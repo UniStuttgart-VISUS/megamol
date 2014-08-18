@@ -39,7 +39,7 @@ namespace math {
          * @param dimension The dimension values.
          */
         explicit inline ShallowDimension(T *dimension) {
-            THE_ASSERT(dimension != NULL);
+            ASSERT(dimension != NULL);
             this->dimension = dimension;
         }
 

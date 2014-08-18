@@ -19,9 +19,8 @@
 #include "vislib/AbstractCommServerChannel.h"
 #include "vislib/IbRdmaCommClientChannel.h"
 #include "vislib/IbRdmaException.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
-#ifdef HAVE_OFED_SDK
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"
 
@@ -38,16 +37,16 @@ namespace ib {
 
     public:
 
-        static SmartRef<IbRdmaCommServerChannel> Create(const size_t cntBufRecv,
-            const size_t cntBufSend);
+        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBufRecv,
+            const SIZE_T cntBufSend);
 
-        static SmartRef<IbRdmaCommServerChannel> Create(const size_t cntBuf);
+        static SmartRef<IbRdmaCommServerChannel> Create(const SIZE_T cntBuf);
 
         virtual SmartRef<AbstractCommClientChannel> Accept(void);
 
         SmartRef<IbRdmaCommClientChannel> Accept(
-                uint8_t *bufRecv, const size_t cntBufRecv, 
-                uint8_t *bufSend, const size_t cntBufSend);
+                BYTE *bufRecv, const SIZE_T cntBufRecv, 
+                BYTE *bufSend, const SIZE_T cntBufSend);
 
         virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
 
@@ -63,17 +62,17 @@ namespace ib {
         typedef AbstractCommServerChannel Super;
 
         /** Ctor. */
-        IbRdmaCommServerChannel(const size_t cntBufRecv, 
-            const size_t cntBufSend);
+        IbRdmaCommServerChannel(const SIZE_T cntBufRecv, 
+            const SIZE_T cntBufSend);
 
         /** Dtor. */
         ~IbRdmaCommServerChannel(void);
 
         /** Size of receive buffers created for client channels in bytes. */
-        size_t cntBufRecv;
+        SIZE_T cntBufRecv;
 
         /** Size of send buffers created for client channels in bytes. */
-        size_t cntBufSend;
+        SIZE_T cntBufSend;
 
         /** The root handle of the RMDA objects used by this channel. */
         struct rdma_cm_id *id;
@@ -89,8 +88,6 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
-
-#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

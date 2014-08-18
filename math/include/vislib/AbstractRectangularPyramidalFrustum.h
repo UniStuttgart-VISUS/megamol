@@ -17,8 +17,8 @@
 
 #include "vislib/AbstractPyramidalFrustum.h"
 #include "vislib/AbstractViewFrustum.h"
-#include "the/argument_exception.h"
-#include "the/memory.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/memutils.h"
 #include "vislib/Plane.h"
 #include "vislib/Point.h"
 #include "vislib/ShallowVector.h"
@@ -62,7 +62,8 @@ namespace math {
          * TODO: Documentation
          */
         inline Point<T, 3> GetApex(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetApex", 
+                __FILE__, __LINE__);
             return Point<T, 3>(this->values + IDX_APEX_X);
         }
 
@@ -79,7 +80,8 @@ namespace math {
          * TODO: Documentation
          */
         inline Vector<T, 3> GetBaseNormal(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBaseNormal",
+                __FILE__, __LINE__);
             return Vector<T, 3>(this->values + IDX_NORMAL_X);
         }
 
@@ -87,7 +89,8 @@ namespace math {
          * TODO: Documentation
          */
         inline const Plane<T>& GetBottomBase(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBottomBase",
+                __FILE__, __LINE__);
             // Note: This is NOT a bug: The bottom base of the frustum is the
             // far clipping plane as seen from the apex.
             return this->fillPlaneCache(false)[IDX_FAR];
@@ -97,7 +100,8 @@ namespace math {
          * TODO: Documentation
          */
         inline const Plane<T>& GetTopBase(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetTopBase",
+                __FILE__, __LINE__);
             // Note: This is NOT a bug: The bottom base of the frustum is the
             // near clipping plane as seen from the apex.
             return this->fillPlaneCache(false)[IDX_NEAR];
@@ -116,7 +120,8 @@ namespace math {
          * TODO: Documentation
          */
         inline Vector<T, 3> GetBaseUp(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBaseUp", 
+                __FILE__, __LINE__);
             return Vector<T, 3>(this->values + IDX_UP_X);
         }
 
@@ -148,7 +153,8 @@ namespace math {
                 const AbstractVector<T, 3, Sp3>& baseUp,
                 const T width, const T height,
                 const T zNear, const T zFar) {
-           THE_STACK_TRACE;
+           VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Set", 
+                __FILE__, __LINE__);
            this->Set(-width, width, -height, height, zNear, zFar, 
                apex.X(), apex.Y(), apex.Z(),
                baseNormal.X(), baseNormal.Y(), baseNormal.Z(),
@@ -160,7 +166,8 @@ namespace math {
          */
         template<class Sp>
         inline void SetApex(const AbstractPoint<T, 3, Sp>& apex) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetApex", 
+                __FILE__, __LINE__);
             this->SetApex(apex.X(), apex.Y(), apex.Z());
         }
 
@@ -168,7 +175,8 @@ namespace math {
          * TODO: Documentation
          */
         inline void SetApex(const T x, const T y, const T z) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetApex", 
+                __FILE__, __LINE__);
             this->values[IDX_APEX_X] = x;
             this->values[IDX_APEX_Y] = y;
             this->values[IDX_APEX_Z] = z;
@@ -190,7 +198,8 @@ namespace math {
          */
         template<class Sp>
         inline void SetBaseNormal(const AbstractVector<T, 3, Sp>& normal) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseNormal",
+                __FILE__, __LINE__);
             this->SetBaseNormal(normal.X(), normal.Y(), normal.Z());
         }
 
@@ -209,7 +218,8 @@ namespace math {
          */
         template<class Sp>
         inline void SetBaseUp(const AbstractVector<T, 3, Sp>& up) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseUp",
+                __FILE__, __LINE__);
             this->SetBaseUp(up.X(), up.Y(), up.Z());
         }
 
@@ -224,52 +234,52 @@ namespace math {
         typedef AbstractPyramidalFrustum<T> Super;
 
         /** The number of elements in 'offset'. */
-        static const uintptr_t CNT_ELEMENTS;
+        static const UINT_PTR CNT_ELEMENTS;
 
         /** Index of the x-coordinate of the apex of the pyramid. */
-        static const uintptr_t IDX_APEX_X;
+        static const UINT_PTR IDX_APEX_X;
 
         /** Index of the y-coordinate of the apex of the pyramid. */
-        static const uintptr_t IDX_APEX_Y;
+        static const UINT_PTR IDX_APEX_Y;
 
         /** Index of the y-coordinate of the apex of the pyramid. */
-        static const uintptr_t IDX_APEX_Z;
+        static const UINT_PTR IDX_APEX_Z;
 
         /** The index of the bottom plane offset. */
-        static const uintptr_t IDX_BOTTOM;
+        static const UINT_PTR IDX_BOTTOM;
 
         /** The index of the far plane offset. */
-        static const uintptr_t IDX_FAR;
+        static const UINT_PTR IDX_FAR;
 
         /** The index of the left plane offset. */
-        static const uintptr_t IDX_LEFT;
+        static const UINT_PTR IDX_LEFT;
 
         /** The index of the near plane offset. */
-        static const uintptr_t IDX_NEAR;
+        static const UINT_PTR IDX_NEAR;
 
         /** The index of the x-coordinate of the bottom/top normal vector. */
-        static const uintptr_t IDX_NORMAL_X;
+        static const UINT_PTR IDX_NORMAL_X;
 
         /** The index of the x-coordinate of the bottom/top normal vector. */
-        static const uintptr_t IDX_NORMAL_Y;
+        static const UINT_PTR IDX_NORMAL_Y;
 
         /** The index of the x-coordinate of the bottom/top normal vector. */
-        static const uintptr_t IDX_NORMAL_Z;
+        static const UINT_PTR IDX_NORMAL_Z;
 
         /** The index of the right plane offset. */
-        static const uintptr_t IDX_RIGHT;
+        static const UINT_PTR IDX_RIGHT;
 
         /** The index of the top plane offset. */
-        static const uintptr_t IDX_TOP;
+        static const UINT_PTR IDX_TOP;
 
         /** The index of the x-coordinate of the up vector. */
-        static const uintptr_t IDX_UP_X;
+        static const UINT_PTR IDX_UP_X;
 
         /** The index of the x-coordinate of the up vector. */
-        static const uintptr_t IDX_UP_Y;
+        static const UINT_PTR IDX_UP_Y;
 
         /** The index of the x-coordinate of the up vector. */
-        static const uintptr_t IDX_UP_Z;
+        static const UINT_PTR IDX_UP_Z;
 
         /** 
          * Disallow instances.
@@ -280,10 +290,10 @@ namespace math {
          * Clear all cached data.
          */
         inline void invalidateCaches(void) {
-            the::safe_array_delete(this->cachePoints);
-            the::safe_array_delete(this->cachePlanes);
-            THE_ASSERT(this->cachePoints == NULL);
-            THE_ASSERT(this->cachePlanes == NULL);
+            ARY_SAFE_DELETE(this->cachePoints);
+            ARY_SAFE_DELETE(this->cachePlanes);
+            ASSERT(this->cachePoints == NULL);
+            ASSERT(this->cachePlanes == NULL);
         }
 
         //Point<T, 3> *fillPointCache(const bool forcheUpdate = false) const;
@@ -321,10 +331,11 @@ namespace math {
     template<class T, class S> 
     AbstractRectangularPyramidalFrustum<T, S>
             ::~AbstractRectangularPyramidalFrustum(void) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::"
+            "AbstractRectangularPyramidalFrustum", __FILE__, __LINE__);
         // Must not do anything about 'values' due to the Crowbar pattern(TM).
-        the::safe_array_delete(this->cachePoints);
-        the::safe_array_delete(this->cachePlanes);
+        ARY_SAFE_DELETE(this->cachePoints);
+        ARY_SAFE_DELETE(this->cachePlanes);
     }
 
 
@@ -335,11 +346,12 @@ namespace math {
     template<class Tp, class Sp>
     bool AbstractRectangularPyramidalFrustum<T, S>::Contains(
             const AbstractPoint<Tp, 3, Sp>& point, const bool onIsIn) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Contains",
+            __FILE__, __LINE__);
         Plane<T> *planes = this->fillPlaneCache();
-        THE_ASSERT(planes != NULL);
+        ASSERT(planes != NULL);
 
-        for (size_t i = 0; i < 6; i++) {
+        for (SIZE_T i = 0; i < 6; i++) {
             T d = planes[i].Distance(point);
 
             if (onIsIn && (d > static_cast<T>(0))) {
@@ -359,7 +371,8 @@ namespace math {
     template<class T, class S> 
     void AbstractRectangularPyramidalFrustum<T, S>::GetBottomBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBottomBasePoints",
+            __FILE__, __LINE__);
         Point<T, 3> apex = this->GetApex();             // Cache apex.
         Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
@@ -397,7 +410,8 @@ namespace math {
     template<class T, class S> 
     void AbstractRectangularPyramidalFrustum<T, S>::GetTopBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetTopBasePoints",
+            __FILE__, __LINE__);
         Point<T, 3> apex = this->GetApex();             // Cache apex.
         Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
@@ -409,7 +423,7 @@ namespace math {
         Vector<T, 3> left = right;                      // Compute left.
         left.ScaleToLength(this->values[IDX_LEFT]);
 
-        THE_ASSERT(normal.IsNormalised());
+        ASSERT(normal.IsNormalised());
         Point<T, 3> center = apex + normal * this->values[IDX_NEAR];
 
         outPoints.SetCount(4);
@@ -426,7 +440,8 @@ namespace math {
     template<class T, class S> 
     void AbstractRectangularPyramidalFrustum<T, S>::SetBaseNormal(
             const T x, const T y, const T z) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseNormal",
+            __FILE__, __LINE__);
         this->values[IDX_NORMAL_X] = x;
         this->values[IDX_NORMAL_Y] = y;
         this->values[IDX_NORMAL_Z] = z;
@@ -443,7 +458,8 @@ namespace math {
     template<class T, class S> 
     void AbstractRectangularPyramidalFrustum<T, S>::SetBaseUp(
             const T x, const T y, const T z) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseUp",
+            __FILE__, __LINE__);
         this->values[IDX_UP_X] = x;
         this->values[IDX_UP_Y] = y;
         this->values[IDX_UP_Z] = z;
@@ -457,112 +473,112 @@ namespace math {
      * ...AbstractRectangularPyramidalFrustum<T, S>::CNT_ELEMENTS
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::CNT_ELEMENTS = 15;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::CNT_ELEMENTS = 15;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_X
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_X = 6;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_X = 6;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Y
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Y = 7;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Y = 7;
 
     
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Z
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Z = 8;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_APEX_Z = 8;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_BOTTOM
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_BOTTOM = 0;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_BOTTOM = 0;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_FAR
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_FAR = 4;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_FAR = 4;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_LEFT
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_LEFT = 2;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_LEFT = 2;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NEAR
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NEAR = 5;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NEAR = 5;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_X
      */    
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_X = 9;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_X = 9;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Y
      */    
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Y = 10;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Y = 10;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Z
      */    
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Z = 11;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_NORMAL_Z = 11;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_RIGHT
      */    
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_RIGHT = 3;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_RIGHT = 3;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_TOP
      */
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_TOP = 1;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_TOP = 1;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_X
      */    
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_X = 12;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_X = 12;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Y
      */    
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Y = 13;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Y = 13;
 
 
     /*
      * ...AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Z
      */    
     template<class T, class S>
-    const uintptr_t AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Z = 14;
+    const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Z = 14;
 
 
     /*
@@ -572,7 +588,8 @@ namespace math {
     AbstractRectangularPyramidalFrustum<T, S>
             ::AbstractRectangularPyramidalFrustum(void) 
             : Super(), cachePoints(NULL), cachePlanes(NULL) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::"
+            "AbstractRectangularPyramidalFrustum", __FILE__, __LINE__);
     }
 
 
@@ -587,7 +604,8 @@ namespace math {
             const T ax, const T ay, const T az,
             const T nx, const T ny, const T nz,
             const T ux, const T uy, const T uz) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Set", 
+            __FILE__, __LINE__);
 
         this->values[IDX_BOTTOM] = bottom;
         this->values[IDX_TOP] = top;
@@ -614,7 +632,8 @@ namespace math {
             const AbstractVector<T, 3, Sp2>& baseNormal,
             const AbstractVector<T, 3, Sp3>& baseUp,
             const AbstractViewFrustum<T, Sp4>& frustum) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Set", 
+            __FILE__, __LINE__);
         this->Set(frustum.GetLeftDistance(), frustum.GetRightDistance(),
             frustum.GetBottomDistance(), frustum.GetTopDistance(),
             frustum.GetNearDistance(), frustum.GetFarDistance(),
@@ -630,7 +649,8 @@ namespace math {
     //template<class T, class S>
     //void AbstractRectangularPyramidalFrustum<T, S>::fillPointCache(
     //        const bool forcheUpdate) const {
-    //    THE_STACK_TRACE;
+    //    VLSTACKTRACE("AbstractRectangularPyramidalFrustum::fillPointCache",
+    //        __FILE__, __LINE__);
 
     //    if (this->cachePoints == NULL) {
     //        this->cachePoints = new Point<T, 3>[8];
@@ -647,7 +667,8 @@ namespace math {
     template<class T, class S>
     Plane<T> *AbstractRectangularPyramidalFrustum<T, S>::fillPlaneCache(
             const bool forceUpdate) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::fillPlaneCache",
+            __FILE__, __LINE__);
 
         if (this->cachePlanes == NULL) {
             this->cachePlanes = new Plane<T>[6];
@@ -665,9 +686,9 @@ namespace math {
         Vector<T, 3> planeNormal;                       // Normal of plane.
 
         /* Assert some preconditions. */
-        THE_ASSERT(normal.IsNormalised());
-        THE_ASSERT(up.IsNormalised());
-        THE_ASSERT(right.IsNormalised());
+        ASSERT(normal.IsNormalised());
+        ASSERT(up.IsNormalised());
+        ASSERT(right.IsNormalised());
 
         /* Compute intersection of base normal with bases. */
         Point<T, 3> nearIntersect = apex + this->values[IDX_NEAR] * normal;
@@ -711,13 +732,14 @@ namespace math {
     template<class T, class S>
     ShallowVector<T, 3>& AbstractRectangularPyramidalFrustum<T, S>
             ::safeUpVector(ShallowVector<T, 3>& inOutUp) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::safeUpVector",
+            __FILE__, __LINE__);
 
         const ShallowVector<T, 3> normal(this->values + IDX_NORMAL_X);
-        THE_ASSERT(normal.IsNormalised());
+        ASSERT(normal.IsNormalised());
         if (inOutUp.IsParallel(normal)) {
             // Cannot fix non-perpendicular up vector if vectors are parallel.
-            throw the::argument_exception("inOutUp", __FILE__, __LINE__);
+            throw vislib::IllegalParamException("inOutUp", __FILE__, __LINE__);
         }
         
         Vector<T, 3> right = normal.Cross(inOutUp);

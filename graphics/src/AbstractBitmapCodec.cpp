@@ -8,12 +8,12 @@
 
 #include "vislib/AbstractBitmapCodec.h"
 #include "vislib/ArrayAllocator.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/MemmappedFile.h"
 #include "vislib/MemoryFile.h"
 #include "vislib/Path.h"
 #include "vislib/SmartPtr.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -36,7 +36,7 @@ vislib::graphics::AbstractBitmapCodec::~AbstractBitmapCodec(void) {
  * vislib::graphics::AbstractBitmapCodec::AutoDetect
  */
 int vislib::graphics::AbstractBitmapCodec::AutoDetect(const void *mem,
-        size_t size) const {
+        SIZE_T size) const {
     // does never detect compatibility
     return 0;
 }
@@ -77,7 +77,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const char* filename) {
         return this->loadFromFileA(filename);
 
     } else if (this->loadFromFileWImplemented()) {
-        return this->loadFromFileW(the::text::string_converter::to_w(filename).c_str());
+        return this->loadFromFileW(vislib::StringW(filename).PeekBuffer());
 
     } else if (this->loadFromStreamImplemented()) {
         vislib::sys::MemmappedFile file;
@@ -93,16 +93,16 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const char* filename) {
                 vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
             vislib::sys::File::FileSize size = file.GetSize();
             vislib::SmartPtr<char, vislib::ArrayAllocator<char> > mem
-                = new char[static_cast<size_t>(size)];
+                = new char[static_cast<SIZE_T>(size)];
             size = file.Read(mem.operator->(), size);
             return this->loadFromMemory(mem.operator->(),
-                static_cast<size_t>(size));
+                static_cast<SIZE_T>(size));
         }
         return false;
 
     }
 
-    throw the::not_supported_exception("Load", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -117,7 +117,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const wchar_t* filename) {
         return this->loadFromFileW(filename);
 
     } else if (this->loadFromFileAImplemented()) {
-        return this->loadFromFileA(the::text::string_converter::to_a(filename).c_str());
+        return this->loadFromFileA(vislib::StringA(filename).PeekBuffer());
 
     } else if (this->loadFromStreamImplemented()) {
         vislib::sys::MemmappedFile file;
@@ -133,16 +133,16 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const wchar_t* filename) {
                 vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
             vislib::sys::File::FileSize size = file.GetSize();
             vislib::SmartPtr<char, vislib::ArrayAllocator<char> > mem
-                = new char[static_cast<size_t>(size)];
+                = new char[static_cast<SIZE_T>(size)];
             size = file.Read(mem.operator->(), size);
             return this->loadFromMemory(mem.operator->(),
-                static_cast<size_t>(size));
+                static_cast<SIZE_T>(size));
         }
         return false;
 
     }
 
-    throw the::not_supported_exception("Load", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -160,74 +160,74 @@ bool vislib::graphics::AbstractBitmapCodec::Load(vislib::sys::File& file) {
         file.SeekToBegin();
         vislib::sys::File::FileSize size = file.GetSize() - file.Tell();
         vislib::SmartPtr<char, vislib::ArrayAllocator<char> > mem = new char[
-            static_cast<size_t>(size)];
+            static_cast<SIZE_T>(size)];
         size = file.Read(mem.operator->(), size);
         return this->loadFromMemory(mem.operator->(),
-            static_cast<size_t>(size));
+            static_cast<SIZE_T>(size));
 
     } else if (this->loadFromFileAImplemented()) {
-        the::astring filename;
+        vislib::StringA filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                size_t size = static_cast<size_t>(
+                SIZE_T size = static_cast<SIZE_T>(
                     file.GetSize() - file.Tell());
                 char *buf = new char[size];
-                size = static_cast<size_t>(file.Read(buf, size));
+                size = static_cast<SIZE_T>(file.Read(buf, size));
                 tmpfile.Write(buf, size);
                 delete[] buf;
                 tmpfile.Flush();
                 tmpfile.SeekToBegin();
 
-                this->loadFromFileA(filename.c_str());
+                this->loadFromFileA(filename);
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
 
     } else if (this->loadFromFileWImplemented()) {
-        the::wstring filename;
+        vislib::StringW filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                size_t size = static_cast<size_t>(
+                SIZE_T size = static_cast<SIZE_T>(
                     file.GetSize() - file.Tell());
                 char *buf = new char[size];
-                size = static_cast<size_t>(file.Read(buf, size));
+                size = static_cast<SIZE_T>(file.Read(buf, size));
                 tmpfile.Write(buf, size);
                 delete[] buf;
                 tmpfile.Flush();
                 tmpfile.SeekToBegin();
 
-                this->loadFromFileW(filename.c_str());
+                this->loadFromFileW(filename);
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
 
     }
 
-    throw the::not_supported_exception("Load", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -235,7 +235,7 @@ bool vislib::graphics::AbstractBitmapCodec::Load(vislib::sys::File& file) {
 /*
  * vislib::graphics::AbstractBitmapCodec::Load
  */
-bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, size_t size) {
+bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, SIZE_T size) {
     this->image();
 
     if (this->loadFromMemoryImplemented()) {
@@ -250,10 +250,10 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, size_t size) {
         return this->loadFromStream(stream);
 
     } else if (this->loadFromFileAImplemented()) {
-        the::astring filename;
+        vislib::StringA filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
@@ -262,23 +262,23 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, size_t size) {
                 tmpfile.Flush();
                 tmpfile.SeekToBegin();
 
-                this->loadFromFileA(filename.c_str());
+                this->loadFromFileA(filename);
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
 
     } else if (this->loadFromFileWImplemented()) {
-        the::wstring filename;
+        vislib::StringW filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
@@ -287,21 +287,21 @@ bool vislib::graphics::AbstractBitmapCodec::Load(const void *mem, size_t size) {
                 tmpfile.Flush();
                 tmpfile.SeekToBegin();
 
-                this->loadFromFileW(filename.c_str());
+                this->loadFromFileW(filename);
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
 
     }
 
-    throw the::not_supported_exception("Load", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Load", __FILE__, __LINE__);
     return false;
 }
 
@@ -321,7 +321,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
         return this->saveToFileA(filename);
 
     } else if (this->saveToFileWImplemented()) {
-        return this->saveToFileW(the::text::string_converter::to_w(filename).c_str());
+        return this->saveToFileW(vislib::StringW(filename));
 
     } else if (this->saveToStreamImplemented()) {
         vislib::sys::MemmappedFile file;
@@ -349,7 +349,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
     }
 
-    throw the::not_supported_exception("Save", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -369,7 +369,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
         return this->saveToFileW(filename);
 
     } else if (this->saveToFileAImplemented()) {
-        return this->saveToFileA(the::text::string_converter::to_a(filename).c_str());
+        return this->saveToFileA(vislib::StringA(filename));
 
     } else if (this->saveToStreamImplemented()) {
         vislib::sys::MemmappedFile file;
@@ -397,7 +397,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
     }
 
-    throw the::not_supported_exception("Save", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -420,20 +420,20 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
         return false;
 
     } else if (this->saveToFileAImplemented()) {
-        the::astring filename;
+        vislib::StringA filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                if (this->saveToFileA(filename.c_str())) {
+                if (this->saveToFileA(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    size_t size = static_cast<size_t>(tmpfile.GetSize());
+                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
                     char *buf = new char[size];
-                    size = static_cast<size_t>(tmpfile.Read(buf,
+                    size = static_cast<SIZE_T>(tmpfile.Read(buf,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     file.Write(buf,
                         static_cast<vislib::sys::File::FileSize>(size));
@@ -444,30 +444,30 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
         return false;
 
     } else if (this->saveToFileWImplemented()) {
-        the::wstring filename;
+        vislib::StringW filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                if (this->saveToFileW(filename.c_str())) {
+                if (this->saveToFileW(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    size_t size = static_cast<size_t>(tmpfile.GetSize());
+                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
                     char *buf = new char[size];
-                    size = static_cast<size_t>(tmpfile.Read(buf,
+                    size = static_cast<SIZE_T>(tmpfile.Read(buf,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     file.Write(buf,
                         static_cast<vislib::sys::File::FileSize>(size));
@@ -478,18 +478,18 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
         return false;
 
     }
 
-    throw the::not_supported_exception("Save", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -513,20 +513,20 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
         return this->saveToStream(file);
 
     } else if (this->saveToFileAImplemented()) {
-        the::astring filename;
+        vislib::StringA filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                if (this->saveToFileA(filename.c_str())) {
+                if (this->saveToFileA(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    size_t size = static_cast<size_t>(tmpfile.GetSize());
+                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
                     outmem.AssertSize(size);
-                    size = static_cast<size_t>(tmpfile.Read(outmem,
+                    size = static_cast<SIZE_T>(tmpfile.Read(outmem,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     outmem.EnforceSize(size, true);
                     return true;
@@ -535,30 +535,30 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
         return false;
 
     } else if (this->saveToFileWImplemented()) {
-        the::wstring filename;
+        vislib::StringW filename;
         vislib::sys::File::CreateTempFileName(filename);
         vislib::sys::MemmappedFile tmpfile;
-        if (tmpfile.Open(filename.c_str(), vislib::sys::File::READ_WRITE,
+        if (tmpfile.Open(filename, vislib::sys::File::READ_WRITE,
                 vislib::sys::File::SHARE_READ,
                 vislib::sys::File::CREATE_ONLY)) {
 
             try {
-                if (this->saveToFileW(filename.c_str())) {
+                if (this->saveToFileW(filename)) {
                     tmpfile.Flush();
                     tmpfile.SeekToBegin();
-                    size_t size = static_cast<size_t>(tmpfile.GetSize());
+                    SIZE_T size = static_cast<SIZE_T>(tmpfile.GetSize());
                     outmem.AssertSize(size);
-                    size = static_cast<size_t>(tmpfile.Read(outmem,
+                    size = static_cast<SIZE_T>(tmpfile.Read(outmem,
                         static_cast<vislib::sys::File::FileSize>(size)));
                     outmem.EnforceSize(size, true);
                     return true;
@@ -567,18 +567,18 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 
             } catch(...) {
                 tmpfile.Close();
-                vislib::sys::File::Delete(filename.c_str());
+                vislib::sys::File::Delete(filename);
                 throw;
             }
             tmpfile.Close();
-            vislib::sys::File::Delete(filename.c_str());
+            vislib::sys::File::Delete(filename);
 
         }
         return false;
 
     }
 
-    throw the::not_supported_exception("Save", __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("Save", __FILE__, __LINE__);
     return false;
 }
 
@@ -589,7 +589,7 @@ bool vislib::graphics::AbstractBitmapCodec::Save(
 vislib::graphics::BitmapImage&
 vislib::graphics::AbstractBitmapCodec::image(void) {
     if (this->img == NULL) {
-        throw the::invalid_operation_exception(
+        throw vislib::IllegalStateException(
             "Must set 'Image' member before calling", __FILE__, __LINE__);
     }
     return *this->img;
@@ -602,7 +602,7 @@ vislib::graphics::AbstractBitmapCodec::image(void) {
 const vislib::graphics::BitmapImage&
 vislib::graphics::AbstractBitmapCodec::image(void) const {
     if (this->img == NULL) {
-        throw the::invalid_operation_exception(
+        throw vislib::IllegalStateException(
             "Must set 'Image' member before calling", __FILE__, __LINE__);
     }
     return *this->img;
@@ -614,7 +614,7 @@ vislib::graphics::AbstractBitmapCodec::image(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromFileA(
         const char *filename) {
-    throw the::not_supported_exception("loadFromFileA",
+    throw vislib::UnsupportedOperationException("loadFromFileA",
         __FILE__, __LINE__);
     return false;
 }
@@ -634,7 +634,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromFileAImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromFileW(
         const wchar_t *filename) {
-    throw the::not_supported_exception("loadFromFileW",
+    throw vislib::UnsupportedOperationException("loadFromFileW",
         __FILE__, __LINE__);
     return false;
 }
@@ -653,8 +653,8 @@ vislib::graphics::AbstractBitmapCodec::loadFromFileWImplemented(void) const {
  * vislib::graphics::AbstractBitmapCodec::loadFromMemory
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromMemory(const void *mem,
-        size_t size) {
-    throw the::not_supported_exception("loadFromMemory",
+        SIZE_T size) {
+    throw vislib::UnsupportedOperationException("loadFromMemory",
         __FILE__, __LINE__);
     return false;
 }
@@ -674,7 +674,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromMemoryImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::loadFromStream(
         vislib::sys::File& stream) {
-    throw the::not_supported_exception("loadFromStream",
+    throw vislib::UnsupportedOperationException("loadFromStream",
         __FILE__, __LINE__);
     return false;
 }
@@ -694,7 +694,7 @@ vislib::graphics::AbstractBitmapCodec::loadFromStreamImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToFileA(
         const char *filename) const {
-    throw the::not_supported_exception("saveToFileA",
+    throw vislib::UnsupportedOperationException("saveToFileA",
         __FILE__, __LINE__);
     return false;
 }
@@ -714,7 +714,7 @@ vislib::graphics::AbstractBitmapCodec::saveToFileAImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToFileW(
         const wchar_t *filename) const {
-    throw the::not_supported_exception("saveToFileW",
+    throw vislib::UnsupportedOperationException("saveToFileW",
         __FILE__, __LINE__);
     return false;
 }
@@ -734,7 +734,7 @@ vislib::graphics::AbstractBitmapCodec::saveToFileWImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToMemory(
         vislib::RawStorage &mem) const {
-    throw the::not_supported_exception("saveToMemory",
+    throw vislib::UnsupportedOperationException("saveToMemory",
         __FILE__, __LINE__);
     return false;
 }
@@ -754,7 +754,7 @@ vislib::graphics::AbstractBitmapCodec::saveToMemoryImplemented(void) const {
  */
 bool vislib::graphics::AbstractBitmapCodec::saveToStream(
         vislib::sys::File& stream) const {
-    throw the::not_supported_exception("saveToStream",
+    throw vislib::UnsupportedOperationException("saveToStream",
         __FILE__, __LINE__);
     return false;
 }

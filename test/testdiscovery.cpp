@@ -9,7 +9,7 @@
 #include "vislib/ClusterDiscoveryService.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/SystemInformation.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 #include <iostream>
 
@@ -27,7 +27,7 @@ class MyListener : public vislib::net::ClusterDiscoveryListener {
 
     virtual void OnUserMessage(const vislib::net::ClusterDiscoveryService& src,
         const vislib::net::ClusterDiscoveryService::PeerHandle& hPeer, 
-        const uint32_t msgType, const uint8_t *msgBody);
+        const UINT32 msgType, const BYTE *msgBody);
 };
 
 
@@ -38,12 +38,12 @@ void MyListener::OnNodeFound(const vislib::net::ClusterDiscoveryService& src,
         const vislib::net::ClusterDiscoveryService::PeerHandle& hPeer) {
     const char *WELCOME_MESSAGE = "Okaerinasai";
     const char *SINGLE_MESSAGE = "Single message";
-    std::cout << src[hPeer].ToStringA().c_str() << " was found for \"" 
-        << src.GetName().c_str() << "\"" << std::endl;
+    std::cout << src[hPeer].ToStringA().PeekBuffer() << " was found for \"" 
+        << src.GetName().PeekBuffer() << "\"" << std::endl;
 
     std::cout << "Now I know ";
-    for (size_t i = 0; i < src.CountPeers(); i++) {
-        std::cout << std::endl << " " << src[i].ToStringA().c_str();
+    for (SIZE_T i = 0; i < src.CountPeers(); i++) {
+        std::cout << std::endl << " " << src[i].ToStringA().PeekBuffer();
     }
     std::cout << std::endl;
 
@@ -68,7 +68,7 @@ void MyListener::OnNodeLost(const vislib::net::ClusterDiscoveryService& src,
         const NodeLostReason reason) {
     std::cout << src[hPeer].ToStringA() 
         << ((reason == LOST_EXPLICITLY) ? " disconnected" : " was lost")
-        << " from \"" << src.GetName().c_str() << "\"" << std::endl;
+        << " from \"" << src.GetName().PeekBuffer() << "\"" << std::endl;
 }
 
 /*
@@ -76,10 +76,10 @@ void MyListener::OnNodeLost(const vislib::net::ClusterDiscoveryService& src,
  */
 void MyListener::OnUserMessage(const vislib::net::ClusterDiscoveryService& src,
         const vislib::net::ClusterDiscoveryService::PeerHandle& hPeer, 
-        const uint32_t msgType, const uint8_t *msgBody) {
+        const UINT32 msgType, const BYTE *msgBody) {
     std::cout << "Received user message " << msgType << " (\""
         << reinterpret_cast<const char *>(msgBody) << "\") from "
-        << src[hPeer].ToStringA().c_str() << std::endl;
+        << src[hPeer].ToStringA().PeekBuffer() << std::endl;
 }
 
 
@@ -88,8 +88,8 @@ static void runCDS(const bool observer) {
     using namespace vislib::net;
     using namespace vislib::sys;
 
-    unsigned int oldLevel = the::trace::get_instance().get_default_level();
-    //Trace::GetInstance().SetLevel(THE_TRCLVL_ERROR);
+    UINT oldLevel = Trace::GetInstance().GetLevel();
+    //Trace::GetInstance().SetLevel(Trace::LEVEL_ERROR);
 
     MyListener myListener;
 
@@ -97,14 +97,14 @@ static void runCDS(const bool observer) {
     Socket::Startup();
 
     ClusterDiscoveryService cds("testnet", 
-        SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA().c_str()), 12345),
+        SocketAddress(SocketAddress::FAMILY_INET, IPAddress(SystemInformation::ComputerNameA()), 12345),
         IPAddress("129.69.215.255"), ClusterDiscoveryService::DEFAULT_PORT, observer);
     cds.AddListener(&myListener);
     cds.Start();
     Thread::Sleep(60 * 1000);
     cds.Stop();
 
-    the::trace::get_instance().set_default_level(oldLevel);
+    Trace::GetInstance().SetLevel(oldLevel);
     Socket::Cleanup();
 }
 

@@ -16,7 +16,7 @@
 
 
 #include "vislib/CriticalSection.h"
-#include "the/string.h"
+#include "vislib/String.h"
 #ifndef _WIN32
 #include "vislib/Runnable.h"
 #endif /* !_WIN32 */
@@ -106,12 +106,12 @@ namespace sys {
          *
          * @return 'true' if the pipe has been opened, 'false' otherwise.
          *
-         * @throws argument_exception if name contains any invalid 
+         * @throws IllegalParamException if name contains any invalid 
          *                               characters.
-         * @throws argument_exception if openMode == 'PIPE_MODE_NONE'
-         * @throws the::system::system_exception if the pipe could not be opened.
+         * @throws IllegalParamException if openMode == 'PIPE_MODE_NONE'
+         * @throws SystemException if the pipe could not be opened.
          */
-        bool Open(the::astring name, PipeMode mode, unsigned int timeout = 0);
+        bool Open(StringA name, PipeMode mode, unsigned int timeout = 0);
 
         /**
          * Opens a named pipe. If another pipe is already opend, that pipe is 
@@ -141,12 +141,12 @@ namespace sys {
          *
          * @return 'true' if the pipe has been opened, 'false' otherwise.
          *
-         * @throws argument_exception if name contains any invalid 
+         * @throws IllegalParamException if name contains any invalid 
          *                               characters.
-         * @throws argument_exception if openMode == 'PIPE_MODE_NONE'
-         * @throws the::system::system_exception if the pipe could not be opened.
+         * @throws IllegalParamException if openMode == 'PIPE_MODE_NONE'
+         * @throws SystemException if the pipe could not be opened.
          */
-        bool Open(the::wstring name, PipeMode mode, unsigned int timeout = 0);
+        bool Open(StringW name, PipeMode mode, unsigned int timeout = 0);
 
         /**
          * Answers the OpenMode of the pipe or 'PIPE_MODE_NONE' if the pipe is
@@ -166,10 +166,10 @@ namespace sys {
          * @param buffer Pointer to the buffer to read.
          * @param size The number of bytes to read.
          *
-         * @throws invalid_operation_exception if the Mode of the pipe is not
+         * @throws IllegalStateException if the Mode of the pipe is not
          *                               'PIPE_MODE_READ'.
-         * @throws argument_exception if buffer is NULL.
-         * @throws the::system::system_exception if the pipe could not be read, e. g. if the
+         * @throws IllegalParamException if buffer is NULL.
+         * @throws SystemException if the pipe could not be read, e. g. if the
          *                         pipe is broke.
          */
         void Read(void *buffer, unsigned int size);
@@ -184,9 +184,9 @@ namespace sys {
          *
          * @return The full system name of the named pipe.
          *
-         * @throws argument_exception if name is not a valid pipe name.
+         * @throws IllegalParamException if name is not a valid pipe name.
          */
-        static the::astring PipeSystemName(const the::astring &name);
+        static vislib::StringA PipeSystemName(const vislib::StringA &name);
 
         /**
          * Answer the full system name of a pipe. The pipe name 'name' is 
@@ -198,9 +198,9 @@ namespace sys {
          *
          * @return The full system name of the named pipe.
          *
-         * @throws argument_exception if name is not a valid pipe name.
+         * @throws IllegalParamException if name is not a valid pipe name.
          */
-        static the::wstring PipeSystemName(const the::wstring &name);
+        static vislib::StringW PipeSystemName(const vislib::StringW &name);
 
         /**
          * Writes 'size' bytes from 'buffer' into the pipe. The method does not
@@ -210,10 +210,10 @@ namespace sys {
          * @param buffer Pointer to the buffer to write.
          * @param size The number of bytes to write.
          *
-         * @throws invalid_operation_exception If the Mode of the pipe is not
+         * @throws IllegalStateException If the Mode of the pipe is not
          *                               'PIPE_MODE_WRITE'.
-         * @throws argument_exception if buffer is NULL.
-         * @throws the::system::system_exception if the data could not be written to the 
+         * @throws IllegalParamException if buffer is NULL.
+         * @throws SystemException if the data could not be written to the 
          *                         pipe, e. g. if the pipe is broke.
          */
         void Write(void *buffer, unsigned int size);
@@ -230,7 +230,7 @@ namespace sys {
          *
          * @return true if the name is valid, false otherwise.
          */
-        template<class T> static bool checkPipeName(const T &name);
+        template<class T> static bool checkPipeName(const String<T> &name);
 
 #ifdef _WIN32
         /** The handle of the pipe */
@@ -272,7 +272,7 @@ namespace sys {
              * @return The application dependent return code of the thread. This 
              *         must not be STILL_ACTIVE (259).
              */
-            virtual unsigned int Run(void *userData);
+            virtual DWORD Run(void *userData);
 
             /** Marks the pipe as connected. */
             inline void MarkConnected(void) {

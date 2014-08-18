@@ -7,8 +7,8 @@
 
 #include "vislib/Interlocked.h"
 
-#include "the/assert.h"
-#include "the/not_supported_exception.h"
+#include "vislib/assert.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 
@@ -17,7 +17,7 @@
  */
 vislib::sys::Interlocked::~Interlocked(void) {
     // Should never be called.
-    THE_ASSERT(false);
+    ASSERT(false);
 }
 
 
@@ -25,5 +25,5 @@ vislib::sys::Interlocked::~Interlocked(void) {
  * vislib::sys::Interlocked::Interlocked
  */
 vislib::sys::Interlocked::Interlocked(void) {
-    throw the::not_supported_exception("Interlocked", __FILE__, __LINE__);
+    throw UnsupportedOperationException("Interlocked", __FILE__, __LINE__);
 }

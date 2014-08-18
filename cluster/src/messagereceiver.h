@@ -86,7 +86,7 @@ namespace cluster {
      * @return The socket error code that caused the function to end or -1 in 
      *         case of an unexpected error.
      */
-    unsigned int ReceiveMessages(void *receiveMessagesCtx); 
+    DWORD ReceiveMessages(void *receiveMessagesCtx); 
 
 } /* end namespace cluster */
 } /* end namespace net */

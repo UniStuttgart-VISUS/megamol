@@ -25,22 +25,59 @@
 #include <curses.h>
 #include <term.h>
 
-#include "the/text/string_converter.h"
+#include "vislib/StringConverter.h"
 
 #endif /* _WIN32 */
 
-#include "the/assert.h"
-#include "the/system/system_exception.h"
-#include "the/not_supported_exception.h"
+#include "vislib/assert.h"
+#include "vislib/SystemException.h"
+#include "vislib/UnsupportedOperationException.h"
 #include "vislib/Thread.h"
-#include "the/string.h"
-#include "the/text/string_builder.h"
+#include "vislib/vislibsymbolimportexport.inl"
+
+
+/*
+ * vislib::sys::Console::ConsoleLogTarget::Msg
+ */
+void vislib::sys::Console::ConsoleLogTarget::Msg(unsigned int level,
+        vislib::sys::Log::TimeStamp time, vislib::sys::Log::SourceID sid,
+                const char *msg) {
+    if (vislib::sys::Console::ColorsEnabled()) {
+        vislib::sys::Console::ColorType color;
+
+        if (level <= vislib::sys::Log::LEVEL_ERROR) color = vislib::sys::Console::RED; // error
+        else if (level <= vislib::sys::Log::LEVEL_WARN) color = vislib::sys::Console::YELLOW; // warning
+        else if (level <= vislib::sys::Log::LEVEL_INFO) color = vislib::sys::Console::WHITE; // info
+        else color = vislib::sys::Console::UNKNOWN_COLOR;
+
+        if (color != vislib::sys::Console::UNKNOWN_COLOR) {
+            vislib::sys::Console::SetForegroundColor(color);
+            vislib::sys::Console::Write("%.4d", level);
+            vislib::sys::Console::RestoreDefaultColors();
+            vislib::sys::Console::Write("|%s", msg);
+        } else {
+            vislib::sys::Console::Write("%.4d|%s", level, msg);
+        }
+    } else {
+        vislib::sys::Console::Write("%.4d|%s", level, msg);
+    }
+}
+
+
+/*
+ * vislib::sys::Console::LogEchoTarget
+ */
+const vislib::sys::Console::ConsoleLogTarget vislib::sys::Console::LogEchoTarget;
 
 
 /*
  * __vl_console_useColors
  */
-bool __vl_console_useColors = vislib::sys::Console::ColorsAvailable();
+VISLIB_STATICSYMBOL bool __vl_console_useColors
+#ifndef VISLIB_SYMBOL_IMPORT
+    = vislib::sys::Console::ColorsAvailable()
+#endif /* !VISLIB_SYMBOL_IMPORT */
+    ;
 
 
 /*
@@ -86,7 +123,7 @@ public:
 #endif /* _WIN32 */
 
         /** The target string to receive the read data */
-        the::astring *target;
+        vislib::StringA *target;
 
     } PipeReaderInfo;
 
@@ -100,15 +137,11 @@ public:
      *
      * @return 0 on success, nonzero on failure.
      */
-    static unsigned int ReadFromPipe(void *userData) {
+    static DWORD ReadFromPipe(void *userData) {
         PipeReaderInfo *info = static_cast<PipeReaderInfo* >(userData);
-        const unsigned int bufferSize = 1024;
+        const DWORD bufferSize = 1024;
         char buffer[bufferSize + 1];
-#ifdef _WIN32
         DWORD bytesRead;
-#else /* _WIN32 */
-        unsigned int bytesRead;
-#endif /* _WIN32 */
 
         while (true) {
 #ifdef _WIN32
@@ -243,8 +276,8 @@ private:
             // first time call
 
             { // check capabilities
-                the::astring out;
-                the::astring err;
+                vislib::StringA out;
+                vislib::StringA err;
 
                 this->dcopPresent = false;
                 this->isKonsole = false;
@@ -252,7 +285,7 @@ private:
                 // first check if dcop is available
                 vislib::sys::Console::Run("dcop", &out, &err);
 
-                this->dcopPresent = (err.size() == 0);
+                this->dcopPresent = (err.Length() == 0);
 
                 // check if environment variable $KONSOLE_DCOP_SESSION is present
                 char *v = ::getenv("KONSOLE_DCOP_SESSION");
@@ -271,12 +304,12 @@ private:
 
             if (this->oldConsoleTitle == NULL) {
                 // try to store the old title
-                the::astring oldName;
+                vislib::StringA oldName;
 
                 if (this->dcopPresent && this->isKonsole) {
-                    the::astring cmd;
-                    the::text::astring_builder::format_to(cmd, "dcop $KONSOLE_DCOP_SESSION sessionName");
-                    vislib::sys::Console::Run(cmd.c_str(), &oldName, NULL);
+                    vislib::StringA cmd;
+                    cmd.Format("dcop $KONSOLE_DCOP_SESSION sessionName");
+                    vislib::sys::Console::Run(cmd.PeekBuffer(), &oldName, NULL);
 
                 } else if (this->isXterm) {
                     // getting title from xterm is very unsecure
@@ -301,7 +334,7 @@ private:
                     fflush(stdout);
 
                     {
-                        the::astring rd;
+                        StringA rd;
                         PipeReaderInfo pri;
                         pri.pipe = STDIN_FILENO;
                         pri.target = &rd;
@@ -312,14 +345,14 @@ private:
                         while(cnt < 1000) {
                             vislib::sys::Thread::Sleep(50);
                             cnt += 50;
-                            if (rd.size() > 0) {
+                            if (rd.Length() > 0) {
                                 break;
                             }
                         }
                         stdinreader.Terminate(true);
 
-                        if (rd.size() > 5) {
-                            oldName = rd.substr(3, rd.size() - 4);
+                        if (rd.Length() > 5) {
+                            oldName = rd.Substring(3, rd.Length() - 4);
                         }
 
                     }
@@ -333,10 +366,10 @@ private:
 
                 }
 
-                unsigned int size = static_cast<unsigned int>(oldName.size());
+                unsigned int size = oldName.Length();
                 if (size > 0) {
                     this->oldConsoleTitle = new char[size + 1];
-                    ::memcpy(this->oldConsoleTitle, oldName.c_str(), size * sizeof(char));
+                    ::memcpy(this->oldConsoleTitle, oldName.PeekBuffer(), size * sizeof(char));
                     this->oldConsoleTitle[size] = 0;
 
                     // truncate control characters at the end
@@ -358,9 +391,9 @@ private:
         }
 
         if (this->dcopPresent && this->isKonsole) {
-            the::astring cmd;
-            the::text::astring_builder::format_to(cmd, "dcop $KONSOLE_DCOP_SESSION renameSession '%s'", title);
-            vislib::sys::Console::Run(cmd.c_str(), NULL, NULL);
+            vislib::StringA cmd;
+            cmd.Format("dcop $KONSOLE_DCOP_SESSION renameSession '%s'", title);
+            vislib::sys::Console::Run(cmd.PeekBuffer(), NULL, NULL);
 
         } else if (this->isXterm) {
             // xterm operating system command: echo '\033]0;AAAAA\007'
@@ -405,7 +438,7 @@ private:
         
         if (this->oldConsoleTitle != NULL) {
             this->SetConsoleTitle(this->oldConsoleTitle);
-            the::safe_array_delete(this->oldConsoleTitle);
+            ARY_SAFE_DELETE(this->oldConsoleTitle);
         }
     }
 
@@ -434,8 +467,8 @@ private:
 /*
  * vislib::sys::Console::Run
  */
-int vislib::sys::Console::Run(const char *command, the::astring *outStdOut, 
-        the::astring *outStdErr) {
+int vislib::sys::Console::Run(const char *command, StringA *outStdOut, 
+        StringA *outStdErr) {
     // TODO: Could use some of the timeout mechanisms?
 #ifdef _WIN32
     HANDLE hErrorRead, hErrorWrite;
@@ -452,19 +485,19 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
 
     // Create pipes
     if (!::CreatePipe(&hErrorRead, &hErrorWrite, &sa, 0)) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
     if (!::CreatePipe(&hInputRead, &hInputWrite, &sa, 0)) {
         ::CloseHandle(hErrorRead);
         ::CloseHandle(hErrorWrite);
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
     if (!::CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0)) {
         ::CloseHandle(hErrorRead);
         ::CloseHandle(hErrorWrite);
         ::CloseHandle(hInputRead);
         ::CloseHandle(hInputWrite);
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     ::ZeroMemory(&startInfo, sizeof(STARTUPINFO));
@@ -477,11 +510,11 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
 
     ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 
-    the::astring cmd = vislib::sys::Path::FindExecutablePath("cmd.exe");
-    the::astring cmdLine;
-    the::text::astring_builder::format_to(cmdLine, "/A /C \"%s\"", command);
+    vislib::StringA cmd = vislib::sys::Path::FindExecutablePath("cmd.exe");
+    vislib::StringA cmdLine;
+    cmdLine.Format("/A /C \"%s\"", command);
 
-    BOOL cp = ::CreateProcessA(cmd.c_str(), const_cast<char *>(cmdLine.c_str()), 
+    BOOL cp = ::CreateProcessA(cmd, const_cast<char *>(cmdLine.PeekBuffer()), 
         NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &startInfo, &pi);
 
     if (cp == FALSE) {
@@ -491,7 +524,7 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
         ::CloseHandle(hInputWrite);
         ::CloseHandle(hOutputRead);
         ::CloseHandle(hOutputWrite);
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     DWORD exitCode = STILL_ACTIVE;
@@ -506,7 +539,7 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
     if (outStdOut != NULL) {
         outputReaderInfo.pipe = hOutputRead;
         outputReaderInfo.target = outStdOut;
-        outStdOut->clear();
+        outStdOut->Clear();
         if (!outputReader.Start(&outputReaderInfo)) {
             outStdOut = NULL; // avoid join
         }
@@ -515,7 +548,7 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
     if (outStdErr != NULL) {
         errorReaderInfo.pipe = hErrorRead;
         errorReaderInfo.target = outStdErr;
-        outStdErr->clear();
+        outStdErr->Clear();
         if (!errorReader.Start(&errorReaderInfo)) {
             outStdErr = NULL; // avoid join
         }
@@ -558,17 +591,17 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
 
     /* Create two pipes for redirecting the child console output. */
     if (::pipe(stdOutPipe) == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
     if (::pipe(stdErrPipe) == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     /* Spawn a new subprocess for running the command. */
     pid = ::fork();
     if (pid < 0) {
         /* Forking failed. */
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
 
     } else if (pid == 0) {
         /* Subprocess created, I am in the subprocess now. */
@@ -607,7 +640,7 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
         if (outStdOut != NULL) {
             outputReaderInfo.pipe = stdOutPipe[0];
             outputReaderInfo.target = outStdOut;
-            outStdOut->clear();
+            outStdOut->Clear();
             if (!outputReader.Start(&outputReaderInfo)) {
                 outStdOut = NULL; // avoid join
             }
@@ -616,7 +649,7 @@ int vislib::sys::Console::Run(const char *command, the::astring *outStdOut,
         if (outStdErr != NULL) {
             errorReaderInfo.pipe = stdErrPipe[0];
             errorReaderInfo.target = outStdErr;
-            outStdErr->clear();
+            outStdErr->Clear();
             if (!errorReader.Start(&errorReaderInfo)) {
                 outStdErr = NULL; // avoid join
             }
@@ -674,7 +707,7 @@ void vislib::sys::Console::WriteLine(const char *fmt, ...) {
  * vislib::sys::Console::Console
  */
 vislib::sys::Console::Console(void) {
-    throw the::not_supported_exception("vislib::sys::Console::Console", 
+    throw UnsupportedOperationException("vislib::sys::Console::Console", 
         __FILE__, __LINE__);
 }
 
@@ -956,12 +989,12 @@ unsigned int vislib::sys::Console::GetHeight(void) {
 /*
  * vislib::sys::Console::SetTitle
  */
-void vislib::sys::Console::SetTitle(const the::astring& title) {
+void vislib::sys::Console::SetTitle(const vislib::StringA& title) {
 #ifdef _WIN32
-    ::SetConsoleTitleA(title.c_str());
+    ::SetConsoleTitleA(title);
 
 #else // _WIN32
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title.c_str());
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(title);
 
 #endif // _WIN32
 }
@@ -970,13 +1003,13 @@ void vislib::sys::Console::SetTitle(const the::astring& title) {
 /*
  * vislib::sys::Console::SetTitle
  */
-void vislib::sys::Console::SetTitle(const the::wstring& title) {
+void vislib::sys::Console::SetTitle(const vislib::StringW& title) {
 #ifdef _WIN32
-    ::SetConsoleTitleW(title.c_str());
+    ::SetConsoleTitleW(title);
 
 #else // _WIN32
     // we only support ANSI-Strings for Linux consoles.
-    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(THE_W2A(title));
+    vislib::sys::Console::ConsoleHelper::GetInstance()->SetConsoleTitle(W2A(title));
 
 #endif // _WIN32
 }

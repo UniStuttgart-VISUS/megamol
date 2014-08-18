@@ -32,13 +32,13 @@ public:
         void *userData) throw();
 
     void OnUserWorkItemCompleted(ThreadPool& src, Runnable *runnable, 
-        void *userData, const unsigned int exitCode) throw();
+        void *userData, const DWORD exitCode) throw();
 
     void OnUserWorkItemCompleted(ThreadPool& src, Runnable::Function runnable,
-        void *userData, const unsigned int exitCode) throw();
+        void *userData, const DWORD exitCode) throw();
 
-    unsigned int cntAborted;
-    unsigned int cntCompleted;
+    UINT cntAborted;
+    UINT cntCompleted;
 
 };
 
@@ -53,13 +53,13 @@ void Horcher::OnUserWorkItemAborted(ThreadPool& src,
 }
 
 void Horcher::OnUserWorkItemCompleted(ThreadPool& src, Runnable *runnable,
-        void *userData, const unsigned int exitCode) throw() {
+        void *userData, const DWORD exitCode) throw() {
     this->cntCompleted++;
 }
 
 void Horcher::OnUserWorkItemCompleted(ThreadPool& src, 
         Runnable::Function runnable, void *userData, 
-        const unsigned int exitCode) throw() {
+        const DWORD exitCode) throw() {
     this->cntCompleted++;
 }
 
@@ -71,14 +71,14 @@ public:
 
     inline Doweler(void) : Runnable() {};
 
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 
     virtual bool Terminate(void);
 };
 
 
-unsigned int Doweler::Run(void *userData) {
-    uintptr_t dowel = reinterpret_cast<uintptr_t>(userData);
+DWORD Doweler::Run(void *userData) {
+    UINT_PTR dowel = reinterpret_cast<UINT_PTR>(userData);
 
     for (int i = 0; i < 5; i++) {
         LOCK_COUT;
@@ -100,7 +100,7 @@ public:
 
     inline Crowbarer(void) : Runnable() {};
 
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 
     virtual bool Terminate(void);
 
@@ -108,8 +108,8 @@ public:
 };
 
 
-unsigned int Crowbarer::Run(void *userData) {
-    uintptr_t crowbar = reinterpret_cast<uintptr_t>(userData);
+DWORD Crowbarer::Run(void *userData) {
+    UINT_PTR crowbar = reinterpret_cast<UINT_PTR>(userData);
 
     sem.Lock();
     LOCK_COUT;
@@ -139,25 +139,25 @@ void TestThreadPool(void) {
 
     pool.AddListener(&a6);
 
-    ::AssertEqual("No threads initially.", pool.GetTotalThreads(), size_t(0));
-    ::AssertEqual("No active threads initially.", pool.GetActiveThreads(), size_t(0));
-    ::AssertEqual("No idle threads initially.", pool.GetAvailableThreads(), size_t(0));
+    ::AssertEqual("No threads initially.", pool.GetTotalThreads(), SIZE_T(0));
+    ::AssertEqual("No active threads initially.", pool.GetActiveThreads(), SIZE_T(0));
+    ::AssertEqual("No idle threads initially.", pool.GetAvailableThreads(), SIZE_T(0));
 
-    for (intptr_t i = 0; i < CNT_DOWELERS; i++) {
+    for (INT_PTR i = 0; i < CNT_DOWELERS; i++) {
         pool.QueueUserWorkItem(&dowelers[i], reinterpret_cast<void *>(i), false);
     }
     pool.SetThreadCount(CNT_THREADS);
 
     pool.Wait();
     ::AssertTrue("Idle threads exist after wait.", pool.GetAvailableThreads() > 0);
-    ::AssertEqual("No active threads after wait.", pool.GetActiveThreads(), size_t(0));
+    ::AssertEqual("No active threads after wait.", pool.GetActiveThreads(), SIZE_T(0));
 
-    ::AssertEqual("Nothing aborted.", a6.cntAborted, static_cast<unsigned int>(0));
-    ::AssertEqual("Everything completed.", a6.cntCompleted, static_cast<unsigned int>(CNT_DOWELERS));
+    ::AssertEqual("Nothing aborted.", a6.cntAborted, UINT(0));
+    ::AssertEqual("Everything completed.", a6.cntCompleted, UINT(CNT_DOWELERS));
 
     a6.cntAborted = 0;
     a6.cntCompleted = 0;
-    for (intptr_t i = 0; i < CNT_CROWBARERS; i++) {
+    for (INT_PTR i = 0; i < CNT_CROWBARERS; i++) {
         pool.QueueUserWorkItem(crowbarers + i, reinterpret_cast<void *>(i), false);
     }
 
@@ -171,9 +171,9 @@ void TestThreadPool(void) {
     }
 
     pool.Terminate();
-    ::AssertEqual("No threads after terminate.", pool.GetTotalThreads(), size_t(0));
-    ::AssertEqual("No active threads after terminate.", pool.GetActiveThreads(), size_t(0));
-    ::AssertEqual("No idle threads after terminate.", pool.GetAvailableThreads(), size_t(0));
+    ::AssertEqual("No threads after terminate.", pool.GetTotalThreads(), SIZE_T(0));
+    ::AssertEqual("No active threads after terminate.", pool.GetActiveThreads(), SIZE_T(0));
+    ::AssertEqual("No idle threads after terminate.", pool.GetAvailableThreads(), SIZE_T(0));
 
     ::AssertTrue("Work items have been completed.", a6.cntCompleted > 0);
     ::AssertTrue("Work items have been aborted.", a6.cntAborted > 0);

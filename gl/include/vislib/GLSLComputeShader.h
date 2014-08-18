@@ -122,7 +122,7 @@ namespace gl {
          *                         fails.
          */
         virtual bool Compile(const char **computeShaderSrc, 
-            const size_t cntComputeShaderSrc, 
+            const SIZE_T cntComputeShaderSrc, 
             bool insertLineDirective = true);
 
         /**
@@ -140,7 +140,7 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char *computeShaderFile);
@@ -166,11 +166,11 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char **computeShaderFiles,
-            const size_t cntComputeShaderFiles,
+            const SIZE_T cntComputeShaderFiles,
             bool insertLineDirective = true);
 
 

@@ -40,7 +40,7 @@ namespace math {
          * @param parameters The storage for the sphere parameters.
          */
         inline ShallowSphere(T *xyzr) {
-            THE_ASSERT(xyzr != NULL);
+            ASSERT(xyzr != NULL);
             this->xyzr = xyzr;
         }
 

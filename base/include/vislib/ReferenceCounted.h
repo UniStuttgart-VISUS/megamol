@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -40,7 +40,7 @@ namespace vislib {
          *
          * @return The new value of the reference counter.
          */
-        uint32_t AddRef(void);
+        UINT32 AddRef(void);
 
         /**
          * Decrement the reference count. If the reference count reaches zero,
@@ -48,7 +48,7 @@ namespace vislib {
          *
          * @return The new value of the reference counter.
          */
-        uint32_t Release(void);
+        UINT32 Release(void);
 
     protected:
 
@@ -85,7 +85,7 @@ namespace vislib {
     private:
         
         /** The current reference count. */
-        uint32_t cntRefs;
+        UINT32 cntRefs;
     };
     
 } /* end namespace vislib */

@@ -14,14 +14,15 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#include "vislib/CharTraits.h"
 #include "vislib/DirectoryEntry.h"
-#include "the/string.h"
+#include "vislib/String.h"
 #include "vislib/Iterator.h"
-#include "the/system/io/io_exception.h"
-#include "the/no_such_element_exception.h"
-#include "the/system/system_exception.h"
+#include "vislib/IOException.h"
+#include "vislib/NoSuchElementException.h"
+#include "vislib/SystemException.h"
 #include "vislib/Path.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -31,7 +32,7 @@
 #include <errno.h>
 #include <iostream>
 #include "vislib/File.h"
-#include "the/text/string_converter.h"
+#include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
 #endif /* _WIN32 */
 
@@ -51,7 +52,7 @@ namespace sys {
     public:
 
         /** Alias for correct char type */
-        typedef typename T::value_type Char;
+        typedef typename T::Char Char;
 
         /** Alias for correct entry type */
         typedef DirectoryEntry<T> Entry;
@@ -79,7 +80,7 @@ namespace sys {
         /** 
          * Behaves like Iterator<T>::Next 
          *
-         * @throws no_such_element_exception if there is no next element
+         * @throws NoSuchElementException if there is no next element
          */
         virtual Entry& Next(void);
 
@@ -90,10 +91,10 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         inline DirectoryIterator(const DirectoryIterator& rhs) {
-            throw the::not_supported_exception(
+            throw UnsupportedOperationException(
                 "vislib::sys::DirectoryIterator::DirectoryIterator",
                 __FILE__, __LINE__);
         }
@@ -105,11 +106,11 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If &'rhs' != this.
+         * @throws IllegalParamException If &'rhs' != this.
          */
         inline DirectoryIterator& operator=(const DirectoryIterator& rhs) {
             if (this != &rhs) {
-                throw the::argument_exception("rhs", __FILE__, __LINE__);
+                throw IllegalParamException("rhs", __FILE__, __LINE__);
             }
         }
 
@@ -138,10 +139,10 @@ namespace sys {
         DIR *dirStream;
 
         /** The base path */
-        the::astring basePath;
+        StringA basePath;
 
         /** The file globbing pattern */
-        the::astring pattern;
+        StringA pattern;
 
 #endif /* _WIN32 */
 
@@ -155,7 +156,7 @@ namespace sys {
             const Char* path, bool isPattern, bool showDirs) : nextItem(),
             currentItem(), omitFolders(!showDirs) {
         // We won't find anything for this type!
-        throw the::not_supported_exception(
+        throw UnsupportedOperationException(
              "DirectoryIterator<T>::DirectoryIterator", __FILE__, __LINE__);
     }
 
@@ -163,14 +164,14 @@ namespace sys {
     /*
      * DirectoryIterator<CharTraitsA>::DirectoryIterator
      */
-    template<> DirectoryIterator<the::astring>::DirectoryIterator(
+    template<> DirectoryIterator<CharTraitsA>::DirectoryIterator(
             const Char* path, bool isPattern, bool showDirs);
 
 
     /*
      * DirectoryIterator<CharTraitsW>::DirectoryIterator
      */
-    template<> DirectoryIterator<the::wstring>::DirectoryIterator(
+    template<> DirectoryIterator<CharTraitsW>::DirectoryIterator(
             const Char* path, bool isPattern, bool showDirs);
 
 
@@ -194,7 +195,7 @@ namespace sys {
      * DirectoryIterator<T>::HasNext
      */
     template<class T> bool DirectoryIterator<T>::HasNext(void) const {
-        return !this->nextItem.Path.empty();
+        return !this->nextItem.Path.IsEmpty();
     }
 
 
@@ -205,8 +206,8 @@ namespace sys {
     typename DirectoryIterator<T>::Entry& DirectoryIterator<T>::Next(void) {
         this->currentItem = this->nextItem;
         this->fetchNextItem();
-        if (this->currentItem.Path.empty()) {
-            throw the::no_such_element_exception("No next element.", __FILE__, __LINE__);
+        if (this->currentItem.Path.IsEmpty()) {
+            throw NoSuchElementException("No next element.", __FILE__, __LINE__);
         }
         return this->currentItem;
 
@@ -218,7 +219,7 @@ namespace sys {
      */
     template<class T> void DirectoryIterator<T>::fetchNextItem(void) {
         // We won't find anything for this type!
-        throw the::not_supported_exception(
+        throw UnsupportedOperationException(
             "DirectoryIterator<T>::fetchNextItem", __FILE__, __LINE__);
     }
 
@@ -226,23 +227,23 @@ namespace sys {
     /*
      * DirectoryIterator<CharTraitsA>::fetchNextItem
      */
-    template<> void DirectoryIterator<the::astring>::fetchNextItem(void);
+    template<> void DirectoryIterator<CharTraitsA>::fetchNextItem(void);
 
 
     /*
      * DirectoryIterator<CharTraitsW>::fetchNextItem
      */
-    template<> void DirectoryIterator<the::wstring>::fetchNextItem(void);
+    template<> void DirectoryIterator<CharTraitsW>::fetchNextItem(void);
 
 
     /** Template instantiation for ANSI char DirectoryIterator. */
-    typedef DirectoryIterator<the::astring> DirectoryIteratorA;
+    typedef DirectoryIterator<CharTraitsA> DirectoryIteratorA;
 
     /** Template instantiation for wide char DirectoryIterator. */
-    typedef DirectoryIterator<the::wstring> DirectoryIteratorW;
+    typedef DirectoryIterator<CharTraitsW> DirectoryIteratorW;
 
     /** Template instantiation for TCHAR DirectoryIterator. */
-    typedef DirectoryIterator<the::tstring> TDirectoryIterator;
+    typedef DirectoryIterator<TCharTraits> TDirectoryIterator;
 
 
 } /* end namespace sys */

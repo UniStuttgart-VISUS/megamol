@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/argument_exception.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/SingleLinkedList.h"
 
 
@@ -98,7 +98,7 @@ namespace graphics {
          *                 set.
          * @param down The new value for the modifiers state.
          *
-         * @throws argument_exception if modifier is larger or equal to the
+         * @throws IllegalParamException if modifier is larger or equal to the
          *         number of modifiers for this cursor.
          */
         void SetModifierState(Modifier modifier, bool down);
@@ -111,12 +111,12 @@ namespace graphics {
          *
          * @return The state of the modifier.
          *
-         * @throws argument_exception if modifier is larger or equal to the
+         * @throws IllegalParamException if modifier is larger or equal to the
          *         number of modifiers for this cursor.
          */
         inline bool GetModifierState(Modifier modifier) {
             if (modifier >= this->modCount) {
-                throw the::argument_exception("modifier", __FILE__, __LINE__);
+                throw IllegalParamException("modifier", __FILE__, __LINE__);
             }
             return this->modState[modifier];
         }

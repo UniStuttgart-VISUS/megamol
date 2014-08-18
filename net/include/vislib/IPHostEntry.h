@@ -24,9 +24,9 @@
 #include "vislib/IPAgnosticAddress.h"       // Must be first include!
 #include "vislib/IPEndPoint.h"
 #include "vislib/Array.h"
-#include "the/argument_exception.h"
-#include "the/string.h"
-#include "the/trace.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/String.h"
+#include "vislib/Trace.h"
 
 
 namespace vislib {
@@ -69,7 +69,7 @@ namespace net {
          *
          * @return The canonical name of the host.
          */
-        inline const T& GetCanonicalName(void) const {
+        inline const String<T>& GetCanonicalName(void) const {
             return this->canonicalName;
         }
 
@@ -94,7 +94,7 @@ namespace net {
          *
          * @param addrInfo The structure holding the data to copy.
          *
-         * @throws argument_exception If the adress info uses an address
+         * @throws IllegalParamException If the adress info uses an address
          *                               family other then AF_INET4 or AF_INET6.
          */
         void set(const struct addrinfo *addrInfo);
@@ -105,7 +105,7 @@ namespace net {
          *
          * @param addrInfo The structure holding the data to copy.
          *
-         * @throws argument_exception If the adress info uses an address
+         * @throws IllegalParamException If the adress info uses an address
          *                               family other then AF_INET4 or AF_INET6.
          */
         void set(const ADDRINFOW *addrInfo);
@@ -115,7 +115,7 @@ namespace net {
         Array<IPAgnosticAddress> addresses;
 
         /** The The official name of the host. */
-        T canonicalName;
+        String<T> canonicalName;
 
         /* Allow DNS creating IPHostEntry objects with actual data. */
         friend class DNS;
@@ -167,14 +167,14 @@ namespace net {
         char buffer[NI_MAXHOST];    // Receives the host name
         int err = 0;                // OS operation return value.
 
-        for (size_t i = 0; i < this->addresses.Count()
-                && this->canonicalName.empty(); ++i) {
+        for (SIZE_T i = 0; i < this->addresses.Count()
+                && this->canonicalName.IsEmpty(); ++i) {
             IPEndPoint ep(this->addresses[i], 0);
             socklen_t size = (ep.GetAddressFamily() == IPEndPoint::FAMILY_INET)
                 ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
             if ((err = ::getnameinfo(static_cast<const sockaddr *>(ep), size,
                 buffer, sizeof(buffer), NULL, 0, NI_NAMEREQD)) != 0) {
-                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getnameinfo failed in "
+                    VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
                         "IPHostEntry::fixHostName(): %s\n",
 #ifdef _WIN32
                     ::gai_strerrorA(err)
@@ -185,7 +185,7 @@ namespace net {
                 buffer[0] = 0;
             }
 
-            the::text::string_converter::convert(this->canonicalName, buffer);
+            this->canonicalName = String<T>(buffer);
         }
     }
 
@@ -199,7 +199,7 @@ namespace net {
 
         // Clear old values
         this->addresses.Clear();
-        this->canonicalName.clear();
+        this->canonicalName.Clear();
 
         while (ai != NULL) {
             switch (ai->ai_family) {
@@ -216,12 +216,12 @@ namespace net {
                     break;
 
                 default:
-                    throw the::argument_exception("ai", __FILE__, __LINE__);
+                    throw IllegalParamException("ai", __FILE__, __LINE__);
             }
         
             if (((ai->ai_flags & AI_CANONNAME) != 0) 
                     && (ai->ai_canonname != NULL)) {
-                the::text::string_converter::convert(this->canonicalName, ai->ai_canonname);
+                this->canonicalName = ai->ai_canonname;
             }
 
             ai = ai->ai_next;
@@ -239,7 +239,7 @@ namespace net {
         const ADDRINFOW *ai = addrInfo;         // Cursor through linked list.
 
         this->addresses.Clear();
-        this->canonicalName.clear();
+        this->canonicalName.Clear();
 
         while (ai != NULL) {
             switch (ai->ai_family) {
@@ -256,7 +256,7 @@ namespace net {
                     break;
 
                 default:
-                    throw the::argument_exception("ai", __FILE__, __LINE__);
+                    throw IllegalParamException("ai", __FILE__, __LINE__);
             }
         
             if (((ai->ai_flags & AI_CANONNAME) != 0) 
@@ -273,14 +273,14 @@ namespace net {
 
 
     /** Template instantiation for ANSI strings. */
-    typedef IPHostEntry<the::astring> IPHostEntryA;
+    typedef IPHostEntry<CharTraitsA> IPHostEntryA;
 
     /** Template instantiation for wide strings. */
-    typedef IPHostEntry<the::wstring> IPHostEntryW;
+    typedef IPHostEntry<CharTraitsW> IPHostEntryW;
 
     /** Template instantiation for TCHARs. */
-    typedef IPHostEntry<the::tstring> TIPHostEntry;
-
+    typedef IPHostEntry<TCharTraits> TIPHostEntry;
+    
 } /* end namespace net */
 } /* end namespace vislib */
 

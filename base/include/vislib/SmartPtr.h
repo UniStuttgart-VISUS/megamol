@@ -15,10 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/assert.h"
-#include "the/memory.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
 #include "vislib/SingleAllocator.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -102,7 +102,7 @@ namespace vislib {
          * @return true, if the pointer is a NULL pointer, false otherwise.
          */
         inline bool IsNull(void) const {
-            THE_ASSERT ((this->ptr == NULL) || (this->ptr->obj != NULL));
+            ASSERT ((this->ptr == NULL) || (this->ptr->obj != NULL));
             return (this->ptr == NULL);
         }
 
@@ -201,7 +201,7 @@ namespace vislib {
          *
          * @return The reference count.
          */
-        inline unsigned int _GetCnt(void) const {
+        inline UINT _GetCnt(void) const {
             return (this->ptr != NULL) ? this->ptr->cnt : 0;
         }
 #endif /* defined(DEBUG) || defined(_DEBUG) */
@@ -210,7 +210,7 @@ namespace vislib {
 
         /** This is a helper structure for doing the reference counting. */
         typedef struct CounterProxy_t {
-            unsigned int cnt;           // The reference counter.
+            UINT cnt;           // The reference counter.
             T *obj;             // The actual object.
 
             /**
@@ -220,7 +220,7 @@ namespace vislib {
              * @param obj The pointer that is wrapped by the smart pointer.
              */
             inline CounterProxy_t(T *obj) : cnt(1), obj(obj) {
-                THE_ASSERT(obj != NULL);
+                ASSERT(obj != NULL);
             }
         } CounterProxy;
 
@@ -255,7 +255,7 @@ namespace vislib {
         /* Handle reference decrement on current object. */
         if ((this->ptr != NULL) && (--this->ptr->cnt == 0)) {
             A::Deallocate(this->ptr->obj);
-            the::safe_delete(this->ptr);
+            SAFE_DELETE(this->ptr);
         }
 
         if (rhs != NULL) {
@@ -278,7 +278,7 @@ namespace vislib {
             /* Handle reference decrement on current object. */
             if ((this->ptr != NULL) && (--this->ptr->cnt == 0)) {
                 A::Deallocate(this->ptr->obj);
-                the::safe_delete(this->ptr);
+                SAFE_DELETE(this->ptr);
             }
 
             /* Handle reference increment on new object. */

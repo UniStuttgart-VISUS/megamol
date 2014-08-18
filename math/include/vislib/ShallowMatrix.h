@@ -15,7 +15,7 @@
 
 
 #include "vislib/AbstractMatrix.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 
 
 namespace vislib {
@@ -45,7 +45,7 @@ namespace math {
          *                   pointer.
          */
         explicit inline ShallowMatrix(T *components) {
-            THE_ASSERT(components != NULL);
+            ASSERT(components != NULL);
             this->components = components;
         }
 

@@ -11,10 +11,10 @@
 #include "vislib/ARBShader.h"
 
 #include "vislib/glverify.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/sysfunctions.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -47,7 +47,7 @@ vislib::graphics::gl::ARBShader::~ARBShader(void) {
  */
 bool vislib::graphics::gl::ARBShader::Create(const char *src) {
     USES_GL_VERIFY;
-    THE_ASSERT(src != NULL);
+    ASSERT(src != NULL);
 
     int errorPos = -1;
 
@@ -90,10 +90,10 @@ bool vislib::graphics::gl::ARBShader::Create(const char *src) {
  * vislib::graphics::gl::ARBShader::CreateFromFile
  */
 bool vislib::graphics::gl::ARBShader::CreateFromFile(const char *filename) {
-    the::astring src;
+    StringA src;
 
     if (vislib::sys::ReadTextFile(src, filename)) {
-        return this->Create(src.c_str());
+        return this->Create(src);
     } else {
         return false;
     }
@@ -126,7 +126,7 @@ GLenum vislib::graphics::gl::ARBShader::Enable(void) {
         GL_VERIFY_RETURN(::glBindProgramARB(this->type, this->id));
         return GL_NO_ERROR;
     } else {
-        throw the::invalid_operation_exception("'type' must not be TYPE_UNKNOWN",
+        throw IllegalStateException("'type' must not be TYPE_UNKNOWN",
             __FILE__, __LINE__);
     }
 }
@@ -164,7 +164,7 @@ GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name,
 GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
                                                      const double *v) {
     USES_GL_VERIFY;
-    THE_ASSERT(v != NULL);
+    ASSERT(v != NULL);
 
     GL_VERIFY_RETURN(::glProgramLocalParameter4dvARB(this->type, name, v));
     return GL_NO_ERROR;
@@ -190,7 +190,7 @@ GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name,
 GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
                                                      const float *v) {
     USES_GL_VERIFY;
-    THE_ASSERT(v != NULL);
+    ASSERT(v != NULL);
 
     GL_VERIFY_RETURN(::glProgramLocalParameter4fvARB(this->type, name, v));
     return GL_NO_ERROR;
@@ -202,7 +202,7 @@ GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name,
  */
 GLenum vislib::graphics::gl::ARBShader::SetParameter(const GLuint name, 
                                                      const int *v) {
-    THE_ASSERT(v != NULL);
+    ASSERT(v != NULL);
     double vd[4];
 
     for (int i = 0; i < 4; i++) {
@@ -229,7 +229,7 @@ const char *vislib::graphics::gl::ARBShader::VERTEX_SHADER_TOKEN = "!!ARBvp";
  * vislib::graphics::gl::ARBShader::ARBShader
  */
 vislib::graphics::gl::ARBShader::ARBShader(const ARBShader& rhs) {
-    throw the::not_supported_exception("ARBShader", __FILE__, __LINE__);
+    throw UnsupportedOperationException("ARBShader", __FILE__, __LINE__);
 }
 
 
@@ -239,7 +239,7 @@ vislib::graphics::gl::ARBShader::ARBShader(const ARBShader& rhs) {
 vislib::graphics::gl::ARBShader& vislib::graphics::gl::ARBShader::operator =(
         const ARBShader& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

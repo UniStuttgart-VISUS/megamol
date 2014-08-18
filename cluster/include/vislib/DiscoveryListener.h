@@ -116,7 +116,7 @@ namespace cluster {
         virtual void OnUserMessage(DiscoveryService& src,
             const DiscoveryService::PeerHandle& hPeer, 
             const bool isClusterMember,
-            const uint32_t msgType, const uint8_t *msgBody) throw();
+            const UINT32 msgType, const BYTE *msgBody) throw();
     };
 
 } /* end namespace cluster */

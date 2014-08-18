@@ -18,9 +18,8 @@
 #include "vislib/Socket.h"      // Must be first!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
-#ifdef HAVE_OFED_SDK
 #include "rdma/winverbs.h"
 
 
@@ -63,7 +62,7 @@ namespace ib {
              * @return The WV_PORT_ATTRIBUTES of the device.
              */
             inline const WV_PORT_ATTRIBUTES& GetAttributes(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Port::GetAttributes", __FILE__, __LINE__);
                 return this->attributes;
             }
 
@@ -73,7 +72,7 @@ namespace ib {
              * @return The port GUID and prefix GID.
              */
             inline const WV_GID& GetGid(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Port::GetGid", __FILE__, __LINE__);
                 return this->gid;
             }
 
@@ -86,8 +85,8 @@ namespace ib {
              * @return A numeric value identifying the current state of the 
              *         port.
              */
-            inline uint8_t GetPhysicalState(void) const {
-                THE_STACK_TRACE;
+            inline UINT8 GetPhysicalState(void) const {
+                VLSTACKTRACE("Port::GetPhysicalState", __FILE__, __LINE__);
                 return this->attributes.PhysicalState;
             }
 
@@ -96,8 +95,8 @@ namespace ib {
              *
              * @return A description of the physical port state.
              */
-            inline the::astring GetPhysicalStateA(void) const {
-                THE_STACK_TRACE;
+            inline StringA GetPhysicalStateA(void) const {
+                VLSTACKTRACE("Port::GetPhysicalStateA", __FILE__, __LINE__);
                 return PHYSICAL_STATES[this->attributes.PhysicalState];
             }
 
@@ -106,10 +105,9 @@ namespace ib {
              *
              * @return A description of the physical port state.
              */
-            inline the::wstring GetPhysicalStateW(void) const {
-                THE_STACK_TRACE;
-                return the::text::string_converter::to_w(
-                    PHYSICAL_STATES[this->attributes.PhysicalState]);
+            inline StringW GetPhysicalStateW(void) const {
+                VLSTACKTRACE("Port::GetPhysicalStateW", __FILE__, __LINE__);
+                return StringW(PHYSICAL_STATES[this->attributes.PhysicalState]);
             }
 
             /**
@@ -118,7 +116,7 @@ namespace ib {
              * @return The port GUID.
              */
             inline NET64 GetPortGuid(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Port::GetPortGuid", __FILE__, __LINE__);
                 return *(reinterpret_cast<const NET64 *>(&this->gid) + 1);
             }
 
@@ -127,14 +125,14 @@ namespace ib {
              *
              * @return The port GUID as hex-string.
              */
-            the::astring GetPortGuidA(void) const;
+            StringA GetPortGuidA(void) const;
 
             /**
              * Get a hex-string representation of the port GUID.
              *
              * @return The port GUID as hex-string.
              */
-            the::wstring GetPortGuidW(void) const;
+            StringW GetPortGuidW(void) const;
 
             /**
              * Gets the current state of the port.
@@ -142,7 +140,7 @@ namespace ib {
              * @return The state of the port.
              */
             inline WV_PORT_STATE GetState(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Port::GetState", __FILE__, __LINE__);
                 return this->attributes.State;
             }
 
@@ -151,8 +149,8 @@ namespace ib {
              *
              * @return The state of the port.
              */
-            inline the::astring GetStateA(void) const {
-                THE_STACK_TRACE;
+            inline StringA GetStateA(void) const {
+                VLSTACKTRACE("Port::GetStateA", __FILE__, __LINE__);
                 return STATES[this->attributes.State];
             }
 
@@ -161,10 +159,9 @@ namespace ib {
              *
              * @return The state of the port.
              */             
-            inline the::wstring GetStateW(void) const {
-                THE_STACK_TRACE;
-                return the::text::string_converter::to_w(
-                    STATES[this->attributes.State]);
+            inline StringW GetStateW(void) const {
+                VLSTACKTRACE("Port::GetStateW", __FILE__, __LINE__);
+                return StringW(STATES[this->attributes.State]);
             }
 
             /**
@@ -195,7 +192,7 @@ namespace ib {
              *          false otherwise.
              */
             inline bool operator !=(const Port& rhs) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Port::operator !=", __FILE__, __LINE__);
                 return !(*this == rhs);
             }
 
@@ -229,9 +226,9 @@ namespace ib {
              * Create a new instance.
              *
              *
-             * @throws the::system::com_exception In case of an error.
+             * @throws vislib::sys::COMException In case of an error.
              */
-            Port(IWVDevice *device, const uint8_t port);
+            Port(IWVDevice *device, const UINT8 port);
 
             /** Holds the attributes of the device port. */
             WV_PORT_ATTRIBUTES attributes;
@@ -279,7 +276,7 @@ namespace ib {
              * @return The WV_DEVICE_ATTRIBUTES of the device.
              */
             inline const WV_DEVICE_ATTRIBUTES& GetAttributes(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Device::GetAttributes", __FILE__, __LINE__);
                 return this->attributes;
             }
 
@@ -289,7 +286,7 @@ namespace ib {
              * @return The node GUID.
              */
             inline NET64 GetNodeGuid(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Device::GetNodeGuid", __FILE__, __LINE__);
                 return this->attributes.NodeGuid;
             }
 
@@ -298,14 +295,14 @@ namespace ib {
              *
              * @return The node GUID.
              */
-            the::astring GetNodeGuidA(void) const;
+            StringA GetNodeGuidA(void) const;
 
             /**
              * Get a hex-string representation of the node GUID.
              *
              * @return The node GUID.
              */
-            the::wstring GetNodeGuidW(void) const;
+            StringW GetNodeGuidW(void) const;
 
             /**
              * Gets the descriptor object for the 'idx'th port.
@@ -319,7 +316,7 @@ namespace ib {
              *                             port index within 
              *                             [0, this->GetPortCount[.
              */
-            const Port& GetPort(const size_t idx) const;
+            const Port& GetPort(const SIZE_T idx) const;
 
             /**
              * Get the list of port descriptors.
@@ -327,7 +324,7 @@ namespace ib {
              * @return Lost of ports.
              */
             inline const PortList& GetPorts(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Device::GetPorts", __FILE__, __LINE__);
                 return this->ports;
             }
 
@@ -337,7 +334,7 @@ namespace ib {
              * @return The number of ports the device has.
              */
             inline int GetPortCount(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Device::GetPortCount", __FILE__, __LINE__);
                 return (int) this->attributes.PhysPortCount;
             }
 
@@ -347,7 +344,7 @@ namespace ib {
              * @return The system image GUID.
              */
             inline NET64 GetSystemImageGuid(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Device::GetSystemImageGuid", __FILE__, __LINE__);
                 return this->attributes.SystemImageGuid;
             }
 
@@ -356,14 +353,14 @@ namespace ib {
              *
              * @return The system image GUID.
              */
-            the::astring GetSystemImageGuidA(void) const;
+            StringA GetSystemImageGuidA(void) const;
 
             /**
              * Get a hex-string representation of system image GUID.
              *
              * @return The system image GUID.
              */
-            the::wstring GetSystemImageGuidW(void) const;
+            StringW GetSystemImageGuidW(void) const;
 
             /**
              * Assignment.
@@ -393,7 +390,7 @@ namespace ib {
              *          false otherwise.
              */
             inline bool operator !=(const Device& rhs) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("Device::operator !=", __FILE__, __LINE__);
                 return !(*this == rhs);
             }
 
@@ -412,7 +409,7 @@ namespace ib {
              * @param wvProvider The WinVerbs root object.
              * @param guid       The GUID to retrieve the attributes for.
              *
-             * @throws the::system::com_exception In case of an error.
+             * @throws vislib::sys::COMException In case of an error.
              */
             Device(IWVProvider *wvProvider, const NET64& guid);
 
@@ -464,11 +461,11 @@ namespace ib {
          * @param reread If true, update the cached devices immediately.
          *
          * @throws std::bad_alloc In case of too few memory to store the data.
-         * @throws the::system::com_exception In case of an error.
+         * @throws vislib::sys::COMException In case of an error.
          */
         void DiscardCache(const bool reread = false);
 
-        size_t GetDevices(DeviceList& outDevices) const;
+        SIZE_T GetDevices(DeviceList& outDevices) const;
 
     private:
 
@@ -480,7 +477,7 @@ namespace ib {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         IbvInformation(const IbvInformation& rhs);
 
@@ -497,7 +494,7 @@ namespace ib {
          *         full before the method was called.
          *
          * @throws std::bad_alloc In case of too few memory to store the data.
-         * @throws the::system::com_exception In case of an error.
+         * @throws vislib::sys::COMException In case of an error.
          */
         bool cacheDevices(void) const;
 
@@ -508,7 +505,7 @@ namespace ib {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         IbvInformation& operator =(const IbvInformation& rhs);
 
@@ -525,8 +522,6 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
-
-#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

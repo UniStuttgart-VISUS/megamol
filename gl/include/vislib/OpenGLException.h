@@ -16,7 +16,7 @@
 
 #include "glh/glh_genext.h"
 
-#include "the/exception.h"
+#include "vislib/Exception.h"
 
 
 namespace vislib {
@@ -27,14 +27,14 @@ namespace gl {
     /**
      * An exception class that represents an OpenGL error.
      */
-    class OpenGLException : public the::exception {
+    class OpenGLException : public Exception {
 
     public:
 
         /**
          * Ctor.
          *
-         * @param errorCode An OpenGL error code.
+		 * @param errorCode An OpenGL error code.
          * @param file      The file the exception was thrown in.
          * @param line      The line the exception was thrown in.
          */
@@ -57,7 +57,7 @@ namespace gl {
         OpenGLException(const OpenGLException& rhs);
 
         /** Dtor. */
-        virtual ~OpenGLException(void) throw();
+        virtual ~OpenGLException(void);
 
         /**
          * Answer the OpenGL error code.

@@ -15,9 +15,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/force_inline.h"
+#include "vislib/forceinline.h"
 #include "vislib/mathfunctions.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/Point.h"
 #include "vislib/Vector.h"
 
@@ -104,7 +104,7 @@ namespace math {
          *
          * @return The position on the bézier curve
          */
-        THE_FORCE_INLINE T Evaluate(float t) const {
+        VISLIB_FORCEINLINE T Evaluate(float t) const {
             T rv;
             return this->CalcPoint(rv, t);
         }
@@ -115,7 +115,7 @@ namespace math {
          * @param idx The index of the control point to be set (0..E)
          * @param p The new value for the control point
          */
-        THE_FORCE_INLINE void SetControlPoint(unsigned int idx, T& p) {
+        VISLIB_FORCEINLINE void SetControlPoint(unsigned int idx, T& p) {
             this->ControlPoint(idx) = p;
         }
 
@@ -128,7 +128,7 @@ namespace math {
          *
          * @return The position on the bézier curve
          */
-        THE_FORCE_INLINE T operator()(float t) const {
+        VISLIB_FORCEINLINE T operator()(float t) const {
             T rv;
             return this->CalcPoint(rv, t);
         }
@@ -140,7 +140,7 @@ namespace math {
          *
          * @return A reference to the idx-th control point
          */
-        THE_FORCE_INLINE T& operator[](unsigned int idx) {
+        VISLIB_FORCEINLINE T& operator[](unsigned int idx) {
             return this->ControlPoint(idx);
         }
 
@@ -151,7 +151,7 @@ namespace math {
          *
          * @return A const reference to the idx-th control point
          */
-        THE_FORCE_INLINE const T& operator[](unsigned int idx) const {
+        VISLIB_FORCEINLINE const T& operator[](unsigned int idx) const {
             return this->ControlPoint(idx);
         }
 
@@ -294,7 +294,7 @@ namespace math {
     template<class T, unsigned int E>
     T& BezierCurve<T, E>::ControlPoint(unsigned int idx) {
         if (idx > E) {
-            throw the::index_out_of_range_exception(idx, 0, E, __FILE__, __LINE__);
+            throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
         }
         return this->cp[idx];
     }
@@ -306,7 +306,7 @@ namespace math {
     template<class T, unsigned int E>
     const T& BezierCurve<T, E>::ControlPoint(unsigned int idx) const {
         if (idx > E) {
-            throw the::index_out_of_range_exception(idx, 0, E, __FILE__, __LINE__);
+            throw vislib::OutOfRangeException(idx, 0, E, __FILE__, __LINE__);
         }
         return this->cp[idx];
     }
@@ -317,7 +317,7 @@ namespace math {
      */
     template<class T, unsigned int E>
     bool BezierCurve<T, E>::operator==(const BezierCurve<T, E>& rhs) const {
-        for (size_t i = 0; i <= E; i++) {
+        for (SIZE_T i = 0; i <= E; i++) {
             if (this->cp[i] != rhs.cp[i]) {
                 return false;
             }

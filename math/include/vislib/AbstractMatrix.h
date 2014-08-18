@@ -15,7 +15,7 @@
 
 
 #include "vislib/AbstractMatrixImpl.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/Quaternion.h"
 
 
@@ -186,7 +186,7 @@ namespace math {
 
         // TODO: Implement something better
 
-        throw the::not_supported_exception("FindEigenvalues",
+        throw vislib::UnsupportedOperationException("FindEigenvalues",
             __FILE__, __LINE__);
 
         return 0;
@@ -265,8 +265,8 @@ namespace math {
         } while (s < D);
 
         /* Compute determinant as product of the diagonal. */
-        THE_ASSERT(D > 0);
-        THE_ASSERT(::fabs(retval) == 1.0);
+        ASSERT(D > 0);
+        ASSERT(::fabs(retval) == 1.0);
         for (unsigned int i = 0; i < D; i++) {
             retval *= A(i, i);
         }
@@ -632,7 +632,7 @@ namespace math {
          *
          * @return A quaternion representing the rotation.
          *
-         * @throw invalid_operation_exception if the matrix is not a rotation-only
+         * @throw IllegalStateException if the matrix is not a rotation-only
          *                              matrix.
          */
         operator Quaternion<T>(void) const;
@@ -702,7 +702,7 @@ namespace math {
 
         // TODO: Implement something better
 
-        throw the::not_supported_exception("FindEigenvalues",
+        throw vislib::UnsupportedOperationException("FindEigenvalues",
             __FILE__, __LINE__);
 
         return 0;
@@ -832,7 +832,7 @@ namespace math {
     AbstractMatrix<T, 3, L, S>::operator Quaternion<T>(void) const {
         Quaternion<T> q;
         if (!this->IsRotation()) {
-            throw the::invalid_operation_exception("Matrix is not rotation-only", __FILE__, __LINE__);
+            throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
         }
         try {
             q.SetFromRotationMatrix(this->components[Super::indexOf(0, 0)],
@@ -845,7 +845,7 @@ namespace math {
                 this->components[Super::indexOf(2, 1)],
                 this->components[Super::indexOf(2, 2)]);
         } catch(...) {
-            throw the::invalid_operation_exception("Matrix is not rotation-only", __FILE__, __LINE__);
+            throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
         }
         return q;
     }
@@ -987,7 +987,7 @@ namespace math {
          *
          * @return A quaternion representing the rotation.
          *
-         * @throw invalid_operation_exception if the matrix is not a rotation-only
+         * @throw IllegalStateException if the matrix is not a rotation-only
          *                              matrix.
          */
         operator Quaternion<T>(void) const;
@@ -1057,7 +1057,7 @@ namespace math {
 
         // TODO: Implement something better
 
-        throw the::not_supported_exception("FindEigenvalues",
+        throw vislib::UnsupportedOperationException("FindEigenvalues",
             __FILE__, __LINE__);
 
         return 0;
@@ -1208,7 +1208,7 @@ namespace math {
     AbstractMatrix<T, 4, L, S>::operator Quaternion<T>(void) const {
         Quaternion<T> q;
         if (!this->IsRotation()) {
-            throw the::invalid_operation_exception("Matrix is not rotation-only", __FILE__, __LINE__);
+            throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
         }
         try {
             q.SetFromRotationMatrix(this->components[Super::indexOf(0, 0)],
@@ -1221,7 +1221,7 @@ namespace math {
                 this->components[Super::indexOf(2, 1)],
                 this->components[Super::indexOf(2, 2)]);
         } catch(...) {
-            throw the::invalid_operation_exception("Matrix is not rotation-only", __FILE__, __LINE__);
+            throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
         }
         return q;
     }

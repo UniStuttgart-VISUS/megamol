@@ -14,7 +14,7 @@
 #include "vislib/AsyncSocket.h"
 #include "vislib/AsyncSocketContext.h"
 #include "vislib/RunnableThread.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 using namespace vislib::net;
 using namespace vislib::sys;
@@ -34,13 +34,13 @@ class Sender : public vislib::sys::Runnable {
 public:
     inline Sender(void) {}
     virtual ~Sender(void);
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 };
 
 Sender::~Sender(void) {}
 
-unsigned int Sender::Run(void *userData) {
-    uintptr_t cnt = reinterpret_cast<uintptr_t>(userData);
+DWORD Sender::Run(void *userData) {
+    UINT_PTR cnt = reinterpret_cast<UINT_PTR>(userData);
     AsyncSocketContext ctx;
 
     try {
@@ -53,7 +53,7 @@ unsigned int Sender::Run(void *userData) {
         IPEndPoint endPoint(IPAddress::LOCALHOST, TEST_PORT);
         AssertNoException("Connect to server", socket.Connect(endPoint));
 
-        for (uintptr_t i = 0; i < cnt; i++) {
+        for (UINT_PTR i = 0; i < cnt; i++) {
             LOCK_COUT;
             std::cout << "BeginSend #" << i << std::endl;
             UNLOCK_COUT;
@@ -69,7 +69,7 @@ unsigned int Sender::Run(void *userData) {
             std::cout << "EndSend #" << i << std::endl;
             UNLOCK_COUT;
             AssertEqual("Sent sufficient data", socket.EndSend(&ctx),
-                static_cast<size_t>(sizeof(uintptr_t)));
+                static_cast<SIZE_T>(sizeof(UINT_PTR)));
         }
 
         AssertNoException("socket.Shutdown", socket.Shutdown());
@@ -77,7 +77,7 @@ unsigned int Sender::Run(void *userData) {
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
-        return static_cast<unsigned int>(cnt);
+        return static_cast<DWORD>(cnt);
     } catch (...) {
         return 0;
     }
@@ -91,14 +91,14 @@ class Receiver : public vislib::sys::Runnable {
 public:
     inline Receiver(void) {}
     virtual ~Receiver(void);
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 };
 
 Receiver::~Receiver(void) {}
 
-unsigned int Receiver::Run(void *userData) {
-    uintptr_t cnt = reinterpret_cast<uintptr_t>(userData);
-    uintptr_t data;
+DWORD Receiver::Run(void *userData) {
+    UINT_PTR cnt = reinterpret_cast<UINT_PTR>(userData);
+    UINT_PTR data;
     AsyncSocketContext ctx;
 
     try {
@@ -116,11 +116,11 @@ unsigned int Receiver::Run(void *userData) {
 
         LOCK_COUT;
         std::cout << "Client (sender) " 
-            << socket.GetPeerEndPoint().ToStringA().c_str() 
+            << socket.GetPeerEndPoint().ToStringA().PeekBuffer() 
             << " connected." << std::endl;
         UNLOCK_COUT;
 
-        for (uintptr_t i = 0; i < cnt; i++) {
+        for (UINT_PTR i = 0; i < cnt; i++) {
             LOCK_COUT;
             std::cout << "BeginReceive #" << i << std::endl;
             UNLOCK_COUT;
@@ -137,7 +137,7 @@ unsigned int Receiver::Run(void *userData) {
             std::cout << "EndReceive #" << i << std::endl;
             UNLOCK_COUT;
             AssertEqual("Received sufficient data", socket.EndReceive(&ctx),
-                static_cast<size_t>(sizeof(uintptr_t)));
+                static_cast<SIZE_T>(sizeof(UINT_PTR)));
         }
 
         AssertNoException("socket.Shutdown", socket.Shutdown());
@@ -145,7 +145,7 @@ unsigned int Receiver::Run(void *userData) {
 
         AssertNoException("Socket::Cleanup", Socket::Cleanup());
 
-        return static_cast<unsigned int>(cnt);
+        return static_cast<DWORD>(cnt);
     } catch (...) {
         return 0;
     }
@@ -159,7 +159,7 @@ void TestAsyncSocket(void) {
     vislib::sys::RunnableThread<Sender> sender;
     vislib::sys::RunnableThread<Receiver> receiver;
 
-    uintptr_t cnt = 10;
+    UINT_PTR cnt = 10;
     receiver.Start(reinterpret_cast<void *>(cnt));
     sender.Start(reinterpret_cast<void *>(cnt));
 

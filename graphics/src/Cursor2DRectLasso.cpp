@@ -6,7 +6,7 @@
  */
 
 #include "vislib/Cursor2DRectLasso.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/Cursor2D.h"
 
 
@@ -45,7 +45,7 @@ void vislib::graphics::Cursor2DRectLasso::Trigger(
         unsigned int param) {
     vislib::graphics::Cursor2D *cursor 
         = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
-    THE_ASSERT(cursor != NULL);
+    ASSERT(cursor != NULL);
 
     if (reason == REASON_BUTTON_DOWN) {
         this->drag = true;

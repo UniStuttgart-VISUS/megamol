@@ -13,8 +13,8 @@
 
 #include "vislib/Array.h"
 #include "vislib/glverify.h"
-#include "the/memory.h"
-#include "the/string.h"
+#include "vislib/memutils.h"
+#include "vislib/String.h"
 #include "vislib/sysfunctions.h"
 
 
@@ -23,10 +23,10 @@
  */
 const char * 
 vislib::graphics::gl::GLSLGeometryShader::RequiredExtensions(void) {
-    static the::astring exts = the::astring(
+    static vislib::StringA exts = vislib::StringA(
         vislib::graphics::gl::GLSLShader::RequiredExtensions())
         + " GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 ";
-    return exts.c_str();
+    return exts.PeekBuffer();
 }
 
 
@@ -71,15 +71,15 @@ bool vislib::graphics::gl::GLSLGeometryShader::Compile(
  * vislib::graphics::gl::GLSLGeometryShader::Compile
  */
 bool vislib::graphics::gl::GLSLGeometryShader::Compile(
-        const char **vertexShaderSrc, const size_t cntVertexShaderSrc, 
-        const char **geometryShaderSrc, const size_t cntGeometryShaderSrc, 
-        const char **fragmentShaderSrc, const size_t cntFragmentShaderSrc, 
+        const char **vertexShaderSrc, const SIZE_T cntVertexShaderSrc, 
+        const char **geometryShaderSrc, const SIZE_T cntGeometryShaderSrc, 
+        const char **fragmentShaderSrc, const SIZE_T cntFragmentShaderSrc, 
         bool insertLineDirective) {
 
     USES_GL_VERIFY;
-    THE_ASSERT(vertexShaderSrc != NULL);
-    THE_ASSERT(geometryShaderSrc != NULL);
-    THE_ASSERT(fragmentShaderSrc != NULL);
+    ASSERT(vertexShaderSrc != NULL);
+    ASSERT(geometryShaderSrc != NULL);
+    ASSERT(fragmentShaderSrc != NULL);
 
     this->Release();
 
@@ -109,9 +109,9 @@ bool vislib::graphics::gl::GLSLGeometryShader::Compile(
 bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
         const char *vertexShaderFile, const char *geometryShaderFile, 
         const char *fragmentShaderFile) {
-    the::astring vertexShaderSrc;
-    the::astring geometryShaderSrc;
-    the::astring fragmentShaderSrc;
+    StringA vertexShaderSrc;
+    StringA geometryShaderSrc;
+    StringA fragmentShaderSrc;
 
     if (!vislib::sys::ReadTextFile(vertexShaderSrc, vertexShaderFile)) {
         return false;
@@ -125,8 +125,8 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
         return false;
     }
 
-    return this->Compile(vertexShaderSrc.c_str(), geometryShaderSrc.c_str(), 
-        fragmentShaderSrc.c_str());
+    return this->Compile(vertexShaderSrc, geometryShaderSrc, 
+        fragmentShaderSrc);
 }
 
 
@@ -134,31 +134,31 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
  * vislib::graphics::gl::GLSLGeometryShader::CompileFromFile
  */
 bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
-        const char **vertexShaderFiles, const size_t cntVertexShaderFiles,
-        const char **geometryShaderFiles, const size_t cntGeometryShaderFiles,
-        const char **fragmentShaderFiles, const size_t cntFragmentShaderFiles,
+        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles,
+        const char **geometryShaderFiles, const SIZE_T cntGeometryShaderFiles,
+        const char **fragmentShaderFiles, const SIZE_T cntFragmentShaderFiles,
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
-    Array<the::astring> vertexShaderSrcs(cntVertexShaderFiles);
-    Array<the::astring> geometryShaderSrcs(cntGeometryShaderFiles);
-    Array<the::astring> fragmentShaderSrcs(cntFragmentShaderFiles);
+    Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
+    Array<StringA> geometryShaderSrcs(cntGeometryShaderFiles);
+    Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
 
-    for(size_t i = 0; i < cntVertexShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
                 vertexShaderFiles[i])) {
             return false;
         }
     }
 
-    for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(geometryShaderSrcs[i], 
                 geometryShaderFiles[i])) {
             return false;
         }
     }
 
-    for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(fragmentShaderSrcs[i], 
                 fragmentShaderFiles[i])) {
             return false;
@@ -173,14 +173,14 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
         = new const char*[cntFragmentShaderFiles];
 
     try {
-        for(size_t i = 0; i < cntVertexShaderFiles; i++) {
-            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
         }
-        for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
-            geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
+            geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].PeekBuffer();
         }
-        for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
-            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
         }
 
         bool retval = this->Compile(vertexShaderSrcPtrs, cntVertexShaderFiles,
@@ -188,33 +188,33 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
             fragmentShaderSrcPtrs, cntFragmentShaderFiles, 
             insertLineDirective);
 
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
 
         return retval;
 
         // free pointer arrays on exception
     } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(CompileException e) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
-    } catch(the::exception e) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+    } catch(Exception e) {
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(...) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
-        throw the::exception("Unknown Exception", __FILE__, __LINE__);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        throw Exception("Unknown Exception", __FILE__, __LINE__);
     }
 
     return false; // should be unreachable code!
@@ -226,7 +226,7 @@ bool vislib::graphics::gl::GLSLGeometryShader::CompileFromFile(
  */
 void vislib::graphics::gl::GLSLGeometryShader::SetProgramParameter(GLenum name,
         GLint value) {
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     glProgramParameteriEXT(this->hProgObj, name, value);
 }

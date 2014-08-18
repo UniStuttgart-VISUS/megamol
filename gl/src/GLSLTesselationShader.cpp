@@ -13,8 +13,8 @@
 
 #include "vislib/Array.h"
 #include "vislib/glverify.h"
-#include "the/memory.h"
-#include "the/string.h"
+#include "vislib/memutils.h"
+#include "vislib/String.h"
 #include "vislib/sysfunctions.h"
 
 
@@ -23,10 +23,10 @@
  */
 const char * 
 vislib::graphics::gl::GLSLTesselationShader::RequiredExtensions(void) {
-    static the::astring exts = the::astring(
+    static vislib::StringA exts = vislib::StringA(
         vislib::graphics::gl::GLSLShader::RequiredExtensions())
         + " GL_ARB_gpu_shader5 GL_ARB_tessellation_shader ";
-    return exts.c_str();
+    return exts.PeekBuffer();
 }
 
 
@@ -75,20 +75,20 @@ bool vislib::graphics::gl::GLSLTesselationShader::Compile(const char *vertexShad
  * vislib::graphics::gl::GLSLTesselationShader::Compile
  */
 bool vislib::graphics::gl::GLSLTesselationShader::Compile(
-            const char **vertexShaderSrc, const size_t cntVertexShaderSrc,
+            const char **vertexShaderSrc, const SIZE_T cntVertexShaderSrc,
             const char **tessControlShaderSrc,
-            const size_t cntTessControlShaderSrc,
-            const char **tessEvalShaderSrc, const size_t cntTessEvalShaderSrc,
-            const char **geometryShaderSrc, const size_t cntGeometryShaderSrc,
-            const char **fragmentShaderSrc, const size_t cntFragmentShaderSrc,
+            const SIZE_T cntTessControlShaderSrc,
+            const char **tessEvalShaderSrc, const SIZE_T cntTessEvalShaderSrc,
+            const char **geometryShaderSrc, const SIZE_T cntGeometryShaderSrc,
+            const char **fragmentShaderSrc, const SIZE_T cntFragmentShaderSrc,
             bool insertLineDirective) {
 
     USES_GL_VERIFY;
-    THE_ASSERT(vertexShaderSrc != NULL);
-    //THE_ASSERT(tessControlShaderSrc != NULL);
-    //THE_ASSERT(tessEvalShaderSrc != NULL);
-    //THE_ASSERT(geometryShaderSrc != NULL);
-    THE_ASSERT(fragmentShaderSrc != NULL);
+    ASSERT(vertexShaderSrc != NULL);
+    //ASSERT(tessControlShaderSrc != NULL);
+    //ASSERT(tessEvalShaderSrc != NULL);
+    //ASSERT(geometryShaderSrc != NULL);
+    ASSERT(fragmentShaderSrc != NULL);
 
     this->Release();
 
@@ -143,11 +143,11 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         const char *vertexShaderFile,
         const char *tessControlShaderFile, const char *tessEvalShaderFile,
         const char *geometryShaderFile, const char *fragmentShaderFile) {
-    the::astring vertexShaderSrc;
-    the::astring tessControlShaderSrc;
-    the::astring tessEvalShaderSrc;
-    the::astring geometryShaderSrc;
-    the::astring fragmentShaderSrc;
+    StringA vertexShaderSrc;
+    StringA tessControlShaderSrc;
+    StringA tessEvalShaderSrc;
+    StringA geometryShaderSrc;
+    StringA fragmentShaderSrc;
 
     if (!vislib::sys::ReadTextFile(vertexShaderSrc, vertexShaderFile)) {
         return false;
@@ -169,11 +169,11 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         return false;
     }
 
-    return this->Compile(vertexShaderSrc.c_str(),
-        tessControlShaderFile == NULL ? NULL : tessControlShaderSrc.c_str(),
-        tessEvalShaderFile == NULL ? NULL : tessEvalShaderSrc.c_str(),
-        geometryShaderFile == NULL ? NULL : geometryShaderSrc.c_str(),
-        fragmentShaderSrc.c_str());
+    return this->Compile(vertexShaderSrc,
+        tessControlShaderFile == NULL ? NULL : tessControlShaderSrc,
+        tessEvalShaderFile == NULL ? NULL : tessEvalShaderSrc,
+        geometryShaderFile == NULL ? NULL : geometryShaderSrc,
+        fragmentShaderSrc);
 }
 
 
@@ -182,53 +182,53 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
  */
 bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         const char **vertexShaderFiles,
-        const size_t cntVertexShaderFiles,
+        const SIZE_T cntVertexShaderFiles,
         const char **tessControlShaderFiles,
-        const size_t cntTessControlShaderFiles,
+        const SIZE_T cntTessControlShaderFiles,
         const char **tessEvalShaderFiles,
-        const size_t cntTessEvalShaderFiles,
+        const SIZE_T cntTessEvalShaderFiles,
         const char **geometryShaderFiles,
-        const size_t cntGeometryShaderFiles,
+        const SIZE_T cntGeometryShaderFiles,
         const char **fragmentShaderFiles,
-        const size_t cntFragmentShaderFiles,
+        const SIZE_T cntFragmentShaderFiles,
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
-    Array<the::astring> vertexShaderSrcs(cntVertexShaderFiles);
-    Array<the::astring> tessControlShaderSrcs(cntTessControlShaderFiles);
-    Array<the::astring> tessEvalShaderSrcs(cntTessEvalShaderFiles);
-    Array<the::astring> geometryShaderSrcs(cntGeometryShaderFiles);
-    Array<the::astring> fragmentShaderSrcs(cntFragmentShaderFiles);
+    Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
+    Array<StringA> tessControlShaderSrcs(cntTessControlShaderFiles);
+    Array<StringA> tessEvalShaderSrcs(cntTessEvalShaderFiles);
+    Array<StringA> geometryShaderSrcs(cntGeometryShaderFiles);
+    Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
 
-    for(size_t i = 0; i < cntVertexShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
                 vertexShaderFiles[i])) {
             return false;
         }
     }
 
-    for(size_t i = 0; i < cntTessControlShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntTessControlShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(tessControlShaderSrcs[i], 
                 tessControlShaderFiles[i])) {
             return false;
         }
     }
 
-    for(size_t i = 0; i < cntTessEvalShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntTessEvalShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(tessEvalShaderSrcs[i], 
                 tessEvalShaderFiles[i])) {
             return false;
         }
     }
 
-    for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(geometryShaderSrcs[i], 
                 geometryShaderFiles[i])) {
             return false;
         }
     }
 
-    for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(fragmentShaderSrcs[i], 
                 fragmentShaderFiles[i])) {
             return false;
@@ -247,20 +247,20 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
         = new const char*[cntFragmentShaderFiles];
 
     try {
-        for(size_t i = 0; i < cntVertexShaderFiles; i++) {
-            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
         }
-        for(size_t i = 0; i < cntTessControlShaderFiles; i++) {
-            tessControlShaderSrcPtrs[i] = tessControlShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntTessControlShaderFiles; i++) {
+            tessControlShaderSrcPtrs[i] = tessControlShaderSrcs[i].PeekBuffer();
         }
-        for(size_t i = 0; i < cntTessEvalShaderFiles; i++) {
-            tessEvalShaderSrcPtrs[i] = tessEvalShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntTessEvalShaderFiles; i++) {
+            tessEvalShaderSrcPtrs[i] = tessEvalShaderSrcs[i].PeekBuffer();
         }
-        for(size_t i = 0; i < cntGeometryShaderFiles; i++) {
-            geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntGeometryShaderFiles; i++) {
+            geometryShaderSrcPtrs[i] = geometryShaderSrcs[i].PeekBuffer();
         }
-        for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
-            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
         }
 
         bool retval = this->Compile(vertexShaderSrcPtrs, cntVertexShaderFiles,
@@ -270,43 +270,43 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
             fragmentShaderSrcPtrs, cntFragmentShaderFiles, 
             insertLineDirective);
 
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(tessControlShaderSrcPtrs);
-        the::safe_array_delete(tessEvalShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessControlShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessEvalShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
 
         return retval;
 
         // free pointer arrays on exception
     } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(tessControlShaderSrcPtrs);
-        the::safe_array_delete(tessEvalShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessControlShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessEvalShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(CompileException e) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(tessControlShaderSrcPtrs);
-        the::safe_array_delete(tessEvalShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessControlShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessEvalShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
-    } catch(the::exception e) {
-        the::safe_array_delete(tessControlShaderSrcPtrs);
-        the::safe_array_delete(tessEvalShaderSrcPtrs);
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+    } catch(Exception e) {
+        ARY_SAFE_DELETE(tessControlShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessEvalShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(...) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(tessControlShaderSrcPtrs);
-        the::safe_array_delete(tessEvalShaderSrcPtrs);
-        the::safe_array_delete(geometryShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
-        throw the::exception("Unknown Exception", __FILE__, __LINE__);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessControlShaderSrcPtrs);
+        ARY_SAFE_DELETE(tessEvalShaderSrcPtrs);
+        ARY_SAFE_DELETE(geometryShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        throw Exception("Unknown Exception", __FILE__, __LINE__);
     }
 
     return false; // should be unreachable code!
@@ -318,7 +318,7 @@ bool vislib::graphics::gl::GLSLTesselationShader::CompileFromFile(
  */
 void vislib::graphics::gl::GLSLTesselationShader::SetProgramParameter(GLenum name,
         GLint value) {
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     glProgramParameteriEXT(this->hProgObj, name, value);
 }

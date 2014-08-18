@@ -7,10 +7,10 @@
 
 #include "vislib/RegistrySerialiser.h"
 
-#include "the/argument_exception.h"
-#include "the/no_such_element_exception.h"
-#include "the/system/system_exception.h"
-#include "the/not_supported_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/NoSuchElementException.h"
+#include "vislib/SystemException.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 #ifdef _WIN32
@@ -32,13 +32,13 @@ namespace sys {
      * @param outValue Receives the deserialised value.
      * @param name     The name of the value to retrieve.
      *
-     * @throws argument_exception If 'name' is NULL or the type of the value 
+     * @throws IllegalParamException If 'name' is NULL or the type of the value 
      *                               parameter does not match the type of the 
      *                               stored element.
-     * @throws the::system::system_exception If the registry access failed.
+     * @throws SystemException If the registry access failed.
      */
     template<class T, DWORD R, class C, LONG (APIENTRY* F)(HKEY, const C *, 
-        DWORD *, DWORD *, uint8_t *, DWORD *)>
+        DWORD *, DWORD *, BYTE *, DWORD *)>
     static void IntegralDeserialise(T& outValue, HKEY hKey, const C *name) {
         DWORD size = 0;                 // Size of stored value in bytes.
         DWORD type = 0;                 // Type of stored value.
@@ -46,24 +46,24 @@ namespace sys {
 
         /* Sanity check. */
         if (name == NULL) {
-            throw the::argument_exception("name", __FILE__, __LINE__);
+            throw IllegalParamException("name", __FILE__, __LINE__);
         }
 
         /* Retrieve size of registry value. */
         if ((result = F(hKey, name, 0, &type, NULL, &size)) 
                 != ERROR_SUCCESS) {
-            throw the::system::system_exception(result, __FILE__, __LINE__);
+            throw SystemException(result, __FILE__, __LINE__);
         }
 
         /* Sanity checks. */
         if ((type != R) && (size != sizeof(T))) {
-            throw the::argument_exception("outValue", __FILE__, __LINE__);
+            throw IllegalParamException("outValue", __FILE__, __LINE__);
         }
 
         /* Get data. */
-        if ((result = F(hKey, name, 0, &type, reinterpret_cast<uint8_t *>(
+        if ((result = F(hKey, name, 0, &type, reinterpret_cast<BYTE *>(
                 &outValue), &size)) != ERROR_SUCCESS) {
-            throw the::system::system_exception(result, __FILE__, __LINE__);
+            throw SystemException(result, __FILE__, __LINE__);
         }
     }
 
@@ -83,16 +83,16 @@ namespace sys {
      * @param hKey  The registry key to write the value to.
      * @param name  The name of the value.
      *
-     * @throws the::system::system_exception If the registry access failed.
+     * @throws SystemException If the registry access failed.
      */
     template<class T, DWORD R, class C, LONG (APIENTRY* F)(HKEY, const C *, 
-        DWORD, DWORD, const uint8_t *, DWORD)>
+        DWORD, DWORD, const BYTE *, DWORD)>
     static void IntegralSerialise(const T& value, HKEY hKey, const C *name) {
-        LONG result = F(hKey, name, 0, R, reinterpret_cast<const uint8_t *>(
+        LONG result = F(hKey, name, 0, R, reinterpret_cast<const BYTE *>(
             &value), sizeof(T));
 
         if (result != ERROR_SUCCESS) {
-            throw the::system::system_exception(result, __FILE__, __LINE__);
+            throw SystemException(result, __FILE__, __LINE__);
         }
     }
 
@@ -109,44 +109,42 @@ namespace sys {
      * @param outValue Receives the deserialised value.
      * @param name     The name of the value to retrieve.
      *
-     * @throws argument_exception If 'name' is NULL or the type of the value 
+     * @throws IllegalParamException If 'name' is NULL or the type of the value 
      *                               parameter does not match the type of the 
      *                               stored element.
-     * @throws the::system::system_exception If the registry access failed.
+     * @throws SystemException If the registry access failed.
      */
-    template<class T, LONG (APIENTRY* F)(HKEY, const typename T::value_type *,
-        DWORD *, DWORD *, uint8_t *, DWORD *), class C>
+    template<class T, LONG (APIENTRY* F)(HKEY, const typename T::Char *,
+        DWORD *, DWORD *, BYTE *, DWORD *), class C>
     static void StringDeserialise(T& outValue, HKEY hKey, const C *name) {
         DWORD size = 0;                 // Size of stored value in bytes.
         DWORD type = 0;                 // Type of stored value.
         LONG result = ERROR_SUCCESS;    // API call return values.
-        uint8_t *outPtr = NULL;            // Pointer to buffer of 'outValue'.
-        T tName;                  // Copy of name with correct charset.
-        the::text::string_converter::convert(tName, name);
+        BYTE *outPtr = NULL;            // Pointer to buffer of 'outValue'.
+        T tName(name);                  // Copy of name with correct charset.
 
         /* Sanity check. */
         if (name == NULL) {
-            throw the::argument_exception("name", __FILE__, __LINE__);
+            throw IllegalParamException("name", __FILE__, __LINE__);
         }
 
         /* Retrieve size of registry value. */
-        if ((result = F(hKey, tName.c_str(), 0, &type, NULL, &size)) 
+        if ((result = F(hKey, tName.PeekBuffer(), 0, &type, NULL, &size)) 
                 != ERROR_SUCCESS) {
-            throw the::system::system_exception(result, __FILE__, __LINE__);
+            throw SystemException(result, __FILE__, __LINE__);
         }
 
         /* Sanity checks. */
         if (type != REG_SZ) {
-            throw the::argument_exception("outValue", __FILE__, __LINE__);
+            throw IllegalParamException("outValue", __FILE__, __LINE__);
         }
 
-        outValue = T(size, static_cast<T::value_type>('\0'));
-        outPtr = const_cast<uint8_t*>(reinterpret_cast<const uint8_t *>(outValue.c_str()));
+        outPtr = reinterpret_cast<BYTE *>(outValue.AllocateBuffer(size));
 
         /* Get data. */
-        if ((result = F(hKey, tName.c_str(), 0, &type, outPtr, &size)) 
+        if ((result = F(hKey, tName.PeekBuffer(), 0, &type, outPtr, &size)) 
                 != ERROR_SUCCESS) {
-            throw the::system::system_exception(result, __FILE__, __LINE__);
+            throw SystemException(result, __FILE__, __LINE__);
         }
     }
 
@@ -164,19 +162,18 @@ namespace sys {
      * @param hKey  The registry key to write the value to.
      * @param name  The name of the value.
      *
-     * @throws the::system::system_exception If the registry access failed.
+     * @throws SystemException If the registry access failed.
      */
-    template<class T, LONG (APIENTRY* F)(HKEY, const typename T::value_type *,
-        DWORD, DWORD, const uint8_t *, DWORD), class C>
+    template<class T, LONG (APIENTRY* F)(HKEY, const typename T::Char *,
+        DWORD, DWORD, const BYTE *, DWORD), class C>
     static void StringSerialise(const T& value, HKEY hKey, const C *name) {
-        T tName;                  // Copy of name with correct charset.
-        the::text::string_converter::convert(tName, name);
-        LONG result = F(hKey, tName.c_str(), 0, REG_SZ,
-            reinterpret_cast<const uint8_t *>(value.c_str()),
-            static_cast<DWORD>(value.size() * sizeof(typename T::value_type)));
+        T tName(name);                  // Copy of name with correct charset.
+        LONG result = F(hKey, tName.PeekBuffer(), 0, REG_SZ,
+            reinterpret_cast<const BYTE *>(value.PeekBuffer()),
+            (value.Length() + 1) * sizeof(typename T::Char));
 
         if (result != ERROR_SUCCESS) {
-            throw the::system::system_exception(result, __FILE__, __LINE__);
+            throw SystemException(result, __FILE__, __LINE__);
         }
     }
 
@@ -206,9 +203,9 @@ vislib::sys::RegistrySerialiser::RegistrySerialiser(const wchar_t *subKey,
  * vislib::sys::RegistrySerialiser::RegistrySerialiser
  */
 vislib::sys::RegistrySerialiser::RegistrySerialiser(
-        const the::astring& subKey, HKEY hKey) 
+        const vislib::StringA& subKey, HKEY hKey) 
         : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
-    this->initialise(subKey.c_str(), hKey);
+    this->initialise(subKey, hKey);
 }
 
 
@@ -216,9 +213,9 @@ vislib::sys::RegistrySerialiser::RegistrySerialiser(
  * vislib::sys::RegistrySerialiser::RegistrySerialiser
  */
 vislib::sys::RegistrySerialiser::RegistrySerialiser(
-        const the::wstring& subKey, HKEY hKey) 
+        const vislib::StringW& subKey, HKEY hKey) 
         : Serialiser(SERIALISER_REQUIRES_NAMES), hBaseKey(NULL) {
-    this->initialise(subKey.c_str(), hKey);
+    this->initialise(subKey, hKey);
 }
 
 
@@ -229,7 +226,7 @@ vislib::sys::RegistrySerialiser::RegistrySerialiser(
         const RegistrySerialiser& rhs) 
         : vislib::Serialiser(rhs), hBaseKey(NULL) {
     *this = rhs;
-    THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
+    ASSERT(this->keyStack.Top() == this->hBaseKey);
 }
 
 
@@ -247,14 +244,14 @@ vislib::sys::RegistrySerialiser::~RegistrySerialiser(void) {
 void vislib::sys::RegistrySerialiser::ClearKey(const bool includeValues) {
     RegistryKey key(this->keyStack.Top());
     
-    Array<the::wstring> keys = key.GetSubKeysW();
-    for (size_t i = 0; i < keys.Count(); i++) {
+    Array<StringW> keys = key.GetSubKeysW();
+    for (SIZE_T i = 0; i < keys.Count(); i++) {
         key.DeleteSubKey(keys[i]);
     }
 
     if (includeValues) {
-        Array<the::wstring> values = key.GetValueNamesW();
-        for (size_t i = 0; i < values.Count(); i++) {
+        Array<StringW> values = key.GetValueNamesW();
+        for (SIZE_T i = 0; i < values.Count(); i++) {
             key.DeleteValue(values[i]);
         }
     }
@@ -266,7 +263,7 @@ void vislib::sys::RegistrySerialiser::ClearKey(const bool includeValues) {
  */
 void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue, 
         const char *name) {
-    THE_ASSERT(sizeof(bool) <= sizeof(DWORD));
+    ASSERT(sizeof(bool) <= sizeof(DWORD));
     DWORD tmp;
     IntegralDeserialise<DWORD, REG_DWORD, char, ::RegQueryValueExA>(
         tmp, this->keyStack.Top(), name);
@@ -279,7 +276,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue,
  */
 void vislib::sys::RegistrySerialiser::Deserialise(bool& outValue, 
         const wchar_t *name) {
-    THE_ASSERT(sizeof(bool) <= sizeof(DWORD));
+    ASSERT(sizeof(bool) <= sizeof(DWORD));
     DWORD tmp;
     IntegralDeserialise<DWORD, REG_DWORD, wchar_t, ::RegQueryValueExW>(
         tmp, this->keyStack.Top(), name);
@@ -308,7 +305,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(wchar_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int8_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT8& outValue, 
         const char *name) {
     this->deserialiseSignedAsDword(outValue, name);
 }
@@ -317,7 +314,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(int8_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int8_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT8& outValue, 
         const wchar_t *name) {
     this->deserialiseSignedAsDword(outValue, name);
 }
@@ -326,7 +323,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(int8_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint8_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT8& outValue, 
         const char *name) {
     this->deserialiseUnsignedAsDword(outValue, name);
 }
@@ -335,7 +332,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(uint8_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint8_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT8& outValue, 
         const wchar_t *name) {
     this->deserialiseUnsignedAsDword(outValue, name);
 }
@@ -344,7 +341,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(uint8_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int16_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT16& outValue, 
         const char *name) {
     this->deserialiseSignedAsDword(outValue, name);
 }
@@ -353,7 +350,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(int16_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int16_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT16& outValue, 
         const wchar_t *name) {
     this->deserialiseSignedAsDword(outValue, name);
 }
@@ -362,7 +359,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(int16_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint16_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT16& outValue, 
         const char *name) {
     this->deserialiseUnsignedAsDword(outValue, name);
 }
@@ -371,7 +368,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(uint16_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint16_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT16& outValue, 
         const wchar_t *name) {
     this->deserialiseUnsignedAsDword(outValue, name);
 }
@@ -380,7 +377,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(uint16_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int32_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT32& outValue, 
         const char *name) {
     this->deserialiseSignedAsDword(outValue, name);
 }
@@ -389,7 +386,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(int32_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int32_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT32& outValue, 
         const wchar_t *name) {
     this->deserialiseSignedAsDword(outValue, name);
 }
@@ -398,9 +395,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(int32_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint32_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT32& outValue, 
         const char *name) {
-    IntegralDeserialise<uint32_t, REG_DWORD, char, ::RegQueryValueExA>(
+    IntegralDeserialise<UINT32, REG_DWORD, char, ::RegQueryValueExA>(
         outValue, this->keyStack.Top(), name);
 }
 
@@ -408,9 +405,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(uint32_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint32_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT32& outValue, 
         const wchar_t *name) {
-    IntegralDeserialise<uint32_t, REG_DWORD, wchar_t, ::RegQueryValueExW>(
+    IntegralDeserialise<UINT32, REG_DWORD, wchar_t, ::RegQueryValueExW>(
         outValue, this->keyStack.Top(), name);
 }
 
@@ -418,31 +415,31 @@ void vislib::sys::RegistrySerialiser::Deserialise(uint32_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int64_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT64& outValue, 
         const char *name) {
-    uint64_t value;
+    UINT64 value;
     this->Deserialise(value, name);
-    outValue = *reinterpret_cast<int64_t *>(&value);
+    outValue = *reinterpret_cast<INT64 *>(&value);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(int64_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(INT64& outValue, 
         const wchar_t *name) {
-    uint64_t value;
+    UINT64 value;
     this->Deserialise(value, name);
-    outValue = *reinterpret_cast<int64_t *>(&value);
+    outValue = *reinterpret_cast<INT64 *>(&value);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint64_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT64& outValue, 
         const char *name) {
-    IntegralDeserialise<uint64_t, REG_QWORD, char, ::RegQueryValueExA>(
+    IntegralDeserialise<UINT64, REG_QWORD, char, ::RegQueryValueExA>(
         outValue, this->keyStack.Top(), name);
 }
 
@@ -450,9 +447,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(uint64_t& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(uint64_t& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(UINT64& outValue, 
         const wchar_t *name) {
-    IntegralDeserialise<uint64_t, REG_QWORD, wchar_t, ::RegQueryValueExW>(
+    IntegralDeserialise<UINT64, REG_QWORD, wchar_t, ::RegQueryValueExW>(
         outValue, this->keyStack.Top(), name);
 }
 
@@ -480,7 +477,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(float& outValue,
  */
 void vislib::sys::RegistrySerialiser::Deserialise(double& outValue, 
         const char *name) {
-    uint64_t value;
+    UINT64 value;
     this->Deserialise(value, name);
     outValue = *reinterpret_cast<double *>(&value);
 }
@@ -491,7 +488,7 @@ void vislib::sys::RegistrySerialiser::Deserialise(double& outValue,
  */
 void vislib::sys::RegistrySerialiser::Deserialise(double& outValue, 
         const wchar_t *name) {
-    uint64_t value;
+    UINT64 value;
     this->Deserialise(value, name);
     outValue = *reinterpret_cast<double *>(&value);
 }
@@ -500,9 +497,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(double& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(the::astring& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(StringA& outValue, 
         const char *name) {
-    StringDeserialise<the::astring, ::RegQueryValueExA, char>(outValue, 
+    StringDeserialise<StringA, ::RegQueryValueExA, char>(outValue, 
         this->keyStack.Top(), name);
 }
 
@@ -510,9 +507,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(the::astring& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(the::astring& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(StringA& outValue, 
         const wchar_t *name) {
-    StringDeserialise<the::astring, ::RegQueryValueExA, wchar_t>(outValue, 
+    StringDeserialise<StringA, ::RegQueryValueExA, wchar_t>(outValue, 
         this->keyStack.Top(), name);
 }
 
@@ -520,9 +517,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(the::astring& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(the::wstring& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(StringW& outValue, 
         const char *name) {
-    StringDeserialise<the::wstring, ::RegQueryValueExW, char>(outValue, 
+    StringDeserialise<StringW, ::RegQueryValueExW, char>(outValue, 
         this->keyStack.Top(), name);
 }
 
@@ -530,9 +527,9 @@ void vislib::sys::RegistrySerialiser::Deserialise(the::wstring& outValue,
 /*
  * vislib::sys::RegistrySerialiser::Deserialise
  */
-void vislib::sys::RegistrySerialiser::Deserialise(the::wstring& outValue, 
+void vislib::sys::RegistrySerialiser::Deserialise(StringW& outValue, 
         const wchar_t *name) {
-    StringDeserialise<the::wstring, ::RegQueryValueExW, wchar_t>(outValue, 
+    StringDeserialise<StringW, ::RegQueryValueExW, wchar_t>(outValue, 
         this->keyStack.Top(), name);
 }
 
@@ -543,17 +540,17 @@ void vislib::sys::RegistrySerialiser::Deserialise(the::wstring& outValue,
 void vislib::sys::RegistrySerialiser::PopKey(const bool isSilent) {
     HKEY hKey = this->keyStack.Pop();
 
-    if (!this->keyStack.empty()) {
+    if (!this->keyStack.IsEmpty()) {
         ::RegCloseKey(hKey);
 
     } else {
         /* The last key must not be removed by the user. */
-        THE_ASSERT(hKey == this->hBaseKey);
+        ASSERT(hKey == this->hBaseKey);
         this->keyStack.Push(hKey);
 
         /* Throw if not disabled. */
         if (!isSilent) {
-            throw the::no_such_element_exception("There must be at least one key in "
+            throw NoSuchElementException("There must be at least one key in "
                 "the stack.", __FILE__, __LINE__);
         }
     }
@@ -571,7 +568,7 @@ void vislib::sys::RegistrySerialiser::PushKey(const char *name) {
         &createDisp);
 
     if (result != ERROR_SUCCESS) {
-        throw the::system::system_exception(result, __FILE__, __LINE__);
+        throw SystemException(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(hKey);
@@ -589,7 +586,7 @@ void vislib::sys::RegistrySerialiser::PushKey(const wchar_t *name) {
         &createDisp);
 
     if (result != ERROR_SUCCESS) {
-        throw the::system::system_exception(result, __FILE__, __LINE__);
+        throw SystemException(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(hKey);
@@ -601,7 +598,7 @@ void vislib::sys::RegistrySerialiser::PushKey(const wchar_t *name) {
  */
 void vislib::sys::RegistrySerialiser::Serialise(const bool value, 
         const char *name) {
-    IntegralSerialise<uint32_t, REG_DWORD, char, ::RegSetValueExA>(
+    IntegralSerialise<UINT32, REG_DWORD, char, ::RegSetValueExA>(
         value, this->keyStack.Top(), name);
 }
 
@@ -636,25 +633,25 @@ void vislib::sys::RegistrySerialiser::Serialise(const wchar_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int8_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT8 value,
         const char *name) {
-    this->serialiseAsDword0<int8_t, unsigned char, char>(value, name);
+    this->serialiseAsDword0<INT8, unsigned char, char>(value, name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int8_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT8 value,
         const wchar_t *name) {
-    this->serialiseAsDword0<int8_t, unsigned char, wchar_t>(value, name);
+    this->serialiseAsDword0<INT8, unsigned char, wchar_t>(value, name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint8_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT8 value,
         const char *name) {
     this->serialiseAsDword(value, name);
 }
@@ -663,7 +660,7 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint8_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint8_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT8 value,
         const wchar_t *name) {
     this->serialiseAsDword(value, name);
 }
@@ -672,25 +669,25 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint8_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int16_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT16 value,
         const char *name) {
-    this->serialiseAsDword0<int16_t, uint16_t, char>(value, name);
+    this->serialiseAsDword0<INT16, UINT16, char>(value, name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int16_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT16 value,
         const wchar_t *name) {
-    this->serialiseAsDword0<int16_t, uint16_t, wchar_t>(value, name);
+    this->serialiseAsDword0<INT16, UINT16, wchar_t>(value, name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint16_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT16 value,
         const char *name) {
     this->serialiseAsDword(value, name);
 }
@@ -699,7 +696,7 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint16_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint16_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT16 value,
         const wchar_t *name) {
     this->serialiseAsDword(value, name);
 }
@@ -708,27 +705,27 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint16_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int32_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT32 value,
         const char *name) {
-    this->serialiseAsDword0<int32_t, uint32_t, char>(value, name);
+    this->serialiseAsDword0<INT32, UINT32, char>(value, name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int32_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT32 value,
         const wchar_t *name) {
-    this->serialiseAsDword0<int32_t, uint32_t, wchar_t>(value, name);
+    this->serialiseAsDword0<INT32, UINT32, wchar_t>(value, name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint32_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT32 value,
         const char *name) {
-    IntegralSerialise<uint32_t, REG_DWORD, char, ::RegSetValueExA>(
+    IntegralSerialise<UINT32, REG_DWORD, char, ::RegSetValueExA>(
         value, this->keyStack.Top(), name);
 }
 
@@ -736,9 +733,9 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint32_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint32_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT32 value,
         const wchar_t *name) {
-    IntegralSerialise<uint32_t, REG_DWORD, wchar_t, ::RegSetValueExW>(
+    IntegralSerialise<UINT32, REG_DWORD, wchar_t, ::RegSetValueExW>(
         value, this->keyStack.Top(), name);
 }
 
@@ -746,29 +743,29 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint32_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int64_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT64 value,
         const char *name) {
-    IntegralSerialise<uint64_t, REG_QWORD, char, ::RegSetValueExA>(
-        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
+    IntegralSerialise<UINT64, REG_QWORD, char, ::RegSetValueExA>(
+        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const int64_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const INT64 value,
         const wchar_t *name) {
-    IntegralSerialise<uint64_t, REG_QWORD, wchar_t, ::RegSetValueExW>(
-        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
+    IntegralSerialise<UINT64, REG_QWORD, wchar_t, ::RegSetValueExW>(
+        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint64_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT64 value,
         const char *name) {
-    IntegralSerialise<uint64_t, REG_QWORD, char, ::RegSetValueExA>(
+    IntegralSerialise<UINT64, REG_QWORD, char, ::RegSetValueExA>(
         value, this->keyStack.Top(), name);
 }
 
@@ -776,9 +773,9 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint64_t value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const uint64_t value,
+void vislib::sys::RegistrySerialiser::Serialise(const UINT64 value,
         const wchar_t *name) {
-    IntegralSerialise<uint64_t, REG_QWORD, wchar_t, ::RegSetValueExW>(
+    IntegralSerialise<UINT64, REG_QWORD, wchar_t, ::RegSetValueExW>(
         value, this->keyStack.Top(), name);
 }
 
@@ -788,7 +785,7 @@ void vislib::sys::RegistrySerialiser::Serialise(const uint64_t value,
  */
 void vislib::sys::RegistrySerialiser::Serialise(const float value, 
         const char *name) {
-    this->serialiseAsDword0<float, uint32_t, char>(value, name);
+    this->serialiseAsDword0<float, UINT32, char>(value, name);
 }
 
 
@@ -797,7 +794,7 @@ void vislib::sys::RegistrySerialiser::Serialise(const float value,
  */
 void vislib::sys::RegistrySerialiser::Serialise(const float value,
         const wchar_t *name) {
-this->serialiseAsDword0<float, uint32_t, wchar_t>(value, name);
+this->serialiseAsDword0<float, UINT32, wchar_t>(value, name);
 }
 
 
@@ -806,9 +803,9 @@ this->serialiseAsDword0<float, uint32_t, wchar_t>(value, name);
  */
 void vislib::sys::RegistrySerialiser::Serialise(const double value, 
         const char *name) {
-    THE_ASSERT(sizeof(double) == sizeof(uint64_t));
-    IntegralSerialise<uint64_t, REG_QWORD, char, ::RegSetValueExA>(
-        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
+    ASSERT(sizeof(double) == sizeof(UINT64));
+    IntegralSerialise<UINT64, REG_QWORD, char, ::RegSetValueExA>(
+        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
 }
 
 
@@ -817,18 +814,18 @@ void vislib::sys::RegistrySerialiser::Serialise(const double value,
  */
 void vislib::sys::RegistrySerialiser::Serialise(const double value, 
         const wchar_t *name) {
-    THE_ASSERT(sizeof(double) == sizeof(uint64_t));
-    IntegralSerialise<uint64_t, REG_QWORD, wchar_t, ::RegSetValueExW>(
-        *reinterpret_cast<const uint64_t *>(&value), this->keyStack.Top(), name);
+    ASSERT(sizeof(double) == sizeof(UINT64));
+    IntegralSerialise<UINT64, REG_QWORD, wchar_t, ::RegSetValueExW>(
+        *reinterpret_cast<const UINT64 *>(&value), this->keyStack.Top(), name);
 }
 
 
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const the::astring& value,
+void vislib::sys::RegistrySerialiser::Serialise(const StringA& value,
         const char *name) {
-    StringSerialise<the::astring, ::RegSetValueExA, char>(value, this->keyStack.Top(), 
+    StringSerialise<StringA, ::RegSetValueExA, char>(value, this->keyStack.Top(), 
         name);
 }
 
@@ -836,9 +833,9 @@ void vislib::sys::RegistrySerialiser::Serialise(const the::astring& value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const the::astring& value,
+void vislib::sys::RegistrySerialiser::Serialise(const StringA& value,
         const wchar_t *name) {
-    StringSerialise<the::astring, ::RegSetValueExA, wchar_t>(value, 
+    StringSerialise<StringA, ::RegSetValueExA, wchar_t>(value, 
         this->keyStack.Top(), name);
 }
 
@@ -846,9 +843,9 @@ void vislib::sys::RegistrySerialiser::Serialise(const the::astring& value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const the::wstring& value,
+void vislib::sys::RegistrySerialiser::Serialise(const StringW& value,
         const char *name) {
-    StringSerialise<the::wstring, ::RegSetValueExW, char>(value, 
+    StringSerialise<StringW, ::RegSetValueExW, char>(value, 
         this->keyStack.Top(), name);
 }
 
@@ -856,9 +853,9 @@ void vislib::sys::RegistrySerialiser::Serialise(const the::wstring& value,
 /*
  * vislib::sys::RegistrySerialiser::Serialise
  */
-void vislib::sys::RegistrySerialiser::Serialise(const the::wstring& value,
+void vislib::sys::RegistrySerialiser::Serialise(const StringW& value,
         const wchar_t *name) {
-    StringSerialise<the::wstring, ::RegSetValueExW, wchar_t>(value, 
+    StringSerialise<StringW, ::RegSetValueExW, wchar_t>(value, 
         this->keyStack.Top(), name);
 }
 
@@ -872,8 +869,8 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
 
     if (this != &rhs) {
         this->closeAllRegistry();
-        THE_ASSERT(this->keyStack.empty());
-        THE_ASSERT(this->hBaseKey == NULL);
+        ASSERT(this->keyStack.IsEmpty());
+        ASSERT(this->hBaseKey == NULL);
 
         // MSDN: DuplicateHandle can duplicate handles to the following types 
         // of objects: The handle is returned by the RegCreateKey, 
@@ -888,11 +885,11 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
                 ::GetCurrentProcess(), reinterpret_cast<HANDLE *>(
                 &this->hBaseKey), 0, FALSE, DUPLICATE_SAME_ACCESS)) {
             this->hBaseKey = NULL;
-            the::system::system_exception(__FILE__, __LINE__);
+            SystemException(__FILE__, __LINE__);
         }
 
         this->keyStack.Push(this->hBaseKey);
-        THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
+        ASSERT(this->keyStack.Top() == this->hBaseKey);
     }
 
     return *this;
@@ -903,12 +900,12 @@ vislib::sys::RegistrySerialiser& vislib::sys::RegistrySerialiser::operator =(
  * vislib::sys::RegistrySerialiser::closeAllRegistry
  */
 void vislib::sys::RegistrySerialiser::closeAllRegistry(void) {
-    while (this->keyStack.empty()) {
+    while (this->keyStack.IsEmpty()) {
         HKEY hKey = this->keyStack.Pop();
-        THE_ASSERT(hKey != NULL);
+        ASSERT(hKey != NULL);
         ::RegCloseKey(hKey);
 
-        THE_ASSERT((this->keyStack.Count() != 1) 
+        ASSERT((this->keyStack.Count() != 1) 
             || (this->keyStack.Top() == this->hBaseKey));
     }
 
@@ -922,8 +919,8 @@ void vislib::sys::RegistrySerialiser::closeAllRegistry(void) {
 void vislib::sys::RegistrySerialiser::initialise(const char *subKey, 
         HKEY hKey) {
     // Assert initialisations that ctor must make in initialisation list:
-    THE_ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
-    THE_ASSERT(this->hBaseKey == NULL);
+    ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
+    ASSERT(this->hBaseKey == NULL);
 
     DWORD createDisp = 0;
     LONG result = ::RegCreateKeyExA(hKey, subKey, 0, NULL, 
@@ -933,11 +930,11 @@ void vislib::sys::RegistrySerialiser::initialise(const char *subKey,
     if (result != ERROR_SUCCESS) {
         // Note: This is safe because not resources that must be deleted in the
         // dtor have been allocated.
-        throw the::system::system_exception(result, __FILE__, __LINE__);
+        throw SystemException(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(this->hBaseKey);
-    THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
+    ASSERT(this->keyStack.Top() == this->hBaseKey);
 }
 
 
@@ -947,8 +944,8 @@ void vislib::sys::RegistrySerialiser::initialise(const char *subKey,
 void vislib::sys::RegistrySerialiser::initialise(const wchar_t *subKey, 
         HKEY hKey) {
     // Assert initialisations that ctor must make in initialisation list:
-    THE_ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
-    THE_ASSERT(this->hBaseKey == NULL);
+    ASSERT((this->GetProperties() & SERIALISER_REQUIRES_NAMES) != 0);
+    ASSERT(this->hBaseKey == NULL);
 
     DWORD createDisp = 0;
     LONG result = ::RegCreateKeyExW(hKey, subKey, 0, NULL, 
@@ -958,11 +955,11 @@ void vislib::sys::RegistrySerialiser::initialise(const wchar_t *subKey,
     if (result != ERROR_SUCCESS) {
         // Note: This is safe because not resources that must be deleted in the
         // dtor have been allocated.
-        throw the::system::system_exception(result, __FILE__, __LINE__);
+        throw SystemException(result, __FILE__, __LINE__);
     }
 
     this->keyStack.Push(this->hBaseKey);
-    THE_ASSERT(this->keyStack.Top() == this->hBaseKey);
+    ASSERT(this->keyStack.Top() == this->hBaseKey);
 }
 
 #endif /* _WIN32 */

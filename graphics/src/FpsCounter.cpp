@@ -8,13 +8,13 @@
 #include "vislib/FpsCounter.h"
 #include <climits>
 #include <cfloat>
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
-#include "the/memory.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/memutils.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/PerformanceCounter.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -32,7 +32,7 @@ vislib::graphics::FpsCounter::FpsCounter(unsigned int bufLength)
  * vislib::graphics::FpsCounter::~FpsCounter
  */
 vislib::graphics::FpsCounter::~FpsCounter(void) {
-    the::safe_array_delete(this->timeValues);
+    ARY_SAFE_DELETE(this->timeValues);
     this->timeValuesCount = 0; // paranoia
 }
 
@@ -42,7 +42,7 @@ vislib::graphics::FpsCounter::~FpsCounter(void) {
  */
 void vislib::graphics::FpsCounter::FrameBegin(void) {
     if (this->frameRunning) {
-        throw the::invalid_operation_exception("Must call \"FrameEnd\" first.", 
+        throw IllegalStateException("Must call \"FrameEnd\" first.", 
             __FILE__, __LINE__);
     }
 
@@ -60,7 +60,7 @@ void vislib::graphics::FpsCounter::FrameBegin(void) {
  */
 void vislib::graphics::FpsCounter::FrameEnd(void) {
     if (!this->frameRunning) {
-        throw the::invalid_operation_exception("Must call \"FrameBegin\" first.", 
+        throw IllegalStateException("Must call \"FrameBegin\" first.", 
             __FILE__, __LINE__);
     }
 
@@ -108,8 +108,8 @@ void vislib::graphics::FpsCounter::Reset(void) {
  * vislib::graphics::FpsCounter::SetBufferLength
  */
 void vislib::graphics::FpsCounter::SetBufferLength(unsigned int bufLength) {
-    THE_ASSERT(bufLength > 0);
-    the::safe_array_delete(this->timeValues);
+    ASSERT(bufLength > 0);
+    ARY_SAFE_DELETE(this->timeValues);
     this->timeValuesCount = bufLength;
     this->timeValues = new TimeValues[this->timeValuesCount];
     this->Reset();
@@ -120,7 +120,7 @@ void vislib::graphics::FpsCounter::SetBufferLength(unsigned int bufLength) {
  * vislib::graphics::FpsCounter::FpsCounter
  */
 vislib::graphics::FpsCounter::FpsCounter(const FpsCounter& rhs) {
-    throw the::not_supported_exception("Copy Ctor", __FILE__, 
+    throw vislib::UnsupportedOperationException("Copy Ctor", __FILE__, 
         __LINE__);
 }
 
@@ -131,7 +131,7 @@ vislib::graphics::FpsCounter::FpsCounter(const FpsCounter& rhs) {
 vislib::graphics::FpsCounter& vislib::graphics::FpsCounter::operator =(
         const vislib::graphics::FpsCounter& rhs) {
     if (&rhs != this) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw vislib::IllegalParamException("rhs", __FILE__, __LINE__);
     }
     return *this;
 }

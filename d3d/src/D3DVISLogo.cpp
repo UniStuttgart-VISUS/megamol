@@ -9,24 +9,17 @@
 #include "vislib/D3DVISLogo.h"
 
 #include "vislib/d3dverify.h"
-#include "the/invalid_operation_exception.h"
-
-#ifndef D3DCOLOR_XRGB
-#define D3DCOLOR_XRGB(r,g,b) \
-    ((int)((((0xff)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff)))
-#endif
+#include "vislib/IllegalStateException.h"
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::D3DVISLogo::D3DVISLogo
  */
 vislib::graphics::d3d::D3DVISLogo::D3DVISLogo(IDirect3DDevice9 *device)
         : apiVersion(D3DVERSION_9), device9(device), vb9(NULL) {
-    THE_ASSERT(this->device9 != NULL);
+    ASSERT(this->device9 != NULL);
     this->device9->AddRef();
 }
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
 /*
@@ -34,7 +27,7 @@ vislib::graphics::d3d::D3DVISLogo::D3DVISLogo(IDirect3DDevice9 *device)
  */
 vislib::graphics::d3d::D3DVISLogo::D3DVISLogo(ID3D10Device *device)
         : apiVersion(D3DVERSION_10), device10(device), vb10(NULL) {
-    THE_ASSERT(this->device10 != NULL);
+    ASSERT(this->device10 != NULL);
     this->device10->AddRef();
 }
 
@@ -46,19 +39,16 @@ vislib::graphics::d3d::D3DVISLogo::~D3DVISLogo(void) {
     this->Release();
 
     switch (this->apiVersion) {
-
-#ifdef HAVE_LEGACY_DIRECTX_SDK
         case D3DVERSION_9:
             SAFE_RELEASE(this->device9);
             break;
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
         case D3DVERSION_10:
             SAFE_RELEASE(this->device10);
             break;
 
         default:
-            THE_ASSERT(false);  // Should be unreachable.
+            ASSERT(false);  // Should be unreachable.
             break;
     }
 }
@@ -77,7 +67,6 @@ void vislib::graphics::d3d::D3DVISLogo::Create(void) {
 
     switch (this->apiVersion) {
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
         case D3DVERSION_9:
             D3D_VERIFY_THROW(this->device9->CreateVertexBuffer(VB_SIZE, 0, FVF,
                 D3DPOOL_MANAGED, &this->vb9, NULL));
@@ -86,7 +75,6 @@ void vislib::graphics::d3d::D3DVISLogo::Create(void) {
             ::memcpy(vertices, VERTICES, VB_SIZE);
             D3D_VERIFY_THROW(this->vb9->Unlock());
             break;
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
         case D3DVERSION_10: {
             // TODO: untested
@@ -107,7 +95,7 @@ void vislib::graphics::d3d::D3DVISLogo::Create(void) {
             } break;
 
         default:
-            throw the::invalid_operation_exception("'apiVersion' must be one of "
+            throw IllegalStateException("'apiVersion' must be one of "
                 "D3DVERSION_9 or D3DVERSION_10", __FILE__, __LINE__);
             break;
     }
@@ -123,7 +111,6 @@ void vislib::graphics::d3d::D3DVISLogo::Draw(void) {
     static const UINT CNT_VERTICES = (sizeof(VERTICES) / VERTEX_SIZE) - 2;
 
     switch (this->apiVersion) {
-#ifdef HAVE_LEGACY_DIRECTX_SDK
         case D3DVERSION_9:
             D3D_VERIFY_THROW(this->device9->SetStreamSource(0, this->vb9, 0,
                 VERTEX_SIZE));
@@ -131,14 +118,13 @@ void vislib::graphics::d3d::D3DVISLogo::Draw(void) {
             D3D_VERIFY_THROW(this->device9->DrawPrimitive(D3DPT_TRIANGLESTRIP,
                 0, CNT_VERTICES));
             break;
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
         case D3DVERSION_10:
             // TODO
             break;
 
         default:
-            throw the::invalid_operation_exception("'apiVersion' must be one of "
+            throw IllegalStateException("'apiVersion' must be one of "
                 "D3DVERSION_9 or D3DVERSION_10", __FILE__, __LINE__);
             break;
     }
@@ -150,19 +136,16 @@ void vislib::graphics::d3d::D3DVISLogo::Draw(void) {
  */
 void vislib::graphics::d3d::D3DVISLogo::Release(void) {
     switch (this->apiVersion) {
-
-#ifdef HAVE_LEGACY_DIRECTX_SDK
         case D3DVERSION_9:
             SAFE_RELEASE(this->vb9);
             break;
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
         case D3DVERSION_10:
             SAFE_RELEASE(this->vb10);
             break;
 
         default:
-            THE_ASSERT(false);  // Should be unreachable.
+            ASSERT(false);  // Should be unreachable.
             break;
     }
 }
@@ -9737,13 +9720,11 @@ const vislib::graphics::d3d::D3DVISLogo::Vertex vislib::graphics::d3d::D3DVISLog
 };
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::D3DVISLogo::FVF
  */
 const DWORD vislib::graphics::d3d::D3DVISLogo::FVF 
     = (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE);
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
 /*

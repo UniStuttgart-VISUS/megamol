@@ -11,15 +11,12 @@
 #include "vislib/GLSLShader.h"
 
 #include "vislib/Array.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
-#include "the/memory.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/memutils.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
-#include "the/not_supported_exception.h"
-#include "the/string.h"
-#include "the/text/string_builder.h"
-#include "the/text/string_buffer.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -78,7 +75,7 @@ vislib::graphics::gl::GLSLShader::~GLSLShader(void) {
 GLenum vislib::graphics::gl::GLSLShader::BindAttribute(GLint index, 
         const char *name) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glBindAttribLocationARB(this->hProgObj, index, name));
     return GL_NO_ERROR;
@@ -101,11 +98,11 @@ bool vislib::graphics::gl::GLSLShader::Compile(const char *vertexShaderSrc,
  * vislib::graphics::gl::GLSLShader::Compile
  */
 bool vislib::graphics::gl::GLSLShader::Compile(const char **vertexShaderSrc, 
-        const size_t cntVertexShaderSrc, const char **fragmentShaderSrc,
-        const size_t cntFragmentShaderSrc, bool insertLineDirective) {
+        const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
+        const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
     USES_GL_VERIFY;
-    THE_ASSERT(vertexShaderSrc != NULL);
-    THE_ASSERT(fragmentShaderSrc != NULL);
+    ASSERT(vertexShaderSrc != NULL);
+    ASSERT(fragmentShaderSrc != NULL);
 
     this->Release();
 
@@ -130,8 +127,8 @@ bool vislib::graphics::gl::GLSLShader::Compile(const char **vertexShaderSrc,
  */
 bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         const char *vertexShaderFile, const char *fragmentShaderFile) {
-    the::astring vertexShaderSrc;
-    the::astring fragmentShaderSrc;
+    StringA vertexShaderSrc;
+    StringA fragmentShaderSrc;
 
     if (!vislib::sys::ReadTextFile(vertexShaderSrc, vertexShaderFile)) {
         return false;
@@ -141,7 +138,7 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         return false;
     }
 
-    return this->Compile(vertexShaderSrc.c_str(), fragmentShaderSrc.c_str());
+    return this->Compile(vertexShaderSrc, fragmentShaderSrc);
 }
 
 
@@ -149,22 +146,22 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
  * vislib::graphics::gl::GLSLShader::CompileFromFile
  */
 bool vislib::graphics::gl::GLSLShader::CompileFromFile(
-        const char **vertexShaderFiles, const size_t cntVertexShaderFiles, 
+        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
-        const size_t cntFragmentShaderFiles, bool insertLineDirective) {
+        const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
-    Array<the::astring> vertexShaderSrcs(cntVertexShaderFiles);
-    Array<the::astring> fragmentShaderSrcs(cntFragmentShaderFiles);
+    Array<StringA> vertexShaderSrcs(cntVertexShaderFiles);
+    Array<StringA> fragmentShaderSrcs(cntFragmentShaderFiles);
 
-    for(size_t i = 0; i < cntVertexShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(vertexShaderSrcs[i], 
                 vertexShaderFiles[i])) {
             return false;
         }
     }
 
-    for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(fragmentShaderSrcs[i], 
                 fragmentShaderFiles[i])) {
             return false;
@@ -177,39 +174,39 @@ bool vislib::graphics::gl::GLSLShader::CompileFromFile(
         = new const char*[cntFragmentShaderFiles];
 
     try {
-        for(size_t i = 0; i < cntVertexShaderFiles; i++) {
-            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntVertexShaderFiles; i++) {
+            vertexShaderSrcPtrs[i] = vertexShaderSrcs[i].PeekBuffer();
         }
-        for(size_t i = 0; i < cntFragmentShaderFiles; i++) {
-            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntFragmentShaderFiles; i++) {
+            fragmentShaderSrcPtrs[i] = fragmentShaderSrcs[i].PeekBuffer();
         }
 
         bool retval = this->Compile(vertexShaderSrcPtrs, cntVertexShaderFiles, 
             fragmentShaderSrcPtrs, cntFragmentShaderFiles, 
             insertLineDirective);
 
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
 
         return retval;
 
         // free pointer arrays on exception
     } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(CompileException e) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
-    } catch(the::exception e) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
+    } catch(Exception e) {
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
         throw e;
     } catch(...) {
-        the::safe_array_delete(vertexShaderSrcPtrs);
-        the::safe_array_delete(fragmentShaderSrcPtrs);
-        throw the::exception("Unknown Exception", __FILE__, __LINE__);
+        ARY_SAFE_DELETE(vertexShaderSrcPtrs);
+        ARY_SAFE_DELETE(fragmentShaderSrcPtrs);
+        throw Exception("Unknown Exception", __FILE__, __LINE__);
     }
 
     return false; // should be unreachable code!
@@ -233,8 +230,8 @@ bool vislib::graphics::gl::GLSLShader::Create(const char *vertexShaderSrc,
  * vislib::graphics::gl::GLSLShader::Create
  */
 bool vislib::graphics::gl::GLSLShader::Create(const char **vertexShaderSrc, 
-        const size_t cntVertexShaderSrc, const char **fragmentShaderSrc,
-        const size_t cntFragmentShaderSrc, bool insertLineDirective) {
+        const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
+        const SIZE_T cntFragmentShaderSrc, bool insertLineDirective) {
     if (this->Compile(vertexShaderSrc, cntVertexShaderSrc, fragmentShaderSrc, 
             cntFragmentShaderSrc, insertLineDirective)) {
         return this->Link();
@@ -261,9 +258,9 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
  * vislib::graphics::gl::GLSLShader::CreateFromFile
  */
 bool vislib::graphics::gl::GLSLShader::CreateFromFile(
-        const char **vertexShaderFiles, const size_t cntVertexShaderFiles, 
+        const char **vertexShaderFiles, const SIZE_T cntVertexShaderFiles, 
         const char **fragmentShaderFiles, 
-        const size_t cntFragmentShaderFiles, bool insertLineDirective) {
+        const SIZE_T cntFragmentShaderFiles, bool insertLineDirective) {
 
     if (this->CompileFromFile(vertexShaderFiles, cntVertexShaderFiles, 
             fragmentShaderFiles, cntFragmentShaderFiles, 
@@ -280,7 +277,7 @@ bool vislib::graphics::gl::GLSLShader::CreateFromFile(
  */
 GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glUseProgramObjectARB(0));
     GL_VERIFY_RETURN(::glDisable(GL_VERTEX_PROGRAM_ARB));
@@ -294,7 +291,7 @@ GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
  */
 GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     GL_VERIFY_RETURN(::glEnable(GL_VERTEX_PROGRAM_ARB));
     GL_VERIFY_RETURN(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
@@ -308,11 +305,11 @@ GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
  */
 bool vislib::graphics::gl::GLSLShader::Link() {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
     
     GL_VERIFY_THROW(::glLinkProgramARB(this->hProgObj));
     if (!this->isLinked(this->hProgObj)) {
-        throw CompileException(this->getProgramInfoLog(this->hProgObj).c_str(), 
+        throw CompileException(this->getProgramInfoLog(this->hProgObj), 
             CompileException::ACTION_LINK, __FILE__, __LINE__);
     }
 
@@ -324,8 +321,8 @@ bool vislib::graphics::gl::GLSLShader::Link() {
  * vislib::graphics::gl::GLSLShader::ParameterLocation
  */
 GLint vislib::graphics::gl::GLSLShader::ParameterLocation(const char *name) const {
-    THE_ASSERT(name != NULL);
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(name != NULL);
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
     return ::glGetUniformLocationARB(this->hProgObj, name);
 }
 
@@ -365,7 +362,7 @@ GLenum vislib::graphics::gl::GLSLShader::Release(void) {
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
         const float v1) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -382,7 +379,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const float v1, const float v2) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -398,7 +395,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const float v1, const float v2, const float v3) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -414,7 +411,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const float v1, const float v2, const float v3, const float v4) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -430,7 +427,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -446,7 +443,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1, const int v2) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -462,7 +459,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1, const int v2, const int v3) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -478,7 +475,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name, 
         const int v1, const int v2, const int v3, const int v4) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -494,7 +491,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -510,7 +507,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -526,7 +523,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -542,7 +539,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
         const GLsizei count, const float *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -558,7 +555,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -574,7 +571,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -590,7 +587,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -606,7 +603,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
 GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
         const GLsizei count, const int *value) {
     USES_GL_VERIFY;
-    THE_ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
+    ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
     if (name < 0) {
         return GL_INVALID_VALUE;
@@ -627,22 +624,22 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     const char lineStr[] = "\n#line 0 %d\n";
 
     if (insertLineDirective && (cnt > 1)) {
-        the::astring tmp;
+        StringA tmp;
         char *ptr;
-        the::text::astring_builder::format_to(tmp, lineStr, cnt);
+        tmp.Format(lineStr, cnt);
 
         // very tricky:
         powerMemory.AssertSize((sizeof(char*) * (cnt * 2 - 1)) 
-            + ((cnt - 1) * sizeof(char) * (tmp.size() + 1)));
+            + ((cnt - 1) * sizeof(char) * (tmp.Length() + 1)));
         ptr = powerMemory.As<char>() + (sizeof(char*) * (cnt = cnt * 2 - 1));
         for (GLsizei i = 0; i < cnt; i++) {
             if (i % 2 == 0) {
                 powerMemory.As<const char*>()[i] = src[i / 2];
             } else {
                 unsigned int len;
-                the::text::astring_builder::format_to(tmp, lineStr, int((i + 1) / 2));
-                len = static_cast<unsigned int>((tmp.size() + 1) * sizeof(char));
-                memcpy(ptr, tmp.c_str(), len);
+                tmp.Format(lineStr, int((i + 1) / 2));
+                len = (tmp.Length() + 1) * sizeof(char);
+                memcpy(ptr, tmp.PeekBuffer(), len);
                 powerMemory.As<char*>()[i] = ptr;
                 ptr += len;
             }
@@ -656,7 +653,7 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     GL_VERIFY_THROW(::glCompileShaderARB(shader));
 
     if (!isCompiled(shader)) {
-        throw CompileException(getProgramInfoLog(shader).c_str(), 
+        throw CompileException(getProgramInfoLog(shader), 
             CompileException::CompilationFailedAction(type), 
             __FILE__, __LINE__);
     }
@@ -668,19 +665,20 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
 /*
  * vislib::graphics::gl::GLSLShader::getProgramInfoLog
  */
-the::astring vislib::graphics::gl::GLSLShader::getProgramInfoLog(
+vislib::StringA vislib::graphics::gl::GLSLShader::getProgramInfoLog(
         GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint len = 0;
     GLint written = 0;
-    the::astring retval;
+    StringA retval;
+    char *log = NULL;
 
     GL_VERIFY_THROW(::glGetObjectParameterivARB(hProg, 
         GL_OBJECT_INFO_LOG_LENGTH_ARB, &len));
 
     if (len > 0) {
-        GL_VERIFY_THROW(::glGetInfoLogARB(hProg, len, &written,
-            the::text::string_buffer_allocate(retval, len)));
+        log = retval.AllocateBuffer(len);
+        GL_VERIFY_THROW(::glGetInfoLogARB(hProg, len, &written, log));
     }
 
     return retval;

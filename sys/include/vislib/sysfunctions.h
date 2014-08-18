@@ -23,13 +23,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "vislib/CharTraits.h"
 #include "vislib/File.h"
-//#include "vislib/sysfunctions.h"  ??? WTF ???
+#include "vislib/sysfunctions.h"
 #include "vislib/RawStorage.h"
-#include "the/string.h"
-#include "the/system/system_exception.h"
-#include "the/types.h"
-#include "the/text/string_builder.h"
+#include "vislib/String.h"
+#include "vislib/SystemException.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -80,7 +80,7 @@ namespace sys {
         ((type *)((PCHAR)(address) - (ULONG_PTR)(&((type *)0)->field)))
 #else /* _WIN32 */
     #define CONTAINING_RECORD(address, type, field) \
-        ((type *)((char*)(address) - ((uintptr_t)(&((type *)4)->field) - 4)))
+        ((type *)((PCHAR)(address) - ((ULONG_PTR)(&((type *)4)->field) - 4)))
 #endif /* _WIN32 */
     #endif /* CONTAINING_RECORD */
     #define CONTAINING_STRUCT(address, type, field) \
@@ -115,10 +115,10 @@ namespace sys {
      */
     template <class T>
     bool FilenameGlobMatch(const T* filename, const T* pattern) {
-        size_t fnl = the::text::string_utility::c_str_len(filename);
-        size_t fnp = 0;
-        size_t pl = the::text::string_utility::c_str_len(pattern);
-        size_t pp = 0;
+        SIZE_T fnl = vislib::CharTraits<T>::SafeStringLength(filename);
+        SIZE_T fnp = 0;
+        SIZE_T pl = vislib::CharTraits<T>::SafeStringLength(pattern);
+        SIZE_T pp = 0;
 
         while ((fnp < fnl) && (pp < pl)) {
             switch (pattern[pp]) {
@@ -133,7 +133,7 @@ namespace sys {
                         return true;
                     }
                     // this is super slow and lazy, but works
-                    for (size_t skipSize = 0; skipSize < (fnl - fnp);
+                    for (SIZE_T skipSize = 0; skipSize < (fnl - fnp);
                             skipSize++) {
                         if (FilenameGlobMatch(filename + fnp + skipSize,
                                 pattern + pp)) {
@@ -142,12 +142,13 @@ namespace sys {
                     }
                     return false;
                 case '[': {
-                    size_t pps = pp;
+                    SIZE_T pps = pp;
                     while ((pp < pl) && (pattern[pp] != ']')) pp++;
                     if (pp == pl) return false;
-                    std::basic_string<T> matchGroup(pattern + pps + 1,
-                        static_cast<size_t>(pp - (1 + pps)));
-                    if (!the::text::string_utility::contains(matchGroup, filename[fnp])) return false;
+                    vislib::String<vislib::CharTraits<T> > matchGroup(
+                        pattern + pps + 1, static_cast<typename vislib::String<
+                            vislib::CharTraits<T> >::Size>(pp - (1 + pps)));
+                    if (!matchGroup.Contains(filename[fnp])) return false;
                     fnp++;
                     pp++;
                 } break;
@@ -181,9 +182,9 @@ namespace sys {
      * @return A RawStorage containing the raw resource data. This is the same
      *         object passed in as out.
      *
-     * @throws the::system::system_exception If the resource lookup or loading the resource
+     * @throws SystemException If the resource lookup or loading the resource
      *                         failed.
-     * @throws not_supported_exception On Linux.
+     * @throws UnsupportedOperationException On Linux.
      */
     RawStorage& LoadResource(RawStorage& out,
 #ifdef _WIN32
@@ -209,9 +210,9 @@ namespace sys {
      * @return A RawStorage containing the raw resource data. This is the same
      *         object passed in as out.
      *
-     * @throws the::system::system_exception If the resource lookup or loading the resource
+     * @throws SystemException If the resource lookup or loading the resource
      *                         failed.
-     * @throws not_supported_exception On Linux.
+     * @throws UnsupportedOperationException On Linux.
      */
     RawStorage& LoadResource(RawStorage& out,
 #ifdef _WIN32
@@ -234,10 +235,10 @@ namespace sys {
      *
      * @return The string holding the line read.
      *
-     * @throws the::system::io::io_exception If the file cannot be read.
+     * @throws IOException If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
-    the::astring ReadLineFromFileA(File& input, unsigned int size = defMaxLineSize);
+    StringA ReadLineFromFileA(File& input, unsigned int size = defMaxLineSize);
 
     /**
      * Reads unicode characters from the file until the end of file, a line 
@@ -253,10 +254,10 @@ namespace sys {
      *
      * @return The string holding the line read.
      *
-     * @throws the::system::io::io_exception If the file cannot be read.
+     * @throws IOException If the file cannot be read.
      * @throws std::bad_alloc If there is not enough memory to store the line.
      */
-    the::wstring ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
+    StringW ReadLineFromFileW(File& input, unsigned int size = defMaxLineSize);
 
 #if defined(UNICODE) || defined(_UNICODE)
 #define ReadLineFromFile ReadLineFromFileW
@@ -276,10 +277,10 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws the::system::io::io_exception If reading from the file failed.
+     * @throws IOException If reading from the file failed.
      */
     template<class tp1, class tp2>
-    bool ReadTextFile(tp1& outStr, const tp2 *filename,
+    bool ReadTextFile(String<tp1>& outStr, const tp2 *filename,
             TextFileFormat format = TEXTFF_UNSPECIFIC,
             bool forceFormat = false) {
         File file;
@@ -290,7 +291,7 @@ namespace sys {
             file.Close();
         } else {
             // works because the last error still contains the correct value
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
         }
         return retval;
     }
@@ -307,13 +308,13 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws the::system::io::io_exception If reading from the file failed.
+     * @throws IOException If reading from the file failed.
      */
     template<class tp1, class tp2>
-    bool ReadTextFile(tp1& outStr, const tp2& filename,
+    bool ReadTextFile(String<tp1>& outStr, const String<tp2>& filename,
             TextFileFormat format = TEXTFF_UNSPECIFIC,
             bool forceFormat = false) {
-        return ReadTextFile(outStr, filename.c_str(), format,
+        return ReadTextFile(outStr, filename.PeekBuffer(), format,
             forceFormat);
     }
 
@@ -330,9 +331,9 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws the::system::io::io_exception If reading from the file failed.
+     * @throws IOException If reading from the file failed.
      */
-    bool ReadTextFile(the::astring& outStr, File& file,
+    bool ReadTextFile(StringA& outStr, File& file,
         TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
 
     /**
@@ -348,9 +349,9 @@ namespace sys {
      * @return true, if the file could be read, false, if the file was not 
      *         found or could not be opened.
      *
-     * @throws the::system::io::io_exception If reading from the file failed.
+     * @throws IOException If reading from the file failed.
      */
-    bool ReadTextFile(the::wstring& outStr, File& file,
+    bool ReadTextFile(StringW& outStr, File& file,
         TextFileFormat format = TEXTFF_UNSPECIFIC, bool forceFormat = false);
 
     /**
@@ -373,7 +374,7 @@ namespace sys {
      *         NOERROR in case of success or an appropriate error code 
      *         otherwise.
      *
-     * @throws the::system::system_exception If the specified module could not be opened or if
+     * @throws SystemException If the specified module could not be opened or if
      *                         it has no DllGetVersion function.
      */
     HRESULT GetDLLVersion(DLLVERSIONINFO& outVersion, const char *moduleName);
@@ -390,7 +391,7 @@ namespace sys {
      *         NOERROR in case of success or an appropriate error code 
      *         otherwise.
      *
-     * @throws the::system::system_exception If the specified module could not be opened or if
+     * @throws SystemException If the specified module could not be opened or if
      *                         it has no DllGetVersion function.
      */
     HRESULT GetDLLVersion(DLLVERSIONINFO& outVersion, 
@@ -406,7 +407,7 @@ namespace sys {
      *
      * @return The name without kernel namespace prefix.
      */
-    the::astring RemoveKernelNamespace(const char *name);
+    vislib::StringA RemoveKernelNamespace(const char *name);
 
     /**
      * Remove Windows kernel namespace prefixes "Global" and "Local" from 
@@ -417,7 +418,7 @@ namespace sys {
      *
      * @return The name without kernel namespace prefix.
      */
-    the::wstring RemoveKernelNamespace(const wchar_t *name);
+    vislib::StringW RemoveKernelNamespace(const wchar_t *name);
 
     /**
      * Release the COM pointer 'ptr' and set it NULL if not yet NULL.
@@ -442,7 +443,7 @@ namespace sys {
      *
      * @return The name in POSIX-compatible format without kernel namespace.
      */
-    the::astring TranslateWinIpc2PosixName(const char *name);
+    vislib::StringA TranslateWinIpc2PosixName(const char *name);
 
     /**
      * Take a Windows IPC resource name and construct a POSIX name for Linux 
@@ -454,7 +455,7 @@ namespace sys {
      *
      * @return The name in POSIX-compatible format without kernel namespace.
      */
-    the::wstring TranslateWinIpc2PosixName(const wchar_t *name);
+    vislib::StringW TranslateWinIpc2PosixName(const wchar_t *name);
 
 #ifndef _WIN32
     /**
@@ -465,7 +466,7 @@ namespace sys {
      *
      * @return The System V unique key for the name.
      *
-     * @throws the::system::system_exception If the key could not be created.
+     * @throws SystemException If the key could not be created.
      */
     key_t TranslateIpcName(const char *name);
 #endif /* !_WIN32 */
@@ -481,18 +482,18 @@ namespace sys {
      * @return 'true' on success, 'false' it not all the data has been
      *         written.
      *
-     * @throws the::system::system_exception If there was an IO error.
+     * @throws SystemException If there was an IO error.
      */
     template<class T>
     bool WriteFormattedLineToFile(File &out,
             const T *format, ...) {
-        std::basic_string<T> tmp;
+        vislib::String<vislib::CharTraits<T> > tmp;
         va_list argptr;
         va_start(argptr, format);
-        the::text::string_builder<T>::format_to(tmp, format, argptr);
+        tmp.FormatVa(format, argptr);
         va_end(argptr);
-        size_t len = tmp.Length() * sizeof(T);
-        return out.Write(tmp.c_str(), len) == len;
+        SIZE_T len = tmp.Length() * sizeof(T);
+        return out.Write(tmp.PeekBuffer(), len) == len;
     }
 
     /**
@@ -505,11 +506,11 @@ namespace sys {
      * @return 'true' on success, 'false' it not all the data has been
      *         written.
      *
-     * @throws the::system::system_exception If there was an IO error.
+     * @throws SystemException If there was an IO error.
      */
     template<class T>
     bool WriteLineToFile(File &out, const T *text) {
-        size_t len = the::text::string_utility::c_str_len(text)
+        SIZE_T len = vislib::CharTraits<T>::SafeStringLength(text)
             * sizeof(T);
         return out.Write(text, len) == len;
     }
@@ -525,13 +526,13 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws the::system::system_exception in case of an error.
+     * @throws SystemException in case of an error.
      */
     template<class tp1, class tp2>
-    bool WriteTextFile(const tp1& filename, const tp2& text,
+    bool WriteTextFile(const String<tp1>& filename, const String<tp2>& text,
             bool force = false, TextFileFormat format = TEXTFF_UNSPECIFIC,
             TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC) {
-        return WriteTextFile(filename.c_str(), text, force, format, bom);
+        return WriteTextFile(filename.PeekBuffer(), text, force, format, bom);
     }
 
     /**
@@ -545,10 +546,10 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws the::system::system_exception in case of an error.
+     * @throws SystemException in case of an error.
      */
     template<class tp1, class tp2>
-    bool WriteTextFile(const tp1 *filename, const tp2& text,
+    bool WriteTextFile(const tp1 *filename, const String<tp2>& text,
             bool force = false, TextFileFormat format = TEXTFF_UNSPECIFIC,
             TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC) {
         bool retval = false;
@@ -559,7 +560,7 @@ namespace sys {
             file.Close();
         } else {
             // works because the last error still contains the correct value
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
         }
         return retval;
     }
@@ -573,9 +574,9 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws the::system::system_exception in case of an error.
+     * @throws SystemException in case of an error.
      */
-    bool WriteTextFile(File& file, const the::astring& text,
+    bool WriteTextFile(File& file, const StringA& text,
         TextFileFormat format = TEXTFF_ASCII,
         TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
 
@@ -588,9 +589,9 @@ namespace sys {
      *
      * @return true if the data was written successfully, false otherwise.
      *
-     * @throws the::system::system_exception in case of an error.
+     * @throws SystemException in case of an error.
      */
-    bool WriteTextFile(File& file, const the::wstring& text,
+    bool WriteTextFile(File& file, const StringW& text,
         TextFileFormat format = TEXTFF_UNICODE,
         TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
 

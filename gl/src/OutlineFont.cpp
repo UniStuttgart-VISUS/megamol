@@ -8,7 +8,9 @@
 #include "vislib/OutlineFont.h"
 #include <cfloat>
 #include "glh/glh_genext.h"
-#include "the/memory.h"
+#include "vislib/CharTraits.h"
+#include "vislib/memutils.h"
+#include "vislib/UTF8Encoder.h"
 
 using namespace vislib::graphics::gl;
 
@@ -444,11 +446,11 @@ void OutlineFont::deinitialise(void) {
  * OutlineFont::buildGlyphRun
  */
 int *OutlineFont::buildGlyphRun(const char *txt, float maxWidth) const {
-    the::astring txtutf8;
-    if (!the::text::string_converter::convert_to_utf8(txtutf8, txt)) {
+    vislib::StringA txtutf8;
+    if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
         // encoding failed ... how?
-        txtutf8 = the::astring(the::text::string_utility::c_str_len(txt), ' ');
-        char *t = const_cast<char*>(txtutf8.c_str());
+        char *t = txtutf8.AllocateBuffer(
+            vislib::CharTraitsA::SafeStringLength(txt));
         for (; *txt != 0; txt++) {
             if ((*txt & 0x80) == 0) {
                 *t = *txt;
@@ -457,7 +459,7 @@ int *OutlineFont::buildGlyphRun(const char *txt, float maxWidth) const {
         }
         *t = 0;
     }
-    return this->buildUpGlyphRun(txtutf8.c_str(), maxWidth);
+    return this->buildUpGlyphRun(txtutf8, maxWidth);
 }
 
 
@@ -465,11 +467,11 @@ int *OutlineFont::buildGlyphRun(const char *txt, float maxWidth) const {
  * OutlineFont::buildGlyphRun
  */
 int *OutlineFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
-    the::astring txtutf8;
-    if (!the::text::string_converter::convert_to_utf8(txtutf8, txt)) {
+    vislib::StringA txtutf8;
+    if (!vislib::UTF8Encoder::Encode(txtutf8, txt)) {
         // encoding failed ... how?
-        txtutf8 = the::astring(the::text::string_utility::c_str_len(txt), ' ');
-        char *t = const_cast<char*>(txtutf8.c_str());
+        char *t = txtutf8.AllocateBuffer(
+            vislib::CharTraitsW::SafeStringLength(txt));
         for (; *txt != 0; txt++) {
             if ((*txt & 0x80) == 0) {
                 *t = static_cast<char>(*txt);
@@ -478,7 +480,7 @@ int *OutlineFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
         }
         *t = 0;
     }
-    return this->buildUpGlyphRun(txtutf8.c_str(), maxWidth);
+    return this->buildUpGlyphRun(txtutf8, maxWidth);
 }
 
 
@@ -486,14 +488,14 @@ int *OutlineFont::buildGlyphRun(const wchar_t *txt, float maxWidth) const {
  * OutlineFont::buildUpGlyphRun
  */
 int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
-    size_t txtlen = static_cast<size_t>(
-        the::text::string_utility::c_str_len(txtutf8));
-    size_t pos = 0;
+    SIZE_T txtlen = static_cast<SIZE_T>(
+        CharTraitsA::SafeStringLength(txtutf8));
+    SIZE_T pos = 0;
     int *glyphrun = new int[txtlen + 1];
     bool knowLastWhite = false;
     bool blackspace = true;
-    size_t lastWhiteGlyph = 0;
-    size_t lastWhiteSpace = 0;
+    SIZE_T lastWhiteGlyph = 0;
+    SIZE_T lastWhiteSpace = 0;
     float lineLength = 0.0f;
     bool nextAsNewLine = false;
     signed short idx;
@@ -504,7 +506,7 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
     // build glyph run
     idx = 0;
-    for (size_t i = 0; i < txtlen; i++) {
+    for (SIZE_T i = 0; i < txtlen; i++) {
         if (txtutf8[i] == '\n') { // special handle new lines
             nextAsNewLine = true;
             continue;

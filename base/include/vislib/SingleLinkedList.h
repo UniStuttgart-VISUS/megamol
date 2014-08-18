@@ -14,13 +14,13 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/memory.h"
+#include "vislib/memutils.h"
 #include "vislib/ConstIterator.h"
 #include "vislib/Iterator.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
-#include "the/no_such_element_exception.h"
-#include "the/assert.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/NoSuchElementException.h"
+#include "vislib/assert.h"
 #include "vislib/OrderedCollection.h"
 #include "vislib/NullLockable.h"
 
@@ -78,7 +78,7 @@ namespace vislib {
             /** 
              * Behaves like Iterator<T>::Next 
              *
-             * @throw invalid_operation_exception if there is no next element
+             * @throw IllegalStateException if there is no next element
              */
             virtual T& Next(void);
 
@@ -172,7 +172,7 @@ namespace vislib {
          *
          * @return Number of items in the collection.
          */
-        virtual size_t Count(void) const;
+        virtual SIZE_T Count(void) const;
 
         /**
          * Answer a pointer to the first copy of 'element' in the collection. 
@@ -203,7 +203,7 @@ namespace vislib {
          *
          * @return A reference to the first element.
          *
-         * @throws no_such_element_exception, if the collection is empty.
+         * @throws NoSuchElementException, if the collection is empty.
          */
         virtual const T& First(void) const;
 
@@ -212,7 +212,7 @@ namespace vislib {
          *
          * @return A reference to the first element.
          *
-         * @throws no_such_element_exception, if the collection is empty.
+         * @throws NoSuchElementException, if the collection is empty.
          */
         virtual T& First(void);
 
@@ -222,7 +222,7 @@ namespace vislib {
          *
          * @return true, if the collection is empty, false otherwise.
          */
-        virtual inline bool empty(void) const {
+        virtual inline bool IsEmpty(void) const {
             // no need to sync here (this race condition is acceptable)
             return this->first == NULL;
         }
@@ -232,7 +232,7 @@ namespace vislib {
          *
          * @return A reference to the last element.
          *
-         * @throws no_such_element_exception, if the collection is empty.
+         * @throws NoSuchElementException, if the collection is empty.
          */
         virtual const T& Last(void) const;
 
@@ -241,7 +241,7 @@ namespace vislib {
          *
          * @return A reference to the last element.
          *
-         * @throws no_such_element_exception, if the collection is empty.
+         * @throws NoSuchElementException, if the collection is empty.
          */
         virtual T& Last(void);
 
@@ -285,7 +285,7 @@ namespace vislib {
          *
          * @param iter The iterator of the item to be removed.
          *
-         * @throw argument_exception if the iterator has not returned any
+         * @throw IllegalParamException if the iterator has not returned any
          *        item of this list at the last 'Next' call.
          */
         virtual void Remove(Iterator& iter);
@@ -471,7 +471,7 @@ namespace vislib {
     T& SingleLinkedList<T, L>::Iterator::Next(void) {
         this->prev = this->next;
         if (!this->next) {
-            throw the::invalid_operation_exception("No next element.",
+            throw IllegalStateException("No next element.",
                 __FILE__, __LINE__);
         }
         this->next = this->next->next;
@@ -612,7 +612,7 @@ namespace vislib {
      * SingleLinkedList<T, L>::Count 
      */
     template<class T, class L>
-    size_t SingleLinkedList<T, L>::Count(void) const {
+    SIZE_T SingleLinkedList<T, L>::Count(void) const {
         unsigned int c = 0;
         this->Lock();
         Item *i = this->first;
@@ -671,7 +671,7 @@ namespace vislib {
         this->Lock();
         if (this->first == NULL) {
             this->Unlock();
-            throw the::no_such_element_exception("List is empty",
+            throw vislib::NoSuchElementException("List is empty",
                 __FILE__, __LINE__);
         }
         const T& retval = this->first->item;
@@ -687,7 +687,7 @@ namespace vislib {
         this->Lock();
         if (this->first == NULL) {
             this->Unlock();
-            throw the::no_such_element_exception("List is empty",
+            throw vislib::NoSuchElementException("List is empty",
                 __FILE__, __LINE__);
         }
         T& retval = this->first->item;
@@ -704,7 +704,7 @@ namespace vislib {
         this->Lock();
         if (this->last == NULL) {
             this->Unlock();
-            throw the::no_such_element_exception("List is empty",
+            throw vislib::NoSuchElementException("List is empty",
                 __FILE__, __LINE__);
         }
         const T& retval = this->last->item;
@@ -720,7 +720,7 @@ namespace vislib {
         this->Lock();
         if (this->last == NULL) {
             this->Unlock();
-            throw the::no_such_element_exception("List is empty",
+            throw vislib::NoSuchElementException("List is empty",
                 __FILE__, __LINE__);
         }
         T& retval = this->last->item;
@@ -787,7 +787,7 @@ namespace vislib {
                     delete i;
                     i = j->next;
                 } else {
-                    THE_ASSERT(this->first == i);
+                    ASSERT(this->first == i);
                     this->first = i->next;
                     if (this->last == i) {
                         this->last = i->next;
@@ -822,7 +822,7 @@ namespace vislib {
                     delete i;
                     i = j->next;
                 } else {
-                    THE_ASSERT(this->first == i);
+                    ASSERT(this->first == i);
                     this->first = i->next;
                     if (this->last == i) {
                         this->last = i->next;
@@ -846,7 +846,7 @@ namespace vislib {
     void SingleLinkedList<T, L>::Remove(
             typename SingleLinkedList<T, L>::Iterator& iter) {
         if (iter.prev == NULL) {
-            throw the::argument_exception("Invalid Iterator state", 
+            throw IllegalParamException("Invalid Iterator state", 
                 __FILE__, __LINE__);
         }
 
@@ -867,7 +867,7 @@ namespace vislib {
                 delete iter.prev;
             } else {
                 this->Unlock();
-                throw the::argument_exception("Invalid Iterator", 
+                throw IllegalParamException("Invalid Iterator", 
                     __FILE__, __LINE__);
             }
         }
@@ -904,7 +904,7 @@ namespace vislib {
                 newlast = this->first;
                 while (newlast->next != this->last) {
                     newlast = newlast->next;
-                    THE_ASSERT(newlast);
+                    ASSERT(newlast);
                 }
                 newlast->next = NULL;
             } else {
@@ -1124,8 +1124,8 @@ namespace vislib {
         /*/
 
         // sequential implementation with A LOT of temporary memory
-        size_t cnt = this->Count();
-        THE_ASSERT(cnt > 1);
+        SIZE_T cnt = this->Count();
+        ASSERT(cnt > 1);
         if (cnt % 2) cnt++;
         cnt /= 2;
         Item **Array = new Item*[cnt];

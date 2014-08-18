@@ -75,7 +75,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw argument_exception if 'rhs' has an effective degree
+         * @throw IllegalParamException if 'rhs' has an effective degree
          *        larger than D.
          */
         template<class Tp, unsigned int Dp>

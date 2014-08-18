@@ -12,7 +12,7 @@
 #ifdef _WIN32
 
 
-#include <the/not_supported_exception.h>
+#include <vislib/UnsupportedOperationException.h>
 #include <windows.h>
 
 
@@ -91,7 +91,7 @@ namespace sys {
      */
     template<class T>
     vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(void) {
-        throw the::not_supported_exception("DynamicFunctionPointer ctor", __FILE__, __LINE__);
+        throw UnsupportedOperationException("DynamicFunctionPointer ctor", __FILE__, __LINE__);
     }
 
 } /* end namespace sys */

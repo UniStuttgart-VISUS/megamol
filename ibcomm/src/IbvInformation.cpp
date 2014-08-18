@@ -8,17 +8,15 @@
 #include "vislib/IbvInformation.h"
 
 #include "vislib/AutoLock.h"
-#include "the/system/com_exception.h"
-#include "the/memory.h"
-#include "the/argument_exception.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/COMException.h"
+#include "vislib/memutils.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sysfunctions.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
-#include "the/utils.h"
-#include "the/string.h"
-#include "the/text/string_utility.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/utils.h"
 
 
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -29,7 +27,7 @@
  * vislib::net::ib::IbvInformation::Port::Port
  */
 vislib::net::ib::IbvInformation::Port::Port(const Port& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Port::Port", __FILE__, __LINE__);
     *this = rhs;
 }
 
@@ -38,32 +36,31 @@ vislib::net::ib::IbvInformation::Port::Port(const Port& rhs) {
  * vislib::net::ib::IbvInformation::Port::~Port
  */
 vislib::net::ib::IbvInformation::Port::~Port(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Port::~Port", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::net::ib::IbvInformation::Port::GetPortGuidA
  */
-the::astring vislib::net::ib::IbvInformation::Port::GetPortGuidA(
+vislib::StringA vislib::net::ib::IbvInformation::Port::GetPortGuidA(
         void) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Port::GetPortGuidA", __FILE__, __LINE__);
     NET64 guid = this->GetPortGuid();
-    return the::text::string_utility::to_hex_astring(
-        reinterpret_cast<const uint8_t *>(&guid), 
-        sizeof(guid)).c_str();
+    return BytesToHexStringA(reinterpret_cast<const BYTE *>(&guid), 
+        sizeof(guid));
 }
 
 
 /*
  * vislib::net::ib::IbvInformation::Port::GetPortGuidW
  */
-the::wstring vislib::net::ib::IbvInformation::Port::GetPortGuidW(
+vislib::StringW vislib::net::ib::IbvInformation::Port::GetPortGuidW(
         void) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Port::GetPortGuidW", __FILE__, __LINE__);
     NET64 guid = this->GetPortGuid();
-    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(&guid), 
-        sizeof(guid)).c_str();
+    return BytesToHexStringW(reinterpret_cast<const BYTE *>(&guid), 
+        sizeof(guid));
 }
 
 
@@ -72,7 +69,7 @@ the::wstring vislib::net::ib::IbvInformation::Port::GetPortGuidW(
  */
 vislib::net::ib::IbvInformation::Port& 
 vislib::net::ib::IbvInformation::Port::operator =(const Port& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Port::operator =", __FILE__, __LINE__);
 
     if (this != &rhs) {
         ::memcpy(&this->attributes, &rhs.attributes, sizeof(this->attributes));
@@ -88,7 +85,7 @@ vislib::net::ib::IbvInformation::Port::operator =(const Port& rhs) {
  */
 bool vislib::net::ib::IbvInformation::Port::operator ==(
         const Port& rhs) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Port::operator =", __FILE__, __LINE__);
 
     if (this == &rhs) {
         return true;
@@ -133,7 +130,7 @@ const char *vislib::net::ib::IbvInformation::Port::STATES[] = {
  * vislib::net::ib::IbvInformation::Port::Port
  */
 vislib::net::ib::IbvInformation::Port::Port(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Port::Port", __FILE__, __LINE__);
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 }
 
@@ -142,31 +139,31 @@ vislib::net::ib::IbvInformation::Port::Port(void) {
  * vislib::net::ib::IbvInformation::Port::Port
  */
 vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device, 
-        const uint8_t port) {
-    THE_STACK_TRACE;
+        const UINT8 port) {
+    VLSTACKTRACE("Port::Port", __FILE__, __LINE__);
     HRESULT hr = S_OK;
 
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying port attributes...\n");
-    THE_ASSERT(device != NULL);
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying port attributes...\n");
+    ASSERT(device != NULL);
     if (FAILED(hr = device->QueryPort(port, &this->attributes))) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying port attributes "
+        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying port attributes "
             "failed with error code %d.\n", hr);
         this->~Port();
-        throw the::system::com_exception(hr, __FILE__, __LINE__);
+        throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying port GUID...\n");
-    THE_ASSERT(this->attributes.GidTableLength > 0);
-    THE_ASSERT(device != NULL);
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying port GUID...\n");
+    ASSERT(this->attributes.GidTableLength > 0);
+    ASSERT(device != NULL);
     if (FAILED(device->QueryGid(port, 0, &this->gid))) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying port GUID failed "
+        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying port GUID failed "
             "with error code %d.\n", hr);
         this->~Port();
-        throw the::system::com_exception(hr, __FILE__, __LINE__);
+        throw sys::COMException(hr, __FILE__, __LINE__);
     }
-    THE_ASSERT(!IbvInformation::IsNullGid(this->gid));
+    ASSERT(!IbvInformation::IsNullGid(this->gid));
 }
  
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -182,7 +179,7 @@ vislib::net::ib::IbvInformation::Port::Port(IWVDevice *device,
  * vislib::net::ib::IbvInformation::Device::Device
  */
 vislib::net::ib::IbvInformation::Device::Device(const Device& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Device::Device", __FILE__, __LINE__);
     *this = rhs;
 }
 
@@ -191,8 +188,8 @@ vislib::net::ib::IbvInformation::Device::Device(const Device& rhs) {
  * vislib::net::ib::IbvInformation::Device::~Device
  */
 vislib::net::ib::IbvInformation::Device::~Device(void) {
-    THE_STACK_TRACE;
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Releasing IB device object...\n");
+    VLSTACKTRACE("Device::~Device", __FILE__, __LINE__);
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Releasing IB device object...\n");
     sys::SafeRelease(this->device);
 }
 
@@ -200,22 +197,22 @@ vislib::net::ib::IbvInformation::Device::~Device(void) {
 /*
  * vislib::net::ib::IbvInformation::Device::GetNodeGuidA
  */
-the::astring vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
+vislib::StringA vislib::net::ib::IbvInformation::Device::GetNodeGuidA(
         void) const {
-    THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_astring(reinterpret_cast<const uint8_t *>(
-        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid)).c_str();
+    VLSTACKTRACE("Device::GetNodeGuidA", __FILE__, __LINE__);
+    return BytesToHexStringA(reinterpret_cast<const BYTE *>(
+        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid));
 }
 
 
 /*
  * vislib::net::ib::IbvInformation::Device::GetNodeGuidW
  */
-the::wstring vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
+vislib::StringW vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
         void) const {
-    THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(
-        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid)).c_str();
+    VLSTACKTRACE("Device::GetNodeGuidW", __FILE__, __LINE__);
+    return BytesToHexStringW(reinterpret_cast<const BYTE *>(
+        &this->attributes.NodeGuid), sizeof(this->attributes.NodeGuid));
 }
 
 
@@ -223,10 +220,10 @@ the::wstring vislib::net::ib::IbvInformation::Device::GetNodeGuidW(
  * vislib::net::ib::IbvInformation::Device::GetPort
  */
 const vislib::net::ib::IbvInformation::Port& 
-vislib::net::ib::IbvInformation::Device::GetPort(const size_t idx) const {
-    THE_STACK_TRACE;
+vislib::net::ib::IbvInformation::Device::GetPort(const SIZE_T idx) const {
+    VLSTACKTRACE("Device::GetPort", __FILE__, __LINE__);
     if ((idx < 0) || (idx > this->ports.Count() - 1)) {
-        throw the::index_out_of_range_exception(idx, 0, this->ports.Count() - 1, __FILE__, 
+        throw OutOfRangeException(idx, 0, this->ports.Count() - 1, __FILE__, 
             __LINE__);
     } else {
         return this->ports[idx];
@@ -237,25 +234,25 @@ vislib::net::ib::IbvInformation::Device::GetPort(const size_t idx) const {
 /*
  * vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA
  */
-the::astring 
+vislib::StringA 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidA(void) const {
-    THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_astring(reinterpret_cast<const uint8_t *>(
+    VLSTACKTRACE("Device::GetSystemImageGuidA", __FILE__, __LINE__);
+    return BytesToHexStringA(reinterpret_cast<const BYTE *>(
         &this->attributes.SystemImageGuid), 
-        sizeof(this->attributes.SystemImageGuid)).c_str();
+        sizeof(this->attributes.SystemImageGuid));
 }
 
 
 /*
- * the::wstring 
+ * vislib::StringW 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW
  */
-the::wstring 
+vislib::StringW 
 vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW(void) const {
-    THE_STACK_TRACE;
-    return the::text::string_utility::to_hex_wstring(reinterpret_cast<const uint8_t *>(
+    VLSTACKTRACE("Device::GetSystemImageGuidW", __FILE__, __LINE__);
+    return BytesToHexStringW(reinterpret_cast<const BYTE *>(
         &this->attributes.SystemImageGuid), 
-        sizeof(this->attributes.SystemImageGuid)).c_str();
+        sizeof(this->attributes.SystemImageGuid));
 }
 
 
@@ -264,7 +261,7 @@ vislib::net::ib::IbvInformation::Device::GetSystemImageGuidW(void) const {
  */
 vislib::net::ib::IbvInformation::Device& 
 vislib::net::ib::IbvInformation::Device::operator =(const Device& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Device::operator =", __FILE__, __LINE__);
 
     if (this != &rhs) {
         ::memcpy(&this->attributes, &rhs.attributes, sizeof(this->attributes));
@@ -282,7 +279,7 @@ vislib::net::ib::IbvInformation::Device::operator =(const Device& rhs) {
  */
 bool vislib::net::ib::IbvInformation::Device::operator ==(
         const Device& rhs) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Device::operator =", __FILE__, __LINE__);
 
     if (this == &rhs) {
         return true;
@@ -300,7 +297,7 @@ bool vislib::net::ib::IbvInformation::Device::operator ==(
  */
 vislib::net::ib::IbvInformation::Device::Device(void) 
         : device(NULL), ports(NULL) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Device::Device", __FILE__, __LINE__);
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 }
 
@@ -310,29 +307,29 @@ vislib::net::ib::IbvInformation::Device::Device(void)
  */
 vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
         const NET64& guid) : device(NULL), ports(NULL) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("Device::Device", __FILE__, __LINE__);
     HRESULT hr = S_OK;
 
     ::ZeroMemory(&this->attributes, sizeof(this->attributes));
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Opening IB device...\n");
-    THE_ASSERT(wvProvider != NULL);
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Opening IB device...\n");
+    ASSERT(wvProvider != NULL);
     if (FAILED(hr = wvProvider->OpenDevice(guid, &this->device))) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Opening device "
+        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Opening device "
             "failed with error code %d.\n", hr);
         this->~Device();
-        throw the::system::com_exception(hr, __FILE__, __LINE__);
+        throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying device attributes...\n");
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying device attributes...\n");
     if (FAILED(hr = this->device->Query(&this->attributes))) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying device attributes "
+        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying device attributes "
             "failed with error code %d.\n", hr);
         this->~Device();
-        throw the::system::com_exception(hr, __FILE__, __LINE__);
+        throw sys::COMException(hr, __FILE__, __LINE__);
     }
 
-    for (uint8_t i = 0; i < this->attributes.PhysPortCount; i++) {
+    for (UINT8 i = 0; i < this->attributes.PhysPortCount; i++) {
         try {
             this->ports.Add(Port(this->device, i + 1));
         } catch (...) {
@@ -352,7 +349,7 @@ vislib::net::ib::IbvInformation::Device::Device(IWVProvider *wvProvider,
  */
 vislib::net::ib::IbvInformation& 
 vislib::net::ib::IbvInformation::GetInstance(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IbvInformation::GetInstance", __FILE__, __LINE__);
     static IbvInformation instance;
     return instance;
 }
@@ -363,7 +360,7 @@ vislib::net::ib::IbvInformation::GetInstance(void) {
  */
 bool vislib::net::ib::IbvInformation::IsNullGid(const WV_GID& gid,
         const bool ignoreSubnetPrefix) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IbvInformation::IsNullGid", __FILE__, __LINE__);
     int cntElements = sizeof(gid.Raw) / sizeof(gid.Raw[0]);
 
     for (int i = ignoreSubnetPrefix ? 8 : 0; i < cntElements; i++) {
@@ -380,7 +377,7 @@ bool vislib::net::ib::IbvInformation::IsNullGid(const WV_GID& gid,
  * vislib::net::ib::IbvInformation::DiscardCache
  */ 
 void vislib::net::ib::IbvInformation::DiscardCache(const bool reread) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IbvInformation::DiscardCache", __FILE__, __LINE__);
     sys::AutoLock(this->lock);
     this->devices.Clear();
 
@@ -393,9 +390,9 @@ void vislib::net::ib::IbvInformation::DiscardCache(const bool reread) {
 /*
  * vislib::net::ib::IbvInformation::GetDevices
  */
-size_t vislib::net::ib::IbvInformation::GetDevices(
+SIZE_T vislib::net::ib::IbvInformation::GetDevices(
         DeviceList& outDevices) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IbvInformation::GetDevices", __FILE__, __LINE__);
 
     sys::AutoLock(this->lock);
     this->cacheDevices();
@@ -408,17 +405,17 @@ size_t vislib::net::ib::IbvInformation::GetDevices(
  * vislib::net::ib::IbvInformation::IbvInformation
  */
 vislib::net::ib::IbvInformation::IbvInformation(void) : wvProvider(NULL) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IbvInformation::IbvInformation", __FILE__, __LINE__);
     HRESULT hr = S_OK;
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Acquiring WinVerbs "
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Acquiring WinVerbs "
         "provider...\n");
     if (FAILED(hr = ::WvGetObject(IID_IWVProvider, 
             reinterpret_cast<void **>(&this->wvProvider)))) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Acquiring WinVerbs provider "
+        VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Acquiring WinVerbs provider "
             "failed with error code %d.\n", hr);
         this->~IbvInformation();
-        throw the::system::com_exception(hr, __FILE__, __LINE__);    
+        throw sys::COMException(hr, __FILE__, __LINE__);    
     }
 }
 
@@ -428,8 +425,8 @@ vislib::net::ib::IbvInformation::IbvInformation(void) : wvProvider(NULL) {
  */
 vislib::net::ib::IbvInformation::IbvInformation(const IbvInformation& rhs) 
         : wvProvider(NULL) {
-    THE_STACK_TRACE;
-    throw the::not_supported_exception("IbvInformation::IbvInformation",
+    VLSTACKTRACE("IbvInformation::IbvInformation", __FILE__, __LINE__);
+    throw UnsupportedOperationException("IbvInformation::IbvInformation",
         __FILE__, __LINE__);
 }
 
@@ -438,8 +435,8 @@ vislib::net::ib::IbvInformation::IbvInformation(const IbvInformation& rhs)
  * vislib::net::ib::IbvInformation::~IbvInformation
  */
 vislib::net::ib::IbvInformation::~IbvInformation(void) {
-    THE_STACK_TRACE;
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Releasing WinVerbs "
+    VLSTACKTRACE("IbvInformation::~IbvInformation", __FILE__, __LINE__);
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Releasing WinVerbs "
         "provider...\n");
     sys::SafeRelease(this->wvProvider);
 }
@@ -449,37 +446,37 @@ vislib::net::ib::IbvInformation::~IbvInformation(void) {
  * vislib::net::ib::IbvInformation::cacheDevices
  */
 bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IbvInformation::cacheDevices", __FILE__, __LINE__);
 
     RawStorage guids;       // Receives GUIDs of devices.
-    size_t size = 0;        // Receives size of GUIDs in bytes.
+    SIZE_T size = 0;        // Receives size of GUIDs in bytes.
     HRESULT hr = S_OK;      // Receives WV API results.
 
-    if (this->devices.empty()) {
+    if (this->devices.IsEmpty()) {
 
         /* Determine number of devices and get their GUIDs. */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying number of IB "
+        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying number of IB "
             "devices...\n");
-        THE_ASSERT(this->wvProvider != NULL);
+        ASSERT(this->wvProvider != NULL);
         if (FAILED(hr = this->wvProvider->QueryDeviceList(NULL, &size))) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying number of "
+            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying number of "
                 "devices failed with error code %d.\n", hr);
-            throw the::system::com_exception(hr, __FILE__, __LINE__);
+            throw sys::COMException(hr, __FILE__, __LINE__);
         }
 
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Querying device GUIDs...\n");
+        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Querying device GUIDs...\n");
         guids.AssertSize(size);
         if (FAILED(hr = this->wvProvider->QueryDeviceList(guids.As<NET64>(), 
                 &size))) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Querying device GUIDs "
+            VLTRACE(vislib::Trace::LEVEL_VL_ERROR, "Querying device GUIDs "
                 "failed with error code %d.\n", hr);
-            throw the::system::com_exception(hr, __FILE__, __LINE__);
+            throw sys::COMException(hr, __FILE__, __LINE__);
         }
 
         /* Get the attributes of the devices. */
         size /= sizeof(NET64);
         this->devices.AssertCapacity(size);
-        for (size_t i = 0; i < size; i++) {
+        for (SIZE_T i = 0; i < size; i++) {
             NET64 guid = *guids.AsAt<NET64>(i * sizeof(NET64));
             this->devices.Add(Device(wvProvider, guid));
         }
@@ -489,7 +486,7 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
     } else {
         return false;
 
-    } /* end if (this->devices.empty()) */
+    } /* end if (this->devices.IsEmpty()) */
 }
 
 
@@ -498,9 +495,9 @@ bool vislib::net::ib::IbvInformation::cacheDevices(void) const {
  */
 vislib::net::ib::IbvInformation& 
 vislib::net::ib::IbvInformation::operator =(const IbvInformation& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IbvInformation::operator =", __FILE__, __LINE__);
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

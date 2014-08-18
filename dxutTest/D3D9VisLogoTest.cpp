@@ -9,9 +9,9 @@
 #include "DXUT.h"
 #include "D3D9VisLogoTest.h"
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/d3dverify.h"
-#include "the/memory.h"
+#include "vislib/memutils.h"
 
 
 /*
@@ -26,7 +26,7 @@ D3D9VisLogoTest::D3D9VisLogoTest(void) : AbstractTest(L"VIS-Logo-Test"),
  * D3D9VisLogoTest::~D3D9VisLogoTest
  */
 D3D9VisLogoTest::~D3D9VisLogoTest(void) {
-    the::safe_delete(this->logo);
+    SAFE_DELETE(this->logo);
 }
 
 
@@ -37,7 +37,7 @@ HRESULT D3D9VisLogoTest::OnD3D9CreateDevice(
         PDIRECT3DDEVICE9 pd3dDevice,
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc) {
     using namespace vislib::graphics::d3d;
-    THE_ASSERT(this->logo == NULL);
+    ASSERT(this->logo == NULL);
 
     AbstractTest::OnD3D9CreateDevice(pd3dDevice, pBackBufferSurfaceDesc);
 
@@ -59,7 +59,7 @@ HRESULT D3D9VisLogoTest::OnD3D9CreateDevice(
  * D3D9VisLogoTest::OnD3D9DestroyDevice
  */
 void D3D9VisLogoTest::OnD3D9DestroyDevice(void) {
-    the::safe_delete(this->logo);
+    SAFE_DELETE(this->logo);
 }
 
 
@@ -80,7 +80,7 @@ void D3D9VisLogoTest::OnFrameMove(double fTime, float fElapsedTime) {
 void D3D9VisLogoTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice, 
         double fTime, float fElapsedTime) {
     USES_D3D_VERIFY;
-    THE_ASSERT(this->logo != NULL);
+    ASSERT(this->logo != NULL);
 
     D3DXMATRIXA16 modelMatrix;                  // Model matrix.
     D3DXMATRIXA16 projMatrix;                   // Projection matrix.

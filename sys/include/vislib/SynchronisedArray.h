@@ -50,7 +50,7 @@ namespace sys {
          *
          * @param capacity The initial capacity of the array.
          */
-        SynchronisedArray(const size_t capacity = Super::DEFAULT_CAPACITY);
+        SynchronisedArray(const SIZE_T capacity = Super::DEFAULT_CAPACITY);
 
         /**
          * Create a new array with the specified initial capacity and
@@ -59,7 +59,7 @@ namespace sys {
          * @param capacity The initial capacity of the array.
          * @param element  The default value to set.
          */
-        inline SynchronisedArray(const size_t capacity, const T& element)
+        inline SynchronisedArray(const SIZE_T capacity, const T& element)
                 : Super(capacity, element) {}
 
         /**
@@ -78,7 +78,7 @@ namespace sys {
      * vislib::sys::SynchronisedArray<T, S, C>::SynchronisedArray
      */
     template<class T, class S , class C>
-    SynchronisedArray<T, S, C>::SynchronisedArray(const size_t capacity)
+    SynchronisedArray<T, S, C>::SynchronisedArray(const SIZE_T capacity)
             : Super(capacity) {
         // Nothing to do.
     }

@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/string.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -181,7 +181,7 @@ namespace vislib {
          *
          * @return The string holding the version number.
          */
-        the::astring ToStringA(unsigned int num = 0) const;
+        vislib::StringA ToStringA(unsigned int num = 0) const;
 
         /**
          * Creates and returns a string holding the version numbers. The string
@@ -200,7 +200,7 @@ namespace vislib {
          *
          * @return The string holding the version number.
          */
-        the::wstring ToStringW(unsigned int num = 0) const;
+        vislib::StringW ToStringW(unsigned int num = 0) const;
 
         /**
          * assignment operator

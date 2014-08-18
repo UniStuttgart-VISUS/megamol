@@ -18,12 +18,12 @@
 
 #include <windows.h>
 
-#include "the/assert.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
-#include "the/string.h"
-#include "the/system/system_exception.h"
-#include "the/not_supported_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/String.h"
+#include "vislib/SystemException.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 namespace vislib {
@@ -45,15 +45,15 @@ namespace sys {
     /**
      * Partial template specialisation of WindowsService for ANSI characters.
      */
-    template<> class WindowsService<the::astring> {
+    template<> class WindowsService<CharTraitsA> {
 
     public: 
 
         /** Characters to use in this class. */
-        typedef the::astring::value_type Char;
+        typedef CharTraitsA::Char Char;
 
         /** String to use in this class. */
-        typedef the::astring String;
+        typedef String<CharTraitsA> String;
 
         /**
          * Install 'binaryPath' as Windows service using 'svcName' as 
@@ -68,7 +68,7 @@ namespace sys {
          * @param startType   The service start type. See Win32 API 
          *                    documentation of CreateService for valid values.
          *
-         * @throws the::system::system_exception If the operation fails.
+         * @throws SystemException If the operation fails.
          */
         static void Install(const String& binaryPath, const String& svcName, 
             const String& displayName, 
@@ -114,7 +114,7 @@ namespace sys {
          *
          * @param startType The startup type of the service.
          *
-         * @throws the::system::system_exception If the service could not be installed.
+         * @throws SystemException If the service could not be installed.
          */
         void Install(const DWORD startType = SERVICE_AUTO_START);
 
@@ -126,10 +126,10 @@ namespace sys {
          * @return false, if the executable is running as application and not as
          *         service; true, never.
          *
-         * @throws the::system::system_exception       If the executable is running as 
+         * @throws SystemException       If the executable is running as 
          *                               service, but the service could not be 
          *                               started.
-         * @throws invalid_operation_exception If another service has already been
+         * @throws IllegalStateException If another service has already been
          *                               started.
          */
         bool Run(void);
@@ -299,7 +299,7 @@ namespace sys {
         /**
          * Uninstall the service.
          *
-         * @throws the::system::system_exception If the operation fails.
+         * @throws SystemException If the operation fails.
          */
         void Uninstall(void);
 
@@ -328,12 +328,12 @@ namespace sys {
          *
          * @param currentState The new state of the service.
          *
-         * @throws the::system::system_exception If the status could not be updated.
+         * @throws SystemException If the status could not be updated.
          */
         inline void setStatus(const DWORD currentState) {
             this->status.dwCurrentState = SERVICE_STOPPED;
             if (!::SetServiceStatus(this->hStatus, &this->status)) {
-                throw the::system::system_exception(__FILE__, __LINE__);
+                throw SystemException(__FILE__, __LINE__);
             }
         }
 
@@ -372,10 +372,10 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         inline WindowsService(const WindowsService& rhs) {
-            throw the::not_supported_exception("WindowsService", __FILE__, 
+            throw UnsupportedOperationException("WindowsService", __FILE__, 
                 __LINE__);
         }
 
@@ -384,7 +384,7 @@ namespace sys {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws argument_exception If (&rhs != this).
+         * @throws IllegalParamException If (&rhs != this).
          */
         WindowsService& operator =(const WindowsService& rhs);
 
@@ -416,15 +416,15 @@ namespace sys {
     /**
      * Partial template specialisation of WindowsService for wide characters.
      */
-    template<> class WindowsService<the::wstring> {
+    template<> class WindowsService<CharTraitsW> {
 
     public: 
 
         /** Characters to use in this class. */
-        typedef the::wstring::value_type Char;
+        typedef CharTraitsW::Char Char;
 
         /** String to use in this class. */
-        typedef the::wstring String;
+        typedef String<CharTraitsW> String;
 
         /**
          * Install 'binaryPath' as Windows service using 'svcName' as 
@@ -439,7 +439,7 @@ namespace sys {
          * @param startType   The service start type. See Win32 API 
          *                    documentation of CreateService for valid values.
          *
-         * @throws the::system::system_exception If the operation fails.
+         * @throws SystemException If the operation fails.
          */
         static void Install(const String& binaryPath, const String& svcName, 
             const String& displayName, 
@@ -485,7 +485,7 @@ namespace sys {
          *
          * @param startType The startup type of the service.
          *
-         * @throws the::system::system_exception If the service could not be installed.
+         * @throws SystemException If the service could not be installed.
          */
         void Install(const DWORD startType = SERVICE_AUTO_START);
 
@@ -497,10 +497,10 @@ namespace sys {
          * @return false, if the executable is running as application and not as
          *         service; true, never.
          *
-         * @throws the::system::system_exception       If the executable is running as 
+         * @throws SystemException       If the executable is running as 
          *                               service, but the service could not be 
          *                               started.
-         * @throws invalid_operation_exception If another service has already been
+         * @throws IllegalStateException If another service has already been
          *                               started.
          */
         bool Run(void);
@@ -672,7 +672,7 @@ namespace sys {
         /**
          * Uninstall the service.
          *
-         * @throws the::system::system_exception If the operation fails.
+         * @throws SystemException If the operation fails.
          */
         void Uninstall(void);
 
@@ -701,12 +701,12 @@ namespace sys {
          *
          * @param currentState The new state of the service.
          *
-         * @throws the::system::system_exception If the status could not be updated.
+         * @throws SystemException If the status could not be updated.
          */
         inline void setStatus(const DWORD currentState) {
             this->status.dwCurrentState = SERVICE_STOPPED;
             if (!::SetServiceStatus(this->hStatus, &this->status)) {
-                throw the::system::system_exception(__FILE__, __LINE__);
+                throw SystemException(__FILE__, __LINE__);
             }
         }
 
@@ -745,10 +745,10 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         inline WindowsService(const WindowsService& rhs) {
-            throw the::not_supported_exception("WindowsService", __FILE__, 
+            throw UnsupportedOperationException("WindowsService", __FILE__, 
                 __LINE__);
         }
 
@@ -757,7 +757,7 @@ namespace sys {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws argument_exception If (&rhs != this).
+         * @throws IllegalParamException If (&rhs != this).
          */
         WindowsService& operator =(const WindowsService& rhs);
 
@@ -783,10 +783,10 @@ namespace sys {
 
 
     /** Instantiation of WindowsService for ANSI strings. */
-    typedef WindowsService<the::astring> WindowsServiceA;
+    typedef WindowsService<CharTraitsA> WindowsServiceA;
 
     /** Instantiation of WindowsService for Unicode strings. */
-    typedef WindowsService<the::wstring> WindowsServiceW;
+    typedef WindowsService<CharTraitsW> WindowsServiceW;
 
 } /* end namespace sys */
 } /* end namespace vislib */

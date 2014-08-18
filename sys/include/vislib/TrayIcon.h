@@ -135,15 +135,15 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws the::system::system_exception If the tray icon could not be created.
+         * @throws SystemException If the tray icon could not be created.
          */
-        void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
+        void Create(HWND targetWnd, const UINT callbackMessage, const UINT id,
             const wchar_t *toolTip, const HICON icon,
             const bool initiallyHidden = false, 
             const wchar_t *balloonText = NULL, 
             const wchar_t *balloonTitle = NULL, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
         /**
          * Creates a new tray icon. If this tray icon has already been created,
@@ -203,15 +203,15 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws the::system::system_exception If the tray icon could not be created.
+         * @throws SystemException If the tray icon could not be created.
          */
-        void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
+        void Create(HWND targetWnd, const UINT callbackMessage, const UINT id,
             const char *toolTip, const HICON icon,
             const bool initiallyHidden = false, 
             const char *balloonText = NULL, 
             const char *balloonTitle = NULL, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
         /**
          * Creates a new tray icon. If this tray icon has already been created,
@@ -273,15 +273,15 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws the::system::system_exception If the tray icon could not be created.
+         * @throws SystemException If the tray icon could not be created.
          */
-        void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
+        void Create(HWND targetWnd, const UINT callbackMessage, const UINT id,
             HINSTANCE hResourceModule, const wchar_t *toolTip, 
-            const unsigned int iconID, const bool initiallyHidden = false, 
+            const UINT iconID, const bool initiallyHidden = false, 
             const wchar_t *balloonText = NULL, 
             const wchar_t *balloonTitle = NULL, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
         /**
          * Creates a new tray icon. If this tray icon has already been created,
@@ -343,15 +343,15 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws the::system::system_exception If the tray icon could not be created.
+         * @throws SystemException If the tray icon could not be created.
          */
-        void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
+        void Create(HWND targetWnd, const UINT callbackMessage, const UINT id,
             HINSTANCE hResourceModule, const char *toolTip, 
-            const unsigned int iconID, const bool initiallyHidden = false, 
+            const UINT iconID, const bool initiallyHidden = false, 
             const char *balloonText = NULL, 
             const char *balloonTitle = NULL, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
         /**
          * Creates a new tray icon. If this tray icon has already been created,
@@ -413,15 +413,15 @@ namespace sys {
          *                        maximum timeout values are currently set 
          *                        at 10 seconds and 30 seconds, respectively.
          *
-         * @throws the::system::system_exception If the tray icon could not be created.
+         * @throws SystemException If the tray icon could not be created.
          */
-        void Create(HWND targetWnd, const unsigned int callbackMessage, const unsigned int id,
-            HINSTANCE hResourceModule, const unsigned int toolTipID, 
-            const unsigned int iconID, const bool initiallyHidden = false, 
-            const unsigned int balloonTextID = 0, 
-            const unsigned int balloonTitleID = 0, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+        void Create(HWND targetWnd, const UINT callbackMessage, const UINT id,
+            HINSTANCE hResourceModule, const UINT toolTipID, 
+            const UINT iconID, const bool initiallyHidden = false, 
+            const UINT balloonTextID = 0, 
+            const UINT balloonTitleID = 0, 
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
         /**
          * Delete the tray icon.
@@ -437,7 +437,7 @@ namespace sys {
          *
          * This method has no effect, if the tray icon is not visible.
          *
-         * @throws the::system::system_exception If the icon could not be hidden.
+         * @throws SystemException If the icon could not be hidden.
          */
         void Hide(void);
 
@@ -450,37 +450,37 @@ namespace sys {
             return this->iconState;
         }
 
-        /**
-         * Change the tray icon to 'icon'.
-         *
-         * @param icon the handle of the new icon. The caller remains owner
-         *             of the icon and can destroy it right afterwards.
-         *
-         * @throws the::system::system_exception in case of error.
-         */
-        inline void SetIcon(const HICON icon) {
-            this->configureIcon(icon);
-            this->notify(NIM_MODIFY);
-        }
+		/**
+		 * Change the tray icon to 'icon'.
+		 *
+		 * @param icon the handle of the new icon. The caller remains owner
+		 *             of the icon and can destroy it right afterwards.
+		 *
+		 * @throws SystemException in case of error.
+		 */
+		inline void SetIcon(const HICON icon) {
+			this->configureIcon(icon);
+			this->notify(NIM_MODIFY);
+		}
 
-        /**
-         * Change the tray icon to the icon pointed to by 'iconID'.
-         * 
+		/**
+		 * Change the tray icon to the icon pointed to by 'iconID'.
+		 * 
          * @param hResourceModule A handle to the module to look for resources
          *                        in.
          * @param iconID          The resource ID of the icon to be added, 
          *                        modified, or deleted. 
-         *
-         * @throws the::system::system_exception in case of error.
-         */
-        void SetIcon(HINSTANCE hResourceModule, const unsigned int iconID);
+		 *
+		 * @throws SystemException in case of error.
+		 */
+		void SetIcon(HINSTANCE hResourceModule, const UINT iconID);
 
         /**
          * Show the tray icon.
          *
          * This method has no effect, if the tray icon is already visible.
          *
-         * @throws the::system::system_exception If the icon could not be made visible.
+         * @throws SystemException If the icon could not be made visible.
          */
         void Show(void);
 
@@ -501,8 +501,8 @@ namespace sys {
          */
         bool ShowBalloonHelp(const wchar_t *balloonText, 
             const wchar_t *balloonTitle = NULL, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
         /**
          * Displays a balloon tool tip.
@@ -521,8 +521,8 @@ namespace sys {
          */
         bool ShowBalloonHelp(const char *balloonText, 
             const char *balloonTitle = NULL, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
         /**
          * Displays a balloon tool tip.
@@ -542,9 +542,9 @@ namespace sys {
          *         on systems which do not support balloon help).
          */
         bool ShowBalloonHelp(HINSTANCE hResourceModule, 
-            const unsigned int balloonTextID, const unsigned int balloonTitleID = 0, 
-            const unsigned int balloonIcon = NIIF_NONE, 
-            const unsigned int balloonTimeout = 10);
+            const UINT balloonTextID, const UINT balloonTitleID = 0, 
+            const DWORD balloonIcon = NIIF_NONE, 
+            const UINT balloonTimeout = 10);
 
     protected:
 
@@ -572,17 +572,17 @@ namespace sys {
             CAPABILITIES_V2 = 2
         };
 
-        static LRESULT WINAPI wndProc(HWND hWnd, unsigned int msg, WPARAM wParam,
+        static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam,
             LPARAM lParam);
 
         /** The maximum length of a balloon help text. */
-        static const unsigned int MAX_BALLOON_LEN;
+        static const UINT MAX_BALLOON_LEN;
 
         /** The maximum length of a balloon title text. */
-        static const unsigned int MAX_BALLOON_TITLE_LEN;
+        static const UINT MAX_BALLOON_TITLE_LEN;
 
         /** The maximum length of a tray icon tooltip. */
-        static const unsigned int MAX_TOOLTIP_LEN;
+        static const UINT MAX_TOOLTIP_LEN;
 
         /** The name of the window class used for the controlling window. */
         static const wchar_t *WNDCLASSNAME;
@@ -603,8 +603,8 @@ namespace sys {
          *         false otherwise.
          */
         bool configureBalloonHelp(const wchar_t *balloonText, 
-            const wchar_t *balloonTitle, const unsigned int balloonIcon, 
-            const unsigned int balloonTimeout);
+            const wchar_t *balloonTitle, const DWORD balloonIcon, 
+            const UINT balloonTimeout);
 
         /**
          * Configure the 'uCallbackMessage' member in 'this->nid'. The property
@@ -612,7 +612,7 @@ namespace sys {
          *
          * @return true.
          */
-        bool configureCallbackMessage(const unsigned int callbackMessage);
+        bool configureCallbackMessage(const UINT callbackMessage);
 
         /**
          * Configure the 'hIcon' member in 'this->nid'. The property
@@ -653,9 +653,9 @@ namespace sys {
          * @param message The message to send. Note that 'this->nid' must be
          *                configured appropriately.
          *
-         * @throws the::system::system_exception If ::Shell_NotifyIcon fails.
+         * @throws SystemException If ::Shell_NotifyIcon fails.
          */
-        void notify(const unsigned int message);
+        void notify(const DWORD message);
 
         /**
          * Register the window class for the hidden window that is used for

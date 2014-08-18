@@ -15,7 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
+
 #include "vislib/Camera.h"
 #include "vislib/D3DMatrix.h"
 #include "vislib/D3DPoint3D.h"
@@ -155,8 +155,6 @@ namespace d3d {
 } /* end namespace d3d */
 } /* end namespace graphics */
 } /* end namespace vislib */
-
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

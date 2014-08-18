@@ -9,7 +9,7 @@
 #include "vislib/CameraRotate2DLookAt.h"
 #include <climits>
 #include "vislib/Cursor2D.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 #include "vislib/Quaternion.h"
 
 
@@ -39,16 +39,16 @@ void vislib::graphics::CameraRotate2DLookAt::Trigger(
         vislib::graphics::AbstractCursorEvent::TriggerReason reason,
         unsigned int param) {
     Cursor2D *cursor = dynamic_cast<Cursor2D *>(caller);
-    THE_ASSERT(cursor != NULL);
+    ASSERT(cursor != NULL);
     
     // otherwise this would be very strange:
-    THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+    ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
     ImageSpaceType curX, curY;
     ImageSpaceType preX, preY;
 
     if (!this->IsCameraParamsValid()) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, 
+        VLTRACE(vislib::Trace::LEVEL_WARN, 
             "CameraRotate2DLookAt::Trigger camera missing.");
         return;
     }

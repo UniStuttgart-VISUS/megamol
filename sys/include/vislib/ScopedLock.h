@@ -15,9 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/argument_exception.h"
-#include "the/stack_trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/StackTrace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 namespace vislib {
@@ -39,10 +39,10 @@ namespace sys {
          * acquired even when waiting infinitely. You should not go one if this
          * happens.
          *
-         * @throws the::system::system_exception If the lock could not be acquired.
+         * @throws SystemException If the lock could not be acquired.
          */
         inline ScopedLock(T& lock) : lock(lock) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("ScopedLock::ScopedLock", __FILE__, __LINE__);
             this->lock.Lock();
         }
 
@@ -50,7 +50,7 @@ namespace sys {
          * The dtor releases 'lock'.
          */
         inline ~ScopedLock(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("ScopedLock::~ScopedLock", __FILE__, __LINE__);
             this->lock.Unlock();
         }
 
@@ -61,10 +61,10 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         inline ScopedLock(const ScopedLock& rhs) : lock(rhs.lock) {
-            throw the::not_supported_exception(
+            throw UnsupportedOperationException(
                 "vislib::sys::ScopedLock::ScopedLock",
                 __FILE__, __LINE__);
         }
@@ -74,11 +74,11 @@ namespace sys {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws argument_exception if &rhs != this.
+         * @throws IllegalParamException if &rhs != this.
          */
         inline ScopedLock& operator =(const ScopedLock& rhs) {
             if (this != &rhs) {
-                throw the::argument_exception("rhs", __FILE__, __LINE__);
+                throw IllegalParamException("rhs", __FILE__, __LINE__);
             }
             return *this;
         }

@@ -7,8 +7,8 @@
  */
 
 #include "vislib/MessageBox.h"
-#include "the/invalid_operation_exception.h"
-#include "the/not_implemented_exception.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/MissingImplementationException.h"
 #ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -736,7 +736,7 @@ namespace MessageBoxLinuxUtils {
     void drawDialog(Display *display, int screen, Window window, GC gc,
             Colours& colours, XFontStruct *font, const char *btn1,
             const char *btn2, const char *btn3, XImage *icon,
-            const the::tstring& msg, unsigned int& btnFocus,
+            const vislib::TString& msg, unsigned int& btnFocus,
             bool focusBtnDown) {
 
         const unsigned int btnCnt = ((btn2 == NULL) ? 1
@@ -769,10 +769,10 @@ namespace MessageBoxLinuxUtils {
         int i1, i2, i3, len, li;
         XCharStruct tsize;
         unsigned int lineCnt = 0;
-        the::astring text(msg);
+        vislib::StringA text(msg);
 
-        the::text::string_utility::trim(text);
-        const char *txt = text.c_str();
+        text.TrimSpaces();
+        const char *txt = text.PeekBuffer();
         len = strlen(txt);
 
         ::XTextExtents(font, "A", 1, &i1, &i2, &i3, &tsize);
@@ -804,7 +804,7 @@ namespace MessageBoxLinuxUtils {
 
         int ty = ((by - border) - (tsize.ascent + tsize.descent)
             * lineCnt) / 2 + tsize.ascent;
-        txt = text.c_str();
+        txt = text.PeekBuffer();
         len = strlen(txt);
 
         while (len > 0) {
@@ -873,8 +873,8 @@ namespace MessageBoxLinuxUtils {
  * vislib::sys::MessageBox::Show
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::Show(const the::astring& msg,
-        const the::astring& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::Show(const vislib::StringA& msg,
+        const vislib::StringA& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -884,8 +884,8 @@ vislib::sys::MessageBox::Show(const the::astring& msg,
  * vislib::sys::MessageBox::Show
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::Show(const the::wstring& msg,
-        const the::wstring& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::Show(const vislib::StringW& msg,
+        const vislib::StringW& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -895,8 +895,8 @@ vislib::sys::MessageBox::Show(const the::wstring& msg,
  * vislib::sys::MessageBox::ShowDialog
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::ShowDialog(const the::astring& msg,
-        const the::astring& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::ShowDialog(const vislib::StringA& msg,
+        const vislib::StringA& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -906,8 +906,8 @@ vislib::sys::MessageBox::ShowDialog(const the::astring& msg,
  * vislib::sys::MessageBox::ShowDialog
  */
 vislib::sys::MessageBox::ReturnValue 
-vislib::sys::MessageBox::ShowDialog(const the::wstring& msg,
-        const the::wstring& title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::ShowDialog(const vislib::StringW& msg,
+        const vislib::StringW& title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) {
     return MessageBox(msg, title, btns, icon, defBtn).ShowDialog();
 }
@@ -916,20 +916,19 @@ vislib::sys::MessageBox::ShowDialog(const the::wstring& msg,
 /*
  * vislib::sys::MessageBox::MessageBox
  */
-vislib::sys::MessageBox::MessageBox(const the::astring &msg,
-        const the::astring &title, MsgButtons btns, MsgIcon icon,
-        DefButton defBtn) : btns(btns), defBtn(defBtn), icon(icon), msg(),
-        retval(RET_NONE), title() {
-    the::text::string_converter::convert(this->msg, msg);
-    the::text::string_converter::convert(this->title, title);
+vislib::sys::MessageBox::MessageBox(const vislib::StringA &msg,
+        const vislib::StringA &title, MsgButtons btns, MsgIcon icon,
+        DefButton defBtn) : btns(btns), defBtn(defBtn), icon(icon), msg(msg),
+        retval(RET_NONE), title(title) {
+    // intentionally empty
 }
 
 
 /*
  * vislib::sys::MessageBox::MessageBox
  */
-vislib::sys::MessageBox::MessageBox(const the::wstring &msg,
-        const the::wstring &title, MsgButtons btns, MsgIcon icon,
+vislib::sys::MessageBox::MessageBox(const vislib::StringW &msg,
+        const vislib::StringW &title, MsgButtons btns, MsgIcon icon,
         DefButton defBtn) : btns(btns), defBtn(defBtn), icon(icon), msg(msg),
         retval(RET_NONE), title(title) {
     // intentionally empty
@@ -950,7 +949,7 @@ vislib::sys::MessageBox::~MessageBox(void) {
 vislib::sys::MessageBox::ReturnValue
 vislib::sys::MessageBox::ShowDialog(void) {
 #ifdef _WIN32
-    unsigned int type = 0;
+    UINT type = 0;
     int rv;
 
     switch (this->btns) {
@@ -961,7 +960,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
         case BTNS_YESNOCANCEL: type |= MB_YESNOCANCEL; break;
         case BTNS_ABORTRETRYIGNORE: type |= MB_ABORTRETRYIGNORE; break;
         case BTNS_CANCELRETRYCONTINUE: type |= MB_CANCELTRYCONTINUE; break;
-        default : throw the::invalid_operation_exception(
+        default : throw IllegalStateException(
                   "MessageBox Buttons had no valid value.",
                   __FILE__, __LINE__);
     }
@@ -982,7 +981,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
         default : /* nothing to do */ break;
     }
 
-    rv = ::MessageBoxW(NULL, this->msg.c_str(), this->title.c_str(),
+    rv = ::MessageBoxW(NULL, this->msg.PeekBuffer(), this->title.PeekBuffer(),
         type);
 
     switch (rv) {
@@ -1010,8 +1009,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
     int answerBtn = -1;
     XImage *xIcon = NULL;
 
-    the::astring titleA;
-    the::text::string_converter::convert(titleA, this->title);
+    vislib::StringA titleA(this->title);
 
     // construct button captions
     const char *btn1 = NULL, *btn2 = NULL, *btn3 = NULL;
@@ -1026,7 +1024,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
             btn3 = "Ignore"; break;
         case BTNS_CANCELRETRYCONTINUE: btn1 = "Cancel"; btn2 = "Retry";
             btn3 = "Continue"; break;
-        default: THE_ASSERT(false); break;
+        default: ASSERT(false); break;
     }
 
     // try connect to the x server and to create a window
@@ -1061,7 +1059,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
 
             window = ::XCreateSimpleWindow(display, DefaultRootWindow(display),
                 100, 100, 100, 100, 4, colours.black, colours.white);
-            ::XSetStandardProperties(display, window, titleA.c_str(), titleA.c_str(), None,
+            ::XSetStandardProperties(display, window, titleA, titleA, None,
                 NULL, 0, NULL);
             ::XSelectInput(display, window, ExposureMask | ButtonPressMask 
                 | ButtonReleaseMask | Button1MotionMask | KeyPressMask);
@@ -1073,9 +1071,8 @@ vislib::sys::MessageBox::ShowDialog(void) {
             font = ::XQueryFont(display, ::XGContextFromGC(gc));
 
             // calculate required dialog size
-            the::astring text;
-            the::text::string_converter::convert(text, this->msg);
-            the::text::string_utility::trim(text);
+            vislib::StringA text(this->msg);
+            text.TrimSpaces();
             const unsigned int maxWinWidth = 600;
             unsigned int winWidth, winHeight;
             const unsigned int btnCnt = ((btn2 == NULL) ? 1
@@ -1085,7 +1082,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
             winWidth = btnCnt * MessageBoxLinuxUtils::btnSize[0]
                 + (btnCnt + 1) * MessageBoxLinuxUtils::border;
             if (winWidth < maxWinWidth) { // if not we are in real trouble
-                int len = ::XTextWidth(font, text.c_str(), text.size());
+                int len = ::XTextWidth(font, text, text.Length());
                 len += 4 * MessageBoxLinuxUtils::border;
                 if (this->icon != ICON_NONE) {
                     len += MessageBoxLinuxUtils::border
@@ -1107,7 +1104,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                     + MessageBoxLinuxUtils::iconSize[0]);
             }
 
-            const char *txt = text.c_str();
+            const char *txt = text.PeekBuffer();
             len = strlen(txt);
 
             ::XTextExtents(font, "A", 1, &i1, &i2, &i3, &tsize);
@@ -1284,7 +1281,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                     // the window was exposed - redraw it!
                     MessageBoxLinuxUtils::drawDialog(display, screen, window,
                         gc, colours, font, btn1, btn2, btn3, xIcon,
-                        the::text::string_converter::to_a(this->msg), btnFocus,
+                        this->msg, btnFocus,
                         focusBtnClicked && mouseOnFocusBtn);
 
                 } else if (event.type == KeyPress) {
@@ -1302,14 +1299,14 @@ vislib::sys::MessageBox::ShowDialog(void) {
                             btnFocus++;
                             MessageBoxLinuxUtils::drawDialog(display, screen,
                                 window, gc, colours, font, btn1, btn2, btn3,
-                                xIcon, the::text::string_converter::to_a(this->msg), btnFocus, false);
+                                xIcon, this->msg, btnFocus, false);
                         }
                     } else if (key == XK_Left) {
                         if ((btnFocus > 0) && (!focusBtnClicked)) {
                             btnFocus--;
                             MessageBoxLinuxUtils::drawDialog(display, screen,
                                 window, gc, colours, font, btn1, btn2, btn3,
-                                xIcon, the::text::string_converter::to_a(this->msg), btnFocus, false);
+                                xIcon, this->msg, btnFocus, false);
                         }
                     }
 
@@ -1343,7 +1340,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                         mouseOnFocusBtn = true;
                         MessageBoxLinuxUtils::drawDialog(display, screen,
                             window, gc, colours, font, btn1, btn2, btn3,
-                            xIcon, the::text::string_converter::to_a(this->msg), btnFocus,
+                            xIcon, this->msg, btnFocus,
                             focusBtnClicked && mouseOnFocusBtn);
                     }
 
@@ -1382,7 +1379,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                         mouseOnFocusBtn = (hitBtn == int(btnFocus));
                         MessageBoxLinuxUtils::drawDialog(display, screen,
                             window, gc, colours, font, btn1, btn2, btn3,
-                            xIcon, the::text::string_converter::to_a(this->msg), btnFocus,
+                            xIcon, this->msg, btnFocus,
                             focusBtnClicked && mouseOnFocusBtn);
                     }
 
@@ -1408,8 +1405,8 @@ vislib::sys::MessageBox::ShowDialog(void) {
         FILE *out = (this->icon == ICON_ERROR) ? stderr : stdout;
 
         // print title and message
-        if (!titleA.empty()) {
-            fprintf(out, "\n\t%s\n\n", titleA.c_str());
+        if (!titleA.IsEmpty()) {
+            fprintf(out, "\n\t%s\n\n", titleA.PeekBuffer());
         }
         switch (this->icon) {
             case ICON_ERROR: fprintf(out, "Error: "); break;
@@ -1419,7 +1416,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
             case ICON_NONE: // fall through
             default : /* nothing to do */ break;
         }
-        fprintf(out, "%s\n\n", the::text::string_converter::to_a(this->msg).c_str());
+        fprintf(out, "%s\n\n", vislib::StringA(this->msg).PeekBuffer());
 
         // simple ok message boxes are handled separatly
         if (this->btns == BTNS_OK) {
@@ -1536,7 +1533,7 @@ vislib::sys::MessageBox::ShowDialog(void) {
                 }
                 break;
             case BTNS_OK: this->retval = RET_OK; break;
-            default: THE_ASSERT(false); break;
+            default: ASSERT(false); break;
         }
 
     }

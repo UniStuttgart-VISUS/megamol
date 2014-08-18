@@ -9,7 +9,7 @@
 #include "vislib/CameraZoom2DAngle.h"
 #include <cfloat>
 #include "vislib/Cursor2D.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -48,10 +48,10 @@ void vislib::graphics::CameraZoom2DAngle::Trigger(
             float maxAngle = 180.0f - FLT_MIN;
 
             // otherwise this would be very strange:
-            THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+            ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
             if (!this->IsCameraParamsValid()) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, 
+                VLTRACE(vislib::Trace::LEVEL_WARN, 
                     "CameraAngleZoom2D::Trigger camera missing.");
                 return;
             }

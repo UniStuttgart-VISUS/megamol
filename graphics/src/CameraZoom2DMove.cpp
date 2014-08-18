@@ -12,7 +12,7 @@
 #include "vislib/Cursor2D.h"
 #include "vislib/Point.h"
 #include "vislib/SmartPtr.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 #include "vislib/Vector.h"
 
 
@@ -70,10 +70,10 @@ void vislib::graphics::CameraZoom2DMove::Trigger(
                 = dynamic_cast<vislib::graphics::Cursor2D*>(caller);
 
             // otherwise this would be very strange:
-            THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+            ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
             if (!this->IsCameraParamsValid()) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, 
+                VLTRACE(vislib::Trace::LEVEL_WARN, 
                     "CameraZoom2DMove::Trigger camera missing.");
                 return;
             }

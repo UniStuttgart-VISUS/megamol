@@ -9,12 +9,11 @@
 
 #include "DynamicFunctionPointer.h"
 #include "vislib/mathfunctions.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
-#include "the/not_implemented_exception.h"
-#include "the/string.h"
-#include "the/text/string_builder.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
+
+#include "vislib/MissingImplementationException.h"
 
 #include <climits>
 
@@ -36,7 +35,7 @@
  * vislib::sys::SystemInformation::AllocationGranularity
  */
 #ifdef _WIN32
-unsigned int vislib::sys::SystemInformation::AllocationGranularity(void) {
+DWORD vislib::sys::SystemInformation::AllocationGranularity(void) {
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
     return si.dwAllocationGranularity;
@@ -47,14 +46,14 @@ unsigned int vislib::sys::SystemInformation::AllocationGranularity(void) {
 /*
  * vislib::sys::SystemInformation::AvailableMemorySize
  */
-uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
+UINT64 vislib::sys::SystemInformation::AvailableMemorySize(void) {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines 
      * with more then 4 GB ram. However, staticly linking would restrict the
      * vislib to windowsXP pro and newer, which is a to hard restrict.
      */
-    uint64_t retval = 0;
+    UINT64 retval = 0;
     DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
 
     if (gmsEx.IsValid()) {
@@ -62,7 +61,7 @@ uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
         memStat.dwLength = sizeof(memStat);
 
         if (gmsEx(&memStat) == 0) {
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
         }
 
         retval = memStat.ullAvailPhys;
@@ -80,15 +79,15 @@ uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
     struct sysinfo info;
 
     if (sysinfo(&info) != 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
         /* a fucking old kernel is used */
-        return static_cast<uint64_t>(info.freeram);
+        return static_cast<UINT64>(info.freeram);
     }
-    return static_cast<uint64_t>(info.freeram) 
-        * static_cast<uint64_t>(info.mem_unit);
+    return static_cast<UINT64>(info.freeram) 
+        * static_cast<UINT64>(info.mem_unit);
 
 #endif /* _WIN32 */
 }
@@ -97,12 +96,11 @@ uint64_t vislib::sys::SystemInformation::AvailableMemorySize(void) {
 /*
  * vislib::sys::SystemInformation::ComputerName
  */
-void vislib::sys::SystemInformation::ComputerName(the::astring &outName) {
+void vislib::sys::SystemInformation::ComputerName(vislib::StringA &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
-    outName = the::astring(bufSize, '\0');
-    char *buf = const_cast<char *>(outName.c_str());
+    char *buf = outName.AllocateBuffer(bufSize);
 
     bufSize++;
     while (!::GetComputerNameA(buf, &bufSize)) {
@@ -111,11 +109,10 @@ void vislib::sys::SystemInformation::ComputerName(the::astring &outName) {
 
         if ((le == ERROR_BUFFER_OVERFLOW) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::astring(bufSize, '\0');
-            buf = const_cast<char *>(outName.c_str());
+            buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw the::system::system_exception(le, __FILE__, __LINE__);
+            throw SystemException(le, __FILE__, __LINE__);
 
         }
         bufSize++;
@@ -123,7 +120,7 @@ void vislib::sys::SystemInformation::ComputerName(the::astring &outName) {
 #else
     struct utsname names;
     if (uname(&names) != 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
     outName = names.nodename;
 #endif
@@ -133,12 +130,11 @@ void vislib::sys::SystemInformation::ComputerName(the::astring &outName) {
 /*
  * vislib::sys::SystemInformation::ComputerName
  */
-void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
+void vislib::sys::SystemInformation::ComputerName(vislib::StringW &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = MAX_COMPUTERNAME_LENGTH; // used for paranoia test
     unsigned long bufSize = MAX_COMPUTERNAME_LENGTH;
-    outName = the::wstring(bufSize, '\0');
-    wchar_t *buf = const_cast<wchar_t *>(outName.c_str());
+    wchar_t *buf = outName.AllocateBuffer(bufSize);
 
     bufSize++;
     while (!::GetComputerNameW(buf, &bufSize)) {
@@ -147,19 +143,18 @@ void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
 
         if ((le == ERROR_BUFFER_OVERFLOW) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::wstring(bufSize, '\0');
-            buf = const_cast<wchar_t *>(outName.c_str());
+            buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw the::system::system_exception(le, __FILE__, __LINE__);
+            throw SystemException(le, __FILE__, __LINE__);
 
         }
         bufSize++;
     }
 #else
-    the::astring tmpStr;
+    vislib::StringA tmpStr;
     SystemInformation::ComputerName(tmpStr);
-    the::text::string_converter::convert(outName, tmpStr);
+    outName = tmpStr;
 #endif
 }
 
@@ -167,11 +162,11 @@ void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
 ///* 
 // * vislib::sys::SystemInformation::DisplayDeviceCount
 // */
-//unsigned int vislib::sys::SystemInformation::DisplayDeviceCount(void) {
+//DWORD vislib::sys::SystemInformation::DisplayDeviceCount(void) {
 //#ifdef _WIN32
 //    DISPLAY_DEVICE dpyDev;
 //    dpyDev.cb = sizeof(DISPLAY_DEVICE);
-//    unsigned int retval = 0;
+//    DWORD retval = 0;
 //
 //    while (::EnumDisplayDevices(NULL, retval, &dpyDev, 0)) {
 //        retval++;
@@ -189,25 +184,25 @@ void vislib::sys::SystemInformation::ComputerName(the::wstring &outName) {
 /*
  * vislib::sys::SystemInformation::MonitorRects
  */
-unsigned int vislib::sys::SystemInformation::MonitorRects(
+DWORD vislib::sys::SystemInformation::MonitorRects(
         MonitorRectArray& outMonitorRects) {
     outMonitorRects.Clear();
 
 #ifdef _WIN32
     if (!::EnumDisplayMonitors(NULL, NULL, SystemInformation::monitorEnumProc,
             reinterpret_cast<LPARAM>(&outMonitorRects))) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     int cntScreens = 0;         // # of attached screens.
     Display *dpy = NULL;        // The display.
-    the::astring errorDesc;          // For formatting an error message.
+    StringA errorDesc;          // For formatting an error message.
     
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
-        the::text::astring_builder::format_to(errorDesc, "Could not open display \"%s\".", 
+        errorDesc.Format("Could not open display \"%s\".", 
             ::XDisplayName(NULL));
-        throw the::exception(errorDesc.c_str(), __FILE__, __LINE__);
+        throw Exception(errorDesc, __FILE__, __LINE__);
     }
 
     cntScreens = ScreenCount(dpy);
@@ -219,14 +214,14 @@ unsigned int vislib::sys::SystemInformation::MonitorRects(
 
 #endif /* _WIN32 */
 
-    return static_cast<unsigned int>(outMonitorRects.Count());
+    return static_cast<DWORD>(outMonitorRects.Count());
 }
 
 
 /*
  * vislib::sys::SystemInformation::PageSize
  */
-unsigned int vislib::sys::SystemInformation::PageSize(void) {
+DWORD vislib::sys::SystemInformation::PageSize(void) {
 #ifdef _WIN32
     SYSTEM_INFO si;
     ::GetSystemInfo(&si);
@@ -236,10 +231,10 @@ unsigned int vislib::sys::SystemInformation::PageSize(void) {
     int retval = ::sysconf(_SC_PAGESIZE);
 
     if (retval == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
-    return static_cast<unsigned int>(retval);
+    return static_cast<DWORD>(retval);
 
 #endif /* _WIN32 */
 }
@@ -248,14 +243,14 @@ unsigned int vislib::sys::SystemInformation::PageSize(void) {
 /*
  * vislib::sys::SystemInformation::PhysicalMemorySize
  */
-uint64_t vislib::sys::SystemInformation::PhysicalMemorySize(void) {
+UINT64 vislib::sys::SystemInformation::PhysicalMemorySize(void) {
 #ifdef _WIN32
     /*
      * It's necessary to call the ex version to get information on machines 
      * with more then 4 GB ram. However, staticly linking would restrict the
      * vislib to windowsXP pro and newer, which is a to hard restrict.
      */
-    uint64_t retval = 0;
+    UINT64 retval = 0;
     DynamicFunctionPointer<BOOL (WINAPI*)(MEMORYSTATUSEX *)> gmsEx("kernel32", "GlobalMemoryStatusEx");
 
     if (gmsEx.IsValid()) {
@@ -263,7 +258,7 @@ uint64_t vislib::sys::SystemInformation::PhysicalMemorySize(void) {
         memStat.dwLength = sizeof(memStat);
 
         if (gmsEx(&memStat) == 0) {
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
         }
 
         retval = memStat.ullTotalPhys;
@@ -281,15 +276,15 @@ uint64_t vislib::sys::SystemInformation::PhysicalMemorySize(void) {
     struct sysinfo info;
 
     if (sysinfo(&info) != 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if (sizeof(info._f) != (sizeof(char) * (20 - 2 * sizeof(long) - sizeof(int)))) {
         /* a fucking old kernel is used */
-        return static_cast<uint64_t>(info.totalram);
+        return static_cast<UINT64>(info.totalram);
     }
-    return static_cast<uint64_t>(info.totalram) 
-        * static_cast<uint64_t>(info.mem_unit);
+    return static_cast<UINT64>(info.totalram) 
+        * static_cast<UINT64>(info.mem_unit);
 
 #endif /* _WIN32 */
 }
@@ -306,22 +301,22 @@ vislib::sys::SystemInformation::PrimaryMonitorRect(void) {
     if (!::EnumDisplayMonitors(NULL, NULL, 
             SystemInformation::findPrimaryMonitorProc,
             reinterpret_cast<LPARAM>(&retval))) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if (retval.IsEmpty()) {
         /* Enumeration was not successful in finding primary display. */
-        throw the::system::system_exception(ERROR_NOT_FOUND, __FILE__, __LINE__);
+        throw SystemException(ERROR_NOT_FOUND, __FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     Display *dpy = NULL;
-    the::astring errorDesc;
+    StringA errorDesc;
 
     if ((dpy = ::XOpenDisplay(NULL)) == NULL) {
-        the::text::astring_builder::format_to(errorDesc, "Could not open display \"%s\".", 
+        errorDesc.Format("Could not open display \"%s\".", 
             ::XDisplayName(NULL));
-        throw the::exception(errorDesc.c_str(), __FILE__, __LINE__);
+        throw Exception(errorDesc, __FILE__, __LINE__);
     }
 
     retval = SystemInformation::getRootWndRect(dpy, DefaultScreen(dpy));
@@ -347,7 +342,7 @@ unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
     int retval = ::sysconf(_SC_NPROCESSORS_ONLN);
 
     if (retval == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return static_cast<unsigned int>(retval);
@@ -376,7 +371,7 @@ unsigned int vislib::sys::SystemInformation::ProcessorCount(void) {
     }
 
     // errno is set by failed fopen
-    throw the::system::system_exception(__FILE__, __LINE__);
+    throw SystemException(__FILE__, __LINE__);
 
     return 0; // never reached 
 #endif
@@ -433,14 +428,14 @@ vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemTyp
 /*
  * vislib::sys::SystemInformation::SystemVersion
  */
-void vislib::sys::SystemInformation::SystemVersion(unsigned int& outMajor, 
-                                                   unsigned int& outMinor) {
+void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor, 
+                                                   DWORD& outMinor) {
 #ifdef _WIN32
     OSVERSIONINFO ver;
     ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     
     if (::GetVersionEx(&ver) != TRUE) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     outMajor = ver.dwMajorVersion;
@@ -456,19 +451,19 @@ void vislib::sys::SystemInformation::SystemVersion(unsigned int& outMajor,
 
     // TODO: Use some shell abstraction class instead of popen.
     if ((fp = ::popen("uname -r", "r")) == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     cnt = ::fread(buffer, 1, sizeof(buffer) - 1, fp);
     ::pclose(fp);
 
     if (cnt == 0)  {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if (::sscanf(buffer, "%d.%d", &majorVersion, &minorVersion) != 2) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "sscanf on version string failed.");
-        throw the::system::system_exception(ENOTSUP, __FILE__, __LINE__);
+        VLTRACE(Trace::LEVEL_ERROR, "sscanf on version string failed.");
+        throw SystemException(ENOTSUP, __FILE__, __LINE__);
     }
 
     outMajor = majorVersion;
@@ -522,12 +517,11 @@ unsigned int vislib::sys::SystemInformation::SystemWordSize(void) {
 /*
  * vislib::sys::SystemInformation::UserName
  */
-void vislib::sys::SystemInformation::UserName(the::astring &outName) {
+void vislib::sys::SystemInformation::UserName(vislib::StringA &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = UNLEN; // used for paranoia test
     unsigned long bufSize = UNLEN;
-    outName = the::astring(bufSize, '\0');
-    char *buf = const_cast<char *>(outName.c_str());
+    char *buf = outName.AllocateBuffer(bufSize);
 
     bufSize++;
     while (!::GetUserNameA(buf, &bufSize)) {
@@ -536,11 +530,10 @@ void vislib::sys::SystemInformation::UserName(the::astring &outName) {
 
         if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::astring(bufSize, '\0');
-            buf = const_cast<char *>(outName.c_str());
+            buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw the::system::system_exception(le, __FILE__, __LINE__);
+            throw SystemException(le, __FILE__, __LINE__);
 
         }
         bufSize++;
@@ -552,7 +545,7 @@ void vislib::sys::SystemInformation::UserName(the::astring &outName) {
 
     struct passwd *passwd = getpwuid(uid);
     if (passwd == NULL) {
-        throw the::system::system_exception(ENOENT, __FILE__, __LINE__);
+        throw SystemException(ENOENT, __FILE__, __LINE__);
     }
     outName = passwd->pw_name;
 
@@ -563,12 +556,11 @@ void vislib::sys::SystemInformation::UserName(the::astring &outName) {
 /*
  * vislib::sys::SystemInformation::UserName
  */
-void vislib::sys::SystemInformation::UserName(the::wstring &outName) {
+void vislib::sys::SystemInformation::UserName(vislib::StringW &outName) {
 #ifdef _WIN32
     unsigned long oldBufSize = UNLEN; // used for paranoia test
     unsigned long bufSize = UNLEN;
-    outName = the::wstring(bufSize, '\0');
-    wchar_t *buf = const_cast<wchar_t *>(outName.c_str());
+    wchar_t *buf = outName.AllocateBuffer(bufSize);
 
     bufSize++;
     while (!::GetUserNameW(buf, &bufSize)) {
@@ -577,19 +569,18 @@ void vislib::sys::SystemInformation::UserName(the::wstring &outName) {
 
         if ((le == ERROR_INSUFFICIENT_BUFFER) && (oldBufSize != bufSize)) {
             oldBufSize = bufSize;
-            outName = the::wstring(bufSize, '\0');
-            buf = const_cast<wchar_t *>(outName.c_str());
+            buf = outName.AllocateBuffer(bufSize);
 
         } else {
-            throw the::system::system_exception(le, __FILE__, __LINE__);
+            throw SystemException(le, __FILE__, __LINE__);
 
         }
         bufSize++;
     }
 #else
-    the::astring tmpStr;
+    vislib::StringA tmpStr;
     SystemInformation::UserName(tmpStr);
-    the::text::string_converter::convert(outName, tmpStr);
+    outName = tmpStr;
 #endif
 }
 
@@ -605,14 +596,14 @@ vislib::sys::SystemInformation::VirtualScreen(void) {
     if (!::EnumDisplayMonitors(NULL, NULL, 
             SystemInformation::calcVirtualScreenProc, 
             reinterpret_cast<LPARAM>(&retval))) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     MonitorRectArray monitors;
     SystemInformation::MonitorRects(monitors);
 
-    for (size_t i = 0; i < monitors.Count(); i++) {
+    for (SIZE_T i = 0; i < monitors.Count(); i++) {
         const MonitorRect& monitor = monitors[i];
         if (monitor.Left() < retval.Left()) {
             retval.SetLeft(monitor.Left());
@@ -683,7 +674,7 @@ vislib::sys::SystemInformation::getRootWndRect(Display *dpy, int screen) {
  */
 BOOL CALLBACK vislib::sys::SystemInformation::monitorEnumProc(HMONITOR hMonitor,
         HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
-    THE_ASSERT(hdcMonitor == NULL);
+    ASSERT(hdcMonitor == NULL);
     MonitorRectArray *da = reinterpret_cast<MonitorRectArray *>(dwData);
     
     da->Append(MonitorRect(lprcMonitor->left, lprcMonitor->bottom,
@@ -713,7 +704,7 @@ BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
             // least on Vista.
         }
     } else {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
  
     return TRUE;
@@ -725,7 +716,7 @@ BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
  * vislib::sys::SystemInformation::SystemInformation
  */
 vislib::sys::SystemInformation::SystemInformation(void) {
-    throw the::not_supported_exception("SystemInformation ctor",
+    throw vislib::UnsupportedOperationException("SystemInformation ctor",
         __FILE__, __LINE__);
 }
 
@@ -735,7 +726,7 @@ vislib::sys::SystemInformation::SystemInformation(void) {
  */
 vislib::sys::SystemInformation::SystemInformation(
         const vislib::sys::SystemInformation& rhs) {
-    throw the::not_supported_exception("SystemInformation copy ctor", 
+    throw vislib::UnsupportedOperationException("SystemInformation copy ctor", 
         __FILE__, __LINE__);
 }
 
@@ -744,6 +735,6 @@ vislib::sys::SystemInformation::SystemInformation(
  * vislib::sys::SystemInformation::~SystemInformation
  */
 vislib::sys::SystemInformation::~SystemInformation(void) {
-    throw the::not_supported_exception("SystemInformation dtor", 
+    throw vislib::UnsupportedOperationException("SystemInformation dtor", 
         __FILE__, __LINE__);
 }

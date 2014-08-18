@@ -27,13 +27,13 @@
 #endif /* (!defined(WIN32)) || !defined(INCLUDED_FROM_ARRAY_CPP) */
 
 #include "vislib/ArrayElementDftCtor.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/Iterator.h"
 #include "vislib/OrderedCollection.h"
-#include "the/index_out_of_range_exception.h"
-#include "the/memory.h"
+#include "vislib/OutOfRangeException.h"
+#include "vislib/memutils.h"
 #include "vislib/NullLockable.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -78,13 +78,13 @@ namespace vislib {
     public:
 
         /** The default initial capacity */
-        static const size_t DEFAULT_CAPACITY;
+        static const SIZE_T DEFAULT_CAPACITY;
 
         /** The default initial capacity increment */
-        static const size_t DEFAULT_CAPACITY_INCREMENT;
+        static const SIZE_T DEFAULT_CAPACITY_INCREMENT;
 
         /** This constant signals an invalid index position. */
-        static const intptr_t INVALID_POS;
+        static const INT_PTR INVALID_POS;
 
         /** 
          * Create an array with the specified initial capacity.
@@ -92,7 +92,7 @@ namespace vislib {
          * @param capacity  The initial capacity of the array.
          * @param increment The initial capacity increment of the array.
          */
-        Array(const size_t capacity = DEFAULT_CAPACITY, const size_t increment
+        Array(const SIZE_T capacity = DEFAULT_CAPACITY, const SIZE_T increment
             = DEFAULT_CAPACITY_INCREMENT);
 
         /**
@@ -104,7 +104,7 @@ namespace vislib {
          * @param element   The default value to set.
          * @param increment The initial capacity increment of the array.
          */
-        Array(const size_t count, const T& element, const size_t increment
+        Array(const SIZE_T count, const T& element, const SIZE_T increment
             = DEFAULT_CAPACITY_INCREMENT);
 
         /**
@@ -146,7 +146,7 @@ namespace vislib {
          * @throws std::bad_alloc If there was insufficient memory for 
          *                        allocating the array.
          */
-        void AssertCapacity(const size_t capacity);
+        void AssertCapacity(const SIZE_T capacity);
 
         /**
          * Erase all elements from the array.
@@ -173,14 +173,14 @@ namespace vislib {
          *
          * @return The number of elements that are currently allocated.
          */
-        size_t Capacity(void) const;
+        SIZE_T Capacity(void) const;
 
         /**
          * Answer the capacity increment of the array.
          *
          * @return The capacity increment
          */
-        inline size_t CapacityIncrement(void) const;
+        inline SIZE_T CapacityIncrement(void) const;
 
         /**
          * Answer whether 'element' is in the array.
@@ -198,7 +198,7 @@ namespace vislib {
          *
          * @return Number of items in the array.
          */
-        virtual size_t Count(void) const;
+        virtual SIZE_T Count(void) const;
 
         /**
          * Erase the element at position 'idx' from the array. If 'idx' is out
@@ -206,7 +206,7 @@ namespace vislib {
          *
          * @param idx The index of the element to be removed.
          */
-        void Erase(const size_t idx);
+        void Erase(const SIZE_T idx);
 
         /**
          * Erase all 'cnt' elements beginning at 'beginIdx'. If elements out of
@@ -215,7 +215,7 @@ namespace vislib {
          * @param beginIdx The index of the first element to be removed.
          * @param cnt      The number of elements to be removed.
          */
-        void Erase(const size_t beginIdx, const size_t cnt);
+        void Erase(const SIZE_T beginIdx, const SIZE_T cnt);
 
         /**
          * Exposes the internal data pointer.
@@ -262,7 +262,7 @@ namespace vislib {
          *
          * @return A reference to the first element in the array.
          *
-         * @throws index_out_of_range_exception, if the array is empty.
+         * @throws OutOfRangeException, if the array is empty.
          */
         virtual inline const T& First(void) const {
             return (*this)[0];
@@ -273,7 +273,7 @@ namespace vislib {
          *
          * @return A reference to the first element in the array.
          *
-         * @throws index_out_of_range_exception, if the array is empty.
+         * @throws OutOfRangeException, if the array is empty.
          */
         virtual inline T& First(void) {
             return (*this)[0];
@@ -289,7 +289,7 @@ namespace vislib {
          * @return The index of the first occurrence of 'element' in the array,
          *         or INVALID_POS if the element is not in the array.
          */
-        intptr_t IndexOf(const T& element, const size_t beginAt = 0) const;
+        INT_PTR IndexOf(const T& element, const SIZE_T beginAt = 0) const;
 
         /**
          * Insert 'element' at position 'idx' in the array. All elements behind
@@ -300,10 +300,10 @@ namespace vislib {
          * @param idx     The position to insert the element at.
          * @param element The element to add.
          *
-         * @throws index_out_of_range_exception If 'idx' is not within 
+         * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()].
          */
-        virtual void Insert(const size_t idx, const T& element);
+        virtual void Insert(const SIZE_T idx, const T& element);
 
         /**
          * Answer whether there is no element in the array. Note that a return
@@ -311,14 +311,14 @@ namespace vislib {
          *
          * @return true, if there is no element in the array, false otherwise.
          */
-        virtual bool empty(void) const;
+        virtual bool IsEmpty(void) const;
 
         /**
          * Answer the last element in the array.
          *
          * @return A reference to the last element in the array.
          *
-         * @throws index_out_of_range_exception, if the array is empty.
+         * @throws OutOfRangeException, if the array is empty.
          */
         virtual const T& Last(void) const;
 
@@ -327,7 +327,7 @@ namespace vislib {
          *
          * @return A reference to the last element in the array.
          *
-         * @throws index_out_of_range_exception, if the array is empty.
+         * @throws OutOfRangeException, if the array is empty.
          */
         virtual T& Last(void);
 
@@ -360,7 +360,7 @@ namespace vislib {
          *
          * @param idx The index of the element to be removed.
          */
-        inline void RemoveAt(const size_t idx) {
+        inline void RemoveAt(const SIZE_T idx) {
             this->Erase(idx);
         }
 
@@ -381,14 +381,14 @@ namespace vislib {
          *
          * @param capacity The new size of the array.
          */
-        void Resize(const size_t capacity);
+        void Resize(const SIZE_T capacity);
 
         /**
          * Set the capacity increment for the array.
          *
          * @param capacityIncrement the new increment
          */
-        void SetCapacityIncrement(const size_t capacityIncrement);
+        void SetCapacityIncrement(const SIZE_T capacityIncrement);
 
         /**
          * Make the array assume that it has 'count' valid elements. If 'count'
@@ -401,7 +401,7 @@ namespace vislib {
          *
          * @param count The new number of elements in the array.
          */
-        void SetCount(const size_t count);
+        void SetCount(const SIZE_T count);
 
         /**
          * Sorts the elements in the collection based on the results of the 
@@ -431,10 +431,10 @@ namespace vislib {
 
          * @return A reference to the 'idx'th element.
          *
-         * @throws index_out_of_range_exception If 'idx' is not within 
+         * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        T& operator [](const size_t idx);
+        T& operator [](const SIZE_T idx);
 
         /**
          * Access the 'idx'th element in the array.
@@ -444,10 +444,10 @@ namespace vislib {
          *
          * @return A reference to the 'idx'th element.
          *
-         * @throws index_out_of_range_exception If 'idx' is not within 
+         * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        const T& operator [](const size_t idx) const;
+        const T& operator [](const SIZE_T idx) const;
 
         /**
          * Access the 'idx'th element in the array.
@@ -457,12 +457,11 @@ namespace vislib {
          *
          * @return A reference to the 'idx'th element.
          *
-         * @throws index_out_of_range_exception If 'idx' is not within 
+         * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        template<typename Tp>
-        inline T& operator [](const Tp idx) {
-            return (*this)[static_cast<size_t>(idx)];
+        inline T& operator [](const INT idx) {
+            return (*this)[static_cast<SIZE_T>(idx)];
         }
 
         /**
@@ -473,50 +472,49 @@ namespace vislib {
          *
          * @return A reference to the 'idx'th element.
          *
-         * @throws index_out_of_range_exception If 'idx' is not within 
+         * @throws OutOfRangeException If 'idx' is not within 
          *                             [0, this->Count()[.
          */
-        template<typename Tp>
-        const T& operator [](const Tp idx) const {
-            return (*this)[static_cast<size_t>(idx)];
+        const T& operator [](const INT idx) const {
+            return (*this)[static_cast<SIZE_T>(idx)];
         }
 
-//#if (defined _WIN32) || (defined _LIN64)
-//        // this define is correct!
-//        //  used on all windows platforms 
-//        //  and on 64 bit linux!
-//
-//        /**
-//         * Access the 'idx'th element in the array.
-//         *
-//         * @param idx The index of the element to access. This must be a value
-//         *            within [0, this->Count()[.
-//         *
-//         * @return A reference to the 'idx'th element.
-//         *
-//         * @throws index_out_of_range_exception If 'idx' is not within 
-//         *                             [0, this->Count()[.
-//         */
-//        inline T& operator [](const unsigned long idx) {
-//            return (*this)[static_cast<size_t>(idx)];
-//        }
-//
-//        /**
-//         * Access the 'idx'th element in the array.
-//         *
-//         * @param idx The index of the element to access. This must be a value
-//         *            within [0, this->Count()[.
-//         *
-//         * @return A reference to the 'idx'th element.
-//         *
-//         * @throws index_out_of_range_exception If 'idx' is not within 
-//         *                             [0, this->Count()[.
-//         */
-//        const T& operator [](const unsigned long idx) const {
-//            return (*this)[static_cast<size_t>(idx)];
-//        }
-//
-//#endif /* (defined _WIN32) || (defined _LIN64) */
+#if (defined _WIN32) || (defined _LIN64)
+        // this define is correct!
+        //  used on all windows platforms 
+        //  and on 64 bit linux!
+
+        /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        inline T& operator [](const UINT idx) {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
+
+        /**
+         * Access the 'idx'th element in the array.
+         *
+         * @param idx The index of the element to access. This must be a value
+         *            within [0, this->Count()[.
+         *
+         * @return A reference to the 'idx'th element.
+         *
+         * @throws OutOfRangeException If 'idx' is not within 
+         *                             [0, this->Count()[.
+         */
+        const T& operator [](const UINT idx) const {
+            return (*this)[static_cast<SIZE_T>(idx)];
+        }
+
+#endif /* (defined _WIN32) || (defined _LIN64) */
 
         /**
          * Assignment.
@@ -566,13 +564,13 @@ namespace vislib {
 #endif /* _WIN32 */
 
         /** The number of actually allocated elements in 'elements' */
-        size_t capacity;
+        SIZE_T capacity;
 
         /** The capacity increment */
-        size_t capacityIncrement;
+        SIZE_T capacityIncrement;
 
         /** The number of used elements in 'elements' */
-        size_t count;
+        SIZE_T count;
 
         /** The actual array (PtrArray must have access) */
         T *elements;
@@ -584,32 +582,32 @@ namespace vislib {
      * vislib::Array<T, L, C>::DEFAULT_CAPACITY
      */
     template<class T, class L, class C>
-    const size_t Array<T, L, C>::DEFAULT_CAPACITY = 8;
+    const SIZE_T Array<T, L, C>::DEFAULT_CAPACITY = 8;
 
 
     /*
      * vislib::Array<T, L, C>::DEFAULT_CAPACITY_INCREMENT
      */
     template<class T, class L, class C>
-    const size_t Array<T, L, C>::DEFAULT_CAPACITY_INCREMENT = 1;
+    const SIZE_T Array<T, L, C>::DEFAULT_CAPACITY_INCREMENT = 1;
 
 
     /*
      * vislib::Array<T, L, C>::INVALID_POS
      */
     template<class T, class L, class C>
-    const intptr_t Array<T, L, C>::INVALID_POS = -1;
+    const INT_PTR Array<T, L, C>::INVALID_POS = -1;
 
 
     /*
      * vislib::Array<T, L, C>::Array
      */
     template<class T, class L, class C>
-    Array<T, L, C>::Array(const size_t capacity,
-            const size_t capacityIncrement)	: OrderedCollection<T, L>(),
+    Array<T, L, C>::Array(const SIZE_T capacity,
+            const SIZE_T capacityIncrement)	: OrderedCollection<T, L>(),
             capacity(0), capacityIncrement(capacityIncrement), count(0),
             elements(NULL) {
-        THE_ASSERT(capacityIncrement > 0);
+        ASSERT(capacityIncrement > 0);
         this->AssertCapacity(capacity);
     }
 
@@ -618,14 +616,14 @@ namespace vislib {
      * vislib::Array<T, L, C>::Array
      */
     template<class T, class L, class C>
-    Array<T, L, C>::Array(const size_t count, const T& element,
-            const size_t capacityIncrement) : OrderedCollection<T, L>(),
+    Array<T, L, C>::Array(const SIZE_T count, const T& element,
+            const SIZE_T capacityIncrement) : OrderedCollection<T, L>(),
             capacity(0), capacityIncrement(capacityIncrement), count(count),
             elements(NULL) {
-        THE_ASSERT(capacityIncrement > 0);
+        ASSERT(capacityIncrement > 0);
         this->Lock();
         this->AssertCapacity(count);
-        for (size_t i = 0; i < this->count; i++) {
+        for (SIZE_T i = 0; i < this->count; i++) {
             this->elements[i] = element;
         }
         this->Unlock();
@@ -647,7 +645,7 @@ namespace vislib {
      */
     template<class T, class L, class C> Array<T, L, C>::~Array(void) {
         this->Resize(0);
-        THE_ASSERT(this->elements == NULL);
+        ASSERT(this->elements == NULL);
     }
 
 
@@ -668,7 +666,7 @@ namespace vislib {
      * vislib::Array<T, L, C>::AssertCapacity
      */
     template<class T, class L, class C>
-    void Array<T, L, C>::AssertCapacity(const size_t capacity) {
+    void Array<T, L, C>::AssertCapacity(const SIZE_T capacity) {
         this->Lock();
         if (this->capacity < capacity) {
             if (capacity - this->capacity < this->capacityIncrement) {
@@ -695,9 +693,9 @@ namespace vislib {
      * vislib::Array<T, L, C>::Capacity
      */
     template<class T, class L, class C>
-    size_t Array<T, L, C>::Capacity(void) const {
+    SIZE_T Array<T, L, C>::Capacity(void) const {
         this->Lock();
-        size_t retval = this->capacity;
+        SIZE_T retval = this->capacity;
         this->Unlock();
         return retval;
     }
@@ -707,9 +705,9 @@ namespace vislib {
      * vislib::Array<T, L, C>::CapacityIncrement
      */
     template<class T, class L, class C>
-    size_t Array<T, L, C>::CapacityIncrement(void) const {
+    SIZE_T Array<T, L, C>::CapacityIncrement(void) const {
         this->Lock();
-        size_t retval = this->capacityIncrement;
+        SIZE_T retval = this->capacityIncrement;
         this->Unlock();
         return retval;
     }
@@ -721,7 +719,7 @@ namespace vislib {
     template<class T, class L, class C>
     bool Array<T, L, C>::Contains(const T& element) const {
         this->Lock();
-        intptr_t idx = this->IndexOf(element);
+        INT_PTR idx = this->IndexOf(element);
         this->Unlock();
         return (idx >= 0);
     }
@@ -731,9 +729,9 @@ namespace vislib {
      * vislib::Array<T, L, C>::Count
      */
     template<class T, class L, class C>
-    size_t Array<T, L, C>::Count(void) const {
+    SIZE_T Array<T, L, C>::Count(void) const {
         this->Lock();
-        size_t retval = this->count;
+        SIZE_T retval = this->count;
         this->Unlock();
         return retval;
     }
@@ -743,14 +741,14 @@ namespace vislib {
      * vislib::Array<T, L, C>::Erase
      */
     template<class T, class L, class C>
-    void Array<T, L, C>::Erase(const size_t idx) {
+    void Array<T, L, C>::Erase(const SIZE_T idx) {
         this->Lock();
         if (idx < this->count) {
             /* Destruct element to erase. */
             C::Dtor(this->elements + idx);
 
             /* Move elements forward. */
-            for (size_t i = idx + 1; i < this->count; i++) {
+            for (SIZE_T i = idx + 1; i < this->count; i++) {
                 this->elements[i - 1] = this->elements[i];
             }
             this->count--;
@@ -766,10 +764,10 @@ namespace vislib {
      * vislib::Array<T, L, C>::Erase
      */
     template<class T, class L, class C>
-    void Array<T, L, C>::Erase(const size_t beginIdx, const size_t cnt) {
-        size_t cntRemoved = cnt;
-        size_t range = cnt;
-        size_t cntMove = range;
+    void Array<T, L, C>::Erase(const SIZE_T beginIdx, const SIZE_T cnt) {
+        SIZE_T cntRemoved = cnt;
+        SIZE_T range = cnt;
+        SIZE_T cntMove = range;
 
         this->Lock();
 
@@ -779,15 +777,15 @@ namespace vislib {
             if (beginIdx + range >= this->count) {
                 cntRemoved = range = cntMove = this->count - beginIdx;
             }
-            THE_ASSERT(beginIdx + range <= this->count);
+            ASSERT(beginIdx + range <= this->count);
 
             /* Dtor element range to erase. */
-            for (size_t i = beginIdx; i < beginIdx + range; i++) {
+            for (SIZE_T i = beginIdx; i < beginIdx + range; i++) {
                 C::Dtor(this->elements + i);
             }
 
             /* Fill empty range. */
-            for (size_t i = beginIdx + range; i < this->count; i += range) {
+            for (SIZE_T i = beginIdx + range; i < this->count; i += range) {
                 if (i + range >= this->count) {
                     cntMove = this->count - i;
                 }
@@ -797,7 +795,7 @@ namespace vislib {
             this->count -= cntRemoved;
 
             /* 'cntRemoved' elements after valid range must be reconstructed. */
-            for (size_t i = this->count; i < this->count + cntRemoved; i++) {
+            for (SIZE_T i = this->count; i < this->count + cntRemoved; i++) {
                 C::Ctor(this->elements + i);
             }
         }
@@ -812,7 +810,7 @@ namespace vislib {
     template<class T, class L, class C>
     const T * Array<T, L, C>::Find(const T& element) const {
         // TODO: Larger critical section? Would not be safe anyway.
-        intptr_t idx = this->IndexOf(element);
+        INT_PTR idx = this->IndexOf(element);
         return (idx >= 0) ? (this->elements + idx) : NULL;
     }
 
@@ -823,7 +821,7 @@ namespace vislib {
     template<class T, class L, class C>
     T * Array<T, L, C>::Find(const T& element) {
         // TODO: Larger critical section? Would not be safe anyway.
-        intptr_t idx = this->IndexOf(element);
+        INT_PTR idx = this->IndexOf(element);
         return (idx >= 0) ? (this->elements + idx) : NULL;
     }
 
@@ -832,10 +830,10 @@ namespace vislib {
      * vislib::Array<T, L, C>::IndexOf
      */
     template<class T, class L, class C>
-    intptr_t Array<T, L, C>::IndexOf(const T& element,
-            const size_t beginAt) const {
+    INT_PTR Array<T, L, C>::IndexOf(const T& element,
+            const SIZE_T beginAt) const {
         this->Lock();
-        for (size_t i = 0; i < this->count; i++) {
+        for (SIZE_T i = 0; i < this->count; i++) {
             if (this->elements[i] == element) {
                 this->Unlock();
                 return i;
@@ -852,13 +850,13 @@ namespace vislib {
      * vislib::Array<T, L, C>::Insert
      */
     template<class T, class L, class C>
-    void Array<T, L, C>::Insert(const size_t idx, const T& element) {
+    void Array<T, L, C>::Insert(const SIZE_T idx, const T& element) {
         this->Lock();
 
-        if (static_cast<size_t>(idx) <= this->count) {
+        if (static_cast<SIZE_T>(idx) <= this->count) {
             this->AssertCapacity(this->count + 1);
 
-            for (size_t i = this->count; i > idx; i--) {
+            for (SIZE_T i = this->count; i > idx; i--) {
                 this->elements[i] = this->elements[i - 1];
             }
             
@@ -867,8 +865,8 @@ namespace vislib {
 
         } else {
             this->Unlock();
-            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
-                static_cast<int>(this->count), __FILE__, __LINE__);
+            throw OutOfRangeException(static_cast<INT>(idx), 0, 
+                static_cast<INT>(this->count), __FILE__, __LINE__);
         }
 
         this->Unlock();
@@ -876,10 +874,10 @@ namespace vislib {
 
 
     /*
-     * vislib::Array<T, L, C>::empty
+     * vislib::Array<T, L, C>::IsEmpty
      */
     template<class T, class L, class C>
-    bool Array<T, L, C>::empty(void) const {
+    bool Array<T, L, C>::IsEmpty(void) const {
         this->Lock();
         bool retval = (this->count == 0);
         this->Unlock();
@@ -919,7 +917,7 @@ namespace vislib {
         this->Lock();
         this->AssertCapacity(this->count + 1);
 
-        for (size_t i = this->count; i > 0; i--) {
+        for (SIZE_T i = this->count; i > 0; i--) {
             this->elements[i] = this->elements[i - 1];
         }
 
@@ -937,13 +935,13 @@ namespace vislib {
 
         this->Lock();
 
-        for (size_t i = 0; i < this->count; i++) {
+        for (SIZE_T i = 0; i < this->count; i++) {
             if (this->elements[i] == element) {
                 /* Dtor element to remove. */
                 C::Dtor(this->elements + i);
 
                 /* Move elements forward. */
-                for (size_t j = i + 1; j < this->count; j++) {
+                for (SIZE_T j = i + 1; j < this->count; j++) {
                     this->elements[j - 1] = this->elements[j];
                 }
                 this->count--;
@@ -967,13 +965,13 @@ namespace vislib {
 
         this->Lock();
 
-        for (size_t i = 0; i < this->count; i++) {
+        for (SIZE_T i = 0; i < this->count; i++) {
             if (this->elements[i] == element) {
                 /* Dtor element to remove. */
                 C::Dtor(this->elements + i);
 
                 /* Move elements forward. */
-                for (size_t j = i + 1; j < this->count; j++) {
+                for (SIZE_T j = i + 1; j < this->count; j++) {
                     this->elements[j - 1] = this->elements[j];
                 }
                 this->count--;
@@ -1011,10 +1009,10 @@ namespace vislib {
      * vislib::Array<T, L, C>::Resize
      */
     template<class T, class L, class C>
-    void Array<T, L, C>::Resize(const size_t capacity) {
+    void Array<T, L, C>::Resize(const SIZE_T capacity) {
         void *newPtr = NULL;
         this->Lock();
-        size_t oldCapacity = this->capacity;
+        SIZE_T oldCapacity = this->capacity;
 
         /*
          * Erase elements, if new capacity is smaller than old one. Ensure that 
@@ -1022,7 +1020,7 @@ namespace vislib {
          * array.
          */
         if (capacity < this->capacity) {
-            for (size_t i = capacity; i < this->capacity; i++) {
+            for (SIZE_T i = capacity; i < this->capacity; i++) {
                 C::Dtor(this->elements + i);
             }
 
@@ -1036,7 +1034,7 @@ namespace vislib {
         this->capacity = capacity;
         if (this->capacity == 0) {
             /* Array is empty now, make 'this->elements' a NULL pointer. */
-            the::safe_free(this->elements);
+            SAFE_FREE(this->elements);
 
         } else if (oldCapacity != this->capacity) {
             /* Reallocate elements. */
@@ -1044,14 +1042,14 @@ namespace vislib {
                     != NULL) {
                 this->elements = static_cast<T *>(newPtr);
 
-                for (size_t i = oldCapacity; i < this->capacity; i++) {
+                for (SIZE_T i = oldCapacity; i < this->capacity; i++) {
                     C::Ctor(this->elements + i);
                 }
             } else {
-                for (size_t i = 0; i < oldCapacity; i++) {
+                for (SIZE_T i = 0; i < oldCapacity; i++) {
                     C::Dtor(this->elements + i);
                 }
-                the::safe_free(this->elements);
+                SAFE_FREE(this->elements);
                 this->Unlock();
                 throw std::bad_alloc();
             }
@@ -1065,7 +1063,7 @@ namespace vislib {
      * vislib::Array<T, L, C>::SetCount
      */
     template<class T, class L, class C>
-    void Array<T, L, C>::SetCount(const size_t count) {
+    void Array<T, L, C>::SetCount(const SIZE_T count) {
         this->Lock();
         if (count < this->count) {
             this->Erase(count, this->count - count);
@@ -1081,7 +1079,7 @@ namespace vislib {
      * vislib::Array<T, L, C>::SetCapacityIncrement
      */
     template<class T, class L, class C>
-    void Array<T, L, C>::SetCapacityIncrement(const size_t capacityIncrement) {
+    void Array<T, L, C>::SetCapacityIncrement(const SIZE_T capacityIncrement) {
         this->Lock();
         this->capacityIncrement = capacityIncrement;
         this->Unlock();
@@ -1101,9 +1099,9 @@ namespace vislib {
 
 #else /* _WIN32 */
         // qsort by hand, because of frowsty ANSI api (based on Sedgewick)
-        int64_t l, r, i, j;
+        INT64 l, r, i, j;
         T tmp;
-        Stack<uint64_t> stack;
+        Stack<UINT64> stack;
 
         l = 0;
         r = this->count - 1;
@@ -1146,7 +1144,7 @@ namespace vislib {
                 r = stack.Pop();
                 l = stack.Pop();
             }
-        } while (!stack.empty());
+        } while (!stack.IsEmpty());
 
 #endif /* _WIN32 */
 
@@ -1158,16 +1156,16 @@ namespace vislib {
      * vislib::Array<T, L, C>::operator []
      */
     template<class T, class L, class C>
-    T& Array<T, L, C>::operator [](const size_t idx) {
+    T& Array<T, L, C>::operator [](const SIZE_T idx) {
         this->Lock();
-        if (static_cast<size_t>(idx) < this->count) {
+        if (static_cast<SIZE_T>(idx) < this->count) {
             T& retval = this->elements[idx];
             this->Unlock();
             return retval;
         } else {
             this->Unlock();
-            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
-                static_cast<int>(this->count - 1), __FILE__, __LINE__);
+            throw OutOfRangeException(static_cast<INT>(idx), 0, 
+                static_cast<INT>(this->count - 1), __FILE__, __LINE__);
         }
     }
 
@@ -1176,16 +1174,16 @@ namespace vislib {
      * vislib::Array<T, L, C>::operator []
      */
     template<class T, class L, class C>
-    const T& Array<T, L, C>::operator [](const size_t idx) const {
+    const T& Array<T, L, C>::operator [](const SIZE_T idx) const {
         this->Lock();
-        if (static_cast<size_t>(idx) < this->count) {
+        if (static_cast<SIZE_T>(idx) < this->count) {
             const T& retval = this->elements[idx];
             this->Unlock();
             return retval;
         } else {
             this->Unlock();
-            throw the::index_out_of_range_exception(static_cast<int>(idx), 0, 
-                static_cast<int>(this->count - 1), __FILE__, __LINE__);
+            throw OutOfRangeException(static_cast<INT>(idx), 0, 
+                static_cast<INT>(this->count - 1), __FILE__, __LINE__);
         }
     }
 
@@ -1201,7 +1199,7 @@ namespace vislib {
             this->count = rhs.count;
             this->capacityIncrement = rhs.capacityIncrement;
 
-            for (size_t i = 0; i < rhs.count; i++) {
+            for (SIZE_T i = 0; i < rhs.count; i++) {
                 this->elements[i] = rhs.elements[i];
             }
             this->Unlock();
@@ -1224,7 +1222,7 @@ namespace vislib {
             this->Unlock();
             return false;
         }
-        for (size_t i = 0; i < this->count; i++) {
+        for (SIZE_T i = 0; i < this->count; i++) {
             if (!(this->elements[i] == rhs.elements[i])) {
                 this->Unlock();
                 return false;

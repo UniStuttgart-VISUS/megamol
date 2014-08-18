@@ -16,14 +16,14 @@
                                                                                \
     if ((hSCMgr = ::OpenSCManager##strType(NULL, NULL, SC_MANAGER_ALL_ACCESS)) \
             == NULL) {                                                         \
-        throw the::system::system_exception(__FILE__, __LINE__);                             \
+        throw SystemException(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
-    if ((hSvc = ::CreateService##strType(hSCMgr, svcName.c_str(), displayName.c_str(),         \
+    if ((hSvc = ::CreateService##strType(hSCMgr, svcName, displayName,         \
             SERVICE_ALL_ACCESS, svcType, startType, SERVICE_ERROR_NORMAL,      \
-            binaryPath.c_str(), NULL, NULL, NULL, NULL, NULL)) == NULL) {              \
+            binaryPath, NULL, NULL, NULL, NULL, NULL)) == NULL) {              \
         ::CloseServiceHandle(hSCMgr);                                          \
-        throw the::system::system_exception(__FILE__, __LINE__);                             \
+        throw SystemException(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     ::CloseServiceHandle(hSvc);                                                \
@@ -40,15 +40,15 @@
         return false;                                                          \
     }                                                                          \
                                                                                \
-    if (::RegOpenKey##strType(hKeyServices, svcName.c_str(), &hKeySvc)                 \
+    if (::RegOpenKey##strType(hKeyServices, svcName, &hKeySvc)                 \
             != ERROR_SUCCESS) {                                                \
         ::RegCloseKey(hKeyServices);                                           \
         return false;                                                          \
     }                                                                          \
                                                                                \
     retval = (::RegSetValueEx##strType(hKeySvc, VALNAMEDESC##strType, 0,       \
-        REG_SZ, reinterpret_cast<const uint8_t *>(desc.c_str()),             \
-        static_cast<DWORD>(desc.size() * sizeof(Char))) == ERROR_SUCCESS);    \
+        REG_SZ, reinterpret_cast<const BYTE *>(desc.PeekBuffer()),             \
+        desc.Length() * CharTraits##strType::CharSize()) == ERROR_SUCCESS);    \
                                                                                \
     ::RegCloseKey(hKeyServices);                                               \
     ::RegCloseKey(hKeySvc);                                                    \
@@ -56,14 +56,14 @@
 
 
 #define IMPLEMENT_WINDOWS_SERVICE_INSTALL2(strType)                            \
-    String binaryPath(MAX_PATH, '\0');                                                \
+    String##strType binaryPath;                                                \
                                                                                \
-    if (::GetModuleFileName##strType(NULL, const_cast<Char*>(binaryPath.c_str()),\
+    if (::GetModuleFileName##strType(NULL, binaryPath.AllocateBuffer(MAX_PATH),\
             MAX_PATH)) {                                                       \
-        WindowsService::Install(binaryPath.c_str(), this->name.c_str(),                        \
-            this->displayName.c_str(), this->status.dwServiceType, startType);         \
+        WindowsService::Install(binaryPath, this->name,                        \
+            this->displayName, this->status.dwServiceType, startType);         \
     } else {                                                                   \
-        throw the::system::system_exception(__FILE__, __LINE__);                             \
+        throw SystemException(__FILE__, __LINE__);                             \
     }
 
 
@@ -73,19 +73,19 @@
                                                                                \
     if ((hSCMgr = ::OpenSCManager##strType(NULL, NULL, SC_MANAGER_ALL_ACCESS)) \
             == NULL) {                                                         \
-        throw the::system::system_exception(__FILE__, __LINE__);                             \
+        throw SystemException(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
-    if ((hSvc = ::OpenService##strType(hSCMgr, this->name.c_str(),                     \
+    if ((hSvc = ::OpenService##strType(hSCMgr, this->name,                     \
             SERVICE_ALL_ACCESS)) == NULL) {                                    \
         ::CloseServiceHandle(hSCMgr);                                          \
-        throw the::system::system_exception(__FILE__, __LINE__);                             \
+        throw SystemException(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     if (!::DeleteService(hSvc)) {                                              \
         ::CloseServiceHandle(hSvc);                                            \
         ::CloseServiceHandle(hSCMgr);                                          \
-        throw the::system::system_exception(__FILE__, __LINE__);                             \
+        throw SystemException(__FILE__, __LINE__);                             \
     }                                                                          \
                                                                                \
     ::CloseServiceHandle(hSvc);                                                \
@@ -95,7 +95,7 @@
 #define IMPLEMENT_WINDOWS_SERVICE_RUN(strType)                                 \
     DWORD errorCode = 0;                                                       \
     SERVICE_TABLE_ENTRY##strType svcTable[] = {                                \
-        { const_cast<Char *>(this->name.c_str()), reinterpret_cast<       \
+        { const_cast<Char *>(this->name.PeekBuffer()), reinterpret_cast<       \
 LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
         { NULL, NULL}                                                          \
     };                                                                         \
@@ -103,7 +103,7 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
     if (WindowsService::instance == NULL) {                                    \
         WindowsService::instance = this;                                       \
     } else {                                                                   \
-        throw the::invalid_operation_exception("There is already a Windows Service"       \
+        throw IllegalStateException("There is already a Windows Service"       \
             "instance.", __FILE__, __LINE__);                                  \
     }                                                                          \
                                                                                \
@@ -120,13 +120,13 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
             return false;                                                      \
         } else {                                                               \
             /* Could not start service for other reason. */                    \
-            throw the::system::system_exception(errorCode, __FILE__, __LINE__);              \
+            throw SystemException(errorCode, __FILE__, __LINE__);              \
         }                                                                      \
     }                                                                           
 
 
 #define IMPLEMENT_WINDOWS_SERVICE_HANDLER_EX                                   \
-    THE_ASSERT(context != NULL);                                                   \
+    ASSERT(context != NULL);                                                   \
     DWORD retval = NO_ERROR;                                                   \
     WindowsService *svc = static_cast<WindowsService *>(context);              \
                                                                                \
@@ -137,8 +137,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnContinue()) == NO_ERROR) {                \
                     svc->setStatus(SERVICE_RUNNING);                           \
                 }                                                              \
-            } catch (the::system::system_exception e) {                                      \
-                retval = e.get_error().native_error();                                     \
+            } catch (SystemException e) {                                      \
+                retval = e.GetErrorCode();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -174,8 +174,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnPause()) == NO_ERROR) {                   \
                     svc->setStatus(SERVICE_PAUSED);                            \
                 }                                                              \
-            } catch (the::system::system_exception e) {                                      \
-                retval = e.get_error().native_error();                                     \
+            } catch (SystemException e) {                                      \
+                retval = e.GetErrorCode();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -185,8 +185,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnShutdown()) == NO_ERROR) {                \
                     svc->setStatus(SERVICE_STOPPED);                           \
                 }                                                              \
-            } catch (the::system::system_exception e) {                                      \
-                retval = e.get_error().native_error();                                     \
+            } catch (SystemException e) {                                      \
+                retval = e.GetErrorCode();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -196,8 +196,8 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
                 if ((retval = svc->OnStop()) == NO_ERROR) {                    \
                     svc->setStatus(SERVICE_STOPPED);                           \
                 }                                                              \
-            } catch (the::system::system_exception e) {                                      \
-                retval = e.get_error().native_error();                                     \
+            } catch (SystemException e) {                                      \
+                retval = e.GetErrorCode();                                     \
             }                                                                  \
             break;                                                             \
                                                                                \
@@ -230,7 +230,7 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
 
 
 #define IMPLEMENT_WINDOWS_SERVICE_SERVICE_MAIN(strType)                        \
-    THE_ASSERT(WindowsService::instance != NULL);                                  \
+    ASSERT(WindowsService::instance != NULL);                                  \
                                                                                \
     SERVICE_STATUS_HANDLE& hStatus = WindowsService::instance->hStatus;        \
     SERVICE_STATUS& status = WindowsService::instance->status;                 \
@@ -261,9 +261,9 @@ LPSERVICE_MAIN_FUNCTION##strType>(&WindowsService::serviceMain) },             \
 // BEGIN OF PARTIAL TEMPLATE SPECIALISATION FOR CharTraitsA
 
 /*
- * vislib::sys::WindowsService<the::astring>::Install
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::Install
  */
-void vislib::sys::WindowsService<the::astring>::Install(
+void vislib::sys::WindowsService<vislib::CharTraitsA>::Install(
         const String& binaryPath, const String& svcName, 
         const String& displayName, const DWORD svcType, const DWORD startType) {
     IMPLEMENT_WINDOWS_SERVICE_INSTALL1(A);
@@ -271,18 +271,18 @@ void vislib::sys::WindowsService<the::astring>::Install(
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::SetDescription
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::SetDescription
  */
-bool vislib::sys::WindowsService<the::astring>::SetDescription(
+bool vislib::sys::WindowsService<vislib::CharTraitsA>::SetDescription(
         const String& svcName, const String& desc) {
     IMPLEMENT_WINDOWS_SERVICE_SETDESCRIPTION(A);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::~WindowsService
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::~WindowsService
  */
-vislib::sys::WindowsService<the::astring>::~WindowsService(void) {
+vislib::sys::WindowsService<vislib::CharTraitsA>::~WindowsService(void) {
     if (this->hStatus != NULL) {
         ::CloseServiceHandle(reinterpret_cast<SC_HANDLE>(this->hStatus));
     }
@@ -290,181 +290,181 @@ vislib::sys::WindowsService<the::astring>::~WindowsService(void) {
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::Install
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::Install
  */
-void vislib::sys::WindowsService<the::astring>::Install(
+void vislib::sys::WindowsService<vislib::CharTraitsA>::Install(
         const DWORD startType) {
     IMPLEMENT_WINDOWS_SERVICE_INSTALL2(A);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::Run
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::Run
  */
-bool vislib::sys::WindowsService<the::astring>::Run(void) {
+bool vislib::sys::WindowsService<vislib::CharTraitsA>::Run(void) {
     IMPLEMENT_WINDOWS_SERVICE_RUN(A);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnContinue
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnContinue
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnContinue(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnContinue(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnDeviceEvent
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnDeviceEvent
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnDeviceEvent(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnDeviceEvent(
         const DWORD eventType, void *eventData) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnHardwareProfileChanged
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnHardwareProfileChanged
  */
 DWORD 
-vislib::sys::WindowsService<the::astring>::OnHardwareProfileChanged(
+vislib::sys::WindowsService<vislib::CharTraitsA>::OnHardwareProfileChanged(
         const DWORD eventType) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnNetBindAdd
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindAdd
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnNetBindAdd(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindAdd(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnNetBindDisable
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindDisable
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnNetBindDisable(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindDisable(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnNetBindEnable
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindEnable
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnNetBindEnable(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindEnable(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnNetBindRemove
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindRemove
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnNetBindRemove(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnNetBindRemove(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* 
- * vislib::sys::WindowsService<the::astring>::OnParamChange
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnParamChange
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnParamChange(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnParamChange(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnPause
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnPause
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnPause(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnPause(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnPowerEvent
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnPowerEvent
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnPowerEvent(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnPowerEvent(
         const DWORD eventType, void *eventData) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnSessionChange
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnSessionChange
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnSessionChange(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnSessionChange(
         const DWORD eventType, void *eventData) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnShutdown
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnShutdown
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnShutdown(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnShutdown(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnStop
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnStop
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnStop(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnStop(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::OnUserControl
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::OnUserControl
  */
-DWORD vislib::sys::WindowsService<the::astring>::OnUserControl(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsA>::OnUserControl(
         const DWORD control) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::Uninstall
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::Uninstall
  */
-void vislib::sys::WindowsService<the::astring>::Uninstall(void) {
+void vislib::sys::WindowsService<vislib::CharTraitsA>::Uninstall(void) {
     IMPLEMENT_WINDOWS_SERVICE_UNINSTALL(A);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::handlerEx
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::handlerEx
  */
-DWORD WINAPI vislib::sys::WindowsService<the::astring>::handlerEx(
+DWORD WINAPI vislib::sys::WindowsService<vislib::CharTraitsA>::handlerEx(
         DWORD control, DWORD eventType, void *eventData, void *context) {
     IMPLEMENT_WINDOWS_SERVICE_HANDLER_EX;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::serviceMain
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::serviceMain
  */
-void WINAPI vislib::sys::WindowsService<the::astring>::serviceMain(
+void WINAPI vislib::sys::WindowsService<vislib::CharTraitsA>::serviceMain(
         DWORD argc, Char **argv) {
     IMPLEMENT_WINDOWS_SERVICE_SERVICE_MAIN(A);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::instance
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::instance
  */
-vislib::sys::WindowsService<the::astring> 
-*vislib::sys::WindowsService<the::astring>::instance = NULL;
+vislib::sys::WindowsService<vislib::CharTraitsA> 
+*vislib::sys::WindowsService<vislib::CharTraitsA>::instance = NULL;
 
 
 /*
- * vislib::sys::WindowsService<the::astring>::operator =
+ * vislib::sys::WindowsService<vislib::CharTraitsA>::operator =
  */
-vislib::sys::WindowsService<the::astring>& 
-vislib::sys::WindowsService<the::astring>::operator =(
+vislib::sys::WindowsService<vislib::CharTraitsA>& 
+vislib::sys::WindowsService<vislib::CharTraitsA>::operator =(
         const WindowsService& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;
@@ -477,9 +477,9 @@ vislib::sys::WindowsService<the::astring>::operator =(
 // BEGIN OF PARTIAL TEMPLATE SPECIALISATION FOR CharTraitsW
 
 /*
- * vislib::sys::WindowsService<the::wstring>::Install
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::Install
  */
-void vislib::sys::WindowsService<the::wstring>::Install(
+void vislib::sys::WindowsService<vislib::CharTraitsW>::Install(
         const String& binaryPath, const String& svcName, 
         const String& displayName, const DWORD svcType, const DWORD startType) {
     IMPLEMENT_WINDOWS_SERVICE_INSTALL1(W);
@@ -487,9 +487,9 @@ void vislib::sys::WindowsService<the::wstring>::Install(
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::SetDescription
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::SetDescription
  */
-bool vislib::sys::WindowsService<the::wstring>::SetDescription(
+bool vislib::sys::WindowsService<vislib::CharTraitsW>::SetDescription(
         const String& svcName, const String& desc) {
     IMPLEMENT_WINDOWS_SERVICE_SETDESCRIPTION(W);
 }
@@ -497,9 +497,9 @@ bool vislib::sys::WindowsService<the::wstring>::SetDescription(
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::~WindowsService
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::~WindowsService
  */
-vislib::sys::WindowsService<the::wstring>::~WindowsService(void) {
+vislib::sys::WindowsService<vislib::CharTraitsW>::~WindowsService(void) {
     if (this->hStatus != NULL) {
         ::CloseServiceHandle(reinterpret_cast<SC_HANDLE>(this->hStatus));
     }
@@ -507,181 +507,181 @@ vislib::sys::WindowsService<the::wstring>::~WindowsService(void) {
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::Install
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::Install
  */
-void vislib::sys::WindowsService<the::wstring>::Install(
+void vislib::sys::WindowsService<vislib::CharTraitsW>::Install(
         const DWORD startType) {
     IMPLEMENT_WINDOWS_SERVICE_INSTALL2(W);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::Run
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::Run
  */
-bool vislib::sys::WindowsService<the::wstring>::Run(void) {
+bool vislib::sys::WindowsService<vislib::CharTraitsW>::Run(void) {
     IMPLEMENT_WINDOWS_SERVICE_RUN(W);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnContinue
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnContinue
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnContinue(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnContinue(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnDeviceEvent
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnDeviceEvent
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnDeviceEvent(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnDeviceEvent(
         const DWORD eventType, void *eventData) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnHardwareProfileChanged
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnHardwareProfileChanged
  */
 DWORD 
-vislib::sys::WindowsService<the::wstring>::OnHardwareProfileChanged(
+vislib::sys::WindowsService<vislib::CharTraitsW>::OnHardwareProfileChanged(
         const DWORD eventType) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnNetBindAdd
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindAdd
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnNetBindAdd(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindAdd(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnNetBindDisable
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindDisable
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnNetBindDisable(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindDisable(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnNetBindEnable
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindEnable
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnNetBindEnable(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindEnable(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnNetBindRemove
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindRemove
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnNetBindRemove(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnNetBindRemove(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* 
- * vislib::sys::WindowsService<the::wstring>::OnParamChange
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnParamChange
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnParamChange(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnParamChange(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnPause
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnPause
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnPause(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnPause(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnPowerEvent
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnPowerEvent
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnPowerEvent(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnPowerEvent(
         const DWORD eventType, void *eventData) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnSessionChange
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnSessionChange
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnSessionChange(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnSessionChange(
         const DWORD eventType, void *eventData) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnShutdown
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnShutdown
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnShutdown(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnShutdown(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnStop
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnStop
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnStop(void) {
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnStop(void) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::OnUserControl
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::OnUserControl
  */
-DWORD vislib::sys::WindowsService<the::wstring>::OnUserControl(
+DWORD vislib::sys::WindowsService<vislib::CharTraitsW>::OnUserControl(
         const DWORD control) {
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::Uninstall
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::Uninstall
  */
-void vislib::sys::WindowsService<the::wstring>::Uninstall(void) {
+void vislib::sys::WindowsService<vislib::CharTraitsW>::Uninstall(void) {
     IMPLEMENT_WINDOWS_SERVICE_UNINSTALL(W);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::handlerEx
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::handlerEx
  */
-DWORD WINAPI vislib::sys::WindowsService<the::wstring>::handlerEx(
+DWORD WINAPI vislib::sys::WindowsService<vislib::CharTraitsW>::handlerEx(
         DWORD control, DWORD eventType, void *eventData, void *context) {
     IMPLEMENT_WINDOWS_SERVICE_HANDLER_EX;
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::serviceMain
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::serviceMain
  */
-void WINAPI vislib::sys::WindowsService<the::wstring>::serviceMain(
+void WINAPI vislib::sys::WindowsService<vislib::CharTraitsW>::serviceMain(
         DWORD argc, Char **argv) {
     IMPLEMENT_WINDOWS_SERVICE_SERVICE_MAIN(W);
 }
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::instance
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::instance
  */
-vislib::sys::WindowsService<the::wstring> 
-*vislib::sys::WindowsService<the::wstring>::instance = NULL;
+vislib::sys::WindowsService<vislib::CharTraitsW> 
+*vislib::sys::WindowsService<vislib::CharTraitsW>::instance = NULL;
 
 
 /*
- * vislib::sys::WindowsService<the::wstring>::operator =
+ * vislib::sys::WindowsService<vislib::CharTraitsW>::operator =
  */
-vislib::sys::WindowsService<the::wstring>& 
-vislib::sys::WindowsService<the::wstring>::operator =(
+vislib::sys::WindowsService<vislib::CharTraitsW>& 
+vislib::sys::WindowsService<vislib::CharTraitsW>::operator =(
         const WindowsService& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

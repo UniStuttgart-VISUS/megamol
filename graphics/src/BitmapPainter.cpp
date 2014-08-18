@@ -6,8 +6,8 @@
  */
 
 #include "vislib/BitmapPainter.h"
-#include "the/assert.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/mathfunctions.h"
 
 
@@ -93,7 +93,7 @@ inline
 #endif /* _WIN32 */
 void vislib::graphics::BitmapPainter::preDraw(void) {
     if (this->img == NULL) {
-        throw the::invalid_operation_exception(
+        throw vislib::IllegalStateException(
             "You must set an image to draw to", __FILE__, __LINE__);
     }
     if (this->colBits == NULL) {
@@ -101,9 +101,9 @@ void vislib::graphics::BitmapPainter::preDraw(void) {
         const unsigned int unsetMask = 0x00000000;
         const unsigned int setMask = 0xFFFFFFFF;
         unsigned int cc = this->img->GetChannelCount();
-        THE_ASSERT((this->img->BytesPerPixel() % cc) == 0);
+        ASSERT((this->img->BytesPerPixel() % cc) == 0);
         unsigned int bpc = this->img->BytesPerPixel() / cc;
-        THE_ASSERT(bpc <= 4);
+        ASSERT(bpc <= 4);
         this->colSize = this->img->BytesPerPixel();
         this->colBits = new unsigned char[this->colSize];
         this->colMask = new unsigned char[this->colSize];
@@ -133,7 +133,7 @@ void vislib::graphics::BitmapPainter::preDraw(void) {
         }
 #if defined(DEBUG) || defined(_DEBUG)
         for (unsigned int i = 0; i < this->colSize; i++) {
-            THE_ASSERT((this->colBits[i] & ~this->colMask[i]) == 0);
+            ASSERT((this->colBits[i] & ~this->colMask[i]) == 0);
         }
 #endif /* DEBUG || _DEBUG */
     }
@@ -147,7 +147,7 @@ template<class Tp>
 inline bool vislib::graphics::BitmapPainter::setColourCacheValue(Tp* dst,
         unsigned int idx, BitmapImage::ChannelLabel label) {
     bool rv = false;
-    for (size_t i = 0; i < this->col.Count(); i++) {
+    for (SIZE_T i = 0; i < this->col.Count(); i++) {
         ChannelColour &cc = this->col[i];
         if ((cc.idx == idx) || (cc.label == label)
                 || ((cc.idx == UINT_MAX)
@@ -174,7 +174,7 @@ inline bool vislib::graphics::BitmapPainter::setColourCacheValue(Tp* dst,
  * vislib::graphics::BitmapPainter::setPixel
  */
 #ifdef _WIN32
-THE_FORCE_INLINE
+VISLIB_FORCEINLINE
 #endif /* _WIN32 */
 void vislib::graphics::BitmapPainter::setPixel(
         unsigned char *dst) {

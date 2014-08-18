@@ -61,7 +61,7 @@ namespace sys {
         /**
          * behaves like File::Flush
          *
-         * throws the::system::io::io_exception with ERROR_WRITE_FAULT if a buffer in write mode
+         * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
          *                    could not be flushed to disk.
          */
         virtual void Flush(void);
@@ -118,7 +118,7 @@ namespace sys {
          *
          * @param newSize The number of bytes to be used for the new buffer.
          *
-         * @throws the::system::io::io_exception if the flush cannot be performed
+         * @throws IOException if the flush cannot be performed
          */
         void SetBufferSize(File::FileSize newSize);
 
@@ -132,7 +132,7 @@ namespace sys {
          * Performs an implicite flush if the buffer is not in write mode.
          * Ensures that the buffer is in write mode.
          *
-         * throws the::system::io::io_exception with ERROR_WRITE_FAULT if a buffer in write mode
+         * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
          *                    could not be flushed to disk.
          */
         virtual File::FileSize Write(const void *buf,
@@ -148,7 +148,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         BufferedFile(const BufferedFile& rhs);
 
@@ -159,7 +159,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If &'rhs' != this.
+         * @throws IllegalParamException If &'rhs' != this.
          */
         BufferedFile& operator =(const BufferedFile& rhs);
 
@@ -168,7 +168,7 @@ namespace sys {
          *
          * @param fileFlush Flag whether or not to flush the file.
          *
-         * throws the::system::io::io_exception with ERROR_WRITE_FAULT if a buffer in write mode
+         * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
          *                    could not be flushed to disk.
          */
         void flush(bool fileFlush);

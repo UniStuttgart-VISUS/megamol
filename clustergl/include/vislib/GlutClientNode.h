@@ -45,7 +45,7 @@ namespace cluster {
 
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
-        virtual unsigned int Run(void);
+        virtual DWORD Run(void);
 
     protected:
 
@@ -61,7 +61,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual size_t countPeers(void) const;
+        virtual SIZE_T countPeers(void) const;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -79,7 +79,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual size_t forEachPeer(ForeachPeerFunc func, void *context);
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -112,8 +112,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed, 
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const uint8_t *body, const size_t cntBody);
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody);
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -169,7 +169,7 @@ namespace cluster {
     /*
      *  vislib::net::cluster::GlutClientNode<T>::Run
      */
-    template<class T> unsigned int GlutClientNode<T>::Run(void) {
+    template<class T> DWORD GlutClientNode<T>::Run(void) {
         AbstractClientNode::Run();          // Let the client node connect.
         return GlutClusterNode<T>::Run();   // Enter GLUT message loop.
     }
@@ -190,7 +190,7 @@ namespace cluster {
     /*
      * vislib::net::cluster::GlutClientNode<T>::countPeers
      */
-    template<class T> size_t GlutClientNode<T>::countPeers(void) const {
+    template<class T> SIZE_T GlutClientNode<T>::countPeers(void) const {
         // GCC cannot resolve this conflict via dominance, even if it is obvious
         // that we do not want to inherit the pure virtual implementation.
         return AbstractClientNode::countPeers();
@@ -201,7 +201,7 @@ namespace cluster {
      * vislib::net::cluster::GlutClientNode<T>::forEachPeer
      */
     template<class T> 
-    size_t GlutClientNode<T>::forEachPeer(ForeachPeerFunc func, void *context) {
+    SIZE_T GlutClientNode<T>::forEachPeer(ForeachPeerFunc func, void *context) {
         // GCC cannot resolve this conflict via dominance, even if it is obvious
         // that we do not want to inherit the pure virtual implementation.
         return AbstractClientNode::forEachPeer(func, context);
@@ -222,8 +222,8 @@ namespace cluster {
      *  vislib::net::cluster::GlutClientNode<T>::onMessageReceived
      */
     template<class T> bool GlutClientNode<T>::onMessageReceived(
-            const Socket& src, const unsigned int msgId, const uint8_t *body, 
-            const size_t cntBody) {
+            const Socket& src, const UINT msgId, const BYTE *body, 
+            const SIZE_T cntBody) {
         bool retval = AbstractControlledNode::onMessageReceived(src, msgId,
             body, cntBody);
         if (this->isWindowReady) {

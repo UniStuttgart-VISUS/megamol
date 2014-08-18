@@ -24,8 +24,8 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Socket.h"
 #include "vislib/SmartPtr.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 
@@ -61,7 +61,7 @@ namespace net {
         typedef struct PeerNode_t {
             IPEndPoint address;             // User communication address (ID).
             IPEndPoint discoveryAddr;       // Discovery service address.
-            unsigned int cntResponseChances;        // Implicit disconnect detector.
+            UINT cntResponseChances;        // Implicit disconnect detector.
 
             inline bool operator ==(const PeerNode_t& rhs) const {
                 return (this->address == rhs.address);
@@ -73,29 +73,29 @@ namespace net {
         typedef vislib::SmartPtr<PeerNode> PeerHandle;
 
         /** The default port number used by the discovery service. */
-        static const uint16_t DEFAULT_PORT;
+        static const USHORT DEFAULT_PORT;
 
         /** The default request interval in milliseconds. */
-        static const unsigned int DEFAULT_REQUEST_INTERVAL;
+        static const UINT DEFAULT_REQUEST_INTERVAL;
 
         /** The default number of chances to respond before disconnect. */
-        static const unsigned int DEFAULT_RESPONSE_CHANCES;
+        static const UINT DEFAULT_RESPONSE_CHANCES;
 
         /**
          * The maximum size of user data that can be sent via the cluster
          * discovery service in bytes.
          */
-        static const size_t MAX_USER_DATA = 256;
+        static const SIZE_T MAX_USER_DATA = 256;
 
         /** 
          * The maximum length of a cluster name in characters, including the
          * trailing zero. 
          */
-        static const size_t MAX_NAME_LEN = MAX_USER_DATA 
+        static const SIZE_T MAX_NAME_LEN = MAX_USER_DATA 
             - sizeof(struct sockaddr_storage);
 
         /** The first message ID that can be used for a user message. */
-        static const uint32_t MSG_TYPE_USER;
+        static const UINT32 MSG_TYPE_USER;
 
         /**
          * Create a new instance.
@@ -134,13 +134,13 @@ namespace net {
          *                            may not answer before being removed from
          *                            this nodes list of known peers.
          */
-        ClusterDiscoveryService(const the::astring& name, 
+        ClusterDiscoveryService(const StringA& name, 
             const IPEndPoint& responseAddr, 
             const IPAddress& bcastAddr,
-            const uint16_t bindPort = DEFAULT_PORT,
+            const USHORT bindPort = DEFAULT_PORT,
             const bool discoveryOnly = false,
-            const unsigned int requestInterval = DEFAULT_REQUEST_INTERVAL,
-            const unsigned int cntResponseChances = DEFAULT_RESPONSE_CHANCES);
+            const UINT requestInterval = DEFAULT_REQUEST_INTERVAL,
+            const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
 
         /**
          * Create a new instance.
@@ -179,13 +179,13 @@ namespace net {
          *                            may not answer before being removed from
          *                            this nodes list of known peers.
          */
-        ClusterDiscoveryService(const the::astring& name, 
+        ClusterDiscoveryService(const StringA& name, 
             const IPEndPoint& responseAddr, 
             const IPAddress6& bcastAddr,
-            const uint16_t bindPort = DEFAULT_PORT,
+            const USHORT bindPort = DEFAULT_PORT,
             const bool discoveryOnly = false,
-            const unsigned int requestInterval = DEFAULT_REQUEST_INTERVAL,
-            const unsigned int cntResponseChances = DEFAULT_RESPONSE_CHANCES);
+            const UINT requestInterval = DEFAULT_REQUEST_INTERVAL,
+            const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
 
         /** 
          * Dtor.
@@ -219,9 +219,9 @@ namespace net {
          *
          * @return The number of known peer nodes.
          */
-        inline size_t CountPeers(void) const {
+        inline SIZE_T CountPeers(void) const {
             this->critSect.Lock();
-            size_t retval = this->peerNodes.Count();
+            SIZE_T retval = this->peerNodes.Count();
             this->critSect.Unlock();
             return retval;
         }
@@ -242,7 +242,7 @@ namespace net {
          *
          * @return The number of chances for a node to answer.
          */
-        inline unsigned int GetCntResponseChances(void) const {
+        inline UINT GetCntResponseChances(void) const {
             return this->cntResponseChances;
         }
 
@@ -254,7 +254,7 @@ namespace net {
          * @return The IP address of the adapter that is used by 'hPeer' for the
          *         discovery communication.
          *
-         * @throws argument_exception If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
         IPAddress GetDiscoveryAddress4(const PeerHandle& hPeer) const;
 
@@ -266,7 +266,7 @@ namespace net {
          * @return The IP address of the adapter that is used by 'hPeer' for the
          *         discovery communication.
          *
-         * @throws argument_exception If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
         IPAddress6 GetDiscoveryAddress6(const PeerHandle& hPeer) const;
 
@@ -275,7 +275,7 @@ namespace net {
          *
          * @return The name.
          */
-        inline const the::astring& GetName(void) const {
+        inline const StringA& GetName(void) const {
             return this->name;
         }
 
@@ -284,7 +284,7 @@ namespace net {
          *
          * @return The interval between two discovery  requests in milliseconds.
          */
-        inline unsigned int GetRequestInterval(void) const {
+        inline UINT GetRequestInterval(void) const {
             return this->requestInterval;
         }
 
@@ -307,7 +307,7 @@ namespace net {
          * @return The socket address that has been specified by the peer node
          *         for user communication.
          *
-         * @throws argument_exception If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
         inline IPEndPoint GetUserComAddress(const PeerHandle& hPeer) const {
             return (*this)[hPeer];
@@ -343,9 +343,9 @@ namespace net {
          *
          * @return true if the specified node is this node, false otherwise.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
+         * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline bool IsSelf(const int idx) const {
+        inline bool IsSelf(const INT idx) const {
             this->critSect.Lock();
             bool retval = (this->peerNodes[idx]->address == this->responseAddr);
             this->critSect.Unlock();
@@ -389,12 +389,12 @@ namespace net {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws argument_exception If 'msgType' is below MSG_TYPE_USER,
+         * @throws IllegalParamException If 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const uint32_t msgType, const void *msgBody, 
-            const size_t msgSize);
+        UINT SendUserMessage(const UINT32 msgType, const void *msgBody, 
+            const SIZE_T msgSize);
 
         /**
          * Send a user-defined message to the node that is identified with the
@@ -416,13 +416,13 @@ namespace net {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws argument_exception If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          *                               or 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const PeerHandle& hPeer, const uint32_t msgType,
-            const void *msgBody, const size_t msgSize);
+        UINT SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
+            const void *msgBody, const SIZE_T msgSize);
 
         /**
          * Change the interval between two discovery requests.
@@ -433,10 +433,10 @@ namespace net {
          * @param requestInterval The interval between two discovery  requests 
          *                        in milliseconds.
          */
-        inline void SetRequestInterval(const unsigned int requestInterval) {
+        inline void SetRequestInterval(const UINT requestInterval) {
             sys::Interlocked::Exchange(
-                reinterpret_cast<int32_t *>(&this->requestInterval),
-                static_cast<int32_t>(requestInterval));
+                reinterpret_cast<INT32 *>(&this->requestInterval),
+                static_cast<INT32>(requestInterval));
         }
 
         /**
@@ -445,7 +445,7 @@ namespace net {
          * as these threads are running, the node is regarded to be a member of
          * the specified cluster.
          *
-         * @throws the::system::system_exception If the creation of one or more threads 
+         * @throws SystemException If the creation of one or more threads 
          *                         failed.
          * @throws std::bad_alloc  If there is not enough memory for the threads
          *                         available.
@@ -461,7 +461,7 @@ namespace net {
          * @param noWait If set true, the method will not block.
          *
          * @return true, if the threads have been terminated without any
-         *         problem, false, if a the::system::system_exception has been thrown by 
+         *         problem, false, if a SystemException has been thrown by 
          *         one of the threads or if the thread did not acknowledge
          *         a 'noWait' terminate.
          */
@@ -476,9 +476,9 @@ namespace net {
          *
          * @return The response address of the 'idx'th node.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
+         * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline IPEndPoint operator [](const int idx) const {
+        inline IPEndPoint operator [](const INT idx) const {
             this->critSect.Lock();
             IPEndPoint retval = this->peerNodes[idx]->address;
             this->critSect.Unlock();
@@ -494,9 +494,9 @@ namespace net {
          *
          * @return The response address of the 'idx'th node.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
+         * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline IPEndPoint operator [](const size_t idx) const {
+        inline IPEndPoint operator [](const SIZE_T idx) const {
             this->critSect.Lock();
             IPEndPoint retval = this->peerNodes[idx]->address;
             this->critSect.Unlock();
@@ -511,7 +511,7 @@ namespace net {
          * @return The socket address that has been specified by the peer node
          *         for user communication.
          *
-         * @throws argument_exception If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
         IPEndPoint operator [](const PeerHandle& hPeer) const;
 
@@ -543,7 +543,7 @@ namespace net {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual unsigned int Run(void *discSvc);
+            virtual DWORD Run(void *discSvc);
 
             /**
              * Ask the thread to terminate.
@@ -588,7 +588,7 @@ namespace net {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual unsigned int Run(void *discSvc);
+            virtual DWORD Run(void *discSvc);
 
             /**
              * Ask the thread to terminate.
@@ -622,14 +622,14 @@ namespace net {
          * UDP datagrams in advance.
          */
         typedef struct Message_t {
-            uint32_t magicNumber;						    // Must be MAGIC_NUMBER.
-            uint32_t msgType;							    // The type identifier.
+            UINT32 magicNumber;						    // Must be MAGIC_NUMBER.
+            UINT32 msgType;							    // The type identifier.
             // Note: 'magicNumber' and 'msgType' can be 32 bit now, because 
             // struct sockaddr_storage must be 64 bit aligned any way.
             union {
                 SenderMessageBody senderBody;           // I am here messages.
                 struct sockaddr_storage responseAddr;   // Resonse peer address.
-                uint8_t userData[MAX_USER_DATA];		    // User defined data.
+                BYTE userData[MAX_USER_DATA];		    // User defined data.
             };
         } Message;
 
@@ -678,8 +678,8 @@ namespace net {
          * @param msgType The message type.
          * @param msgBody The body of the message.
          */
-        void fireUserMessage(const IPEndPoint& sender, const uint32_t msgType, 
-            const uint8_t *msgBody) const;
+        void fireUserMessage(const IPEndPoint& sender, const UINT32 msgType, 
+            const BYTE *msgBody) const;
 
         /**
          * Answer whether 'hPeer' is a valid peer node handle.
@@ -701,7 +701,7 @@ namespace net {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        intptr_t peerFromAddress(const IPEndPoint& addr) const;
+        INT_PTR peerFromAddress(const IPEndPoint& addr) const;
 
         /**
          * Answer the index of the peer node that runs its discovery 
@@ -716,7 +716,7 @@ namespace net {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        intptr_t peerFromDiscoveryAddr(const IPEndPoint& addr) const;
+        INT_PTR peerFromDiscoveryAddr(const IPEndPoint& addr) const;
 
         /**
          * Prepares the list of known peer nodes for a new request. 
@@ -737,7 +737,7 @@ namespace net {
          * steps are taken.
          *
          * All user input, i. e. 'msgType', 'msgBody' and 'msgSize' is validated
-         * and an argument_exception is thrown, if 'msgType' is not in the
+         * and an IllegalParamException is thrown, if 'msgType' is not in the
          * user message range, if 'msgBody' is a NULL pointer of 'msgSize' is 
          * too large.
          *
@@ -760,12 +760,12 @@ namespace net {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws argument_exception If 'msgType' is below MSG_TYPE_USER,
+         * @throws IllegalParamException If 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        void prepareUserMessage(Message& outMsg, const uint32_t msgType,
-            const void *msgBody, const size_t msgSize);
+        void prepareUserMessage(Message& outMsg, const UINT32 msgType,
+            const void *msgBody, const SIZE_T msgSize);
 
         /**
          * Remove the peer node having the user communication address 'address'.
@@ -780,16 +780,16 @@ namespace net {
         void removePeerNode(const IPEndPoint& address);
 
         /** The magic number at the begin of each message. */
-        static const uint32_t MAGIC_NUMBER;
+        static const UINT32 MAGIC_NUMBER;
 
         /** Message type ID of a repeated discovery request. */
-        static const uint32_t MSG_TYPE_IAMALIVE;
+        static const UINT32 MSG_TYPE_IAMALIVE;
 
         /** Message type ID of an initial discovery request. */
-        static const uint32_t MSG_TYPE_IAMHERE;
+        static const UINT32 MSG_TYPE_IAMHERE;
 
         /** Message type ID of the explicit disconnect notification. */
-        static const uint32_t MSG_TYPE_SAYONARA;
+        static const UINT32 MSG_TYPE_SAYONARA;
 
         /** This is the broadcast address to send requests to. */
         IPEndPoint bcastAddr;
@@ -810,10 +810,10 @@ namespace net {
          * The number of chances a node gets to respond before it is implicitly 
          * disconnected from the cluster.
          */
-        unsigned int cntResponseChances;
+        UINT cntResponseChances;
 
         /** The time in milliseconds between two discovery requests. */
-        unsigned int requestInterval;
+        UINT requestInterval;
 
         /**
          * If this flag is set, the discovery service will not send 
@@ -825,7 +825,7 @@ namespace net {
         ListenerList listeners;
 
         /** The name of the cluster this discovery service should form. */
-        the::astring name;
+        StringA name;
 
         /** The thread receiving discovery requests. */
         sys::RunnableThread<Receiver> receiverThread;

@@ -9,7 +9,7 @@
 
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 #include "vislib/unreferenced.h"
 
 
@@ -157,8 +157,8 @@ vislib::net::cluster::AbstractControllerNode::AbstractControllerNode(
  * vislib::net::cluster::AbstractControllerNode::onMessageReceived
  */
 bool vislib::net::cluster::AbstractControllerNode::onMessageReceived(
-        const Socket& src, const unsigned int msgId, const uint8_t *body, 
-        const size_t cntBody) {
+        const Socket& src, const UINT msgId, const BYTE *body, 
+        const SIZE_T cntBody) {
     return false;
 }
 
@@ -170,12 +170,12 @@ void vislib::net::cluster::AbstractControllerNode::onPeerConnected(
         const PeerIdentifier& peerId) throw() {
     try {
         this->sendAllParameters(&peerId);
-    } catch (the::exception& e) {
+    } catch (Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Sending camera parameters to newly "
-            "connected node failed: %s\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Sending camera parameters to newly "
+            "connected node failed: %s\n", e.GetMsgA());
     } catch (...) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Sending camera parameters to newly "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Sending camera parameters to newly "
             "connected node failed for a unknown reason\n");
     }
 }
@@ -207,24 +207,24 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
 
     /* Serialise the camera parameter limits first. */
     msg.EnforceSize(0);
-    THE_ASSERT(msg.GetSize() == 0);     // Storage must be empty!
+    ASSERT(msg.GetSize() == 0);     // Storage must be empty!
     serialiser.SetOffset(sizeof(MessageHeader) + sizeof(BlockHeader));
     this->parameters->Limits()->Serialise(serialiser);
 
     BlockHeader *blkHdr1 = msg.AsAt<BlockHeader>(sizeof(MessageHeader));
     blkHdr1->BlockId = MSGID_CAM_LIMITS;
-    blkHdr1->BlockLength = static_cast<uint32_t>(msg.GetSize()
+    blkHdr1->BlockLength = static_cast<UINT32>(msg.GetSize()
         - sizeof(MessageHeader)
         - sizeof(BlockHeader));
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Packaged %u B serialised camera parameter "
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Packaged %u B serialised camera parameter "
         "limits (Message %u).\n", blkHdr1->BlockLength, blkHdr1->BlockId);
 
     /* 
      * Serialise the parameters as a second block (deserialisation of parameters
      * will trigger evaluation against limits on client side).
      */
-    THE_ASSERT(msg.GetSize() >= serialiser.Offset());
-    serialiser.SetOffset(static_cast<uint32_t>(msg.GetSize()
+    ASSERT(msg.GetSize() >= serialiser.Offset());
+    serialiser.SetOffset(static_cast<UINT32>(msg.GetSize()
         + sizeof(BlockHeader)));
     this->parameters->Serialise(serialiser);
 
@@ -232,31 +232,31 @@ void vislib::net::cluster::AbstractControllerNode::sendAllParameters(
     BlockHeader *blkHdr2 = msg.AsAt<BlockHeader>(sizeof(MessageHeader)
         + sizeof(BlockHeader) + blkHdr1->BlockLength);
     blkHdr2->BlockId = MSGID_CAM_SERIALISEDCAMPARAMS;
-    blkHdr2->BlockLength = static_cast<uint32_t>(msg.GetSize()
+    blkHdr2->BlockLength = static_cast<UINT32>(msg.GetSize()
         - sizeof(MessageHeader)
         - 2 * sizeof(BlockHeader)
         - blkHdr1->BlockLength);
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Packaged %u B serialised camera parameters "
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Packaged %u B serialised camera parameters "
         "(Message %u).\n", blkHdr2->BlockLength, blkHdr2->BlockId);
 
     /* Fill in the message header for a compound message. */
-    THE_ASSERT(blkHdr1->BlockId == MSGID_CAM_LIMITS);
-    THE_ASSERT(blkHdr2->BlockId == MSGID_CAM_SERIALISEDCAMPARAMS);
+    ASSERT(blkHdr1->BlockId == MSGID_CAM_LIMITS);
+    ASSERT(blkHdr2->BlockId == MSGID_CAM_SERIALISEDCAMPARAMS);
 
     MessageHeader *msgHdr = msg.As<MessageHeader>();
     InitialiseMessageHeader(*msgHdr);
     msgHdr->Header.BlockId = MSGID_MULTIPLE;
-    msgHdr->Header.BlockLength = static_cast<uint32_t>(msg.GetSize() 
+    msgHdr->Header.BlockLength = static_cast<UINT32>(msg.GetSize() 
         - sizeof(MessageHeader));
-    THE_ASSERT(msgHdr->Header.BlockLength 
+    ASSERT(msgHdr->Header.BlockLength 
         == sizeof(BlockHeader) + blkHdr1->BlockLength
         + sizeof(BlockHeader) + blkHdr2->BlockLength);
 
     /* Post the message. */
     if (peerId != NULL) {
-        this->sendToPeer(*peerId, msg.As<uint8_t>(), msg.GetSize());
+        this->sendToPeer(*peerId, msg.As<BYTE>(), msg.GetSize());
     } else {
-        this->sendToEachPeer(msg.As<uint8_t>(), msg.GetSize());
+        this->sendToEachPeer(msg.As<BYTE>(), msg.GetSize());
     }
 }
 
@@ -270,7 +270,7 @@ void vislib::net::cluster::AbstractControllerNode::setParameters(
         this->getObservableParameters()->RemoveCameraParameterObserver(this);
     }
     if (params.DynamicCast<graphics::ObservableCameraParams>() == NULL) {
-        throw the::argument_exception("params", __FILE__, __LINE__);
+        throw IllegalParamException("params", __FILE__, __LINE__);
     }
 
     this->parameters = params;

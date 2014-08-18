@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -59,7 +59,7 @@ namespace math {
          * @param flt     An array of at least 'cnt' floats. The caller remains
          *                owner of the memory.
          */
-        static void FromFloat32(uint16_t *outHalf, size_t cnt,
+        static void FromFloat32(UINT16 *outHalf, SIZE_T cnt,
             const float *flt);
 
         /**
@@ -69,8 +69,8 @@ namespace math {
          *
          * @return 'flt' as half.
          */
-        inline static uint16_t FromFloat32(const float flt) {
-            uint16_t retval;
+        inline static UINT16 FromFloat32(const float flt) {
+            UINT16 retval;
             Float16::FromFloat32(&retval, 1, &flt);
             return retval;
         }
@@ -86,8 +86,8 @@ namespace math {
          * @param half     An array of at least 'cnt' 16 bit floats. The caller 
          *                 remains owner of the memory.
          */
-        static void ToFloat32(float *outFloat, const size_t cnt,
-            const uint16_t *half);
+        static void ToFloat32(float *outFloat, const SIZE_T cnt,
+            const UINT16 *half);
 
         /**
          * Convert 'half' to float.
@@ -96,23 +96,23 @@ namespace math {
          * 
          * @return 'half' as full float.
          */
-        inline static float ToFloat32(const uint16_t half) {
+        inline static float ToFloat32(const UINT16 half) {
             float retval;
             Float16::ToFloat32(&retval, 1, &half);
             return retval;
         }
 
         /** Number of bits in mantissa. */
-        static const int MANT_DIG;
+        static const INT MANT_DIG;
 
         /** Maximum binary exponent. */
-        static const int MAX_EXP;
+        static const INT MAX_EXP;
 
         /** Minimum binary exponent. */
-        static const int MIN_EXP;
+        static const INT MIN_EXP;
 
         /** Exponent radix. */
-        static const int RADIX;
+        static const INT RADIX;
 
         /** Smallest such that 1.0 + epsilon != 1.0 */
         static const float EPSILON;
@@ -151,11 +151,11 @@ namespace math {
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
-         * Cast ctor. from uint8_t.
+         * Cast ctor. from BYTE.
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const uint8_t value)
+        inline Float16(const BYTE value)
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
@@ -163,23 +163,23 @@ namespace math {
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const uint16_t value) 
+        inline Float16(const SHORT value) 
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
-         * Cast ctor. from int32_t.
+         * Cast ctor. from INT32.
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const int32_t value)
+        inline Float16(const INT32 value)
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /**
-         * Cast ctor. from int64_t.
+         * Cast ctor. from INT64.
          *
          * @param value The initial value of the half float.
          */
-        inline Float16(const int64_t value)
+        inline Float16(const INT64 value)
             : value(Float16::FromFloat32(static_cast<float>(value))) {}
 
         /** Dtor. */
@@ -267,12 +267,12 @@ namespace math {
         }
 
         /**
-         * Cast to uint8_t.
+         * Cast to BYTE.
          *
          * @return The value of this half.
          */
-        inline operator uint8_t(void) const {
-            return static_cast<uint8_t>(Float16::ToFloat32(this->value));
+        inline operator BYTE(void) const {
+            return static_cast<BYTE>(Float16::ToFloat32(this->value));
         }
 
         /**
@@ -280,32 +280,32 @@ namespace math {
          *
          * @return The value of this half.
          */
-        inline operator uint16_t(void) const {
-            return static_cast<uint16_t>(Float16::ToFloat32(this->value));
+        inline operator SHORT(void) const {
+            return static_cast<SHORT>(Float16::ToFloat32(this->value));
         }
 
         /**
-         * Cast to int32_t.
+         * Cast to INT32.
          *
          * @return The value of this half.
          */
-        inline operator int32_t(void) const {
-            return static_cast<int32_t>(Float16::ToFloat32(this->value));
+        inline operator INT32(void) const {
+            return static_cast<INT32>(Float16::ToFloat32(this->value));
         }
 
         /**
-         * Cast to int64_t.
+         * Cast to INT64.
          *
          * @return The value of this half.
          */
-        inline operator int64_t(void) const {
-            return static_cast<int64_t>(Float16::ToFloat32(this->value));
+        inline operator INT64(void) const {
+            return static_cast<INT64>(Float16::ToFloat32(this->value));
         }
 
     private:
 
         /** The value represented by this object. */
-        uint16_t value;
+        UINT16 value;
     };
 
 } /* end namespace math */

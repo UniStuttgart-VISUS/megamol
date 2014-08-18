@@ -18,10 +18,10 @@
 #include "vislib/Socket.h"      // Must be included at begin!
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
-#include "the/exception.h"
+#include "vislib/Exception.h"
 #include "vislib/IPHostEntry.h"
-#include "the/stack_trace.h"
-#include "the/string.h"
+#include "vislib/StackTrace.h"
+#include "vislib/String.h"
 
 #ifdef _WIN32
 #include <iphlpapi.h>
@@ -57,7 +57,7 @@ namespace net {
          * This exception is thrown if a property of an adapter was retrieved 
          * that is obviously invalid, i. e. has a confidence of INVALID.
          */
-        class NoConfidenceException : public the::exception {
+        class NoConfidenceException : public vislib::Exception {
 
         public:
 
@@ -89,7 +89,7 @@ namespace net {
             NoConfidenceException(const NoConfidenceException& rhs);
 
             /** Dtor. */
-            virtual ~NoConfidenceException(void) throw();
+            virtual ~NoConfidenceException(void);
 
             /**
              * Assignment operator.
@@ -353,7 +353,7 @@ namespace net {
              * @throws NoConfidenceException If the prefix length is invalid
              *                               and 'outConfidence' is NULL.
              */
-            inline unsigned long GetPrefixLength(
+            inline ULONG GetPrefixLength(
                     Confidence *outConfidence = NULL) const {
                 this->prefixLength.GetConfidence(outConfidence, 
                     "Prefix Length");
@@ -485,7 +485,7 @@ namespace net {
              * @param suffixOriginConfidence Confidence of 'suffixOrigin'. 
              */
             UnicastAddressInformation(const IPEndPoint endPoint, 
-                const unsigned long prefixLength, 
+                const ULONG prefixLength, 
                 const Confidence prefixLengthConfidence,
                 const PrefixOrigin prefixOrigin,
                 const Confidence prefixOriginConfidence,
@@ -496,7 +496,7 @@ namespace net {
             IPAgnosticAddress address;
 
             /** Length of the prefix (equivalent of netmask). */
-            AssessedMember<unsigned long> prefixLength;
+            AssessedMember<ULONG> prefixLength;
 
             /** Origin of the prefix. */
             AssessedMember<PrefixOrigin> prefixOrigin;
@@ -607,7 +607,7 @@ namespace net {
              *
              * @return A string representation of the physical address.
              */
-            the::astring FormatPhysicalAddressA(void) const;
+            StringA FormatPhysicalAddressA(void) const;
 
             /**
              * Create a string from the physical (MAC) address. 
@@ -617,7 +617,7 @@ namespace net {
              *
              * @return A string representation of the physical address.
              */
-            the::wstring FormatPhysicalAddressW(void) const;
+            StringW FormatPhysicalAddressW(void) const;
 
             /** 
              * Answer the list of anycast addresses associated with the adapter.
@@ -669,7 +669,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline const the::wstring& GetDescription(
+            inline const StringW& GetDescription(
                     Confidence *outConfidence = NULL) const {
                 this->description.GetConfidence(outConfidence, 
                     "Description");
@@ -691,7 +691,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline const the::astring& GetID(
+            inline const StringA& GetID(
                     Confidence *outConfidence = NULL) const {
                 this->id.GetConfidence(outConfidence, "ID");
                 return this->id;
@@ -709,7 +709,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline unsigned int GetMTU(Confidence *outConfidence = NULL) const {
+            inline UINT GetMTU(Confidence *outConfidence = NULL) const {
                 this->mtu.GetConfidence(outConfidence, "MTU");
                 return this->mtu;
             }
@@ -746,7 +746,7 @@ namespace net {
              * @throws NoConfidenceException If the return value is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            inline const the::wstring& GetName(
+            inline const StringW& GetName(
                     Confidence *outConfidence = NULL) const {
                 this->name.GetConfidence(outConfidence, "Name");
                 return this->name;
@@ -764,7 +764,7 @@ namespace net {
              * @throws NoConfidenceException If the MAC address is invalid 
              *                               and 'outConfidence' is NULL.
              */
-            const Array<uint8_t>& GetPhysicalAddress(
+            const Array<BYTE>& GetPhysicalAddress(
                 Confidence *outConfidence = NULL) const;
 
             /** 
@@ -818,7 +818,7 @@ namespace net {
              *
              * @throws NoConfidenceException If the adapter has no valid
              *                               unicast addresses.
-             * @throws index_out_of_range_exception If the adapter has no unicast 
+             * @throws OutOfRangeException If the adapter has no unicast 
              *                             addresses assigned.
              */
             const IPAgnosticAddress GetUnicastAddress(
@@ -889,22 +889,22 @@ namespace net {
             AssessedMember<IPAddress> broadcastAddress;
 
             /** A description of the adapter (human-readable device name). */
-            AssessedMember<the::wstring> description;
+            AssessedMember<StringW> description;
 
             /** The permanent name (ID) of the adapter. */
-            AssessedMember<the::astring> id;
+            AssessedMember<StringA> id;
 
             /** The maximum transmission unit (MTU) size, in bytes. */
-            AssessedMember<unsigned int> mtu;
+            AssessedMember<UINT> mtu;
 
             /** The multicast addressess of the adapter. */
             AssessedMember<AddressList> multicastAddresses;
 
             /** The human-readable adapter name. */
-            AssessedMember<the::wstring> name;
+            AssessedMember<StringW> name;
 
             /** The physical MAC address of the adapter. */
-            Array<uint8_t> physicalAddress;
+            Array<BYTE> physicalAddress;
 
             /** The status of the adapter. */
             AssessedMember<OperStatus> status;
@@ -954,14 +954,14 @@ namespace net {
          *
          * @return The number of known adapters.
          * 
-         * @throws the::system::system_exception If the adapters could not be retrieved due to
+         * @throws SystemException If the adapters could not be retrieved due to
          *                         an error in a system call.
          * @throws SocketException If the adapters could not be retrieved due to
          *                         an error in a socket operation.
          * @throws std::bad_alloc  If the memory required to retrieve the 
          *                         adapters could not be allocated.
          */
-        static size_t CountAdapters(void);
+        static SIZE_T CountAdapters(void);
 
         /**
          * Discard all cached adapter information.
@@ -969,7 +969,7 @@ namespace net {
          * @param reread If set true, the cache is immediately re-read after 
          *               clearing.
          *
-         * @throws the::system::system_exception If the adapters could not be retrieved due to
+         * @throws SystemException If the adapters could not be retrieved due to
          *                         an error in a system call.
          * @throws SocketException If the adapters could not be retrieved due to
          *                         an error in a socket operation.
@@ -986,8 +986,8 @@ namespace net {
          * @param cb
          * @param userContext
          *
-         * @throws argument_exception If 'cb' is a NULL pointer.
-         * @throws the::system::system_exception       If the adapters could not be retrieved 
+         * @throws IllegalParamException If 'cb' is a NULL pointer.
+         * @throws SystemException       If the adapters could not be retrieved 
          *                               due to an error in a system call.
          * @throws SocketException       If the adapters could not be retrieved 
          *                               due to an error in a socket operation.
@@ -1012,15 +1012,15 @@ namespace net {
          *
          * @return The 'idx'th adapter.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid adapter index.
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws OutOfRangeException If 'idx' is not a valid adapter index.
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static Adapter GetAdapter(const size_t idx);
+        static Adapter GetAdapter(const SIZE_T idx);
 
         /**
          * Answer the adapter with the given ID into 'outAdapter.
@@ -1034,7 +1034,7 @@ namespace net {
          * @return true if an adapter with the given ID was found,
          *         false otherwise.
          *
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
@@ -1057,14 +1057,14 @@ namespace net {
          * 
          * @return The number of adapters found.
          *
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static size_t GetAdaptersForPredicate(AdapterList& outAdapters,
+        static SIZE_T GetAdaptersForPredicate(AdapterList& outAdapters,
             SelectAdapterCallback cb, void *userContext = NULL);
 
         /**
@@ -1077,14 +1077,14 @@ namespace net {
          * 
          * @return The number of adapters found.
          *
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static size_t GetAdaptersForType(AdapterList& outAdapters,
+        static SIZE_T GetAdaptersForType(AdapterList& outAdapters,
             const Adapter::Type type);
 
         /**
@@ -1097,14 +1097,14 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static size_t GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
+        static SIZE_T GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
             const IPAddress& address);
 
         /**
@@ -1117,14 +1117,14 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static size_t GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
+        static SIZE_T GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
             const IPAddress6& address);
 
         /**
@@ -1137,14 +1137,14 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static size_t GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
+        static SIZE_T GetAdaptersForUnicastAddress(AdapterList& outAdapters, 
             const IPAgnosticAddress& address);
 
         /**
@@ -1158,15 +1158,15 @@ namespace net {
          *
          * @return The number of adapters found.
          *
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static size_t GetAdaptersForUnicastPrefix(AdapterList& outAdapters,
-            const IPAgnosticAddress& address, const unsigned long prefixLength);
+        static SIZE_T GetAdaptersForUnicastPrefix(AdapterList& outAdapters,
+            const IPAgnosticAddress& address, const ULONG prefixLength);
 
         /**
          *
@@ -1189,15 +1189,15 @@ namespace net {
          *
          * @return The 'idx'th adapter.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid adapter index.
-         * @throws the::system::system_exception     If an error occurred while retrieving 
+         * @throws OutOfRangeException If 'idx' is not a valid adapter index.
+         * @throws SystemException     If an error occurred while retrieving 
          *                             information from the OS.
          * @throws SocketException     If the socket subsystem could not be 
          *                             used.
          * @throws std::bad_alloc      If there was insufficient memory for 
          *                             retrieving the data.
          */
-        static const Adapter& GetAdapterUnsafe(const size_t idx);
+        static const Adapter& GetAdapterUnsafe(const SIZE_T idx);
 
         /**
          * Performs a wild guess on which adapter could be designated by the 
@@ -1240,7 +1240,7 @@ namespace net {
          *         return value is inverted, i.e. 1.0 in best case and 0.0 in
          *         worst case.
          *
-         * @throws no_such_element_exception If there is no known adapter 
+         * @throws NoSuchElementException If there is no known adapter 
          *                                available.
          */
         static float GuessAdapter(Adapter& outAdapter, const char *str,
@@ -1287,7 +1287,7 @@ namespace net {
          *         return value is inverted, i.e. 1.0 in best case and 0.0 in
          *         worst case.
          *
-         * @throws no_such_element_exception If there is no known adapter 
+         * @throws NoSuchElementException If there is no known adapter 
          *                                available.
          */
         static float GuessAdapter(Adapter& outAdapter, const wchar_t *str,
@@ -1340,10 +1340,10 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws argument_exception If 'netmask' is not a valid netmask.
+         * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        inline static unsigned long NetmaskToPrefix(const IPAddress& netmask) {
-            const uint8_t *mask = reinterpret_cast<const uint8_t *>(
+        inline static ULONG NetmaskToPrefix(const IPAddress& netmask) {
+            const BYTE *mask = reinterpret_cast<const BYTE *>(
                 static_cast<const struct in_addr *>(netmask));
             return NetworkInformation::netmaskToPrefix(mask, 
                 sizeof(struct in_addr));
@@ -1356,10 +1356,10 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws argument_exception If 'netmask' is not a valid netmask.
+         * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        inline static unsigned long NetmaskToPrefix(const IPAddress6& netmask) {
-            const uint8_t *mask = reinterpret_cast<const uint8_t *>(
+        inline static ULONG NetmaskToPrefix(const IPAddress6& netmask) {
+            const BYTE *mask = reinterpret_cast<const BYTE *>(
                 static_cast<const struct in6_addr *>(netmask));
             return NetworkInformation::netmaskToPrefix(mask, 
                 sizeof(struct in6_addr));
@@ -1372,9 +1372,9 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws argument_exception If 'netmask' is not a valid netmask.
+         * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        static unsigned long NetmaskToPrefix(const IPAgnosticAddress& netmask);
+        static ULONG NetmaskToPrefix(const IPAgnosticAddress& netmask);
 
         /**
          * Convert a prefix length to an IPv4 netmask.
@@ -1383,12 +1383,12 @@ namespace net {
          *
          * @return The equivalent netmask.
          *
-         * @throws index_out_of_range_exception If the prefix length is not within the 
+         * @throws OutOfRangeException If the prefix length is not within the 
          *                             valid range of an IPv4 address.
          */
-        inline static IPAddress PrefixToNetmask4(const unsigned long prefix) {
+        inline static IPAddress PrefixToNetmask4(const ULONG prefix) {
             IPAddress retval;
-            uint8_t *mask = reinterpret_cast<uint8_t *>(
+            BYTE *mask = reinterpret_cast<BYTE *>(
                 static_cast<struct in_addr *>(retval));
             NetworkInformation::prefixToNetmask(mask, sizeof(struct in_addr), 
                 prefix);
@@ -1404,7 +1404,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws argument_exception If the enumeration value cannot be
+         * @throws IllegalParamException If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::ScopeLevel sl);
@@ -1418,7 +1418,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws argument_exception If the enumeration value cannot be
+         * @throws IllegalParamException If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::OperStatus as);
@@ -1432,7 +1432,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws argument_exception If the enumeration value cannot be
+         * @throws IllegalParamException If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::Type at);
@@ -1446,7 +1446,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws argument_exception If the enumeration value cannot be
+         * @throws IllegalParamException If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(const Adapter::TunnelType tt);
@@ -1460,7 +1460,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws argument_exception If the enumeration value cannot be
+         * @throws IllegalParamException If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(
@@ -1475,7 +1475,7 @@ namespace net {
          * @return A string representing the enumeration value. The memory
          *         is owned by the callee.
          *
-         * @throws argument_exception If the enumeration value cannot be
+         * @throws IllegalParamException If the enumeration value cannot be
          *                               stringised.
          */
         static const char *Stringise(
@@ -1484,7 +1484,7 @@ namespace net {
         /**
          * Discard all cached adapter information and re-read it.
          *
-         * @throws the::system::system_exception
+         * @throws SystemException
          * @throws SocketException
          * @throws std::bad_alloc
          */
@@ -1500,7 +1500,7 @@ namespace net {
          */
         typedef struct GuessLocalEndPointCtx_t {
             IPAgnosticAddress *Address; //< Pointer to input address.
-            unsigned long *PrefixLen;           //< Pointer to input prefix length.
+            ULONG *PrefixLen;           //< Pointer to input prefix length.
             Array<float> *Wildness;     //< Output array of address wildness.
             bool IsIPv4Preferred;       //< Prefer IPv4 in case of doubt.
         } GuessLocalEndPointCtx;
@@ -1533,7 +1533,7 @@ namespace net {
          *         change is not reflected in 'inOutWildness'.
          */
         static float consolidateWildness(Array<float>& inOutWildness, 
-            size_t& outIdxFirstBest);
+            SIZE_T& outIdxFirstBest);
 
         /**
          * Answer whether the UnicastAddressList 'list' contains the IPAddress,
@@ -1566,7 +1566,7 @@ namespace net {
          */
         template<class A> 
         static int findSamePrefix(const UnicastAddressList& list, 
-            const A& addr, const unsigned long prefixLen, const int startIdx = 0);
+            const A& addr, const ULONG prefixLen, const int startIdx = 0);
 
         /**
          * Guess a broadcast address for the given adapter address 'address' 
@@ -1577,7 +1577,7 @@ namespace net {
          *
          * @return A guess for the broadcast address.
          *
-         * @throws argument_exception If no guess could be made, e.g. 
+         * @throws IllegalParamException If no guess could be made, e.g. 
          *                               because the netmask is empty.
          */
         static IPAddress guessBroadcastAddress(const IPAddress& address, 
@@ -1626,7 +1626,7 @@ namespace net {
          *
          * This method is not thread-safe!
          *
-         * @throws the::system::system_exception If an error occurred while retrieving 
+         * @throws SystemException If an error occurred while retrieving 
          *                         information from the OS.
          * @throws SocketException If the socket subsystem could not be used.
          * @throws std::bad_alloc  If there was insufficient memory for 
@@ -1642,7 +1642,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws argument_exception If no valid mapping could be found.
+         * @throws IllegalParamException If no valid mapping could be found.
          */
 #ifdef _WIN32
         static Adapter::Type mapAdapterType(const IFTYPE type);
@@ -1659,7 +1659,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws argument_exception If no valid mapping could be found.
+         * @throws IllegalParamException If no valid mapping could be found.
          */
         static Adapter::OperStatus mapOperationStatus(
             const IF_OPER_STATUS status);
@@ -1674,7 +1674,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws argument_exception If no valid mapping could be found.
+         * @throws IllegalParamException If no valid mapping could be found.
          */
         static UnicastAddressInformation::PrefixOrigin mapPrefixOrigin(
             const IP_PREFIX_ORIGIN prefixOrigin);
@@ -1687,7 +1687,7 @@ namespace net {
          *
          * @return The VISlib equivalent of the input.
          *
-         * @throws argument_exception If no valid mapping could be found.
+         * @throws IllegalParamException If no valid mapping could be found.
          */
         static UnicastAddressInformation::SuffixOrigin mapSuffixOrigin(
             const IP_SUFFIX_ORIGIN suffixOrigin);
@@ -1701,9 +1701,9 @@ namespace net {
          *
          * @return The equivalent prefix length in bits.
          *
-         * @throws argument_exception If 'netmask' is not a valid netmask.
+         * @throws IllegalParamException If 'netmask' is not a valid netmask.
          */
-        static unsigned long netmaskToPrefix(const uint8_t *netmask, const size_t len);
+        static ULONG netmaskToPrefix(const BYTE *netmask, const SIZE_T len);
 
         /**
          * Convert a prefix length to a netmask.
@@ -1714,11 +1714,11 @@ namespace net {
          *
          * @return The equivalent netmask.
          *
-         * @throws index_out_of_range_exception If the prefix length is not within the 
+         * @throws OutOfRangeException If the prefix length is not within the 
          *                             valid range.
          */
-        static void prefixToNetmask(uint8_t *outNetmask, const size_t len,
-            const unsigned long prefix);
+        static void prefixToNetmask(BYTE *outNetmask, const SIZE_T len,
+            const ULONG prefix);
 
         /**
          * Process an enumerated adapter for guessing a local endpoint.
@@ -1811,8 +1811,8 @@ namespace net {
          * @return The wildness of the guess within [0, 1].
          */
         static float wildGuessAdapter(Adapter& outAdapter, 
-            const IPAgnosticAddress& address, const the::wstring& device, 
-            const unsigned long prefixLen, const uint32_t validMask);
+            const IPAgnosticAddress& address, const StringW& device, 
+            const ULONG prefixLen, const UINT32 validMask);
 
         /**
          * Split the input on behalf of the wild guess method into the parts
@@ -1833,8 +1833,8 @@ namespace net {
          *
          * @return A bitmask specifying which of the out parameters are valid.
          */
-        static uint32_t wildGuessSplitInput(IPAgnosticAddress& outAddress,
-            the::wstring& outDevice, unsigned long& outPrefixLen, uint16_t& outPort,
+        static UINT32 wildGuessSplitInput(IPAgnosticAddress& outAddress,
+            StringW& outDevice, ULONG& outPrefixLen, USHORT& outPort,
             const wchar_t *str, 
             const IPAgnosticAddress::AddressFamily *prefFam = NULL);
 
@@ -1867,19 +1867,19 @@ namespace net {
          * Flag indicating that the address returned by wildGuessSplitInput()
          * was parsed from an empty string.
          */
-        static const uint32_t WILD_GUESS_FROM_EMPTY_ADDRESS;
+        static const UINT32 WILD_GUESS_FROM_EMPTY_ADDRESS;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outAddress'.
          */
-        static const uint32_t WILD_GUESS_HAS_ADDRESS;
+        static const UINT32 WILD_GUESS_HAS_ADDRESS;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outDevice'.
          */
-        static const uint32_t WILD_GUESS_HAS_DEVICE;
+        static const UINT32 WILD_GUESS_HAS_DEVICE;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
@@ -1887,19 +1887,19 @@ namespace net {
          * derived from an IPv4 subnet mask rather than from the prefix length
          * itself.
          */
-        static const uint32_t WILD_GUESS_HAS_NETMASK;
+        static const UINT32 WILD_GUESS_HAS_NETMASK;
 
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outPort'.
          */
-        static const uint32_t WILD_GUESS_HAS_PORT;
+        static const UINT32 WILD_GUESS_HAS_PORT;
         
         /**
          * Flag that is returned by wildGuessSplitInput() indicating that a 
          * valid value has been set in 'outPrefix'.
          */
-        static const uint32_t WILD_GUESS_HAS_PREFIX_LEN;
+        static const UINT32 WILD_GUESS_HAS_PREFIX_LEN;
 
         /** The list of adapters. */
         static AdapterList adapters;
@@ -1910,14 +1910,14 @@ namespace net {
         /** 
          * Forbidden Ctor. 
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         NetworkInformation(void);
 
        /** 
          * Forbidden Ctor. 
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         NetworkInformation(const NetworkInformation& rhs);
 
@@ -1937,7 +1937,7 @@ namespace net {
     template<class T>
     NetworkInformation::AssessedMember<T>::AssessedMember(void) 
             : confidence(INVALID) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AssessedMember::AssessedMember", __FILE__, __LINE__);
     }
 
 
@@ -1946,7 +1946,7 @@ namespace net {
      */
     template<class T>
     NetworkInformation::AssessedMember<T>::~AssessedMember(void) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AssessedMember::~AssessedMember", __FILE__, __LINE__);
     }
 
 
@@ -1957,7 +1957,7 @@ namespace net {
     NetworkInformation::AssessedMember<T>::AssessedMember(
             const T& value, const Confidence confidence) 
             : confidence(confidence), value(value) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AssessedMember::AssessedMember", __FILE__, __LINE__);
     }
 
 
@@ -1967,7 +1967,7 @@ namespace net {
     template<class T>
     void NetworkInformation::AssessedMember<T>::GetConfidence(
             Confidence *outConfidence, const char *name) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AssessedMember::GetConfidence", __FILE__, __LINE__);
         if (outConfidence != NULL) {
             *outConfidence = this->confidence;
         } else if (this->confidence == INVALID) {
@@ -1983,7 +1983,7 @@ namespace net {
     NetworkInformation::AssessedMember<T>& 
     NetworkInformation::AssessedMember<T>::operator =(
             const AssessedMember& rhs) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AssessedMember::operator =", __FILE__, __LINE__);
 
         if (this != &rhs) {
             this->confidence = rhs.confidence;
@@ -2002,10 +2002,11 @@ namespace net {
      */
     template<class A> int NetworkInformation::findAddress(
             const UnicastAddressList& list, const A& addr, const int startIdx) {
-        THE_STACK_TRACE;
-        THE_ASSERT(startIdx >= 0);
+        VLSTACKTRACE("NetworkInformation::findAddress", __FILE__, 
+            __LINE__);
+        ASSERT(startIdx >= 0);
 
-        for (size_t i = static_cast<size_t>(startIdx); i < list.Count(); i++) {
+        for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count(); i++) {
             if (list[i] == addr) {
                 return static_cast<int>(i);
             }
@@ -2021,15 +2022,16 @@ namespace net {
      */
     template<class A> int NetworkInformation::findSamePrefix(
             const UnicastAddressList& list, 
-            const A& addr, const unsigned long prefixLen, 
+            const A& addr, const ULONG prefixLen, 
             const int startIdx) {
-        THE_STACK_TRACE;
-        THE_ASSERT(startIdx >= 0);
+        VLSTACKTRACE("NetworkInformation::findAddress", __FILE__, 
+            __LINE__);
+        ASSERT(startIdx >= 0);
 
         try {
             A prefix = addr.GetPrefix(prefixLen);
 
-            for (size_t i = static_cast<size_t>(startIdx); i < list.Count();
+            for (SIZE_T i = static_cast<SIZE_T>(startIdx); i < list.Count();
                     i++) {
                 try {
                     if (list[i].GetAddress().GetPrefix(prefixLen) == prefix) {

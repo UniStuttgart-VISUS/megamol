@@ -9,8 +9,8 @@
 #include "vislib/AsyncSocketContext.h"
 
 #include "vislib/AsyncSocket.h"
-#include "the/argument_exception.h"
-#include "the/trace.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -18,7 +18,7 @@
  */
 vislib::net::AsyncSocketContext::AsyncSocketContext(AsyncCallback callback,
         void *userContext) : Super(callback, userContext), evt(true) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AsyncSocketContext::AsyncSocketContext", __FILE__, __LINE__);
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
     this->cntData = 0;
     this->errorCode = 0;
@@ -30,7 +30,7 @@ vislib::net::AsyncSocketContext::AsyncSocketContext(AsyncCallback callback,
  * vislib::net::AsyncSocketContext::~AsyncSocketContext
  */
 vislib::net::AsyncSocketContext::~AsyncSocketContext(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AsyncSocketContext::~AsyncSocketContext", __FILE__, __LINE__);
 }
 
 
@@ -38,7 +38,7 @@ vislib::net::AsyncSocketContext::~AsyncSocketContext(void) {
  * vislib::net::AsyncSocketContext::Reset
  */
 void vislib::net::AsyncSocketContext::Reset(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AsyncSocketContext::Reset", __FILE__, __LINE__);
     Super::Reset();
     this->evt.Reset();
 }
@@ -48,7 +48,7 @@ void vislib::net::AsyncSocketContext::Reset(void) {
  * vislib::net::AsyncSocketContext::Wait
  */
 void vislib::net::AsyncSocketContext::Wait(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AsyncSocketContext::Wait", __FILE__, __LINE__);
     this->evt.Wait();
 }
 
@@ -56,11 +56,11 @@ void vislib::net::AsyncSocketContext::Wait(void) {
 /*
  * islib::net::AsyncSocketContext::notifyCompleted
  */
-void vislib::net::AsyncSocketContext::notifyCompleted(const unsigned int cntData,
-        const unsigned int errorCode) {
-    THE_STACK_TRACE;
+void vislib::net::AsyncSocketContext::notifyCompleted(const DWORD cntData,
+        const DWORD errorCode) {
+    VLSTACKTRACE("AsyncSocketContext::notifyCompleted", __FILE__, __LINE__);
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Signaling completion of "
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Signaling completion of "
         "asynchronous socket operation with return value %u for "
         "%u Bytes ...\n", errorCode, cntData);
 
@@ -85,10 +85,10 @@ void vislib::net::AsyncSocketContext::notifyCompleted(const unsigned int cntData
  */
 vislib::net::AsyncSocketContext& vislib::net::AsyncSocketContext::operator =(
         const AsyncSocketContext& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AsyncSocketContext::operator =", __FILE__, __LINE__);
 
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

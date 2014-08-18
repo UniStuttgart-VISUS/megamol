@@ -79,7 +79,7 @@ int* testIntPoolImpl(void) {
 
     const unsigned int bufSize = 100;
     int *buf[bufSize];
-    the::zero_memory(buf, bufSize * sizeof(int*));
+    ZeroMemory(buf, bufSize * sizeof(int*));
 
     allocateObjects(buf, bufSize, intPool, 12);
     testPoolProperties(intPool, 2, 20, 12);
@@ -189,7 +189,7 @@ void testClassPool(void) {
 
     const unsigned int bufSize = 100;
     TestClass *buf[bufSize];
-    the::zero_memory(buf, bufSize * sizeof(TestClass*));
+    ZeroMemory(buf, bufSize * sizeof(TestClass*));
 
     testTestClassProperties(0, 0);
 

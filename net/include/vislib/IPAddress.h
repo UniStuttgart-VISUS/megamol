@@ -25,7 +25,7 @@
 #pragma comment(lib, "Ws2_32")
 #endif /* _MSC_VER */
 
-#include "the/string.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -76,7 +76,7 @@ namespace net {
          *
          * @return The IP address matching 'address'.
          *
-         * @throws argument_exception If 'address' is not a valid IP address 
+         * @throws IllegalParamException If 'address' is not a valid IP address 
          *                               or host name.
          */
         static IPAddress Create(const char *address = "127.0.0.1");
@@ -141,7 +141,7 @@ namespace net {
          *                     the method will succeed and return the complete
          *                     address.
          */
-        IPAddress GetPrefix(const unsigned long prefixLength) const;
+        IPAddress GetPrefix(const ULONG prefixLength) const;
 
         /**
          * Lookup and set the IP address of the specified host. If the host is
@@ -163,15 +163,15 @@ namespace net {
          *
          * @return The string representation of the IP address.
          */
-        the::astring ToStringA(void) const;
+        StringA ToStringA(void) const;
 
         /**
          * Convert the IP address into dotted string format.
          *
          * @return The string representation of the IP address.
          */
-        inline the::wstring ToStringW(void) const {
-            return the::text::string_converter::to_w(this->ToStringA());
+        inline StringW ToStringW(void) const {
+            return StringW(this->ToStringA());
         }
 
         /**
@@ -182,9 +182,9 @@ namespace net {
          *
          * @return The 'i'th byte of the address.
          *
-         * @throws index_out_of_range_exception If 'i' is not a legal byte number.
+         * @throws OutOfRangeException If 'i' is not a legal byte number.
          */
-        uint8_t operator [](const int i) const;
+        BYTE operator [](const int i) const;
 
         /**
          * Assignment operator.

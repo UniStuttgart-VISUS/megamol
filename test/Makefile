@@ -8,7 +8,7 @@
 
 TargetName := vislibtest
 
-IncludeDir := ./include ../base/include ../sys/include ../math/include ../graphics/include ../net/include $(thelibpath)include
+IncludeDir := ./include ../base/include ../sys/include ../math/include ../graphics/include ../net/include
 InputDir := ./
 
 # VISlib libraries to link (in that order):
@@ -17,11 +17,11 @@ VISlibs := graphics math net sys base
 
 
 # C++ compiler flags:
-CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb $(CompilerFlags)
+CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb
 
 # Linker flags:
 #LDFLAGS := -L$(VISlibDir) -lX11 -lXext -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
-LDFLAGS := -L$(VISlibDir) -lX11 -lXext -lm -lpthread -ldl -lncurses  -lrt -lcrypt $(DebugLinkerFlags)
+LDFLAGS := -L$(VISlibDir) -lX11 -lXext -lm -lpthread -ldl -lncurses  -lrt -lcrypt -ltinfo
 
 
 ###############################################################################

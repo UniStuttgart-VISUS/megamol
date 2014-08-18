@@ -12,7 +12,7 @@
 
 #include "vislib/TrayIcon.h"
 #include "vislib/Thread.h"
-#include "the/system/system_exception.h"
+#include "vislib/SystemException.h"
 
 
 #ifdef _WIN32

@@ -338,7 +338,7 @@ vislib::graphics::CameraParamsStore::Right(void) const {
  */
 void vislib::graphics::CameraParamsStore::SetApertureAngle(
         vislib::math::AngleDeg apertureAngle) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     apertureAngle = math::AngleDeg2Rad(apertureAngle);
 
@@ -368,7 +368,7 @@ void vislib::graphics::CameraParamsStore::SetAutoFocusOffset(
 void vislib::graphics::CameraParamsStore::SetClip(
         vislib::graphics::SceneSpaceType nearClip, 
         vislib::graphics::SceneSpaceType farClip) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     if (nearClip < this->limits->MinNearClipDist()) {
         nearClip = this->limits->MinNearClipDist();
@@ -413,7 +413,7 @@ void vislib::graphics::CameraParamsStore::SetEye(
  */
 void vislib::graphics::CameraParamsStore::SetFarClip(
         vislib::graphics::SceneSpaceType farClip) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     if (this->nearClip < this->limits->MinNearClipDist()) {
         this->nearClip = this->limits->MinNearClipDist();
@@ -434,7 +434,7 @@ void vislib::graphics::CameraParamsStore::SetFarClip(
  */
 void vislib::graphics::CameraParamsStore::SetFocalDistance(
         vislib::graphics::SceneSpaceType focalDistance) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     if (vislib::math::IsEqual(focalDistance, 0.0f)) {
         this->focalDistance = 0.0f; // special indication
@@ -475,7 +475,7 @@ void vislib::graphics::CameraParamsStore::SetLookAt(const
  */
 void vislib::graphics::CameraParamsStore::SetNearClip(
         vislib::graphics::SceneSpaceType nearClip) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     if (nearClip + this->limits->MinNearClipDist() > this->farClip) {
         nearClip = this->farClip - this->limits->MinNearClipDist();
@@ -534,7 +534,7 @@ void vislib::graphics::CameraParamsStore::SetStereoParameters(
         vislib::graphics::SceneSpaceType stereoDisparity, 
         vislib::graphics::CameraParamsStore::StereoEye eye, 
         vislib::graphics::SceneSpaceType focalDistance) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     this->halfStereoDisparity = stereoDisparity * 0.5f; 
     this->eye = eye;
@@ -565,7 +565,7 @@ void vislib::graphics::CameraParamsStore::SetTileRect(const
  */
 void vislib::graphics::CameraParamsStore::SetUp(const 
         vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& up) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     if (this->front.IsParallel(up)) {
         // up and directon are parallel
@@ -591,7 +591,7 @@ void vislib::graphics::CameraParamsStore::SetView(const
         vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& position, 
         const vislib::math::Point<vislib::graphics::SceneSpaceType, 3>& lookAt,
         const vislib::math::Vector<vislib::graphics::SceneSpaceType, 3>& up) {
-    THE_ASSERT(!this->limits.IsNull());
+    ASSERT(!this->limits.IsNull());
 
     math::Vector<SceneSpaceType, 3> dir = lookAt - position;
     SceneSpaceType dirLen = dir.Length();

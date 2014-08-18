@@ -14,8 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/force_inline.h"
-#include "the/string.h"
+#include "vislib/forceinline.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -110,7 +110,7 @@ namespace math {
          *         parsed. In the later case the value of 'this' was not
          *         changed.
          */
-        bool Parse(const the::astring& str);
+        bool Parse(const vislib::StringA& str);
 
         /**
          * Parses the string 'str' to be a ternary value.
@@ -121,7 +121,7 @@ namespace math {
          *         parsed. In the later case the value of 'this' was not
          *         changed.
          */
-        bool Parse(const the::wstring& str);
+        bool Parse(const vislib::StringW& str);
 
         /**
          * Answers a string representation of the value. The returned string
@@ -129,7 +129,7 @@ namespace math {
          *
          * @return A string representation of the value.
          */
-        the::astring ToStringA(void) const;
+        vislib::StringA ToStringA(void) const;
 
         /**
          * Answers a string representation of the value. The returned string
@@ -137,7 +137,7 @@ namespace math {
          *
          * @return A string representation of the value.
          */
-        the::wstring ToStringW(void) const;
+        vislib::StringW ToStringW(void) const;
 
         /**
          * Assignment operator
@@ -355,7 +355,7 @@ namespace math {
          *
          * @return The value for the internal representation
          */
-        THE_TRY_FORCE_INLINE int getValue(int v) const;
+        VISLIB_FORCEINLINE int getValue(int v) const;
 
         /**
          * Calculates the value for the input 'v'
@@ -364,7 +364,7 @@ namespace math {
          *
          * @return The value for the internal representation
          */
-        THE_TRY_FORCE_INLINE int getValue(bool v) const;
+        VISLIB_FORCEINLINE int getValue(bool v) const;
 
         /** The three-state value */
         int value;

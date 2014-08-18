@@ -31,20 +31,20 @@ DebugDir := Debug
 
 
 # Additional include directories
-IncludeDirs := . $(thelibpath)include
+IncludeDirs := .
 
 # Additional system include directories
 SystemIncludeDirs := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
 
 # Additional compiler flags
-CompilerFlags := -fPIC -DVISLIB_CLUSTER_WITH_OPENGL -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY $(CompilerFlags)
+CompilerFlags := -fPIC -DVISLIB_CLUSTER_WITH_OPENGL -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY
 CompilerFlagsDebug := -ggdb
 CompilerFlagsRelease := -O3 -g0
 
 # Additional linker flags
-LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses
-LinkerFlagsDebug := $(DebugLinkerFlags)
-LinkerFlagsRelease := $(ReleaseLinkerFlags)
+LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses -ltinfo
+LinkerFlagsDebug :=
+LinkerFlagsRelease :=
 
 
 # Input directory

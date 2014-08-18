@@ -16,8 +16,9 @@
 
 
 #include <windows.h>
+#include <d3d9.h>
 
-#include "the/exception.h"
+#include "vislib/Exception.h"
 
 
 namespace vislib {
@@ -28,7 +29,7 @@ namespace d3d {
     /**
      * Create a new exception that represents a Direct3D error.
      */
-    class D3DException : public the::exception {
+    class D3DException : public vislib::Exception {
 
     public:
 
@@ -74,7 +75,7 @@ namespace d3d {
         /** The error code that was the reason for this exception. */
         HRESULT result;
     };
-
+    
 } /* end namespace d3d */
 } /* end namespace graphics */
 } /* end namespace vislib */

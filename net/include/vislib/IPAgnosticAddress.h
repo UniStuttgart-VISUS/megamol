@@ -18,7 +18,7 @@
 #include "vislib/IPAddress.h"
 #include "vislib/IPAddress6.h"
 #include "vislib/SocketAddress.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -107,7 +107,7 @@ namespace net {
          *
          * @return ANY4 or ANY6 depending on 'addressFamily'.
          *
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         static IPAgnosticAddress CreateAny(const AddressFamily addressFamily);
 
@@ -208,7 +208,7 @@ namespace net {
          * @param b4  Byte number 4 of the IP address.
          */
         IPAgnosticAddress(
-            const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4);
+            const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4);
 
         /**
          * Create an IPv6 address from individual bytes. The bytes must be 
@@ -232,10 +232,10 @@ namespace net {
          * @param b16 Byte number 16 of the IP address.
          */
         IPAgnosticAddress(
-            const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
-            const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
-            const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
-            const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16);
+            const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
+            const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
+            const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
+            const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16);
 
         /**
          * Copy ctor.
@@ -260,7 +260,7 @@ namespace net {
          *                     the method will succeed and return the complete
          *                     address.
          */
-        IPAgnosticAddress GetPrefix(const unsigned long prefixLength) const;
+        IPAgnosticAddress GetPrefix(const ULONG prefixLength) const;
 
         /**
          * Answer whether the address is the ANY4 or ANY6 address.
@@ -268,7 +268,7 @@ namespace net {
          * @return true if the address represents "any" address, false otherwise.
          */
         inline bool IsAny(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::IsAny", __FILE__, __LINE__);
             return ((*this == ANY4) || (*this == ANY6));
         }
 
@@ -278,7 +278,7 @@ namespace net {
          * @return true if the address is v4, false otherwise.
          */
         inline bool IsV4(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::IsV4", __FILE__, __LINE__);
             return (this->v4 != NULL);
         }
 
@@ -288,7 +288,7 @@ namespace net {
          * @return true if the address is v6, false otherwise.
          */
         inline bool IsV6(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::IsV6", __FILE__, __LINE__);
             return (this->v6 != NULL);
         }
 
@@ -297,14 +297,14 @@ namespace net {
          *
          * @return A string representation.
          */
-        the::astring ToStringA(void) const;
+        StringA ToStringA(void) const;
 
         /** 
          * Answer a string representation of the IP address.
          *
          * @return A string representation.
          */
-        the::wstring ToStringW(void) const;
+        StringW ToStringW(void) const;
 
         /**
          * Provides access to the single bytes of the IP address.
@@ -314,10 +314,10 @@ namespace net {
          *
          * @return The 'i'th byte of the address.
          *
-         * @throws index_out_of_range_exception If 'i' is not a legal byte number.
-         * @throws invalid_operation_exception If the address is invalid.
+         * @throws OutOfRangeException If 'i' is not a legal byte number.
+         * @throws IllegalStateException If the address is invalid.
          */
-        uint8_t operator [](const int i) const;
+        BYTE operator [](const int i) const;
 
         /**
          * Assignment.
@@ -417,7 +417,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAgnosticAddress& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -429,7 +429,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAddress& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -441,7 +441,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAddress6& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -453,7 +453,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const struct in_addr& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -465,7 +465,7 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const struct in6_addr& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -478,7 +478,7 @@ namespace net {
          *
          * @return The IPv4 address that is equivalent to this address.
          *
-         * @throws invalid_operation_exception If the address is neither IPv4 nor can
+         * @throws IllegalStateException If the address is neither IPv4 nor can
          *                               be casted to an IPv4 address.
          */
         operator IPAddress(void) const;
@@ -491,7 +491,7 @@ namespace net {
          *
          * @return The IPv4 address that is equivalent to this address.
          *
-         * @throws invalid_operation_exception If the address is not IPv4.
+         * @throws IllegalStateException If the address is not IPv4.
          */
         operator const IPAddress *(void) const;
 
@@ -505,7 +505,7 @@ namespace net {
          *
          * @return The IPv4 address that is equivalent to this address.
          *
-         * @throws invalid_operation_exception If the address is not IPv4.
+         * @throws IllegalStateException If the address is not IPv4.
          */
         operator IPAddress *(void);
 
@@ -519,7 +519,7 @@ namespace net {
          *
          * @return The IPv6 address that is equivalent to this address.
          *
-         * @throws invalid_operation_exception If the address is neither IPv6 nor can
+         * @throws IllegalStateException If the address is neither IPv6 nor can
          *                               be casted to an IPv6 address.
          */
         operator IPAddress6(void) const;
@@ -534,7 +534,7 @@ namespace net {
          *
          * @return The IPv6 address that is equivalent to this address.
          *
-         * @throws invalid_operation_exception If the address is not IPv6.
+         * @throws IllegalStateException If the address is not IPv6.
          */
         operator const IPAddress6 *(void) const;
 
@@ -548,7 +548,7 @@ namespace net {
          *
          * @return The IPv6 address that is equivalent to this address.
          *
-         * @throws invalid_operation_exception If the address is not IPv6.
+         * @throws IllegalStateException If the address is not IPv6.
          */
         operator IPAddress6 *(void);
 

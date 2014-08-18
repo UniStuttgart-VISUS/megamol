@@ -8,8 +8,8 @@
 
 #include "vislib/AbstractAsyncContext.h"
 
-#include "the/assert.h"
-#include "the/memory.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
 
 
 /*
@@ -27,7 +27,7 @@ void vislib::sys::AbstractAsyncContext::Reset(void) {
 #ifdef _WIN32
     this->callback = NULL;
     ::ZeroMemory(&this->overlapped, sizeof(OVERLAPPED));
-    THE_ASSERT(sizeof(this->overlapped.hEvent) >= sizeof(this));
+    ASSERT(sizeof(this->overlapped.hEvent) >= sizeof(this));
     this->overlapped.hEvent = reinterpret_cast<HANDLE>(this);
 #endif /* _WIN32 */
 }
@@ -67,7 +67,7 @@ vislib::sys::AbstractAsyncContext::operator =(const AbstractAsyncContext& rhs) {
 
 #ifdef _WIN32
         ::memcpy(&this->overlapped, &rhs.overlapped, sizeof(OVERLAPPED));
-        THE_ASSERT(sizeof(this->overlapped.hEvent) >= sizeof(this));
+        ASSERT(sizeof(this->overlapped.hEvent) >= sizeof(this));
         this->overlapped.hEvent = reinterpret_cast<HANDLE>(this);
 #endif /* _WIN32 */
 

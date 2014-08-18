@@ -32,7 +32,7 @@
 
 #include "vislib/IPEndPoint.h"
 #include "vislib/SocketAddress.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -160,7 +160,7 @@ namespace net {
         static void Startup(void);
 
         /** Constant for specifying an infinite timeout. */
-        static const unsigned int TIMEOUT_INFINITE;
+        static const UINT TIMEOUT_INFINITE;
 
         /**
          * Create an invalid socket. Call Create() on the new object to create 
@@ -259,7 +259,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        virtual void BindToDevice(const the::astring& name);
+        virtual void BindToDevice(const StringA& name);
 
         /**
          * Close the socket. If the socket is not open, i. e. not valid, this 
@@ -318,7 +318,7 @@ namespace net {
          * @param type           The type of the socket.
          * @param protocol       The protocol to use.
          *
-         * @throws argument_exception If 'familiySpecAddr' does not specify a
+         * @throws IllegalParamException If 'familiySpecAddr' does not specify a
          *                               supported address family, i.e. IPv4 or
          *                               IPv6.
          * @throws SocketException If the operation fails.
@@ -396,7 +396,7 @@ namespace net {
          * @throws SocketException If the operation fails.
          */
         inline void GetLinger(struct linger& outLinger) const {
-            size_t size = sizeof(struct linger);
+            SIZE_T size = sizeof(struct linger);
             this->GetOption(SOL_SOCKET, SO_LINGER, &outLinger, size);
         }
 
@@ -429,7 +429,7 @@ namespace net {
          * @return true if the socket receives local multicast packets, 
          *         false otherwise.
          *
-         * @throws argument_exception If 'pf' has an unsupported value.
+         * @throws IllegalParamException If 'pf' has an unsupported value.
          * @throws SocketException If the operation fails.
          */
         bool GetMulticastLoop(const ProtocolFamily pf) const;
@@ -440,10 +440,10 @@ namespace net {
          * @param pf FAMILY_INET for retrieving the value for IPv4.
          * @return The number of routers multicast packets may pass.
          *
-         * @throws argument_exception If 'pf' has an unsupported value.
+         * @throws IllegalParamException If 'pf' has an unsupported value.
          * @throws SocketException If the operation fails.
          */
-        uint8_t GetMulticastTimeToLive(const ProtocolFamily pf) const;
+        BYTE GetMulticastTimeToLive(const ProtocolFamily pf) const;
 
         /**
          * Answer the deactivation state of the Nagle algorithm for send 
@@ -482,8 +482,8 @@ namespace net {
          *                         returns, this variable will contain the 
          *                         number of bytes actually retrieved.
          */
-        void GetOption(const int level, const int optName, void *outValue,
-            size_t& inOutValueLength) const;
+        void GetOption(const INT level, const INT optName, void *outValue,
+            SIZE_T& inOutValueLength) const;
 
         /**
          * Answer the address of the peer to which a socket is connected.
@@ -501,9 +501,9 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline int GetRcvBuf(void) const {
-            int retval;
-            size_t size = sizeof(int);
+        inline INT GetRcvBuf(void) const {
+            INT retval;
+            SIZE_T size = sizeof(INT);
             this->GetOption(SOL_SOCKET, SO_RCVBUF, &retval, size);
             return retval;
         }
@@ -515,9 +515,9 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline int GetRcvTimeo(void) const {
-            int retval;
-            size_t size = sizeof(int);
+        inline INT GetRcvTimeo(void) const {
+            INT retval;
+            SIZE_T size = sizeof(INT);
             this->GetOption(SOL_SOCKET, SO_RCVTIMEO, &retval, size);
             return retval;
         }
@@ -557,9 +557,9 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline int GetSndBuf(void) const {
-            int retval;
-            size_t size = sizeof(int);
+        inline INT GetSndBuf(void) const {
+            INT retval;
+            SIZE_T size = sizeof(INT);
             this->GetOption(SOL_SOCKET, SO_SNDBUF, &retval, size);
             return retval;
         }
@@ -571,9 +571,9 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline int GetSndTimeo(void) const {
-            int retval;
-            size_t size = sizeof(int);
+        inline INT GetSndTimeo(void) const {
+            INT retval;
+            SIZE_T size = sizeof(INT);
             this->GetOption(SOL_SOCKET, SO_SNDTIMEO, &retval, size);
             return retval;
         }
@@ -617,9 +617,9 @@ namespace net {
          * @throws SocketException If the operation fails.
          */
         // TODO: Linux IOCTLs?
-        void IOControl(const unsigned int ioControlCode, void *inBuffer, 
-            const unsigned int cntInBuffer, void *outBuffer, const unsigned int cntOutBuffer,
-            unsigned int& outBytesReturned);
+        void IOControl(const DWORD ioControlCode, void *inBuffer, 
+            const DWORD cntInBuffer, void *outBuffer, const DWORD cntOutBuffer,
+            DWORD& outBytesReturned);
 
         /**
          * Answer whether the socket is valid. Only use sockets that return true
@@ -667,7 +667,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        virtual void Listen(const int backlog = SOMAXCONN);
+        virtual void Listen(const INT backlog = SOMAXCONN);
 
         /**
          * Join the IPv4 multicast group identified by the mutlicast address 
@@ -726,8 +726,8 @@ namespace net {
          *
          * @throws SocketException       If the operation fails or timeouts.
          */
-        virtual size_t Receive(void *outData, const size_t cntBytes, 
-            const int timeout = TIMEOUT_INFINITE, const int flags = 0, 
+        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
             const bool forceReceive = false);
 
         /**
@@ -763,9 +763,9 @@ namespace net {
          *
          * @throws SocketException       If the operation fails or timeouts.
          */
-        virtual size_t Receive(IPEndPoint& outFromAddr, void *outData, 
-            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0, const bool forceReceive = false);
+        virtual SIZE_T Receive(IPEndPoint& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceReceive = false);
 
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
@@ -804,9 +804,9 @@ namespace net {
          *
          * @throws SocketException       If the operation fails or timeouts.
          */
-        virtual size_t Receive(SocketAddress& outFromAddr, void *outData, 
-            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0, const bool forceReceive = false);
+        virtual SIZE_T Receive(SocketAddress& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceReceive = false);
 
         ///**
         // * Receives one object of type T to 'outData'. The method does not 
@@ -821,7 +821,7 @@ namespace net {
         // *
         // * @throws SocketException If the operation fails.
         // */
-        //template<class T> inline void Receive(T& outData, const int flags = 0) {
+        //template<class T> inline void Receive(T& outData, const INT flags = 0) {
         //    return this->Receive(&outData, sizeof(T), flags, true);
         //}
 
@@ -851,11 +851,11 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        virtual size_t Send(const void *data, const size_t cntBytes, 
-            const int timeout = TIMEOUT_INFINITE, const int flags = 0, 
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
             const bool forceSend = false);
 
         /**
@@ -887,12 +887,12 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        virtual size_t Send(const IPEndPoint& toAddr, const void *data, 
-            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0, const bool forceSend = false);
+        virtual SIZE_T Send(const IPEndPoint& toAddr, const void *data, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceSend = false);
 
         /**
          * Send a datagram of 'cntBytes' bytes from the location designated by 
@@ -927,12 +927,12 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        inline size_t Send(const SocketAddress& toAddr, const void *data,
-                const size_t cntBytes, const int timeout = TIMEOUT_INFINITE,
-                const int flags = 0, const bool forceSend = false) {
+        inline SIZE_T Send(const SocketAddress& toAddr, const void *data,
+                const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE,
+                const INT flags = 0, const bool forceSend = false) {
             return this->Send(IPEndPoint(toAddr), data, cntBytes, timeout, 
                 flags, forceSend);
         }
@@ -949,7 +949,7 @@ namespace net {
         // *
         // * @throws SocketException If the operation fails.
         // */
-        //template<class T> inline void Send(const T& data, const int flags = 0) {
+        //template<class T> inline void Send(const T& data, const INT flags = 0) {
         //    return this->Send(&data, sizeof(T), flags, true);
         //}
 
@@ -1021,7 +1021,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline void SetLinger(const bool enable, const short lingerTime) {
+        inline void SetLinger(const bool enable, const SHORT lingerTime) {
             struct linger l = { enable, lingerTime };
             this->SetOption(SOL_SOCKET, SO_LINGER, &l, sizeof(struct linger));
         }
@@ -1062,8 +1062,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        virtual void SetOption(const int level, const int optName, 
-            const void *value, const size_t valueLength);
+        virtual void SetOption(const INT level, const INT optName, 
+            const void *value, const SIZE_T valueLength);
 
         /**
          * Enables a socket to receive all IP packets on the network through a
@@ -1096,8 +1096,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline void SetRcvBuf(const int size) {
-            this->SetOption(SOL_SOCKET, SO_RCVBUF, &size, sizeof(int));
+        inline void SetRcvBuf(const INT size) {
+            this->SetOption(SOL_SOCKET, SO_RCVBUF, &size, sizeof(INT));
         }
 
         /**
@@ -1110,8 +1110,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline void SetRcvTimeo(const int timeout) {
-            this->SetOption(SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(int));
+        inline void SetRcvTimeo(const INT timeout) {
+            this->SetOption(SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(INT));
         }
 
         /**
@@ -1173,7 +1173,7 @@ namespace net {
          *               address.
          * @param enable The new activation state of the option.
          *
-         * @throws argument_exception If 'pf' is unsupported.
+         * @throws IllegalParamException If 'pf' is unsupported.
          * @throws SocketException If the operation fails.
          */
         void SetMulticastLoop(const ProtocolFamily pf, const bool enable);
@@ -1188,10 +1188,10 @@ namespace net {
          * @param pf     The protocol (FAMILY_INET) to address.
          * @param ttl The number of routers multicast packets may pass.
          *
-         * @throws argument_exception If 'pf' is unsupported.
+         * @throws IllegalParamException If 'pf' is unsupported.
          * @throws SocketException If the operation fails.
          */
-        void SetMulticastTimeToLive(const ProtocolFamily pf, const uint8_t ttl);
+        void SetMulticastTimeToLive(const ProtocolFamily pf, const BYTE ttl);
 
 //IP_ADD_MEMBERSHIP           yes                      no
 //IP_DROP_MEMBERSHIP          yes                      no
@@ -1204,8 +1204,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline void SetSndBuf(const int size) {
-            this->SetOption(SOL_SOCKET, SO_SNDBUF, &size, sizeof(int));
+        inline void SetSndBuf(const INT size) {
+            this->SetOption(SOL_SOCKET, SO_SNDBUF, &size, sizeof(INT));
         }
 
         /**
@@ -1218,8 +1218,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline void SetSndTimeo(const int timeout) {
-            this->SetOption(SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(int));
+        inline void SetSndTimeo(const INT timeout) {
+            this->SetOption(SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(INT));
         }
 
         /**
@@ -1272,9 +1272,9 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline bool getOption(const int level, const int optName) const {
-            int value = 0;
-            size_t valueSize = sizeof(int);
+        inline bool getOption(const INT level, const INT optName) const {
+            INT value = 0;
+            SIZE_T valueSize = sizeof(INT);
             this->GetOption(level, optName, &value, valueSize);
             return (value != 0);
         }
@@ -1302,7 +1302,7 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        size_t receive(void *outData, const size_t cntBytes, const int flags,
+        SIZE_T receive(void *outData, const SIZE_T cntBytes, const INT flags,
             const bool forceReceive);
 
         /**
@@ -1330,8 +1330,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        size_t receiveFrom(IPEndPoint& outFromAddr, void *outData, 
-            const size_t cntBytes, const int flags, const bool forceReceive);
+        SIZE_T receiveFrom(IPEndPoint& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT flags, const bool forceReceive);
 
         /**
          * Send 'cntBytes' from the location designated by 'data' using this 
@@ -1356,8 +1356,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        size_t send(const void *data, const size_t cntBytes, 
-            const int flags = 0, const bool forceSend = false);
+        SIZE_T send(const void *data, const SIZE_T cntBytes, 
+            const INT flags = 0, const bool forceSend = false);
 
         /**
          * Send a datagram of 'cntBytes' bytes from the location designated by 
@@ -1383,8 +1383,8 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        size_t sendTo(const IPEndPoint& toAddr, const void *data, 
-            const size_t cntBytes, const int flags, const bool forceSend);
+        SIZE_T sendTo(const IPEndPoint& toAddr, const void *data, 
+            const SIZE_T cntBytes, const INT flags, const bool forceSend);
 
         /**
          * Set a boolean socket option.
@@ -1395,10 +1395,10 @@ namespace net {
          *
          * @throws SocketException If the operation fails.
          */
-        inline void setOption(const int level, const int optName, 
+        inline void setOption(const INT level, const INT optName, 
                 const bool value) {
-            int tmp = value ? 1 : 0;
-            return this->SetOption(level, optName, &tmp, sizeof(int));
+            INT tmp = value ? 1 : 0;
+            return this->SetOption(level, optName, &tmp, sizeof(INT));
         }
 
         /** The socket handle. */

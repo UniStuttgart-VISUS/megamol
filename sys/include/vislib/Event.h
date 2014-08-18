@@ -45,7 +45,7 @@ namespace sys {
          * Use this value to wait infinitely for an event to become 
          * signaled. 
          */
-        static const unsigned int TIMEOUT_INFINITE;
+        static const DWORD TIMEOUT_INFINITE;
 
         /** 
          * Create a new event.
@@ -129,7 +129,7 @@ namespace sys {
          * It is safe to reset an already non-signaled event. The operation has 
          * no effect in this case.
          *
-         * @throws the::system::system_exception If the operation failed.
+         * @throws SystemException If the operation failed.
          */
         void Reset(void);
 
@@ -139,7 +139,7 @@ namespace sys {
          * It is safe to set an already signaled event. The operation has no
          * effect in this case.
          *
-         * @throws the::system::system_exception If the operation failed.
+         * @throws SystemException If the operation failed.
          */
         void Set(void);
 
@@ -151,9 +151,9 @@ namespace sys {
          * @return true, if the event was signaled, false, if the operation
          *         timed out.
          * 
-         * @throws the::system::system_exception If the operation failed.
+         * @throws SystemException If the operation failed.
          */
-        bool Wait(const unsigned int timeout = TIMEOUT_INFINITE);
+        bool Wait(const DWORD timeout = TIMEOUT_INFINITE);
 
     protected:
 
@@ -162,7 +162,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         Event(const Event& rhs);
 
@@ -173,7 +173,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         Event& operator =(const Event& rhs);
 

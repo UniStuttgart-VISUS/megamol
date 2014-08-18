@@ -25,7 +25,7 @@
 #include "vislib/Socket.h"  // Must be first.
 #include "vislib/CriticalSection.h"
 #include "vislib/Runnable.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 #include "vislib/ThreadPool.h"
 
 
@@ -70,7 +70,7 @@ namespace net {
          * a new socket.
          */
         inline AsyncSocket(void) : Super() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /**
@@ -79,7 +79,7 @@ namespace net {
          * @param handle The socket handle.
          */
         explicit inline AsyncSocket(SOCKET handle) : Super(handle) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /**
@@ -88,7 +88,7 @@ namespace net {
          * @param socket The socket to be cloned
          */
         explicit inline AsyncSocket(Socket socket) : Super(socket) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /**
@@ -97,7 +97,7 @@ namespace net {
          * @param rhs The object to be cloned.
          */
         inline AsyncSocket(const AsyncSocket& rhs) : Super(rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AsyncSocket::AsyncSocket", __FILE__, __LINE__);
         }
 
         /** Dtor. */
@@ -125,11 +125,11 @@ namespace net {
          *                     is made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'context' is a NULL pointer.
+         * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        void BeginReceive(void *outData, const size_t cntBytes,
-            AsyncSocketContext *context, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0);
+        void BeginReceive(void *outData, const SIZE_T cntBytes,
+            AsyncSocketContext *context, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0);
 
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
@@ -156,12 +156,12 @@ namespace net {
          *                     is made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'outFromAddr' or 'context' is a 
+         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
          *                               NULL pointer.
          */
         void BeginReceive(IPEndPoint *outFromAddr, void *outData, 
-            const size_t cntBytes, AsyncSocketContext *context, 
-            const int timeout = TIMEOUT_INFINITE, const int flags = 0);
+            const SIZE_T cntBytes, AsyncSocketContext *context, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0);
 
         /**
          * Send 'cntBytes' from the location designated by 'data' using this 
@@ -185,12 +185,12 @@ namespace net {
          *                  made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'outFromAddr' or 'context' is a 
+         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
          *                               NULL pointer.
          */
-        void BeginSend(const void *data, const size_t cntBytes,
-            AsyncSocketContext *context, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0);
+        void BeginSend(const void *data, const SIZE_T cntBytes,
+            AsyncSocketContext *context, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0);
 
         /**
          * Send a datagram of 'cntBytes' bytes from the location designated by 
@@ -217,12 +217,12 @@ namespace net {
          *                  made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'outFromAddr' or 'context' is a 
+         * @throws IllegalParamException If 'outFromAddr' or 'context' is a 
          *                               NULL pointer.
          */
         void BeginSend(const IPEndPoint& toAddr, const void *data, 
-            const size_t cntBytes, AsyncSocketContext *context, 
-            const int timeout = TIMEOUT_INFINITE, const int flags = 0);
+            const SIZE_T cntBytes, AsyncSocketContext *context, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0);
 
         /**
          * Completes an asynchronous receive operation. This method must be 
@@ -236,10 +236,10 @@ namespace net {
          *
          * @throws SocketException       If the previously initiated operation 
          *                               failed.
-         * @throws argument_exception If 'context' is a NULL pointer.
+         * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        inline size_t EndReceive(AsyncSocketContext *context) {
-            THE_STACK_TRACE;
+        inline SIZE_T EndReceive(AsyncSocketContext *context) {
+            VLSTACKTRACE("AsyncSocket::EndReceive", __FILE__, __LINE__);
             return this->endAsync(context);
         }
 
@@ -255,10 +255,10 @@ namespace net {
          *
          * @throws SocketException       If the previously initiated operation 
          *                               failed.
-         * @throws argument_exception If 'context' is a NULL pointer.
+         * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        inline size_t EndSend(AsyncSocketContext *context) {
-            THE_STACK_TRACE;
+        inline SIZE_T EndSend(AsyncSocketContext *context) {
+            VLSTACKTRACE("AsyncSocket::EndSend", __FILE__, __LINE__);
             return this->endAsync(context);
         }
 
@@ -285,11 +285,11 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
-        virtual size_t Receive(void *outData, const size_t cntBytes, 
-            const int timeout = TIMEOUT_INFINITE, const int flags = 0, 
+        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
             const bool forceReceive = false);
 
         /**
@@ -318,12 +318,12 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
-        virtual size_t Receive(IPEndPoint& outFromAddr, void *outData, 
-            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0, const bool forceReceive = false);
+        virtual SIZE_T Receive(IPEndPoint& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceReceive = false);
 
         /**
          * Receives a datagram from 'fromAddr' and stores it to 'outData'. 
@@ -355,12 +355,12 @@ namespace net {
          * @return The number of bytes actually received.
          *
          * @throws SocketException       If the operation fails or timeouts.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceReceive' is true.
          */
-        virtual size_t Receive(SocketAddress& outFromAddr, void *outData, 
-            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0, const bool forceReceive = false);
+        virtual SIZE_T Receive(SocketAddress& outFromAddr, void *outData, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceReceive = false);
 
         /**
          * Send 'cntBytes' from the location designated by 'data' using this 
@@ -382,11 +382,11 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        virtual size_t Send(const void *data, const size_t cntBytes, 
-            const int timeout = TIMEOUT_INFINITE, const int flags = 0, 
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes, 
+            const INT timeout = TIMEOUT_INFINITE, const INT flags = 0, 
             const bool forceSend = false);
 
         /**
@@ -412,12 +412,12 @@ namespace net {
          * @return The number of bytes acutally sent.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        virtual size_t Send(const IPEndPoint& toAddr, const void *data, 
-            const size_t cntBytes, const int timeout = TIMEOUT_INFINITE, 
-            const int flags = 0, const bool forceSend = false);
+        virtual SIZE_T Send(const IPEndPoint& toAddr, const void *data, 
+            const SIZE_T cntBytes, const INT timeout = TIMEOUT_INFINITE, 
+            const INT flags = 0, const bool forceSend = false);
 #endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
         /**
@@ -428,7 +428,7 @@ namespace net {
          * @return *this.
          */
         AsyncSocket& operator =(const AsyncSocket& rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AsyncSocket::operator =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -441,7 +441,7 @@ namespace net {
          * @return true, if *this and 'rhs' are equal, false otherwise.
          */
         inline bool operator ==(const AsyncSocket& rhs) const {
-            THE_STACK_TRACE;
+            VISLIB_STACKTRACE("AsyncSocket::operator ==", __FILE__, __LINE__);
             return Super::operator ==(rhs);
         }
 
@@ -453,7 +453,7 @@ namespace net {
          * @return true, if *this and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const AsyncSocket& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AsyncSocket::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -491,7 +491,7 @@ namespace net {
          *
          * @return 0 in case of success, an OS error code otherwise.
          */
-        static unsigned int receiveFunc(void *asyncSocketContext);
+        static DWORD receiveFunc(void *asyncSocketContext);
 
         /**
          * This function runs the send operation specified in 
@@ -502,7 +502,7 @@ namespace net {
          *
          * @return 0 in case of success, an OS error code otherwise.
          */
-        static unsigned int sendFunc(void *asyncSocketContext);
+        static DWORD sendFunc(void *asyncSocketContext);
 #endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
         /**
@@ -516,9 +516,9 @@ namespace net {
          *
          * @throws SocketException       If the previously initiated operation 
          *                               failed.
-         * @throws argument_exception If 'context' is a NULL pointer.
+         * @throws IllegalParamException If 'context' is a NULL pointer.
          */
-        size_t endAsync(AsyncSocketContext *context);
+        SIZE_T endAsync(AsyncSocketContext *context);
 
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /** This lock ensures exclusive receive access on Linux. */

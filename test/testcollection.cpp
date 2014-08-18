@@ -14,7 +14,7 @@
 #include "vislib/Pair.h"
 #include "vislib/PtrArray.h"
 #include "vislib/SingleLinkedList.h"
-#include "the/string.h"
+#include "vislib/String.h"
 #include "vislib/SynchronisedArray.h"
 #include "vislib/ConsoleProgressBar.h"
 
@@ -29,17 +29,17 @@ void TestArray(void) {
     Array<int> intAry;
 
     ::AssertEqual("Array default capacity", intAry.Capacity(), Array<int>::DEFAULT_CAPACITY);
-    ::AssertEqual("Array initially empty", intAry.Count(), size_t(0));
-    ::AssertTrue("empty method", intAry.empty());
+    ::AssertEqual("Array initially empty", intAry.Count(), SIZE_T(0));
+    ::AssertTrue("IsEmpty method", intAry.IsEmpty());
     
     intAry.Append(4);
-    ::AssertEqual("Appended one element", intAry.Count(), size_t(1));
+    ::AssertEqual("Appended one element", intAry.Count(), SIZE_T(1));
     ::AssertTrue("New element in array", intAry.Contains(4));
     ::AssertEqual("New element is at expected position", intAry[0], 4);
 
     intAry.Append(6);
     intAry.Append(43);
-    ::AssertEqual("Appended two elements", intAry.Count(), size_t(3));
+    ::AssertEqual("Appended two elements", intAry.Count(), SIZE_T(3));
 
     intAry.AssertCapacity(Array<int>::DEFAULT_CAPACITY + 5);
     ::AssertEqual("Increased capacity", intAry.Capacity(), Array<int>::DEFAULT_CAPACITY + 5);
@@ -48,11 +48,11 @@ void TestArray(void) {
     ::AssertEqual("Capacity set to current count", intAry.Count(), intAry.Capacity());
 
     intAry.Append(99);
-    ::AssertEqual("New element appended to full array", intAry[int(intAry.Count() - 1)], 99);
+    ::AssertEqual("New element appended to full array", intAry[INT(intAry.Count() - 1)], 99);
 
     intAry.Erase(1, 2);
-    ::AssertEqual("Two elements erased", intAry.Count(), size_t(2));
-    ::AssertEqual("Capacity unchanged", intAry.Capacity(), size_t(4));
+    ::AssertEqual("Two elements erased", intAry.Count(), SIZE_T(2));
+    ::AssertEqual("Capacity unchanged", intAry.Capacity(), SIZE_T(4));
     ::AssertEqual("First element unchanged", intAry[0], 4);
     ::AssertEqual("Last element unchanged", intAry[1], 99);
 
@@ -74,39 +74,39 @@ void TestArray(void) {
 
     Array<int> intAry2(10, 42);
     
-    ::AssertEqual("Initially filled array", intAry2.Count(), size_t(10));
+    ::AssertEqual("Initially filled array", intAry2.Count(), SIZE_T(10));
 
     intAry = intAry2;
-    ::AssertEqual("Assignment copies all elements", intAry.Count(), size_t(10));
+    ::AssertEqual("Assignment copies all elements", intAry.Count(), SIZE_T(10));
     ::AssertTrue("Assignment copies correct elements", intAry.Contains(42));
     
     intAry.RemoveAll(43);
-    ::AssertEqual("Removing non-exisiting element has no effect", intAry.Count(), size_t(10));
+    ::AssertEqual("Removing non-exisiting element has no effect", intAry.Count(), SIZE_T(10));
     
     intAry.RemoveAll(42);
     ::AssertFalse("Remove element", intAry.Contains(42));
-    ::AssertTrue("Remove affects all matching elements", intAry.empty());
+    ::AssertTrue("Remove affects all matching elements", intAry.IsEmpty());
 
     intAry2.Erase(intAry2.Count());
-    ::AssertEqual("Erase on non-exisiting index has no effect", intAry2.Count(), size_t(10));
+    ::AssertEqual("Erase on non-exisiting index has no effect", intAry2.Count(), SIZE_T(10));
 
     intAry2.Erase(3);
-    ::AssertEqual("Erase one element", intAry2.Count(), size_t(9));
+    ::AssertEqual("Erase one element", intAry2.Count(), SIZE_T(9));
 
     intAry2.Erase(2, 5);
-    ::AssertEqual("Erase five elements", intAry2.Count(), size_t(4));
+    ::AssertEqual("Erase five elements", intAry2.Count(), SIZE_T(4));
 
     intAry2.Erase(2, 5);
-    ::AssertEqual("Erase begining at 2", intAry2.Count(), size_t(2));
+    ::AssertEqual("Erase begining at 2", intAry2.Count(), SIZE_T(2));
 
     intAry2.Clear();
-    ::AssertTrue("Clear array", intAry2.empty());
+    ::AssertTrue("Clear array", intAry2.IsEmpty());
 
     intAry2.Trim();
-    ::AssertEqual("Trim empty array", intAry2.Capacity(), size_t(0));
+    ::AssertEqual("Trim empty array", intAry2.Capacity(), SIZE_T(0));
 
     
-    Array<the::astring> strAry;
+    Array<vislib::StringA> strAry;
     strAry.Append("Horst");
     AssertTrue("Contains \"Horst\"", strAry.Contains("Horst"));
 
@@ -119,12 +119,12 @@ void TestArray(void) {
     AssertEqual("Added pointer to 4", *(intPtrAry[1]), 4);
     
     intPtrAry.Resize(1);
-    AssertEqual("Removed all but first element", intPtrAry.Count(), size_t(1));
+    AssertEqual("Removed all but first element", intPtrAry.Count(), SIZE_T(1));
     AssertEqual("First element was not changed", *(intPtrAry[0]), 5);
 
     intPtrAry.Clear(true);
-    AssertEqual("Removed all elements", intPtrAry.Count(), size_t(0));
-    AssertEqual("Deallocated whole array", intPtrAry.Capacity(), size_t(0));
+    AssertEqual("Removed all elements", intPtrAry.Count(), SIZE_T(0));
+    AssertEqual("Deallocated whole array", intPtrAry.Capacity(), SIZE_T(0));
 
 
     vislib::sys::SynchronisedArray<int> syncedIntArray;
@@ -135,7 +135,7 @@ void TestArray(void) {
     intAry.Add(3);
     intAry.Add(4);
     intAry.Erase(0, 1);
-    AssertEqual("Array has 3 elements", intAry.Count(), size_t(3));
+    AssertEqual("Array has 3 elements", intAry.Count(), SIZE_T(3));
     AssertEqual("Array[0] == 2", intAry[0], 2);
     AssertEqual("Array[1] == 3", intAry[1], 3);
     AssertEqual("Array[2] == 4", intAry[2], 4);
@@ -146,7 +146,7 @@ void TestArray(void) {
     intAry.Add(3);
     intAry.Add(4);
     intAry.Erase(1, 1);
-    AssertEqual("Array has 3 elements", intAry.Count(), size_t(3));
+    AssertEqual("Array has 3 elements", intAry.Count(), SIZE_T(3));
     AssertEqual("Array[0] == 1", intAry[0], 1);
     AssertEqual("Array[1] == 3", intAry[1], 3);
     AssertEqual("Array[2] == 4", intAry[2], 4);
@@ -165,7 +165,7 @@ void TestSingleLinkedList(void) {
     list.Add(7);
     list.Prepend(6);
 
-    AssertEqual("List contains 3 elements", list.Count(), size_t(3));
+    AssertEqual("List contains 3 elements", list.Count(), SIZE_T(3));
 
     IntList::Iterator i = list.GetIterator();
     AssertTrue("Iterator valid", i.HasNext());
@@ -201,18 +201,18 @@ void TestHeap(void) {
     Heap<MyPair> heap;
 
     ::AssertEqual("Heap default capacity", heap.Capacity(), Array<MyPair>::DEFAULT_CAPACITY);
-    ::AssertEqual("Heap initially empty", heap.Count(), size_t(0));
-    ::AssertTrue("empty method", heap.empty());
+    ::AssertEqual("Heap initially empty", heap.Count(), SIZE_T(0));
+    ::AssertTrue("IsEmpty method", heap.IsEmpty());
 
     heap.Add(MyPair(3, 'H'));
-    ::AssertEqual("One element added", heap.Count(), size_t(1));
-    ::AssertFalse("empty method", heap.empty());
+    ::AssertEqual("One element added", heap.Count(), SIZE_T(1));
+    ::AssertFalse("IsEmpty method", heap.IsEmpty());
 
     heap.Add(MyPair(7, 't'));
     heap.Add(MyPair(5, 'r'));
     heap.Add(MyPair(6, 's'));
     heap.Add(MyPair(4, 'o'));
-    ::AssertEqual("Four additional elements added", heap.Count(), size_t(5));
+    ::AssertEqual("Four additional elements added", heap.Count(), SIZE_T(5));
 
     ::AssertEqual("Get element 'H'", heap.First().Value(), 'H');
     heap.RemoveFirst();
@@ -224,7 +224,7 @@ void TestHeap(void) {
     heap.RemoveFirst();
     ::AssertEqual("Get element 't'", heap.First().Value(), 't');
     heap.RemoveFirst();
-    ::AssertTrue("Heap is empty now", heap.empty());
+    ::AssertTrue("Heap is empty now", heap.IsEmpty());
 
     heap.Add(MyPair(7, 't'));
     heap.Add(MyPair(5, 'r'));
@@ -232,7 +232,7 @@ void TestHeap(void) {
     heap.Add(MyPair(0, 'H'));
     heap.Add(MyPair(6, 's'));
     heap.Add(MyPair(4, 'o'));
-    ::AssertEqual("Heap filled with duplicate key", heap.Count(), size_t(6));
+    ::AssertEqual("Heap filled with duplicate key", heap.Count(), SIZE_T(6));
 
     ::AssertEqual("Get element 'H'", heap.First().Value(), 'H');
     heap.RemoveFirst();
@@ -246,11 +246,11 @@ void TestHeap(void) {
     heap.RemoveFirst();
     ::AssertEqual("Get element 't'", heap.First().Value(), 't');
     heap.RemoveFirst();
-    ::AssertTrue("Heap is empty now", heap.empty());
+    ::AssertTrue("Heap is empty now", heap.IsEmpty());
 
     heap.Add(MyPair(4, 'o'));
     heap.Clear();
-    ::AssertTrue("Heap is empty after Clear", heap.empty());
+    ::AssertTrue("Heap is empty after Clear", heap.IsEmpty());
 }
 
 
@@ -264,20 +264,20 @@ void TestMap(void) {
     Map<int, float> map;
 
     map.Set(12, 13.5f);
-    ::AssertEqual("Map contains one element", map.Count(), static_cast<size_t>(1));
+    ::AssertEqual("Map contains one element", map.Count(), static_cast<SIZE_T>(1));
     ::AssertEqual("Map element correct", map[12], 13.5f);
     ::AssertEqual("New Map element correct", map[11], 0.0f);
-    ::AssertEqual("Map contains two elements", map.Count(), static_cast<size_t>(2));
+    ::AssertEqual("Map contains two elements", map.Count(), static_cast<SIZE_T>(2));
     map[11] = 1.01f;
     ::AssertEqual("New Map element correct", map[11], 1.01f);
     map.Remove(11);
-    ::AssertEqual("Map contains one element", map.Count(), static_cast<size_t>(1));
+    ::AssertEqual("Map contains one element", map.Count(), static_cast<SIZE_T>(1));
     map[10] = 2.0f;
     map[13] = 2.0f;
     map[0] = 2.0f;
-    ::AssertEqual("Map contains four elements", map.Count(), static_cast<size_t>(4));
+    ::AssertEqual("Map contains four elements", map.Count(), static_cast<SIZE_T>(4));
     SingleLinkedList<int> keys = map.FindKeys(2.0f);
-    ::AssertEqual("Three keys associate '2.0f'", keys.Count(), static_cast<size_t>(3));
+    ::AssertEqual("Three keys associate '2.0f'", keys.Count(), static_cast<SIZE_T>(3));
     ::AssertTrue("Key 0 present", keys.Contains(0));
     ::AssertTrue("Key 10 present", keys.Contains(10));
     ::AssertTrue("Key 13 present", keys.Contains(13));
@@ -291,8 +291,8 @@ void TestMap(void) {
     ::AssertEqual("Map[10] correct", map[10], 4.0f);
     ::AssertEqual("Map[13] correct", map[13], 2.0f);
     map.Clear();
-    ::AssertEqual("Map is empty", map.Count(), static_cast<size_t>(0));
-    ::AssertTrue("Map is empty", map.empty());
+    ::AssertEqual("Map is empty", map.Count(), static_cast<SIZE_T>(0));
+    ::AssertTrue("Map is empty", map.IsEmpty());
 
 }
 
@@ -347,19 +347,19 @@ void TestSingleLinkedListSort(void) {
 
     list.Clear();
 
-    const size_t cnt = 10000000;
-    for (size_t i = 0; i < cnt; i++) {
+    const SIZE_T cnt = 10000000;
+    for (SIZE_T i = 0; i < cnt; i++) {
         list.Add(rand());
     }
 
 #ifdef _WIN32
-    unsigned int startTick = GetTickCount();
+    DWORD startTick = GetTickCount();
 #endif /* _WIN32 */
     AssertEqual("List filled with random Elements", list.Count(), cnt);
     list.Sort(intSortCompare);
     AssertEqual("List still contains random Elements", list.Count(), cnt);
 #ifdef _WIN32
-    unsigned int duration = GetTickCount() - startTick;
+    DWORD duration = GetTickCount() - startTick;
     printf("Sorted in %u milliseconds\n", duration);
 #endif /* _WIN32 */
 

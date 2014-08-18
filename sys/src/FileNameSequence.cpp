@@ -6,13 +6,13 @@
  */
 
 #include "vislib/FileNameSequence.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
+#include "vislib/CharTraits.h"
 #include "vislib/File.h"
-#include "the/argument_exception.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/Path.h"
-#include "the/string.h"
-#include "the/text/string_builder.h"
+#include "vislib/String.h"
 
 
 /****************************************************************************/
@@ -125,9 +125,9 @@ unsigned int vislib::sys::FileNameSequence::FileNameCountElement::Count(void)
 unsigned int
 vislib::sys::FileNameSequence::FileNameCountElement::CounterIndex(void)
         const {
-    THE_ASSERT(this->value >= this->minVal);
+    ASSERT(this->value >= this->minVal);
     unsigned int p = this->value - this->minVal;
-    THE_ASSERT((p % this->step) == 0);
+    ASSERT((p % this->step) == 0);
     return p / this->step;
 }
 
@@ -153,10 +153,10 @@ vislib::sys::FileNameSequence::FileNameCountElement::IncreaseCounter(void) {
 void vislib::sys::FileNameSequence::FileNameCountElement::SetCounterIndex(
         unsigned int idx) {
     if (idx >= this->Count()) {
-        throw the::index_out_of_range_exception(idx, 0, this->Count(), __FILE__, __LINE__);
+        throw OutOfRangeException(idx, 0, this->Count(), __FILE__, __LINE__);
     }
     this->value = this->minVal + this->step * idx;
-    THE_ASSERT(this->value <= this->maxVal);
+    ASSERT(this->value <= this->maxVal);
 }
 
 
@@ -175,7 +175,7 @@ void vislib::sys::FileNameSequence::FileNameCountElement::SetDigits(
 void vislib::sys::FileNameSequence::FileNameCountElement::SetRange(
         unsigned int minVal, unsigned int maxVal, unsigned int step) {
     if (maxVal < minVal) {
-        throw the::argument_exception("maxVal must not be less minVal",
+        throw IllegalParamException("maxVal must not be less minVal",
             __FILE__, __LINE__);
     }
     this->minVal = minVal;
@@ -209,13 +209,13 @@ void vislib::sys::FileNameSequence::FileNameCountElement::SetStepSize(
  */
 char * vislib::sys::FileNameSequence::FileNameCountElement::makeTextA(void)
         const {
-    the::astring s1, s2;
-    the::text::astring_builder::format_to(s1, "%%.%uu", this->digits); // paranoia way to do this
-    the::text::astring_builder::format_to(s2, s1.c_str(), this->value);
-    unsigned int len = static_cast<unsigned int>(s2.size());
+    vislib::StringA s1, s2;
+    s1.Format("%%.%uu", this->digits); // paranoia way to do this
+    s2.Format(s1, this->value);
+    unsigned int len = s2.Length();
     char *buf = new char[len + 1];
     buf[len] = 0;
-    memcpy(buf, s2.c_str(), len * sizeof(char));
+    memcpy(buf, s2.PeekBuffer(), len * sizeof(char));
     return buf;
 }
 
@@ -225,13 +225,13 @@ char * vislib::sys::FileNameSequence::FileNameCountElement::makeTextA(void)
  */
 wchar_t * vislib::sys::FileNameSequence::FileNameCountElement::makeTextW(void)
         const {
-    the::wstring s1, s2;
-    the::text::wstring_builder::format_to(s1, L"%%.%uu", this->digits); // paranoia way to do this
-    the::text::wstring_builder::format_to(s2, s1.c_str(), this->value);
-    unsigned int len = static_cast<unsigned int>(s2.size());
+    vislib::StringW s1, s2;
+    s1.Format(L"%%.%uu", this->digits); // paranoia way to do this
+    s2.Format(s1, this->value);
+    unsigned int len = s2.Length();
     wchar_t *buf = new wchar_t[len + 1];
     buf[len] = 0;
-    memcpy(buf, s2.c_str(), len * sizeof(wchar_t));
+    memcpy(buf, s2.PeekBuffer(), len * sizeof(wchar_t));
     return buf;
 }
 
@@ -259,7 +259,7 @@ vislib::sys::FileNameSequence::~FileNameSequence(void) {
  * vislib::sys::FileNameSequence::Autodetect
  */
 void vislib::sys::FileNameSequence::Autodetect(
-        const the::astring& firstFileName) {
+        const vislib::StringA& firstFileName) {
     this->autodetect(firstFileName);
 }
 
@@ -268,7 +268,7 @@ void vislib::sys::FileNameSequence::Autodetect(
  * vislib::sys::FileNameSequence::Autodetect
  */
 void vislib::sys::FileNameSequence::Autodetect(
-        const the::wstring& firstFileName) {
+        const vislib::StringW& firstFileName) {
     this->autodetect(firstFileName);
 }
 
@@ -289,12 +289,12 @@ unsigned int vislib::sys::FileNameSequence::Count(void) {
 /*
  * vislib::sys::FileNameSequence::FileNameA
  */
-the::astring vislib::sys::FileNameSequence::FileNameA(unsigned int idx) {
-    THE_ASSERT(this->IsValid() == true);
+vislib::StringA vislib::sys::FileNameSequence::FileNameA(unsigned int idx) {
+    ASSERT(this->IsValid() == true);
     this->setIndex(idx);
-    the::astring rv;
+    vislib::StringA rv;
     for (unsigned int i = 0; i < this->elements.Count(); i++) {
-        rv.append(this->elements[i]->TextA());
+        rv.Append(this->elements[i]->TextA());
     }
     return rv;
 }
@@ -303,12 +303,12 @@ the::astring vislib::sys::FileNameSequence::FileNameA(unsigned int idx) {
 /*
  * vislib::sys::FileNameSequence::FileNameW
  */
-the::wstring vislib::sys::FileNameSequence::FileNameW(unsigned int idx) {
-    THE_ASSERT(this->IsValid() == true);
+vislib::StringW vislib::sys::FileNameSequence::FileNameW(unsigned int idx) {
+    ASSERT(this->IsValid() == true);
     this->setIndex(idx);
-    the::wstring rv;
+    vislib::StringW rv;
     for (unsigned int i = 0; i < this->elements.Count(); i++) {
-        rv.append(this->elements[i]->TextW());
+        rv.Append(this->elements[i]->TextW());
     }
     return rv;
 }
@@ -331,45 +331,45 @@ bool vislib::sys::FileNameSequence::IsValid(void) const {
  * vislib::sys::FileNameSequence::autodetect
  */
 template<class T>
-void vislib::sys::FileNameSequence::autodetect(const T& filename) {
+void vislib::sys::FileNameSequence::autodetect(const vislib::String<T>& filename) {
     this->elements.Clear();
-    if (!File::IsFile(filename.c_str())) return;
+    if (!File::IsFile(filename)) return;
 
     // separate path from name
-    auto i = filename.find(static_cast<typename T::value_type>(Path::SEPARATOR_A));
+    typename String<T>::Size i = filename.FindLast(
+        static_cast<typename T::Char>(Path::SEPARATOR_A));
     unsigned int len, start = 0;
-    const typename T::value_type* buffer;
-    if (i == T::npos) {
+    const typename String<T>::Char * buffer;
+    if (i == String<T>::INVALID_POS) {
         // it seams there is no path
-        len = static_cast<unsigned int>(filename.size());
-        buffer = filename.c_str();
+        len = filename.Length();
+        buffer = filename.PeekBuffer();
     } else {
         // path as first string element
         i++;
         this->elements.Add(new FileNameStringElement<T>(
-            filename.substr(0, i).c_str()));
-        len = static_cast<unsigned int>(filename.size() - i);
-        buffer = filename.c_str() + i;
+            filename.Substring(0, i)));
+        len = filename.Length() - i;
+        buffer = filename.PeekBuffer() + i;
     }
 
     // now search for numbers
     bool dig, seqdig = false;
     FileNameCountElement *cntElement = NULL;
     for (unsigned int pos = 0; pos < len; pos++) {
-        dig = the::text::char_utility::is_digit(buffer[pos]);
+        dig = T::IsDigit(buffer[pos]);
         if (dig != seqdig) {
             if (seqdig) {
                 // number element
                 unsigned int val = static_cast<unsigned int>(
-                    the::text::string_utility::parse_int(
-                        T(buffer + start, pos - start)));
+                    T::ParseInt(String<T>(buffer + start, pos - start)));
                 this->elements.Add(cntElement = new FileNameCountElement(
                     pos - start, val, val));
                 // range will be adjusted later on
             } else {
                 // string element
                 this->elements.Add(new FileNameStringElement<T>(
-                    T(buffer + start, pos - start)));
+                    String<T>(buffer + start, pos - start)));
             }
             start = pos;
             seqdig = dig;
@@ -379,14 +379,14 @@ void vislib::sys::FileNameSequence::autodetect(const T& filename) {
         if (seqdig) {
             // number element
             unsigned int val = static_cast<unsigned int>(
-                the::text::string_utility::parse_int(T(buffer + start, len - start)));
+                T::ParseInt(String<T>(buffer + start, len - start)));
             this->elements.Add(cntElement = new FileNameCountElement(
                 len - start, val, val));
             // range will be adjusted later on
         } else {
             // string element
             this->elements.Add(new FileNameStringElement<T>(
-                T(buffer + start, len - start)));
+                String<T>(buffer + start, len - start)));
         }
     }
 
@@ -397,7 +397,7 @@ void vislib::sys::FileNameSequence::autodetect(const T& filename) {
             cntElement->SetRange(cntElement->MinValue(),
                 cntElement->MaxValue() + 1);
             idx++;
-        } while(File::IsFile(this->FileNameW(idx).c_str()));
+        } while(File::IsFile(this->FileNameW(idx)));
         cntElement->SetRange(cntElement->MinValue(),
             cntElement->MaxValue() - 1);
     }

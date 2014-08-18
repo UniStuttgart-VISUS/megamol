@@ -19,7 +19,7 @@
 #include "vislib/AbstractCommEndPoint.h"
 #include "vislib/ReferenceCounted.h"
 #include "vislib/SmartRef.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {

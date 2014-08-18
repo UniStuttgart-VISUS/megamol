@@ -119,9 +119,9 @@ namespace cluster {
          *
          * @return 0 in case of success, an error code otherwise.
          *
-         * @throws the::system::system_exception If the server thread could not be started.
+         * @throws SystemException If the server thread could not be started.
          */
-        virtual unsigned int Run(void);
+        virtual DWORD Run(void);
 
         /**
          * Set a new socket address the server should bind to. 
@@ -158,7 +158,7 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        virtual size_t countPeers(void) const;
+        virtual SIZE_T countPeers(void) const;
 
         /**
          * Remove the 'idx'th peer node. 
@@ -172,7 +172,7 @@ namespace cluster {
          *
          * @param idx The index of the peer node to be removed.
          */
-        void disconnectPeer(const size_t idx);
+        void disconnectPeer(const SIZE_T idx);
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -187,7 +187,7 @@ namespace cluster {
          *
          * @return The number of sucessful calls to 'func' that have been made.
          */
-        virtual size_t forEachPeer(ForeachPeerFunc func, void *context);
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -248,10 +248,10 @@ namespace cluster {
          *
          * @return The index if the peer node with the specified identifier.
          *
-         * @throws no_such_element_exception If no peer with the specified ID is
+         * @throws NoSuchElementException If no peer with the specified ID is
          *                                known.
          */
-        size_t findPeerNode(const PeerIdentifier& peerId);
+        SIZE_T findPeerNode(const PeerIdentifier& peerId);
 
         /**
          * Character type agnostic initialiser that does the actual work.
@@ -285,7 +285,7 @@ namespace cluster {
      */
     template<class T>
     void AbstractServerNode::initialise(sys::CmdLineProvider<T>& inOutCmdLine) {
-        typedef T String;
+        typedef vislib::String<T> String;
         typedef vislib::sys::CmdLineParser<T> Parser;
         typedef typename Parser::Argument Argument;
         typedef typename Parser::Option Option;
@@ -294,27 +294,27 @@ namespace cluster {
         Parser parser;
         Argument *arg = NULL;
 
-        Option optServer(the::text::string_converter::convert<String>(_T("bind-address")), 
-            the::text::string_converter::convert<String>(_T("Specifies the address (adapter) to bind the server to.")),
+        Option optServer(String(_T("bind-address")), 
+            String(_T("Specifies the address (adapter) to bind the server to.")),
             Option::FLAG_UNIQUE, 
             ValueDesc::ValueList(Option::STRING_VALUE, 
-                the::text::string_converter::convert<String>(_T("adapter")), 
-                the::text::string_converter::convert<String>(_T("The IP address to bind the server to."))));
+                String(_T("adapter")), 
+                String(_T("The IP address to bind the server to."))));
         parser.AddOption(&optServer);
 
-        Option optPort(the::text::string_converter::convert<String>(_T("bind-port")), 
-            the::text::string_converter::convert<String>(_T("Specifies the post to bind the server to.")),
+        Option optPort(String(_T("bind-port")), 
+            String(_T("Specifies the post to bind the server to.")),
             Option::FLAG_UNIQUE, 
             ValueDesc::ValueList(Option::INT_VALUE, 
-                the::text::string_converter::convert<String>(_T("port")), 
-                the::text::string_converter::convert<String>(_T("The port the server node will listen on."))));
+                String(_T("port")), 
+                String(_T("The port the server node will listen on."))));
         parser.AddOption(&optPort);
 
         if (parser.Parse(inOutCmdLine.ArgC(), inOutCmdLine.ArgV()) >= 0) {
             if ((arg = optServer.GetFirstOccurrence()) != NULL) {
                 // TODO: IPv6
                 this->bindAddress.SetIPAddress(IPAddress::Create(
-                    the::text::string_converter::convert<the::astring>(arg->GetValueString()).c_str()));
+                    StringA(arg->GetValueString())));
             } else {
                 // TODO: IPv6
                 this->bindAddress.SetIPAddress(IPAddress::ANY);

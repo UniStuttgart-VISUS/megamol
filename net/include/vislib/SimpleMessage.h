@@ -41,7 +41,7 @@ namespace net {
          * @param bodySize The size of the message body to be allocated in
          *                 bytes.
          */
-        SimpleMessage(const size_t bodySize = 0);
+        SimpleMessage(const SIZE_T bodySize = 0);
 
         /**
          * Create a new message using the size specified in 'header'. The 
@@ -87,7 +87,7 @@ namespace net {
          * @return *this.
          */
         inline SimpleMessage& operator =(const AbstractSimpleMessage& rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("SimpleMessage::operator =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -100,7 +100,7 @@ namespace net {
          * @return *this.
          */
         inline SimpleMessage& operator =(const SimpleMessage& rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("SimpleMessage::operator =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -121,7 +121,7 @@ namespace net {
          *
          * @throws Exception or derived in case of an error.
          */
-        virtual bool assertStorage(void *& outStorage, const size_t size);
+        virtual bool assertStorage(void *& outStorage, const SIZE_T size);
 
     private:
 

@@ -57,9 +57,9 @@ namespace vislib {
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
          *
-         * @throws invalid_operation_exception If the hash has not been initialised.
+         * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual void TransformBlock(const uint8_t *input, const size_t cntInput);
+        virtual void TransformBlock(const BYTE *input, const SIZE_T cntInput);
 
         /**
          * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -77,28 +77,28 @@ namespace vislib {
          * @param input     The data to be added to the hash.
          * @param cntInput  The number of bytes in 'input'.
          *
-         * @throws invalid_operation_exception If the hash has not been initialised.
+         * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual bool TransformFinalBlock(uint8_t *outHash, size_t& inOutSize,
-            const uint8_t *input, const size_t cntInput);
+        virtual bool TransformFinalBlock(BYTE *outHash, SIZE_T& inOutSize,
+            const BYTE *input, const SIZE_T cntInput);
 
     private:
 
         /** The size of the SHA-1 in bytes. */
-        static const size_t HASH_SIZE = 20;
+        static const SIZE_T HASH_SIZE = 20;
 
         /**
          * This structure will hold context information for the SHA-1
          * hashing operation.
          */
         typedef struct SHA1Context_t {
-            uint32_t Intermediate_Hash[HASH_SIZE / 4];    // Message Digest
+            UINT32 Intermediate_Hash[HASH_SIZE / 4];    // Message Digest
 
-            uint32_t Length_Low;          // Message length in bits
-            uint32_t Length_High;         // Message length in bits
+            UINT32 Length_Low;          // Message length in bits
+            UINT32 Length_High;         // Message length in bits
 
-            uint16_t Message_Block_Index; // Index into message block array
-            uint8_t Message_Block[64];     // 512-bit message blocks
+            UINT16 Message_Block_Index; // Index into message block array
+            BYTE Message_Block[64];     // 512-bit message blocks
 
             int Computed;               // Is the digest computed?
             int Corrupted;              // Is the message digest corrupted?
@@ -121,12 +121,12 @@ namespace vislib {
          *                  portion of the message.
          * @param cntInput  The length of the message in message_array
          *
-         * @throws invalid_operation_exception If the hash designated by 'context' was
+         * @throws IllegalStateException If the hash designated by 'context' was
          *                               already computed,
          *                               If the context was corrupted.
          */
-        void input(SHA1Context *context, const uint8_t *input, 
-            const unsigned int cntInput);
+        void input(SHA1Context *context, const BYTE *input, 
+            const UINT cntInput);
 
         /**
          * According to the standard, the message must be padded to an even
@@ -159,9 +159,9 @@ namespace vislib {
          * @param messageDigest Where the digest is returned.
          * @param context       The context to use to calculate the SHA-1 hash.
          *
-         * @throws invalid_operation_exception If the context was corrupted.
+         * @throws IllegalStateException If the context was corrupted.
          */
-        static void result(uint8_t *messageDigest, SHA1Context *context);
+        static void result(UINT8 *messageDigest, SHA1Context *context);
 
         /**
          * Forbidden assignemt operator.
@@ -170,7 +170,7 @@ namespace vislib {
          *
          * @return *this
          *
-         * @throws argument_exception If this != &rhs.
+         * @throws IllegalParamException If this != &rhs.
          */
         SHA1HashProvider& operator =(const SHA1HashProvider& rhs);
 

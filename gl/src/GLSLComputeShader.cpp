@@ -13,8 +13,8 @@
 
 #include "vislib/Array.h"
 #include "vislib/glverify.h"
-#include "the/memory.h"
-#include "the/string.h"
+#include "vislib/memutils.h"
+#include "vislib/String.h"
 #include "vislib/sysfunctions.h"
 
 
@@ -23,10 +23,10 @@
  */
 const char * 
 vislib::graphics::gl::GLSLComputeShader::RequiredExtensions(void) {
-    static the::astring exts = the::astring(
+    static vislib::StringA exts = vislib::StringA(
         vislib::graphics::gl::GLSLShader::RequiredExtensions())
         + " GL_VERSION_4_3 ";
-    return exts.c_str();
+    return exts.PeekBuffer();
 }
 
 
@@ -68,11 +68,11 @@ bool vislib::graphics::gl::GLSLComputeShader::Compile(
  * vislib::graphics::gl::GLSLComputeShader::Compile
  */
 bool vislib::graphics::gl::GLSLComputeShader::Compile(
-        const char **computeShaderSrc, const size_t cntComputeShaderSrc, 
+        const char **computeShaderSrc, const SIZE_T cntComputeShaderSrc, 
         bool insertLineDirective) {
 
     USES_GL_VERIFY;
-    THE_ASSERT(computeShaderSrc != NULL);
+    ASSERT(computeShaderSrc != NULL);
 
     this->Release();
 
@@ -94,13 +94,13 @@ bool vislib::graphics::gl::GLSLComputeShader::Compile(
  */
 bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
         const char *computeShaderFile) {
-    the::astring computeShaderSrc;
+    StringA computeShaderSrc;
 
     if (!vislib::sys::ReadTextFile(computeShaderSrc, computeShaderFile)) {
         return false;
     }
 
-    return this->Compile(computeShaderSrc.c_str());
+    return this->Compile(computeShaderSrc);
 }
 
 
@@ -108,13 +108,13 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
  * vislib::graphics::gl::GLSLComputeShader::CompileFromFile
  */
 bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
-        const char **computeShaderFiles, const size_t cntComputeShaderFiles,
+        const char **computeShaderFiles, const SIZE_T cntComputeShaderFiles,
         bool insertLineDirective) {
 
     // using arrays for automatic cleanup when a 'read' throws an exception
-    Array<the::astring> copmuteShaderSrcs(cntComputeShaderFiles);
+    Array<StringA> copmuteShaderSrcs(cntComputeShaderFiles);
 
-    for(size_t i = 0; i < cntComputeShaderFiles; i++) {
+    for(SIZE_T i = 0; i < cntComputeShaderFiles; i++) {
         if (!vislib::sys::ReadTextFile(copmuteShaderSrcs[i], 
                 computeShaderFiles[i])) {
             return false;
@@ -125,30 +125,30 @@ bool vislib::graphics::gl::GLSLComputeShader::CompileFromFile(
     const char **computeShaderSrcPtrs = new const char*[cntComputeShaderFiles];
 
     try {
-        for(size_t i = 0; i < cntComputeShaderFiles; i++) {
-            computeShaderSrcPtrs[i] = copmuteShaderSrcs[i].c_str();
+        for(SIZE_T i = 0; i < cntComputeShaderFiles; i++) {
+            computeShaderSrcPtrs[i] = copmuteShaderSrcs[i].PeekBuffer();
         }
 
         bool retval = this->Compile(computeShaderSrcPtrs, cntComputeShaderFiles,
             insertLineDirective);
 
-        the::safe_array_delete(computeShaderSrcPtrs);
+        ARY_SAFE_DELETE(computeShaderSrcPtrs);
 
         return retval;
 
         // free pointer arrays on exception
     } catch(OpenGLException e) { // catch OpenGLException to avoid truncating
-        the::safe_array_delete(computeShaderSrcPtrs);
+        ARY_SAFE_DELETE(computeShaderSrcPtrs);
         throw e;
     } catch(CompileException e) {
-        the::safe_array_delete(computeShaderSrcPtrs);
+        ARY_SAFE_DELETE(computeShaderSrcPtrs);
         throw e;
-    } catch(the::exception e) {
-        the::safe_array_delete(computeShaderSrcPtrs);
+    } catch(Exception e) {
+        ARY_SAFE_DELETE(computeShaderSrcPtrs);
         throw e;
     } catch(...) {
-        the::safe_array_delete(computeShaderSrcPtrs);
-        throw the::exception("Unknown Exception", __FILE__, __LINE__);
+        ARY_SAFE_DELETE(computeShaderSrcPtrs);
+        throw Exception("Unknown Exception", __FILE__, __LINE__);
     }
 
     return false; // should be unreachable code!

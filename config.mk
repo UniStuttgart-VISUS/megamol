@@ -21,11 +21,6 @@ LINK = icpc
 endif
 
 
-# Include project default configuration.
-#include ../ExtLibs.mk
-thelibpath := ../thelib
-
-
 # Set Verbosity
 ifndef VISLIB_VERBOSE
     VISLIB_VERBOSE = 0
@@ -62,16 +57,15 @@ endif
 
 
 # Add clib version to the bits field for binary compatibility
-#CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
-#BITSEX := $(BITS)_clib$(CLIBVER)
-BITSEX := $(BITS)
+CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
+BITSEX := $(BITS)_clib$(CLIBVER)
 
 
 # The default input directory
 InputDir := ./src
 
 # The default include directories:
-IncludeDir := ./include $(thelibpath)include
+IncludeDir := ./include
 
 # List of system include directories:
 SystemIncludeDir := /usr/include/g++ /usr/include/g++/bits /usr/include/g++/ext
@@ -93,7 +87,7 @@ ReleaseDir := Release
 
 
 # Common compiler flags
-CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic -fPIC -std=c++11
+CompilerFlags := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) -Wall -ansi -pedantic -fPIC
 
 CPPVersionInfo := $(shell $(CPP) --version | tr "[:upper:]" "[:lower:]")
 ifneq (,$(findstring gcc,$(CPPVersionInfo)))
@@ -118,12 +112,12 @@ ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 
 # Common linker flags
-LinkerFlags := -lX11 -lXext -lXxf86vm -lm
+LinkerFlags := -lX11 -lXext -lXxf86vm -lm -ltinfo
 ifneq ($(VISLIB_ICC), 0)
 	# Katrin says this is required ...
 	LinkerFlags += -lstdc++
 endif
 
 # Additional linker flags for special configurations
-DebugLinkerFlags := $(thelibpath)debug/libthelib.a
-ReleaseLinkerFlags := $(thelibpath)release/libthelib.a
+DebugLinkerFlags := -ltinfo
+ReleaseLinkerFlags := -ltinfo

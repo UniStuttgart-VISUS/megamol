@@ -62,7 +62,7 @@ namespace sys {
          * Enter the crititcal section for the calling thread. The method blocks
          * until the lock is acquired. 
          *
-         * @throws the::system::system_exception If the lock could not be acquired.
+         * @throws SystemException If the lock could not be acquired.
          */
         virtual void Lock(void);
 
@@ -77,9 +77,9 @@ namespace sys {
          *
          * @return true, if the lock was acquired, false, if not.
          *
-         * @throws not_supported_exception On system prior to Windows 
+         * @throws UnsupportedOperationException On system prior to Windows 
          *                                       NT 4.
-         * @throws the::system::system_exception If an error occurred when trying to acquire
+         * @throws SystemException If an error occurred when trying to acquire
          *                         the lock.
          *
          */
@@ -88,7 +88,7 @@ namespace sys {
         /**
          * Leave the critical section.
          *
-         * @throw the::system::system_exception If the lock could not be released.
+         * @throw SystemException If the lock could not be released.
          */
         virtual void Unlock(void);
 
@@ -99,7 +99,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         CriticalSection(const CriticalSection& rhs);
 
@@ -110,7 +110,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         CriticalSection& operator =(const CriticalSection& rhs);
 

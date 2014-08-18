@@ -7,11 +7,11 @@
 
 #include "vislib/CameraRotate2DEulerLookAt.h"
 #define _USE_MATH_DEFINES
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/Cursor2D.h"
 #include "vislib/graphicstypes.h"
 #include "vislib/Quaternion.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 #include <cmath>
 #include <climits>
 
@@ -79,15 +79,15 @@ void vislib::graphics::CameraRotate2DEulerLookAt::Trigger(
         vislib::graphics::AbstractCursorEvent::TriggerReason reason,
         unsigned int param) {
     Cursor2D *cursor = dynamic_cast<Cursor2D *>(caller);
-    THE_ASSERT(cursor != NULL);
+    ASSERT(cursor != NULL);
     // otherwise this would be very strange:
-    THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+    ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
     ImageSpaceType curX, curY;
     ImageSpaceType preX, preY;
 
     if (!this->IsCameraParamsValid()) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, 
+        VLTRACE(vislib::Trace::LEVEL_WARN, 
             "CameraRotate2DLookAt::Trigger camera missing.");
         return;
     }

@@ -12,9 +12,9 @@
 #include "testhelper.h"
 #include "vislib/Event.h"
 #include "vislib/SmartRef.h"
-#include "the/string.h"
+#include "vislib/String.h"
 #include "vislib/RunnableThread.h"
-#include "the/text/string_converter.h"
+#include "vislib/StringConverter.h"
 #include "vislib/IPCommEndPoint.h"
 
 
@@ -23,12 +23,12 @@ static vislib::sys::Event evtServerBound(true);
 
 class Worker : public vislib::sys::Runnable {
 public:
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 
     vislib::SmartRef<vislib::net::AbstractCommEndPoint> EndPoint;
 };
 
-unsigned int Worker::Run(void *userData) {
+DWORD Worker::Run(void *userData) {
     using namespace vislib::net;
 
     Socket::Startup();
@@ -40,28 +40,28 @@ unsigned int Worker::Run(void *userData) {
 
     try {
         if (isServer) {
-            std::cout << "Server binding to " << this->EndPoint->ToStringA().c_str() << " ..." << std::endl;
+            std::cout << "Server binding to " << this->EndPoint->ToStringA().PeekBuffer() << " ..." << std::endl;
             comm->Bind(this->EndPoint);
             comm->Listen();
             std::cout << "Server (" << &(*comm) << ") ready and waiting now ..." << std::endl;
             ::evtServerBound.Set(); // This is actually not totally safe, but enough for a test.
             client = comm->Accept().DynamicCast<TcpCommChannel>();
-            std::cout << "Client acceppted " << client->GetSocket().GetPeerEndPoint().ToStringA().c_str() << "." << std::endl;
+            std::cout << "Client acceppted " << client->GetSocket().GetPeerEndPoint().ToStringA().PeekBuffer() << "." << std::endl;
             comm->Close();
 
             client->Receive(&data, sizeof(data));
             ::AssertEqual("Received 12", data, 12);
 
         } else {
-            std::cout << "Client connecting to " << this->EndPoint->ToStringA().c_str()  << " ..." << std::endl;
+            std::cout << "Client connecting to " << this->EndPoint->ToStringA().PeekBuffer()  << " ..." << std::endl;
             comm->Connect(this->EndPoint);
-            std::cout << "Client (" << &(*comm) << ") connected to " << comm->GetSocket().GetPeerEndPoint().ToStringA().c_str() << "." << std::endl;
+            std::cout << "Client (" << &(*comm) << ") connected to " << comm->GetSocket().GetPeerEndPoint().ToStringA().PeekBuffer() << "." << std::endl;
 
             data = 12;
             comm->Send(&data, sizeof(data));
         }
-    } catch (the::exception e) {
-        std::cerr << e.what() << std::endl;
+    } catch (vislib::Exception e) {
+        std::cerr << e.GetMsgA() << std::endl;
         throw e;
     }
 
@@ -76,13 +76,13 @@ void TestIpCommEndPoint(void) {
     SmartRef<AbstractCommEndPoint> a;
 
     a = IPCommEndPoint::Create("localhost:2222");
-    std::cout << "localhost:2222" << " -> " << a->ToStringA().c_str() << std::endl;
+    std::cout << "localhost:2222" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
 
     a = IPCommEndPoint::Create("127.0.0.1:2222");
-    std::cout << "127.0.0.1:2222" << " -> " << a->ToStringA().c_str() << std::endl;
+    std::cout << "127.0.0.1:2222" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
 
     a = IPCommEndPoint::Create(IPCommEndPoint::IPV4, "www.microsoft.com", 80);
-    std::cout << "IPV4, www.microsoft.com, 80" << " -> " << a->ToStringA().c_str() << std::endl;
+    std::cout << "IPV4, www.microsoft.com, 80" << " -> " << a->ToStringA().PeekBuffer() << std::endl;
 }
 
 

@@ -9,10 +9,10 @@
 #include "DXUT.h"
 #include "D3D9SimpleCameraTest.h"
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/d3dverify.h"
-#include "the/memory.h"
-#include "the/trace.h"
+#include "vislib/memutils.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -31,7 +31,7 @@ D3D9SimpleCameraTest::D3D9SimpleCameraTest(void)
  * D3D9SimpleCameraTest::~D3D9SimpleCameraTest
  */
 D3D9SimpleCameraTest::~D3D9SimpleCameraTest(void) {
-    the::safe_delete(this->mia);
+    SAFE_DELETE(this->mia);
 }
 
 
@@ -43,7 +43,7 @@ HRESULT D3D9SimpleCameraTest::OnD3D9CreateDevice(
         const D3DSURFACE_DESC *pBackBufferSurfaceDesc) {
     using namespace vislib::graphics::d3d;
     USES_D3D_VERIFY;
-    THE_ASSERT(this->logo == NULL);
+    ASSERT(this->logo == NULL);
 
     AbstractTest::OnD3D9CreateDevice(pd3dDevice, pBackBufferSurfaceDesc);
 
@@ -67,7 +67,7 @@ HRESULT D3D9SimpleCameraTest::OnD3D9CreateDevice(
  */
 void D3D9SimpleCameraTest::OnD3D9DestroyDevice(void) {
     this->boxes.Release();
-    the::safe_delete(this->logo);
+    SAFE_DELETE(this->logo);
 }
 
 
@@ -78,7 +78,7 @@ void D3D9SimpleCameraTest::OnD3D9FrameRender(PDIRECT3DDEVICE9 pd3dDevice,
         double fTime, float fElapsedTime) {
     using vislib::graphics::d3d::D3DMatrix;
     USES_D3D_VERIFY;
-    THE_ASSERT(this->logo != NULL);
+    ASSERT(this->logo != NULL);
 
     D3DXMATRIXA16 modelMatrix;              // Model matrix.
     D3DMatrix projMatrix;                   // Projection matrix.
@@ -149,7 +149,7 @@ void D3D9SimpleCameraTest::OnMouse(bool bLeftButtonDown, bool bRightButtonDown,
         bool bMiddleButtonDown, bool bSideButton1Down, bool bSideButton2Down,
         INT nMouseWheelDelta, INT xPos, INT yPos) {
     using vislib::graphics::MouseInteractionAdapter;
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "left = %d, right = %d, middle = %d\n", 
+    VLTRACE(VISLIB_TRCELVL_INFO, "left = %d, right = %d, middle = %d\n", 
         bLeftButtonDown, bRightButtonDown, bMiddleButtonDown);
 
     this->mia->SetMouseButtonState(MouseInteractionAdapter::BUTTON_LEFT, 

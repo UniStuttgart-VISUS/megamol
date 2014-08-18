@@ -8,15 +8,15 @@
 #include "vislib/ReferenceCounted.h"
 
 
-#include "the/assert.h"
-#include "the/trace.h"
+#include "vislib/assert.h"
+#include "vislib/Trace.h"
 
 
 /*
  * vislib::ReferenceCounted::AddRef
  */
-uint32_t vislib::ReferenceCounted::AddRef(void) {
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Add reference to 0x%p, "
+UINT32 vislib::ReferenceCounted::AddRef(void) {
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Add reference to 0x%p, "
         "reference count is now %u.\n", this, this->cntRefs + 1);
     return ++this->cntRefs;
 }
@@ -24,10 +24,10 @@ uint32_t vislib::ReferenceCounted::AddRef(void) {
 /*
  * vislib::ReferenceCounted::Release
  */
-uint32_t vislib::ReferenceCounted::Release(void) {
-    THE_ASSERT(this->cntRefs > 0);
-    uint32_t retval = --this->cntRefs;
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Released object 0x%p, "
+UINT32 vislib::ReferenceCounted::Release(void) {
+    ASSERT(this->cntRefs > 0);
+    UINT32 retval = --this->cntRefs;
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Released object 0x%p, "
         "reference count is now %u.\n", this, this->cntRefs);
     if (this->cntRefs == 0) {
         delete this;
@@ -40,7 +40,7 @@ uint32_t vislib::ReferenceCounted::Release(void) {
  * vislib::ReferenceCounted::ReferenceCounted
  */
 vislib::ReferenceCounted::ReferenceCounted(void) : cntRefs(1) {
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Object 0x%p initialised, "
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Object 0x%p initialised, "
         "reference count is now %u.\n", this, this->cntRefs);
 }
 
@@ -57,7 +57,7 @@ vislib::ReferenceCounted::ReferenceCounted(const ReferenceCounted& rhs)
  * vislib::ReferenceCounted::~ReferenceCounted
  */
 vislib::ReferenceCounted::~ReferenceCounted(void) {
-    THE_ASSERT(this->cntRefs == 0);
+    ASSERT(this->cntRefs == 0);
 }
 
 

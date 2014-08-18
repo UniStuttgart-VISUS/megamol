@@ -20,7 +20,7 @@
 #include "vislib/RunnableThread.h"
 #include "vislib/Semaphore.h"
 #include "vislib/SingleLinkedList.h"
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/ThreadPoolListener.h"
 
 
@@ -59,7 +59,7 @@ namespace sys {
          *
          * @return The number of items actually removed.
          */
-        size_t AbortPendingUserWorkItems(void);
+        SIZE_T AbortPendingUserWorkItems(void);
 
         /**
          * Add a new ThreadPoolListener to be informed about user work items 
@@ -76,28 +76,28 @@ namespace sys {
          *
          * @return The number of threads currently working.
          */
-        size_t GetActiveThreads(void) const;
+        SIZE_T GetActiveThreads(void) const;
 
         /**
          * Answer the number of threads currently idling.
          *
          * @return The number of threads currently idling.
          */
-        size_t GetAvailableThreads(void) const;
+        SIZE_T GetAvailableThreads(void) const;
 
         /**
          * Answer the total number of threads available in the pool.
          *
          * @return The total number of threads in the pool.
          */
-        size_t GetTotalThreads(void) const;
+        SIZE_T GetTotalThreads(void) const;
 
         /**
          * Answer the number of work items which are currently in the queue.
          *
          * @return The number of work items currently in the queue.
          */
-        size_t CountUserWorkItems(void) const;
+        SIZE_T CountUserWorkItems(void) const;
 
         /**
          * Queue a new work item for execution in a pool thread.
@@ -118,8 +118,8 @@ namespace sys {
          *                             number of threads is one for each 
          *                             available processor.
          *
-         * @throws invalid_operation_exception If the work item queue has been closed.
-         * @throws argument_exception If 'runnable' is NULL.
+         * @throws IllegalStateException If the work item queue has been closed.
+         * @throws IllegalParamException If 'runnable' is NULL.
          */
         void QueueUserWorkItem(Runnable *runnable, void *userData = NULL, 
             const bool createDefaultThreads = true);
@@ -143,8 +143,8 @@ namespace sys {
          *                             number of threads is one for each 
          *                             available processor.
          *
-         * @throws invalid_operation_exception If the work item queue has been closed.
-         * @throws argument_exception If 'runnable' is NULL.
+         * @throws IllegalStateException If the work item queue has been closed.
+         * @throws IllegalParamException If 'runnable' is NULL.
          */
         void QueueUserWorkItem(Runnable::Function runnable, 
             void *userData = NULL, const bool createDefaultThreads = true);
@@ -167,9 +167,9 @@ namespace sys {
          *
          * @param threadCount The number of threads to use.
          *
-         * @throws argument_exception If 'threadCount' is too small.
+         * @throws IllegalParamException If 'threadCount' is too small.
          */
-        void SetThreadCount(const size_t threadCount);
+        void SetThreadCount(const SIZE_T threadCount);
 
         /**
          * Wait for all queued or running work items to be completed and exit 
@@ -190,7 +190,7 @@ namespace sys {
          * @return true If the operation completed successfully, 
          *         false if a timeout occurred.
          */
-        inline bool Wait(const unsigned int timeout = Event::TIMEOUT_INFINITE) {
+        inline bool Wait(const DWORD timeout = Event::TIMEOUT_INFINITE) {
             return this->evtAllCompleted.Wait(timeout);
         }
 
@@ -222,7 +222,7 @@ namespace sys {
              *
              * @return 0, always.
              */
-            virtual unsigned int Run(void *pool);
+            virtual DWORD Run(void *pool);
 
         private:
 
@@ -248,7 +248,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         ThreadPool(const ThreadPool& rhs);
 
@@ -271,7 +271,7 @@ namespace sys {
          * @param exitCode The exit code of the work item.
          */
         void fireUserWorkItemCompleted(WorkItem& workItem, 
-            const unsigned int exitCode);
+            const DWORD exitCode);
 
         /**
          * Queue a new work item for execution in a pool thread.
@@ -285,8 +285,8 @@ namespace sys {
          *                             number of threads is one for each 
          *                             available processor.
          * 
-         * @throws invalid_operation_exception If the work item queue has been closed.
-         * @throws argument_exception If both, the 'runnable' and the 
+         * @throws IllegalStateException If the work item queue has been closed.
+         * @throws IllegalParamException If both, the 'runnable' and the 
          *                               'runnnableFunction' in the 'workItem' 
          *                               are both NULL or not NULL.
          */
@@ -300,15 +300,15 @@ namespace sys {
          *
          * @return *this
          *
-         * @throws the::argument_exception if (this != &rhs).
+         * @throws IllegalParameException if (this != &rhs).
          */
         ThreadPool& operator =(const ThreadPool& rhs);
 
         /** The number of threads currently working on some work item. */
-        size_t cntActiveThreads;
+        SIZE_T cntActiveThreads;
 
         /** The total number of threads (active and idling). */
-        size_t cntTotalThreads;
+        SIZE_T cntTotalThreads;
 
         /** 
          * This event is in signaled state while no work item is pending or

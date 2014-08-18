@@ -59,12 +59,12 @@ void DiscoveryTestApp::Initialise(CmdLineProviderW& inOutCmdLine) {
  */
 void DiscoveryTestApp::OnNodeFound(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer) throw() {
-    std::cout << "Discovery service \"" << src.GetName().c_str() 
-        << "\" discovered new peer node " << src[hPeer].ToStringA().c_str()
+    std::cout << "Discovery service \"" << src.GetName().PeekBuffer() 
+        << "\" discovered new peer node " << src[hPeer].ToStringA().PeekBuffer()
         << std::endl
         << "Now, the following nodes are known to the service:" << std::endl;
-    for (size_t i = 0; i < src.CountPeers(); i++) {
-        std::cout << "\t" << src[i].ToStringA().c_str() << std::endl;
+    for (SIZE_T i = 0; i < src.CountPeers(); i++) {
+        std::cout << "\t" << src[i].ToStringA().PeekBuffer() << std::endl;
     }
 
     const char *msg = "Hello, nodes!";
@@ -80,13 +80,13 @@ void DiscoveryTestApp::OnNodeFound(DiscoveryService& src,
 void DiscoveryTestApp::OnNodeLost(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer,
         const DiscoveryListener::NodeLostReason reason) throw() {
-    std::cout << "Discovery service " << src.GetName().c_str() 
-        << " lost peer node " << src[hPeer].ToStringA().c_str()
+    std::cout << "Discovery service " << src.GetName().PeekBuffer() 
+        << " lost peer node " << src[hPeer].ToStringA().PeekBuffer()
         << " for reason " << reason 
         << std::endl
         << "from the following list of known nodes:" << std::endl;
-    for (size_t i = 0; i < src.CountPeers(); i++) {
-        std::cout << "\t" << src[hPeer].ToStringA().c_str() << std::endl;
+    for (SIZE_T i = 0; i < src.CountPeers(); i++) {
+        std::cout << "\t" << src[hPeer].ToStringA().PeekBuffer() << std::endl;
     }
 }
 
@@ -97,10 +97,10 @@ void DiscoveryTestApp::OnNodeLost(DiscoveryService& src,
 void DiscoveryTestApp::OnUserMessage(DiscoveryService& src,
         const DiscoveryService::PeerHandle& hPeer,
         const bool isClusterMember,
-        const uint32_t msgType, const uint8_t *msgBody) throw() {
-    std::cout << "Discovery service " << src.GetName().c_str() 
+        const UINT32 msgType, const BYTE *msgBody) throw() {
+    std::cout << "Discovery service " << src.GetName().PeekBuffer() 
         << " received user message " << msgType 
-        << " from peer node " << src[hPeer].ToStringA().c_str()
+        << " from peer node " << src[hPeer].ToStringA().PeekBuffer()
         << std::endl;
 }
 
@@ -108,9 +108,9 @@ void DiscoveryTestApp::OnUserMessage(DiscoveryService& src,
 /*
  * DiscoveryTestApp::Run
  */
-unsigned int DiscoveryTestApp::Run(void) {
+DWORD DiscoveryTestApp::Run(void) {
     char dowel;
-    size_t cntCfgs = 0;
+    SIZE_T cntCfgs = 0;
     IPAddress adapter;
     IPAddress bcastAddress;
     DiscoveryService::DiscoveryConfig cfg;
@@ -118,8 +118,8 @@ unsigned int DiscoveryTestApp::Run(void) {
     try {
         Socket::Startup();
 
-        DNS::GetHostAddress(adapter, SystemInformation::ComputerNameW().c_str());
-        //for (unsigned int i = 0; i < NetworkInformation::AdapterCount(); i++) {
+        DNS::GetHostAddress(adapter, SystemInformation::ComputerNameW());
+        //for (UINT i = 0; i < NetworkInformation::AdapterCount(); i++) {
         //    NetworkInformation::Adapter ai = NetworkInformation::AdapterInformation(i);
         //    if ((adapter & ai.SubnetMask()) == (ai.BroadcastAddress() & ai.SubnetMask())) {
         //        bcastAddress = ai.BroadcastAddress();
@@ -135,8 +135,8 @@ unsigned int DiscoveryTestApp::Run(void) {
         //this->cds.Start("MegaMolRenderCluster", &cfg, 1, 2, 0/*DiscoveryService::FLAG_SHARE_SOCKETS*/, DiscoveryService::DEFAULT_REQUEST_INTERVAL, 1);
 
         Socket::Cleanup();
-    } catch (the::exception& e) {
-        std::cerr << "VISlib exception caught: " << e.what() << std::endl;
+    } catch (vislib::Exception& e) {
+        std::cerr << "VISlib exception caught: " << e.GetMsgA() << std::endl;
     } catch (...) {
         std::cerr << "Unknown exception caught." << std::endl;
     }
@@ -146,8 +146,8 @@ unsigned int DiscoveryTestApp::Run(void) {
     try {
         this->cds.Stop();
         Socket::Cleanup();
-    } catch (the::exception& e) {
-        std::cerr << "VISlib exception caught: " << e.what() << std::endl;
+    } catch (vislib::Exception& e) {
+        std::cerr << "VISlib exception caught: " << e.GetMsgA() << std::endl;
     } catch (...) {
         std::cerr << "Unknown exception caught." << std::endl;
     }

@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/Array.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/AbstractVector.h"
 #include "vislib/AbstractMatrix.h"
 #include "vislib/mathfunctions.h"
@@ -66,8 +66,8 @@ namespace math {
      */
     template<class T, unsigned int D, MatrixLayout L, class S1, class S2>
     void CalcCovarianceMatrix(AbstractMatrix<T, D, L, S1>& outMatrix,
-            const AbstractVector<T, D, S2> *relCoords, size_t relCoordsCnt) {
-        THE_ASSERT(relCoords != NULL);
+            const AbstractVector<T, D, S2> *relCoords, SIZE_T relCoordsCnt) {
+        ASSERT(relCoords != NULL);
 
         for (unsigned int x = 0; x < D; x++) {
             for (unsigned int y = 0; y < D; y++) {
@@ -76,7 +76,7 @@ namespace math {
         }
 
         if (relCoordsCnt > 0) {
-            for (size_t i = 0; i < relCoordsCnt; i++) {
+            for (SIZE_T i = 0; i < relCoordsCnt; i++) {
                 for (unsigned int x = 0; x < D; x++) {
                     for (unsigned int y = 0; y < D; y++) {
                         outMatrix(x, y) += (relCoords[i][x] * relCoords[i][y]);
@@ -98,35 +98,35 @@ namespace math {
      * @param cnt The number of eigenvectors/eigenvalues
      */
     template<class T, unsigned int D, class S>
-    void SortEigenvectors(AbstractVector<T, D, S> *evec, T *eval, size_t cnt) {
+    void SortEigenvectors(AbstractVector<T, D, S> *evec, T *eval, SIZE_T cnt) {
         if (cnt < 2) return; // lol
 
         if (cnt < 5) {
             if (eval[0] > eval[1]) {
-                std::swap(eval[0], eval[1]);
-                std::swap(evec[0], evec[1]);
+                vislib::math::Swap(eval[0], eval[1]);
+                vislib::math::Swap(evec[0], evec[1]);
             }
             if (cnt > 2) {
                 if (eval[0] > eval[2]) {
-                    std::swap(eval[0], eval[2]);
-                    std::swap(evec[0], evec[2]);
+                    vislib::math::Swap(eval[0], eval[2]);
+                    vislib::math::Swap(evec[0], evec[2]);
                 }
                 if (eval[1] > eval[2]) {
-                    std::swap(eval[1], eval[2]);
-                    std::swap(evec[1], evec[2]);
+                    vislib::math::Swap(eval[1], eval[2]);
+                    vislib::math::Swap(evec[1], evec[2]);
                 }
                 if (cnt == 4) {
                     if (eval[0] > eval[3]) {
-                        std::swap(eval[0], eval[3]);
-                        std::swap(evec[0], evec[3]);
+                        vislib::math::Swap(eval[0], eval[3]);
+                        vislib::math::Swap(evec[0], evec[3]);
                     }
                     if (eval[1] > eval[3]) {
-                        std::swap(eval[1], eval[3]);
-                        std::swap(evec[1], evec[3]);
+                        vislib::math::Swap(eval[1], eval[3]);
+                        vislib::math::Swap(evec[1], evec[3]);
                     }
                     if (eval[2] > eval[3]) {
-                        std::swap(eval[2], eval[3]);
-                        std::swap(evec[2], evec[3]);
+                        vislib::math::Swap(eval[2], eval[3]);
+                        vislib::math::Swap(evec[2], evec[3]);
                     }
                 }
             }
@@ -136,12 +136,12 @@ namespace math {
         // more than four dimensions. I so don't care
         vislib::Array<vislib::Pair<T, Vector<T, D> > > tb;
         tb.SetCount(cnt);
-        for (size_t i = 0; i < cnt; i++) {
+        for (SIZE_T i = 0; i < cnt; i++) {
             tb[i].SetFirst(eval[i]);
             tb[i].SetSecond(evec[i]);
         }
         tb.Sort(&ComparePairsFirst<T, Vector<T, D> >);
-        for (size_t i = 0; i < cnt; i++) {
+        for (SIZE_T i = 0; i < cnt; i++) {
             eval[i] = tb[i].First();
             evec[i] = tb[i].Second();
         }

@@ -13,13 +13,13 @@
 #include <fcntl.h>  // For O_CREAT. Thank you for documenting that at sem_open.
 #endif /* _!WIN32 */
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/error.h"
-#include "the/argument_exception.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/sysfunctions.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -30,7 +30,7 @@ vislib::sys::Semaphore::Semaphore(long initialCount, long maxCount) {
 
 #ifdef _WIN32
     this->handle = ::CreateSemaphore(NULL, initialCount, maxCount, NULL);
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     this->handle = new sem_t;
@@ -60,22 +60,22 @@ vislib::sys::Semaphore::Semaphore(const char *name, long initialCount,
             *outIsNew = true;
         }
     }
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     if (name != NULL) {
         this->name = TranslateWinIpc2PosixName(name);
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open named POSIX semaphore \"%s\"\n", 
-            this->name.c_str());
-        if ((this->handle = ::sem_open(this->name.c_str(), 0, 0, 0)) 
+        VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%s\"\n", 
+            this->name.PeekBuffer());
+        if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0)) 
                 == SEM_FAILED) {
-            this->handle = ::sem_open(this->name.c_str(), O_CREAT, 
+            this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, 
                 DFT_PERMS, initialCount);
             if (outIsNew != NULL) {
                 *outIsNew = true;
             }
         }
-        THE_ASSERT(this->handle !=  SEM_FAILED);
+        ASSERT(this->handle !=  SEM_FAILED);
     } else {
         this->handle = new sem_t;
         ::sem_init(this->handle, 0, initialCount); 
@@ -108,22 +108,22 @@ vislib::sys::Semaphore::Semaphore(const wchar_t *name, long initialCount,
             *outIsNew = true;
         }
     }
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     if (name != NULL) {
-        the::text::string_converter::convert(this->name, TranslateWinIpc2PosixName(name));
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
-            this->name.c_str());
-        if ((this->handle = ::sem_open(this->name.c_str(), 0, 0, 0)) 
+        this->name = TranslateWinIpc2PosixName(name);
+        VLTRACE(Trace::LEVEL_VL_INFO, "Open named POSIX semaphore \"%ls\"\n", 
+            this->name.PeekBuffer());
+        if ((this->handle = ::sem_open(this->name.PeekBuffer(), 0, 0, 0)) 
                 == SEM_FAILED) {
-            this->handle = ::sem_open(this->name.c_str(), O_CREAT, 
+            this->handle = ::sem_open(this->name.PeekBuffer(), O_CREAT, 
                 DFT_PERMS, initialCount);
             if (outIsNew != NULL) {
                 *outIsNew = true;
             }
         }
-        THE_ASSERT(this->handle !=  SEM_FAILED);
+        ASSERT(this->handle !=  SEM_FAILED);
     } else {
         this->handle = new sem_t;
         ::sem_init(this->handle, 0, initialCount);
@@ -144,11 +144,11 @@ vislib::sys::Semaphore::~Semaphore(void) {
     ::CloseHandle(this->handle);
 
 #else /* _WIN32 */
-    if (this->name.empty()) {
+    if (this->name.IsEmpty()) {
         ::sem_destroy(this->handle);
-        the::safe_delete(this->handle);
+        SAFE_DELETE(this->handle);
     } else {
-        ::sem_unlink(this->name.c_str());
+        ::sem_unlink(this->name.PeekBuffer());
         ::sem_close(this->handle);
         // mueller: I assume that this->handle is owned by the system if it was
         // returned by sem_open, but the documentation says nothing about that.
@@ -174,16 +174,16 @@ void vislib::sys::Semaphore::Lock(void) {
 
         case WAIT_TIMEOUT:
             /* Waiting infinitely should not timeout. */
-            THE_ASSERT(false);
+            ASSERT(false);
             break;
 
         default:
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     if (::sem_wait(this->handle) == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
 }
@@ -202,7 +202,7 @@ bool vislib::sys::Semaphore::TryLock(void) {
         if (error == EAGAIN) {
             return false;
         } else {
-            throw the::system::system_exception(error, __FILE__, __LINE__);
+            throw SystemException(error, __FILE__, __LINE__);
         }
     }
 
@@ -214,7 +214,7 @@ bool vislib::sys::Semaphore::TryLock(void) {
 /*
  * vislib::sys::Semaphore::TryLock
  */
-bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
+bool vislib::sys::Semaphore::TryLock(const DWORD timeout) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, timeout)) {
 
@@ -227,7 +227,7 @@ bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
             return false;
 
         default:
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -242,7 +242,7 @@ bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
         if ((error == EAGAIN) || (error == ETIMEDOUT)) {
             return false;
         } else {
-            throw the::system::system_exception(error, __FILE__, __LINE__);
+            throw SystemException(error, __FILE__, __LINE__);
         }
     }
 
@@ -257,12 +257,12 @@ bool vislib::sys::Semaphore::TryLock(const unsigned int timeout) {
 void vislib::sys::Semaphore::Unlock(void) {
 #ifdef _WIN32
     if (::ReleaseSemaphore(this->handle, 1, NULL) != TRUE) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     if (::sem_post(this->handle) == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
 }
@@ -272,7 +272,7 @@ void vislib::sys::Semaphore::Unlock(void) {
  * vislib::sys::Semaphore::Semaphore
  */
 vislib::sys::Semaphore::Semaphore(const Semaphore& rhs) {
-    throw the::not_supported_exception("vislib::sys::Semaphore::Semaphore",
+    throw UnsupportedOperationException("vislib::sys::Semaphore::Semaphore",
         __FILE__, __LINE__);
 }
 
@@ -292,9 +292,9 @@ void vislib::sys::Semaphore::enforceParamAssertions(long& inOutInitialCount,
         inOutInitialCount = inOutMaxCount;
     }
 
-    THE_ASSERT(inOutMaxCount > 0);
-    THE_ASSERT(inOutInitialCount >= 0);
-    THE_ASSERT(inOutInitialCount <= inOutMaxCount);
+    ASSERT(inOutMaxCount > 0);
+    ASSERT(inOutInitialCount >= 0);
+    ASSERT(inOutInitialCount <= inOutMaxCount);
 
 }
 
@@ -312,7 +312,7 @@ const int vislib::sys::Semaphore::DFT_PERMS = 0666;
 vislib::sys::Semaphore& vislib::sys::Semaphore::operator =(
         const Semaphore& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

@@ -25,15 +25,15 @@
 #include <stdio.h> 
 #endif /* _WIN32 */
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/error.h"
-#include "the/argument_exception.h"
-#include "the/system/io/io_exception.h"
-#include "the/text/string_converter.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IOException.h"
+#include "vislib/StringConverter.h"
 #include "vislib/sysfunctions.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 #ifndef _WIN32
@@ -80,21 +80,21 @@ namespace sys {
  */
 vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
 #ifdef _WIN32
-    the::astring tempName;
+    vislib::StringA tempName;
     File *retval = new File();
-    if ((retval->handle = ::CreateFileA(CreateTempFileName(tempName).c_str(),
+    if ((retval->handle = ::CreateFileA(CreateTempFileName(tempName),
             GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
             FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, NULL))
             == INVALID_HANDLE_VALUE) {
-        the::safe_delete(retval);
-        throw the::system::system_exception(__FILE__, __LINE__);
+        SAFE_DELETE(retval);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     TmpFile *retval = new TmpFile();
     if ((retval->hFile = ::tmpfile()) == NULL) {
-        the::safe_delete(retval);
-        throw the::system::system_exception(__FILE__, __LINE__);
+        SAFE_DELETE(retval);
+        throw SystemException(__FILE__, __LINE__);
     } else {
         retval->handle = ::fileno(retval->hFile);
     }
@@ -108,10 +108,10 @@ vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
 /*
  * vislib::sys::File::CreateTempFileName
  */
-the::astring& vislib::sys::File::CreateTempFileName(the::astring& outFn) {
+vislib::StringA& vislib::sys::File::CreateTempFileName(vislib::StringA& outFn) {
 #ifdef _WIN32
-    const unsigned int BUFFER_SIZE = 4096;
-    unsigned int bufSize=BUFFER_SIZE;
+    const DWORD BUFFER_SIZE = 4096;
+    DWORD bufSize=BUFFER_SIZE;
     char tempName[MAX_PATH];
     char tempPath[BUFFER_SIZE];
 
@@ -134,10 +134,10 @@ the::astring& vislib::sys::File::CreateTempFileName(the::astring& outFn) {
 /*
  * vislib::sys::File::CreateTempFileName
  */
-the::wstring& vislib::sys::File::CreateTempFileName(the::wstring& outFn) {
+vislib::StringW& vislib::sys::File::CreateTempFileName(vislib::StringW& outFn) {
 #ifdef _WIN32
-    const unsigned int BUFFER_SIZE = 4096;
-    unsigned int bufSize=BUFFER_SIZE;
+    const DWORD BUFFER_SIZE = 4096;
+    DWORD bufSize=BUFFER_SIZE;
     wchar_t tempName[MAX_PATH];
     wchar_t tempPath[BUFFER_SIZE];
 
@@ -147,9 +147,9 @@ the::wstring& vislib::sys::File::CreateTempFileName(the::wstring& outFn) {
     outFn = tempName;
 
 #else /* _WIN32 */
-    the::astring outFnA;
+    vislib::StringA outFnA;
     CreateTempFileName(outFnA);
-    the::text::string_converter::convert(outFn, outFnA);
+    outFn = outFnA;
 
 #endif /* _WIN32 */
 
@@ -179,7 +179,7 @@ bool vislib::sys::File::Delete(const wchar_t *filename) {
     return (::DeleteFileW(filename) == TRUE); 
 
 #else /* _WIN32 */
-    return (::remove(THE_W2A(filename)) == 0);
+    return (::remove(W2A(filename)) == 0);
 
 #endif /* _WIN32 */
 }
@@ -212,7 +212,7 @@ bool vislib::sys::File::Exists(const wchar_t *filename) {
 
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(THE_W2A(filename), &buf); 
+    int i = stat(W2A(filename), &buf); 
     return (i == 0);
 
 #endif /* _WIN32 */
@@ -226,14 +226,14 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(const char *filename) {
 #ifdef _WIN32
     WIN32_FILE_ATTRIBUTE_DATA buf;
     if (::GetFileAttributesExA(filename, GetFileExInfoStandard, &buf) == 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
     return (static_cast<FileSize>(buf.nFileSizeHigh) << 32)
         + static_cast<FileSize>(buf.nFileSizeLow);
 #else /* _WIN32 */
     struct stat buf;
     int i = stat(filename, &buf); 
-    if (i != 0) throw the::exception(__FILE__, __LINE__);
+    if (i != 0) throw vislib::Exception(__FILE__, __LINE__);
     return buf.st_size;
 #endif /* _WIN32 */
 }
@@ -246,14 +246,14 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(const wchar_t *filename) 
 #ifdef _WIN32
     WIN32_FILE_ATTRIBUTE_DATA buf;
     if (::GetFileAttributesExW(filename, GetFileExInfoStandard, &buf) == 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
     return (static_cast<FileSize>(buf.nFileSizeHigh) << 32)
         + static_cast<FileSize>(buf.nFileSizeLow);
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(THE_W2A(filename), &buf); 
-    if (i != 0) throw the::exception(__FILE__, __LINE__);
+    int i = stat(W2A(filename), &buf); 
+    if (i != 0) throw vislib::Exception(__FILE__, __LINE__);
     return buf.st_size;
 #endif /* _WIN32 */
 }
@@ -292,7 +292,7 @@ bool vislib::sys::File::IsDirectory(const wchar_t *filename) {
 
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(THE_W2A(filename), &buf); 
+    int i = stat(W2A(filename), &buf); 
     return (i == 0) && S_ISDIR(buf.st_mode);
 
 #endif /* _WIN32 */
@@ -332,7 +332,7 @@ bool vislib::sys::File::IsFile(const wchar_t *filename) {
 
 #else /* _WIN32 */
     struct stat buf;
-    int i = stat(THE_W2A(filename), &buf); 
+    int i = stat(W2A(filename), &buf); 
     return (i == 0) && S_ISREG(buf.st_mode);
 
 #endif /* _WIN32 */
@@ -358,7 +358,7 @@ bool vislib::sys::File::Rename(const wchar_t *oldName, const wchar_t *newName) {
 #ifdef _WIN32
     return (::MoveFileW(oldName, newName) == TRUE);
 #else /* _WIN32 */
-    return ::rename(THE_W2A(oldName), THE_W2A(newName));
+    return ::rename(W2A(oldName), W2A(newName));
 #endif /* _WIN32 */
 }
 
@@ -412,7 +412,7 @@ void vislib::sys::File::Flush(void) {
 #else /* _WIN32 */
     if (::fsync(this->handle) != 0) {
 #endif /* _WIN32 */
-        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
+        throw IOException(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -435,7 +435,7 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(void) const {
 
 #endif /* _WIN32 */
     } else {
-        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
+        throw IOException(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -461,15 +461,15 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
     this->Close();
 
 #ifdef _WIN32
-    unsigned int access;
-    unsigned int share;
-    unsigned int create;
+    DWORD access;
+    DWORD share;
+    DWORD create;
 
     switch (accessMode) {
         case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
         case READ_ONLY: access = GENERIC_READ; break;
         case WRITE_ONLY: access = GENERIC_WRITE; break;
-        default: throw the::argument_exception("accessMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
     }
 
     switch (shareMode) {
@@ -477,7 +477,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case SHARE_READ: share = FILE_SHARE_READ; break;
         case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
         case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
-        default: throw the::argument_exception("shareMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("shareMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -485,7 +485,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case CREATE_OVERWRITE: create = CREATE_ALWAYS; break;
         case OPEN_ONLY: create = OPEN_EXISTING; break;
         case OPEN_CREATE: create = OPEN_ALWAYS; break;
-        default: throw the::argument_exception("creationMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
     }
 
     this->handle = ::CreateFileA(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -500,7 +500,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case READ_WRITE: oflag |= O_RDWR; break;
         case READ_ONLY: oflag |= O_RDONLY; break;
         case WRITE_ONLY: oflag |= O_WRONLY; break;
-        default: throw the::argument_exception("accessMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -517,7 +517,7 @@ bool vislib::sys::File::Open(const char *filename, const AccessMode accessMode,
         case OPEN_CREATE: 
             if (!fileExists) oflag |= O_CREAT;
             break;
-        default: throw the::argument_exception("creationMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
     }
 
     this->handle = ::open(filename, oflag, 
@@ -536,15 +536,15 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
     this->Close();
 
 #ifdef _WIN32
-    unsigned int access;
-    unsigned int share;
-    unsigned int create;
+    DWORD access;
+    DWORD share;
+    DWORD create;
 
     switch (accessMode) {
         case READ_WRITE: access = GENERIC_READ | GENERIC_WRITE; break;
         case READ_ONLY: access = GENERIC_READ; break;
         case WRITE_ONLY: access = GENERIC_WRITE; break;
-        default: throw the::argument_exception("accessMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("accessMode", __FILE__, __LINE__);
     }
 
     switch (shareMode) {
@@ -552,7 +552,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
         case SHARE_READ: share = FILE_SHARE_READ; break;
         case SHARE_WRITE: share = FILE_SHARE_WRITE; break;
         case SHARE_READWRITE: share = FILE_SHARE_READ | FILE_SHARE_WRITE; break;
-        default: throw the::argument_exception("shareMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("shareMode", __FILE__, __LINE__);
     }
 
     switch (creationMode) {
@@ -560,7 +560,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
         case CREATE_OVERWRITE: create = CREATE_ALWAYS; break;
         case OPEN_ONLY: create = OPEN_EXISTING; break;
         case OPEN_CREATE: create = OPEN_ALWAYS; break;
-        default: throw the::argument_exception("creationMode", __FILE__, __LINE__);
+        default: throw IllegalParamException("creationMode", __FILE__, __LINE__);
     }
 
     this->handle = ::CreateFileW(filename, access, share, NULL, create, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -568,7 +568,7 @@ bool vislib::sys::File::Open(const wchar_t *filename, const AccessMode accessMod
 
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefmäßige Unicode-API.
-    return this->Open(THE_W2A(filename), accessMode, shareMode, creationMode);
+    return this->Open(W2A(filename), accessMode, shareMode, creationMode);
 
 #endif /* _WIN32 */
 }
@@ -581,12 +581,12 @@ vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf,
                                                     const FileSize bufSize) {
 #ifdef _WIN32
     DWORD readBytes;
-    if (::ReadFile(this->handle, outBuf, static_cast<unsigned int>(bufSize), 
+    if (::ReadFile(this->handle, outBuf, static_cast<DWORD>(bufSize), 
             &readBytes, NULL)) {
         return readBytes;
 
 #else /* _WIN32 */
-    THE_ASSERT(bufSize < INT_MAX);
+    ASSERT(bufSize < INT_MAX);
 
     int readBytes = ::read(this->handle, outBuf, bufSize);
     if (readBytes != -1) {
@@ -594,7 +594,7 @@ vislib::sys::File::FileSize vislib::sys::File::Read(void *outBuf,
 
 #endif /* _WIN32 */
     } else {
-        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
+        throw IOException(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -609,7 +609,7 @@ vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset,
     LARGE_INTEGER n;
     o.QuadPart = offset; 
 
-    if (::SetFilePointerEx(this->handle, o, &n, static_cast<unsigned int>(from))) {
+    if (::SetFilePointerEx(this->handle, o, &n, static_cast<DWORD>(from))) {
         return n.QuadPart;		
 
 #else /* _WIN32 */
@@ -620,7 +620,7 @@ vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset,
 
 #endif /* _WIN32 */
     } else {
-        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
+        throw IOException(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -645,7 +645,7 @@ vislib::sys::File::FileSize vislib::sys::File::Tell(void) const {
 
 #endif /* _WIN32 */
     } else {
-        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
+        throw IOException(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -657,12 +657,12 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
                                                      const FileSize bufSize) {
 #ifdef _WIN32
     DWORD writtenBytes;
-    if (::WriteFile(this->handle, buf, static_cast<unsigned int>(bufSize), 
+    if (::WriteFile(this->handle, buf, static_cast<DWORD>(bufSize), 
             &writtenBytes, NULL)) {
         return writtenBytes;
 
 #else /* _WIN32 */
-    THE_ASSERT(bufSize < INT_MAX);
+    ASSERT(bufSize < INT_MAX);
 
     int writtenBytes = ::write(this->handle, buf, bufSize);
     if (writtenBytes != -1) {
@@ -670,7 +670,7 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
 
 #endif /* _WIN32 */
     } else {
-        throw the::system::io::io_exception(::GetLastError(), __FILE__, __LINE__);
+        throw IOException(::GetLastError(), __FILE__, __LINE__);
     }
 }
 
@@ -679,7 +679,7 @@ vislib::sys::File::FileSize vislib::sys::File::Write(const void *buf,
  * vislib::sys::File::File
  */
 vislib::sys::File::File(const File& rhs) {
-    throw the::not_supported_exception("vislib::sys::File::File", 
+    throw UnsupportedOperationException("vislib::sys::File::File", 
         __FILE__, __LINE__);
 }
 
@@ -689,7 +689,7 @@ vislib::sys::File::File(const File& rhs) {
  */
 vislib::sys::File& vislib::sys::File::operator =(const File& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

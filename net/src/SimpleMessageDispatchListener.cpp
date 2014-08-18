@@ -9,9 +9,9 @@
 #include "vislib/SimpleMessageDispatchListener.h"
 
 #include "vislib/AbstractSimpleMessage.h"
-#include "the/exception.h"
+#include "vislib/Exception.h"
 #include "vislib/SimpleMessageDispatcher.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
 
 /*
@@ -19,7 +19,8 @@
  */
 vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener(
         void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("SimpleMessageDispatchListener::SimpleMessageDispatchListener",
+        __FILE__, __LINE__);
 }
 
 
@@ -28,7 +29,8 @@ vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener(
  */
 vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(
         void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("SimpleMessageDispatchListener::"
+        "~SimpleMessageDispatchListener", __FILE__, __LINE__);
 }
 
 
@@ -37,8 +39,9 @@ vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(
  */
 bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
         SimpleMessageDispatcher& src, 
-        const the::exception& exception) throw() {
-    THE_STACK_TRACE;
+        const vislib::Exception& exception) throw() {
+    VLSTACKTRACE("SimpleMessageDispatchListener::OnCommunicationError", 
+        __FILE__, __LINE__);
     return true;
 }
 
@@ -48,7 +51,8 @@ bool vislib::net::SimpleMessageDispatchListener::OnCommunicationError(
  */
 void vislib::net::SimpleMessageDispatchListener::OnDispatcherExited(
         SimpleMessageDispatcher& src) throw() {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("SimpleMessageDispatchListener::OnDispatcherExited", 
+        __FILE__, __LINE__);
 }
 
 
@@ -57,7 +61,8 @@ void vislib::net::SimpleMessageDispatchListener::OnDispatcherExited(
  */
 void vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted(
         SimpleMessageDispatcher& src) throw() {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("SimpleMessageDispatchListener::OnDispatcherStarted", 
+        __FILE__, __LINE__);
 }
 
 
@@ -66,7 +71,8 @@ void vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted(
 // */
 //bool vislib::net::SimpleMessageDispatchListener::OnMessageBodyReceived(
 //        const AbstractSimpleMessageHeader& header, const void *body) throw() {
-//    THE_STACK_TRACE;
+//    VLSTACKTRACE("SimpleMessageDispatchListener::OnMessageBodyReceived", 
+//        __FILE__, __LINE__);
 //    return true;
 //}
 //
@@ -79,7 +85,8 @@ void vislib::net::SimpleMessageDispatchListener::OnDispatcherStarted(
 //        SimpleMessageSize& outDstSize, 
 //        SimpleMessageSize& outOffset, 
 //        const AbstractSimpleMessageHeader& header) throw() {
-//    THE_STACK_TRACE;    
+//    VLSTACKTRACE("SimpleMessageDispatchListener::OnMessageHeaderReceived", 
+//        __FILE__, __LINE__);    
 //    outDst = NULL;
 //    outDstSize = 0;
 //}

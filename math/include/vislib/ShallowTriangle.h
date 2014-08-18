@@ -34,7 +34,7 @@ namespace math {
          *                   pointer.
          */
         explicit inline ShallowTriangle(T *vertices) {
-            THE_ASSERT(vertices != NULL);
+            ASSERT(vertices != NULL);
             this->vertices = vertices;
         }
 

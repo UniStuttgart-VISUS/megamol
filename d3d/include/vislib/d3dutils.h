@@ -15,10 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include <d3d9.h>
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
 #ifndef SAFE_RELEASE
@@ -48,7 +45,6 @@ namespace d3d {
         CRITERION_HEIGHT    //< Maximise the screen height.
     } FullscreenSizeCriterion;
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
     /**
      * Answer the dimensions of the backbuffer of the specified device.
      *
@@ -60,9 +56,7 @@ namespace d3d {
      */
     void GetBackbufferSize(UINT& outWidth, UINT& outHeight, 
         IDirect3DDevice9 *device);
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
     /**
      * Answer the maximum resolution the specified adapter supports.
      *
@@ -84,9 +78,7 @@ namespace d3d {
         const UINT adapterID, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion = CRITERION_AREA);
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
     /**
      * Answer the maximum resolution that is supported by all adapters of the
      * specified device.
@@ -104,15 +96,13 @@ namespace d3d {
      * @throws
      * @throws
      */
-    bool GetMaximumSharedFullscreenResolution(UINT& outWidth,
+    bool GetMaximumSharedFullscreenResolution(UINT& outWidth, 
         UINT& outHeight, 
         UINT& outRefreshRate,
         IDirect3D9 *d3d, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion = CRITERION_AREA);
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
     /**
      * Answer whether the specified fullscreen resolution is supported by the
      * specified adapter. If requested, return the refresh rate for that mode.
@@ -135,7 +125,6 @@ namespace d3d {
         const UINT width,
         const UINT height,
         UINT *outRefreshRate = NULL);
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 } /* end namespace d3d */
 } /* end namespace graphics */

@@ -39,6 +39,6 @@ void TestVIPCStrTabSet(void) {
 
 void TestVIPCStrTabGet(void) {
     // Gets a vipc string tab value
-    the::astring value = vislib::sys::VolatileIPCStringTable::GetValue(TestEntryName);
-    AssertEqual("VIPCStrTab Entry Value is correct", value, the::astring(TestEntryValue));
+    vislib::StringA value = vislib::sys::VolatileIPCStringTable::GetValue(TestEntryName);
+    AssertEqual("VIPCStrTab Entry Value is correct", value, TestEntryValue);
 }

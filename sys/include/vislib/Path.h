@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/string.h"
+#include "vislib/String.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib, "shlwapi")
@@ -43,7 +43,7 @@ namespace sys {
          *
          * @return The canonicalised path.
          */
-        static the::astring Canonicalise(const the::astring& path);
+        static StringA Canonicalise(const StringA& path);
 
         /**
          * Canonicalises the path. 
@@ -57,7 +57,7 @@ namespace sys {
          *
          * @return The canonicalised path.
          */
-        static the::wstring Canonicalise(const the::wstring& path);
+        static StringW Canonicalise(const StringW& path);
 
         /**
          * Return a new path that has 'extension' as new extension.
@@ -78,7 +78,7 @@ namespace sys {
          *
          * @return The modified path.
          */
-        static the::astring ChangeExtension(const char *path, const char *extension);
+        static StringA ChangeExtension(const char *path, const char *extension);
 
         /**
          * Return a new path that has 'extension' as new extension.
@@ -99,7 +99,7 @@ namespace sys {
          *
          * @return The modified path.
          */
-        static the::wstring ChangeExtension(const wchar_t *path, 
+        static StringW ChangeExtension(const wchar_t *path, 
             const wchar_t *extension);
 
         /**
@@ -114,7 +114,7 @@ namespace sys {
          * @return True if both paths are considdered equal, false otherwise.
          */
         template<class T>
-        static bool Compare(const T& lhs, const T& rhs);
+        static bool Compare(const String<T>& lhs, const String<T>& rhs);
 
         /**
          * Concatenate the paths 'lhs' and 'rhs'. The method ensures, that
@@ -130,7 +130,7 @@ namespace sys {
          *
          * @return The concatenated path.
          */
-        static the::astring Concatenate(const the::astring& lhs, const the::astring& rhs,
+        static StringA Concatenate(const StringA& lhs, const StringA& rhs,
             const bool canonicalise = false);
 
         /**
@@ -147,7 +147,7 @@ namespace sys {
          *
          * @return The concatenated path.
          */
-        static the::wstring Concatenate(const the::wstring& lhs, const the::wstring& rhs,
+        static StringW Concatenate(const StringW& lhs, const StringW& rhs,
             const bool canonicalise = false);
 
         /**
@@ -159,9 +159,9 @@ namespace sys {
          *                  removed. If false and the directory is not empty
          *                  the function will fail.
          *
-         * @throws the::system::system_exception if an error occured.
+         * @throws SystemException if an error occured.
          */
-        static void DeleteDirectory(const the::astring& path, bool recursive);
+        static void DeleteDirectory(const StringA& path, bool recursive);
 
         /**
          * Deletes a directory and optional all files and subdirectories.
@@ -172,9 +172,9 @@ namespace sys {
          *                  removed. If false and the directory is not empty
          *                  the function will fail.
          *
-         * @throws the::system::system_exception if an error occured.
+         * @throws SystemException if an error occured.
          */
-        static void DeleteDirectory(const the::wstring& path, bool recursive);
+        static void DeleteDirectory(const StringW& path, bool recursive);
 
         /**
          * Answer the fully qualified path to a given executable. This method
@@ -188,7 +188,7 @@ namespace sys {
          * @return The fully qualified path to the executable or an empty
          *         string if the executable was not found.
          */
-        static the::astring FindExecutablePath(const the::astring& filename);
+        static StringA FindExecutablePath(const StringA& filename);
 
         /**
          * Answer the fully qualified path to a given executable. This method
@@ -202,7 +202,7 @@ namespace sys {
          * @return The fully qualified path to the executable or an empty
          *         string if the executable was not found.
          */
-        static the::wstring FindExecutablePath(const the::wstring& filename);
+        static StringW FindExecutablePath(const StringW& filename);
 
         /**
          * Answer the path to the currently running application including the
@@ -211,7 +211,7 @@ namespace sys {
          * @return The fully qualified path to the currently running
          *         application or an empty string in case of an error.
          */
-        static the::astring GetApplicationPathA(void);
+        static StringA GetApplicationPathA(void);
 
         /**
          * Answer the path to the currently running application including the
@@ -220,7 +220,7 @@ namespace sys {
          * @return The fully qualified path to the currently running
          *         application or an empty string in case of an error.
          */
-        static the::wstring GetApplicationPathW(void);
+        static StringW GetApplicationPathW(void);
 
         /**
          * Answer the current working directory.
@@ -229,11 +229,11 @@ namespace sys {
          *
          * @return The current working directory.
          *
-         * @throws the::system::system_exception If the directory cannot be retrieved
+         * @throws SystemException If the directory cannot be retrieved
          * @throws std::bad_alloc If there is not enough memory for storing the
          *                        directory.
          */
-        static the::astring GetCurrentDirectoryA(void);
+        static StringA GetCurrentDirectoryA(void);
 
         /**
          * Answer the current working directory.
@@ -242,11 +242,11 @@ namespace sys {
          *
          * @return The current working directory.
          *
-         * @throws the::system::system_exception If the directory cannot be retrieved
+         * @throws SystemException If the directory cannot be retrieved
          * @throws std::bad_alloc If there is not enough memory for storing the
          *                        directory.
          */
-        static the::wstring GetCurrentDirectoryW(void);
+        static StringW GetCurrentDirectoryW(void);
 
         /**
          * Answer the directory path containing the given path.
@@ -259,7 +259,7 @@ namespace sys {
          *
          * @param path Path of a file or directory.
          */
-        static the::astring GetDirectoryName(const char *path);
+        static StringA GetDirectoryName(const char *path);
 
         /**
          * Answer the directory path containing the given path.
@@ -272,7 +272,7 @@ namespace sys {
          *
          * @param path Path of a file or directory.
          */
-        static the::wstring GetDirectoryName(const wchar_t *path);
+        static StringW GetDirectoryName(const wchar_t *path);
 
         /**
          * Answer the current temp directory.
@@ -284,9 +284,9 @@ namespace sys {
          *
          * @return The current temp directory.
          *
-         * @throws the::system::system_exception if an error occured.
+         * @throws SystemException if an error occured.
          */
-        static the::astring GetTempDirectoryA(void);
+        static StringA GetTempDirectoryA(void);
 
         /**
          * Answer the current temp directory.
@@ -298,9 +298,9 @@ namespace sys {
          *
          * @return The current temp directory.
          *
-         * @throws the::system::system_exception if an error occured.
+         * @throws SystemException if an error occured.
          */
-        static the::wstring GetTempDirectoryW(void);
+        static StringW GetTempDirectoryW(void);
 
         /**
          * Answer the home directory of the user. On windows the 'My Documents'
@@ -310,9 +310,9 @@ namespace sys {
          *
          * @return The users home directory.
          *
-         * @throws the::system::system_exception If the directory cannot be retrieved
+         * @throws SystemException If the directory cannot be retrieved
          */
-        static the::astring GetUserHomeDirectoryA(void);
+        static StringA GetUserHomeDirectoryA(void);
 
         /**
          * Answer the home directory of the user. On windows the 'My Documents'
@@ -322,9 +322,9 @@ namespace sys {
          *
          * @return The users home directory.
          *
-         * @throws the::system::system_exception If the directory cannot be retrieved
+         * @throws SystemException If the directory cannot be retrieved
          */
-        static the::wstring GetUserHomeDirectoryW(void);
+        static StringW GetUserHomeDirectoryW(void);
 
         /**
          * Answer, whether 'path' is an absolute path.
@@ -333,7 +333,7 @@ namespace sys {
          *
          * @return true, if 'path' is absolute, false otherwise.
          */
-        inline static bool IsAbsolute(const the::astring& path) {
+        inline static bool IsAbsolute(const StringA& path) {
             return !Path::IsRelative(path);
         }
 
@@ -344,7 +344,7 @@ namespace sys {
          *
          * @return true, if 'path' is absolute, false otherwise.
          */
-        inline static bool IsAbsolute(const the::wstring& path) {
+        inline static bool IsAbsolute(const StringW& path) {
             return !Path::IsRelative(path);
         }
 
@@ -355,7 +355,7 @@ namespace sys {
          *
          * @return true, if 'path' is relative, false otherwise.
          */
-        static bool IsRelative(const the::astring& path);
+        static bool IsRelative(const StringA& path);
 
         /**
          * Answer, whether 'path' is a relative path.
@@ -364,7 +364,7 @@ namespace sys {
          *
          * @return true, if 'path' is relative, false otherwise.
          */
-        static bool IsRelative(const the::wstring& path);
+        static bool IsRelative(const StringW& path);
 
         /**
          * Creates a directory and all intermediate directories on the path 
@@ -374,9 +374,9 @@ namespace sys {
          *
          * @param path The path to the directory to be created. 
          *
-         * @throws the::system::system_exception if an error occured.
+         * @throws SystemException if an error occured.
          */
-        static void MakeDirectory(const the::astring& path);
+        static void MakeDirectory(const StringA& path);
 
         /**
          * Creates a directory and all intermediate directories on the path 
@@ -386,9 +386,9 @@ namespace sys {
          *
          * @param path The path to the directory to be created. 
          *
-         * @throws the::system::system_exception if an error occured.
+         * @throws SystemException if an error occured.
          */
-        static void MakeDirectory(const the::wstring& path);
+        static void MakeDirectory(const StringW& path);
 
         /**
          * Clears a directory by removing all files and optionally all 
@@ -397,7 +397,7 @@ namespace sys {
          * @param path The director to purge.
          * @param recursive If true all subdirectories will be also removed.
          */
-        static void PurgeDirectory(const the::astring& path, bool recursive);
+        static void PurgeDirectory(const StringA& path, bool recursive);
 
         /**
          * Clears a directory by removing all files and optionally all 
@@ -406,7 +406,7 @@ namespace sys {
          * @param path The director to purge.
          * @param recursive If true all subdirectories will be also removed.
          */
-        static void PurgeDirectory(const the::wstring& path, bool recursive);
+        static void PurgeDirectory(const StringW& path, bool recursive);
 
         /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
@@ -427,7 +427,7 @@ namespace sys {
          *
          * @return The absolute path.
          */
-        static inline the::astring Resolve(the::astring path) {
+        static inline StringA Resolve(StringA path) {
             return Resolve(path, GetCurrentDirectoryA());
         }
 
@@ -450,7 +450,7 @@ namespace sys {
          *
          * @return The absolute path.
          */
-        static inline the::wstring Resolve(the::wstring path) {
+        static inline StringW Resolve(StringW path) {
             return Resolve(path, GetCurrentDirectoryW());
         }
         
@@ -475,7 +475,7 @@ namespace sys {
          *
          * @return The absolute path.
          */
-        static the::astring Resolve(the::astring path, the::astring basepath);
+        static StringA Resolve(StringA path, StringA basepath);
 
         /**
          * Answer the absolute path of 'path'. 'path' can be absolute itself and
@@ -498,27 +498,27 @@ namespace sys {
          *
          * @return The absolute path.
          */
-        static the::wstring Resolve(the::wstring path, the::wstring basepath);
+        static StringW Resolve(StringW path, StringW basepath);
 
         /**
          * Changes the current directory to be 'path'.
          *
          * @param path The path to the new current directory.
          *
-         * @throws the::system::system_exception If setting a new current directory fails, 
+         * @throws SystemException If setting a new current directory fails, 
          *                         e. g. 'path' does not exist.
          */
-        static void SetCurrentDirectory(const the::astring& path);
+        static void SetCurrentDirectory(const StringA& path);
 
         /**
          * Changes the current directory to be 'path'.
          *
          * @param path The path to the new current directory.
          *
-         * @throws the::system::system_exception If setting a new current directory fails, 
+         * @throws SystemException If setting a new current directory fails, 
          *                         e. g. 'path' does not exist.
          */
-        static void SetCurrentDirectory(const the::wstring& path);
+        static void SetCurrentDirectory(const StringW& path);
 
         /** The home directory marker character. */
         static const char MYDOCUMENTS_MARKER_A;
@@ -546,13 +546,13 @@ namespace sys {
      * Path::Compare<T>
      */
     template<class T>
-    bool Path::Compare(const T& lhs, const T& rhs) {
-        T rlhs = (Path::IsAbsolute(lhs)) ? Path::Canonicalise(lhs) : Path::Resolve(lhs);
-        T rrhs = (Path::IsAbsolute(rhs)) ? Path::Canonicalise(rhs) : Path::Resolve(rhs);
+    bool Path::Compare(const String<T>& lhs, const String<T>& rhs) {
+        String<T> rlhs = (Path::IsAbsolute(lhs)) ? Path::Canonicalise(lhs) : Path::Resolve(lhs);
+        String<T> rrhs = (Path::IsAbsolute(rhs)) ? Path::Canonicalise(rhs) : Path::Resolve(rhs);
 #ifdef _WIN32
-        return the::text::string_utility::compare(rlhs, rrhs, false) == 0;
+        return rlhs.Equals(rrhs, false);
 #else /* _WIN32 */
-        return the::text::string_utility::compare(rlhs, rrhs, true) == 0;
+        return rlhs.Equals(rrhs, true);
 #endif /* _WIN32 */
     }
     

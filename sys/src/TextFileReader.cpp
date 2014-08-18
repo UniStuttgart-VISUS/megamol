@@ -6,8 +6,8 @@
  */
 
 #include "vislib/TextFileReader.h"
-#include "the/assert.h"
-#include "the/not_supported_exception.h"
+#include "vislib/assert.h"
+#include "vislib/UnsupportedOperationException.h"
 
 #include "vislib/sysfunctions.h"
 
@@ -29,7 +29,7 @@ vislib::sys::TextFileReader::TextFileReader(vislib::sys::File *file,
  * vislib::sys::TextFileReader::~TextFileReader
  */
 vislib::sys::TextFileReader::~TextFileReader(void) {
-    the::safe_array_delete(this->buf);
+    ARY_SAFE_DELETE(this->buf);
     this->validBufSize = 0;
     this->file = NULL; // DO NOT DELETE!
 }
@@ -39,7 +39,7 @@ vislib::sys::TextFileReader::~TextFileReader(void) {
  * vislib::sys::TextFileReader::FilePositionToReaderPosition
  */
 void vislib::sys::TextFileReader::FilePositionToReaderPosition(void) {
-    THE_ASSERT(this->file != NULL);
+    ASSERT(this->file != NULL);
     this->bufStart = this->file->Tell();
     this->bufPos = 0;
     this->validBufSize = 0;
@@ -50,7 +50,7 @@ void vislib::sys::TextFileReader::FilePositionToReaderPosition(void) {
  * vislib::sys::TextFileReader::ReaderPositionToFilePosition
  */
 void vislib::sys::TextFileReader::ReaderPositionToFilePosition(void) {
-    THE_ASSERT(this->file != NULL);
+    ASSERT(this->file != NULL);
     this->file->Seek(this->bufStart + this->bufPos);
 }
 
@@ -58,11 +58,11 @@ void vislib::sys::TextFileReader::ReaderPositionToFilePosition(void) {
 /*
  * vislib::sys::TextFileReader::ReadLine
  */
-bool vislib::sys::TextFileReader::ReadLine(the::astring& outLine,
+bool vislib::sys::TextFileReader::ReadLine(vislib::StringA& outLine,
         unsigned int maxSize) {
-    THE_ASSERT(this->file != NULL);
+    ASSERT(this->file != NULL);
 
-    the::astring prepend;
+    vislib::StringA prepend;
     unsigned int start = this->bufPos;
     unsigned int maxToRead = maxSize;
     unsigned int len = 0;
@@ -72,12 +72,12 @@ bool vislib::sys::TextFileReader::ReadLine(the::astring& outLine,
         if (this->bufPos >= this->validBufSize) {
             if (len > 0) {
                 // copy partial line to output variable
-                prepend.append(the::astring(this->buf + start, len));
+                prepend.Append(StringA(this->buf + start, len));
             }
 
             // buffer depleted. Need new data.
             this->bufStart += this->validBufSize;
-            THE_ASSERT(this->file->Tell() == this->bufStart); // inconsitency
+            ASSERT(this->file->Tell() == this->bufStart); // inconsitency
             // ... detected, maybe we should always seek here (or at least
             // throw and exception instead of an assertion. Think about!
             this->bufPos = 0;
@@ -88,15 +88,15 @@ bool vislib::sys::TextFileReader::ReadLine(the::astring& outLine,
             if (this->validBufSize == 0) {
                 // unable to read, maybe eof
                 outLine = prepend;
-                return !outLine.empty();
+                return !outLine.IsEmpty();
             }
         }
 
         if ((this->buf[this->bufPos] == 0x0A)
                 || (this->buf[this->bufPos] == 0x0D)) {
             // I detected a new line character :-)
-            outLine = prepend + the::astring(this->buf + start, len + 1);
-            len = static_cast<unsigned int>(outLine.size());
+            outLine = prepend + StringA(this->buf + start, len + 1);
+            len = outLine.Length();
             // make the newline pretty
             outLine[static_cast<int>(len) - 1] = '\n';
 
@@ -107,7 +107,7 @@ bool vislib::sys::TextFileReader::ReadLine(the::astring& outLine,
             } else {
                 // arglegarglgarg EndOfBuffer Buhuhu
                 this->bufStart += this->validBufSize;
-                THE_ASSERT(this->file->Tell() == this->bufStart); // inconsitency
+                ASSERT(this->file->Tell() == this->bufStart); // inconsitency
                 // ... detected, maybe we should always seek here (or at least
                 // throw and exception instead of an assertion. Think about!
                 this->bufPos = 0;
@@ -137,7 +137,7 @@ bool vislib::sys::TextFileReader::ReadLine(the::astring& outLine,
     }
 
     // no new line buf read max characters.
-    outLine = prepend + the::astring(this->buf + start, len);
+    outLine = prepend + StringA(this->buf + start, len);
     return true;
 }
 
@@ -145,16 +145,16 @@ bool vislib::sys::TextFileReader::ReadLine(the::astring& outLine,
 /*
  * vislib::sys::TextFileReader::ReadLine
  */
-bool vislib::sys::TextFileReader::ReadLine(the::wstring& outLine,
+bool vislib::sys::TextFileReader::ReadLine(vislib::StringW& outLine,
         unsigned int maxSize) {
-    THE_ASSERT(this->file != NULL);
+    ASSERT(this->file != NULL);
 
     // Think about it! Reading unicode files seams kinda odd.
     // Would need encoding or something similar.
 
-    the::astring line;
+    vislib::StringA line;
     if (this->ReadLine(line, maxSize)) {
-        the::text::string_converter::convert(outLine, line);
+        outLine = line;
         return true;
     }
 
@@ -199,7 +199,7 @@ void vislib::sys::TextFileReader::SetFile(File *file) {
  */
 vislib::sys::TextFileReader::TextFileReader(
         const vislib::sys::TextFileReader& src) {
-    throw the::not_supported_exception("TextFileReader::CopyCtor",
+    throw vislib::UnsupportedOperationException("TextFileReader::CopyCtor",
         __FILE__, __LINE__);
 }
 
@@ -210,7 +210,7 @@ vislib::sys::TextFileReader::TextFileReader(
 vislib::sys::TextFileReader& vislib::sys::TextFileReader::operator=(
         const vislib::sys::TextFileReader& src) {
     if (&src != this) {
-        throw the::not_supported_exception(
+        throw vislib::UnsupportedOperationException(
             "TextFileReader::operator=", __FILE__, __LINE__);
     }
     return *this;

@@ -21,12 +21,12 @@
 #endif /* _WIN32 */
 
 #include "vislib/AbstractAsyncContext.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/Event.h"
 #include "vislib/IPEndPoint.h"
 #include "vislib/Socket.h"
-#include "the/stack_trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/StackTrace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 namespace vislib {
@@ -44,7 +44,7 @@ namespace net {
      * <code>
      * vislib::net::AsyncSocket socket;
      * vislib::net::AsyncSocketContext context;
-     * uint8_t data[16];
+     * BYTE data[16];
      *
      * // Setup the socket and connect.
      *
@@ -76,7 +76,7 @@ namespace net {
      *
      * // Somewhere else:
      * vislib::net::AsyncSocket socket;
-     * uint8_t data[16];
+     * BYTE data[16];
      *
      * // Setup the socket and connect.
      *
@@ -115,7 +115,7 @@ namespace net {
         /**
          * Wait for the operation associated with this context to complete.
          *
-         * @throws the::system::system_exception If the operation failed.
+         * @throws SystemException If the operation failed.
          */
         virtual void Wait(void);
 
@@ -135,8 +135,9 @@ namespace net {
          * @return A pointer to the WSAOVERLAPPED structure.
          */
         operator WSAOVERLAPPED *(void) {
-            THE_STACK_TRACE;
-            THE_ASSERT(sizeof(WSAOVERLAPPED) == sizeof(OVERLAPPED));
+            VLSTACKTRACE("AsyncSocketContext::operator WSAOVERLAPPED *", 
+                __FILE__, __LINE__);
+            ASSERT(sizeof(WSAOVERLAPPED) == sizeof(OVERLAPPED));
             return (Super::operator OVERLAPPED *());
         }
 #endif /* _WIN32 */
@@ -154,8 +155,8 @@ namespace net {
          * @param errorCode 0 in case the operation completed successfully, an 
          *                  appropriate system error code otherwise.
          */
-        virtual void notifyCompleted(const unsigned int cntData, 
-            const unsigned int errorCode);
+        virtual void notifyCompleted(const DWORD cntData, 
+            const DWORD errorCode);
 
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
         /**
@@ -170,9 +171,10 @@ namespace net {
          */
         inline void setDgramParams(AsyncSocket *socket, 
                 const IPEndPoint *dgramAddr, const void *data, 
-                const size_t cntData, const int flags, const int timeout) {
-            THE_STACK_TRACE;
-            THE_ASSERT(dgramAddr != NULL);
+                const SIZE_T cntData, const INT flags, const INT timeout) {
+            VLSTACKTRACE("AsyncSocketContext::setDgramParams", __FILE__, 
+                __LINE__);
+            ASSERT(dgramAddr != NULL);
             this->socket = socket;
             this->dgramAddrOrg = const_cast<IPEndPoint *>(dgramAddr);
             this->dgramAddrCpy = *this->dgramAddrOrg;
@@ -191,8 +193,9 @@ namespace net {
          * @param flags     Socket flags.
          * @param timeout   Timeout for the operation.         */
         inline void setStreamParams(AsyncSocket *socket, const void *data, 
-                const size_t cntData, const int flags, const int timeout) {
-            THE_STACK_TRACE;
+                const SIZE_T cntData, const INT flags, const INT timeout) {
+            VLSTACKTRACE("AsyncSocketContext::setStreamParams", __FILE__, 
+                __LINE__);
             this->socket = socket;
             this->dgramAddrOrg = NULL;
             this->data = const_cast<void *>(data);
@@ -208,8 +211,9 @@ namespace net {
          * @param data      Pointer to the data buffer.
          * @param cntData   Size of the data buffer.
          */
-        inline void setWsaParams(const void *data, const size_t cntData) {
-            THE_STACK_TRACE;
+        inline void setWsaParams(const void *data, const SIZE_T cntData) {
+            VLSTACKTRACE("AsyncSocketContext::setWsaParams", __FILE__, 
+                __LINE__);
             wsaBuf.buf = static_cast<char *>(const_cast<void *>(data));
             wsaBuf.len = static_cast<u_long>(cntData);
         }
@@ -222,12 +226,13 @@ namespace net {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         inline AsyncSocketContext(const AsyncSocketContext& rhs)
                 : Super(NULL, NULL) {
-            THE_STACK_TRACE;
-            throw the::not_supported_exception("AsyncSocketContext", __FILE__, 
+            VLSTACKTRACE("AsyncSocketContext::AsyncSocketContext", __FILE__, 
+                __LINE__);
+            throw UnsupportedOperationException("AsyncSocketContext", __FILE__, 
                 __LINE__);
         }
 
@@ -238,7 +243,7 @@ namespace net {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         AsyncSocketContext& operator =(const AsyncSocketContext& rhs);
 
@@ -285,13 +290,13 @@ namespace net {
          * Passes the socket flags from AsyncSocket::BeginSend() or 
          * AsyncSocket::BeginReceive() to the worker thread.
          */
-        int flags;
+        INT flags;
 
         /** 
          * Passes the timeout from AsyncSocket::BeginSend() or 
          * AsyncSocket::BeginReceive() to the worker thread.
          */
-        int timeout;
+        INT timeout;
 
 #else /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
         /** 

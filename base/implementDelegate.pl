@@ -170,7 +170,7 @@ sub WriteClass {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -188,7 +188,7 @@ sub WriteClass {
          * \@param funcPtr Function pointer to be set
          */
         void Set($returnType (*funcPtr)($paramTypeList)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -202,7 +202,7 @@ sub WriteClass {
          */
         template<class CT1, class CT2>
         void Set($returnType (*funcPtr)($paramCtxtTypeList), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -216,7 +216,7 @@ sub WriteClass {
          */
         template<class C>
         void Set(C& obj, $returnType (C::*methPtr)($paramTypeList)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -229,7 +229,7 @@ sub WriteClass {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, $returnType (C::*methPtr)($paramCtxtTypeList), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -239,7 +239,7 @@ sub WriteClass {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -249,7 +249,7 @@ sub WriteClass {
          */
         $returnType operator()($paramList) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             ${returnStatement}this->callee->Call($paramNameList);
         }
@@ -276,7 +276,7 @@ sub WriteClass {
          * \@return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -346,7 +346,7 @@ sub WriteClass {
              * \@param func The function pointer (must not be NULL)
              */
             FunctionCallee($returnType (*func)($paramTypeList)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -402,7 +402,7 @@ sub WriteClass {
              * \@param ctxt The user data context
              */
             FunctionContextCallee($returnType (*func)($paramCtxtTypeList), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -462,7 +462,7 @@ sub WriteClass {
              * \@param ctxt The user data context
              */
             MethodCallee(C& obj, $returnType (C::*meth)($paramTypeList)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -523,7 +523,7 @@ sub WriteClass {
              * \@param ctxt The user data context
              */
             MethodContextCallee(C& obj, $returnType (C::*meth)($paramCtxtTypeList), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -601,9 +601,9 @@ print $out qq§/*
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/assert.h"
-#include "the/invalid_operation_exception.h"
-#include "the/memory.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/memutils.h"
 
 
 /*

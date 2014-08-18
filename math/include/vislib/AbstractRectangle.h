@@ -15,13 +15,13 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/Dimension.h"
 #include "vislib/mathfunctions.h"
-#include "the/memory.h"
+#include "vislib/memutils.h"
 #include "vislib/Point.h"
-#include "the/types.h"
-#include "the/utils.h"
+#include "vislib/types.h"
+#include "vislib/utils.h"
 
 
 namespace vislib {
@@ -43,19 +43,19 @@ namespace math {
     public:
 
         /** A bitmask representing all rectangle borders. */
-        static const uint32_t BORDER_ALL;
+        static const UINT32 BORDER_ALL;
 
         /** A bitmask representing the bottom border of the rectangle. */
-        static const uint32_t BORDER_BOTTOM;
+        static const UINT32 BORDER_BOTTOM;
 
         /** A bitmask representing the left border of the rectangle. */
-        static const uint32_t BORDER_LEFT;
+        static const UINT32 BORDER_LEFT;
 
         /** A bitmask representing the right border of the rectangle. */
-        static const uint32_t BORDER_RIGHT;
+        static const UINT32 BORDER_RIGHT;
 
         /** A bitmask representing the top border of the rectangle. */
-        static const uint32_t BORDER_TOP;
+        static const UINT32 BORDER_TOP;
 
         /** Dtor. */
         ~AbstractRectangle(void);
@@ -112,7 +112,7 @@ namespace math {
          */
         template<class Sp>
         bool Contains(const AbstractPoint<T, 2, Sp>& point, 
-            const uint32_t includeBorder = 0) const;
+            const UINT32 includeBorder = 0) const;
 
         /**
          * Answer the height of the rectangle.
@@ -603,16 +603,16 @@ namespace math {
     protected:
 
         /** The index of the bottom coordinate in 'bounds'. */
-        static const uintptr_t IDX_BOTTOM;
+        static const UINT_PTR IDX_BOTTOM;
 
         /** The index of the right coordinate in 'bounds'. */
-        static const uintptr_t IDX_RIGHT;
+        static const UINT_PTR IDX_RIGHT;
 
         /** The index of the left coordinate in 'bounds'. */
-        static const uintptr_t IDX_LEFT;
+        static const UINT_PTR IDX_LEFT;
 
         /** The index of the top coordinate in 'bounds'. */
-        static const uintptr_t IDX_TOP;
+        static const UINT_PTR IDX_TOP;
 
         /**
          * Forbidden default ctor. This does nothing.
@@ -631,7 +631,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_ALL
      */
     template<class T, class S>
-    const uint32_t AbstractRectangle<T, S>::BORDER_ALL
+    const UINT32 AbstractRectangle<T, S>::BORDER_ALL
         = AbstractRectangle<T, S>::BORDER_LEFT
         | AbstractRectangle<T, S>::BORDER_BOTTOM
         | AbstractRectangle<T, S>::BORDER_RIGHT
@@ -642,14 +642,14 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_BOTTOM
      */
     template<class T, class S>
-    const uint32_t AbstractRectangle<T, S>::BORDER_BOTTOM 
+    const UINT32 AbstractRectangle<T, S>::BORDER_BOTTOM 
         = 1 << AbstractRectangle<T, S>::IDX_BOTTOM;
 
     /*
      * vislib::math::AbstractRectangle<T, S>::BORDER_LEFT
      */
     template<class T, class S>
-    const uint32_t AbstractRectangle<T, S>::BORDER_LEFT 
+    const UINT32 AbstractRectangle<T, S>::BORDER_LEFT 
         = 1 << AbstractRectangle<T, S>::IDX_LEFT;
 
 
@@ -657,7 +657,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_RIGHT
      */
     template<class T, class S>
-    const uint32_t AbstractRectangle<T, S>::BORDER_RIGHT 
+    const UINT32 AbstractRectangle<T, S>::BORDER_RIGHT 
         = 1 << AbstractRectangle<T, S>::IDX_RIGHT;
 
 
@@ -665,7 +665,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::BORDER_TOP
      */
     template<class T, class S>
-    const uint32_t AbstractRectangle<T, S>::BORDER_TOP
+    const UINT32 AbstractRectangle<T, S>::BORDER_TOP
         = 1 << AbstractRectangle<T, S>::IDX_TOP;
 
 
@@ -694,7 +694,7 @@ namespace math {
     template<class T, class S> 
     template<class Sp>
     bool AbstractRectangle<T, S>::Contains(const AbstractPoint<T, 2, Sp>& point,
-            const uint32_t includeBorder) const {
+            const UINT32 includeBorder) const {
 
         if ((point.X() < this->bounds[IDX_LEFT])
                 || ((((includeBorder & BORDER_LEFT) == 0))
@@ -829,10 +829,10 @@ namespace math {
 
         this->EnforcePositiveSize();
 
-        THE_ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
-        THE_ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
-        THE_ASSERT(rectLeft <= rectRight);
-        THE_ASSERT(rectBottom <= rectTop);
+        ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
+        ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
+        ASSERT(rectLeft <= rectRight);
+        ASSERT(rectBottom <= rectTop);
 
         if (rectLeft < this->bounds[IDX_LEFT]) {
             this->bounds[IDX_LEFT] = rectLeft;
@@ -903,28 +903,28 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::IDX_BOTTOM
      */
     template<class T, class S> 
-    const uintptr_t AbstractRectangle<T, S>::IDX_BOTTOM = 1;
+    const UINT_PTR AbstractRectangle<T, S>::IDX_BOTTOM = 1;
 
 
     /*
      * vislib::math::AbstractRectangle<T, S>::IDX_RIGHT
      */
     template<class T, class S> 
-    const uintptr_t AbstractRectangle<T, S>::IDX_RIGHT = 2;
+    const UINT_PTR AbstractRectangle<T, S>::IDX_RIGHT = 2;
 
 
     /*
      * vislib::math::AbstractRectangle<T, S>::IDX_LEFT
      */
     template<class T, class S> 
-    const uintptr_t AbstractRectangle<T, S>::IDX_LEFT = 0;
+    const UINT_PTR AbstractRectangle<T, S>::IDX_LEFT = 0;
 
 
     /*
      * vislib::math::AbstractRectangle<T, S>::IDX_TOP
      */
     template<class T, class S> 
-    const uintptr_t AbstractRectangle<T, S>::IDX_TOP = 3;
+    const UINT_PTR AbstractRectangle<T, S>::IDX_TOP = 3;
 
 } /* end namespace math */
 } /* end namespace vislib */

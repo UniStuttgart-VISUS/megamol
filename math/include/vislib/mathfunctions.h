@@ -17,10 +17,10 @@
 #include <cmath>
 #include <cstdlib>
 #include <limits>
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathtypes.h"
 #include "vislib/Pair.h"
-#include "the/utils.h"
+#include "vislib/utils.h"
 
 
 namespace vislib {
@@ -67,7 +67,7 @@ namespace math {
      * @return The smallest power of two with ('n' <= result).
      */
     template<class T> T NextPowerOfTwo(const T n) {
-        THE_ASSERT(std::numeric_limits<T>::is_integer);
+        ASSERT(std::numeric_limits<T>::is_integer);
         
         T retval = static_cast<T>(1);
 
@@ -181,7 +181,7 @@ namespace math {
     template<class T> inline bool IsWithin(const T n, const T minVal, 
             const T maxVal, const bool includeMin = false, 
             const bool includeMax = false) {
-        THE_ASSERT(minVal <= maxVal);
+        ASSERT(minVal <= maxVal);
         return (((minVal < n) || (includeMin && (minVal == n)))
             && ((n < maxVal) || (includeMax && (maxVal == n))));
     }
@@ -274,6 +274,14 @@ namespace math {
     }
 
 
+    /*
+     * There was a second implementation of 'Swap' here.
+     * Instead use '::vislib::Swap' from 'vislib/utils' from base!
+     * This 'using' is to preserve the name for backward compatibility.
+     */
+    using ::vislib::Swap;
+
+
     /**
      * Calculates the unsigned modulo value.
      * Only signed interger types can be used to instanciate this function.
@@ -287,9 +295,9 @@ namespace math {
      * @return The unsigned modulo value.
      */
     template<class T> inline T UMod(const T left, const T right) {
-        THE_ASSERT(std::numeric_limits<T>::is_integer);
-        THE_ASSERT(std::numeric_limits<T>::is_signed);
-        THE_ASSERT(right >= 0);
+        ASSERT(std::numeric_limits<T>::is_integer);
+        ASSERT(std::numeric_limits<T>::is_signed);
+        ASSERT(right >= 0);
         // return (left >= 0) ? (left % right) : ((left % right) + right);
         return (left >= 0) ? (left % right) : ((1 - ((left + 1) / right)) * right + left);
     }

@@ -14,9 +14,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/memory.h"
-#include "the/no_such_element_exception.h"
-#include "the/types.h"
+#include "vislib/memutils.h"
+#include "vislib/NoSuchElementException.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -66,14 +66,14 @@ namespace vislib {
          *
          * @return The number of elements in the stack.
          */
-        size_t Count(void) const;
+        SIZE_T Count(void) const;
 
         /**
          * Answer whether the stack is empty.
          *
          * @return true, if the stack is empty, false otherwise.
          */
-        inline bool empty(void) const {
+        inline bool IsEmpty(void) const {
             return (this->top == NULL);
         }
 
@@ -82,7 +82,7 @@ namespace vislib {
          *
          * @return A pointer to the element on top of the stack.
          *
-         * @throws no_such_element_exception If the stack is empty.
+         * @throws NoSuchElementException If the stack is empty.
          */
         T *Peek(void) const;
 
@@ -91,7 +91,7 @@ namespace vislib {
          *
          * @return The element on top of the stack.
          *
-         * @throws no_such_element_exception If the stack is empty.
+         * @throws NoSuchElementException If the stack is empty.
          */
         T Pop(void);
 
@@ -112,7 +112,7 @@ namespace vislib {
          *
          * @return The element on top of the stack.
          *
-         * @throws no_such_element_exception If the stack is empty.
+         * @throws NoSuchElementException If the stack is empty.
          */
         const T& Top(void) const;
 
@@ -188,7 +188,7 @@ namespace vislib {
         while (cursor != NULL) {
             tmp = cursor;
             cursor = cursor->next;
-            the::safe_delete(tmp);
+            SAFE_DELETE(tmp);
         }
 
         this->top = NULL;
@@ -199,9 +199,9 @@ namespace vislib {
      * vislib::Stack<T>::Count
      */
     template<class T>
-    size_t Stack<T>::Count(void) const {
+    SIZE_T Stack<T>::Count(void) const {
         Element *cursor = this->top;
-        size_t retval = 0;
+        SIZE_T retval = 0;
 
         while (cursor != NULL) {
             retval++;
@@ -233,7 +233,7 @@ namespace vislib {
         if (this->top != NULL) {
             return &(this->top->element);
         } else {
-            throw the::no_such_element_exception("Empty stack.", __FILE__, __LINE__);
+            throw NoSuchElementException("Empty stack.", __FILE__, __LINE__);
         }
     }
 
@@ -248,7 +248,7 @@ namespace vislib {
             this->RemoveTop();
             return retval;
         } else {
-            throw the::no_such_element_exception("Empty stack.", __FILE__, __LINE__);
+            throw NoSuchElementException("Empty stack.", __FILE__, __LINE__);
         }
     }
 
@@ -262,7 +262,7 @@ namespace vislib {
 
         if (tmp != NULL) {
             this->top = tmp->next;
-            the::safe_delete(tmp);
+            SAFE_DELETE(tmp);
         }
     }
 
@@ -275,7 +275,7 @@ namespace vislib {
         if (this->top != NULL) {
             return this->top->element;
         } else {
-            throw the::no_such_element_exception("Empty stack.", __FILE__, __LINE__);
+            throw NoSuchElementException("Empty stack.", __FILE__, __LINE__);
         }
     }
 

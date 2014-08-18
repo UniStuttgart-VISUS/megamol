@@ -9,12 +9,10 @@
 #include "vislib/d3dutils.h"
 
 #include "vislib/D3DException.h"
-#include "the/argument_exception.h"
-#include "the/stack_trace.h"
-#include "the/assert.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/StackTrace.h"
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 /**
  * Answer whether the resolution of the display mode 'displayMode' is larger 
  * than the given resolution of 'width' x 'height' with respect to 'criterion'.
@@ -45,20 +43,18 @@ static bool IsDisplayModeLargerThan(const D3DDISPLAYMODE& displayMode,
             return (displayMode.Height > height);
 
         default:
-            throw the::argument_exception("criterion", __FILE__, 
+            throw vislib::IllegalParamException("criterion", __FILE__, 
                 __LINE__);
     }
 }
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::GetBackbufferSize
  */
 void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
         IDirect3DDevice9 *device) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("GetBackbufferSize", __FILE__, __LINE__);
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -66,7 +62,7 @@ void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
     D3DSURFACE_DESC backBufferDesc;
 
     if (device == NULL) {
-        throw the::argument_exception("device", __FILE__, __LINE__);
+        throw IllegalParamException("device", __FILE__, __LINE__);
     }
 
     if (FAILED(hr = device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, 
@@ -83,10 +79,8 @@ void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
     outWidth = backBufferDesc.Width;
     outHeight = backBufferDesc.Height;
 }
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::GetMaximumFullscreenResolution
  */
@@ -98,7 +92,7 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
         const UINT adapterID, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("GetMaximumFullscreenResolution", __FILE__, __LINE__);
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -107,7 +101,7 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
 
     /* Sanity checks. */
     if (d3d == NULL) {
-        throw the::argument_exception("d3d", __FILE__, __LINE__);
+        throw IllegalParamException("d3d", __FILE__, __LINE__);
     }
 
     outWidth = outHeight = outRefreshRate = 0;
@@ -117,7 +111,7 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
                 &displayMode))) {
             throw D3DException(hr, __FILE__, __LINE__);
         }
-        THE_ASSERT(displayMode.Format == format);
+        ASSERT(displayMode.Format == format);
 
         if (::IsDisplayModeLargerThan(displayMode, outWidth, outHeight, 
                 criterion)) {
@@ -127,10 +121,8 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
         }
     }
 }
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::GetMaximumSharedFullscreenResolution
  */
@@ -141,7 +133,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
         IDirect3D9 *d3d, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("GetMaximumSharedFullscreenResolution", __FILE__, __LINE__);
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;                // API return values.
@@ -154,7 +146,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
 
     /* Sanity checks. */
     if (d3d == NULL) {
-        throw the::argument_exception("d3d", __FILE__, __LINE__);
+        throw IllegalParamException("d3d", __FILE__, __LINE__);
     }
 
     cntAdapters = d3d->GetAdapterCount();
@@ -166,7 +158,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
         if (FAILED(hr = d3d->EnumAdapterModes(0, format, i, &displayModeRef))) {
             throw D3DException(hr, __FILE__, __LINE__);
         }
-        THE_ASSERT(displayModeRef.Format == format);
+        ASSERT(displayModeRef.Format == format);
 
         if (::IsDisplayModeLargerThan(displayModeRef, outWidth, outHeight,
                 criterion)) {
@@ -180,7 +172,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
                             &displayModeOther))) {
                         throw D3DException(hr, __FILE__, __LINE__);
                     }
-                    THE_ASSERT(displayModeOther.Format == format);                
+                    ASSERT(displayModeOther.Format == format);                
                 
                     if ((displayModeRef.Width != displayModeOther.Width)
                             || (displayModeRef.Height 
@@ -209,10 +201,8 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
 
     return retval;
 }
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::IsFullscreenResolutionSupported
  */
@@ -223,7 +213,7 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
         const UINT width,
         const UINT height,
         UINT *outRefreshRate) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("GetMaximumFullscreenResolution", __FILE__, __LINE__);
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -232,7 +222,7 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
 
     /* Sanity checks. */
     if (d3d == NULL) {
-        throw the::argument_exception("d3d", __FILE__, __LINE__);
+        throw IllegalParamException("d3d", __FILE__, __LINE__);
     }
 
     cntAdapterModes = d3d->GetAdapterModeCount(adapterID, format); 
@@ -241,7 +231,7 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
                 &displayMode))) {
             throw D3DException(hr, __FILE__, __LINE__);
         }
-        THE_ASSERT(displayMode.Format == format);
+        ASSERT(displayMode.Format == format);
 
         if ((displayMode.Width == width) && (displayMode.Height == height)) {
             if (outRefreshRate != NULL) {
@@ -254,4 +244,3 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
 
     return false;
 }
-#endif /* HAVE_LEGACY_DIRECTX_SDK */

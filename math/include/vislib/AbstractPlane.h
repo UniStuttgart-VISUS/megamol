@@ -14,11 +14,11 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/mathtypes.h"
 #include "vislib/Point.h"
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/Vector.h"
 
 
@@ -344,16 +344,16 @@ namespace math {
     protected:
 
         /** The index of the parameter a. */
-        static const uintptr_t IDX_A;
+        static const UINT_PTR IDX_A;
 
         /** The index of the parameter b. */
-        static const uintptr_t IDX_B;
+        static const UINT_PTR IDX_B;
 
         /** The index of the parameter c. */
-        static const uintptr_t IDX_C;
+        static const UINT_PTR IDX_C;
 
         /** The index of the parameter d. */
-        static const uintptr_t IDX_D;
+        static const UINT_PTR IDX_D;
 
         /** 
          * Disallow instances of this class.
@@ -404,9 +404,9 @@ namespace math {
         Vector<T, 3> n2(a2, b2, c2);
         Vector<T, 3> n3(a3, b3, c3);
 
-        THE_ASSERT(n1.IsNormalised());
-        THE_ASSERT(n2.IsNormalised());
-        THE_ASSERT(n3.IsNormalised());
+        ASSERT(n1.IsNormalised());
+        ASSERT(n2.IsNormalised());
+        ASSERT(n3.IsNormalised());
 
         T denom = n1.Dot(n2.Cross(n3));
 
@@ -430,9 +430,9 @@ namespace math {
         d1 = Abs(this->Distance(outPoint));
         d2 = Abs(plane2.Distance(outPoint));
         d3 = Abs(plane3.Distance(outPoint));
-        THE_ASSERT(d1 < static_cast<T>(0.002f)); // epsilon is adjusted for MegaMol :-/
-        THE_ASSERT(d2 < static_cast<T>(0.002f));
-        THE_ASSERT(d3 < static_cast<T>(0.002f));
+        ASSERT(d1 < static_cast<T>(0.002f)); // epsilon is adjusted for MegaMol :-/
+        ASSERT(d2 < static_cast<T>(0.002f));
+        ASSERT(d3 < static_cast<T>(0.002f));
 #endif
 
         return true;
@@ -473,7 +473,7 @@ namespace math {
             return POSITIVE_HALFSPACE;
     
         } else {
-            THE_ASSERT(false);      // Should never happen.
+            ASSERT(false);      // Should never happen.
             return IN_PLANE;
         }        
     }
@@ -545,9 +545,9 @@ namespace math {
             outP1.Z());
         outP3 += (outP2 - outP1).Cross(this->Normal());   
 
-        THE_ASSERT(this->Contains(outP1));
-        THE_ASSERT(this->Contains(outP2));
-        THE_ASSERT(this->Contains(outP3));
+        ASSERT(this->Contains(outP1));
+        ASSERT(this->Contains(outP2));
+        ASSERT(this->Contains(outP3));
     }
 
 
@@ -629,28 +629,28 @@ namespace math {
      * vislib::math::AbstractPlane<T, S>::IDX_A
      */
     template<class T, class S> 
-    const uintptr_t AbstractPlane<T, S>::IDX_A = 0;
+    const UINT_PTR AbstractPlane<T, S>::IDX_A = 0;
 
 
     /*
      * vislib::math::AbstractPlane<T, S>::IDX_B
      */
     template<class T, class S> 
-    const uintptr_t AbstractPlane<T, S>::IDX_B = 1;
+    const UINT_PTR AbstractPlane<T, S>::IDX_B = 1;
 
 
     /*
      * vislib::math::AbstractPlane<T, S>::IDX_C
      */
     template<class T, class S> 
-    const uintptr_t AbstractPlane<T, S>::IDX_C = 2;
+    const UINT_PTR AbstractPlane<T, S>::IDX_C = 2;
 
 
     /*
      * vislib::math::AbstractPlane<T, S>::IDX_D
      */
     template<class T, class S> 
-    const uintptr_t AbstractPlane<T, S>::IDX_D = 3;
+    const UINT_PTR AbstractPlane<T, S>::IDX_D = 3;
 
 
     /*

@@ -10,8 +10,8 @@
 #include "vislib/D3DException.h"
 #include "vislib/d3dutils.h"
 #include "vislib/d3dverify.h"
-#include "the/argument_exception.h"
-#include "the/trace.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/Trace.h"
 
 
 
@@ -19,7 +19,8 @@
  * vislib::graphics::d3d::AbstractD3D11WindowImpl::~AbstractD3D11WindowImpl
  */
 vislib::graphics::d3d::AbstractD3D11WindowImpl::~AbstractD3D11WindowImpl(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::~AbstractD3D11WindowImpl", 
+        __FILE__, __LINE__);
     SAFE_RELEASE(this->device);
     SAFE_RELEASE(this->depthStencilTexture);
     SAFE_RELEASE(this->depthStencilView);
@@ -36,9 +37,9 @@ vislib::graphics::d3d::AbstractD3D11WindowImpl::~AbstractD3D11WindowImpl(void) {
 void vislib::graphics::d3d::AbstractD3D11WindowImpl::ClearViews(const float r, 
         const float g, const float b, const float a, const float depth, 
         const BYTE stencil) {
-    THE_STACK_TRACE;
-    THE_ASSERT(this->deviceContext != NULL);
-    THE_ASSERT(this->renderTargetView != NULL);
+    VLSTACKTRACE("AbstractD3D11WindowImpl::ClearViews", __FILE__, __LINE__);
+    ASSERT(this->deviceContext != NULL);
+    ASSERT(this->renderTargetView != NULL);
     float colour[] = { r, g, b, a };
 
     this->deviceContext->ClearRenderTargetView(this->renderTargetView, colour);
@@ -53,7 +54,8 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::ClearViews(const float r,
  * vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDevice
  */
 ID3D11Device *vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDevice(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::GetDevice", __FILE__, 
+        __LINE__);
     if (this->device != NULL) {
         this->device->AddRef();
     }
@@ -66,7 +68,8 @@ ID3D11Device *vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDevice(void) {
  */
 ID3D11DeviceContext *
 vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDeviceContext(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::GetDeviceContext", __FILE__, 
+        __LINE__);
     if (this->deviceContext != NULL) {
         this->deviceContext->AddRef();
     }
@@ -78,8 +81,8 @@ vislib::graphics::d3d::AbstractD3D11WindowImpl::GetDeviceContext(void) {
  * vislib::graphics::d3d::AbstractD3D11WindowImpl::Present
  */
 void vislib::graphics::d3d::AbstractD3D11WindowImpl::Present(void) {
-    THE_STACK_TRACE;
-    THE_ASSERT(this->swapChain != NULL);
+    VLSTACKTRACE("AbstractD3D11WindowImpl::Present", __FILE__, __LINE__);
+    ASSERT(this->swapChain != NULL);
     this->swapChain->Present(0, 0);
 }
 
@@ -92,7 +95,8 @@ vislib::graphics::d3d::AbstractD3D11WindowImpl::AbstractD3D11WindowImpl(
         : depthStencilTexture(NULL), depthStencilView(NULL), device(NULL), 
         deviceContext(NULL), dxgiFactory(NULL), renderTargetView(NULL), 
         swapChain(NULL) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::AbstractD3D11WindowImpl", 
+        __FILE__, __LINE__);
 }
 
 
@@ -101,7 +105,7 @@ vislib::graphics::d3d::AbstractD3D11WindowImpl::AbstractD3D11WindowImpl(
  */
 IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
         HWND hWnd) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::findAdapter", __FILE__, __LINE__);
     IDXGIAdapter *adapter = NULL;
     HMONITOR hMonitor = NULL;
     HRESULT hr = S_OK;
@@ -111,31 +115,31 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
 
     /* Sanity checks. */
     if (hWnd == NULL) {
-        throw the::argument_exception("hWnd", __FILE__, __LINE__);
+        throw IllegalParamException("hWnd", __FILE__, __LINE__);
     }
 
     /* Determine which is the adapter that the window is visible on. */
     if (SUCCEEDED(hr)) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Searching monitor that window is "
+        VLTRACE(Trace::LEVEL_VL_INFO, "Searching monitor that window is "
             "displayed on...\n");
         hMonitor = ::MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-        THE_ASSERT(hMonitor != NULL);
+        ASSERT(hMonitor != NULL);
     }
 
     /* Create DXGI factory if necessary. */
     if (SUCCEEDED(hr) && (this->dxgiFactory == NULL)) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Creating DXGI factory...\n");
+        VLTRACE(Trace::LEVEL_VL_INFO, "Creating DXGI factory...\n");
         hr = ::CreateDXGIFactory(IID_IDXGIFactory,
             reinterpret_cast<void **>(&this->dxgiFactory));
     }
 
     /* Search the output that the monitor uses. */
     if (SUCCEEDED(hr)) {
-         THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Enumerating DXGI adapters...\n");
+         VLTRACE(Trace::LEVEL_VL_INFO, "Enumerating DXGI adapters...\n");
         for (UINT a = 0; SUCCEEDED(hr); ++a) {
             hr = this->dxgiFactory->EnumAdapters(a, &adapter);
 
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Enumerating outputs...\n");
+            VLTRACE(Trace::LEVEL_VL_INFO, "Enumerating outputs...\n");
             for (UINT o = 0; SUCCEEDED(hr); ++o) {
                 hr = adapter->EnumOutputs(o, &output);
                 if (SUCCEEDED(hr)) {
@@ -161,8 +165,8 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
         }
     }
 
-    THE_ASSERT(adapter == NULL);
-    THE_ASSERT(output == NULL);
+    ASSERT(adapter == NULL);
+    ASSERT(output == NULL);
 
     if (FAILED(hr)) {
         throw D3DException(hr, __FILE__, __LINE__);
@@ -176,7 +180,7 @@ IDXGIAdapter *vislib::graphics::d3d::AbstractD3D11WindowImpl::findAdapter(
  * vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise
  */
 void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::initialise", __FILE__, __LINE__);
     IDXGIAdapter *adapter = NULL;
     IDXGIDevice *dxgiDevice = NULL;
     UINT flags = 0;
@@ -233,16 +237,16 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
                 D3D_DRIVER_TYPE_UNKNOWN,
                 NULL,
                 flags,
-                !featureLevels.empty() ? featureLevels.PeekElements() : NULL,
-                static_cast<UINT>(featureLevels.Count()),
+                !featureLevels.IsEmpty() ? featureLevels.PeekElements() : NULL,
+                featureLevels.Count(),
                 D3D11_SDK_VERSION,
                 &this->device,
                 &featureLevel,
                 &this->deviceContext);
         }
     } /* end if (device != NULL) */
-    THE_ASSERT(FAILED(hr) || (this->dxgiFactory != NULL));
-    THE_ASSERT(FAILED(hr) || (this->device != NULL));
+    ASSERT(FAILED(hr) || (this->dxgiFactory != NULL));
+    ASSERT(FAILED(hr) || (this->device != NULL));
 
     /* Get windows bounds. */
     if (SUCCEEDED(hr)) {
@@ -268,7 +272,7 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
 
         this->onCreatingSwapChain(swapChainDesc);
 
-        THE_ASSERT(this->dxgiFactory != NULL);
+        ASSERT(this->dxgiFactory != NULL);
         hr = this->dxgiFactory->CreateSwapChain(this->device, 
             &swapChainDesc, &this->swapChain);
     }
@@ -292,7 +296,8 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::initialise(HWND hWnd) {
 bool vislib::graphics::d3d::AbstractD3D11WindowImpl
         ::onCreatingDepthStencilTexture(
         D3D11_TEXTURE2D_DESC& inOutBackBufferDesc) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::inOutBackBufferDesc", __FILE__,
+        __LINE__);
     return true;
 }
 
@@ -303,7 +308,8 @@ bool vislib::graphics::d3d::AbstractD3D11WindowImpl
 void vislib::graphics::d3d::AbstractD3D11WindowImpl::onCreatingDevice(
         UINT& inOutFlags, 
         vislib::Array<D3D_FEATURE_LEVEL>& inOutFeatureLevels) throw() {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::onCreatingDevice", __FILE__, 
+        __LINE__);
     // Nothing to do.
 }
 
@@ -313,7 +319,8 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::onCreatingDevice(
  */
 void vislib::graphics::d3d::AbstractD3D11WindowImpl::onCreatingSwapChain(
         DXGI_SWAP_CHAIN_DESC& inOutSwapChainDesc) throw() {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::onCreatingSwapChain", __FILE__, 
+        __LINE__);
     // Nothing to do.
 }
 
@@ -323,9 +330,10 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::onCreatingSwapChain(
  */
 void vislib::graphics::d3d::AbstractD3D11WindowImpl::resizeSwapChain(
         const int width, const int height) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3D11WindowImpl::resizeSwapChain", __FILE__, 
+        __LINE__);
     USES_D3D_VERIFY;
-    THE_ASSERT(this->swapChain != NULL);
+    ASSERT(this->swapChain != NULL);
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
 
@@ -340,9 +348,10 @@ void vislib::graphics::d3d::AbstractD3D11WindowImpl::resizeSwapChain(
  * vislib::graphics::d3d::AbstractD3D11WindowImpl::updateViews(void)
  */
 HRESULT vislib::graphics::d3d::AbstractD3D11WindowImpl::updateViews(void) {
-    THE_STACK_TRACE;
-    THE_ASSERT(this->device != NULL);
-    THE_ASSERT(this->swapChain != NULL);
+    VLSTACKTRACE("AbstractD3D11WindowImpl::updateBackBuffers", __FILE__, 
+        __LINE__);
+    ASSERT(this->device != NULL);
+    ASSERT(this->swapChain != NULL);
 
     ID3D11Texture2D *backBuffer = NULL;
     D3D11_TEXTURE2D_DESC backBufferDesc;

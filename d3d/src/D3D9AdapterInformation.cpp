@@ -9,7 +9,7 @@
 #include "vislib/D3D9AdapterInformation.h"
 
 #include "vislib/d3dverify.h"
-#include "the/system/system_exception.h"
+#include "vislib/SystemException.h"
 
 
 /*
@@ -18,11 +18,12 @@
 void vislib::graphics::d3d::D3D9AdapterInformation::GetAdapterInformation(
             vislib::PtrArray<D3D9AdapterInformation>& outAdapterInformation,
             IDirect3D9 *d3d) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D9AdapterInformation::GetAdapterInformation",
+        __FILE__, __LINE__);
     USES_D3D_VERIFY;
     D3DCAPS9 d3dCaps;           // Capabilities of the hardware.
 
-    THE_ASSERT(d3d != NULL);
+    ASSERT(d3d != NULL);
 
     /* Clear output. */
     outAdapterInformation.Clear();
@@ -45,14 +46,15 @@ void vislib::graphics::d3d::D3D9AdapterInformation::GetAdapterInformation(
  */
 vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
         IDirect3D9 *d3d, const UINT adapterOrdinal) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D9AdapterInformation::D3D9AdapterInformation",
+        __FILE__, __LINE__);
 
     HRESULT hr = D3D_OK;            // Direct3D API results.
     Output output;                  // Receives current output infos.
     HMONITOR hMon = NULL;           // Monitor pseudo handle.
     UINT masterAdapterOrdinal = 0;  // ID of the master adapter.
 
-    THE_ASSERT(d3d != NULL);
+    ASSERT(d3d != NULL);
 
     /* 
      * Get the ID of the master adapter. In order to get all outputs/swap 
@@ -90,7 +92,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
             hMon = d3d->GetAdapterMonitor(output.d3dCaps.AdapterOrdinal);
             if (!::GetMonitorInfo(hMon, &output.monInfo)) {
                 this->~D3D9AdapterInformation();
-                throw the::system::system_exception(__FILE__, __LINE__);
+                throw vislib::sys::SystemException(__FILE__, __LINE__);
             }
 
             this->infos.Add(output);
@@ -105,7 +107,8 @@ vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
  * vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation
  */
 vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D9AdapterInformation::D3D9AdapterInformation",
+        __FILE__, __LINE__);
     this->infos.Clear(true);
 }
 
@@ -116,11 +119,12 @@ vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation(void) {
 const D3DCAPS9& 
 vislib::graphics::d3d::D3D9AdapterInformation::GetDirect3DCapabilites(
         const SIZE_T outputIdx) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D9AdapterInformation::GetDirect3DCapabilites", __FILE__, 
+        __LINE__);
 
     /* Range check. */
     if (outputIdx > this->infos.Count()) {
-        throw the::index_out_of_range_exception(outputIdx, 0, 
+        throw OutOfRangeException(outputIdx, 0, 
             static_cast<int>(this->infos.Count()), __FILE__, __LINE__);
     }
 
@@ -133,7 +137,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::GetDirect3DCapabilites(
  */
 SIZE_T vislib::graphics::d3d::D3D9AdapterInformation::GetOutputCount(
         void) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D9AdapterInformation::GetOutputCount", __FILE__, __LINE__);
     return this->infos.Count();
 }
 
@@ -144,7 +148,7 @@ SIZE_T vislib::graphics::d3d::D3D9AdapterInformation::GetOutputCount(
 vislib::graphics::d3d::D3D9AdapterInformation& 
 vislib::graphics::d3d::D3D9AdapterInformation::operator =(
         const D3D9AdapterInformation& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D9AdapterInformation::operator =", __FILE__, __LINE__);
 
     if (this != &rhs) {
         this->infos = rhs.infos;
@@ -160,7 +164,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::operator =(
 const MONITORINFOEXW&
 vislib::graphics::d3d::D3D9AdapterInformation::getMonitorInfo(
         const SIZE_T outputIdx) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D9AdapterInformation::getMonitorInfo", __FILE__, __LINE__);
 
     for (SIZE_T i = 0; i < this->infos.Count(); i++) {
         if (this->infos[i].d3dCaps.AdapterOrdinalInGroup == outputIdx) {
@@ -169,6 +173,6 @@ vislib::graphics::d3d::D3D9AdapterInformation::getMonitorInfo(
     }
     /* Not found. */
 
-    throw the::index_out_of_range_exception(outputIdx, 0, 
+    throw OutOfRangeException(outputIdx, 0, 
         static_cast<int>(this->infos.Count()), __FILE__, __LINE__);
 }

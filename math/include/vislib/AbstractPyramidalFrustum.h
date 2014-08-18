@@ -16,13 +16,13 @@
 
 
 #include "vislib/Array.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Point.h"
-#include "the/stack_trace.h"
-#include "the/types.h"
+#include "vislib/StackTrace.h"
+#include "vislib/types.h"
 
-#include "the/not_implemented_exception.h"
+#include "vislib/MissingImplementationException.h"
 
 namespace vislib {
 namespace math {
@@ -40,26 +40,26 @@ namespace math {
          * Index of the left bottom point (as seen from the apex of the pyramid)
          * in the array returned by GetBottomBasePoints() or GetTopBasePoints().
          */
-        static const uintptr_t IDX_LEFT_BOTTOM_POINT;
+        static const UINT_PTR IDX_LEFT_BOTTOM_POINT;
 
         /**
          * Index of the left top point (as seen from the apex of the pyramid)
          * in the array returned by GetBottomBasePoints() or GetTopBasePoints().
          */
-        static const uintptr_t IDX_LEFT_TOP_POINT;
+        static const UINT_PTR IDX_LEFT_TOP_POINT;
 
         /**
          * Index of the right bottom point (as seen from the apex of the 
          * pyramid) in the array returned by GetBottomBasePoints() or 
          * GetTopBasePoints().
          */
-        static const uintptr_t IDX_RIGHT_BOTTOM_POINT;
+        static const UINT_PTR IDX_RIGHT_BOTTOM_POINT;
 
         /**
          * Index of the right top point (as seen from the apex of the pyramid)
          * in the array returned by GetBottomBasePoints() or GetTopBasePoints().
          */
-        static const uintptr_t IDX_RIGHT_TOP_POINT;
+        static const UINT_PTR IDX_RIGHT_TOP_POINT;
 
         /** Dtor. */
         virtual ~AbstractPyramidalFrustum(void);
@@ -119,28 +119,28 @@ namespace math {
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_LEFT_BOTTOM_POINT
      */
     template<class T> 
-    const uintptr_t AbstractPyramidalFrustum<T>::IDX_LEFT_BOTTOM_POINT = 0;
+    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_LEFT_BOTTOM_POINT = 0;
 
 
     /*
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_LEFT_TOP_POINT
      */
     template<class T> 
-    const uintptr_t AbstractPyramidalFrustum<T>::IDX_LEFT_TOP_POINT = 3;
+    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_LEFT_TOP_POINT = 3;
 
 
     /*
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_RIGHT_BOTTOM_POINT
      */
     template<class T> 
-    const uintptr_t AbstractPyramidalFrustum<T>::IDX_RIGHT_BOTTOM_POINT = 1;
+    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_RIGHT_BOTTOM_POINT = 1;
 
 
     /*
      * vislib::math::AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT
      */
     template<class T> 
-    const uintptr_t AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT = 2;
+    const UINT_PTR AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT = 2;
 
 
     /*
@@ -148,7 +148,8 @@ namespace math {
      */
     template<class T> 
     AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum(void) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractPyramidalFrustum::AbstractPyramidalFrustum", 
+            __FILE__, __LINE__);
     }
 
 
@@ -159,7 +160,8 @@ namespace math {
     bool AbstractPyramidalFrustum<T>::checkSanity(
             const vislib::Array<Point<T, 3> >& bottomBasePoints,
             const vislib::Array<Point<T, 3> >& topBasePoints) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractPyramidalFrustum::checkSanity", __FILE__, 
+            __LINE__);
 
         /* 
          * Bottom and top base must be at least triangles and have the same 
@@ -176,7 +178,7 @@ namespace math {
         // TODO: Check parallel
         // TODO: Check base size
         // TODO: Check apex
-        throw the::not_implemented_exception("checkSanity", __FILE__, __LINE__);
+        throw MissingImplementationException("checkSanity", __FILE__, __LINE__);
         return true;
     }
     

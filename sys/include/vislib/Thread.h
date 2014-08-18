@@ -19,7 +19,7 @@
 
 
 #include "vislib/Runnable.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -47,11 +47,11 @@ namespace sys {
          *
          * @eturn The ID of the calling thread.
          */
-        static inline unsigned int CurrentID(void) {
+        static inline DWORD CurrentID(void) {
 #ifdef _WIN32
             return ::GetCurrentThreadId();
 #else /* _WIN32 */
-            return static_cast<unsigned int>(::pthread_self());
+            return static_cast<DWORD>(::pthread_self());
 #endif /* _WIN32 */
         }
 
@@ -74,13 +74,13 @@ namespace sys {
          *
          * @param millis The milliseconds to block the calling thread.
          */
-        static void Sleep(const unsigned int millis);
+        static void Sleep(const DWORD millis);
 
         /**
          * Causes the calling thread to yield execution to another thread that 
          * is ready to run on the current processor.
          *
-         * @throws the::system::system_exception If the operation could not be completed 
+         * @throws SystemException If the operation could not be completed 
          *                         successfully (Linux only).
          */
         static void Reschedule(void);
@@ -112,9 +112,9 @@ namespace sys {
          *
          * @return The thread exit code.
          * 
-         * @throws the::system::system_exception If the exit code could not be determined.
+         * @throws SystemException If the exit code could not be determined.
          */
-        unsigned int GetExitCode(void) const;
+        DWORD GetExitCode(void) const;
 
         /**
          * Answer a pointer to the Runnable executed by this thread. If the
@@ -143,7 +143,7 @@ namespace sys {
          * On Linux, Join() detaches the thread. Any further call to join is
          * illegal.
          *
-         * @throws the::system::system_exception If waiting for the thread failed.
+         * @throws SystemException If waiting for the thread failed.
          */
         void Join(void);
 
@@ -159,7 +159,7 @@ namespace sys {
          * @return true, if the thread was started, false, if it could not be
          *         started, because it is already running.
          *
-         * @throws the::system::system_exception If the creation of the new thread failed.
+         * @throws SystemException If the creation of the new thread failed.
          */
         bool Start(void *userData = NULL);
 
@@ -170,7 +170,7 @@ namespace sys {
          * behaviour is as follows: If 'forceTerminate' is true, the thread is
          * forcefully terminated and the method returns true. 'forceTerminate'
          * cannot be false when using a RunnableFunc. The method will throw
-         * an argument_exception.
+         * an IllegalParamException.
          *
          * If the thread has been constructed using a Runnable object, the
          * behaviour is as follows: If 'forceTerminate' is true, the thread
@@ -192,10 +192,10 @@ namespace sys {
          * 
          * @returns true, if the thread has been terminated, false, otherwise.
          *
-         * @throws invalid_operation_exception If 'forceTerminate' is false and the
+         * @throws IllegalStateException If 'forceTerminate' is false and the
          *                               thread has been constructed using a 
          *                               RunnableFunc.
-         * @throws the::system::system_exception       If terminating the thread forcefully
+         * @throws SystemException       If terminating the thread forcefully
          *                               failed.
          */
         bool Terminate(const bool forceTerminate, const int exitCode = 0);
@@ -222,7 +222,7 @@ namespace sys {
          * @return true, if the Runnable acknowledged the termination request,
          *         false otherwise.
          *
-         * @throws invalid_operation_exception If the thread has been constructed 
+         * @throws IllegalStateException If the thread has been constructed 
          *                               using a RunnableFunc.
          */
         bool TryTerminate(const bool doWait = false);
@@ -269,7 +269,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         Thread(const Thread& rhs);
 
@@ -280,7 +280,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         Thread& operator =(const Thread& rhs);
 
@@ -296,7 +296,7 @@ namespace sys {
         pthread_attr_t attribs;
 
         /** The exit code of the thread. */
-        unsigned int exitCode;
+        DWORD exitCode;
 
         /** The thread ID. */
         pthread_t id;

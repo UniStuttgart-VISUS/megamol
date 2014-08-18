@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -23,10 +23,10 @@ namespace net {
 
 
     /** ID type for simple messages. */
-    typedef uint32_t SimpleMessageID;
+    typedef UINT32 SimpleMessageID;
 
     /** Size type for simple messages. */
-    typedef uint32_t SimpleMessageSize;
+    typedef UINT32 SimpleMessageSize;
 
 
     /**

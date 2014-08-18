@@ -47,7 +47,7 @@ namespace math {
          *                   pointer.
          */
         explicit inline ShallowVector(T *components) {
-            THE_ASSERT(components != NULL);
+            ASSERT(components != NULL);
             this->components = components;
         }
 
@@ -76,7 +76,7 @@ namespace math {
          */
 //#pragma deprecated(SetComponents)
 //        inline void SetComponents(T *components) {
-//            THE_ASSERT(components != NULL);
+//            ASSERT(components != NULL);
 //            this->components = components;
 //        }
 

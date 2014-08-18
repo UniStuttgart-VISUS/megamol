@@ -12,9 +12,9 @@
 #include "vislib/DateTime.h"
 
 
-static void DateConversionTest(const int year, const int month, const int day,
-        const int hour, const int minute, const int second) {
-    int outYear, outMonth, outDay, outHour, outMinute, outSecond;
+static void DateConversionTest(const INT year, const INT month, const INT day,
+        const INT hour, const INT minute, const INT second) {
+    INT outYear, outMonth, outDay, outHour, outMinute, outSecond;
 
     std::cout << "Testing " << day << "." << month << "." << year << " "
         << hour << ":" << minute << ":" << second << " ..." << std::endl;
@@ -30,9 +30,9 @@ static void DateConversionTest(const int year, const int month, const int day,
     AssertEqual("Set and get second", second, outSecond);
 }
 
-static void DateValueTest(const int year, const int month, const int day,
-        const int hour, const int minute, const int second, const int millis,
-        const int64_t expectedValue) {
+static void DateValueTest(const INT year, const INT month, const INT day,
+        const INT hour, const INT minute, const INT second, const INT millis,
+        const INT64 expectedValue) {
     std::cout << "Testing " << day << "." << month << "." << year << " "
         << hour << ":" << minute << ":" << second << "." << millis 
         << ", expected value is " << expectedValue << " ..." << std::endl;
@@ -46,31 +46,31 @@ static void TestSpan(void) {
     using vislib::sys::DateTimeSpan;
     DateTimeSpan ts1, ts2;
 
-    ::AssertEqual("Value of MILLISECONDS_PER_SECOND.", DateTimeSpan::MILLISECONDS_PER_SECOND, (int64_t) 1000);
-    ::AssertEqual("Value of MILLISECONDS_PER_MINUTE.", DateTimeSpan::MILLISECONDS_PER_MINUTE, (int64_t) 60 * 1000);
-    ::AssertEqual("Value of MILLISECONDS_PER_HOUR.", DateTimeSpan::MILLISECONDS_PER_HOUR, (int64_t) 60 * 60 * 1000);
-    ::AssertEqual("Value of MILLISECONDS_PER_DAY.", DateTimeSpan::MILLISECONDS_PER_DAY, (int64_t) 24 * 60 * 60 * 1000);
-    ::AssertEqual("Empty time span is 0 millis.", (int64_t) DateTimeSpan::EMPTY, (int64_t) 0);
-    ::AssertEqual("Value of ONE_MILLISECOND.", (int64_t) DateTimeSpan::OneMillisecond(), (int64_t) 1 * DateTimeSpan::TICKS_PER_MILLISECOND);
-    ::AssertEqual("Value of ONE_SECOND.", (int64_t) DateTimeSpan::OneSecond(), (int64_t) 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
-    ::AssertEqual("Value of ONE_MINUTE.", (int64_t) DateTimeSpan::OneMinute(), (int64_t) 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
-    ::AssertEqual("Value of ONE_HOUR.", (int64_t) DateTimeSpan::OneHour(), (int64_t) 60 * 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
-    ::AssertEqual("Value of ONE_DAY.", (int64_t) DateTimeSpan::OneDay(), (int64_t) 24 * 60 * 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of MILLISECONDS_PER_SECOND.", DateTimeSpan::MILLISECONDS_PER_SECOND, (INT64) 1000);
+    ::AssertEqual("Value of MILLISECONDS_PER_MINUTE.", DateTimeSpan::MILLISECONDS_PER_MINUTE, (INT64) 60 * 1000);
+    ::AssertEqual("Value of MILLISECONDS_PER_HOUR.", DateTimeSpan::MILLISECONDS_PER_HOUR, (INT64) 60 * 60 * 1000);
+    ::AssertEqual("Value of MILLISECONDS_PER_DAY.", DateTimeSpan::MILLISECONDS_PER_DAY, (INT64) 24 * 60 * 60 * 1000);
+    ::AssertEqual("Empty time span is 0 millis.", (INT64) DateTimeSpan::EMPTY, (INT64) 0);
+    ::AssertEqual("Value of ONE_MILLISECOND.", (INT64) DateTimeSpan::OneMillisecond(), (INT64) 1 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_SECOND.", (INT64) DateTimeSpan::OneSecond(), (INT64) 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_MINUTE.", (INT64) DateTimeSpan::OneMinute(), (INT64) 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_HOUR.", (INT64) DateTimeSpan::OneHour(), (INT64) 60 * 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
+    ::AssertEqual("Value of ONE_DAY.", (INT64) DateTimeSpan::OneDay(), (INT64) 24 * 60 * 60 * 1000 * DateTimeSpan::TICKS_PER_MILLISECOND);
 
-    ::AssertEqual("Initialisation with default ctor.", (int64_t) DateTimeSpan(), (int64_t) 0);
-    ::AssertEqual("Initialisation with millis.", (int64_t) DateTimeSpan(10), (int64_t) 10);
-    ::AssertEqual("Initialisation with input until seconds.", (int64_t) DateTimeSpan(1, 1, 1, 1), 
+    ::AssertEqual("Initialisation with default ctor.", (INT64) DateTimeSpan(), (INT64) 0);
+    ::AssertEqual("Initialisation with millis.", (INT64) DateTimeSpan(10), (INT64) 10);
+    ::AssertEqual("Initialisation with input until seconds.", (INT64) DateTimeSpan(1, 1, 1, 1), 
         1 * DateTimeSpan::TICKS_PER_DAY 
         + 1 * DateTimeSpan::TICKS_PER_HOUR 
         + 1 * DateTimeSpan::TICKS_PER_MINUTE
         + 1 * DateTimeSpan::TICKS_PER_SECOND);
-    ::AssertEqual("Initialisation with input until millis.", (int64_t) DateTimeSpan(1, 1, 1, 1, 1), 
+    ::AssertEqual("Initialisation with input until millis.", (INT64) DateTimeSpan(1, 1, 1, 1, 1), 
         1 * DateTimeSpan::TICKS_PER_DAY 
         + 1 * DateTimeSpan::TICKS_PER_HOUR 
         + 1 * DateTimeSpan::TICKS_PER_MINUTE
         + 1 * DateTimeSpan::TICKS_PER_SECOND
         + 1 * DateTimeSpan::TICKS_PER_MILLISECOND);
-    ::AssertEqual("Initialisation with all members.", (int64_t) DateTimeSpan(1, 1, 1, 1, 1, 1),
+    ::AssertEqual("Initialisation with all members.", (INT64) DateTimeSpan(1, 1, 1, 1, 1, 1),
         1 * DateTimeSpan::TICKS_PER_DAY 
         + 1 * DateTimeSpan::TICKS_PER_HOUR 
         + 1 * DateTimeSpan::TICKS_PER_MINUTE
@@ -79,31 +79,31 @@ static void TestSpan(void) {
         + 1);
 
     ts1 = DateTimeSpan(1, 1, 1, 1, 1);
-    ::AssertEqual("ToStringA", ts1.ToStringA(), the::astring("1:01:01:01.0001"));
-    ::AssertEqual("ToStringW", ts1.ToStringW(), the::wstring(L"1:01:01:01.0001"));
+    ::AssertEqual("ToStringA", ts1.ToStringA(), vislib::StringA("1:01:01:01.0001"));
+    ::AssertEqual("ToStringW", ts1.ToStringW(), vislib::StringW(L"1:01:01:01.0001"));
     ::AssertFalse("Test for equality returns false.", ts1 == ts2);
     ::AssertTrue("Test for inequality returns true.", ts1 != ts2);
-    ::AssertEqual("GetDays().", ts1.GetDays(), (int) 1);
-    ::AssertEqual("GetHours().", ts1.GetHours(), (int) 1);
-    ::AssertEqual("GetMinutes().", ts1.GetMinutes(), (int) 1);
-    ::AssertEqual("GetSeconds().", ts1.GetSeconds(), (int) 1);
-    ::AssertEqual("GetMilliseconds().", ts1.GetMilliseconds(), (int) 1);
+    ::AssertEqual("GetDays().", ts1.GetDays(), (INT) 1);
+    ::AssertEqual("GetHours().", ts1.GetHours(), (INT) 1);
+    ::AssertEqual("GetMinutes().", ts1.GetMinutes(), (INT) 1);
+    ::AssertEqual("GetSeconds().", ts1.GetSeconds(), (INT) 1);
+    ::AssertEqual("GetMilliseconds().", ts1.GetMilliseconds(), (INT) 1);
 
     ts2 = ts1;
-    ::AssertEqual("Assignment succeeds.", (int64_t) ts1, (int64_t) ts2);
+    ::AssertEqual("Assignment succeeds.", (INT64) ts1, (INT64) ts2);
     
     ::AssertTrue("Test for equality returns true.", ts1 == ts2);
     ::AssertFalse("Test for inequality returns false.", ts1 != ts2);
 
     ts1 = ts2 + DateTimeSpan(0, 0, 0, 0, 0, 1);
-    ::AssertEqual("Addition.", (int64_t) ts1, (int64_t) ts2 + 1);
+    ::AssertEqual("Addition.", (INT64) ts1, (INT64) ts2 + 1);
 
     ts1 = ts2 - DateTimeSpan(0, 0, 0, 0, 0, 1);
-    ::AssertEqual("Subtraction.", (int64_t) ts1, (int64_t) ts2 - 1);
+    ::AssertEqual("Subtraction.", (INT64) ts1, (INT64) ts2 - 1);
 
     ts1 = ts2;
     ts1 += DateTimeSpan(0, 0, 0, 0, 0, 1);
-    ::AssertEqual("Addition assigment.", (int64_t) ts1, (int64_t) ts2 + 1);
+    ::AssertEqual("Addition assigment.", (INT64) ts1, (INT64) ts2 + 1);
     ::AssertTrue("operator >.", ts1 > ts2);
     ::AssertTrue("operator >=.", ts1 >= ts2);
     ::AssertFalse("operator <.", ts1 < ts2);
@@ -111,7 +111,7 @@ static void TestSpan(void) {
 
     ts1 = ts2;
     ts1 -= DateTimeSpan(0, 0, 0, 0, 0, 1);
-    ::AssertEqual("Subtraction assigment.", (int64_t) ts1, (int64_t) ts2 - 1);
+    ::AssertEqual("Subtraction assigment.", (INT64) ts1, (INT64) ts2 - 1);
     ::AssertFalse("operator >.", ts1 > ts2);
     ::AssertFalse("operator >=.", ts1 >= ts2);
     ::AssertTrue("operator <.", ts1 < ts2);
@@ -123,55 +123,55 @@ static void TestSpan(void) {
     ::AssertFalse("operator < with equal value.", ts1 < ts2);
     ::AssertTrue("operator <= with equal value.", ts1 <= ts2);
 
-    ::AssertEqual("Negation.", (int64_t) -ts1, -((int64_t) ts1));
+    ::AssertEqual("Negation.", (INT64) -ts1, -((INT64) ts1));
 
     ts2.Set(10, 0, 0, 0, 0);
-    ::AssertEqual("GetDays() == 10.", ts2.GetDays(), (int) 10);
-    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (int) 0);
-    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (int) 0);
-    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (int) 0);
-    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (int) 0);
+    ::AssertEqual("GetDays() == 10.", ts2.GetDays(), (INT) 10);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT) 0);
+    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (INT) 0);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT) 0);
 
     ts2.Set(-10, 0, 0, 0, 0);
-    ::AssertEqual("GetDays() == -10.", ts2.GetDays(), (int) -10);
-    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (int) 0);
-    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (int) 0);
-    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (int) 0);
-    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (int) 0);
+    ::AssertEqual("GetDays() == -10.", ts2.GetDays(), (INT) -10);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT) 0);
+    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (INT) 0);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT) 0);
 
     ts2.Set(-10, 1, 0, 0, 0);
-    ::AssertEqual("GetDays() == -9.", ts2.GetDays(), (int) -9);
-    ::AssertEqual("GetHours() == -23.", ts2.GetHours(), (int) -23);
-    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (int) 0);
-    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (int) 0);
-    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (int) 0);
+    ::AssertEqual("GetDays() == -9.", ts2.GetDays(), (INT) -9);
+    ::AssertEqual("GetHours() == -23.", ts2.GetHours(), (INT) -23);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT) 0);
+    ::AssertEqual("GetSeconds() == 0.", ts2.GetSeconds(), (INT) 0);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT) 0);
 
     ts2.Set(0, 0, 0, -1, 0);
-    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (int) 0);
-    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (int) 0);
-    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (int) 0);
-    ::AssertEqual("GetSeconds() == -1.", ts2.GetSeconds(), (int) -1);
-    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (int) 0);
+    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (INT) 0);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT) 0);
+    ::AssertEqual("GetSeconds() == -1.", ts2.GetSeconds(), (INT) -1);
+    ::AssertEqual("GetMilliseconds() == 0.", ts2.GetMilliseconds(), (INT) 0);
 
     ts2.Set(0, 0, 0, 0, 1001);
-    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (int) 0);
-    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (int) 0);
-    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (int) 0);
-    ::AssertEqual("GetSeconds() == 1.", ts2.GetSeconds(), (int) 1);
-    ::AssertEqual("GetMilliseconds() == 1.", ts2.GetMilliseconds(), (int) 1);
+    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (INT) 0);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT) 0);
+    ::AssertEqual("GetSeconds() == 1.", ts2.GetSeconds(), (INT) 1);
+    ::AssertEqual("GetMilliseconds() == 1.", ts2.GetMilliseconds(), (INT) 1);
 
     ts2.Set(0, 0, 0, 0, -1001);
-    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (int) 0);
-    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (int) 0);
-    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (int) 0);
-    ::AssertEqual("GetSeconds() == -1.", ts2.GetSeconds(), (int) -1);
-    ::AssertEqual("GetMilliseconds() == -1.", ts2.GetMilliseconds(), (int) -1);
+    ::AssertEqual("GetDays() == 0.", ts2.GetDays(), (INT) 0);
+    ::AssertEqual("GetHours() == 0.", ts2.GetHours(), (INT) 0);
+    ::AssertEqual("GetMinutes() == 0.", ts2.GetMinutes(), (INT) 0);
+    ::AssertEqual("GetSeconds() == -1.", ts2.GetSeconds(), (INT) -1);
+    ::AssertEqual("GetMilliseconds() == -1.", ts2.GetMilliseconds(), (INT) -1);
 }
 
 
 static void TestTime(void) {
 // Convert milliseconds to ticks:
-#define MTT(millis) (static_cast<int64_t>(millis) * DateTimeSpan::TICKS_PER_MILLISECOND)
+#define MTT(millis) (static_cast<INT64>(millis) * DateTimeSpan::TICKS_PER_MILLISECOND)
 
 // Convert seconds to ticks:
 #define STT(secs) (MTT(secs) * 1000)
@@ -183,7 +183,7 @@ static void TestTime(void) {
     using vislib::sys::DateTimeSpan;
     time_t unixTimeStamp;
 
-    ::AssertEqual("DateTime::EMPTY internal data.", DateTime::EMPTY.GetTotalTicks(), int64_t(0));
+    ::AssertEqual("DateTime::EMPTY internal data.", DateTime::EMPTY.GetTotalTicks(), INT64(0));
 
     // 1.1.1 AD with auto fix
     ::DateValueTest(0, 0, 0, 0, 0, 0, 0, MTT(0));
@@ -225,11 +225,11 @@ static void TestTime(void) {
 
     // Time on 31.1.1 AD
     ::DateValueTest(1, 1, 31, 0, 0, 0, 0, MTT(30) * 24 * 60 * 60 * 1000);
-    ::DateValueTest(1, 1, 31, 0, 0, 0, 1, MTT(int64_t(30) * 24 * 60 * 60 * 1000 + 1));
-    ::DateValueTest(1, 1, 31, 0, 0, 1, 0, MTT(int64_t(30) * 24 * 60 * 60 * 1000 + 1000));
-    ::DateValueTest(1, 1, 31, 0, 1, 0, 0, MTT(int64_t(30) * 24 * 60 * 60 * 1000 + 60 * 1000));
-    ::DateValueTest(1, 1, 31, 1, 0, 0, 0, MTT(int64_t(30) * 24 * 60 * 60 * 1000 + 60 * 60 * 1000));
-    ::DateValueTest(1, 1, 31, 24, 0, 0, 0, MTT(int64_t(30) * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000));
+    ::DateValueTest(1, 1, 31, 0, 0, 0, 1, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 1));
+    ::DateValueTest(1, 1, 31, 0, 0, 1, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 1000));
+    ::DateValueTest(1, 1, 31, 0, 1, 0, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 60 * 1000));
+    ::DateValueTest(1, 1, 31, 1, 0, 0, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 60 * 60 * 1000));
+    ::DateValueTest(1, 1, 31, 24, 0, 0, 0, MTT(INT64(30) * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000));
     
     // Non-leap day 1 AD
     ::DateValueTest(1, 2, 1, 0, 0, 0, 0, MTT(31) * 24 * 60 * 60 * 1000);
@@ -308,9 +308,9 @@ static void TestTime(void) {
     ::DateConversionTest(1, 3, 1, 0, 0, 0);
     ::DateConversionTest(1, 12, 31, 0, 0, 0);
 
-    //for (int y = 0; y <= 401; y++) {
-    //    for (int m = 1; m <= 12; m++) {
-    //        for (int d = 1; d <= 31; d++) {
+    //for (INT y = 0; y <= 401; y++) {
+    //    for (INT m = 1; m <= 12; m++) {
+    //        for (INT d = 1; d <= 31; d++) {
     //            if ((m == 2) && ((d > 28) || (DateTime::IsLeapYear(y) && (d > 29)))) {
     //                break;
     //            }
@@ -322,9 +322,9 @@ static void TestTime(void) {
     //    }
     //}
 
-    //for (int y = 1900; y <= 2001; y++) {
-    //    for (int m = 1; m <= 12; m++) {
-    //        for (int d = 1; d <= 31; d++) {
+    //for (INT y = 1900; y <= 2001; y++) {
+    //    for (INT m = 1; m <= 12; m++) {
+    //        for (INT d = 1; d <= 31; d++) {
     //            if ((m == 2) && ((d > 28) || (DateTime::IsLeapYear(y) && (d > 29)))) {
     //                break;
     //            }

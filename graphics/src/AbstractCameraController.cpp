@@ -7,7 +7,7 @@
 
 #include <cstddef> // for NULL
 #include "vislib/AbstractCameraController.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 
 
 /*
@@ -32,7 +32,7 @@ vislib::graphics::AbstractCameraController::~AbstractCameraController(void) {
  */
 vislib::SmartPtr<vislib::graphics::CameraParameters>& 
 vislib::graphics::AbstractCameraController::CameraParams(void) {
-    THE_ASSERT(this->IsCameraParamsValid());
+    ASSERT(this->IsCameraParamsValid());
     return this->cameraParams;
 }
 
@@ -42,7 +42,7 @@ vislib::graphics::AbstractCameraController::CameraParams(void) {
  */
 const vislib::SmartPtr<vislib::graphics::CameraParameters>& 
 vislib::graphics::AbstractCameraController::CameraParams(void) const {
-    THE_ASSERT(this->IsCameraParamsValid());
+    ASSERT(this->IsCameraParamsValid());
     return this->cameraParams;
 }
 

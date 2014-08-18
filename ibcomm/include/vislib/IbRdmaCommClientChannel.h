@@ -18,9 +18,8 @@
 #include "vislib/Socket.h"                      // Must be first!
 #include "vislib/AbstractCommClientChannel.h"
 #include "vislib/IbRdmaException.h"
-#include "the/stack_trace.h"
+ #include "vislib/StackTrace.h"
 
-#ifdef HAVE_OFED_SDK
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"
 
@@ -53,7 +52,7 @@ namespace ib {
          * @return
          */
         static SmartRef<IbRdmaCommClientChannel> Create(
-                const size_t cntBufRecv, const size_t cntBufSend);
+                const SIZE_T cntBufRecv, const SIZE_T cntBufSend);
         
         /**
          * Create a new instance with receive and send buffers of the specified
@@ -63,7 +62,7 @@ namespace ib {
          *
          * @return
          */
-        static SmartRef<IbRdmaCommClientChannel> Create(const size_t cntBuf);
+        static SmartRef<IbRdmaCommClientChannel> Create(const SIZE_T cntBuf);
 
         /**
          * Create a new instance using the specified buffers for DMA.
@@ -89,8 +88,8 @@ namespace ib {
          *
          * @return
          */
-        static SmartRef<IbRdmaCommClientChannel> Create(uint8_t *bufRecv, 
-            const size_t cntBufRecv, uint8_t *bufSend, const size_t cntBufSend);
+        static SmartRef<IbRdmaCommClientChannel> Create(BYTE *bufRecv, 
+            const SIZE_T cntBufRecv, BYTE *bufSend, const SIZE_T cntBufSend);
 
         virtual void Close(void);
 
@@ -107,7 +106,8 @@ namespace ib {
          * @return
          */
         inline bool IsZeroCopyReceive(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopyReceive",
+                __FILE__, __LINE__);
             return (this->bufRecvEnd != NULL);
         }
 
@@ -118,16 +118,17 @@ namespace ib {
          * @return
          */
         inline bool IsZeroCopySend(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopySend", 
+                __FILE__, __LINE__);
             return (this->bufSendEnd != NULL);
         }
 
-        virtual size_t Receive(void *outData, const size_t cntBytes,
-            const unsigned int timeout = TIMEOUT_INFINITE, 
+        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
+            const UINT timeout = TIMEOUT_INFINITE, 
             const bool forceReceive = true);
 
-        virtual size_t Send(const void *data, const size_t cntBytes,
-            const unsigned int timeout = TIMEOUT_INFINITE, 
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
+            const UINT timeout = TIMEOUT_INFINITE, 
             const bool forceSend = true);
 
     private:
@@ -178,43 +179,43 @@ namespace ib {
          *                   number of bytes to be allocaated if 'bufSend' is
          *                   NULL.
          */
-        void setBuffers(uint8_t *bufRecv, const size_t cntBufRecv, 
-            uint8_t *bufSend, const size_t cntBufSend);
+        void setBuffers(BYTE *bufRecv, const SIZE_T cntBufRecv, 
+            BYTE *bufSend, const SIZE_T cntBufSend);
 
         /**
          * Buffer for receiving data from the network. This can either be a 
          * buffer owned by the channel or a user-provided memory range (for
          * zero-copy operations). This pointer is registered via 'mrRecv'.
          */
-        uint8_t *bufRecv;
+        BYTE *bufRecv;
 
         /** 
          * Pointer to the end of the receive buffer in case of a zero-copy
          * operation. Otherwise, the pointer is NULL.
          */
-        uint8_t *bufRecvEnd;
+        BYTE *bufRecvEnd;
 
         /**
          * Buffer for sending data from the network. This can either be a 
          * buffer owned by the channel or a user-provided memory range (for
          * zero-copy operations). This pointer is registered via 'mrSend'.
          */
-        uint8_t *bufSend;
+        BYTE *bufSend;
 
         /** 
          * Pointer to the end of the send buffer in case of a zero-copy
          * operation. Otherwise, the pointer is NULL.
          */
-        uint8_t *bufSendEnd;
+        BYTE *bufSendEnd;
 
         /** Size of 'bufRecv' in bytes. */
-        size_t cntBufRecv;
+        SIZE_T cntBufRecv;
 
         /** Size of 'bufSend' in bytes. */
-        size_t cntBufSend;
+        SIZE_T cntBufSend;
 
         /** Valid bytes starting at 'remRecv'. */
-        size_t cntRemRecv;
+        SIZE_T cntRemRecv;
 
         struct rdma_cm_id *id;
 
@@ -228,7 +229,7 @@ namespace ib {
          * Pointer to the start of the data in 'bufRecv' that have not yet been
          * delivered to the user.
          */
-        uint8_t *remRecv;
+        BYTE *remRecv;
 
         /** 
          * The server channel must be able to initialise a client channel 
@@ -241,8 +242,6 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
-
-#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

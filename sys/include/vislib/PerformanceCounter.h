@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -50,10 +50,10 @@ namespace sys {
          *         current hardware allows. Otherwise, the value is normalised
          *         to milliseconds.
          *
-         * @throws the::system::system_exception If the performance counter could not be 
+         * @throws SystemException If the performance counter could not be 
          *                         queried.
          */
-        static uint64_t Query(const bool useFullPrecision = false);
+        static UINT64 Query(const bool useFullPrecision = false);
 
         /**
          * Query the performance counter for its current value in milliseconds.
@@ -62,14 +62,14 @@ namespace sys {
          *
          * Using this method is equivalent to the following code:
          *
-         * uint64_t value = PerformanceCounter::Query(true);
-         * uint64_t frequency = PerformanceCounter::QueryFrequency();
+         * UINT64 value = PerformanceCounter::Query(true);
+         * UINT64 frequency = PerformanceCounter::QueryFrequency();
          * double result = static_cast<double>(value) * 1000.0 
          *     / static_cast<double>(frequency);
          *
          * @return The current perfomance counter value in milliseconds.
          *
-         * @throws the::system::system_exception If the performance counter could not be 
+         * @throws SystemException If the performance counter could not be 
          *                         queried.
          */
         inline static double QueryMillis(void) {
@@ -81,9 +81,9 @@ namespace sys {
          *
          * @return The performance counter frequency in counts per second.
          *
-         * @throws the::system::system_exception If the frequency could not be queried.
+         * @throws SystemException If the frequency could not be queried.
          */
-        static uint64_t QueryFrequency(void);
+        static UINT64 QueryFrequency(void);
 
         /**
          * Convert a full resolution performance counter value to milliseconds.
@@ -93,9 +93,9 @@ namespace sys {
          * 
          * @return The milliseconds that 'value' represents.
          *
-         * @throws the::system::system_exception If the frequency could not be queried.
+         * @throws SystemException If the frequency could not be queried.
          */
-        inline static double ToMillis(const uint64_t value) {
+        inline static double ToMillis(const UINT64 value) {
             return (static_cast<double>(value) * 1000.0)
                 / static_cast<double>(QueryFrequency());
         }
@@ -139,10 +139,10 @@ namespace sys {
          *
          * @return The difference between now and the mark.
          */
-        inline int64_t Difference(void) const {
-            return (static_cast<int64_t>(PerformanceCounter::Query(
+        inline INT64 Difference(void) const {
+            return (static_cast<INT64>(PerformanceCounter::Query(
                 this->isUsingFullPrecisionMark)) 
-                - static_cast<int64_t>(this->mark));
+                - static_cast<INT64>(this->mark));
         }
 
         /**
@@ -156,7 +156,7 @@ namespace sys {
          *
          * @return The last mark.
          */
-        inline uint64_t GetMark(void) const {
+        inline UINT64 GetMark(void) const {
             return this->mark;
         }
 
@@ -176,7 +176,7 @@ namespace sys {
          * @return The new value of the mark, i. e. the current performance 
          *         counter value.
          */
-        inline uint64_t SetMark(void) {
+        inline UINT64 SetMark(void) {
             return (this->mark = PerformanceCounter::Query(
                 this->isUsingFullPrecisionMark));
         }
@@ -222,7 +222,7 @@ namespace sys {
          * The mark, i. e. the performance counter value when the last
          * mark was set.
          */
-        uint64_t mark;
+        UINT64 mark;
         
     };
 

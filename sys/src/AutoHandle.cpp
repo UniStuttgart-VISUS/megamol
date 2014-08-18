@@ -7,7 +7,7 @@
 
 #include "vislib/AutoHandle.h"
 
-#include "the/system/system_exception.h"
+#include "vislib/SystemException.h"
 
 
 #ifdef _WIN32
@@ -71,7 +71,7 @@ void vislib::sys::AutoHandle::Set(HANDLE handle, const bool takeOwnership) {
             if (!::DuplicateHandle(::GetCurrentProcess(), handle, 
                     ::GetCurrentProcess(), &(this->handle), 0, FALSE, 
                     DUPLICATE_SAME_ACCESS)) {
-                the::system::system_exception(__FILE__, __LINE__);
+                SystemException(__FILE__, __LINE__);
             }   
         }
     }

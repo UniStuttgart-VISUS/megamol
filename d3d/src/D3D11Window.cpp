@@ -8,14 +8,14 @@
 #include "vislib/D3D11Window.h"
 
 #include "vislib/D3DException.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 
 /*
  * vislib::graphics::d3d::D3D11Window::~D3D11Window
  */
 vislib::graphics::d3d::D3D11Window::~D3D11Window(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D11Window::~D3D11Window", __FILE__, __LINE__);
 }
 
 
@@ -23,7 +23,7 @@ vislib::graphics::d3d::D3D11Window::~D3D11Window(void) {
  * vislib::graphics::d3d::D3D11Window::onCreated
  */
 void vislib::graphics::d3d::D3D11Window::onCreated(HWND hWnd) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D11Window::onCreated", __FILE__, __LINE__);
     AbstractWindow::onCreated(hWnd);
     this->initialise(hWnd);
 }
@@ -34,6 +34,6 @@ void vislib::graphics::d3d::D3D11Window::onCreated(HWND hWnd) {
  */
 void vislib::graphics::d3d::D3D11Window::onResized(const int width, 
         const int height) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("D3D11Window::onResized", __FILE__, __LINE__);
     this->resizeSwapChain(width, height);
 }

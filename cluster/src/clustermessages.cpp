@@ -12,8 +12,8 @@
  * vislib::net::cluster::InitialiseMessageHeader
  */
 void vislib::net::cluster::InitialiseMessageHeader(
-        MessageHeader& inOutHeader, const uint32_t blockId, 
-        const uint32_t blockLength) {
+        MessageHeader& inOutHeader, const UINT32 blockId, 
+        const UINT32 blockLength) {
     inOutHeader.MagicNumber = MAGIC_NUMBER;
     inOutHeader.Header.BlockId = blockId;
     inOutHeader.Header.BlockLength = blockLength;

@@ -36,9 +36,6 @@
     <ClInclude Include="include\vislib\IbRdmaException.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\IbDummy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\IbvCommChannel.cpp">
@@ -60,9 +57,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\IbRdmaException.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\IbDummy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,8 +17,8 @@
 #include "vislibGlutInclude.h"
 
 #include "vislib/AbstractClusterNode.h"
-#include "the/not_supported_exception.h"
-#include "the/trace.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/Trace.h"
 
 
 namespace vislib {
@@ -86,7 +86,7 @@ namespace cluster {
          */
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
-        virtual unsigned int Run(void);
+        virtual DWORD Run(void);
 
     protected:
 
@@ -300,7 +300,7 @@ namespace cluster {
      */
     template<class T> 
     void GlutClusterNode<T>::Initialise(sys::CmdLineProviderW& inOutCmdLine) {
-        throw the::not_supported_exception("glutInit is not supported for "
+        throw UnsupportedOperationException("glutInit is not supported for "
             "wchar_t.", __FILE__, __LINE__);
     }
 
@@ -308,7 +308,7 @@ namespace cluster {
     /*
      * vislib::net::cluster::GlutClusterNode<T>::Run
      */
-    template<class T> unsigned int GlutClusterNode<T>::Run(void) {
+    template<class T> DWORD GlutClusterNode<T>::Run(void) {
         // TODO: Additional initialisation callback (format, title, ...) req.
         this->onPreCreateWindow();
         ::glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);

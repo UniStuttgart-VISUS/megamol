@@ -18,7 +18,7 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/Array.h"
 #include "vislib/Map.h"
-#include "the/string.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -70,7 +70,7 @@ namespace gl {
              *
              * @param str The text of the snippet.
              */
-            StringSnippet(const the::astring& str);
+            StringSnippet(const vislib::StringA& str);
 
             /**
              * ctor.
@@ -89,7 +89,7 @@ namespace gl {
              *
              * @return true if the file was successfully read, otherwise false.
              *
-             * @throw the::system::io::io_exception If reading from the file failed.
+             * @throw IOException If reading from the file failed.
              */
             bool LoadFile(const char* filename);
 
@@ -103,7 +103,7 @@ namespace gl {
              *
              * @param str The text of the snippet.
              */
-            void Set(const the::astring& str);
+            void Set(const vislib::StringA& str);
 
             /**
              * Sets the text of the snippet.
@@ -117,7 +117,7 @@ namespace gl {
              *
              * @return The text of the snippet.
              */
-            const the::astring& String(void) const;
+            const vislib::StringA& String(void) const;
 
             /**
              * Assignment operator from vislib string.
@@ -126,7 +126,7 @@ namespace gl {
              *
              * @return A reference to this.
              */
-            inline StringSnippet& operator=(const the::astring& str) {
+            inline StringSnippet& operator=(const vislib::StringA& str) {
                 this->Set(str);
                 return *this;
             }
@@ -146,7 +146,7 @@ namespace gl {
         protected:
 
             /** The text of the snippet. */
-            the::astring txt;
+            vislib::StringA txt;
         };
 
         /**
@@ -189,7 +189,7 @@ namespace gl {
         private:
 
             /** The string representation of the version */
-            the::astring verStr;
+            vislib::StringA verStr;
         };
 
         /** ctor. Creates empty shader source. */
@@ -214,7 +214,7 @@ namespace gl {
          *
          * @return The snipped added.
          *
-         * @throw argument_exception if code is <NULL>.
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Append(
             const vislib::SmartPtr<Snippet>& code);
@@ -227,12 +227,12 @@ namespace gl {
          *
          * @return The snipped added.
          *
-         * @throw already_exists_exception if there already is a snippet with
+         * @throw AlreadyExistsException if there already is a snippet with
          *                               this name.
-         * @throw argument_exception if code is <NULL>.
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Append(
-            const the::astring& name,
+            const vislib::StringA& name,
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -254,7 +254,7 @@ namespace gl {
          *
          * @return The number of code snippets.
          */
-        size_t Count(void) const;
+        SIZE_T Count(void) const;
 
         /**
          * Inserts one code snipped into the shader source at the given index.
@@ -264,11 +264,11 @@ namespace gl {
          *
          * @return The snippet inserted.
          *
-         * @throw argument_exception if code is <NULL>.
-         * @throw index_out_of_range_exception If 'idx' is not within 
+         * @throw IllegalParamException if code is <NULL>.
+         * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        const vislib::SmartPtr<Snippet>& Insert(const size_t idx, 
+        const vislib::SmartPtr<Snippet>& Insert(const SIZE_T idx, 
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -280,14 +280,14 @@ namespace gl {
          *
          * @return The snippet inserted.
          *
-         * @throw argument_exception if code is <NULL>.
-         * @throw already_exists_exception if there already is a snippet with
+         * @throw IllegalParamException if code is <NULL>.
+         * @throw AlreadyExistsException if there already is a snippet with
          *                               this name.
-         * @throw index_out_of_range_exception If 'idx' is not within 
+         * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        const vislib::SmartPtr<Snippet>& Insert(const size_t idx, 
-            const the::astring& name,
+        const vislib::SmartPtr<Snippet>& Insert(const SIZE_T idx, 
+            const vislib::StringA& name,
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -295,9 +295,9 @@ namespace gl {
          *
          * @param name The name to return the index.
          *
-         * @throw no_such_element_exception if there is no index with this name.
+         * @throw NoSuchElementException if there is no index with this name.
          */
-        size_t NameIndex(const the::astring& name);
+        SIZE_T NameIndex(const vislib::StringA& name);
 
         /**
          * Adds one code snippet to the beginning of the shader source.
@@ -306,7 +306,7 @@ namespace gl {
          *
          * @return The snippet prepended.
          *
-         * @throw argument_exception if code is <NULL>.
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Prepend(
             const vislib::SmartPtr<Snippet>& code);
@@ -319,12 +319,12 @@ namespace gl {
          *
          * @return The snippet prepended.
          *
-         * @throw already_exists_exception if there already is a snippet with
+         * @throw AlreadyExistsException if there already is a snippet with
          *                               this name.
-         * @throw argument_exception if code is <NULL>.
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Prepend(
-            const the::astring& name,
+            const vislib::StringA& name,
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -332,17 +332,17 @@ namespace gl {
          *
          * @param idx The index of the snipped to be removed.
          *
-         * @throw index_out_of_range_exception If 'idx' is not within 
+         * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        void Remove(size_t idx);
+        void Remove(SIZE_T idx);
 
         /**
          * Removes the name 'name', if it exists.
          *
          * @param name The name to be removed.
          */
-        void RemoveName(the::astring& name);
+        void RemoveName(vislib::StringA& name);
 
         /**
          * Replaces a snippet with a new one.
@@ -352,7 +352,7 @@ namespace gl {
          *
          * @return The snippet replaced by the new one.
          */
-        vislib::SmartPtr<Snippet> Replace(size_t idx, 
+        vislib::SmartPtr<Snippet> Replace(SIZE_T idx, 
             const vislib::SmartPtr<Snippet>& code);
 
         /**
@@ -362,7 +362,7 @@ namespace gl {
          *
          * @return The snipped set as shader source.
          *
-         * @throw argument_exception if code is <NULL>.
+         * @throw IllegalParamException if code is <NULL>.
          */
         const vislib::SmartPtr<Snippet>& Set(
             const vislib::SmartPtr<Snippet>& code);
@@ -373,19 +373,19 @@ namespace gl {
          * @param name The name to be set.
          * @param idx The index to be set.
          *
-         * @throw already_exists_exception if there already is a snippet with
+         * @throw AlreadyExistsException if there already is a snippet with
          *                               this name.
-         * @throw index_out_of_range_exception If 'idx' is not within 
+         * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        void SetName(const the::astring& name, size_t idx);
+        void SetName(const vislib::StringA& name, SIZE_T idx);
 
         /**
          * Creates a single string containing the whole shader source code.
          *
          * @return The string containing the whole shader source code.
          */
-        the::astring WholeCode(void) const;
+        vislib::StringA WholeCode(void) const;
 
         /**
          * Answers one snippet of the shader source.
@@ -394,10 +394,10 @@ namespace gl {
          *
          * @return The idx-th snippet of the shader source.
          *
-         * @throw index_out_of_range_exception If 'idx' is not within 
+         * @throw OutOfRangeException If 'idx' is not within 
          *                            [0, this->Count()[.
          */
-        const vislib::SmartPtr<Snippet>& operator[](const size_t idx) const;
+        const vislib::SmartPtr<Snippet>& operator[](const SIZE_T idx) const;
 
         /**
          * Assignment operator.
@@ -416,7 +416,7 @@ namespace gl {
         vislib::Array<vislib::SmartPtr<Snippet> > snippets;
 
         /** the names of some of the shader snippets */
-        vislib::Map<the::astring, size_t> names;
+        vislib::Map<vislib::StringA, SIZE_T> names;
 
         /** the code output array */
         mutable const char **code;

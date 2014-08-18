@@ -15,10 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/ColourRGBAu8.h"
-#include "the/no_such_element_exception.h"
-#include "the/index_out_of_range_exception.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/NoSuchElementException.h"
+#include "vislib/OutOfRangeException.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -487,7 +487,7 @@ namespace graphics {
          *
          * @return The number of named colours
          */
-        static size_t CountNamedColours(void);
+        static SIZE_T CountNamedColours(void);
 
         /**
          * Answer the idx-th named colour
@@ -496,9 +496,9 @@ namespace graphics {
          *
          * @return The idx-th named colour
          *
-         * @throw index_out_of_range_exception if idx < 0 or idx >= CountNamedColours
+         * @throw OutOfRangeException if idx < 0 or idx >= CountNamedColours
          */
-        static const ColourRGBAu8& GetColourByIndex(size_t idx);
+        static const ColourRGBAu8& GetColourByIndex(SIZE_T idx);
 
         /**
          * Answer the colour of the specified name
@@ -507,7 +507,7 @@ namespace graphics {
          *
          * @return The colour of the specified name
          *
-         * @throw no_such_element_exception if 'name' is not a named colour name
+         * @throw NoSuchElementException if 'name' is not a named colour name
          */
         static const ColourRGBAu8& GetColourByName(const char *name);
 
@@ -518,21 +518,21 @@ namespace graphics {
          *
          * @return The idx-th named colour name
          *
-         * @throw index_out_of_range_exception if idx < 0 or idx >= CountNamedColours
+         * @throw OutOfRangeException if idx < 0 or idx >= CountNamedColours
          */
-        static const char *GetNameByIndex(size_t idx);
+        static const char *GetNameByIndex(SIZE_T idx);
 
         /**
          * Answer the name of the colour
          *
          * @param col The colour to test
-         * @param throwException If set to 'true' a no_such_element_exception is
+         * @param throwException If set to 'true' a NoSuchElementException is
          *                       thrown if 'col' is not a named colour.
          *
          * @return ASCII string of the colour name or NULL if 'col' is not a
          *         named colour. Do not free the memory of the return value.
          *
-         * @throw no_such_element_exception if 'col' is not a named colour and
+         * @throw NoSuchElementException if 'col' is not a named colour and
          *        'throwException' is 'true'.
          */
         static const char *GetNameByColour(const ColourRGBAu8& col,
@@ -557,7 +557,7 @@ namespace graphics {
         typedef struct _namedcolourindex_t {
 
             /** The colours name */
-            const the::astring name;
+            const vislib::StringA name;
 
             /** The named colour */
             const ColourRGBAu8 colour;
@@ -565,7 +565,7 @@ namespace graphics {
         } NamedColourIndex;
 
         /** The size of the index of named colours */
-        static size_t count;
+        static SIZE_T count;
 
         /** The index of named colours */
         static NamedColourIndex index[];
@@ -577,7 +577,7 @@ namespace graphics {
          *
          * @return The colour
          */
-        static ColourRGBAu8 colFromHex(unsigned int hex);
+        static ColourRGBAu8 colFromHex(DWORD hex);
 
         /** Forbidden ctor. */
         NamedColours(void);

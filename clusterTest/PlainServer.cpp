@@ -51,8 +51,8 @@ void PlainServer::Initialise(vislib::sys::CmdLineProviderW& inOutCmdLine) {
 /*
  * PlainServer::Run
  */
-unsigned int PlainServer::Run(void) {
-    unsigned int retval = vislib::net::cluster::AbstractServerNode::Run();
+DWORD PlainServer::Run(void) {
+    DWORD retval = vislib::net::cluster::AbstractServerNode::Run();
     char dowel;
     
     std::cin >> dowel;
@@ -71,7 +71,7 @@ PlainServer::PlainServer(void) : vislib::net::cluster::AbstractServerNode() {
  * PlainServer::onMessageReceived
  */
 bool PlainServer::onMessageReceived(const vislib::net::Socket& src, 
-        const unsigned int msgId, const uint8_t *body, const size_t cntBody) {
+        const UINT msgId, const BYTE *body, const SIZE_T cntBody) {
     std::cout << "PlainServer received message " << msgId << " with " 
         << cntBody << " Bytes of body data" << std::endl;
 

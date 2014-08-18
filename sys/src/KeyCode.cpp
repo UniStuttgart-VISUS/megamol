@@ -6,9 +6,7 @@
  */
 
 #include "vislib/KeyCode.h"
-#include "the/string.h"
-#include "the/text/string_builder.h"
-#include "the/text/char_utility.h"
+#include "vislib/CharTraits.h"
 
 
 /*
@@ -46,8 +44,8 @@ vislib::sys::KeyCode::~KeyCode(void) {
 /*
  * vislib::sys::KeyCode::ToStringA
  */
-the::astring vislib::sys::KeyCode::ToStringA(void) const {
-    the::astring msg;
+vislib::StringA vislib::sys::KeyCode::ToStringA(void) const {
+    vislib::StringA msg;
     if (this->IsShiftMod()) msg += "Shift + ";
     if (this->IsCtrlMod()) msg += "Ctrl + ";
     if (this->IsAltMod()) msg += "Alt + ";
@@ -79,8 +77,8 @@ the::astring vislib::sys::KeyCode::ToStringA(void) const {
             case vislib::sys::KeyCode::KEY_F11: msg += "F11"; break;
             case vislib::sys::KeyCode::KEY_F12: msg += "F12"; break;
             default: {
-                the::astring ks;
-                the::text::astring_builder::format_to(ks, "[%d]", static_cast<int>(this->NoModKeys()));
+                vislib::StringA ks;
+                ks.Format("[%d]", static_cast<int>(this->NoModKeys()));
                 msg += ks;
             } break;
         }
@@ -89,11 +87,11 @@ the::astring vislib::sys::KeyCode::ToStringA(void) const {
         if (c == 20) {
             msg += "Space";
         } else {
-            the::astring ks;
+            vislib::StringA ks;
             if (c < 20) {
-                the::text::astring_builder::format_to(ks, "[%d]", static_cast<int>(c));
+                ks.Format("[%d]", static_cast<int>(c));
             } else {
-                the::text::astring_builder::format_to(ks, "'%c'", c);
+                ks.Format("'%c'", c);
             }
             msg += ks;
         }
@@ -148,9 +146,8 @@ void vislib::sys::KeyCode::normalise(void) {
     if (this->IsSpecial()) return; // special keys are as they are
 
     char c = static_cast<char>(this->key & 0x00FF);
-    if (the::text::char_utility::is_upper_case(c)) {
-        this->key = (this->key & 0xFF00) | KEY_MOD_SHIFT
-            | the::text::char_utility::to_lower_case(c);
+    if (vislib::CharTraitsA::IsUpperCase(c)) {
+        this->key = (this->key & 0xFF00) | KEY_MOD_SHIFT | vislib::CharTraitsA::ToLower(c);
     }
 
     // TODO: Implement something intelligent here

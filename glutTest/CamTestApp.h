@@ -12,7 +12,7 @@
 
 
 #include "AbstractGlutApp.h"
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/CameraOpenGL.h"
 #include "vislib/OpenGLVISLogo.h"
 
@@ -58,7 +58,7 @@ private:
     unsigned int lensCount;
     Lens *lenses;
     float angle;
-    uint64_t lastTime;
+    UINT64 lastTime;
     float walkSpeed, rotSpeed;
     bool ortho;
     bool nativeFull;

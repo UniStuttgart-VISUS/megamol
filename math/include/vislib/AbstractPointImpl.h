@@ -15,10 +15,10 @@
 
 
 #include "vislib/AbstractVector.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/mathtypes.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/Vector.h"
 
 
@@ -248,7 +248,7 @@ namespace math {
          * @return A reference to the x-coordinate for 0, 
          *         the y-coordinate for 1, etc.
          *
-         * @throws index_out_of_range_exception, if 'i' is not within [0, D[.
+         * @throws OutOfRangeException, if 'i' is not within [0, D[.
          */
         T& operator [](const int i);
 
@@ -259,7 +259,7 @@ namespace math {
          *
          * @return The x-coordinate for 0, the y-coordinate for 1, etc.
          *
-         * @throws index_out_of_range_exception, if 'i' is not within [0, D[.
+         * @throws OutOfRangeException, if 'i' is not within [0, D[.
          */
         T operator [](const int i) const;
 
@@ -336,7 +336,7 @@ namespace math {
             return HALFSPACE_NEGATIVE;//HALFSPACE_POSITIVE;
     
         } else {
-            THE_ASSERT(false);      // Should never happen.
+            ASSERT(false);      // Should never happen.
             return HALFSPACE_IN_PLANE;
         }        
     }
@@ -573,7 +573,7 @@ namespace math {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->coordinates[i];
         } else {
-            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
 
@@ -587,7 +587,7 @@ namespace math {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->coordinates[i];
         } else {
-            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
     

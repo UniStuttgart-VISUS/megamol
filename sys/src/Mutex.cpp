@@ -7,11 +7,11 @@
 
 #include "vislib/Mutex.h"
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/error.h"
-#include "the/argument_exception.h"
-#include "the/system/system_exception.h"
-#include "the/not_supported_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/SystemException.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -20,7 +20,7 @@
 vislib::sys::Mutex::Mutex(void) {
 #ifdef _WIN32
     this->handle = ::CreateMutex(NULL, FALSE, NULL);
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
     ::pthread_mutexattr_init(&attr);
@@ -66,17 +66,17 @@ void vislib::sys::Mutex::Lock(void) {
 
         case WAIT_TIMEOUT:
             /* Waiting infinitely should not timeout. */
-            THE_ASSERT(false);
+            ASSERT(false);
             break;
 
         default:
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     int returncode = ::pthread_mutex_lock(&this->mutex);
     if (returncode != 0) {
-        throw the::system::system_exception(returncode, __FILE__, __LINE__);
+        throw SystemException(returncode, __FILE__, __LINE__);
     }
 
 #endif /* _WIN32 */
@@ -86,7 +86,7 @@ void vislib::sys::Mutex::Lock(void) {
 /*
  * vislib::sys::Mutex::TryLock
  */
-bool vislib::sys::Mutex::TryLock(const unsigned int timeout) {
+bool vislib::sys::Mutex::TryLock(const DWORD timeout) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, timeout)) {
 
@@ -99,7 +99,7 @@ bool vislib::sys::Mutex::TryLock(const unsigned int timeout) {
             return false;
 
         default:
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -114,7 +114,7 @@ bool vislib::sys::Mutex::TryLock(const unsigned int timeout) {
             return false;
 
         default:
-            throw the::system::system_exception(returncode, __FILE__, __LINE__);
+            throw SystemException(returncode, __FILE__, __LINE__);
     }
 
 #endif /* _WIN32 */
@@ -127,13 +127,13 @@ bool vislib::sys::Mutex::TryLock(const unsigned int timeout) {
 void vislib::sys::Mutex::Unlock(void) {
 #ifdef _WIN32
     if (::ReleaseMutex(this->handle) != TRUE) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
     int returncode = ::pthread_mutex_unlock(&this->mutex);
     if (returncode != 0) {
-        throw the::system::system_exception(returncode, __FILE__, __LINE__);
+        throw SystemException(returncode, __FILE__, __LINE__);
     }
 
 #endif /* _WIN32 */
@@ -144,7 +144,7 @@ void vislib::sys::Mutex::Unlock(void) {
  * vislib::sys::Mutex::Mutex
  */
 vislib::sys::Mutex::Mutex(const Mutex& rhs) {
-    throw the::not_supported_exception("vislib::sys::Mutex::Mutex", 
+    throw UnsupportedOperationException("vislib::sys::Mutex::Mutex", 
         __FILE__, __LINE__);
 }
 
@@ -154,7 +154,7 @@ vislib::sys::Mutex::Mutex(const Mutex& rhs) {
  */
 vislib::sys::Mutex& vislib::sys::Mutex::operator =(const Mutex& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

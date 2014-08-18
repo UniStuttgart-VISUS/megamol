@@ -15,7 +15,7 @@
 #include "vislib/CameraOpenGL.h"
 #include "vislib/CameraParameters.h"
 #include "vislib/SmartPtr.h"
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/OpenGLVISLogo.h"
 
 
@@ -38,7 +38,7 @@ private:
     void RenderTestBox(void);
 
     float angle;
-    uint64_t lastTime;
+    UINT64 lastTime;
 
     vislib::SmartPtr<vislib::graphics::CameraParameters> parameters;
     vislib::graphics::gl::CameraOpenGL cameraLeft;

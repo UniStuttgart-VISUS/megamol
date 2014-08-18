@@ -8,7 +8,7 @@ include ../config.mk
 
 TargetName := vislibgluttest
 
-IncludeDir := . ../base/include ../math/include ../graphics/include ../gl/include ../sys/include ../glutInclude $(thelibpath)include
+IncludeDir := . ../base/include ../math/include ../graphics/include ../gl/include ../sys/include ../glutInclude
 InputDir := ./
 
 
@@ -17,11 +17,11 @@ OutName := vislibgluttest
 
 
 # C++ compiler flags:
-CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -ggdb -Wno-missing-braces $(CompilerFlags)
+CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -ggdb -Wno-missing-braces
 # removed: -pedantic 
 
 # Linker flags:
-LDFLAGS := -ldl -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL -lX11 $(DebugLinkerFlags)
+LDFLAGS := -ldl -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL -lX11 
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
@@ -35,10 +35,10 @@ IntDir := Lin$(BITSEX)
 ifeq ($(PLATFORM), x64)
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
-	LDFLAGS := -lvislibgl64 -lvislibgraphics64 -lvislibmath64 -lvislibsys64 -lvislibbase64 $(LDFLAGS)
+	LDFLAGS += -lvislibgl64 -lvislibgraphics64 -lvislibmath64 -lvislibsys64 -lvislibbase64
 else
 	OutDir := ../Lin32
-	LDFLAGS := -lvislibgl32 -lvislibgraphics32 -lvislibmath32 -lvislibsys32 -lvislibbase32 $(LDFLAGS)
+	LDFLAGS += -lvislibgl32 -lvislibgraphics32 -lvislibmath32 -lvislibsys32 -lvislibbase32
 endif
 
 LDFLAGS += -lX11 -lXxf86vm -lpthread

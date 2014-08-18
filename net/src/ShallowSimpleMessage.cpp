@@ -12,11 +12,12 @@
  * vislib::net::ShallowSimpleMessage::ShallowSimpleMessage
  */
 vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
-        void *storage, const size_t cntStorage) 
+        void *storage, const SIZE_T cntStorage) 
         : Super(), cntStorage(cntStorage), storage(storage) {
-    THE_STACK_TRACE;
-    THE_ASSERT(storage != NULL);
-    THE_ASSERT((cntStorage == 0) 
+    VLSTACKTRACE("ShallowSimpleMessage::ShallowSimpleMessage", 
+        __FILE__, __LINE__);
+    ASSERT(storage != NULL);
+    ASSERT((cntStorage == 0) 
         || (cntStorage >= sizeof(SimpleMessageHeaderData)));
 
     this->GetHeader().SetData(static_cast<SimpleMessageHeaderData*>(storage));
@@ -31,7 +32,8 @@ vislib::net::ShallowSimpleMessage::ShallowSimpleMessage(
  * vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage
  */
 vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("ShallowSimpleMessage::~ShallowSimpleMessage",
+        __FILE__, __LINE__);
 }
 
 
@@ -39,10 +41,10 @@ vislib::net::ShallowSimpleMessage::~ShallowSimpleMessage(void) {
  * vislib::net::ShallowSimpleMessage::SetStorage
  */
 void vislib::net::ShallowSimpleMessage::SetStorage(void *storage, 
-        const size_t cntStorage) {
-    THE_STACK_TRACE;
-    THE_ASSERT(storage != NULL);
-    THE_ASSERT((cntStorage == 0) 
+        const SIZE_T cntStorage) {
+    VLSTACKTRACE("ShallowSimpleMessage::SetStorage", __FILE__, __LINE__);
+    ASSERT(storage != NULL);
+    ASSERT((cntStorage == 0) 
         || (cntStorage >= sizeof(SimpleMessageHeaderData)));
     
     // Note: Order of assignments is important!
@@ -55,7 +57,7 @@ void vislib::net::ShallowSimpleMessage::SetStorage(void *storage,
 /*
  * vislib::net::ShallowSimpleMessage::assertStorage
  */
-bool vislib::net::ShallowSimpleMessage::assertStorage(void *& outStorage, const size_t size) {
+bool vislib::net::ShallowSimpleMessage::assertStorage(void *& outStorage, const SIZE_T size) {
     // intentionally empty atm
     return false;
 }

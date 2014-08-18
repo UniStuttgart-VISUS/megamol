@@ -9,17 +9,17 @@
 
 #include <climits>
 
-#include "the/assert.h"
-#include "the/memory.h"
-#include "the/argument_exception.h"
-#include "the/not_supported_exception.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
  * vislib::RawStoragePool::RawStoragePool
  */
 vislib::RawStoragePool::RawStoragePool(void) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     // Nothing to do.
 }
 
@@ -28,7 +28,7 @@ vislib::RawStoragePool::RawStoragePool(void) {
  * vislib::RawStoragePool::~RawStoragePool
  */
 vislib::RawStoragePool::~RawStoragePool(void) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     this->Clear();
 }
 
@@ -37,9 +37,9 @@ vislib::RawStoragePool::~RawStoragePool(void) {
  * vislib::RawStoragePool::Clear
  */
 void vislib::RawStoragePool::Clear(void) {
-    THE_STACK_TRACE;
-    while (!this->storageList.empty()) {
-        the::safe_delete(this->storageList.First().storage);
+    VLAUTOSTACKTRACE;
+    while (!this->storageList.IsEmpty()) {
+        SAFE_DELETE(this->storageList.First().storage);
         this->storageList.RemoveFirst();
     }
 }
@@ -48,11 +48,11 @@ void vislib::RawStoragePool::Clear(void) {
 /*
  * vislib::RawStoragePool::RaiseAtLeast
  */
-vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const size_t size) {
-    THE_STACK_TRACE;
+vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const SIZE_T size) {
+    VLAUTOSTACKTRACE;
     PooledRawStorage *bestFit = NULL;
     PooledRawStorage *firstUnused = NULL;
-    size_t bestDist = SIZE_MAX;
+    SIZE_T bestDist = SIZE_MAX;
     RawStorageList::Iterator it = this->storageList.GetIterator();
 
     while (it.HasNext()) {
@@ -74,7 +74,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const size_t size) {
     }
 
     if (bestFit != NULL) {
-        THE_ASSERT(bestFit->storage->GetSize() >= size);
+        ASSERT(bestFit->storage->GetSize() >= size);
         bestFit->isInUse = true;
         return bestFit->storage;
 
@@ -89,7 +89,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const size_t size) {
         n.storage = new RawStorage(size);
         this->storageList.Append(n);
 
-        THE_ASSERT(this->storageList.Last().storage->GetSize() == size);
+        ASSERT(this->storageList.Last().storage->GetSize() == size);
         return this->storageList.Last().storage;
     }
 
@@ -100,7 +100,7 @@ vislib::RawStorage *vislib::RawStoragePool::RaiseAtLeast(const size_t size) {
  * vislib::RawStoragePool::Return
  */
 void vislib::RawStoragePool::Return(RawStorage *storage) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     RawStorageList::Iterator it = this->storageList.GetIterator();
 
     while (it.HasNext()) {
@@ -112,7 +112,7 @@ void vislib::RawStoragePool::Return(RawStorage *storage) {
     }
     /* 'storage' was not found at this point. */
 
-    throw the::argument_exception("storage", __FILE__, __LINE__);
+    throw IllegalParamException("storage", __FILE__, __LINE__);
 }
 
 
@@ -120,7 +120,7 @@ void vislib::RawStoragePool::Return(RawStorage *storage) {
  *  vislib::RawStoragePool::SafeReturn
  */
 void vislib::RawStoragePool::SafeReturn(RawStorage *storage) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     if (storage != NULL) {
         this->Return(storage);
     }
@@ -131,8 +131,8 @@ void vislib::RawStoragePool::SafeReturn(RawStorage *storage) {
  * vislib::RawStoragePool::RawStoragePool
  */
 vislib::RawStoragePool::RawStoragePool(const RawStoragePool& rhs) {
-    THE_STACK_TRACE;
-    throw the::not_supported_exception("RawStoragePool::RawStoragePool",
+    VLAUTOSTACKTRACE;
+    throw UnsupportedOperationException("RawStoragePool::RawStoragePool",
         __FILE__, __LINE__);
 }
 
@@ -142,9 +142,9 @@ vislib::RawStoragePool::RawStoragePool(const RawStoragePool& rhs) {
  */
 vislib::RawStoragePool& vislib::RawStoragePool::operator =(
         const RawStoragePool& rhs) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

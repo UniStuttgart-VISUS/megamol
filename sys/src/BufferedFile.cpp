@@ -6,13 +6,14 @@
 
 #include "vislib/BufferedFile.h"
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/error.h"
-#include "the/argument_exception.h"
-#include "the/system/io/io_exception.h"
-#include "the/memory.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IOException.h"
+#include "vislib/memutils.h"
 #include "vislib/SystemInformation.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/vislibsymbolimportexport.inl"
 
 #ifdef _WIN32
 #include <WinError.h>
@@ -24,7 +25,13 @@
 /*
  * vislib::sys::BufferedFile::defBufferSize
  */
-vislib::sys::File::FileSize __vl_bufferedfile_defaultBufferSize = 64 * 1024;
+VISLIB_STATICSYMBOL vislib::sys::File::FileSize
+__vl_bufferedfile_defaultBufferSize 
+#ifndef VISLIB_SYMBOL_IMPORT
+//    = vislib::sys::SystemInformation::PageSize();
+    = 64 * 1024
+#endif /* !VISLIB_SYMBOL_IMPORT */
+    ;
 
 
 /*
@@ -50,7 +57,7 @@ vislib::sys::BufferedFile::BufferedFile(void)
  * vislib::sys::BufferedFile::~BufferedFile
  */
 vislib::sys::BufferedFile::~BufferedFile(void) {
-    the::safe_array_delete(this->buffer);
+    ARY_SAFE_DELETE(this->buffer);
 }
 
 
@@ -137,7 +144,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Read(void *outBuf,
     // check for compatible file mode
     if ((this->fileMode != File::READ_WRITE) 
             && (this->fileMode != File::READ_ONLY)) {
-        throw the::system::io::io_exception(
+        throw IOException(
 #ifdef _WIN32
             E_ACCESSDENIED  /* access denied: wrong access mode */
 #else /* _WIN32 */
@@ -226,7 +233,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Seek(
             pos = this->GetSize() + offset;
             break;
         default:
-            throw the::argument_exception("from", __FILE__, __LINE__);
+            throw vislib::IllegalParamException("from", __FILE__, __LINE__);
     }
 
     if ((pos >= this->bufferStart) 
@@ -255,7 +262,7 @@ void vislib::sys::BufferedFile::SetBufferSize(
         vislib::sys::File::FileSize newSize) {
 
     if (newSize < 1) {
-        throw the::argument_exception("newSize", __FILE__, __LINE__);
+        throw vislib::IllegalParamException("newSize", __FILE__, __LINE__);
     }
 
     this->Flush(); // writes buffer if dirty and file writeable
@@ -283,7 +290,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
     // check for compatible file mode
     if ((this->fileMode != File::READ_WRITE) 
             && (this->fileMode != File::WRITE_ONLY)) {
-        throw the::system::io::io_exception(
+        throw IOException(
 #ifdef _WIN32
             E_ACCESSDENIED  /* access denied: wrong access mode */
 #else /* _WIN32 */
@@ -356,7 +363,7 @@ vislib::sys::File::FileSize vislib::sys::BufferedFile::Write(const void *buf,
  * vislib::sys::BufferedFile::BufferedFile copy ctor
  */
 vislib::sys::BufferedFile::BufferedFile(const vislib::sys::BufferedFile& rhs) {
-    throw the::not_supported_exception("vislib::sys::File::File",
+    throw UnsupportedOperationException("vislib::sys::File::File",
         __FILE__, __LINE__);
 }
 
@@ -367,7 +374,7 @@ vislib::sys::BufferedFile::BufferedFile(const vislib::sys::BufferedFile& rhs) {
 vislib::sys::BufferedFile& vislib::sys::BufferedFile::operator =(
         const vislib::sys::BufferedFile& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
     return *this;
 }
@@ -389,9 +396,9 @@ void vislib::sys::BufferedFile::flush(bool fileFlush) {
                 w = File::Write(this->buffer + r, this->validBufferSize + r);
                 if (w == 0) {
 #ifdef _WIN32
-                    throw the::system::io::io_exception(ERROR_WRITE_FAULT, __FILE__, __LINE__);
+                    throw IOException(ERROR_WRITE_FAULT, __FILE__, __LINE__);
 #else /* _WIN32 */
-                    throw the::system::io::io_exception(EIO, __FILE__, __LINE__);
+                    throw IOException(EIO, __FILE__, __LINE__);
 #endif /* _WIN32 */
                 }
                 r += w;

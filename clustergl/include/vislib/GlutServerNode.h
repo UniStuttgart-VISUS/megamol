@@ -61,7 +61,7 @@ namespace cluster {
 
         virtual void Initialise(sys::CmdLineProviderW& inOutCmdLine);
 
-        virtual unsigned int Run(void);
+        virtual DWORD Run(void);
 
     protected:
 
@@ -77,7 +77,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual size_t countPeers(void) const;
+        virtual SIZE_T countPeers(void) const;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -95,7 +95,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual size_t forEachPeer(ForeachPeerFunc func, void *context);
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -166,8 +166,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed, 
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const uint8_t *body, const size_t cntBody);
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody);
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -288,8 +288,8 @@ namespace cluster {
      * vislib::net::cluster::GlutServerNode<T>::~GlutServerNode
      */
     template<class T> GlutServerNode<T>::~GlutServerNode(void) {
-        the::safe_delete(this->rotateController);
-        the::safe_delete(this->zoomController);
+        SAFE_DELETE(this->rotateController);
+        SAFE_DELETE(this->zoomController);
     }
 
 
@@ -316,7 +316,7 @@ namespace cluster {
     /*
      *  vislib::net::cluster::GlutServerNode<T>::Run
      */
-    template<class T> unsigned int GlutServerNode<T>::Run(void) {
+    template<class T> DWORD GlutServerNode<T>::Run(void) {
         AbstractServerNode::Run();          // First, start the server.
         return GlutClusterNode<T>::Run();   // Afterwards, enter message loop.
     }
@@ -338,7 +338,7 @@ namespace cluster {
     /*
      * vislib::net::cluster::GlutServerNode<T>::countPeers
      */
-    template<class T> size_t GlutServerNode<T>::countPeers(void) const {
+    template<class T> SIZE_T GlutServerNode<T>::countPeers(void) const {
         // GCC cannot resolve this conflict via dominance, even if it is obvious
         // that we do not want to inherit the pure virtual implementation.
         return AbstractServerNode::countPeers();
@@ -349,7 +349,7 @@ namespace cluster {
      * vislib::net::cluster::GlutServerNode<T>::forEachPeer
      */
     template<class T> 
-    size_t GlutServerNode<T>::forEachPeer(ForeachPeerFunc func, void *context) {
+    SIZE_T GlutServerNode<T>::forEachPeer(ForeachPeerFunc func, void *context) {
         // GCC cannot resolve this conflict via dominance, even if it is obvious
         // that we do not want to inherit the pure virtual implementation.
         return AbstractServerNode::forEachPeer(func, context);
@@ -377,15 +377,15 @@ namespace cluster {
 
         /* Clean up possible old controllers. */
         if (inOutRotateController != NULL) {
-            THE_ASSERT(dynamic_cast<graphics::AbstractCursorEvent *>(
+            BECAUSE_I_KNOW(dynamic_cast<graphics::AbstractCursorEvent *>(
                 inOutRotateController) != NULL);
             this->cursor.UnregisterCursorEvent(dynamic_cast<
                 graphics::AbstractCursorEvent *>(inOutRotateController));
         }
-        the::safe_delete(inOutRotateController);
+        SAFE_DELETE(inOutRotateController);
 
         if (inOutZoomController != NULL) {
-            THE_ASSERT(dynamic_cast<graphics::AbstractCursorEvent *>(
+            BECAUSE_I_KNOW(dynamic_cast<graphics::AbstractCursorEvent *>(
                 inOutZoomController) != NULL);
             this->cursor.UnregisterCursorEvent(dynamic_cast<
                 graphics::AbstractCursorEvent *>(inOutZoomController));
@@ -454,8 +454,8 @@ namespace cluster {
      *  vislib::net::cluster::GlutServerNode<T>::onMessageReceived
      */
     template<class T> bool GlutServerNode<T>::onMessageReceived(
-            const Socket& src, const unsigned int msgId, const uint8_t *body, 
-            const size_t cntBody) {
+            const Socket& src, const UINT msgId, const BYTE *body, 
+            const SIZE_T cntBody) {
         bool retval = AbstractControllerNode::onMessageReceived(src, msgId, 
             body, cntBody);
         // Add GlutClusterNode if it overrides method some time, too.
@@ -478,8 +478,8 @@ namespace cluster {
      */
     template<class T> void GlutServerNode<T>::onMouseButton(const int button,
             const int state, const int x, const int y) {
-        THE_ASSERT(GLUT_LEFT_BUTTON < 3);
-        THE_ASSERT(GLUT_MIDDLE_BUTTON < 3);
+        BECAUSE_I_KNOW(GLUT_LEFT_BUTTON < 3);
+        BECAUSE_I_KNOW(GLUT_MIDDLE_BUTTON < 3);
         this->cursor.SetButtonState(button, (state == GLUT_DOWN));
 
         this->updateInputModifiers();

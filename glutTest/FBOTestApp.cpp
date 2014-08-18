@@ -60,11 +60,11 @@ int FBOTestApp::GLInit(void) {
             //        FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT32)) {
             if (!this->fbo.Create(512, 512, 2, cap, dap, sap)) {
                 std::cout << "Framebuffer object creation failed." << std::endl;
-                THE_ASSERT(false);
+                ASSERT(false);
                 retval++;
             }
         } catch (vislib::graphics::gl::OpenGLException e) {
-            std::cout << e.what() << " @ " << e.get_file() << ":" << e.get_line() 
+            std::cout << e.GetMsgA() << " @ " << e.GetFile() << ":" << e.GetLine() 
                 << std::endl;
             retval++;
         }
@@ -160,6 +160,6 @@ void FBOTestApp::Render(void) {
         ::glutSwapBuffers();
 
     } catch (vislib::graphics::gl::OpenGLException e) {
-        std::cout << e.what() << std::endl;
+        std::cout << e.GetMsgA() << std::endl;
     }
 }

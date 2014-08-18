@@ -23,7 +23,7 @@
 
 #include "vislib/Lockable.h"
 #include "vislib/SyncObject.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -55,7 +55,7 @@ namespace sys {
          * Acquire a lock on the mutex for the calling thread. The method blocks
          * until the lock is acquired. 
          *
-         * @throws the::system::system_exception If the lock could not be acquired.
+         * @throws SystemException If the lock could not be acquired.
          */
         virtual void Lock(void);
 
@@ -71,15 +71,15 @@ namespace sys {
          *
          * @return true, if the lock was acquired, false, if not.
          *
-         * @throws the::system::system_exception If an error occurred when trying to acquire
+         * @throws SystemException If an error occurred when trying to acquire
          *                         the lock.
          */
-        bool TryLock(const unsigned int timeout = 0);
+        bool TryLock(const DWORD timeout = 0);
 
         /**
          * Release the mutex.
          *
-         * @throw the::system::system_exception If the lock could not be released.
+         * @throw SystemException If the lock could not be released.
          */
         virtual void Unlock(void);
 
@@ -90,7 +90,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         Mutex(const Mutex& rhs);
 
@@ -101,7 +101,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         Mutex& operator =(const Mutex& rhs);
 

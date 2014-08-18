@@ -14,10 +14,11 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/string.h"
+#include "vislib/CharTraits.h"
+#include "vislib/String.h"
 
 #ifdef _WIN32
-#include "the/system/system_exception.h"
+#include "vislib/SystemException.h"
 #endif // _WIN32
 
 
@@ -43,7 +44,7 @@ namespace sys {
         template<class Tf> friend class vislib::sys::CmdLineParser;
 
         /** Define a local name for the character type. */
-        typedef typename T::value_type Char;
+        typedef typename T::Char Char;
 
         /**
          * Convenience method for creating a command line provider from 
@@ -71,10 +72,10 @@ namespace sys {
          *
          * @return The module file name.
          *
-         * @throw the::system::system_exception if the module file name cannot be received
+         * @throw SystemException if the module file name cannot be received
          *        due to a system error.
          */
-        static T GetModuleName(void);
+        static String<T> GetModuleName(void);
 #endif // _WIN32
 
         /** Ctor. */
@@ -103,7 +104,7 @@ namespace sys {
          * @param cmdLine The single string command line including the 
          *                application name.
          */
-        CmdLineProvider(const T& cmdLine);
+        CmdLineProvider(const String<T>& cmdLine);
 
         /**
          * Create command line provider from C style parameters.
@@ -133,7 +134,7 @@ namespace sys {
          * @param cmdLine The single string command line excluding the 
          *                application name.
          */
-        CmdLineProvider(const Char *appName, const T& cmdLine);
+        CmdLineProvider(const Char *appName, const String<T>& cmdLine);
 
         /**
          * Ctor with initialization
@@ -143,7 +144,7 @@ namespace sys {
          * @param cmdLine The single string command line excluding the 
          *                application name.
          */
-        CmdLineProvider(const T& appName, const Char *cmdLine);
+        CmdLineProvider(const String<T>& appName, const Char *cmdLine);
 
         /**
          * Ctor with initialization
@@ -153,7 +154,7 @@ namespace sys {
          * @param cmdLine The single string command line excluding the 
          *                application name.
          */
-        CmdLineProvider(const T& appName, const T& cmdLine);
+        CmdLineProvider(const String<T>& appName, const String<T>& cmdLine);
 
         /** Dtor. */
         ~CmdLineProvider(void);
@@ -225,8 +226,8 @@ namespace sys {
          * @param cmdLine The single string command line excluding the 
          *                application name.
          */
-        inline void CreateCmdLine(const T& appName, const Char *cmdLine) {
-            this->CreateCmdLine(appName.c_str(), cmdLine);
+        inline void CreateCmdLine(const String<T>& appName, const Char *cmdLine) {
+            this->CreateCmdLine(appName.PeekBuffer(), cmdLine);
         }
 
         /**
@@ -238,8 +239,8 @@ namespace sys {
          * @param cmdLine The single string command line excluding the 
          *                application name.
          */
-        inline void CreateCmdLine(const Char *appName, const T& cmdLine) {
-            this->CreateCmdLine(appName, cmdLine.c_str());
+        inline void CreateCmdLine(const Char *appName, const String<T>& cmdLine) {
+            this->CreateCmdLine(appName, cmdLine.PeekBuffer());
         }
 
         /**
@@ -251,8 +252,8 @@ namespace sys {
          * @param cmdLine The single string command line excluding the 
          *                application name.
          */
-        inline void CreateCmdLine(const T& appName, const T& cmdLine) {
-            this->CreateCmdLine(appName.c_str(), cmdLine.c_str());
+        inline void CreateCmdLine(const String<T>& appName, const String<T>& cmdLine) {
+            this->CreateCmdLine(appName.PeekBuffer(), cmdLine.PeekBuffer());
         }
 
         /**
@@ -275,8 +276,8 @@ namespace sys {
          * @param cmdLine The single string command line including the 
          *                application name.
          */
-        inline void CreateCmdLine(const T& cmdLine) {
-            this->CreateCmdLine(NULL, cmdLine.c_str());
+        inline void CreateCmdLine(const String<T>& cmdLine) {
+            this->CreateCmdLine(NULL, cmdLine.PeekBuffer());
         }
 
         /**
@@ -318,8 +319,8 @@ namespace sys {
          *
          * @param arg The argument to be appenden to the command line.
          */
-        inline void Append(const T& arg) {
-            this->Append(arg.c_str());
+        inline void Append(const String<T>& arg) {
+            this->Append(arg.PeekBuffer());
         }
 
         /**
@@ -334,8 +335,8 @@ namespace sys {
          *
          * @param arg The argument to be prependen to the command line.
          */
-        void Prepend(const T& arg) {
-            this->Prepend(arg.c_str());
+        void Prepend(const String<T>& arg) {
+            this->Prepend(arg.PeekBuffer());
         }
 
         /**
@@ -355,7 +356,7 @@ namespace sys {
          *
          * @return The generated single string command line.
          */
-        T SingleStringCommandLine(bool includeFirst);
+        String<T> SingleStringCommandLine(bool includeFirst);
 
     private:
 
@@ -411,14 +412,14 @@ namespace sys {
     template<class T>
     CmdLineProvider<T> CmdLineProvider<T>::Create(int argc, char **argv) {
         // TODO: This is not very efficient.
-        T tmpLine;
+        String<T> tmpLine;
 
         for (int i = 0; i < argc; i++) {
-            tmpLine += T(argv[i]);
+            tmpLine += String<T>(argv[i]);
             tmpLine += static_cast<Char>(' ');
         }
 
-        return CmdLineProvider(tmpLine.c_str());
+        return CmdLineProvider(tmpLine.PeekBuffer());
     }
 
 
@@ -426,24 +427,23 @@ namespace sys {
     /*
      * CmdLineProvider<T>::GetModuleName
      */
-    template<class T> T CmdLineProvider<T>::GetModuleName(void) {
-        T str;
-        unsigned int len = 16;
-        unsigned int rlen;
+    template<class T> String<T> CmdLineProvider<T>::GetModuleName(void) {
+        String<T> str;
+        DWORD len = 16;
+        DWORD rlen;
         Char *buf = NULL;
 
         while(true) {
-            str = T(len, static_cast<Char>(' '));
-            buf = const_cast<Char*>(str.c_str());
+            buf = str.AllocateBuffer(len);
 
-            if (sizeof(typename T::value_type) == sizeof(wchar_t)) { // not too secure, but it will do
+            if (T::CharSize() == sizeof(wchar_t)) { // not too secure, but it will do
                 rlen = GetModuleFileNameW(NULL, reinterpret_cast<wchar_t*>(buf), len); // unicode string
             } else {
                 rlen = GetModuleFileNameA(NULL, reinterpret_cast<char*>(buf), len); // ansi string
             }
 
             if (rlen == 0) {
-                throw the::system::system_exception(__FILE__, __LINE__);
+                throw SystemException(__FILE__, __LINE__);
             }
 
             if (rlen < len) break;
@@ -490,11 +490,11 @@ namespace sys {
     /*
      * CmdLineProvider<T>::CmdLineProvider
      */
-    template<class T> CmdLineProvider<T>::CmdLineProvider(const T& cmdLine) 
+    template<class T> CmdLineProvider<T>::CmdLineProvider(const String<T>& cmdLine) 
             : argCount(0), arguments(NULL), storeCount(0)/*, memoryAnchor(NULL)*/ {
         this->memoryAnchor[0] = NULL;
         this->memoryAnchor[1] = NULL;
-        this->CreateCmdLine(NULL, cmdLine.c_str());
+        this->CreateCmdLine(NULL, cmdLine.PeekBuffer());
     }
 
 
@@ -508,11 +508,11 @@ namespace sys {
         this->memoryAnchor[1] = new Char *[this->argCount];
         this->arguments = this->memoryAnchor[1];
 
-        THE_ASSERT(this->argCount == this->storeCount);
+        BECAUSE_I_KNOW(this->argCount == this->storeCount);
         for (int i = 0; i < this->argCount; i++) {
-            size_t len = the::text::string_utility::c_str_len(argv[i]) + 1;
+            typename T::Size len = T::SafeStringLength(argv[i]) + 1;
             this->arguments[i] = this->memoryAnchor[0][i] = new Char[len];
-            ::memcpy(this->memoryAnchor[0][i], argv[i], len * sizeof(typename T::value_type));
+            ::memcpy(this->memoryAnchor[0][i], argv[i], len * T::CharSize());
         }
     }
 
@@ -531,33 +531,33 @@ namespace sys {
     /*
      * CmdLineProvider<T>::CmdLineProvider
      */
-    template<class T> CmdLineProvider<T>::CmdLineProvider(const Char *appName, const T& cmdLine) 
+    template<class T> CmdLineProvider<T>::CmdLineProvider(const Char *appName, const String<T>& cmdLine) 
             : argCount(0), arguments(NULL), storeCount(0)/*, memoryAnchor(NULL)*/ {
         this->memoryAnchor[0] = NULL;
         this->memoryAnchor[1] = NULL;
-        this->CreateCmdLine(appName, cmdLine.c_str());
+        this->CreateCmdLine(appName, cmdLine.PeekBuffer());
     }
 
 
     /*
      * CmdLineProvider<T>::CmdLineProvider
      */
-    template<class T> CmdLineProvider<T>::CmdLineProvider(const T& appName, const Char *cmdLine) 
+    template<class T> CmdLineProvider<T>::CmdLineProvider(const String<T>& appName, const Char *cmdLine) 
             : argCount(0), arguments(NULL), storeCount(0)/*, memoryAnchor(NULL)*/ {
         this->memoryAnchor[0] = NULL;
         this->memoryAnchor[1] = NULL;
-        this->CreateCmdLine(appName.c_str(), cmdLine);
+        this->CreateCmdLine(appName.PeekBuffer(), cmdLine);
     }
 
 
     /*
      * CmdLineProvider<T>::CmdLineProvider
      */
-    template<class T> CmdLineProvider<T>::CmdLineProvider(const T& appName, const T& cmdLine) 
+    template<class T> CmdLineProvider<T>::CmdLineProvider(const String<T>& appName, const String<T>& cmdLine) 
             : argCount(0), arguments(NULL), storeCount(0)/*, memoryAnchor(NULL)*/ {
         this->memoryAnchor[0] = NULL;
         this->memoryAnchor[1] = NULL;
-        this->CreateCmdLine(appName.c_str(), cmdLine.c_str());
+        this->CreateCmdLine(appName.PeekBuffer(), cmdLine.PeekBuffer());
     }
 
 
@@ -625,7 +625,7 @@ namespace sys {
                     } else if (*ci == static_cast<Char>('"')) { // start of qouted parameter
                         this->storeCount++; 
                         state = 3;
-                    } else if (!the::text::char_utility::is_space(*ci)) { // start of parameter
+                    } else if (!T::IsSpace(*ci)) { // start of parameter
                         this->storeCount++; 
                         state = 2;
                     }
@@ -635,7 +635,7 @@ namespace sys {
                         state = 0;
                     } else if (*ci == static_cast<Char>('"')) { // start of qouted section
                         state = 3;
-                    } else if (the::text::char_utility::is_space(*ci)) { // end of parameter
+                    } else if (T::IsSpace(*ci)) { // end of parameter
                         state = 1;
                     }
                     break;
@@ -651,7 +651,7 @@ namespace sys {
                         state = 0;
                     } else if (*ci == static_cast<Char>('"')) { // escaped qout!
                         state = 3;
-                    } else if (the::text::char_utility::is_space(*ci)) { // end of parameter
+                    } else if (T::IsSpace(*ci)) { // end of parameter
                         state = 1; // truncate last space!
                     } else { // end of qouted section
                         state = 2;
@@ -671,7 +671,7 @@ namespace sys {
             ci = const_cast<Char*>(appName);
             while (*ci != 0) { len++; ci++; }
             this->memoryAnchor[0][0] = new Char[len];
-            ::memcpy(this->memoryAnchor[0][0], appName, len * sizeof(typename T::value_type));
+            ::memcpy(this->memoryAnchor[0][0], appName, len * T::CharSize());
             this->argCount = 1;
         } else {
             this->argCount = 0;
@@ -688,7 +688,7 @@ namespace sys {
                     } else if (*ci == static_cast<Char>('"')) { // start of qouted parameter
                         start = ci + 1;
                         state = 3;
-                    } else if (!the::text::char_utility::is_space(*ci)) { // start of parameter
+                    } else if (!T::IsSpace(*ci)) { // start of parameter
                         start = ci;
                         state = 2;
                     }
@@ -699,7 +699,7 @@ namespace sys {
                         this->memoryAnchor[0][this->argCount++] = this->createArgument(start, (ci - 1));
                     } else if (*ci == static_cast<Char>('"')) { // start of qouted section
                         state = 3;
-                    } else if (the::text::char_utility::is_space(*ci)) { // end of parameter
+                    } else if (T::IsSpace(*ci)) { // end of parameter
                         state = 1;
                         this->memoryAnchor[0][this->argCount++] = this->createArgument(start, (ci - 1));
                     }
@@ -718,7 +718,7 @@ namespace sys {
                         this->memoryAnchor[0][this->argCount++] = this->createArgument(start, (ci - 2));
                     } else if (*ci == static_cast<Char>('"')) { // escaped qout!
                         state = 3;
-                    } else if (the::text::char_utility::is_space(*ci)) { // end of parameter
+                    } else if (T::IsSpace(*ci)) { // end of parameter
                         state = 1; // truncate last space!
                         this->memoryAnchor[0][this->argCount++] = this->createArgument(start, (ci - 2));
                     } else { // end of qouted section
@@ -729,7 +729,7 @@ namespace sys {
             ci++;
         }
 
-        THE_ASSERT(this->storeCount == this->argCount);
+        ASSERT(this->storeCount == this->argCount);
 
         for (this->argCount = 0; this->argCount < this->storeCount; this->argCount++) {
             this->arguments[this->argCount] = this->memoryAnchor[0][this->argCount];
@@ -744,10 +744,10 @@ namespace sys {
     template<class T> void CmdLineProvider<T>::clearArgumentList(void) {
         if (this->memoryAnchor[0] != NULL) {
             for (int i = 0; i < this->storeCount; i++) {
-                the::safe_array_delete(this->memoryAnchor[0][i]);
+                ARY_SAFE_DELETE(this->memoryAnchor[0][i]);
             }
-            the::safe_array_delete(this->memoryAnchor[0]);
-            the::safe_array_delete(this->memoryAnchor[1]);
+            ARY_SAFE_DELETE(this->memoryAnchor[0]);
+            ARY_SAFE_DELETE(this->memoryAnchor[1]);
             this->arguments = NULL;
         }
 
@@ -852,8 +852,8 @@ namespace sys {
     /*
      * CmdLineProvider<T>::SingleStringCommandLine
      */
-    template<class T> T CmdLineProvider<T>::SingleStringCommandLine(bool includeFirst) {
-        T retval;
+    template<class T> String<T> CmdLineProvider<T>::SingleStringCommandLine(bool includeFirst) {
+        String<T> retval;
         int startIndex = includeFirst ? 0 : 1;
 
         if (this->argCount > startIndex) {
@@ -864,7 +864,7 @@ namespace sys {
                 bool needQuots = (*this->arguments[i] == 0);
                 for (Char *ci = this->arguments[i]; *ci != 0; ci++) {
                     len++; // character
-                    if (the::text::char_utility::is_space(*ci)) needQuots = true; // parameter with spaces
+                    if (T::IsSpace(*ci)) needQuots = true; // parameter with spaces
                     if (*ci == static_cast<Char>('"')) {
                         needQuots = true;
                         len++; // escape qouts
@@ -874,8 +874,7 @@ namespace sys {
             }
 
             // build string
-            retval = T(len, static_cast<Char>(' '));
-            Char *data = const_cast<Char*>(retval.c_str());
+            Char *data = retval.AllocateBuffer(len);
 
             for (int i = startIndex; i < this->argCount; i++) {
                 if (i > startIndex) *(data++) = static_cast<Char>(' '); // seperating space
@@ -887,7 +886,7 @@ namespace sys {
                 for (Char *ci = this->arguments[i]; *ci != 0; ci++) {
                     *(data++) = *ci;
 
-                    if ((the::text::char_utility::is_space(*ci)) || (*ci == static_cast<Char>('"'))) {
+                    if ((T::IsSpace(*ci)) || (*ci == static_cast<Char>('"'))) {
                         // quots are needed!
                         needQuots = true;
                         break;
@@ -911,7 +910,7 @@ namespace sys {
     
         } else {
             // no arguments, so return empty string
-            retval.clear();
+            retval.AllocateBuffer(0);
 
         }
 
@@ -962,13 +961,13 @@ namespace sys {
 
 
     /** Template instantiation for ANSI strings. */
-    typedef CmdLineProvider<the::astring> CmdLineProviderA;
+    typedef CmdLineProvider<CharTraitsA> CmdLineProviderA;
 
     /** Template instantiation for wide strings. */
-    typedef CmdLineProvider<the::wstring> CmdLineProviderW;
+    typedef CmdLineProvider<CharTraitsW> CmdLineProviderW;
 
     /** Template instantiation for TCHARs. */
-    typedef CmdLineProvider<the::tstring> TCmdLineProvider;
+    typedef CmdLineProvider<TCharTraits> TCmdLineProvider;
 
 } /* end namespace sys */
 } /* end namespace vislib */

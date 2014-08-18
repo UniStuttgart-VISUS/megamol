@@ -14,27 +14,24 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
 #include "vislib/CameraParameterObserver.h"
 #include "vislib/CameraParameters.h"
 #include "vislib/SingleLinkedList.h"
 
-
 namespace vislib {
 namespace graphics {
 
-
-    /**
-     * This class implements a specialised CameraParameters that fires events
-     * every time it was changed.
-     *
-     * ObservableCameraParams is implemented as a pass-through wrapper that 
-     * fires events and lets the observed actual parameter store or override
-     * do the rest of the job.
-     *
-     * Note: THE CURRENT IMPLEMENTATION IS NOT THREAD-SAFE!
-     */
-    class ObservableCameraParams : public CameraParameters {
+/**
+ * This class implements a specialised CameraParameters that fires events
+ * every time it was changed.
+ *
+ * ObservableCameraParams is implemented as a pass-through wrapper that
+ * fires events and lets the observed actual parameter store or override
+ * do the rest of the job.
+ *
+ * Note: THE CURRENT IMPLEMENTATION IS NOT THREAD-SAFE!
+ */
+class ObservableCameraParams: public CameraParameters {
 
     public:
 
@@ -72,7 +69,7 @@ namespace graphics {
          *                 NULL.
          */
         virtual void AddCameraParameterObserver(
-            CameraParameterObserver *observer);
+                CameraParameterObserver *observer);
 
         /**
          * Applies the limits to the stored values. This should be called
@@ -85,7 +82,7 @@ namespace graphics {
          * new values will not be set.
          */
         virtual void ApplyLimits(void);
-        
+
         /**
          * Answers the auto focus offset
          *
@@ -107,6 +104,102 @@ namespace graphics {
          * @return the coordinate system type of the camera.
          */
         virtual math::CoordSystemType CoordSystemType(void) const;
+
+        /**
+         * Copies all values from 'src' into this object. Events are only fired
+         * if the parameters actually changed in value.
+         *
+         * @param src The source object to copy from.
+         */
+        inline void CopyChangedParamsFrom(
+                const SmartPtr<CameraParameters> src) {
+            this->CopyChangedParamsFrom(src.operator->());
+        }
+
+        /**
+         * Copies all values from 'src' into this object. Events are only fired
+         * if the parameters actually have changed in value.
+         *
+         * @param src The source object to copy from.
+         */
+        inline void CopyChangedParamsFrom(const CameraParameters *src) {
+            using namespace vislib::math;
+
+            if (!IsEqual(this->ApertureAngle(), src->ApertureAngle())) {
+                this->suspendFire();
+                this->observed->SetApertureAngle(src->ApertureAngle());
+                this->resumeFire();
+                this->fireChanged(DIRTY_APERTUREANGLE, false);
+            }
+
+            if (!IsEqual(this->AutoFocusOffset(), src->AutoFocusOffset())) {
+                this->suspendFire();
+                this->observed->SetAutoFocusOffset(src->AutoFocusOffset());
+                this->resumeFire();
+                this->fireChanged(DIRTY_AUTOFOCUSOFFSET, false);
+            }
+
+            if ((!IsEqual(this->NearClip(), src->NearClip()))||
+                (!IsEqual(this->FarClip(), src->FarClip()))) {
+                this->suspendFire();
+                this->observed->SetClip(src->NearClip(), src->FarClip());
+                this->resumeFire();
+                this->fireChanged(DIRTY_NEARCLIP | DIRTY_FARCLIP);
+            }
+
+            if (this->CoordSystemType() != src->CoordSystemType()) {
+                this->suspendFire();
+                this->observed->SetCoordSystemType(src->CoordSystemType());
+                this->resumeFire();
+                this->fireChanged(DIRTY_COORDSYSTEMTYPE);
+            }
+
+            if (this->Projection() != src->Projection()) {
+                this->suspendFire();
+                this->observed->SetProjection(src->Projection());
+                this->resumeFire();
+                this->fireChanged(DIRTY_PROJECTION);
+            }
+
+            if ((this->StereoDisparity() != src->StereoDisparity())||
+                (!IsEqual(this->FocalDistance(), src->FocalDistance()))||
+                (this->Eye() != src->Eye())) {
+                this->suspendFire();
+                this->observed->SetStereoParameters(src->StereoDisparity(),
+                        src->Eye(), src->FocalDistance());
+                this->resumeFire();
+                this->fireChanged(DIRTY_DISPARITY | DIRTY_EYE | DIRTY_FOCALDISTANCE);
+            }
+
+            if ((this->Position() != src->Position())||
+                    (this->LookAt() != src->LookAt())||
+                    (this->Up() != src->Up())){
+                this->suspendFire();
+                this->observed->SetView(src->Position(), src->LookAt(), src->Up());
+                this->resumeFire();
+                this->fireChanged(DIRTY_POSITION | DIRTY_LOOKAT | DIRTY_UP);
+            }
+
+            if (this->VirtualViewSize() != src->VirtualViewSize()) {
+                this->suspendFire();
+                this->observed->SetVirtualViewSize(src->VirtualViewSize());
+                this->resumeFire();
+                this->fireChanged(DIRTY_VIRTUALVIEW);
+            }
+
+            // set after virtual view size
+            if (this->TileRect() != src->TileRect()) {
+                this->suspendFire();
+                this->observed->SetTileRect(src->TileRect());
+                this->resumeFire();
+                this->fireChanged(DIRTY_TILERECT, false);
+            }
+
+            // set as last
+            if (this->Limits() != src->Limits()) {
+                this->observed->SetLimits(src->Limits());
+            }
+        }
 
         /**
          * Ends a batch interaction and fires all pending events.
@@ -243,7 +336,7 @@ namespace graphics {
          * @param observer The observer to be removed. This must not be NULL.
          */
         virtual void RemoveCameraParameterObserver(
-            CameraParameterObserver *observer);
+                CameraParameterObserver *observer);
 
         /** 
          * Sets all parameters to their default values. 
@@ -263,7 +356,7 @@ namespace graphics {
          */
         virtual const math::Vector<SceneSpaceType, 3>& Right(void) const;
 
-       /**
+        /**
          * Sets the aperture angle along the y-axis.
          *
          * @param The aperture angle in radians.
@@ -333,7 +426,7 @@ namespace graphics {
          * Sets the near clipping distance.
          *
          * @param nearClip the distance to the near clipping plane.
-         */        
+         */
         virtual void SetNearClip(SceneSpaceType nearClip);
 
         /**
@@ -342,7 +435,7 @@ namespace graphics {
          * @param position The position of the camera in world coordinates.
          */
         virtual void SetPosition(
-            const math::Point<SceneSpaceType, 3>& position);
+                const math::Point<SceneSpaceType, 3>& position);
 
         /**
          * Sets the projection type used.
@@ -365,8 +458,8 @@ namespace graphics {
          * @param eye The eye for stereo projection.
          * @param focalDistance The focal distance.
          */
-        virtual void SetStereoParameters(SceneSpaceType stereoDisparity, 
-            StereoEye eye, SceneSpaceType focalDistance);
+        virtual void SetStereoParameters(SceneSpaceType stereoDisparity,
+                StereoEye eye, SceneSpaceType focalDistance);
 
         /**
          * Sets the selected clip tile rectangle of the virtual view. Also see
@@ -375,7 +468,7 @@ namespace graphics {
          * @param tileRect The selected clip tile rectangle of the virtual view
          */
         virtual void SetTileRect(
-            const math::Rectangle<ImageSpaceType>& tileRect);
+                const math::Rectangle<ImageSpaceType>& tileRect);
 
         /**
          * Sets the up vector of the camera in world coordinates.
@@ -395,9 +488,9 @@ namespace graphics {
          * @param lookAt The look-at-point of the camera in world coordinates.
          * @param up The up vector of the camera in world coordinates.
          */
-        virtual void SetView(const math::Point<SceneSpaceType, 3>& position, 
-            const math::Point<SceneSpaceType, 3>& lookAt, 
-            const math::Vector<SceneSpaceType, 3>& up);
+        virtual void SetView(const math::Point<SceneSpaceType, 3>& position,
+                const math::Point<SceneSpaceType, 3>& lookAt,
+                const math::Vector<SceneSpaceType, 3>& up);
 
         /**
          * Sets the size of the full virtual view. If the selected clip tile 
@@ -408,7 +501,7 @@ namespace graphics {
          * @param viewSize The new size of the full virtual view.
          */
         virtual void SetVirtualViewSize(
-            const math::Dimension<ImageSpaceType, 2>& viewSize);
+                const math::Dimension<ImageSpaceType, 2>& viewSize);
 
         /** 
          * Answer the synchronisation number used to update camera objects 
@@ -440,8 +533,7 @@ namespace graphics {
          * @return The size of the full virtual view.
          */
         virtual const math::Dimension<ImageSpaceType, 2>& VirtualViewSize(
-            void) const;
-
+                void) const;
 
         /**
          * Assignment operator.
@@ -450,8 +542,7 @@ namespace graphics {
          *
          * @return Reference to this object.
          */
-        ObservableCameraParams& operator =(
-            const ObservableCameraParams& rhs);
+        ObservableCameraParams& operator =(const ObservableCameraParams& rhs);
 
         /**
          * Test for equality.
@@ -472,52 +563,52 @@ namespace graphics {
         typedef CameraParameters Super;
 
         /** Set all parameters dirty. */
-        static const uint32_t DIRTY_ALL;
+        static const UINT32 DIRTY_ALL;
 
         /** The dirty flag for the aperture angle. */
-        static const uint32_t DIRTY_APERTUREANGLE;
-        
+        static const UINT32 DIRTY_APERTUREANGLE;
+
         /** The dirty flag for the auto focus offset */
-        static const uint32_t DIRTY_AUTOFOCUSOFFSET;
+        static const UINT32 DIRTY_AUTOFOCUSOFFSET;
 
         /** The dirty flag for the coordinate system type */
-        static const uint32_t DIRTY_COORDSYSTEMTYPE;
+        static const UINT32 DIRTY_COORDSYSTEMTYPE;
 
         /** The dirty flag for the stereo eye. */
-        static const uint32_t DIRTY_EYE;
+        static const UINT32 DIRTY_EYE;
 
         /** The dirty flag for the far clipping plane. */
-        static const uint32_t DIRTY_FARCLIP;
+        static const UINT32 DIRTY_FARCLIP;
 
         /** The dirty flag for the focal distance. */
-        static const uint32_t DIRTY_FOCALDISTANCE;
+        static const UINT32 DIRTY_FOCALDISTANCE;
 
         /** The dirty flag for the parameter limits. */
-        static const uint32_t DIRTY_LIMITS;
+        static const UINT32 DIRTY_LIMITS;
 
         /** The dirty flag for the look-at point. */
-        static const uint32_t DIRTY_LOOKAT;
+        static const UINT32 DIRTY_LOOKAT;
 
         /** The dirty flag for the near clipping plane. */
-        static const uint32_t DIRTY_NEARCLIP;
+        static const UINT32 DIRTY_NEARCLIP;
 
         /** The dirty flag for the camera position. */
-        static const uint32_t DIRTY_POSITION;
-        
+        static const UINT32 DIRTY_POSITION;
+
         /** The dirty flag for the stereo/mono projection type. */
-        static const uint32_t DIRTY_PROJECTION;
+        static const UINT32 DIRTY_PROJECTION;
 
         /** The dirty flag for the stereo disparity. */
-        static const uint32_t DIRTY_DISPARITY;
+        static const UINT32 DIRTY_DISPARITY;
 
         /** The dirty flag for the tile rectangle. */
-        static const uint32_t DIRTY_TILERECT;
+        static const UINT32 DIRTY_TILERECT;
 
         /** The dirty flag for the up vector. */
-        static const uint32_t DIRTY_UP;
-        
+        static const UINT32 DIRTY_UP;
+
         /** The dirty flag for the virtual view size. */
-        static const uint32_t DIRTY_VIRTUALVIEW;
+        static const UINT32 DIRTY_VIRTUALVIEW;
 
         /**
          * Inform all registered observers about a change of the fields marked
@@ -540,8 +631,8 @@ namespace graphics {
          *                    false, only fields set in 'which' are fired. 
          *                    Defaults to true.
          */
-        void fireChanged(const uint32_t which = DIRTY_ALL, 
-            const bool andAllDirty = true);
+        void fireChanged(const UINT32 which = DIRTY_ALL,
+                const bool andAllDirty = true);
 
         /**
          * Indicates that a new base object is about to be set.
@@ -574,7 +665,7 @@ namespace graphics {
          * BeginBatchInteraction/EndBatchInteraction block or while directly 
          * firing events is internally suspended.
          */
-        uint32_t dirtyFields;
+        UINT32 dirtyFields;
 
         /** The list of registered CameraParameterObservers. */
         SingleLinkedList<CameraParameterObserver *> camParamObservers;
@@ -594,8 +685,8 @@ namespace graphics {
          */
         bool isSuspendFire;
 
-    };
-    
+};
+
 } /* end namespace graphics */
 } /* end namespace vislib */
 

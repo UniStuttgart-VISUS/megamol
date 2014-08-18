@@ -11,7 +11,7 @@
 #include "glh/glh_genext.h"
 #include <GL/glu.h>
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/ShallowMatrix.h"
 
 
@@ -108,7 +108,7 @@ void vislib::graphics::gl::CameraOpenGL::ProjectionMatrix(float *mat) const {
         this->updateMembers();
     }
 
-    the::zero_memory(mat, sizeof(float) * 16);
+    ZeroMemory(mat, sizeof(float) * 16);
     vislib::math::ShallowMatrix<float, 4, vislib::math::COLUMN_MAJOR> matrix(mat);
 
     if (this->Parameters()->Projection() != CameraParameters::MONO_ORTHOGRAPHIC) {
@@ -151,7 +151,7 @@ void vislib::graphics::gl::CameraOpenGL::ViewMatrix(float *mat) const {
     SceneSpaceVector3D yAxis = zAxis.Cross(xAxis);
     yAxis.Normalise();
 
-    the::zero_memory(mat, sizeof(float) * 16);
+    ::ZeroMemory(mat, sizeof(float) * 16);
     math::ShallowMatrix<float, 4, math::COLUMN_MAJOR> matrix(mat);
 
     matrix.SetAt(0, 0, xAxis.GetX());
@@ -272,7 +272,7 @@ void vislib::graphics::gl::CameraOpenGL::updateMembers(void) const {
             break;
         default:
             // projection parameter calculation still not implemeneted
-            THE_ASSERT(false);
+            ASSERT(false);
     }
     const_cast<CameraOpenGL*>(this)->markAsUpdated();
 }

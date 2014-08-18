@@ -15,9 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/stack_trace.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/StackTrace.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 
@@ -43,7 +43,7 @@ namespace sys {
          *
          * @throws TODO: range check!
          */
-        static int64_t DaysToTicks(const int64_t days);
+        static INT64 DaysToTicks(const INT64 days);
 
         /** 
          * Create a positive or negative DateTimeSpan of one day.
@@ -122,24 +122,24 @@ namespace sys {
          *
          * @throws TODO: range check!
          */
-        static int64_t TimeToTicks(const int hours, const int minutes, 
-            const int seconds, const int milliseconds = 0,
-            const int ticks = 0);
+        static INT64 TimeToTicks(const INT hours, const INT minutes, 
+            const INT seconds, const INT milliseconds = 0,
+            const INT ticks = 0);
 
         /** A constant empty time span. */
         static const DateTimeSpan EMPTY;
 
         /** One day in milliseconds. */
-        static const int64_t MILLISECONDS_PER_DAY;
+        static const INT64 MILLISECONDS_PER_DAY;
 
         /** One hour in milliseconds. */
-        static const int64_t MILLISECONDS_PER_HOUR;
+        static const INT64 MILLISECONDS_PER_HOUR;
 
         /** One minute in milliseconds. */
-        static const int64_t MILLISECONDS_PER_MINUTE;
+        static const INT64 MILLISECONDS_PER_MINUTE;
         
         /** One second in milliseconds. */
-        static const int64_t MILLISECONDS_PER_SECOND;
+        static const INT64 MILLISECONDS_PER_SECOND;
 
         /** The largest possible positive time span. */
         static const DateTimeSpan MAXIMUM;
@@ -148,19 +148,19 @@ namespace sys {
         static const DateTimeSpan MINIMUM;
 
         /** One day in milliseconds. */
-        static const int64_t TICKS_PER_DAY;
+        static const INT64 TICKS_PER_DAY;
 
         /** One hour in milliseconds. */
-        static const int64_t TICKS_PER_HOUR;
+        static const INT64 TICKS_PER_HOUR;
 
         /** Ticks per millisecond. */
-        static const int64_t TICKS_PER_MILLISECOND;
+        static const INT64 TICKS_PER_MILLISECOND;
 
         /** One minute in milliseconds. */
-        static const int64_t TICKS_PER_MINUTE;
+        static const INT64 TICKS_PER_MINUTE;
         
         /** One second in milliseconds. */
-        static const int64_t TICKS_PER_SECOND;
+        static const INT64 TICKS_PER_SECOND;
 
         /**
          * Create a time span of the given amount of ticks.
@@ -168,7 +168,7 @@ namespace sys {
          * @param ticks The total number of ticks of the timespan. This 
          *              parameter defaults to zero.
          */
-        explicit inline DateTimeSpan(const int64_t ticks = 0L) throw()
+        explicit inline DateTimeSpan(const INT64 ticks = 0L) throw()
             : ticks(ticks) {}
 
         /**
@@ -183,11 +183,11 @@ namespace sys {
          * @param ticks        The 100 ns part of the time span. This defaults
          *                     to zero.
          *
-         * @throws argument_exception If the parameters would cause a numeric
+         * @throws IllegalParamException If the parameters would cause a numeric
          *                               overflow.
          */
-        DateTimeSpan(const int days, const int hours, const int minutes,
-            const int seconds, const int milliseconds = 0, const int ticks = 0);
+        DateTimeSpan(const INT days, const INT hours, const INT minutes,
+            const INT seconds, const INT milliseconds = 0, const INT ticks = 0);
 
         /**
          * Copy ctor.
@@ -196,7 +196,7 @@ namespace sys {
          */
         inline DateTimeSpan(const DateTimeSpan& rhs) throw() 
                 : ticks(rhs.ticks) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::DateTimeSpan", __FILE__, __LINE__);
         }
 
         /** Dtor. */
@@ -207,9 +207,9 @@ namespace sys {
          *
          * @return The days part of the time span.
          */
-        inline int GetDays(void) const {
-            THE_STACK_TRACE;
-            return static_cast<int>(this->ticks / TICKS_PER_DAY);
+        inline INT GetDays(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetDays", __FILE__, __LINE__);
+            return static_cast<INT>(this->ticks / TICKS_PER_DAY);
         }
 
         /**
@@ -218,9 +218,9 @@ namespace sys {
          *
          * @return The hours part of the time span.
          */
-        inline int GetHours(void) const {
-            THE_STACK_TRACE;
-            return static_cast<int>((this->ticks / TICKS_PER_HOUR) % 24);
+        inline INT GetHours(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetHours", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_HOUR) % 24);
         }
 
         /**
@@ -229,9 +229,9 @@ namespace sys {
          *
          * @return The milliseconds part of the time span.
          */
-        inline int GetMilliseconds(void) const {
-            THE_STACK_TRACE;
-            return static_cast<int>((this->ticks / TICKS_PER_MILLISECOND) 
+        inline INT GetMilliseconds(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetMilliseconds", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_MILLISECOND) 
                 % 1000);
         }
 
@@ -241,9 +241,9 @@ namespace sys {
          *
          * @return The minutes part of the time span.
          */
-        inline int GetMinutes(void) const {
-            THE_STACK_TRACE;
-            return static_cast<int>((this->ticks / TICKS_PER_MINUTE) % 60);
+        inline INT GetMinutes(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetMinutes", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_MINUTE) % 60);
         }
 
         /**
@@ -252,9 +252,9 @@ namespace sys {
          *
          * @return The seconds part of the time span.
          */
-        inline int GetSeconds(void) const {
-            THE_STACK_TRACE;
-            return static_cast<int>((this->ticks / TICKS_PER_SECOND) % 60);
+        inline INT GetSeconds(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetSeconds", __FILE__, __LINE__);
+            return static_cast<INT>((this->ticks / TICKS_PER_SECOND) % 60);
         }
 
         /**
@@ -263,9 +263,9 @@ namespace sys {
          *
          * @return The ticks part of the time span.
          */
-        inline int GetTicks(void) const {
-            THE_STACK_TRACE;
-            return static_cast<int>(this->ticks % TICKS_PER_MILLISECOND);
+        inline INT GetTicks(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetTicks", __FILE__, __LINE__);
+            return static_cast<INT>(this->ticks % TICKS_PER_MILLISECOND);
         }
 
         /**
@@ -273,8 +273,8 @@ namespace sys {
          *
          * @return The total number of ticks.
          */
-        inline int64_t GetTotalTicks(void) const {
-            THE_STACK_TRACE;
+        inline INT64 GetTotalTicks(void) const {
+            VLSTACKTRACE("DateTimeSpan::GetTotalTicks", __FILE__, __LINE__);
             return this->ticks;
         }
 
@@ -290,25 +290,25 @@ namespace sys {
          * @param ticks        The 100 ns part of the time span. This defaults
          *                     to zero.
          *
-         * @throws argument_exception If the parameters would cause a numeric
+         * @throws IllegalParamException If the parameters would cause a numeric
          *                               overflow.
          */
-        void Set(const int days, const int hours, const int minutes,
-            const int seconds, const int milliseconds = 0, const int ticks = 0);
+        void Set(const INT days, const INT hours, const INT minutes,
+            const INT seconds, const INT milliseconds = 0, const INT ticks = 0);
 
         /**
          * Answer a string representation of the time span.
          *
          * @return A string representation.
          */
-        the::astring ToStringA(void) const;
+        StringA ToStringA(void) const;
 
         /**
          * Answer a string representation of the time span.
          *
          * @return A string representation.
          */
-        the::wstring ToStringW(void) const;
+        StringW ToStringW(void) const;
 
         /**
          * Test for equality.
@@ -318,7 +318,7 @@ namespace sys {
          * @return true if this object and 'rhs' are equal, false otherwise.
          */
         inline bool operator ==(const DateTimeSpan& rhs) const throw() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator ==", __FILE__, __LINE__);
             return (this->ticks == rhs.ticks);
         }
 	
@@ -330,7 +330,7 @@ namespace sys {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const DateTimeSpan& rhs) const throw() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator !=", __FILE__, __LINE__);
             return (this->ticks != rhs.ticks);
         }
 
@@ -343,7 +343,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator <(const DateTimeSpan& rhs) const throw() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator <", __FILE__, __LINE__);
             return (this->ticks < rhs.ticks);
         }
 
@@ -356,7 +356,7 @@ namespace sys {
          *         false otherwise.
          */
 	    inline bool operator >(const DateTimeSpan& rhs) const throw() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator <", __FILE__, __LINE__);
             return (this->ticks > rhs.ticks);
         }
 	    
@@ -369,7 +369,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator <=(const DateTimeSpan& rhs) const throw() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator <=", __FILE__, __LINE__);
             return (this->ticks <= rhs.ticks);
         }
 
@@ -382,7 +382,7 @@ namespace sys {
          *         false otherwise.
          */
 	    inline bool operator >=(const DateTimeSpan& rhs) const throw() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator >=", __FILE__, __LINE__);
             return (this->ticks >= rhs.ticks);
         }
 
@@ -393,11 +393,11 @@ namespace sys {
          *
          * @return The sum of this time span and 'rhs'.
          *
-         * @throws argument_exception If 'rhs' has a value that would cause 
+         * @throws IllegalParamException If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
 	    inline DateTimeSpan operator +(const DateTimeSpan& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator +", __FILE__, __LINE__);
             DateTimeSpan retval(*this);
             retval += rhs;
             return retval;
@@ -410,11 +410,11 @@ namespace sys {
          *
          * @return The difference between this time span and 'rhs'.
          *
-         * @throws argument_exception If 'rhs' has a value that would cause 
+         * @throws IllegalParamException If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
         inline DateTimeSpan operator -(const DateTimeSpan& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator -", __FILE__, __LINE__);
             DateTimeSpan retval(*this);
             retval -= rhs;
             return retval;
@@ -428,11 +428,11 @@ namespace sys {
          * @return *this, which is the sum of the prior value of this time span
          *         and 'rhs'.
          *
-         * @throws argument_exception If 'rhs' has a value that would cause 
+         * @throws IllegalParamException If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
         inline DateTimeSpan& operator +=(const DateTimeSpan& rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTimeSpan::operator +=", __FILE__, __LINE__);
             this->add(rhs.ticks);
             return *this;
         }
@@ -445,7 +445,7 @@ namespace sys {
          * @return *this, which is the difference between the prior value of 
          *         this time span and 'rhs'.
          *
-         * @throws argument_exception If 'rhs' has a value that would cause 
+         * @throws IllegalParamException If 'rhs' has a value that would cause 
          *                               an overflow of the result.
          */
         DateTimeSpan& operator -=(const DateTimeSpan& rhs);
@@ -455,7 +455,7 @@ namespace sys {
          *
          * @return This time span multiplied with -1.
          *
-         * @throws invalid_operation_exception If 'rhs' the time span is the smallest
+         * @throws IllegalStateException If 'rhs' the time span is the smallest
          *                               possible negative value, because this
          *                               would cause an overflow of the result.
          */
@@ -475,8 +475,8 @@ namespace sys {
          *
          * @return The total number of ticks.
          */
-        inline operator int64_t(void) const throw() {
-            THE_STACK_TRACE;
+        inline operator INT64(void) const throw() {
+            VLSTACKTRACE("DateTimeSpan::operator INT64", __FILE__, __LINE__);
             return this->ticks;
         }
 
@@ -491,13 +491,13 @@ namespace sys {
          *
          * @param ticks The ticks to be added.
          *
-         * @throws argument_exception If 'ticks' has a value that would 
+         * @throws IllegalParamException If 'ticks' has a value that would 
          *                               cause an overflow of the result.
          */
-        void add(const int64_t ticks);
+        void add(const INT64 ticks);
 
         /** The value in 100 ns ticks. */
-        int64_t ticks;
+        INT64 ticks;
 
     };
     

@@ -11,7 +11,7 @@
 #include "testnetinfo.h"
 #include "testhelper.h"
 
-#include "the/text/string_converter.h"
+#include "vislib/StringConverter.h"
 #include "vislib/NetworkInformation.h"
 
 
@@ -22,14 +22,14 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
 
     std::cout << std::endl;
     std::cout << "ID: " << a.GetID() << std::endl;
-    std::cout << "\tFriendly Name: " << THE_W2A(a.GetName()) << std::endl;
-    std::cout << "\tDescription: " << THE_W2A(a.GetDescription()) << std::endl;
+    std::cout << "\tFriendly Name: " << W2A(a.GetName()) << std::endl;
+    std::cout << "\tDescription: " << W2A(a.GetDescription()) << std::endl;
 
     std::cout << "\tUnicast Addresses:" << std::endl;
     const NetworkInformation::UnicastAddressList& unicastAddresses = a.GetUnicastAddresses();
-    for (size_t i = 0; i < unicastAddresses.Count(); i++) {
+    for (SIZE_T i = 0; i < unicastAddresses.Count(); i++) {
         const NetworkInformation::UnicastAddressInformation& ai = unicastAddresses[i];
-        std::cout << "\t\t" << ai.GetAddress().ToStringA().c_str() 
+        std::cout << "\t\t" << ai.GetAddress().ToStringA().PeekBuffer() 
             << "/" << ai.GetPrefixLength() << std::endl;
         std::cout << "\t\t\tOrigin: ";
         try {
@@ -47,15 +47,15 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
 
         if (ai.GetAddressFamily() == IPAgnosticAddress::FAMILY_INET) {
             std::cout << "\t\t\tNetmask: ";
-            std::cout << NetworkInformation::PrefixToNetmask4(ai.GetPrefixLength()).ToStringA().c_str();
+            std::cout << NetworkInformation::PrefixToNetmask4(ai.GetPrefixLength()).ToStringA().PeekBuffer();
             std::cout << std::endl;
         }
     }
     std::cout << "\tMulticast Addresses:" << std::endl;
     try {
         const NetworkInformation::AddressList& multicastAddresses = a.GetMulticastAddresses();
-        for (size_t i = 0; i < multicastAddresses.Count(); i++) {
-            std::cout << "\t\t" << (multicastAddresses[i]).ToStringA().c_str() << std::endl;
+        for (SIZE_T i = 0; i < multicastAddresses.Count(); i++) {
+            std::cout << "\t\t" << (multicastAddresses[i]).ToStringA().PeekBuffer() << std::endl;
         }
     } catch (...) {
         std::cout << "\t\tINVALID";
@@ -65,8 +65,8 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
     std::cout << "\tAnycast Addresses:" << std::endl;
     try {
         const NetworkInformation::AddressList& anycastAddresses = a.GetAnycastAddresses();
-        for (size_t i = 0; i < anycastAddresses.Count(); i++) {
-            std::cout << "\t\t" << (anycastAddresses[i]).ToStringA().c_str() << std::endl;
+        for (SIZE_T i = 0; i < anycastAddresses.Count(); i++) {
+            std::cout << "\t\t" << (anycastAddresses[i]).ToStringA().PeekBuffer() << std::endl;
         }
     } catch (...) {
         std::cout << "\t\tINVALID";
@@ -75,7 +75,7 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
 
     std::cout << "\tIPv4 Broadcast Address: ";
     try {
-        std::cout << a.GetBroadcastAddress().ToStringA().c_str();
+        std::cout << a.GetBroadcastAddress().ToStringA().PeekBuffer();
     } catch (...) {
         std::cout << "INVALID";
     }
@@ -107,7 +107,7 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
 
     std::cout << "\tMAC: ";
     try {
-        std::cout << a.FormatPhysicalAddressA().c_str();
+        std::cout << a.FormatPhysicalAddressA().PeekBuffer();
     } catch (...) {
         std::cout << "INVALID";
     }
@@ -118,8 +118,8 @@ bool PrintAdapter(const vislib::net::NetworkInformation::Adapter& a, void *ctx) 
 
 
 void PrintAdapterList(const vislib::net::NetworkInformation::AdapterList& a) {
-    for (size_t i = 0; i < a.Count(); i++) {
-        std::cout << "\t\"" << a[i].GetID() << "\" \"" << THE_W2A(a[i].GetName()) << "\"" << std::endl;
+    for (SIZE_T i = 0; i < a.Count(); i++) {
+        std::cout << "\t\"" << a[i].GetID() << "\" \"" << W2A(a[i].GetName()) << "\"" << std::endl;
     }
 }
 
@@ -135,7 +135,7 @@ void TestNetworkInformation(void) {
 
     Socket::Startup();
 
-    size_t cntAdapters = NetworkInformation::CountAdapters();
+    SIZE_T cntAdapters = NetworkInformation::CountAdapters();
     std::cout << "Number of network adapters: " << cntAdapters << std::endl;
     NetworkInformation::EnumerateAdapters(::PrintAdapter);
     std::cout << std::endl;
@@ -152,11 +152,11 @@ void TestNetworkInformation(void) {
     std::cout << std::endl << "Ethernet adapters: " << std::endl;
     ::PrintAdapterList(ethernetAdapters);
 
-    if (!ethernetAdapters.empty()) {
+    if (!ethernetAdapters.IsEmpty()) {
         NetworkInformation::UnicastAddressInformation ref = ethernetAdapters[0].GetUnicastAddresses()[0];
         NetworkInformation::AdapterList result;
 
-        std::cout << std::endl << "Adapters in subnet of " << ref.GetAddress().ToStringA().c_str()
+        std::cout << std::endl << "Adapters in subnet of " << ref.GetAddress().ToStringA().PeekBuffer()
             << "/" << ref.GetPrefixLength() << ": " << std::endl;
         NetworkInformation::GetAdaptersForUnicastPrefix(result, ref.GetAddress(), ref.GetPrefixLength());
         ::PrintAdapterList(result);
@@ -167,99 +167,99 @@ void TestNetworkInformation(void) {
     /* Test wild guess. */
     guessInput = "LAN";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "LAN-Verbindun";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "eth0";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "localhost/255.255.255.0:12345";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "localhost/255.255.255.0";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "localhost:12345";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "localhost:";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "::1";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "[::1]";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "::1/128:12345";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "fe80::bd28:d109:20ac:8a21%9:12345";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "[::1]:12345";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "127.0.0.1/24:12345";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "127.0.0.1/24";
     wildness = NetworkInformation::GuessAdapter(guessedAdapter, guessInput);
-    std::cout << "Guessed \"" << guessedAdapter.GetID().c_str() 
-        << "\" (\"" << THE_W2A(guessedAdapter.GetName()) << "\") "
+    std::cout << "Guessed \"" << guessedAdapter.GetID().PeekBuffer() 
+        << "\" (\"" << W2A(guessedAdapter.GetName()) << "\") "
         << "with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
@@ -267,55 +267,55 @@ void TestNetworkInformation(void) {
     /* Guess local end points. */
     guessInput = "127.0.0.1/24";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "salsa/24";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "salsa/255.255.255.0";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "klassik/255.255.255.0";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "klassik";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "localhost/128";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "/64";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "/255.255.255.0";
     wildness = NetworkInformation::GuessLocalEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
@@ -323,31 +323,31 @@ void TestNetworkInformation(void) {
     /* Guess remote endpoints. */
     guessInput = "salsa.informatik.uni-stuttgart.de";
     wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "salsa.informatik.uni-stuttgart.de/255.255.255.0";
     wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "salsa.informatik.uni-stuttgart.de/255.255.0.0";
     wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "salsa.informatik.uni-stuttgart.de/48";
     wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 
     guessInput = "/48";
     wildness = NetworkInformation::GuessRemoteEndPoint(guessedEndPoint, guessInput);
-    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().c_str()
+    std::cout << "Guessed \"" << guessedEndPoint.ToStringA().PeekBuffer()
         << "\" with wildness " << wildness 
         << " from \"" << guessInput << "\"" << std::endl;
 

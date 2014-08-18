@@ -17,9 +17,9 @@
 
 
 #include "vislib/Rectangle.h"
-#include "the/stack_trace.h"
-#include "the/string.h"
-#include "the/text/string_converter.h"
+#include "vislib/StackTrace.h"
+#include "vislib/String.h"
+#include "vislib/StringConverter.h"
 
 
 namespace vislib {
@@ -52,7 +52,7 @@ namespace d3d {
          *         or INVALID_OUTPUT_IDX in case such a device was not found.
          */
         virtual INT_PTR FindOutputIdxForDeviceName(
-            const the::wstring& deviceName) const;
+            const StringW& deviceName) const;
 
         /**
          * Answer the index of the output that has the display device with the
@@ -65,10 +65,11 @@ namespace d3d {
          *         or INVALID_OUTPUT_IDX in case such a device was not found.
          */
         inline INT_PTR FindOutputIdxForDeviceName(
-                const the::astring& deviceName) const {
-            THE_STACK_TRACE;
+                const StringA& deviceName) const {
+            VLSTACKTRACE("AbstractD3DAdapterInformation::"
+                "FindOutputIdxForDeviceName", __FILE__, __LINE__);
             return this->FindOutputIdxForDeviceName(
-                THE_A2W(deviceName.c_str()));
+                A2W(deviceName.PeekBuffer()));
         }
 
         /**
@@ -83,7 +84,7 @@ namespace d3d {
          *
          * @return A reference to 'outDesktopCoordinates'.
          * 
-         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
+         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual math::Rectangle<LONG>& GetDesktopCoordinates(
@@ -99,10 +100,10 @@ namespace d3d {
          *
          * @return
          *
-         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
+         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
-        virtual the::wstring GetDeviceName(const SIZE_T outputIdx) const;
+        virtual StringW GetDeviceName(const SIZE_T outputIdx) const;
 
         /**
          * Answer the number of outputs this adapter has.
@@ -121,7 +122,7 @@ namespace d3d {
          *
          * @return
          *
-         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
+         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual bool IsPrimaryDisplay(const SIZE_T outputIdx) const;
@@ -138,7 +139,7 @@ namespace d3d {
          * @return Reference to the monitor description. The value designated 
          *         must live as long as this object lives.
          *
-         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
+         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual const MONITORINFOEXW& getMonitorInfo(

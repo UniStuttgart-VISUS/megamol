@@ -20,10 +20,10 @@
 //#include <asm/atomic.h>
 #endif /* _WIN32 */
 
-#include "the/assert.h"
-#include "the/force_inline.h"
-#include "the/not_supported_exception.h"
-#include "the/types.h"
+#include "vislib/assert.h"
+#include "vislib/forceinline.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -72,16 +72,16 @@ namespace sys {
          *
          * @return The initial value of the variable designated by 'address'.
          */
-        THE_FORCE_INLINE static int32_t CompareExchange(volatile int32_t *address,
-                const int32_t exchange, const int32_t comparand) {
+        VISLIB_FORCEINLINE static INT32 CompareExchange(volatile INT32 *address,
+                const INT32 exchange, const INT32 comparand) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedCompareExchange(
                 reinterpret_cast<volatile LONG *>(address), 
                 static_cast<LONG>(exchange),
                 static_cast<LONG>(comparand));
 #else /* _WIN32 */
-            int32_t retval;
+            INT32 retval;
             __asm__ __volatile__ ("lock; cmpxchgl %2, %0"
                 : "=m" (*address), "=a" (retval)
                 : "r" (exchange), "m" (*address), "a" (comparand)
@@ -103,25 +103,25 @@ namespace sys {
          *
          * @return The initial value of the variable designated by 'address'.
          *
-         * @throws not_supported_exception If the platform does not 
+         * @throws UnsupportedOperationException If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static int64_t CompareExchange(volatile int64_t *address,
-                const int64_t exchange, const int64_t comparand) {
+        VISLIB_FORCEINLINE static INT64 CompareExchange(volatile INT64 *address,
+                const INT64 exchange, const INT64 comparand) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedCompareExchange64(
                 reinterpret_cast<volatile LONGLONG *>(address),
                 static_cast<LONGLONG>(exchange),
                 static_cast<LONGLONG>(comparand));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw the::not_supported_exception("Interlocked::CompareExchange",
+            throw UnsupportedOperationException("Interlocked::CompareExchange",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            throw the::not_supported_exception("Interlocked::CompareExchange",
+            throw UnsupportedOperationException("Interlocked::CompareExchange",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -134,9 +134,9 @@ namespace sys {
          *
          * @return The new value of the variable.
          */
-        THE_FORCE_INLINE static int32_t Decrement(volatile int32_t *address) {
+        VISLIB_FORCEINLINE static INT32 Decrement(volatile INT32 *address) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedDecrement(
                 reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */
@@ -152,22 +152,22 @@ namespace sys {
          *
          * @return The new value of the variable.
          *
-         * @throws not_supported_exception If the platform does not 
+         * @throws UnsupportedOperationException If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static int64_t Decrement(volatile int64_t *address) {
+        VISLIB_FORCEINLINE static INT64 Decrement(volatile INT64 *address) {
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedDecrement64(
                 reinterpret_cast<volatile LONGLONG *>(address));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw the::not_supported_exception("Interlocked::Decrement",
+            throw UnsupportedOperationException("Interlocked::Decrement",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            throw the::not_supported_exception("Interlocked::Decrement",
+            throw UnsupportedOperationException("Interlocked::Decrement",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -180,15 +180,15 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          */
-        THE_FORCE_INLINE static int32_t Exchange(volatile int32_t *address,
-                const int32_t value) {
+        VISLIB_FORCEINLINE static INT32 Exchange(volatile INT32 *address,
+                const INT32 value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedExchange(
                 reinterpret_cast<volatile LONG *>(address),
-                static_cast<int32_t>(value));
+                static_cast<INT32>(value));
 #else /* _WIN32 */
-            int32_t old;
+            INT32 old;
             do {
                 old = *address;
             } while (Interlocked::CompareExchange(address, value, old) != old);
@@ -204,24 +204,24 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          *
-         * @throws not_supported_exception If the platform does not 
+         * @throws UnsupportedOperationException If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static int64_t Exchange(volatile int64_t *address,
-                const int64_t value) {
+        VISLIB_FORCEINLINE static INT64 Exchange(volatile INT64 *address,
+                const INT64 value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedExchange64(
                 reinterpret_cast<volatile LONGLONG *>(address),
                 static_cast<LONGLONG>(value));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw the::not_supported_exception("Interlocked::Exchange",
+            throw UnsupportedOperationException("Interlocked::Exchange",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            int64_t old;
+            INT64 old;
             do {
                 old = *address;
             } while (Interlocked::CompareExchange(address, value, old) != old);
@@ -237,7 +237,7 @@ namespace sys {
          *
          * @return The old value of the variable designated by 'address'.
          */
-        THE_FORCE_INLINE static void *Exchange(void **address,
+        VISLIB_FORCEINLINE static void *Exchange(void **address,
                 const void *value) {
 #ifdef _WIN32
 #pragma warning(disable: 4311)
@@ -250,12 +250,12 @@ namespace sys {
 #if ((defined(__LP64__) || defined(_LP64) || defined(__x86_64__)) \
 && ((__LP64__ != 0) || (_LP64 != 0) || (__x86_64__ != 0)))
             return reinterpret_cast<void *>(Interlocked::Exchange(
-                reinterpret_cast<volatile int64_t *>(address), 
-                reinterpret_cast<int64_t>(value)));
+                reinterpret_cast<volatile INT64 *>(address), 
+                reinterpret_cast<INT64>(value)));
 #else /* #if ((defined(__LP64__) || defined(_LP64) || ... */
             return reinterpret_cast<void *>(Interlocked::Exchange(
-                reinterpret_cast<volatile int32_t *>(address), 
-                reinterpret_cast<int32_t>(value)));
+                reinterpret_cast<volatile INT32 *>(address), 
+                reinterpret_cast<INT32>(value)));
 #endif /* #if ((defined(__LP64__) || defined(_LP64) || ... */
 #endif /* _WIN32 */
         }
@@ -270,15 +270,15 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          */
-        THE_FORCE_INLINE static int32_t ExchangeAdd(volatile int32_t *address, 
-                const int32_t value) {
+        VISLIB_FORCEINLINE static INT32 ExchangeAdd(volatile INT32 *address, 
+                const INT32 value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedExchangeAdd(
                 reinterpret_cast<volatile LONG *>(address),
                 static_cast<LONG>(value));
 #else /* _WIN32 */
-            int32_t retval;
+            INT32 retval;
             __asm__ __volatile__("lock; xaddl %0, %1"
                 : "=r" (retval), "=m" (*address)
                 : "0" (value), "m" (*address)
@@ -297,24 +297,24 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          *
-         * @throws not_supported_exception If the platform does not 
+         * @throws UnsupportedOperationException If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static int64_t ExchangeAdd(volatile int64_t *address,
-                const int64_t value) {
+        VISLIB_FORCEINLINE static INT64 ExchangeAdd(volatile INT64 *address,
+                const INT64 value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedExchangeAdd64(
                 reinterpret_cast<volatile LONGLONG *>(address),
                 static_cast<LONGLONG>(value));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw the::not_supported_exception("Interlocked::ExchangeAdd",
+            throw UnsupportedOperationException("Interlocked::ExchangeAdd",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
-            throw the::not_supported_exception("Interlocked::ExchangeAdd",
+            throw UnsupportedOperationException("Interlocked::ExchangeAdd",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -329,10 +329,10 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          */
-        THE_FORCE_INLINE static int32_t ExchangeSub(volatile int32_t *address, 
-                const int32_t value) {
+        VISLIB_FORCEINLINE static INT32 ExchangeSub(volatile INT32 *address, 
+                const INT32 value) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedExchangeAdd(
                 reinterpret_cast<volatile LONG *>(address), 
                 static_cast<LONG>(-value));
@@ -351,12 +351,12 @@ namespace sys {
          * @return Value of variable designated by 'address' prior to the 
          *         operation.
          *
-         * @throws not_supported_exception If the platform does not 
+         * @throws UnsupportedOperationException If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static int64_t ExchangeSub(volatile int64_t *address,
-                const int64_t value) {
+        VISLIB_FORCEINLINE static INT64 ExchangeSub(volatile INT64 *address,
+                const INT64 value) {
 #ifdef _WIN32
             return Interlocked::ExchangeAdd(address, -value);
 #else /* _WIN32 */
@@ -372,9 +372,9 @@ namespace sys {
          *
          * @return The new value of the variable.
          */
-        THE_FORCE_INLINE static int32_t Increment(volatile int32_t *address) {
+        VISLIB_FORCEINLINE static INT32 Increment(volatile INT32 *address) {
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int32_t) == sizeof(LONG));
+            ASSERT(sizeof(INT32) == sizeof(LONG));
             return ::InterlockedIncrement(
                 reinterpret_cast<volatile LONG *>(address));
 #else /* _WIN32 */
@@ -390,18 +390,18 @@ namespace sys {
          *
          * @return The new value of the variable.
          *
-         * @throws not_supported_exception If the platform does not 
+         * @throws UnsupportedOperationException If the platform does not 
          *                                       support 64 bit interlocked
          *                                       operations.
          */
-        THE_FORCE_INLINE static int64_t Increment(volatile int64_t *address) {
+        VISLIB_FORCEINLINE static INT64 Increment(volatile INT64 *address) {
+            ASSERT(sizeof(INT64) == sizeof(LONGLONG));
 #ifdef _WIN32
-            THE_ASSERT(sizeof(int64_t) == sizeof(LONGLONG));
 #if (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502))
             return ::InterlockedIncrement64(
                 reinterpret_cast<volatile LONGLONG *>(address));
 #else /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
-            throw the::not_supported_exception("Interlocked::Increment",
+            throw UnsupportedOperationException("Interlocked::Increment",
                 __FILE__, __LINE__);
 #endif /* (defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0502)) */
 #else /* _WIN32 */
@@ -414,7 +414,7 @@ namespace sys {
         /**
          * Disallow instances.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         Interlocked(void);
 

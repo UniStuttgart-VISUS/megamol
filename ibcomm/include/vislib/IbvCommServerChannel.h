@@ -17,7 +17,7 @@
 //
 //#include "vislib/Socket.h"                      // Must be first!
 //#include "vislib/AbstractCommServerChannel.h"
-//#include "the/system/com_exception.h"
+//#include "vislib/COMException.h"
 //#include "vislib/Event.h"
 //#include "vislib/StackTrace.h"
 //#include "vislib/Thread.h"
@@ -58,12 +58,12 @@
 //
 //        virtual void Listen(const int backlog = SOMAXCONN);
 //
-//        virtual size_t Receive(void *outData, const size_t cntBytes,
-//            const unsigned int timeout = TIMEOUT_INFINITE, 
+//        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
+//            const UINT timeout = TIMEOUT_INFINITE, 
 //            const bool forceReceive = true);
 //
-//        virtual size_t Send(const void *data, const size_t cntBytes,
-//            const unsigned int timeout = TIMEOUT_INFINITE, 
+//        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
+//            const UINT timeout = TIMEOUT_INFINITE, 
 //            const bool forceSend = true);
 //
 //    protected:
@@ -73,7 +73,7 @@
 //
 //    private:
 //
-//        static unsigned int messagePump(void *userData); 
+//        static DWORD messagePump(void *userData); 
 //
 //        /** Ctor. */
 //        IbvCommServerChannel(void);

@@ -7,14 +7,15 @@
 
 #include "vislib/AbstractSyncMsgUser.h"
 
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 
 /*
  * vislib::net::AbstractSyncMsgUser::~AbstractSyncMsgUser
  */
 vislib::net::AbstractSyncMsgUser::~AbstractSyncMsgUser(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractSyncMsgUser::~AbstractSyncMsgUser", __FILE__, 
+        __LINE__);
     // Nothing to do.
 }
 
@@ -23,7 +24,8 @@ vislib::net::AbstractSyncMsgUser::~AbstractSyncMsgUser(void) {
  * vislib::net::AbstractSyncMsgUser::AbstractSyncMsgUser
  */
 vislib::net::AbstractSyncMsgUser::AbstractSyncMsgUser(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractSyncMsgUser::AbstractSyncMsgUser", __FILE__, 
+        __LINE__);
     // Nothing to do.
 }
 
@@ -34,8 +36,9 @@ vislib::net::AbstractSyncMsgUser::AbstractSyncMsgUser(void) {
 const vislib::net::SimpleMessage& 
 vislib::net::AbstractSyncMsgUser::receiveViaMsgBuffer(
         SmartRef<AbstractCommClientChannel> channel,
-        const unsigned int timeout) {
-    THE_STACK_TRACE;
+        const UINT timeout) {
+    VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__, 
+        __LINE__);
     
     SimpleMessageSize headerSize = this->msgBuffer.GetHeader().GetHeaderSize();
     channel->Receive(static_cast<void *>(this->msgBuffer), headerSize, timeout,
@@ -58,18 +61,18 @@ void vislib::net::AbstractSyncMsgUser::sendViaMsgBuffer(
         const SimpleMessageID msgID, 
         const void *body, 
         const unsigned int bodySize,
-        const unsigned int timeout) {
-    THE_STACK_TRACE;
+        const UINT timeout) {
+    VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, __LINE__);
 
     this->msgBuffer.GetHeader().SetMessageID(msgID);
     this->msgBuffer.SetBody(body, bodySize);
     
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Sending message %u via buffer ...\n",
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Sending message %u via buffer ...\n",
         this->msgBuffer.GetHeader().GetMessageID());
     channel->Send(static_cast<const void *>(this->msgBuffer),
         this->msgBuffer.GetMessageSize(), 
         timeout,
         true);
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Message %u sent via buffer.\n", 
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "Message %u sent via buffer.\n", 
         this->msgBuffer.GetHeader().GetMessageID());
 }

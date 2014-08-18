@@ -22,7 +22,7 @@ void TestTrace(void);
 
 void TestExceptions(void);
 
-void Test_system_message(void);
+void TestSystemMessage(void);
 
 void TestPerformanceCounter(void);
 
@@ -33,5 +33,7 @@ void TestFileNameSequence(void);
 void TestAsciiFile(void);
 
 void TestNamedColours(void);
+
+void TestRLEUInt(void);
 
 #endif /* VISLIBTEST_TESTMISC_H_INCLUDED */

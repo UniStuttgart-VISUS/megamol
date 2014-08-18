@@ -8,10 +8,10 @@
 #include "vislib/AbstractClusterNode.h"
 
 #include "vislib/clustermessages.h"
-#include "the/not_implemented_exception.h"
+#include "vislib/MissingImplementationException.h"
 #include "vislib/RawStorage.h"
-#include "the/trace.h"
-#include "the/types.h"
+#include "vislib/Trace.h"
+#include "vislib/types.h"
 
 #include "messagereceiver.h"
 
@@ -19,7 +19,7 @@
 /*
  * vislib::net::cluster::AbstractClusterNode::DEFAULT_PORT
  */
-const uint16_t vislib::net::cluster::AbstractClusterNode::DEFAULT_PORT = 28182;
+const SHORT vislib::net::cluster::AbstractClusterNode::DEFAULT_PORT = 28182;
 
 
 /*
@@ -50,8 +50,8 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
  * vislib::net::cluster::AbstractClusterNode::onMessageReceived
  */
 //void vislib::net::cluster::AbstractClusterNode::onMessageReceived(
-//        const Socket& src, const unsigned int msgId, const uint8_t *body, 
-//        const size_t cntBody) {
+//        const Socket& src, const UINT msgId, const BYTE *body, 
+//        const SIZE_T cntBody) {
 //    // Do nothing. Implementing subclasses override this method if they are
 //    // interested in messages.
 //}
@@ -63,8 +63,8 @@ vislib::net::cluster::AbstractClusterNode::AbstractClusterNode(
 void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
         const PeerIdentifier& peerId, const ComErrorSource src,
         const SocketException& err) throw() {
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A communication error occurred while talking "
-        "to %s: %s\n", peerId.ToStringA().c_str(), err.what());
+    VLTRACE(Trace::LEVEL_VL_ERROR, "A communication error occurred while talking "
+        "to %s: %s\n", peerId.ToStringA().PeekBuffer(), err.GetMsgA());
 }
 
 
@@ -73,7 +73,7 @@ void vislib::net::cluster::AbstractClusterNode::onCommunicationError(
  */
 void vislib::net::cluster::AbstractClusterNode::onMessageReceiverExiting(
         vislib::net::Socket& socket, PReceiveMessagesCtx rmc) {
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
+    VLTRACE(Trace::LEVEL_VL_INFO, "AbstractClusterNode::onMessageReceiverExiting "
         "releasing receive context ...\n");
     FreeRecvMsgCtx(rmc);
 }
@@ -91,14 +91,14 @@ void vislib::net::cluster::AbstractClusterNode::onPeerConnected(
 /*
  * vislib::net::cluster::AbstractClusterNode::sendMessage
  */
-size_t vislib::net::cluster::AbstractClusterNode::sendMessage(
-        const uint32_t msgId, const uint8_t *data, const uint32_t cntData) {
+SIZE_T vislib::net::cluster::AbstractClusterNode::sendMessage(
+        const UINT32 msgId, const BYTE *data, const UINT32 cntData) {
     RawStorage msg(sizeof(MessageHeader) + cntData);
 
     InitialiseMessageHeader(*msg.As<MessageHeader>(), msgId, cntData);
     ::memcpy(msg.At(sizeof(MessageHeader)), data, cntData);
 
-    return this->sendToEachPeer(msg.As<uint8_t>(), msg.GetSize());
+    return this->sendToEachPeer(msg.As<BYTE>(), msg.GetSize());
 }
 
 
@@ -106,22 +106,22 @@ size_t vislib::net::cluster::AbstractClusterNode::sendMessage(
  * vislib::net::cluster::AbstractClusterNode::sendMessage
  */
 bool vislib::net::cluster::AbstractClusterNode::sendMessage(
-        const PeerIdentifier& peerId, const uint32_t msgId, const uint8_t *data, 
-        const uint32_t cntData) {
+        const PeerIdentifier& peerId, const UINT32 msgId, const BYTE *data, 
+        const UINT32 cntData) {
     RawStorage msg(sizeof(MessageHeader) + cntData);
 
     InitialiseMessageHeader(*msg.As<MessageHeader>(), msgId, cntData);
     ::memcpy(msg.At(sizeof(MessageHeader)), data, cntData);
 
-    return this->sendToPeer(peerId, msg.As<uint8_t>(), msg.GetSize());
+    return this->sendToPeer(peerId, msg.As<BYTE>(), msg.GetSize());
 }
 
 
 /*
  * vislib::net::cluster::AbstractClusterNode::sendToEachPeer
  */
-size_t vislib::net::cluster::AbstractClusterNode::sendToEachPeer(
-        const uint8_t *data, const size_t cntData) {
+SIZE_T vislib::net::cluster::AbstractClusterNode::sendToEachPeer(
+        const BYTE *data, const SIZE_T cntData) {
     SendToPeerCtx context;
     context.Data = data;
     context.CntData = cntData;
@@ -134,7 +134,7 @@ size_t vislib::net::cluster::AbstractClusterNode::sendToEachPeer(
  * vislib::net::cluster::AbstractClusterNode::sendToPeer
  */
 bool vislib::net::cluster::AbstractClusterNode::sendToPeer(
-        const PeerIdentifier& peerId, const uint8_t *data, const size_t cntData) {
+        const PeerIdentifier& peerId, const BYTE *data, const SIZE_T cntData) {
     SendToPeerCtx context;
     context.Data = data;
     context.CntData = cntData;

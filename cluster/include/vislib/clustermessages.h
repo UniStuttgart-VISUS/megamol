@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -32,8 +32,8 @@ namespace cluster {
      * new BlockHeader.
      */
     typedef struct BlockHeader_t {
-        uint32_t BlockId;
-        uint32_t BlockLength;
+        UINT32 BlockId;
+        UINT32 BlockLength;
     } BlockHeader;
 
     /**
@@ -41,7 +41,7 @@ namespace cluster {
      * node classes for network communication.
      */
     typedef struct MessageHeader_t {
-        uint32_t MagicNumber;
+        UINT32 MagicNumber;
         BlockHeader Header;
     } MessageHeader;
 
@@ -56,13 +56,13 @@ namespace cluster {
      * @param blockLength The size of the first (required) block.
      */
     void InitialiseMessageHeader(MessageHeader& inOutHeader, 
-        const uint32_t blockId = 0, const uint32_t blockLength = 0);
+        const UINT32 blockId = 0, const UINT32 blockLength = 0);
 
 
     /** The magic number which must be at the begin of all network messages. */
-    const uint32_t MAGIC_NUMBER = static_cast<uint32_t>('v')
-        | static_cast<uint32_t>('l') << 8
-        | static_cast<uint32_t>('c') << 16
+    const UINT32 MAGIC_NUMBER = static_cast<UINT32>('v')
+        | static_cast<UINT32>('l') << 8
+        | static_cast<UINT32>('c') << 16
         | 1 << 24;
 
 
@@ -77,7 +77,7 @@ namespace cluster {
      * The string "MSGID_" is prepended to the name.
      */
     #define DEFINE_VLC1_BASE_MSG(name, id)                                     \
-        const uint32_t MSGID_##name = VLC1_BASE_MSG_ID(id)
+        const UINT32 MSGID_##name = VLC1_BASE_MSG_ID(id)
 
     /**
      * Declare and define a variable 'name' that has the camera parameter 

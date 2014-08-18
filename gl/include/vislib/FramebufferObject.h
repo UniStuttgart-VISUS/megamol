@@ -16,7 +16,7 @@
 
 
 #include "vislib/ExtensionsDependent.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -84,7 +84,7 @@ namespace gl {
          * @throws OpenGLException If the number of attachments cannot be 
          *                         retrieved.
          */
-        unsigned int GetMaxColourAttachments(void);
+        UINT GetMaxColourAttachments(void);
 
         /** Ctor. */
         FramebufferObject(void);
@@ -108,13 +108,13 @@ namespace gl {
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
-         * @throws index_out_of_range_exception   If 'which' does not designate a valid
+         * @throws OutOfRangeException   If 'which' does not designate a valid
          *                               colour attachment.
-         * @throws invalid_operation_exception If the attachment designated by 'which'
+         * @throws IllegalStateException If the attachment designated by 'which'
          *                               exists, but is not a texture 
          *                               attachment.
          */
-        GLenum BindColourTexture(const unsigned int which = 0);
+        GLenum BindColourTexture(const UINT which = 0);
 
         /**
          * Bind the texture that is used as depth target.
@@ -124,7 +124,7 @@ namespace gl {
          * 
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          * 
-         * @throws invalid_operation_exception If the framebuffer object has no 
+         * @throws IllegalStateException If the framebuffer object has no 
          *                               texture attachment for the depth
          *                               buffer.
          */
@@ -159,8 +159,8 @@ namespace gl {
          *                         object could not be created, e. g. because
          *                         the format of one of the buffers is invalid.
          */
-        bool Create(const unsigned int width, const unsigned int height, 
-            const unsigned int cntColourAttachments, const ColourAttachParams *cap,
+        bool Create(const UINT width, const UINT height, 
+            const UINT cntColourAttachments, const ColourAttachParams *cap,
             const DepthAttachParams& dap, const StencilAttachParams& sap);
 
         /**
@@ -191,7 +191,7 @@ namespace gl {
          *                         object could not be created, e. g. because
          *                         the format of one of the buffers is invalid.
          */
-        inline bool Create(const unsigned int width, const unsigned int height, 
+        inline bool Create(const UINT width, const UINT height, 
                 const GLenum colourInternalFormat = GL_RGBA8, 
                 const GLenum colourFormat = GL_RGBA, 
                 const GLenum colourType = GL_UNSIGNED_BYTE,
@@ -220,7 +220,7 @@ namespace gl {
          *
          * @return The openGL depth texture ressource ID.
          *
-         * @throw invalid_operation_exception if the depth attachment is not a 
+         * @throw IllegalStateException if the depth attachment is not a 
          *        texture attachment.
          */
         inline GLuint DepthTextureID(void) const {
@@ -271,12 +271,12 @@ namespace gl {
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
-         * @throw invalid_operation_exception If no colour texture is attached.
-         * @throw index_out_of_range_exception If colour textures are attached, but the
+         * @throw IllegalStateException If no colour texture is attached.
+         * @throw OutOfRangeException If colour textures are attached, but the
          *                            index 'colourAttachment' does not 
          *                            designate a legal attachment.
          */
-        inline GLenum DrawColourTexture(const unsigned int colourAttachment = 0,
+        inline GLenum DrawColourTexture(const UINT colourAttachment = 0,
                 const GLint minFilter = GL_LINEAR, 
                 const GLint magFilter = GL_LINEAR,
                 const double depth = 0.5) const {
@@ -299,7 +299,7 @@ namespace gl {
          *
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          *
-         * @throw invalid_operation_exception If no depth texture attachment exists.
+         * @throw IllegalStateException If no depth texture attachment exists.
          */
         inline GLenum DrawDepthTexture(const GLint minFilter = GL_LINEAR,
                 const GLint magFilter = GL_LINEAR, 
@@ -330,10 +330,10 @@ namespace gl {
          * @return GL_NO_ERROR if the FBO has been enabled as render target,
          *         an error code otherwise.
          *
-         * @throw index_out_of_range_exception If an invalid colour attachment index was
+         * @throw OutOfRangeException If an invalid colour attachment index was
          *                            specified.
          */
-        GLenum Enable(const unsigned int colourAttachment = 0);
+        GLenum Enable(const UINT colourAttachment = 0);
 
         /**
          * TODO: Document
@@ -341,8 +341,8 @@ namespace gl {
          * Does not set and unsets read buffer!
          * OpenGL morons defined GL_COLOR_ATTACHMENT0_EXT to use
          */
-        GLenum EnableMultipleV(unsigned int cntColourAttachments,
-            const unsigned int* colourAttachments);
+        GLenum EnableMultipleV(UINT cntColourAttachments,
+            const UINT* colourAttachments);
 
         /**
          * TODO: Document
@@ -350,7 +350,7 @@ namespace gl {
          * Does not set and unsets read buffer!
          * OpenGL morons defined GL_COLOR_ATTACHMENT0_EXT to use
          */
-        GLenum EnableMultiple(unsigned int cntColourAttachments, ...);
+        GLenum EnableMultiple(UINT cntColourAttachments, ...);
 
         /**
          * Answer the number of colour attachments attached to this framebuffer
@@ -358,7 +358,7 @@ namespace gl {
          *
          * @return The number of colour attachments.
          */
-        inline unsigned int GetCntColourAttachments(void) const {
+        inline UINT GetCntColourAttachments(void) const {
             return this->cntColourAttachments;
         }
 
@@ -376,7 +376,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an error code otherwise.
          */
         inline GLenum GetColourTexture(void *outData, 
-                const unsigned int colourAttachment = 0, const GLenum format = GL_RGBA, 
+                const UINT colourAttachment = 0, const GLenum format = GL_RGBA, 
                 const GLenum type = GL_UNSIGNED_BYTE) {
             return this->readTexture(outData, this->GetColourTextureID(
                 colourAttachment), format, type);
@@ -392,12 +392,12 @@ namespace gl {
          *
          * @return The OpenGL resource ID of the colour texture.
          *
-         * @throw invalid_operation_exception If no colour texture is attached.
-         * @throw index_out_of_range_exception If colour textures are attached, but the
+         * @throw IllegalStateException If no colour texture is attached.
+         * @throw OutOfRangeException If colour textures are attached, but the
          *                            index 'colourAttachment' does not 
          *                            designate a legal attachment.
          */
-        GLuint GetColourTextureID(const unsigned int colourAttachment = 0) const;
+        GLuint GetColourTextureID(const UINT colourAttachment = 0) const;
 
         /**
          * Read the pixel data from the depth attachment.
@@ -426,7 +426,7 @@ namespace gl {
          *
          * @return The OpenGL resource ID of the depth texture.
          *
-         * @throw invalid_operation_exception If no depth texture is attached.
+         * @throw IllegalStateException If no depth texture is attached.
          */
         GLuint GetDepthTextureID(void) const;
 
@@ -435,8 +435,8 @@ namespace gl {
          *
          * @return The height.
          */
-        inline unsigned int GetHeight(void) const {
-            return static_cast<unsigned int>(this->height);
+        inline UINT GetHeight(void) const {
+            return static_cast<UINT>(this->height);
         }
 
         /**
@@ -458,8 +458,8 @@ namespace gl {
          *
          * @return The width.
          */
-        inline unsigned int GetWidth(void) const {
-            return static_cast<unsigned int>(this->width);
+        inline UINT GetWidth(void) const {
+            return static_cast<UINT>(this->width);
         }
 
         /**
@@ -499,17 +499,17 @@ namespace gl {
         } AttachmentProps;
 
         /** Index of the depth attachment in 'attachmentOther'. */
-        static const unsigned int ATTACH_IDX_DEPTH;
+        static const UINT ATTACH_IDX_DEPTH;
 
         /** Index of the stencil attachment in 'attachmentOther'. */
-        static const unsigned int ATTACH_IDX_STENCIL;
+        static const UINT ATTACH_IDX_STENCIL;
 
         /**
          * Forbidden copy ctor.
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Always.
+         * @throws UnsupportedOperationException Always.
          */
         FramebufferObject(const FramebufferObject& rhs);
 
@@ -602,7 +602,7 @@ namespace gl {
          *
          * @return *this.
          *
-         * @throws argument_exception If this != &rhs.
+         * @throws IllegalParamException If this != &rhs.
          */
         FramebufferObject& operator =(const FramebufferObject& rhs);
 
@@ -616,7 +616,7 @@ namespace gl {
         AttachmentProps attachmentOther[2];
 
         /** The number of colour attachments created for this FBO. */
-        unsigned int cntColourAttachments;
+        UINT cntColourAttachments;
 
         /** The ID of the frame buffer. */
         GLuint idFb;

@@ -159,12 +159,12 @@ namespace gl {
          *                         fails.
          */
         virtual bool Compile(
-            const char **vertexShaderSrc, const size_t cntVertexShaderSrc,
+            const char **vertexShaderSrc, const SIZE_T cntVertexShaderSrc,
             const char **tessControlShaderSrc,
-            const size_t cntTessControlShaderSrc,
-            const char **tessEvalShaderSrc, const size_t cntTessEvalShaderSrc,
-            const char **geometryShaderSrc, const size_t cntGeometryShaderSrc,
-            const char **fragmentShaderSrc, const size_t cntFragmentShaderSrc,
+            const SIZE_T cntTessControlShaderSrc,
+            const char **tessEvalShaderSrc, const SIZE_T cntTessEvalShaderSrc,
+            const char **geometryShaderSrc, const SIZE_T cntGeometryShaderSrc,
+            const char **fragmentShaderSrc, const SIZE_T cntFragmentShaderSrc,
             bool insertLineDirective = true);
 
         /**
@@ -195,7 +195,7 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char *vertexShaderFile,
@@ -247,20 +247,20 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(
             const char **vertexShaderFiles,
-            const size_t cntVertexShaderFiles,
+            const SIZE_T cntVertexShaderFiles,
             const char **tessControlShaderFiles,
-            const size_t cntTessControlShaderFiles,
+            const SIZE_T cntTessControlShaderFiles,
             const char **tessEvalShaderFiles,
-            const size_t cntTessEvalShaderFiles,
+            const SIZE_T cntTessEvalShaderFiles,
             const char **geometryShaderFiles,
-            const size_t cntGeometryShaderFiles,
+            const SIZE_T cntGeometryShaderFiles,
             const char **fragmentShaderFiles,
-            const size_t cntFragmentShaderFiles,
+            const SIZE_T cntFragmentShaderFiles,
             bool insertLineDirective = true);
 
         /**

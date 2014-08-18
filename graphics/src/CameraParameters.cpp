@@ -95,7 +95,7 @@ void vislib::graphics::CameraParameters::CalcClipping(
 void vislib::graphics::CameraParameters::Deserialise(
         vislib::Serialiser& serialiser) {
     float f0, f1, f2, f3, f4, f5, f6, f7, f8;
-    int32_t i;
+    INT32 i;
     // TODO: Add name parameters
     serialiser.Deserialise(f0, "ApertureAngle");
     this->SetApertureAngle(f0);
@@ -141,12 +141,12 @@ void vislib::graphics::CameraParameters::Deserialise(
 void vislib::graphics::CameraParameters::Serialise(
         vislib::Serialiser& serialiser) const {
     serialiser.Serialise((float)this->ApertureAngle(), "ApertureAngle");
-    serialiser.Serialise((int32_t)this->CoordSystemType(), "CoordSystemType");
+    serialiser.Serialise((INT32)this->CoordSystemType(), "CoordSystemType");
     serialiser.Serialise((float)this->NearClip(), "NearClip");
     serialiser.Serialise((float)this->FarClip(), "FarClip");
-    serialiser.Serialise((int32_t)this->Projection(), "Projection");
+    serialiser.Serialise((INT32)this->Projection(), "Projection");
     serialiser.Serialise((float)this->StereoDisparity(), "StereoDisparity");
-    serialiser.Serialise((int32_t)this->Eye(), "StereoEye");
+    serialiser.Serialise((INT32)this->Eye(), "StereoEye");
     serialiser.Serialise((float)this->FocalDistance(), "FocalDistance");
     serialiser.Serialise((float)this->Position().X(), "PositionX");
     serialiser.Serialise((float)this->Position().Y(), "PositionY");

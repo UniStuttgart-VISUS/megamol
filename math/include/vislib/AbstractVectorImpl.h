@@ -16,10 +16,10 @@
 
 #include <limits>
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
-#include "the/memory.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/memutils.h"
+#include "vislib/OutOfRangeException.h"
 
 
 namespace vislib {
@@ -377,7 +377,7 @@ namespace math {
          *
          * @return A reference on the 'i'th component.
          *
-         * @throws index_out_of_range_exception, If 'i' is not within [0, D[.
+         * @throws OutOfRangeException, If 'i' is not within [0, D[.
          */
         T& operator [](const int i);
 
@@ -389,7 +389,7 @@ namespace math {
          *
          * @return A reference on the 'i'th component.
          *
-         * @throws index_out_of_range_exception, If 'i' is not within [0, D[.
+         * @throws OutOfRangeException, If 'i' is not within [0, D[.
          */
         const T& operator [](const int i) const;
 
@@ -921,7 +921,7 @@ namespace math {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];
         } else {
-            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
 
@@ -935,7 +935,7 @@ namespace math {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];
         } else {
-            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
     

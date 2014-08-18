@@ -8,9 +8,9 @@
  */
 
 #include "vislib/Camera.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/CameraParamsStore.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalStateException.h"
 
 
 /*
@@ -28,7 +28,7 @@ vislib::graphics::Camera::Camera(void) : syncNumber(),
 vislib::graphics::Camera::Camera(
         const vislib::SmartPtr<vislib::graphics::CameraParameters>& params) 
         : syncNumber(params->SyncNumber() - 1), parameters(params) {
-    THE_ASSERT(!this->parameters.IsNull());
+    ASSERT(!this->parameters.IsNull());
 }
 
 
@@ -55,7 +55,7 @@ vislib::graphics::SceneSpaceFrustum&
 vislib::graphics::Camera::CalcViewFrustum(SceneSpaceFrustum& outFrustum) {
     if (this->Parameters()->Projection() 
             == CameraParameters::MONO_ORTHOGRAPHIC) {
-        throw the::invalid_operation_exception("Computing frustums for "
+        throw vislib::IllegalStateException("Computing frustums for "
             "MONO_ORTHOGRAPHIC is currently unsupported.", __FILE__, __LINE__);
     }
 
@@ -160,7 +160,7 @@ vislib::graphics::Camera::CalcViewFrustum(
             break;
 
         default:
-            throw the::invalid_operation_exception("The specified projection type is not "
+            throw IllegalStateException("The specified projection type is not "
                 "supported.", __FILE__, __LINE__);
     }
 

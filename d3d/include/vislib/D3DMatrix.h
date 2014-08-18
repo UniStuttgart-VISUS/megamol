@@ -16,12 +16,11 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include <d3d9.h>
 #include <d3dx9math.h>
 
 #include "vislib/AbstractMatrix.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 
 
 namespace vislib {
@@ -62,7 +61,7 @@ namespace d3d {
          *                   NULL and according to the matrix layout L.
          */
         inline D3DMatrix(const T *components) : Super() {
-            THE_ASSERT(components != NULL);
+            ASSERT(components != NULL);
             ::memcpy(this->components.m, components, Super::CNT_COMPONENTS
                 * sizeof(T));
         }
@@ -226,8 +225,6 @@ namespace d3d {
 } /* end namespace d3d */
 } /* end namespace graphics */
 } /* end namespace vislib */
-
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -40,7 +40,7 @@ namespace math {
          *                  be NULL.
          */
         inline Dimension(const T *dimension) {
-            THE_ASSERT(dimension != NULL);
+            ASSERT(dimension != NULL);
             ::memcpy(this->dimension, dimension, D * sizeof(T));
         }
 
@@ -151,7 +151,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         inline Dimension(const T *dimension) {
-            THE_ASSERT(dimension != NULL);
+            ASSERT(dimension != NULL);
             ::memcpy(this->dimension, dimension, D * sizeof(T));
         }
 
@@ -255,7 +255,7 @@ namespace math {
 
         /** Behaves like primary class template. */
         inline Dimension(const T *dimension) {
-            THE_ASSERT(dimension != NULL);
+            ASSERT(dimension != NULL);
             ::memcpy(this->dimension, dimension, D * sizeof(T));
         }
 

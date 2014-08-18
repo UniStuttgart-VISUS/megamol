@@ -7,15 +7,15 @@
 
 #include "vislib/DiscoveryService.h"
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/DiscoveryListener.h"
-#include "the/argument_exception.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/NetworkInformation.h"
 #include "vislib/SocketException.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
-#include "the/not_implemented_exception.h"
+#include "vislib/MissingImplementationException.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,13 +35,13 @@ vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(void)
 vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(
         const IPEndPoint& discoveryAddress,  
         const IPEndPoint& responseAddress,
-        const unsigned int cntResponseChances, 
+        const UINT cntResponseChances, 
         DiscoveryConfigEx *discoverySource)
         : cntResponseChances(cntResponseChances), 
         discoveryAddress(discoveryAddress),
         discoverySource(discoverySource),
         responseAddress(responseAddress) {
-    THE_ASSERT(this->discoverySource != NULL);
+    ASSERT(this->discoverySource != NULL);
 
     // Fix the port of the discovery address, as we get the client socket 
     // address as input, which is normally not bound to the port of the 
@@ -49,9 +49,9 @@ vislib::net::cluster::DiscoveryService::PeerNode::PeerNode(
     this->discoveryAddress.SetPort(
         this->discoverySource->GetBcastAddress().GetPort());
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "New peer node %s, discovered via %s.\n",
-        this->responseAddress.ToStringA().c_str(),
-        this->discoveryAddress.ToStringA().c_str());
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "New peer node %s, discovered via %s.\n",
+        this->responseAddress.ToStringA().PeekBuffer(),
+        this->discoveryAddress.ToStringA().PeekBuffer());
 }
 
 
@@ -79,14 +79,14 @@ bool vislib::net::cluster::DiscoveryService::PeerNode::decrementResponseChances(
         void) {
     if (this->cntResponseChances > 0) {
         this->cntResponseChances--;
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Response chances for %s decremented "
-            "to %d.\n", this->responseAddress.ToStringA().c_str(),
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Response chances for %s decremented "
+            "to %d.\n", this->responseAddress.ToStringA().PeekBuffer(),
             this->cntResponseChances);
         return true;
 
     } else {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "No response chance for %s left.\n",
-            this->responseAddress.ToStringA().c_str());
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "No response chance for %s left.\n",
+            this->responseAddress.ToStringA().PeekBuffer());
         return false;
     }
 }
@@ -129,7 +129,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
     // TODO: This is not good
     NetworkInformation::Adapter adapter = NetworkInformation::GetAdapter(0);
     
-    throw the::not_implemented_exception("DiscoveryConfig::DiscoveryConfig", __FILE__, __LINE__);
+    throw MissingImplementationException("DiscoveryConfig::DiscoveryConfig", __FILE__, __LINE__);
     // TODO: use netinfo to find meaningful default configuration.
     //this->responseAddress = IPEndPoint(adapter.GetAddress4());
     //this->bindAddress = IPEndPoint(adapter.GetAddress4(), DEFAULT_PORT);
@@ -143,7 +143,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(void) {
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const vislib::net::IPEndPoint &responseAddress, 
         const vislib::net::IPAddress &bcastAddress, 
-        const uint16_t bindPort) 
+        const USHORT bindPort) 
         : bcastAddress(bcastAddress, bindPort),
         bindAddress(IPAddress::ANY, bindPort),
         responseAddress(responseAddress) {
@@ -156,7 +156,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const vislib::net::IPEndPoint &responseAddress, 
         const vislib::net::IPAddress6 &bcastAddress, 
-        const uint16_t bindPort) 
+        const USHORT bindPort) 
         : bcastAddress(bcastAddress, bindPort),
         bindAddress(IPAddress6::ANY, bindPort),
         responseAddress(responseAddress) {
@@ -168,7 +168,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const IPEndPoint& responseAddress, 
         const IPAgnosticAddress& bcastAddress,
-        const uint16_t bindPort)
+        const USHORT bindPort)
         : bcastAddress(bcastAddress, bindPort),
         bindAddress(static_cast<IPEndPoint::AddressFamily>(
         bcastAddress.GetAddressFamily()), bindPort),
@@ -181,7 +181,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
  */
 vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         const IPEndPoint& responseAddress, 
-        const uint16_t bindPort)
+        const USHORT bindPort)
         : bcastAddress(responseAddress.GetAddressFamily(), bindPort),
         bindAddress(responseAddress.GetAddressFamily(), bindPort),
         responseAddress(responseAddress) {
@@ -191,7 +191,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
     NetworkInformation::GetAdaptersForUnicastAddress(candidates, 
         responseAddress.GetIPAddress());
 
-    for (size_t i = 0; i < candidates.Count(); i++) {
+    for (SIZE_T i = 0; i < candidates.Count(); i++) {
         this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
             &confidence));
         // We allow valid and guessed broadcast addresses.
@@ -204,7 +204,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
         this->bcastAddress.SetPort(bindPort);
     } else {
         this->~DiscoveryConfig();
-        throw the::argument_exception("bindAddress", __FILE__, __LINE__);
+        throw IllegalParamException("bindAddress", __FILE__, __LINE__);
     }
 }
 
@@ -223,7 +223,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 //
 //    NetworkInformation::GetAdaptersForUnicastAddress(candidates, bindAddress);
 //
-//    for (size_t i = 0; i < candidates.Count(); i++) {
+//    for (SIZE_T i = 0; i < candidates.Count(); i++) {
 //        this->bcastAddress.SetIPAddress(candidates[i].GetBroadcastAddress(
 //            &confidence));
 //        if (confidence != NetworkInformation::INVALID) {
@@ -235,7 +235,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfig::DiscoveryConfig(
 //        this->bcastAddress.SetPort(bindPort);
 //    } else {
 //        this->~DiscoveryConfig();
-//        throw the::argument_exception("bindAddress", __FILE__, __LINE__);
+//        throw IllegalParamException("bindAddress", __FILE__, __LINE__);
 //    }
 //}
 
@@ -290,39 +290,39 @@ bool vislib::net::cluster::DiscoveryService::DiscoveryConfig::operator ==(
 /*
  * vislib::net::cluster::DiscoveryService::DEFAULT_PORT 
  */
-const uint16_t vislib::net::cluster::DiscoveryService::DEFAULT_PORT = 28181;
+const USHORT vislib::net::cluster::DiscoveryService::DEFAULT_PORT = 28181;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::DEFAULT_REQUEST_INTERVAL
  */
-const unsigned int vislib::net::cluster::DiscoveryService::DEFAULT_REQUEST_INTERVAL
+const UINT vislib::net::cluster::DiscoveryService::DEFAULT_REQUEST_INTERVAL
     = 10 * 1000;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::DEFAULT_RESPONSE_CHANCES
  */
-const unsigned int vislib::net::cluster::DiscoveryService::DEFAULT_RESPONSE_CHANCES = 1;
+const UINT vislib::net::cluster::DiscoveryService::DEFAULT_RESPONSE_CHANCES = 1;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::FLAG_OBSERVE_ONLY
  */
-const uint32_t vislib::net::cluster::DiscoveryService::FLAG_OBSERVE_ONLY = 0x1;
+const UINT32 vislib::net::cluster::DiscoveryService::FLAG_OBSERVE_ONLY = 0x1;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS
  */
-const uint32_t vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS = 0x2;
+const UINT32 vislib::net::cluster::DiscoveryService::FLAG_SHARE_SOCKETS = 0x2;
 
 
 //#ifndef _WIN32
 ///*
 // * vislib::net::cluster::DiscoveryService::MSG_TYPE_USER
 // */
-//const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_USER;
+//const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_USER;
 //#endif /* _WIN32 */
 
 
@@ -340,10 +340,10 @@ vislib::net::cluster::DiscoveryService::DiscoveryService(void)
 vislib::net::cluster::DiscoveryService::~DiscoveryService(void) {
     try {
         this->Stop();
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService was stopped in dtor. "
+        VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService was stopped in dtor. "
             "Any shutdown exceptions traced before can be safely ignored.\n");
     } catch (...) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Stopping the discovery threads crashed "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Stopping the discovery threads crashed "
             "in the dtor. This should never happen.\n");
     }
 }
@@ -354,7 +354,7 @@ vislib::net::cluster::DiscoveryService::~DiscoveryService(void) {
  */
 void vislib::net::cluster::DiscoveryService::AddListener(
         DiscoveryListener *listener) {
-    THE_ASSERT(listener != NULL);
+    ASSERT(listener != NULL);
 
     this->listeners.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
@@ -376,7 +376,7 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress4(
 
     //if ((hPeer == NULL) || !hPeer->isValid()) {
     //    this->peerNodesCritSect.Unlock();
-    //    throw the::argument_exception("hPeer", __FILE__, __LINE__);
+    //    throw IllegalParamException("hPeer", __FILE__, __LINE__);
     //} else {
     //    retval = hPeer->getDiscoveryAddress4();
     //    this->peerNodesCritSect.Unlock();
@@ -398,7 +398,7 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress6(
 
     //if ((hPeer == NULL) || !hPeer->isValid()) {
     //    this->peerNodesCritSect.Unlock();
-    //    throw the::argument_exception("hPeer", __FILE__, __LINE__);
+    //    throw IllegalParamException("hPeer", __FILE__, __LINE__);
     //} else {
     //    retval = hPeer->getDiscoveryAddress6();
     //    this->peerNodesCritSect.Unlock();
@@ -414,7 +414,7 @@ vislib::net::cluster::DiscoveryService::GetDiscoveryAddress6(
 vislib::net::cluster::DiscoveryService::State 
 vislib::net::cluster::DiscoveryService::GetState(void) const {
     State retval = STATE_STOPPED;
-    size_t cntConfigs = this->configs.Count();
+    SIZE_T cntConfigs = this->configs.Count();
     
     if (this->senderThread.IsRunning()) {
         reinterpret_cast<int&>(retval) |= STATE_SENDER_RUNNING;
@@ -423,7 +423,7 @@ vislib::net::cluster::DiscoveryService::GetState(void) const {
     if (cntConfigs > 0) {
         reinterpret_cast<int&>(retval) |= STATE_RECEIVER_RUNNING;
     }
-    for (size_t i = 0; i < cntConfigs; i++) {
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
         if (!this->configs[i].GetRecvThread().IsRunning()) {
             reinterpret_cast<int&>(retval) &= ~STATE_RECEIVER_RUNNING;
             break;
@@ -449,13 +449,13 @@ bool vislib::net::cluster::DiscoveryService::IsRunning(void) const {
  * vislib::net::cluster::DiscoveryService::IsSelf
  */
 bool vislib::net::cluster::DiscoveryService::IsSelf(
-        const int idx) const {
+        const INT idx) const {
     IPEndPoint ep((*this)[idx]);
-    size_t cntConfigs = this->configs.Count();
+    SIZE_T cntConfigs = this->configs.Count();
     bool retval = false;
 
     this->peerNodesCritSect.Lock();
-    for (size_t i = 0; i < cntConfigs; i++) {
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
         if ((retval = (ep == this->configs[i].GetResponseAddress()))) {
             break;
         }
@@ -471,7 +471,7 @@ bool vislib::net::cluster::DiscoveryService::IsSelf(
  */
 void vislib::net::cluster::DiscoveryService::RemoveListener(
         DiscoveryListener *listener) {
-    THE_ASSERT(listener != NULL);
+    ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
 
@@ -479,22 +479,22 @@ void vislib::net::cluster::DiscoveryService::RemoveListener(
 /*
  * vislib::net::cluster::DiscoveryService::SendUserMessage
  */
-unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
-        const uint32_t msgType, const void *msgBody, const size_t msgSize) {
+UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
+        const UINT32 msgType, const void *msgBody, const SIZE_T msgSize) {
     Message msg;                // The datagram we are going to send.
-    unsigned int retval = 0;            // Number of failed communication trials.
+    UINT retval = 0;            // Number of failed communication trials.
 
     this->prepareUserMessage(msg, msgType, msgBody, msgSize);
 
     /* Send the message to all registered clients. */
     this->peerNodesCritSect.Lock();
-    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
+    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         try {
             this->peerNodes[i]->discoverySource->SendMessageTo(msg,
                 this->peerNodes[i]->discoveryAddress);
         } catch (SocketException e) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService could not send "
-                "user message (\"%s\").\n", e.what());
+            VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService could not send "
+                "user message (\"%s\").\n", e.GetMsgA());
             retval++;
         }
     }
@@ -507,11 +507,11 @@ unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
 /*
  * vislib::net::cluster::DiscoveryService::SendUserMessage
  */
-unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
-        const PeerHandle& hPeer, const uint32_t msgType, const void *msgBody, 
-        const size_t msgSize) {
+UINT vislib::net::cluster::DiscoveryService::SendUserMessage(
+        const PeerHandle& hPeer, const UINT32 msgType, const void *msgBody, 
+        const SIZE_T msgSize) {
     Message msg;                // The datagram we are going to send.
-    unsigned int retval = 0;            // Retval, 0 in case of success.
+    UINT retval = 0;            // Retval, 0 in case of success.
 
     this->prepareUserMessage(msg, msgType, msgBody, msgSize);
     
@@ -523,14 +523,14 @@ unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
     //if ((hPeer == NULL) || !hPeer->isValid()) {
     if ((hPeer == NULL)) {
         this->peerNodesCritSect.Unlock();
-        throw the::argument_exception("hPeer", __FILE__, __LINE__);
+        throw IllegalParamException("hPeer", __FILE__, __LINE__);
     }
 
     try {
         hPeer->discoverySource->SendMessageTo(msg, hPeer->discoveryAddress);
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "DiscoveryService could not send "
-            "user message (\"%s\").\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_WARN, "DiscoveryService could not send "
+            "user message (\"%s\").\n", e.GetMsgA());
         retval++;
     }
     this->peerNodesCritSect.Unlock();
@@ -543,20 +543,20 @@ unsigned int vislib::net::cluster::DiscoveryService::SendUserMessage(
  * vislib::net::cluster::DiscoveryService::Start
  */
 void vislib::net::cluster::DiscoveryService::Start(const char *name, 
-        const DiscoveryConfig *configs, const size_t cntConfigs,
-        const unsigned int cntExpectedNodes,
-        const uint32_t flags,
-        const unsigned int requestInterval,
-        const unsigned int requestIntervalIntensive,
-        const unsigned int cntResponseChances) {
+        const DiscoveryConfig *configs, const SIZE_T cntConfigs,
+        const UINT cntExpectedNodes,
+        const UINT32 flags,
+        const UINT requestInterval,
+        const UINT requestIntervalIntensive,
+        const UINT cntResponseChances) {
     // TODO: Check for restart
 
     this->name = name;
-    this->name.resize(MAX_NAME_LEN);
+    this->name.Truncate(MAX_NAME_LEN);
 
     this->configs.SetCount(0);
     this->configs.AssertCapacity(cntConfigs);
-    for (size_t i = 0; i < cntConfigs; i++) {
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
         this->configs.Add(DiscoveryConfigEx(configs[i], this));
     }
 
@@ -566,13 +566,13 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
     this->requestIntervalIntensive 
         = (requestInterval > requestIntervalIntensive)
         ? requestIntervalIntensive
-        : math::Max(requestInterval / 2, static_cast<unsigned int>(1));
+        : math::Max(requestInterval / 2, static_cast<UINT>(1));
     this->cntResponseChances = cntResponseChances;
 
     /* Start the threads. */
     this->senderThread.Start(this);
-    THE_ASSERT(cntConfigs == this->configs.Count());
-    for (size_t i = 0; i < cntConfigs; i++) {
+    ASSERT(cntConfigs == this->configs.Count());
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
         this->configs[i].GetRecvThread().Start(&(this->configs[i]));
     }
 }
@@ -581,9 +581,9 @@ void vislib::net::cluster::DiscoveryService::Start(const char *name,
 /*
  * vislib::net::cluster::DiscoveryService::ToStringA
  */
-the::astring vislib::net::cluster::DiscoveryService::ToStringA(
+vislib::StringA vislib::net::cluster::DiscoveryService::ToStringA(
         const PeerHandle& hPeer) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("DiscoveryService::ToStringA", __FILE__, __LINE__);
     try {
         return this->GetResponseAddress(hPeer).ToStringA();
     } catch (...) {
@@ -595,9 +595,9 @@ the::astring vislib::net::cluster::DiscoveryService::ToStringA(
 /*
  * vislib::net::cluster::DiscoveryService::ToStringW
  */
-the::wstring vislib::net::cluster::DiscoveryService::ToStringW(
+vislib::StringW vislib::net::cluster::DiscoveryService::ToStringW(
         const PeerHandle& hPeer) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("DiscoveryService::ToStringW", __FILE__, __LINE__);
     try {
         return this->GetResponseAddress(hPeer).ToStringW();
     } catch (...) {
@@ -610,28 +610,28 @@ the::wstring vislib::net::cluster::DiscoveryService::ToStringW(
  * vislib::net::cluster::DiscoveryService::Stop
  */
 bool vislib::net::cluster::DiscoveryService::Stop(const bool noWait) {
-    size_t cntConfigs = this->configs.Count();
+    SIZE_T cntConfigs = this->configs.Count();
     bool retval = true;
     
     // Note: Receiver must be stopped first, in order to prevent shutdown
     // deadlock when waiting for the last message.    
-    for (size_t i = 0; i < cntConfigs; i++) {
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
         try {
             this->configs[i].GetRecvThread().Terminate(false);
-        } catch (the::system::system_exception e) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Stopping a discovery receiver "
+        } catch (sys::SystemException e) {
+            VLTRACE(Trace::LEVEL_VL_ERROR, "Stopping a discovery receiver "
                 "thread failed. The error code is %d (\"%s\").\n", 
-                e.get_error().native_error(), e.what());
+                e.GetErrorCode(), e.GetMsgA());
             retval = false;
         }
     }
     
     try {
         this->senderThread.Terminate(false);
-    } catch (the::system::system_exception e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Stopping the discovery sender thread "
+    } catch (sys::SystemException e) {
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Stopping the discovery sender thread "
             "failed. The error code is %d (\"%s\").\n", 
-            e.get_error().native_error(), e.what());
+            e.GetErrorCode(), e.GetMsgA());
         retval = false;
     }
 
@@ -650,7 +650,7 @@ vislib::net::IPEndPoint vislib::net::cluster::DiscoveryService::operator [](
 
     if ((hPeer == NULL) || !hPeer->isValid()) {
         this->peerNodesCritSect.Unlock();
-        throw the::argument_exception("hPeer", __FILE__, __LINE__);
+        throw IllegalParamException("hPeer", __FILE__, __LINE__);
     } else {
         retval = hPeer->responseAddress;
         this->peerNodesCritSect.Unlock();
@@ -681,19 +681,19 @@ vislib::net::cluster::DiscoveryService::Receiver::~Receiver(void) {
 /*
  * vislib::net::cluster::DiscoveryService::Receiver::Run
  */
-unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
+DWORD vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     IPEndPoint peerAddr;            // Receives address of communication peer.
     PeerNode peerNode;              // The peer node to register in our list.
     Message msg;                    // Receives the request messages.
     DiscoveryConfigEx *config = static_cast<DiscoveryConfigEx *>(dcfg);
 
-    THE_ASSERT(config != NULL);
-    THE_ASSERT(!this->socket.IsValid());
+    ASSERT(config != NULL);
+    ASSERT(!this->socket.IsValid());
 
     // Assert expected message memory layout.
-    THE_ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(uint32_t));
-    THE_ASSERT(reinterpret_cast<uint8_t *>(&(msg.SenderBody)) 
-       == reinterpret_cast<uint8_t *>(&msg) + 2 * sizeof(uint32_t));
+    ASSERT(sizeof(msg) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    ASSERT(reinterpret_cast<BYTE *>(&(msg.SenderBody)) 
+       == reinterpret_cast<BYTE *>(&msg) + 2 * sizeof(UINT32));
 
     // Reset termiation flag.
     this->isRunning = true;
@@ -702,9 +702,9 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
      * Prepare a datagram socket listening for requests on the specified 
      * adapter and port. 
      */
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The discovery receiver thread is "
+    VLTRACE(Trace::LEVEL_VL_VERBOSE, "The discovery receiver thread is "
         "preparing its socket on %s ...\n", 
-        config->GetBindAddress().ToStringA().c_str());
+        config->GetBindAddress().ToStringA().PeekBuffer());
     try {
         Socket::Startup();
         this->socket.Create(config->GetProtocolFamily(), Socket::TYPE_DGRAM, 
@@ -716,23 +716,23 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
         this->socket.Bind(config->GetBindAddress());
         //socket.SetLinger(false, 0);     // Force hard close.
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery receiver thread could not "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery receiver thread could not "
             "create its socket and bind it to the requested address. The "
-            "error code is %d (\"%s\").\n", e.get_error().native_error(), e.what());
-        return e.get_error().native_error();
+            "error code is %d (\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
+        return e.GetErrorCode();
     }
 
     /* Register myself as known node first (observer does not know itself). */
     if (!config->GetDiscoveryService().IsObserver()) {
         IPEndPoint discoveryAddr(config->GetResponseAddress());
         discoveryAddr.SetPort(config->GetBindAddress().GetPort());  // TODO: hugly
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Add myself (%s) as known node.\n",
-            config->GetResponseAddress().ToStringA().c_str());
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Add myself (%s) as known node.\n",
+            config->GetResponseAddress().ToStringA().PeekBuffer());
         config->GetDiscoveryService().addPeerNode(discoveryAddr,
             config, config->GetResponseAddress());
     }
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The discovery receiver thread is "
+    VLTRACE(Trace::LEVEL_VL_INFO, "The discovery receiver thread is "
         "starting ...\n");
 
     while (this->isRunning != 0) {
@@ -745,9 +745,9 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
             }
 
             if (msg.MagicNumber != MAGIC_NUMBER) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery service received "
+                VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery service received "
                     "invalid magic number %d from %s.\n", msg.MagicNumber,
-                    peerAddr.ToStringA().c_str());
+                    peerAddr.ToStringA().PeekBuffer());
                 continue;
             }
 
@@ -762,12 +762,12 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
                 continue;
             }
 
-            if (!config->GetDiscoveryService().GetName().compare(
-                    msg.SenderBody.Name) == 0) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery service received "
+            if (!config->GetDiscoveryService().GetName().Equals(
+                    msg.SenderBody.Name)) {
+                VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery service received "
                     "message for different cluster \"%s\" from %s.\n", 
                     msg.SenderBody.Name,
-                    peerAddr.ToStringA().c_str());
+                    peerAddr.ToStringA().PeekBuffer());
                 continue;
             }
 
@@ -775,9 +775,9 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
             switch (msg.MsgType) {
 
                 case MSG_TYPE_IAMALIVE:
-                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service received "
+                    VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
                         "MSG_TYPE_IAMALIVE from %s.\n", 
-                        peerAddr.ToStringA().c_str());
+                        peerAddr.ToStringA().PeekBuffer());
                     
                     /* Add peer to local list, if not yet known. */
                     config->GetDiscoveryService().addPeerNode(peerAddr, 
@@ -796,29 +796,29 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
                      * observer mode also send MSG_TYPE_IAMHERE to request an
                      * immediate response of all running nodes.
                      */
-                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service received "
+                    VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
                         "MSG_TYPE_IAMHERE from %s.\n", 
-                        peerAddr.ToStringA().c_str());
+                        peerAddr.ToStringA().PeekBuffer());
 
                     if (!config->GetDiscoveryService().IsObserver()) {
                         /* Observers must not send alive messages. */
                         peerAddr.SetPort(config->GetBindAddress().GetPort());
-                        THE_ASSERT(msg.MagicNumber == MAGIC_NUMBER);
+                        ASSERT(msg.MagicNumber == MAGIC_NUMBER);
                         msg.MsgType = MSG_TYPE_IAMALIVE;
                         msg.SenderBody.ResponseAddress 
                             = config->GetResponseAddress();
                         this->socket.Send(peerAddr, &msg, sizeof(Message));
-                        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
+                        VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
                             "immediate MSG_TYPE_IAMALIVE answer to %s.\n",
-                            peerAddr.ToStringA().c_str());
+                            peerAddr.ToStringA().PeekBuffer());
                     }
                     break;
 
                 case MSG_TYPE_SAYONARA:
                     /* Got an explicit disconnect. */
-                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service received "
+                    VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service received "
                         "MSG_TYPE_SAYONARA from %s.\n",
-                        peerAddr.ToStringA().c_str());
+                        peerAddr.ToStringA().PeekBuffer());
 
                     config->GetDiscoveryService().removePeerNode(
                         IPEndPoint(msg.SenderBody.ResponseAddress));
@@ -826,11 +826,11 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
             }
 
         } catch (SocketException e) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "A socket error occurred in the "
+            VLTRACE(Trace::LEVEL_VL_WARN, "A socket error occurred in the "
                 "discovery receiver thread. The error code is %d (\"%s\").\n",
-                e.get_error().native_error(), e.what());
+                e.GetErrorCode(), e.GetMsgA());
         } catch (...) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The discovery receiver caught an "
+            VLTRACE(Trace::LEVEL_VL_ERROR, "The discovery receiver caught an "
                 "unexpected exception and will exit.\n");
             return -1;
         }
@@ -844,10 +844,10 @@ unsigned int vislib::net::cluster::DiscoveryService::Receiver::Run(void *dcfg) {
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket cleanup failed in the discovery "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket cleanup failed in the discovery "
             "receiver thread. The error code is %d (\"%s\").\n", 
-            e.get_error().native_error(), e.what());
-        return e.get_error().native_error();
+            e.GetErrorCode(), e.GetMsgA());
+        return e.GetErrorCode();
     }
 
     return 0;
@@ -863,18 +863,18 @@ bool vislib::net::cluster::DiscoveryService::Receiver::Terminate(void) {
     try {
         this->socket.Shutdown();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while shutting down cluster "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Error while shutting down cluster "
             "discovery receiver socket: %s. This is normally no problem and "
             "indicates that you already stopped the receiver before.\n",
-            e.what());
+            e.GetMsgA());
     }
     try {
         this->socket.Close();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while closing cluster "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Error while closing cluster "
             "discovery receiver socket: %s. This is normally no problem and "
             "indicates that you already stopped the receiver before.\n",
-            e.what());
+            e.GetMsgA());
     }
 
     return true;
@@ -901,7 +901,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(
 vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::DiscoveryConfigEx(
         const DiscoveryConfig& config, DiscoveryService *cds) 
         : Super(config), cds(cds) {
-    THE_ASSERT(cds != NULL);
+    ASSERT(cds != NULL);
 }
 
 
@@ -940,7 +940,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::~DiscoveryConfigEx(
             this->recvThread.Terminate(true);
         }
     } catch (...) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Error while forcefully terminating "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Error while forcefully terminating "
             "receiver thread.\n");
     }
 }
@@ -990,7 +990,7 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
             //IPEndPoint bindAddr(this->bindAddress, 0);
 
             try {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Lazy creation of discovery "
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Lazy creation of discovery "
                     "service send socket.\n");
                 this->socketSend.Create(this->GetProtocolFamily(), 
                     Socket::TYPE_DGRAM, Socket::PROTOCOL_UDP);
@@ -998,34 +998,34 @@ vislib::net::cluster::DiscoveryService::DiscoveryConfigEx::SendMessageTo(
                 //this->socketSend.SetLinger(false, 0);     // Force hard close.
                 //this->socketSend.Bind(bindAddr);
             } catch (SocketException e) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The socket for the discovery "
+                VLTRACE(Trace::LEVEL_VL_ERROR, "The socket for the discovery "
                     "sender could not be created. The error code is %d "
-                    "(\"%s\").\n", e.get_error().native_error(), e.what());
+                    "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
                 throw;
             }
         }
 
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Using broadcast socket for sending a "
-            "message to %s ...\n", to.ToStringA().c_str());
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Using broadcast socket for sending a "
+            "message to %s ...\n", to.ToStringA().PeekBuffer());
         socket = &this->socketSend;
 
     } else {
         if (!this->socketUserMsg.IsValid()) {
             try {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Lazy creation of discovery "
+                VLTRACE(Trace::LEVEL_VL_VERBOSE, "Lazy creation of discovery "
                     "service user message socket.\n");
                 this->socketUserMsg.Create(this->GetProtocolFamily(), 
                     Socket::TYPE_DGRAM, Socket::PROTOCOL_UDP);
             } catch (SocketException e) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The socket for sending user "
+                VLTRACE(Trace::LEVEL_VL_ERROR, "The socket for sending user "
                     "messages could not be created. The error code is %d "
-                    "(\"%s\").\n", e.get_error().native_error(), e.what());
+                    "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
                 throw;
             } 
         }
 
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Using user message socket for "
-            "sending a message to %s ...\n", to.ToStringA().c_str());
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Using user message socket for "
+            "sending a message to %s ...\n", to.ToStringA().PeekBuffer());
         socket = &this->socketUserMsg;
     }
     
@@ -1087,49 +1087,49 @@ vislib::net::cluster::DiscoveryService::Sender::~Sender(void) {
 /*
  * vislib::net::cluster::DiscoveryService::Sender::Run
  */
-unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
-    THE_ASSERT(cds != NULL);
+DWORD vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
+    ASSERT(cds != NULL);
 
     Message request;        // The UDP datagram we send.
     DiscoveryService *ds    // The discovery service we work for.
         = static_cast<DiscoveryService *>(cds);
-    size_t cntConfigs = ds->configs.Count();    // # of configs. to serve.
-    size_t cntPeers = 0;    // Cache for # of known peers.
+    SIZE_T cntConfigs = ds->configs.Count();    // # of configs. to serve.
+    SIZE_T cntPeers = 0;    // Cache for # of known peers.
 
     // Assert expected memory layout of messages.
-    THE_ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(uint32_t));
-    THE_ASSERT(reinterpret_cast<uint8_t *>(&(request.SenderBody)) 
-       == reinterpret_cast<uint8_t *>(&request) + 2 * sizeof(uint32_t));
+    ASSERT(sizeof(request) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    ASSERT(reinterpret_cast<BYTE *>(&(request.SenderBody)) 
+       == reinterpret_cast<BYTE *>(&request) + 2 * sizeof(UINT32));
 
     // Reset termiation flag.
     this->isRunning = true;
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The discovery sender thread is "
+    VLTRACE(Trace::LEVEL_VL_INFO, "The discovery sender thread is "
         "starting ...\n");
 
     /* Prepare the sockets. */
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Discovery sender thread could not "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Discovery sender thread could not "
             "create initialise socket sub-system. The error code is %d "
-            "(\"%s\").\n", e.get_error().native_error(), e.what());
-        return e.get_error().native_error();
+            "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
+        return e.GetErrorCode();
     }
 
     /* Prepare the constant parameters of our requests. */
     request.MagicNumber = MAGIC_NUMBER;
 #if (_MSC_VER >= 1400)
-    ::strncpy_s(request.SenderBody.Name, MAX_NAME_LEN, ds->name.c_str(),
+    ::strncpy_s(request.SenderBody.Name, MAX_NAME_LEN, ds->name.PeekBuffer(),
         MAX_NAME_LEN);
 #else /* (_MSC_VER >= 1400) */
-    ::strncpy(request.SenderBody.Name, ds->name.c_str(), MAX_NAME_LEN);
+    ::strncpy(request.SenderBody.Name, ds->name.PeekBuffer(), MAX_NAME_LEN);
 #endif /* (_MSC_VER >= 1400) */
 
 
     /* Send the initial "immediate alive request" message(s). */
     request.MsgType = MSG_TYPE_IAMHERE;
-    for (size_t i = 0; i < cntConfigs; i++) {
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
         DiscoveryConfigEx& config = ds->configs[i];
 
         if (this->isRunning == 0) {
@@ -1138,16 +1138,16 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         
         try {
             config.SendCustomisedMessage(request);
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
+            VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
                 "MSG_TYPE_IAMHERE (%s) to %s.\n", 
-                config.GetResponseAddress().ToStringA().c_str(),
-                config.GetBcastAddress().ToStringA().c_str());
+                config.GetResponseAddress().ToStringA().PeekBuffer(),
+                config.GetBcastAddress().ToStringA().PeekBuffer());
         } catch (SocketException e) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
+            VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
                 "discovery sender thread. The error code is %d (\"%s\").\n",
-                e.get_error().native_error(), e.what());
+                e.GetErrorCode(), e.GetMsgA());
         }
-    } /* end for (size_t i = 0; i < cntConfigs; i++) */
+    } /* end for (SIZE_T i = 0; i < cntConfigs; i++) */
 
 
     /*
@@ -1158,7 +1158,7 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
      * time before really starting.
      */
     if (ds->IsObserver()) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service is leaving the sender "
+        VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service is leaving the sender "
             "thread as it is in observer mode.\n");
         return 0;
     } else {
@@ -1172,13 +1172,13 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
         try {
             ds->prepareRequest();
         } catch (...) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The discovery sender thread caught "
+            VLTRACE(Trace::LEVEL_VL_ERROR, "The discovery sender thread caught "
                 "an unexpected exception while preparing the request.\n");
             return -1;
         }
 
         cntPeers = ds->CountPeers();    // Remember that for all configs.
-        for (size_t i = 0; i < cntConfigs; i++) {
+        for (SIZE_T i = 0; i < cntConfigs; i++) {
             DiscoveryConfigEx& config = ds->configs[i];
 
             if (this->isRunning == 0) {
@@ -1187,54 +1187,54 @@ unsigned int vislib::net::cluster::DiscoveryService::Sender::Run(void *cds) {
 
             try {
                 config.SendCustomisedMessage(request);
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
+                VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
                     "MSG_TYPE_IAMALIVE (%s) to %s.\n", 
-                    config.GetResponseAddress().ToStringA().c_str(),
-                    config.GetBcastAddress().ToStringA().c_str());
+                    config.GetResponseAddress().ToStringA().PeekBuffer(),
+                    config.GetBcastAddress().ToStringA().PeekBuffer());
             } catch (SocketException e) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
+                VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
                     "discovery sender thread. The error code is %d (\"%s\").\n",
-                    e.get_error().native_error(), e.what());
+                    e.GetErrorCode(), e.GetMsgA());
             }
-        } /* end for (size_t i = 0; i < cntConfigs; i++) */ 
+        } /* end for (SIZE_T i = 0; i < cntConfigs; i++) */ 
 
         try {
             if (this->isRunning != 0) {
                 sys::Thread::Sleep((cntPeers < ds->cntExpectedNodes)
                     ? ds->requestIntervalIntensive : ds->requestInterval);
             }
-        } catch (the::system::system_exception e) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "An error occurred in the "
+        } catch (sys::SystemException e) {
+            VLTRACE(Trace::LEVEL_VL_WARN, "An error occurred in the "
                 "discovery sender thread while waiting. The error code is %d "
-                "(\"%s\").\n", e.get_error().native_error(), e.what());
+                "(\"%s\").\n", e.GetErrorCode(), e.GetMsgA());
         }
     } /* end while (this->isRunning != 0) */
 
     /* Now inform all other nodes, that we are out. */
     request.MsgType = MSG_TYPE_SAYONARA;
-    for (size_t i = 0; i < cntConfigs; i++) {
+    for (SIZE_T i = 0; i < cntConfigs; i++) {
         DiscoveryConfigEx& config = ds->configs[i];
 
         try {
             config.SendCustomisedMessage(request);
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discovery service sent "
+            VLTRACE(Trace::LEVEL_VL_INFO, "Discovery service sent "
                 "MSG_TYPE_SAYONARA to %s.\n", 
-                config.GetBcastAddress().ToStringA().c_str());
+                config.GetBcastAddress().ToStringA().PeekBuffer());
         } catch (SocketException e) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "A socket error occurred in the "
+            VLTRACE(Trace::LEVEL_VL_ERROR, "A socket error occurred in the "
                 "discovery sender thread. The error code is %d (\"%s\").\n",
-                e.get_error().native_error(), e.what());
+                e.GetErrorCode(), e.GetMsgA());
         }
-    } /* end for (size_t i = 0; i < cntConfigs; i++) */
+    } /* end for (SIZE_T i = 0; i < cntConfigs; i++) */
 
     /* Clean up. */
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket cleanup failed in the discovery "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket cleanup failed in the discovery "
             "request thread. The error code is %d (\"%s\").\n", 
-            e.get_error().native_error(), e.what());
-        return e.get_error().native_error();
+            e.GetErrorCode(), e.GetMsgA());
+        return e.GetErrorCode();
     }
 
     return 0;
@@ -1262,24 +1262,24 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
         const IPEndPoint& discoveryAddr, 
         DiscoveryConfigEx *discoverySource,
         const IPEndPoint& responseAddr) {
-    intptr_t idx = 0;            // Index of possible duplicate.
+    INT_PTR idx = 0;            // Index of possible duplicate.
     PeerHandle hPeer = NULL;    // Old or new peer node handle.
 
-    THE_ASSERT(discoverySource != NULL);
+    ASSERT(discoverySource != NULL);
 
     this->peerNodesCritSect.Lock();
     
     if ((idx = this->peerFromResponseAddress(responseAddr)) >= 0) {
         /* Already known, reset disconnect chance. */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Peer node %s is already known.\n", 
-            responseAddr.ToStringA().c_str());
-        hPeer = this->peerNodes[static_cast<size_t>(idx)];
+        VLTRACE(Trace::LEVEL_VL_VERBOSE, "Peer node %s is already known.\n", 
+            responseAddr.ToStringA().PeekBuffer());
+        hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
         hPeer->cntResponseChances = this->cntResponseChances;
 
     } else {
         /* Not known, so add it and fire event. */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "I learned about node %s.\n",
-            responseAddr.ToStringA().c_str());
+        VLTRACE(Trace::LEVEL_VL_INFO, "I learned about node %s.\n",
+            responseAddr.ToStringA().PeekBuffer());
         hPeer = new PeerNode(discoveryAddr, responseAddr, 
             this->cntResponseChances, discoverySource);
         this->peerNodes.Append(hPeer);
@@ -1302,14 +1302,14 @@ void vislib::net::cluster::DiscoveryService::addPeerNode(
  */
 void vislib::net::cluster::DiscoveryService::fireUserMessage(
         const IPEndPoint& sender, DiscoveryConfigEx *discoverySource, 
-        const uint32_t msgType, const uint8_t *msgBody) {
-    intptr_t idx = 0;        // Index of sender PeerNode.
+        const UINT32 msgType, const BYTE *msgBody) {
+    INT_PTR idx = 0;        // Index of sender PeerNode.
     PeerHandle hPeer;       // Handle or meta-handle of PeerNode.
 
     this->peerNodesCritSect.Lock();
     
     if ((idx = this->peerFromDiscoveryAddr(sender)) >= 0) {
-        hPeer = this->peerNodes[static_cast<size_t>(idx)];
+        hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
     } else {
         hPeer = new PeerNode(sender,  
             IPEndPoint(IPAddress6::UNSPECIFIED, 0),
@@ -1337,12 +1337,12 @@ void vislib::net::cluster::DiscoveryService::fireUserMessage(
 /*
  * vislib::net::cluster::DiscoveryService::peerFromResponseAddress
  */
-intptr_t vislib::net::cluster::DiscoveryService::peerFromResponseAddress(
+INT_PTR vislib::net::cluster::DiscoveryService::peerFromResponseAddress(
         const IPEndPoint& addr) const {
     // TODO: Think of faster solution.  
-    intptr_t retval = -1;
+    INT_PTR retval = -1;
 
-    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
+    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         if (this->peerNodes[i]->responseAddress == addr) {
             retval = i;
             break;
@@ -1356,12 +1356,12 @@ intptr_t vislib::net::cluster::DiscoveryService::peerFromResponseAddress(
 /*
  * vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr
  */
-intptr_t vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
+INT_PTR vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
         const IPEndPoint& addr) const {
     // TODO: Think of faster solution.  
-    intptr_t retval = -1;
+    INT_PTR retval = -1;
 
-    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
+    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         // TODO: Endpoint test for multiple discovery instances on one node
         if (this->peerNodes[i]->discoveryAddress.GetIPAddress()
                 == addr.GetIPAddress()) {
@@ -1380,11 +1380,11 @@ intptr_t vislib::net::cluster::DiscoveryService::peerFromDiscoveryAddr(
 void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
     this->peerNodesCritSect.Lock();
 
-    for (size_t i = 0; i < this->peerNodes.Count(); i++) {
+    for (SIZE_T i = 0; i < this->peerNodes.Count(); i++) {
         if (!this->peerNodes[i]->decrementResponseChances()) {
-            THE_ASSERT(this->peerNodes[i]->isValid());
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Node %s lost, firing event ...\n",
-                this->peerNodes[i]->responseAddress.ToStringA().c_str());
+            ASSERT(this->peerNodes[i]->isValid());
+            VLTRACE(Trace::LEVEL_VL_VERBOSE, "Node %s lost, firing event ...\n",
+                this->peerNodes[i]->responseAddress.ToStringA().PeekBuffer());
             
             /* Fire event. */
             ConstIterator<ListenerList::Iterator> it 
@@ -1414,32 +1414,32 @@ void vislib::net::cluster::DiscoveryService::prepareRequest(void) {
  * vislib::net::cluster::DiscoveryService::prepareUserMessage
  */
 void vislib::net::cluster::DiscoveryService::prepareUserMessage(
-        Message& outMsg, const uint32_t msgType, const void *msgBody, 
-        const size_t msgSize) {
+        Message& outMsg, const UINT32 msgType, const void *msgBody, 
+        const SIZE_T msgSize) {
 
     /* Check user parameters. */
     if (msgType < MSG_TYPE_USER) {
-        throw the::argument_exception("msgType", __FILE__, __LINE__);
+        throw IllegalParamException("msgType", __FILE__, __LINE__);
     }
     if ((msgBody == NULL) && (msgSize > 0)) {
-        throw the::argument_exception("msgBody", __FILE__, __LINE__);
+        throw IllegalParamException("msgBody", __FILE__, __LINE__);
     }
     if (msgSize > MAX_USER_DATA) {
-        throw the::argument_exception("msgSize", __FILE__, __LINE__);
+        throw IllegalParamException("msgSize", __FILE__, __LINE__);
     }
 
     // Assert some stuff.
-    THE_ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(uint32_t));
-    THE_ASSERT(reinterpret_cast<uint8_t *>(&(outMsg.UserData)) 
-       == reinterpret_cast<uint8_t *>(&outMsg) + 2 * sizeof(uint32_t));
-    THE_ASSERT(msgType >= MSG_TYPE_USER);
-    THE_ASSERT((msgBody != NULL) || (msgSize == 0));
-    THE_ASSERT(msgSize <= MAX_USER_DATA);
+    ASSERT(sizeof(outMsg) == MAX_USER_DATA + 2 * sizeof(UINT32));
+    ASSERT(reinterpret_cast<BYTE *>(&(outMsg.UserData)) 
+       == reinterpret_cast<BYTE *>(&outMsg) + 2 * sizeof(UINT32));
+    ASSERT(msgType >= MSG_TYPE_USER);
+    ASSERT((msgBody != NULL) || (msgSize == 0));
+    ASSERT(msgSize <= MAX_USER_DATA);
 
     /* Prepare the message. */
     outMsg.MagicNumber = MAGIC_NUMBER;
     outMsg.MsgType = msgType;
-    ::the::zero_memory(outMsg.UserData, MAX_USER_DATA);
+    ::ZeroMemory(outMsg.UserData, MAX_USER_DATA);
     ::memcpy(outMsg.UserData, msgBody, msgSize);
 }
 
@@ -1449,12 +1449,12 @@ void vislib::net::cluster::DiscoveryService::prepareUserMessage(
  */
 void vislib::net::cluster::DiscoveryService::removePeerNode(
         const IPEndPoint& address) {
-    intptr_t idx = 0;
+    INT_PTR idx = 0;
     
     this->listeners.Lock();
 
     if ((idx = this->peerFromResponseAddress(address)) >= 0) {
-        PeerHandle hPeer = this->peerNodes[static_cast<size_t>(idx)];
+        PeerHandle hPeer = this->peerNodes[static_cast<SIZE_T>(idx)];
 
         /* Fire event. */
         ConstIterator<ListenerList::Iterator> it 
@@ -1478,26 +1478,26 @@ void vislib::net::cluster::DiscoveryService::removePeerNode(
 /*
  * vislib::net::cluster::DiscoveryService::MAGIC_NUMBER
  */
-const uint32_t vislib::net::cluster::DiscoveryService::MAGIC_NUMBER 
-    = (static_cast<uint32_t>('v') << 0) | (static_cast<uint32_t>('c') << 8)
-    | (static_cast<uint32_t>('d') << 16) | (static_cast<uint32_t>('s') << 24);
+const UINT32 vislib::net::cluster::DiscoveryService::MAGIC_NUMBER 
+    = (static_cast<UINT32>('v') << 0) | (static_cast<UINT32>('c') << 8)
+    | (static_cast<UINT32>('d') << 16) | (static_cast<UINT32>('s') << 24);
 
 
 #ifndef _WIN32
 /*
  * vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMALIVE
  */
-const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMALIVE;
+const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMALIVE;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMHERE
  */
-const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMHERE;
+const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_IAMHERE;
 
 
 /*
  * vislib::net::cluster::DiscoveryService::MSG_TYPE_SAYONARA
  */
-const uint32_t vislib::net::cluster::DiscoveryService::MSG_TYPE_SAYONARA;
+const UINT32 vislib::net::cluster::DiscoveryService::MSG_TYPE_SAYONARA;
 #endif  /* !_WIN32 */

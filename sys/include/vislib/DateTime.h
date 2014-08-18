@@ -18,8 +18,8 @@
 #include <ctime>
 
 #include "vislib/DateTimeSpan.h"
-#include "the/stack_trace.h"
-#include "the/types.h"
+#include "vislib/StackTrace.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -70,7 +70,7 @@ namespace sys {
          *
          * @return true, if 'year' is a leap year, false otherwise.
          */
-        static bool IsLeapYear(const int year);
+        static bool IsLeapYear(const INT year);
 
         /**
          * Get the current local time.
@@ -90,13 +90,13 @@ namespace sys {
          *
          * @return The time span in 100 ns ticks.
          *
-         * @throws argument_exception If the conversion fails due to numeric
+         * @throws IllegalParamException If the conversion fails due to numeric
          *                               overflows.
          */
-        inline static int64_t TimeToTicks(const int hours, const int minutes, 
-                const int seconds, const int milliseconds = 0,
-                const int ticks = 0) {
-            THE_STACK_TRACE;
+        inline static INT64 TimeToTicks(const INT hours, const INT minutes, 
+                const INT seconds, const INT milliseconds = 0,
+                const INT ticks = 0) {
+            VLSTACKTRACE("DateTime::TimeToTicks", __FILE__, __LINE__);
             return DateTimeSpan::TimeToTicks(hours, minutes, seconds,
                 milliseconds, ticks);
         }
@@ -141,9 +141,9 @@ namespace sys {
          *
          * @throws TODO should implement overflow check.
          */
-        DateTime(const int year, const int month, const int day, 
-            const int hours = 0, const int minutes = 0, const int seconds = 0,
-            const int milliseconds = 0);
+        DateTime(const INT year, const INT month, const INT day, 
+            const INT hours = 0, const INT minutes = 0, const INT seconds = 0,
+            const INT milliseconds = 0);
 
         /**
          * Create a new instance from struct tm. This ctor allows for implicit
@@ -155,7 +155,7 @@ namespace sys {
          * @param tm The time that should be used for initialisation.
          */
         inline DateTime(const struct tm& tm) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
             this->Set(tm);
         }
 
@@ -172,7 +172,7 @@ namespace sys {
          * @param time The time that should be used for initialisation.
          */
         explicit inline DateTime(const time_t time) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
             this->Set(time);
         }
 
@@ -186,12 +186,12 @@ namespace sys {
          * @param fileTime The time that should be used for initialisation.
          */
         inline DateTime(const FILETIME& fileTime) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
             this->Set(fileTime);
         }
 
         inline DateTime(const SYSTEMTIME& systemTime, const bool isUTC = true) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
             this->Set(systemTime, isUTC);
         }
 #endif /* _WIN32 */
@@ -202,7 +202,7 @@ namespace sys {
          * @param rhs The object to be cloned.
          */
         inline DateTime(const DateTime& rhs) : ticks(rhs.ticks) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
         }
 
         /** Dtor. */
@@ -213,7 +213,7 @@ namespace sys {
         // *
         // * @param days The number of days to add.
         // */
-        //inline void AddDays(const int days) {
+        //inline void AddDays(const INT days) {
         //    this->value += days * ONE_DAY;
         //}
 
@@ -222,7 +222,7 @@ namespace sys {
         // *
         // * @param hours The number of hours to add.
         // */
-        //inline void AddHours(const int hours) {
+        //inline void AddHours(const INT hours) {
         //    this->value += hours * ONE_HOUR;
         //}
 
@@ -231,7 +231,7 @@ namespace sys {
         // *
         // * @param minutes The number of minutes to add.
         // */
-        //inline void AddMinutes(const int minutes) {
+        //inline void AddMinutes(const INT minutes) {
         //    this->value += minutes * ONE_MINUTE;
         //}
 
@@ -240,14 +240,14 @@ namespace sys {
         //// *
         //// * @param months The number of months to add.
         //// */
-        ////void AddMonths(const int months);
+        ////void AddMonths(const INT months);
 
         ///**
         // * Add the specified number of seconds to the current date.
         // *
         // * @param seconds The number of seconds to add.
         // */
-        //inline void AddSeconds(const int seconds) {
+        //inline void AddSeconds(const INT seconds) {
         //    this->value += seconds * ONE_SECOND;
         //}
 
@@ -256,7 +256,7 @@ namespace sys {
         //// *
         //// * @param years The number of years to add.
         //// */
-        ////void AddYears(const int years);
+        ////void AddYears(const INT years);
 
         /**
          * Get the date and time.
@@ -271,10 +271,10 @@ namespace sys {
          * @param outSeconds      Receives the seconds.
          * @param outMilliseconds Receives the milliseconds.
          */
-        inline void Get(int& outYear, int& outMonth, int& outDay,
-                int& outHours, int& outMinutes, int& outSeconds, 
-                int& outMilliseconds) const {
-            THE_STACK_TRACE;
+        inline void Get(INT& outYear, INT& outMonth, INT& outDay,
+                INT& outHours, INT& outMinutes, INT& outSeconds, 
+                INT& outMilliseconds) const {
+            VLSTACKTRACE("DateTime::Get", __FILE__, __LINE__);
             this->GetDate(outYear, outMonth, outDay);
             this->GetTime(outHours, outMinutes, outSeconds, outMilliseconds);
         }
@@ -291,9 +291,9 @@ namespace sys {
          * @param outMinutes Receives the minutes.
          * @param outSeconds Receives the seconds.
          */
-        inline void Get(int& outYear, int& outMonth, int& outDay,
-                int& outHours, int& outMinutes, int& outSeconds) const {
-            THE_STACK_TRACE;
+        inline void Get(INT& outYear, INT& outMonth, INT& outDay,
+                INT& outHours, INT& outMinutes, INT& outSeconds) const {
+            VLSTACKTRACE("DateTime::Get", __FILE__, __LINE__);
             this->GetDate(outYear, outMonth, outDay);
             this->GetTime(outHours, outMinutes, outSeconds);
         }
@@ -306,7 +306,7 @@ namespace sys {
          * @param outMonth  Receives the month. The value is within [1, 12].
          * @param outDay    Recevies the day in the month.
          */
-        void GetDate(int& outYear, int& outMonth, int& outDay) const;
+        void GetDate(INT& outYear, INT& outMonth, INT& outDay) const;
 
         /**
          * Get the time.
@@ -316,8 +316,8 @@ namespace sys {
          * @param outSeconds      Receives the seconds.
          * @param outMilliseconds Receives the milliseconds.
          */
-        void GetTime(int& outHours, int& outMinutes, int& outSeconds, 
-            int& outMilliseconds) const;
+        void GetTime(INT& outHours, INT& outMinutes, INT& outSeconds, 
+            INT& outMilliseconds) const;
 
         /**
          * Get the time.
@@ -326,10 +326,10 @@ namespace sys {
          * @param outMinutes Receives the minutes.
          * @param outSeconds Receives the seconds.
          */
-        inline void GetTime(int& outHours, int& outMinutes, 
-                int& outSeconds) const {
-            THE_STACK_TRACE;
-            int tmp;
+        inline void GetTime(INT& outHours, INT& outMinutes, 
+                INT& outSeconds) const {
+            VLSTACKTRACE("DateTime::GetTime", __FILE__, __LINE__);
+            INT tmp;
             this->GetTime(outHours, outMinutes, outSeconds, tmp);
         }
 
@@ -338,8 +338,8 @@ namespace sys {
          *
          * @return The total ticks that represent the time.
          */
-        inline int64_t GetTotalTicks(void) const {
-            THE_STACK_TRACE;
+        inline INT64 GetTotalTicks(void) const {
+            VLSTACKTRACE("DateTime::GetTotalTicks", __FILE__, __LINE__);
             return this->ticks;
         }
 
@@ -369,9 +369,9 @@ namespace sys {
          *
          * @throws TODO should implement overflow check.
          */
-        void Set(const int year, const int month, const int day, 
-            const int hours, const int minutes, const int seconds, 
-            const int milliseconds = 0, const int ticks = 0);
+        void Set(const INT year, const INT month, const INT day, 
+            const INT hours, const INT minutes, const INT seconds, 
+            const INT milliseconds = 0, const INT ticks = 0);
 
         /**
          * Set the date and time from the specified struct tm. 'tm' is assumed 
@@ -393,7 +393,7 @@ namespace sys {
          *
          * @param time  The time to set.
          *
-         * @throws the::system::system_exception If 'time' has an invalid value.
+         * @throws SystemException If 'time' has an invalid value.
          */
         void Set(const time_t time);
 
@@ -406,7 +406,7 @@ namespace sys {
          *
          * @param fileTime The FILETIME to set.
          *
-         * @throws the::system::system_exception If the conversion of the FILETIME into a
+         * @throws SystemException If the conversion of the FILETIME into a
          *                         SYSTEMTIME structure failed.
          */
         void Set(const FILETIME& fileTime);
@@ -422,7 +422,7 @@ namespace sys {
          *                   local time  and will not be converted. This 
          *                   parameter defaults true.
          *
-         * @throws the::system::system_exception If the conversion from UTC to local time
+         * @throws SystemException If the conversion from UTC to local time
          *                         failed.
          */
         void Set(const SYSTEMTIME& systemTime, const bool isUTC = true);
@@ -440,7 +440,7 @@ namespace sys {
          * @param day   The day. Invalid dates are corrected by changing the
          *              month and/or year.
          */
-        void SetDate(const int year, const int month, const int day); 
+        void SetDate(const INT year, const INT month, const INT day); 
 
         /**
          * Se the time part without modifying the date.
@@ -460,15 +460,15 @@ namespace sys {
          *                     TICKS_PER_MILLISECOND[. This parameter defaults 
          *                     to 0.
          */
-        void SetTime(const int hour, const int minute, const int second,
-            const int milliseconds = 0, const int ticks = 0);
+        void SetTime(const INT hour, const INT minute, const INT second,
+            const INT milliseconds = 0, const INT ticks = 0);
 
         ///**
         // * Subtract the specified number of days from the current date.
         // *
         // * @param days The number of days to subtract.
         // */
-        //inline void SubtractDays(const int days) {
+        //inline void SubtractDays(const INT days) {
         //    this->value -= days * ONE_DAY;
         //}
 
@@ -477,7 +477,7 @@ namespace sys {
         // *
         // * @param hours The number of hours to subtract.
         // */
-        //inline void SubtractHours(const int hours) {
+        //inline void SubtractHours(const INT hours) {
         //    this->value -= hours * ONE_HOUR;
         //}
 
@@ -486,7 +486,7 @@ namespace sys {
         // *
         // * @param minutes The number of minutes to subtract.
         // */
-        //inline void SubtractMinutes(const int minutes) {
+        //inline void SubtractMinutes(const INT minutes) {
         //    this->value -= minutes * ONE_MINUTE;
         //}
 
@@ -495,7 +495,7 @@ namespace sys {
         // *
         // * @param seconds The number of seconds to subtract.
         // */
-        //inline void SubtractSeconds(const int seconds) {
+        //inline void SubtractSeconds(const INT seconds) {
         //    this->value -= seconds * ONE_SECOND;
         //}
 
@@ -516,7 +516,7 @@ namespace sys {
          * @return true, if 'rhs' and this object are equal, false otherwise.
          */
         inline bool operator ==(const DateTime& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator ==", __FILE__, __LINE__);
             return (this->ticks == rhs.ticks);
         }
 
@@ -529,7 +529,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator !=(const DateTime& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator !=", __FILE__, __LINE__);
             return (this->ticks != rhs.ticks);
         }
 
@@ -541,7 +541,7 @@ namespace sys {
          * @return true, if this DateTime lies before 'rhs', false otherwise.
          */
         inline bool operator <(const DateTime& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator <", __FILE__, __LINE__);
             return (this->ticks < rhs.ticks);
         }
 
@@ -554,7 +554,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator <=(const DateTime& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator <=", __FILE__, __LINE__);
             return (this->ticks <= rhs.ticks);
         }
 
@@ -566,7 +566,7 @@ namespace sys {
          * @return true, if this DateTime lies after 'rhs', false otherwise.
          */
         inline bool operator >(const DateTime& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator >", __FILE__, __LINE__);
             return (this->ticks > rhs.ticks);
         }
 
@@ -579,7 +579,7 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator >=(const DateTime& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator >=", __FILE__, __LINE__);
             return (this->ticks >= rhs.ticks);
         }
 
@@ -591,11 +591,11 @@ namespace sys {
          * @return A point in time that is 'rhs' in the future from this point
          *         in time.
          *
-         * @throws argument_exception If 'rhs' has such a value that the
+         * @throws IllegalParamException If 'rhs' has such a value that the
          *                               result would overflow.
          */
         inline DateTime operator +(const DateTimeSpan& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator +", __FILE__, __LINE__);
             DateTime retval(*this);
             retval += rhs;
             return retval;
@@ -608,11 +608,11 @@ namespace sys {
          *
          * @return A point in time that is 'rhs' before this point in time.
          *
-         * @throws argument_exception If 'rhs' has such a value that the
+         * @throws IllegalParamException If 'rhs' has such a value that the
          *                               result would overflow.
          */
         inline DateTime operator -(const DateTimeSpan& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("DateTime::operator -", __FILE__, __LINE__);
             DateTime retval(*this);
             retval -= rhs;
             return retval;
@@ -625,7 +625,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If 'rhs' has such a value that the
+         * @throws IllegalParamException If 'rhs' has such a value that the
          *                               result would overflow.
          */
 	    DateTime& operator +=(const DateTimeSpan& rhs);
@@ -637,7 +637,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If 'rhs' has such a value that the
+         * @throws IllegalParamException If 'rhs' has such a value that the
          *                               result would overflow.
          */
 	    DateTime& operator -=(const DateTimeSpan& rhs);
@@ -649,7 +649,7 @@ namespace sys {
          *
          * @return The time span between the two points in time.
          *
-         * @throws argument_exception If 'rhs' has such a value that the
+         * @throws IllegalParamException If 'rhs' has such a value that the
          *                               result would overflow.
          */
         DateTimeSpan operator -(const DateTime& rhs) const;
@@ -711,24 +711,24 @@ namespace sys {
          * being at index 1. Element 0 holds a zero, element 13 holds the 
          * total number of days of a non-leap year.
          */
-        static const int64_t DAYS_AFTER_MONTH[13];
+        static const INT64 DAYS_AFTER_MONTH[13];
 
         /**
          * The same as DAYS_AFTER_MONTH, but for leap years. 
          */
-        static const int64_t DAYS_AFTER_MONTH_LY[13];
+        static const INT64 DAYS_AFTER_MONTH_LY[13];
 
         /** The days in a normal, i. e. non-leap, year. */
-        static const int64_t DAYS_PER_YEAR;
+        static const INT64 DAYS_PER_YEAR;
 
         /** The days in a four year period, including leap years. */
-        static const int64_t DAYS_PER_4YEARS;
+        static const INT64 DAYS_PER_4YEARS;
 
         /** The days in a 100 year period, including leap years. */
-        static const int64_t DAYS_PER_100YEARS;
+        static const INT64 DAYS_PER_100YEARS;
 
         /** The days in a 400 year period, including leap years. */
-        static const int64_t DAYS_PER_400YEARS;
+        static const INT64 DAYS_PER_400YEARS;
 
         /**
          * Create a new instance with the given initial value.
@@ -738,8 +738,8 @@ namespace sys {
          * @param ticks The ticks since 01.01.0001.
          * @param dowel Ignore this. Any data is acceptable
          */
-        inline DateTime(const int64_t value, const int dowel) : ticks(ticks) {
-            THE_STACK_TRACE;
+        inline DateTime(const INT64 value, const INT dowel) : ticks(ticks) {
+            VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
         }
 
         /**
@@ -749,10 +749,10 @@ namespace sys {
          *
          * @return The value of the specified part.
          */
-        int64_t get(const DatePart datePart) const;
+        INT64 get(const DatePart datePart) const;
 
         /** The date value in 100 ns ticks since 01.01.0001. */
-        int64_t ticks;
+        INT64 ticks;
     };
     
 } /* end namespace sys */

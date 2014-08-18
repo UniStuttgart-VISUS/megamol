@@ -47,7 +47,8 @@ namespace vislib {
             * @throws Exception or derived in case of an error. 
              */
             void AssertBodySize(void) {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("AbstractSimpleMessage::AssertBodySize", 
+                    __FILE__, __LINE__);
                 this->assertStorage(this->GetHeader().GetBodySize());
             }
 
@@ -74,7 +75,8 @@ namespace vislib {
             * @return The message body.
             */
             template<class T> inline const T *GetBodyAs(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("AbstractSimpleMessage::GetBodyAs", 
+                    __FILE__, __LINE__);
                 return reinterpret_cast<const T *>(this->GetBody());
             }
 
@@ -85,7 +87,8 @@ namespace vislib {
             * @return The message body.
             */
             template<class T> inline T *GetBodyAs(void) {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("AbstractSimpleMessage::GetBodyAs", 
+                    __FILE__, __LINE__);
                 return reinterpret_cast<T *>(this->GetBody());
             }
 
@@ -99,9 +102,10 @@ namespace vislib {
             * @return A pointer to the begin of the message body + 'offset' bytes.
             */
             template<class T> 
-            inline const T *GetBodyAsAt(const size_t offset) const {
-                THE_STACK_TRACE;
-                return reinterpret_cast<const T *>(this->GetBodyAs<uint8_t>() 
+            inline const T *GetBodyAsAt(const SIZE_T offset) const {
+                VLSTACKTRACE("AbstractSimpleMessage::GetBodyAsAt", 
+                    __FILE__, __LINE__);
+                return reinterpret_cast<const T *>(this->GetBodyAs<BYTE>() 
                     + offset);
             }
 
@@ -115,9 +119,10 @@ namespace vislib {
             * @return A pointer to the begin of the message body + 'offset' bytes.
             */
             template<class T> 
-            inline T *GetBodyAsAt(const size_t offset) {
-                THE_STACK_TRACE;
-                return reinterpret_cast<T *>(this->GetBodyAs<uint8_t>() + offset);
+            inline T *GetBodyAsAt(const SIZE_T offset) {
+                VLSTACKTRACE("AbstractSimpleMessage::GetBodyAsAt", 
+                    __FILE__, __LINE__);
+                return reinterpret_cast<T *>(this->GetBodyAs<BYTE>() + offset);
             }
 
             /**
@@ -126,7 +131,8 @@ namespace vislib {
             * message.
             */
             inline const ShallowSimpleMessageHeader& GetHeader(void) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("AbstractSimpleMessage::GetHeader", 
+                    __FILE__, __LINE__);
                 return this->header;
             }
 
@@ -136,7 +142,8 @@ namespace vislib {
             * message.
             */
             inline ShallowSimpleMessageHeader& GetHeader(void) {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("AbstractSimpleMessage::GetHeader", 
+                    __FILE__, __LINE__);
                 return this->header;
             }
 
@@ -145,8 +152,9 @@ namespace vislib {
             *
             * @return The combined size of the header and message body.
             */
-            inline size_t GetMessageSize(void) const {
-                THE_STACK_TRACE;
+            inline SIZE_T GetMessageSize(void) const {
+                VLSTACKTRACE("AbstractSimpleMessage::GetMessageSize", 
+                    __FILE__, __LINE__);
                 return (this->GetHeader().GetHeaderSize() 
                     + this->GetHeader().GetBodySize());
             }
@@ -173,7 +181,7 @@ namespace vislib {
             *
             * @throws Exception or derived in case of an error.
             */
-            void SetBody(const void *body, const size_t bodySize = 0);
+            void SetBody(const void *body, const SIZE_T bodySize = 0);
 
             /**
             * Update the message header. 
@@ -230,7 +238,8 @@ namespace vislib {
             *         false otherwise.
             */
             bool operator !=(const AbstractSimpleMessage& rhs) const {
-                THE_STACK_TRACE;
+                VLSTACKTRACE("AbstractSimpleMessage::operator !=", 
+                    __FILE__, __LINE__);
                 return !(*this == rhs);
             }
 
@@ -278,7 +287,7 @@ namespace vislib {
             *
             * @throws Exception or derived in case of an error.
             */
-            virtual bool assertStorage(void *& outStorage, const size_t size) = 0;
+            virtual bool assertStorage(void *& outStorage, const SIZE_T size) = 0;
 
             /**
             * Ensure that there is enough storage for the message header and a body
@@ -287,7 +296,7 @@ namespace vislib {
             * the header is returned.
             *
             * Implementation note: This method uses 
-            * assertStorage(void *& outStorage, const size_t size) to allocate the
+            * assertStorage(void *& outStorage, const SIZE_T size) to allocate the
             * storage. Additional logic is wrapped around this call.
             *
             * @param bodySize The size of the message body in bytes.
@@ -296,7 +305,7 @@ namespace vislib {
             *
             * @throws Exception or derived in case of an error.
             */
-            void *assertStorage(const size_t bodySize);
+            void *assertStorage(const SIZE_T bodySize);
 
         private:
 

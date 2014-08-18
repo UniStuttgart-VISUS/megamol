@@ -22,9 +22,9 @@
 
 #include "vislib/Dimension.h"
 #include "vislib/Point.h"
-#include "the/not_implemented_exception.h"
-#include "the/stack_trace.h"
-#include "the/string.h"
+#include "vislib/MissingImplementationException.h"
+#include "vislib/StackTrace.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -53,7 +53,7 @@ namespace graphics {
         /**
          * Close the window.
          *
-         * @throws the::system::system_exception In case the window could not be closed, e.g.
+         * @throws SystemException In case the window could not be closed, e.g.
          *                         because it was not open.
          */
         void Close(void);
@@ -67,13 +67,13 @@ namespace graphics {
          * @param width  The desired width of the client area of the window.
          * @param height The desired height of the client area of the window.
          * 
-         * @throws invalid_operation_exception If the window handle of the object has
+         * @throws IllegalStateException If the window handle of the object has
          *                               already been set.
-         * @throws the::system::system_exception If the instance handle could not be retrieved
+         * @throws SystemException If the instance handle could not be retrieved
          *                         or if the window rectangle could not be 
          *                         adjusted in size.
          */
-        void Create(const the::astring& title, int left, int top, 
+        void Create(const vislib::StringA& title, int left, int top, 
             int width, int height);
 
         /**
@@ -85,13 +85,13 @@ namespace graphics {
          * @param width  The desired width of the client area of the window.
          * @param height The desired height of the client area of the window.
          * 
-         * @throws invalid_operation_exception If the window handle of the object has
+         * @throws IllegalStateException If the window handle of the object has
          *                               already been set.
-         * @throws the::system::system_exception If the instance handle could not be retrieved
+         * @throws SystemException If the instance handle could not be retrieved
          *                         or if the window rectangle could not be 
          *                         adjusted in size.
          */
-        void Create(const the::wstring& title, int left, int top, 
+        void Create(const vislib::StringW& title, int left, int top, 
             int width, int height);
 
         /**
@@ -99,7 +99,7 @@ namespace graphics {
          *
          * @return The position of the window.
          *
-         * @throws the::system::system_exception In case of an error.
+         * @throws SystemException In case of an error.
          */
         Point GetPosition(void) const;
 
@@ -108,7 +108,7 @@ namespace graphics {
          *
          * @return The size of the window.
          *
-         * @throws the::system::system_exception In case of an error.
+         * @throws SystemException In case of an error.
          */
         Dimension GetSize(void) const;
 
@@ -116,11 +116,11 @@ namespace graphics {
          * Makes the window invisible.
          */
         inline void Hide(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractWindow::Hide", __FILE__, __LINE__);
 #ifdef _WIN32
             ::ShowWindow(this->hWnd, SW_HIDE);
 #else /* _WIN32 */
-            throw the::not_implemented_exception("AbstractWindow::Hide",
+            throw MissingImplementationException("AbstractWindow::Hide",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -149,11 +149,11 @@ namespace graphics {
          * Makes the window visible.
          */
         inline void Show(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractWindow::Show", __FILE__, __LINE__);
 #ifdef _WIN32
             ::ShowWindow(this->hWnd, SW_SHOW);
 #else /* _WIN32 */
-            throw the::not_implemented_exception("AbstractWindow::Show",
+            throw MissingImplementationException("AbstractWindow::Show",
                 __FILE__, __LINE__);
 #endif /* _WIN32 */
         }
@@ -184,7 +184,7 @@ namespace graphics {
          *
          * The default implementation does nothing.
          */
-        virtual void onCreating(unsigned int& inOutStyle, unsigned int& inOutExStyle) throw();
+        virtual void onCreating(DWORD& inOutStyle, DWORD& inOutExStyle) throw();
 #endif /* _WIN32 */
 
 #ifdef _WIN32
@@ -207,7 +207,7 @@ namespace graphics {
          * 
          * @return
          */
-        virtual LRESULT onMessage(bool& outHandled, unsigned int msg, WPARAM wParam, 
+        virtual LRESULT onMessage(bool& outHandled, UINT msg, WPARAM wParam, 
             LPARAM lParam) throw();
 #endif /* _WIN32 */
 
@@ -248,7 +248,7 @@ namespace graphics {
          * @param className The name of the window class that was registered.
          */
          virtual void onWindowClassRegistered(
-             const the::wstring className) throw();
+             const vislib::StringW className) throw();
 #endif /* _WIN32 */
 
 #ifdef _WIN32
@@ -270,7 +270,7 @@ namespace graphics {
          *
          * @return
          */
-        static LRESULT CALLBACK wndProc(HWND hWnd, unsigned int msg, WPARAM wParam,
+        static LRESULT CALLBACK wndProc(HWND hWnd, UINT msg, WPARAM wParam,
             LPARAM lParam);
 #endif /* _WIN32 */
 
@@ -279,7 +279,7 @@ namespace graphics {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         AbstractWindow(const AbstractWindow& rhs);
 
@@ -296,13 +296,14 @@ namespace graphics {
         // *
         // * @return The name of the class that has been registered.
         // *
-        // * @throws the::system::system_exception If the instance handle could not be 
+        // * @throws SystemException If the instance handle could not be 
         // *                         retrieved or the window class could not
         // *                         be registered.
         // */
-        //inline the::astring registerWindowClassA(HINSTANCE hInstance) {
-        //    THE_STACK_TRACE;
-        //    return the::astring(this->registerWindowClassW(hInstance));
+        //inline vislib::StringA registerWindowClassA(HINSTANCE hInstance) {
+        //    VLSTACKTRACE("AbstractWindow::registerWindowClassA", __FILE__, 
+        //        __LINE__);
+        //    return vislib::StringA(this->registerWindowClassW(hInstance));
         //}
 
         /**
@@ -317,11 +318,11 @@ namespace graphics {
          *
          * @return The name of the class that has been registered.
          *
-         * @throws the::system::system_exception If the instance handle could not be 
+         * @throws SystemException If the instance handle could not be 
          *                         retrieved or the window class could not
          *                         be registered.
          */
-        the::wstring registerWindowClassW(HINSTANCE hInstance);
+        vislib::StringW registerWindowClassW(HINSTANCE hInstance);
 #endif /* _WIN32 */
 
         /**
@@ -331,7 +332,7 @@ namespace graphics {
          *
          * @return *this
          *
-         * @throws argument_exception if (this != &rhs).
+         * @throws IllegalParamException if (this != &rhs).
          */
         AbstractWindow& operator =(const AbstractWindow& rhs);
     };

@@ -8,12 +8,12 @@
 
 #include "vislib/OpenGLTexture2D.h"
 
-#include "the/assert.h"
-#include "the/argument_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/glverify.h"
 #include "vislib/mathfunctions.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 
@@ -22,7 +22,7 @@
  */
 GLenum vislib::graphics::gl::OpenGLTexture2D::SetFilter(const GLint minFilter, 
                                                         const GLint magFilter) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::SetFilter", __FILE__, __LINE__);
     return Super::setFilter(GL_TEXTURE_2D, minFilter, magFilter);
 }
 
@@ -32,7 +32,7 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::SetFilter(const GLint minFilter,
  */
 GLenum vislib::graphics::gl::OpenGLTexture2D::SetWrap(const GLint s, 
                                                       const GLint t) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::SetWrap", __FILE__, __LINE__);
     USES_GL_VERIFY;
 
     GL_VERIFY_RETURN(::glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, s));
@@ -46,7 +46,7 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::SetWrap(const GLint s,
  * vislib::graphics::gl::OpenGLTexture2D::OpenGLTexture2D
  */
 vislib::graphics::gl::OpenGLTexture2D::OpenGLTexture2D(void) : Super() {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::OpenGLTexture2D", __FILE__, __LINE__);
     // Nothing to do.
 }
 
@@ -55,7 +55,7 @@ vislib::graphics::gl::OpenGLTexture2D::OpenGLTexture2D(void) : Super() {
  * vislib::graphics::gl::OpenGLTexture2D::~OpenGLTexture2D
  */
 vislib::graphics::gl::OpenGLTexture2D::~OpenGLTexture2D(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::~OpenGLTexture2D", __FILE__, __LINE__);
     // Nothing to do.
 }
 
@@ -64,7 +64,7 @@ vislib::graphics::gl::OpenGLTexture2D::~OpenGLTexture2D(void) {
  * vislib::graphics::gl::OpenGLTexture2D::Bind
  */
 GLenum vislib::graphics::gl::OpenGLTexture2D::Bind(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::Bind", __FILE__, __LINE__);
     USES_GL_VERIFY;
     GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, this->GetId()));
     return GL_NO_ERROR;
@@ -74,10 +74,10 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::Bind(void) {
 /*
  * vislib::graphics::gl::OpenGLTexture2D::Create
  */
-GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const unsigned int width, 
-        const unsigned int height, const void *pixels, const GLenum format, 
+GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const UINT width, 
+        const UINT height, const void *pixels, const GLenum format, 
         const GLenum type, const GLint internalFormat, const GLint border) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::Create", __FILE__, __LINE__);
     USES_GL_VERIFY;
 
     /* Create new texture. */
@@ -100,15 +100,15 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const unsigned int width,
 /*
  * vislib::graphics::gl::OpenGLTexture2D::Create
  */
-GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const unsigned int width, 
-        const unsigned int height, const bool forcePowerOfTwo, const void *pixels,
+GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const UINT width, 
+        const UINT height, const bool forcePowerOfTwo, const void *pixels,
         const GLenum format, const GLenum type, const GLint internalFormat, 
         const GLint border) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::Create", __FILE__, __LINE__);
     USES_GL_VERIFY;
 
-    unsigned int w = math::NextPowerOfTwo(width);
-    unsigned int h = math::NextPowerOfTwo(height);
+    UINT w = math::NextPowerOfTwo(width);
+    UINT h = math::NextPowerOfTwo(height);
 
     if (!forcePowerOfTwo || ((w == width) && (h == height))) {
         return this->Create(width, height, pixels, format, type, 
@@ -128,10 +128,10 @@ GLenum vislib::graphics::gl::OpenGLTexture2D::Create(const unsigned int width,
  * vislib::graphics::gl::OpenGLTexture2D::Update
  */
 GLenum vislib::graphics::gl::OpenGLTexture2D::Update(const void *pixels, 
-        const unsigned int width, const unsigned int height, const GLenum format, 
-        const GLenum type, const unsigned int offsetX, const unsigned int offsetY, 
+        const UINT width, const UINT height, const GLenum format, 
+        const GLenum type, const UINT offsetX, const UINT offsetY, 
         const GLint level, const bool resetBind) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("OpenGLTexture2D::Update", __FILE__, __LINE__);
     USES_GL_VERIFY;
     GLint oldTex;
     GLenum retval = GL_NO_ERROR;

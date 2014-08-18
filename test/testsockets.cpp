@@ -10,13 +10,13 @@
 #include "vislib/AsyncSocketSender.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
-#include "the/system/system_exception.h"
+#include "vislib/SystemException.h"
 #include "vislib/Thread.h"
 #include "testhelper.h"
 
 
 /** Port used for test server. */
-static const uint16_t TEST_PORT = 7134;
+static const SHORT TEST_PORT = 7134;
 
 
 /** Reads data from 'socket' member. */
@@ -25,7 +25,7 @@ class SocketReader : public vislib::sys::Runnable {
 public:
     inline SocketReader(vislib::net::Socket socket) : socket(socket) {}
     virtual ~SocketReader(void);
-    virtual unsigned int Run(void *cntRepeat);
+    virtual DWORD Run(void *cntRepeat);
 
 protected:
     vislib::net::Socket socket;
@@ -42,24 +42,24 @@ SocketReader::~SocketReader(void) {
 /*
  * SocketReader::Run
  */
-unsigned int SocketReader::Run(void *cntRepeat) {
+DWORD SocketReader::Run(void *cntRepeat) {
     using namespace vislib::net;
-    unsigned int cnt = *static_cast<unsigned int *>(cntRepeat);
-    unsigned int recvBuf = 0;
-    unsigned int retval = 0;
+    DWORD cnt = *static_cast<DWORD *>(cntRepeat);
+    DWORD recvBuf = 0;
+    DWORD retval = 0;
 
     try {
         Socket::Startup();
 
         for (retval = 0; retval < cnt; retval++) {
-            this->socket.Receive(&recvBuf, sizeof(unsigned int));
+            this->socket.Receive(&recvBuf, sizeof(DWORD));
             AssertEqual("Received expected data", retval, recvBuf);
             vislib::sys::Thread::Reschedule();
         }
 
         Socket::Cleanup();
     } catch (SocketException e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.GetMsgA() << std::endl;
     }
 
     return retval;
@@ -72,7 +72,7 @@ class SocketWriter : public vislib::sys::Runnable {
 public:
     inline SocketWriter(vislib::net::Socket socket) : socket(socket) {}
     virtual ~SocketWriter(void);
-    virtual unsigned int Run(void *cntRepeat);
+    virtual DWORD Run(void *cntRepeat);
 
 protected:
     vislib::net::Socket socket;
@@ -89,21 +89,21 @@ SocketWriter::~SocketWriter(void) {
 /*
  * SocketWriter::run
  */
-unsigned int SocketWriter::Run(void *cntRepeat) {
+DWORD SocketWriter::Run(void *cntRepeat) {
     using namespace vislib::net;
-    unsigned int cnt = *static_cast<unsigned int *>(cntRepeat);
-    unsigned int retval = 0;
+    DWORD cnt = *static_cast<DWORD *>(cntRepeat);
+    DWORD retval = 0;
 
     try {
         Socket::Startup();
 
         for (retval = 0; retval < cnt; retval++) {
-            this->socket.Send(&retval, sizeof(unsigned int));
+            this->socket.Send(&retval, sizeof(DWORD));
         }
 
         Socket::Cleanup();
     } catch (SocketException e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.GetMsgA() << std::endl;
     }
 
     return retval;
@@ -115,7 +115,7 @@ class SocketServer : public vislib::sys::Runnable {
 public:
     inline SocketServer(void) {}
     virtual ~SocketServer(void);
-    virtual unsigned int Run(void *cntRepeat);
+    virtual DWORD Run(void *cntRepeat);
 };
 
 
@@ -129,10 +129,10 @@ SocketServer::~SocketServer(void) {
 /*
  * SocketServer::run
  */
-unsigned int SocketServer::Run(void *cntRepeat) {
+DWORD SocketServer::Run(void *cntRepeat) {
     using namespace vislib::net;
     using namespace vislib::sys;
-    unsigned int retval = 0;
+    DWORD retval = 0;
     Socket serverSocket;
     Socket clientSocket;
     
@@ -162,8 +162,8 @@ unsigned int SocketServer::Run(void *cntRepeat) {
 
         clientSocket.Close();
         Socket::Cleanup();
-    } catch (the::system::system_exception e) {
-        std::cerr << e.what() << std::endl;
+    } catch (SystemException e) {
+        std::cerr << e.GetMsgA() << std::endl;
     }
     return retval;
 }
@@ -174,7 +174,7 @@ class SocketClient : public vislib::sys::Runnable {
 public:
     inline SocketClient(void) {}
     virtual ~SocketClient(void);
-    virtual unsigned int Run(void *cntRepeat);
+    virtual DWORD Run(void *cntRepeat);
 };
 
 
@@ -188,10 +188,10 @@ SocketClient::~SocketClient(void) {
 /*
  * SocketClient::run
  */
-unsigned int SocketClient::Run(void *cntRepeat) {
+DWORD SocketClient::Run(void *cntRepeat) {
     using namespace vislib::net;
     using namespace vislib::sys;
-    unsigned int retval = 0;
+    DWORD retval = 0;
     Socket clientSocket;
     
     try {
@@ -217,8 +217,8 @@ unsigned int SocketClient::Run(void *cntRepeat) {
 
         clientSocket.Close();
         Socket::Cleanup();
-    } catch (the::system::system_exception e) {
-        std::cerr << e.what() << std::endl;
+    } catch (SystemException e) {
+        std::cerr << e.GetMsgA() << std::endl;
     }
     return retval;
 }
@@ -228,7 +228,7 @@ void TestAsyncSocketSender(void) {
     using namespace vislib::net;
     using namespace vislib::sys;
 
-    unsigned int cntRepeat = 10;
+    DWORD cntRepeat = 10;
     Socket socket;
     AsyncSocketSender sender;
     Thread senderThread(&sender);
@@ -246,8 +246,8 @@ void TestAsyncSocketSender(void) {
     socket.Connect(SocketAddress::CreateInet("127.0.0.1", TEST_PORT));
     senderThread.Start(&socket);
 
-    for (unsigned int i = 0; i < cntRepeat; i++) {
-        sender.Send(&i, sizeof(unsigned int));
+    for (DWORD i = 0; i < cntRepeat; i++) {
+        sender.Send(&i, sizeof(DWORD));
     }
 
     serverThread.Join();
@@ -260,7 +260,7 @@ void TestAsyncSocketSender(void) {
 
 void TestSockets(void) {
     using namespace vislib::sys;
-    unsigned int cntRepeat = 10;
+    DWORD cntRepeat = 10;
     SocketServer server;
     Thread serverThread(&server);
     SocketClient client;

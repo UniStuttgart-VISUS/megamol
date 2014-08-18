@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/File.h"
-#include "the/string.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -93,7 +93,7 @@ namespace sys {
          *         otherwise (usually eof). If 'false' is returned the value
          *         of outLine is undefined.
          */
-        bool ReadLine(the::astring& outLine, unsigned int maxSize = 1024);
+        bool ReadLine(StringA& outLine, unsigned int maxSize = 1024);
 
         /**
          * Reads the next line from the text file. You must not call this
@@ -108,7 +108,7 @@ namespace sys {
          *         otherwise (usually eof). If 'false' is returned the value
          *         of outLine is undefined.
          */
-        bool ReadLine(the::wstring& outLine, unsigned int maxSize = 1024);
+        bool ReadLine(StringW& outLine, unsigned int maxSize = 1024);
 
         /**
          * Reads the next line from the text file. You must not call this
@@ -119,10 +119,10 @@ namespace sys {
          *
          * @return The content of the newly read line.
          */
-        inline the::astring ReadLineA(unsigned int maxSize = 1024) {
-            the::astring line;
+        inline StringA ReadLineA(unsigned int maxSize = 1024) {
+            StringA line;
             if (!this->ReadLine(line, maxSize)) {
-                line.clear();
+                line.Clear();
             }
             return line;
         }
@@ -138,10 +138,10 @@ namespace sys {
          *
          * @return The content of the newly read line.
          */
-        inline the::astring ReadLineA(bool& success, unsigned int maxSize = 1024) {
-            the::astring line;
+        inline StringA ReadLineA(bool& success, unsigned int maxSize = 1024) {
+            StringA line;
             if ((success = this->ReadLine(line, maxSize)) == false) {
-                line.clear();
+                line.Clear();
             }
             return line;
         }
@@ -155,10 +155,10 @@ namespace sys {
          *
          * @return The content of the newly read line.
          */
-        inline the::wstring ReadLineW(unsigned int maxSize = 1024) {
-            the::wstring line;
+        inline StringW ReadLineW(unsigned int maxSize = 1024) {
+            StringW line;
             if (!this->ReadLine(line, maxSize)) {
-                line.clear();
+                line.Clear();
             }
             return line;
         }
@@ -172,10 +172,10 @@ namespace sys {
          *
          * @return The content of the newly read line.
          */
-        inline the::wstring ReadLineW(bool& success, unsigned int maxSize = 1024) {
-            the::wstring line;
+        inline StringW ReadLineW(bool& success, unsigned int maxSize = 1024) {
+            StringW line;
             if ((success = this->ReadLine(line, maxSize)) == false) {
-                line.clear();
+                line.Clear();
             }
             return line;
         }

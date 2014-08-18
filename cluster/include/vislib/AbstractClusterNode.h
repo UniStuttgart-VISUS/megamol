@@ -19,7 +19,7 @@
 #include "vislib/CmdLineProvider.h"
 #include "vislib/Socket.h"
 #include "vislib/SocketException.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -59,7 +59,7 @@ namespace cluster {
          * no other value is provided either via the command line or via the 
          * API.
          */
-        static const uint16_t DEFAULT_PORT;
+        static const SHORT DEFAULT_PORT;
 
         /** Dtor. */
         virtual ~AbstractClusterNode(void);
@@ -106,7 +106,7 @@ namespace cluster {
          *                               Calling this interface implementation
          *                               is a severe logic error.
          */
-        virtual unsigned int Run(void) = 0;
+        virtual DWORD Run(void) = 0;
 
     protected:
 
@@ -162,7 +162,7 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        virtual size_t countPeers(void) const = 0;
+        virtual SIZE_T countPeers(void) const = 0;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -177,7 +177,7 @@ namespace cluster {
          *
          * @return The number of sucessful calls to 'func' that have been made.
          */
-        virtual size_t forEachPeer(ForeachPeerFunc func, void *context) = 0;
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context) = 0;
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -223,8 +223,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed,
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const uint8_t *body, const size_t cntBody) = 0;
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody) = 0;
 
         /**
          * The message receiver thread calls this method once it exists.
@@ -272,8 +272,8 @@ namespace cluster {
          *
          * @return The number of messages successfully delivered.
          */
-        virtual size_t sendMessage(const uint32_t msgId, const uint8_t *data, 
-            const uint32_t cntData);
+        virtual SIZE_T sendMessage(const UINT32 msgId, const BYTE *data, 
+            const UINT32 cntData);
 
         /**
          * Send a message to a specific peer node.
@@ -290,7 +290,7 @@ namespace cluster {
          *         not found or a communication error occurred.
          */
         virtual bool sendMessage(const PeerIdentifier& peerId, 
-            const uint32_t msgId, const uint8_t *data, const uint32_t cntData);
+            const UINT32 msgId, const BYTE *data, const UINT32 cntData);
 
 
         /**
@@ -305,7 +305,7 @@ namespace cluster {
          *
          * @return The number of messages successfully delivered.
          */
-        virtual size_t sendToEachPeer(const uint8_t *data, const size_t cntData);
+        virtual SIZE_T sendToEachPeer(const BYTE *data, const SIZE_T cntData);
 
         /**
          * Send 'cntData' bytes of data beginning at 'data' to the peer node
@@ -323,7 +323,7 @@ namespace cluster {
          *         not found or a communication error occurred.
          */
         virtual bool sendToPeer(const PeerIdentifier& peerId,
-            const uint8_t *data, const size_t cntData);
+            const BYTE *data, const SIZE_T cntData);
 
         /**
          * Assignment.
@@ -340,8 +340,8 @@ namespace cluster {
          * This is the context parameter for SendToPeerFunc().
          */
         typedef struct SendToPeerCtx_t {
-            const uint8_t *Data;
-            size_t CntData;
+            const BYTE *Data;
+            SIZE_T CntData;
         } SendToPeerCtx;
 
         /**
@@ -372,7 +372,7 @@ namespace cluster {
             const PeerIdentifier& peerId, Socket& peerSocket, void *context);
 
         /* Grant access to message handler methods. */
-        friend unsigned int ReceiveMessages(void *receiveMessagesCtx);
+        friend DWORD ReceiveMessages(void *receiveMessagesCtx);
 
     };
     

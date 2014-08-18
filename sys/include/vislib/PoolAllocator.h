@@ -15,11 +15,11 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/NullLockable.h"
 #include "vislib/sysfunctions.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -147,8 +147,8 @@ namespace sys {
          * @param outElCount    Receives the number of allocated elements.
          * @param outActElCount Receives the number of active elements.
          */
-        inline void _GetCounts(unsigned int &outPageCount, unsigned int &outElCount,
-                unsigned int &outActElCount) const {
+        inline void _GetCounts(UINT &outPageCount, UINT &outElCount,
+                UINT &outActElCount) const {
 
             outPageCount = 0;
             outElCount = 0;
@@ -292,10 +292,10 @@ namespace sys {
             e->link = NULL; // find the page ... :-(
             Page *p = this->firstPage;
             while (p) {
-                size_t offset = (reinterpret_cast<char*>(e)
+                SIZE_T offset = (reinterpret_cast<char*>(e)
                     - reinterpret_cast<char*>(p)) - sizeof(Page);
                 if (offset <= p->cnt * sizeof(Element)) {
-                    THE_ASSERT((offset % sizeof(Element)) == 0);
+                    ASSERT((offset % sizeof(Element)) == 0);
                     e->link = static_cast<void*>(p);
                     break;
                 }
@@ -321,8 +321,8 @@ namespace sys {
 
         this->Unlock();
 
-        THE_ASSERT(e != NULL);
-        THE_ASSERT(e->link != NULL);
+        ASSERT(e != NULL);
+        ASSERT(e->link != NULL);
         new (&e->obj) T; // ctor object
         return &e->obj;
     }
@@ -353,7 +353,7 @@ namespace sys {
         // remove pages
         while (pages) {
             nextPage = pages->next;
-            THE_ASSERT(pages->owner == this);
+            ASSERT(pages->owner == this);
             if (isPageClean(pages)) {
                 // page not in use. => deallocate
                 ::free(static_cast<void*>(pages));
@@ -390,7 +390,7 @@ namespace sys {
      */
     template<class T, class L, class LS>
     void PoolAllocator<T, L, LS>::SetAllocationSize(unsigned int s) {
-        THE_ASSERT(s > 0);
+        ASSERT(s > 0);
         // no need to synchronise this
         this->allocSize = s;
     }
@@ -407,9 +407,9 @@ namespace sys {
 
         Element *e = CONTAINING_STRUCT(inOutPtr, Element, obj);
         Page *p = static_cast<Page *>(e->link);
-        THE_ASSERT(((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
+        ASSERT(((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
             - sizeof(Page)) % sizeof(Element) == 0);
-        THE_ASSERT((((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
+        ASSERT((((reinterpret_cast<char*>(e) - reinterpret_cast<char*>(p))
             - sizeof(Page)) / sizeof(Element)) <= p->cnt);
 
         if (p->owner != NULL) {

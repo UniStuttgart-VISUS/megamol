@@ -14,9 +14,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/string.h"
-#include "the/types.h"
-#include "the/log.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
+#include "vislib/Log.h"
 
 
 namespace vislib {
@@ -52,6 +52,42 @@ namespace sys {
         };
 
         /**
+         * Log echo output target implementation using special functions of the
+         * console, like coloured text.
+         */
+        class ConsoleLogTarget : public vislib::sys::Log::Target {
+        public:
+
+            /** ctor */
+            ConsoleLogTarget(unsigned int level = vislib::sys::Log::LEVEL_ERROR)
+                    : vislib::sys::Log::Target(level) {
+                // intentionally empty
+            }
+
+            /** dtor */
+            virtual ~ConsoleLogTarget() {
+                // intentionally empty
+            }
+
+            /**
+             * Writes a message to the log target
+             *
+             * @param level The level of the message
+             * @param time The time stamp of the message
+             * @param sid The object id of the source of the message
+             * @param msg The message text itself
+             */
+            virtual void Msg(unsigned int level,
+                vislib::sys::Log::TimeStamp time,
+                vislib::sys::Log::SourceID sid,
+                const char *msg);
+
+        };
+
+        /** The log echo output target of the console. */
+        static const ConsoleLogTarget LogEchoTarget;
+
+        /**
          * Runs a console command in a common system command interpreter. On
          * windows 'cmd.exe' is used, on linux '/bin/sh' is used. The output
          * of the command to 'stdout' and 'stderr' are returned in the two
@@ -73,8 +109,8 @@ namespace sys {
          *
          * @return The exit code of the command.
          */
-        static int Run(const char *command, the::astring *outStdOut = NULL, 
-            the::astring *outStdErr = NULL);
+        static int Run(const char *command, StringA *outStdOut = NULL, 
+            StringA *outStdErr = NULL);
 
         /**
          * Write formatted text output to the standard output.
@@ -205,14 +241,14 @@ namespace sys {
          *
          * @param title The new title of the console window.
          */
-        static void SetTitle(const the::astring& title);
+        static void SetTitle(const vislib::StringA& title);
 
         /**
          * Sets the title of the console window, if possible.
          *
          * @param title The new title of the console window.
          */
-        static void SetTitle(const the::wstring& title);
+        static void SetTitle(const vislib::StringW& title);
 
         /**
          * Sets the icon of the console window, if possible.

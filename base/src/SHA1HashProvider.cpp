@@ -7,10 +7,10 @@
 
 #include "vislib/SHA1HashProvider.h"
 
-#include "the/assert.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
-#include "the/memory.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/memutils.h"
 
 
 /* Define the SHA1 circular left shift macro. */
@@ -31,7 +31,7 @@ vislib::SHA1HashProvider::SHA1HashProvider(void) {
  * vislib::SHA1HashProvider::~SHA1HashProvider
  */
 vislib::SHA1HashProvider::~SHA1HashProvider(void) {
-    the::secure_zero_memory(&this->context, sizeof(SHA1Context));
+    ::SecureZeroMemory(&this->context, sizeof(SHA1Context));
 }
 
 
@@ -57,12 +57,12 @@ void vislib::SHA1HashProvider::Initialise(void) {
 /*
  * vislib::SHA1HashProvider::TransformBlock
  */
-void vislib::SHA1HashProvider::TransformBlock(const uint8_t *input, 
-                                              const size_t cntInput) {
+void vislib::SHA1HashProvider::TransformBlock(const BYTE *input, 
+                                              const SIZE_T cntInput) {
     // Must be initialised, as ctor does this.
     if ((input != NULL) && (cntInput > 0)) {
         SHA1HashProvider::input(&this->context, input, 
-            static_cast<unsigned int>(cntInput));
+            static_cast<UINT>(cntInput));
     }
 }
 
@@ -70,8 +70,8 @@ void vislib::SHA1HashProvider::TransformBlock(const uint8_t *input,
 /*
  * vislib::SHA1HashProvider::TransformFinalBlock
  */
-bool vislib::SHA1HashProvider::TransformFinalBlock(uint8_t *outHash, 
-        size_t& inOutSize, const uint8_t *input, const size_t cntInput) {
+bool vislib::SHA1HashProvider::TransformFinalBlock(BYTE *outHash, 
+        SIZE_T& inOutSize, const BYTE *input, const SIZE_T cntInput) {
     SHA1Context ctx = this->context;    // Local context to be finalised.
     bool retval = false;                // Remember whether output was copied.
 
@@ -92,12 +92,12 @@ bool vislib::SHA1HashProvider::TransformFinalBlock(uint8_t *outHash,
 /*
  * vislib::SHA1HashProvider::input
  */
-void vislib::SHA1HashProvider::input(SHA1Context *context, const uint8_t *input, 
-        const unsigned int cntInput) {
-    THE_ASSERT(context != NULL);
-    THE_ASSERT(input != NULL);
+void vislib::SHA1HashProvider::input(SHA1Context *context, const BYTE *input, 
+        const UINT cntInput) {
+    ASSERT(context != NULL);
+    ASSERT(input != NULL);
 
-    unsigned int length = cntInput;
+    UINT length = cntInput;
 
     if (!length) {
         /* Nothing to do. */
@@ -111,12 +111,12 @@ void vislib::SHA1HashProvider::input(SHA1Context *context, const uint8_t *input,
 
     if (context->Computed) {
         context->Corrupted = shaStateError;
-        throw the::invalid_operation_exception("vislib::SHA1HashProvider::input called "
+        throw IllegalStateException("vislib::SHA1HashProvider::input called "
             "after hash was already computed.", __FILE__, __LINE__);
     }
 
     if (context->Corrupted) {
-         throw the::invalid_operation_exception("SHA1Context is corrupted.", __FILE__, 
+         throw IllegalStateException("SHA1Context is corrupted.", __FILE__, 
              __LINE__);
     }
 
@@ -192,11 +192,11 @@ void vislib::SHA1HashProvider::padMessage(SHA1Context *context) {
  * vislib::SHA1HashProvider::processMessageBlock
  */
 void vislib::SHA1HashProvider::processMessageBlock(SHA1Context *context) {
-    const uint32_t K[] = {    // Constants defined in SHA-1
+    const UINT32 K[] = {    // Constants defined in SHA-1
         0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6 };
-    uint32_t temp;            // Temporary word value
-    uint32_t W[80];           // Word sequence
-    uint32_t A, B, C, D, E;   // Word buffers 
+    UINT32 temp;            // Temporary word value
+    UINT32 W[80];           // Word sequence
+    UINT32 A, B, C, D, E;   // Word buffers 
 
     /* Initialize the first 16 words in the array W */
     for (int t = 0; t < 16; t++) {
@@ -268,10 +268,10 @@ void vislib::SHA1HashProvider::processMessageBlock(SHA1Context *context) {
 /*
  * vislib::SHA1HashProvider::result
  */
-void vislib::SHA1HashProvider::result(uint8_t *messageDigest, 
+void vislib::SHA1HashProvider::result(UINT8 *messageDigest, 
                                       SHA1Context *context) {
-    THE_ASSERT(messageDigest != NULL);
-    THE_ASSERT(context != NULL);
+    ASSERT(messageDigest != NULL);
+    ASSERT(context != NULL);
 
     // vislib enforces this.
     //if (!context || !messageDigest) {
@@ -279,7 +279,7 @@ void vislib::SHA1HashProvider::result(uint8_t *messageDigest,
     //}
 
     if (context->Corrupted) {
-         throw the::invalid_operation_exception("SHA1Context is corrupted.", __FILE__, 
+         throw IllegalStateException("SHA1Context is corrupted.", __FILE__, 
              __LINE__);
     }
 
@@ -294,7 +294,7 @@ void vislib::SHA1HashProvider::result(uint8_t *messageDigest,
         context->Computed = 1;
     }
 
-    for (unsigned int i = 0; i < SHA1HashProvider::HASH_SIZE; i++) {
+    for (UINT i = 0; i < SHA1HashProvider::HASH_SIZE; i++) {
         messageDigest[i] = context->Intermediate_Hash[i >> 2] >> 8 
             * (3 - (i & 0x03));
     }
@@ -307,7 +307,7 @@ void vislib::SHA1HashProvider::result(uint8_t *messageDigest,
 vislib::SHA1HashProvider& vislib::SHA1HashProvider::operator =(
         const SHA1HashProvider& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

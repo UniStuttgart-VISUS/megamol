@@ -8,15 +8,15 @@
 
 #include "vislib/AbstractServerNode.h"
 
-#include "the/assert.h"
-#include "the/argument_exception.h"
-#include "the/index_out_of_range_exception.h"
-#include "the/no_such_element_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/OutOfRangeException.h"
+#include "vislib/NoSuchElementException.h"
 #include "vislib/SocketException.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 #include "vislib/unreferenced.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 
 #include "messagereceiver.h"
 
@@ -31,11 +31,11 @@ vislib::net::cluster::AbstractServerNode::~AbstractServerNode(void) {
         while (this->countPeers() > 0) {
             this->disconnectPeer(0);
         }
-    } catch (the::exception e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception while releasing "
-            "ServerNodeAdapter: %s\n", e.what());
+    } catch (Exception e) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "Exception while releasing "
+            "ServerNodeAdapter: %s\n", e.GetMsgA());
     } catch (...) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Unexpected exception whie releasing "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Unexpected exception whie releasing "
             "ServerNodeAdapter.\n");
     }
 }
@@ -83,8 +83,8 @@ bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
 
         ReceiveMessagesCtx *rmc = AllocateRecvMsgCtx(this, &peerNode->Socket);
         try {
-            THE_VERIFY(peerNode->Receiver->Start(static_cast<void *>(rmc)));
-        } catch (the::exception e) {
+            VERIFY(peerNode->Receiver->Start(static_cast<void *>(rmc)));
+        } catch (Exception e) {
             FreeRecvMsgCtx(rmc);
             throw e;
         }
@@ -96,14 +96,14 @@ bool vislib::net::cluster::AbstractServerNode::OnNewConnection(Socket& socket,
         this->onPeerConnected(addr);
 
         return true;
-    } catch (the::exception e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not accept peer node %s in "
+    } catch (Exception e) {
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not accept peer node %s in "
             "ServerNodeAdapter because of an exception: %s\n", 
-            addr.ToStringA().c_str(), e.what());
+            addr.ToStringA().PeekBuffer(), e.GetMsgA());
     } catch (...) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not accept peer node %s in "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not accept peer node %s in "
             "ServerNodeAdapter because of an unexpected exception.\n", 
-            addr.ToStringA().c_str());
+            addr.ToStringA().PeekBuffer());
     }
     /* Exception was caught if here. */
 
@@ -121,7 +121,7 @@ void vislib::net::cluster::AbstractServerNode::OnServerStopped(void) throw() {
 /*
  * vislib::net::cluster::AbstractServerNode::Run
  */
-unsigned int vislib::net::cluster::AbstractServerNode::Run(void) {
+DWORD vislib::net::cluster::AbstractServerNode::Run(void) {
     bool isStarted = this->server.Start(&this->bindAddress);
 #ifndef _WIN32
     isStarted = isStarted;
@@ -167,7 +167,7 @@ vislib::net::cluster::AbstractServerNode::AbstractServerNode(void)
 vislib::net::cluster::AbstractServerNode::AbstractServerNode(
         const AbstractServerNode& rhs) 
         : AbstractClusterNode(rhs), TcpServer::Listener(rhs) {
-    throw the::not_supported_exception("AbstractServerNode", __FILE__,
+    throw UnsupportedOperationException("AbstractServerNode", __FILE__,
         __LINE__);
 }
 
@@ -175,8 +175,8 @@ vislib::net::cluster::AbstractServerNode::AbstractServerNode(
 /*
  * vislib::net::cluster::AbstractServerNode::countPeers
  */
-size_t vislib::net::cluster::AbstractServerNode::countPeers(void) const {
-    size_t retval = 0;
+SIZE_T vislib::net::cluster::AbstractServerNode::countPeers(void) const {
+    SIZE_T retval = 0;
     this->peersLock.Lock();
     retval = this->peers.Count();
     this->peersLock.Unlock();
@@ -188,7 +188,7 @@ size_t vislib::net::cluster::AbstractServerNode::countPeers(void) const {
  * vislib::net::cluster::AbstractServerNode::disconnectPeer
  */
 void vislib::net::cluster::AbstractServerNode::disconnectPeer(
-        const size_t idx) {
+        const SIZE_T idx) {
     this->peersLock.Lock();
 
     // We assure the user that erasing non-existent peers will silently fail, 
@@ -196,18 +196,18 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
     try {
         PeerNode& peerNode = *this->peers[idx];
         peerNode.Socket.Close();
-        the::safe_delete(peerNode.Receiver);
+        SAFE_DELETE(peerNode.Receiver);
         this->peers.Erase(idx);
 
     } catch (SocketException se) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "SocketException occurred when "
-            "disconnecting node %u: %s\n", idx, se.what());
-    } catch (the::system::system_exception sye) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "the::system::system_exception occurred when "
-            "disconnecting node %u: %s\n", idx, sye.what());
-    } catch (the::index_out_of_range_exception oore) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "index_out_of_range_exception occurred when "
-            "disconnecting node %u: %s\n", idx, oore.what());
+        VLTRACE(Trace::LEVEL_VL_WARN, "SocketException occurred when "
+            "disconnecting node %u: %s\n", idx, se.GetMsgA());
+    } catch (sys::SystemException sye) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "SystemException occurred when "
+            "disconnecting node %u: %s\n", idx, sye.GetMsgA());
+    } catch (OutOfRangeException oore) {
+        VLTRACE(Trace::LEVEL_VL_WARN, "OutOfRangeException occurred when "
+            "disconnecting node %u: %s\n", idx, oore.GetMsgA());
     }
 
     this->peersLock.Unlock();
@@ -217,13 +217,13 @@ void vislib::net::cluster::AbstractServerNode::disconnectPeer(
 /*
  * vislib::net::cluster::AbstractServerNode::forEachPeer
  */
-size_t vislib::net::cluster::AbstractServerNode::forEachPeer(
+SIZE_T vislib::net::cluster::AbstractServerNode::forEachPeer(
         ForeachPeerFunc func, void *context) {
     PeerIdentifier peerId;
-    size_t retval = 0;
+    SIZE_T retval = 0;
 
     this->peersLock.Lock();
-    for (size_t i = 0; i < this->peers.Count(); i++) {
+    for (SIZE_T i = 0; i < this->peers.Count(); i++) {
         try {
             peerId = this->peers[i]->Socket.GetPeerEndPoint();
             bool isContinue = func(this, peerId, this->peers[i]->Socket, 
@@ -233,18 +233,18 @@ size_t vislib::net::cluster::AbstractServerNode::forEachPeer(
             if (!isContinue) {
                 break;
             }
-        } catch (the::exception& e) {
+        } catch (Exception& e) {
             VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with an exception: %s\n", i, 
-                peerId.ToStringA().c_str(), e.what());
+                peerId.ToStringA().PeekBuffer(), e.GetMsgA());
             // TODO: second chance??????
             this->disconnectPeer(i);
             i--;
         } catch (...) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with a non-VISlib exception.\n", i,
-                peerId.ToStringA().c_str());
+                peerId.ToStringA().PeekBuffer());
             // TODO: second chance??????
             this->disconnectPeer(i);
             i--;
@@ -261,7 +261,7 @@ size_t vislib::net::cluster::AbstractServerNode::forEachPeer(
  */
 bool vislib::net::cluster::AbstractServerNode::forPeer(
         const PeerIdentifier& peerId, ForeachPeerFunc func, void *context) {
-    size_t i = 0;
+    SIZE_T i = 0;
     bool retval = false;
 
     this->peersLock.Lock();
@@ -271,22 +271,22 @@ bool vislib::net::cluster::AbstractServerNode::forPeer(
         try {
             func(this, peerId, this->peers[i]->Socket, context);
             retval = true;
-        } catch (the::exception& e) {
+        } catch (Exception& e) {
             VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with an exception: %s\n", i,
-                peerId.ToStringA().c_str(), e.what());
+                peerId.ToStringA().PeekBuffer(), e.GetMsgA());
             // TODO: second chance??????
             this->disconnectPeer(i);
         } catch (...) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ForeachPeerFunc failed for node %u "
+            VLTRACE(Trace::LEVEL_VL_WARN, "ForeachPeerFunc failed for node %u "
                 "(%s) with a non-VISlib exception.\n", i,
-                peerId.ToStringA().c_str());
+                peerId.ToStringA().PeekBuffer());
             // TODO: second chance??????
             this->disconnectPeer(i);
         }
-    } catch (the::no_such_element_exception e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, e.what());
+    } catch (NoSuchElementException e) {
+        VLTRACE(Trace::LEVEL_VL_WARN, e.GetMsgA());
     }
 
     this->peersLock.Unlock();
@@ -313,7 +313,7 @@ vislib::net::cluster::AbstractServerNode::operator =(
     if (this != &rhs) {
         AbstractClusterNode::operator =(rhs);
         TcpServer::Listener::operator =(rhs);
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
     return *this;
 }
@@ -322,24 +322,24 @@ vislib::net::cluster::AbstractServerNode::operator =(
 /*
  * vislib::net::cluster::AbstractServerNode::findPeerNode
  */
-size_t vislib::net::cluster::AbstractServerNode::findPeerNode(
+SIZE_T vislib::net::cluster::AbstractServerNode::findPeerNode(
         const PeerIdentifier& peerId) {
     PeerIdentifier addr;
 
     this->peersLock.Lock();
-    for (size_t i = 0; i < this->peers.Count(); i++) {
+    for (SIZE_T i = 0; i < this->peers.Count(); i++) {
         try {
             if (this->peers[i]->Socket.GetPeerEndPoint() == peerId) {
                 this->peersLock.Unlock();
                 return i;
             }
         } catch (SocketException e) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Could not determine identifier of "
-                "peer node for a client socket: %s\n", e.what());
+            VLTRACE(Trace::LEVEL_VL_WARN, "Could not determine identifier of "
+                "peer node for a client socket: %s\n", e.GetMsgA());
         }
     }
     this->peersLock.Unlock();
 
-    throw the::no_such_element_exception("The requested peer node is not known", 
+    throw NoSuchElementException("The requested peer node is not known", 
         __FILE__, __LINE__);
 }

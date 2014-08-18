@@ -8,61 +8,61 @@
 
 #include <cfloat>
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 
 
 /** Absolute of bias of half exponent (-15). */
-static const int32_t FLT16_BIAS = 15;
+static const INT32 FLT16_BIAS = 15;
 
 /** Bitmask for the exponent bits of half. */
-static const uint16_t FLT16_EXPONENT_MASK = 0x7C00;
+static const UINT16 FLT16_EXPONENT_MASK = 0x7C00;
 
 /** Bitmask for the mantissa bits of half. */
-static const uint16_t FLT16_MANTISSA_MASK = 0x03FF;
+static const UINT16 FLT16_MANTISSA_MASK = 0x03FF;
 
 /** Bitmask for the sign bit of half. */
-static const uint16_t FLT16_SIGN_MASK = 0x8000;
+static const UINT16 FLT16_SIGN_MASK = 0x8000;
 
 /** Size difference between half and float mantissa. */
-static const uint32_t FLT1632_MANTISSA_OFFSET 
+static const UINT32 FLT1632_MANTISSA_OFFSET 
     = (FLT_MANT_DIG - vislib::math::Float16::MANT_DIG) - 1;
 
 /** Distance between half and float sign bit. */
-static const uint32_t FLT1632_SIGN_OFFSET = (32 - 16);
+static const UINT32 FLT1632_SIGN_OFFSET = (32 - 16);
 
 /** Bias of float exponent. */
-static const int32_t FLT32_BIAS = 127;
+static const INT32 FLT32_BIAS = 127;
 
 /** Bitmask for the exponent bits of float. */
-static const uint32_t FLT32_EXPONENT_MASK = 0x7F800000;
+static const UINT32 FLT32_EXPONENT_MASK = 0x7F800000;
 
 /** Bitmask for the mantissa bits of half */
-static const uint32_t FLT32_MANTISSA_MASK = 0x007FFFFF;
+static const UINT32 FLT32_MANTISSA_MASK = 0x007FFFFF;
 
 /** Bitmask for the sign bit of float */
-static const uint32_t FLT32_SIGN_MASK = 0x80000000;
+static const UINT32 FLT32_SIGN_MASK = 0x80000000;
 
 
 /*
  * vislib::math::Float16::FromFloat32
  */
-void vislib::math::Float16::FromFloat32(uint16_t *outHalf, size_t cnt,
+void vislib::math::Float16::FromFloat32(UINT16 *outHalf, SIZE_T cnt,
         const float *flt) {
-    int32_t exponent = 0;         // Value of exponent of 'flt'.
-    uint32_t input = 0;           // Bitwise reinterpretation of 'flt'.
-    uint32_t mantissa = 0;        // Value of mantissa, biased for half.
-    uint32_t sign = 0;            // The sign bit.
+    INT32 exponent = 0;         // Value of exponent of 'flt'.
+    UINT32 input = 0;           // Bitwise reinterpretation of 'flt'.
+    UINT32 mantissa = 0;        // Value of mantissa, biased for half.
+    UINT32 sign = 0;            // The sign bit.
 
-    for (size_t i = 0; i < cnt; i++) {
+    for (SIZE_T i = 0; i < cnt; i++) {
 
         /* Bitwise reinterpretation of input */
-        input = *(reinterpret_cast<const uint32_t *>(flt + i));
+        input = *(reinterpret_cast<const UINT32 *>(flt + i));
 
         /* Just move the sign bit directly to its final position. */
         sign = (input & FLT32_SIGN_MASK) >> FLT1632_SIGN_OFFSET;
 
         /* Retrieve value of exponent. */
-        exponent = static_cast<int32_t>((input & FLT32_EXPONENT_MASK) 
+        exponent = static_cast<INT32>((input & FLT32_EXPONENT_MASK) 
             >> (FLT_MANT_DIG - 1)) - FLT32_BIAS + FLT16_BIAS;
 
         /* Retrieve value of mantissa. */
@@ -78,7 +78,7 @@ void vislib::math::Float16::FromFloat32(uint16_t *outHalf, size_t cnt,
             /* Normalise the number. */
             mantissa = (mantissa | (1 << (FLT_MANT_DIG - 1))) >> (1 - exponent);
                 
-            outHalf[i] = static_cast<uint16_t>(sign 
+            outHalf[i] = static_cast<UINT16>(sign 
                 | (mantissa >> FLT1632_MANTISSA_OFFSET));
 
         } else if (exponent == (FLT32_EXPONENT_MASK >> (FLT_MANT_DIG - 1)) 
@@ -100,12 +100,12 @@ void vislib::math::Float16::FromFloat32(uint16_t *outHalf, size_t cnt,
                 mantissa |= (mantissa == 0);
             }
 
-            outHalf[i] = static_cast<uint16_t>(sign | FLT16_EXPONENT_MASK
+            outHalf[i] = static_cast<UINT16>(sign | FLT16_EXPONENT_MASK
                 | mantissa);
 
         } else if (exponent > Float16::MAX_EXP + FLT16_BIAS) {
             /* Overflow, result becomes infinity. */
-            outHalf[i] = static_cast<uint16_t>(sign | FLT16_EXPONENT_MASK);
+            outHalf[i] = static_cast<UINT16>(sign | FLT16_EXPONENT_MASK);
 
         } else {
             /* 
@@ -115,32 +115,32 @@ void vislib::math::Float16::FromFloat32(uint16_t *outHalf, size_t cnt,
             outHalf[i] = sign | (exponent << Float16::MANT_DIG)
                 | (mantissa >> FLT1632_MANTISSA_OFFSET);
         } /* end if (exponent <= 0) */
-    } /* end for (size_t i = 0; i < cnt; i++) */
+    } /* end for (SIZE_T i = 0; i < cnt; i++) */
 }
 
 
 /*
  * vislib::math::Float16::ToFloat32
  */
-void vislib::math::Float16::ToFloat32(float *outFloat, const size_t cnt,
-        const uint16_t *half) {
-    int32_t exponent = 0;         // Value of exponent of 'half'.
-    uint32_t mantissa = 0;        // Value of mantissa.
-    uint32_t result = 0;          // The result
-    uint32_t sign = 0;            // The sign bit.
+void vislib::math::Float16::ToFloat32(float *outFloat, const SIZE_T cnt,
+        const UINT16 *half) {
+    INT32 exponent = 0;         // Value of exponent of 'half'.
+    UINT32 mantissa = 0;        // Value of mantissa.
+    UINT32 result = 0;          // The result
+    UINT32 sign = 0;            // The sign bit.
 
-    for (size_t i = 0; i < cnt; i++) {
+    for (SIZE_T i = 0; i < cnt; i++) {
 
         /* Just move the sign bit directly to its final position. */
-        sign = static_cast<uint32_t>(half[i] & FLT16_SIGN_MASK) 
+        sign = static_cast<UINT32>(half[i] & FLT16_SIGN_MASK) 
             << FLT1632_SIGN_OFFSET;
 
         /* Retrieve value of exponent. */
-        exponent = static_cast<int32_t>((half[i] & FLT16_EXPONENT_MASK) 
+        exponent = static_cast<INT32>((half[i] & FLT16_EXPONENT_MASK) 
             >> Float16::MANT_DIG);
 
         /* Retrieve value of mantissa. */
-        mantissa = static_cast<uint32_t>(half[i] & FLT16_MANTISSA_MASK);
+        mantissa = static_cast<UINT32>(half[i] & FLT16_MANTISSA_MASK);
 
         if (exponent == 0) {
             if (mantissa == 0) {
@@ -196,32 +196,32 @@ void vislib::math::Float16::ToFloat32(float *outFloat, const size_t cnt,
         /* Bitwise reinterpret the result as float. */
         outFloat[i] = *reinterpret_cast<float *>(&result);
 
-    } /* end for (size_t i = 0; i < cnt; i++) */
+    } /* end for (SIZE_T i = 0; i < cnt; i++) */
 }
 
 
 /*
  * vislib::math::Float16::MANT_DIG
  */
-const int vislib::math::Float16::MANT_DIG = 10;
+const INT vislib::math::Float16::MANT_DIG = 10;
 
 
 /*
  * vislib::math::Float16::MAX_EXP
  */
-const int vislib::math::Float16::MAX_EXP = (16 - 1);
+const INT vislib::math::Float16::MAX_EXP = (16 - 1);
 
 
 /*
  * vislib::math::Float16::MIN_EXP
  */
-const int vislib::math::Float16::MIN_EXP = -12;
+const INT vislib::math::Float16::MIN_EXP = -12;
 
 
 /*
  * vislib::math::Float16::RADIX
  */
-const int vislib::math::Float16::RADIX = 2;
+const INT vislib::math::Float16::RADIX = 2;
 
 
 /*

@@ -153,10 +153,10 @@ namespace net {
          * @param b15 Byte number 15 of the IP address.
          * @param b16 Byte number 16 of the IP address.
          */
-        IPAddress6(const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
-            const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
-            const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
-            const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16);
+        IPAddress6(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
+            const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
+            const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
+            const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16);
 
         /**
          * Create an IPv4 mapped address.
@@ -191,7 +191,7 @@ namespace net {
          *                     the method will succeed and return the complete
          *                     address.
          */
-        IPAddress6 GetPrefix(const unsigned long prefixLength) const;
+        IPAddress6 GetPrefix(const ULONG prefixLength) const;
 
         /**
          * Determines whether the address is a link local address.
@@ -285,15 +285,15 @@ namespace net {
          *
          * @return The string representation of the IP address.
          */
-        the::astring ToStringA(void) const;
+        StringA ToStringA(void) const;
 
         /**
          * Convert the IP address into a human readable format.
          *
          * @return The string representation of the IP address.
          */
-        inline the::wstring ToStringW(void) const {
-            return the::text::string_converter::to_w(this->ToStringA());
+        inline StringW ToStringW(void) const {
+            return StringW(this->ToStringA());
         }
 
         /**
@@ -303,7 +303,7 @@ namespace net {
          *
          * @return The mapped IPv4 address.
          *
-         * @throws invalid_operation_exception If this address is not a mapped IPv4
+         * @throws IllegalStateException If this address is not a mapped IPv4
          *                               address.
          */
         IPAddress UnmapV4Address(void) const;
@@ -316,9 +316,9 @@ namespace net {
          *
          * @return The 'i'th byte of the address.
          *
-         * @throws index_out_of_range_exception If 'i' is not a legal byte number.
+         * @throws OutOfRangeException If 'i' is not a legal byte number.
          */
-        uint8_t operator [](const int i) const;
+        BYTE operator [](const int i) const;
 
         /**
          * Assignment operator.
@@ -444,7 +444,7 @@ namespace net {
          * @return The IPv4 address that is equivalent to this IPv6 address if 
          *         such a conversion is possible.
          *
-         * @throws invalid_operation_exception If the IPv6 address is neither an IPv4
+         * @throws IllegalStateException If the IPv6 address is neither an IPv4
          *                               mapped address nor IPv4 compatible.
          */
         operator IPAddress(void) const;

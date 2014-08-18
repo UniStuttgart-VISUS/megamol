@@ -17,7 +17,7 @@
 
 #include "vislib/AutoLock.h"
 #include "vislib/CriticalSection.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -55,7 +55,7 @@ namespace sys {
          *
          * @return The current value of the counter.
          */
-        inline uint64_t GetValue(void) const {
+        inline UINT64 GetValue(void) const {
             AutoLock l(this->lock);
             return this->value;
         }
@@ -66,7 +66,7 @@ namespace sys {
          *
          * @return The new value of the counter.
          */
-        uint64_t StepLocal(void);
+        UINT64 StepLocal(void);
 
         /**
          * Tells the clock that a message with timestamp 'timestamp' was 
@@ -76,7 +76,7 @@ namespace sys {
          *
          * @return The new value of the counter.
          */
-        uint64_t StepReceive(uint64_t timestamp);
+        UINT64 StepReceive(UINT64 timestamp);
 
         /**
          * Tells the clock to make a local step, i. e. increment the counter
@@ -84,7 +84,7 @@ namespace sys {
          *
          * @return The old value of the counter.
          */
-        uint64_t operator ++(int);
+        UINT64 operator ++(int);
 
         /**
          * Tells the clock to make a local step, i. e. increment the counter 
@@ -92,7 +92,7 @@ namespace sys {
          *
          * @return The new value of the counter.
          */
-        inline uint64_t operator ++(void) {
+        inline UINT64 operator ++(void) {
             return this->StepLocal();
         }
 
@@ -101,7 +101,7 @@ namespace sys {
          *
          * @return The current value of the counter.
          */
-        uint64_t operator *(void) const {
+        UINT64 operator *(void) const {
             return this->GetValue();
         }
 
@@ -112,7 +112,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Always.
+         * @throws UnsupportedOperationException Always.
          */
         LamportClock(const LamportClock& rhs);
 
@@ -121,7 +121,7 @@ namespace sys {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws argument_exception if &rhs != this.
+         * @throws IllegalParamException if &rhs != this.
          */
         LamportClock& operator =(const LamportClock& rhs);
 
@@ -129,7 +129,7 @@ namespace sys {
         mutable CriticalSection lock;
 
         /** The value of counter. */
-        uint64_t value;
+        UINT64 value;
 
     };
     

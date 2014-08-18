@@ -6,13 +6,13 @@
  */
 
 #include "vislib/SimpleFont.h"
-#include "the/types.h"
+#include "vislib/types.h"
 #include "glh/glh_genext.h"
 #include <GL/glu.h>
 #include <float.h>
 #include <climits>
 #include "glh/glh_extensions.h"
-#include "the/text/string_converter.h"
+#include "vislib/StringConverter.h"
 #include "vislib/mathfunctions.h"
 
 #include "SimpleFontData.inc"
@@ -54,7 +54,7 @@ unsigned int vislib::graphics::gl::SimpleFont::BlockLines(float maxWidth,
  */
 unsigned int vislib::graphics::gl::SimpleFont::BlockLines(float maxWidth,
         float size, const wchar_t *txt) const {
-    return this->BlockLines(maxWidth, size, THE_W2A(txt));
+    return this->BlockLines(maxWidth, size, W2A(txt));
 }
 
 
@@ -172,7 +172,7 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
 void vislib::graphics::gl::SimpleFont::DrawString(float x, float y, float size,
         bool flipY, const wchar_t *txt,
         vislib::graphics::AbstractFont::Alignment align) const {
-    this->DrawString(x, y, size, flipY, THE_W2A(txt), align);
+    this->DrawString(x, y, size, flipY, W2A(txt), align);
 }
 
 
@@ -182,7 +182,7 @@ void vislib::graphics::gl::SimpleFont::DrawString(float x, float y, float size,
 void vislib::graphics::gl::SimpleFont::DrawString(float x, float y,
         float w, float h, float size, bool flipY, const wchar_t *txt,
         vislib::graphics::AbstractFont::Alignment align) const {
-    this->DrawString(x, y, w, h, size, flipY, THE_W2A(txt), align);
+    this->DrawString(x, y, w, h, size, flipY, W2A(txt), align);
 }
 
 
@@ -214,7 +214,7 @@ float vislib::graphics::gl::SimpleFont::LineWidth(float size, const char *txt)
  */
 float vislib::graphics::gl::SimpleFont::LineWidth(float size,
         const wchar_t *txt) const {
-    return this->LineWidth(size, THE_W2A(txt));
+    return this->LineWidth(size, W2A(txt));
 }
 
 
@@ -377,7 +377,7 @@ void vislib::graphics::gl::SimpleFont::enterTextMode(void) const {
 vislib::graphics::gl::SimpleFont::TextLine*
 vislib::graphics::gl::SimpleFont::layoutText(const char *text, float maxWidth,
         unsigned int &outLineCnt) const {
-    unsigned int len = static_cast<unsigned int>(the::text::string_utility::c_str_len(text));
+    unsigned int len = vislib::CharTraitsA::SafeStringLength(text);
     TextLine *retval = new TextLine[len]; // heavily overestimated ... Boh
     outLineCnt = 0;
     const unsigned char *ls = NULL;
@@ -390,7 +390,7 @@ vislib::graphics::gl::SimpleFont::layoutText(const char *text, float maxWidth,
             = reinterpret_cast<const unsigned char*>(text);
             len > 0; c++, len--) {
         float gw = bmpSimpleFontGlyphSize[*c].width;
-        if (the::text::char_utility::is_space(
+        if (vislib::CharTraitsA::IsSpace(
                 *reinterpret_cast<const char*>(c))) {
             ls = c;
         }

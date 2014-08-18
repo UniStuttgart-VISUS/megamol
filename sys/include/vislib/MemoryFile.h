@@ -41,7 +41,7 @@ namespace sys {
          * Forces all buffered data to be written.
          * This method has no effect.
          *
-         * @throws the::system::io::io_exception
+         * @throws IOException
          */
         virtual void Flush(void);
 
@@ -72,7 +72,7 @@ namespace sys {
          *
          * @return true on success, false on failure
          */
-        virtual bool Open(void *buffer, size_t bufferLength,
+        virtual bool Open(void *buffer, SIZE_T bufferLength,
             AccessMode accessMode);
 
         /**
@@ -178,7 +178,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         MemoryFile(const MemoryFile& rhs);
 
@@ -189,7 +189,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If &'rhs' != this.
+         * @throws IllegalParamException If &'rhs' != this.
          */
         MemoryFile& operator=(const MemoryFile& rhs);
 

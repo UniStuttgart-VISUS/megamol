@@ -14,9 +14,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/assert.h"
-#include "the/invalid_operation_exception.h"
-#include "the/memory.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/memutils.h"
 
 
 /*
@@ -114,7 +114,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -132,7 +132,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -146,7 +146,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -160,7 +160,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -173,7 +173,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -183,7 +183,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -193,7 +193,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9, P10 p10) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
         }
@@ -220,7 +220,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -290,7 +290,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -346,7 +346,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -406,7 +406,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -467,7 +467,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -603,7 +603,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -621,7 +621,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -635,7 +635,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -649,7 +649,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -662,7 +662,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -672,7 +672,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -682,7 +682,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7, p8, p9);
         }
@@ -709,7 +709,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -779,7 +779,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -835,7 +835,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -895,7 +895,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -956,7 +956,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, P9, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1092,7 +1092,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -1110,7 +1110,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -1124,7 +1124,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -1138,7 +1138,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7, P8)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -1151,7 +1151,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -1161,7 +1161,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -1171,7 +1171,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7, p8);
         }
@@ -1198,7 +1198,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -1268,7 +1268,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1324,7 +1324,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1384,7 +1384,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1445,7 +1445,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, P8, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1581,7 +1581,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -1599,7 +1599,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -1613,7 +1613,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, P7, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -1627,7 +1627,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -1640,7 +1640,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, P7, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -1650,7 +1650,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -1660,7 +1660,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6, p7);
         }
@@ -1687,7 +1687,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -1757,7 +1757,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1813,7 +1813,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, P7, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -1873,7 +1873,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -1934,7 +1934,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, P7, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2070,7 +2070,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -2088,7 +2088,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -2102,7 +2102,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, P6, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -2116,7 +2116,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -2129,7 +2129,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, P6, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -2139,7 +2139,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -2149,7 +2149,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5, p6);
         }
@@ -2176,7 +2176,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -2246,7 +2246,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5, P6)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2302,7 +2302,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, P6, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2362,7 +2362,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2423,7 +2423,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, P6, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2559,7 +2559,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -2577,7 +2577,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -2591,7 +2591,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, P5, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -2605,7 +2605,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -2618,7 +2618,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, P5, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -2628,7 +2628,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -2638,7 +2638,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4, p5);
         }
@@ -2665,7 +2665,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -2735,7 +2735,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4, P5)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2791,7 +2791,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, P5, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -2851,7 +2851,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -2912,7 +2912,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, P5, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3048,7 +3048,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -3066,7 +3066,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3, P4)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -3080,7 +3080,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, P4, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -3094,7 +3094,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -3107,7 +3107,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, P4, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -3117,7 +3117,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -3127,7 +3127,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3, P4 p4) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3, p4);
         }
@@ -3154,7 +3154,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -3224,7 +3224,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3, P4)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3280,7 +3280,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, P4, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3340,7 +3340,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3401,7 +3401,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, P4, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3537,7 +3537,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -3555,7 +3555,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2, P3)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -3569,7 +3569,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, P3, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -3583,7 +3583,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -3596,7 +3596,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, P3, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -3606,7 +3606,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -3616,7 +3616,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2, P3 p3) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2, p3);
         }
@@ -3643,7 +3643,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -3713,7 +3713,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2, P3)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3769,7 +3769,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, P3, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -3829,7 +3829,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2, P3)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -3890,7 +3890,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, P3, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4026,7 +4026,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -4044,7 +4044,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1, P2)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -4058,7 +4058,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, P2, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -4072,7 +4072,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -4085,7 +4085,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, P2, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -4095,7 +4095,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -4105,7 +4105,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1, P2 p2) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1, p2);
         }
@@ -4132,7 +4132,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -4202,7 +4202,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1, P2)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4258,7 +4258,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, P2, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4318,7 +4318,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1, P2)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4379,7 +4379,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, P2, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4515,7 +4515,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -4533,7 +4533,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(P1)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -4547,7 +4547,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(P1, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -4561,7 +4561,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(P1)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -4574,7 +4574,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(P1, CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -4584,7 +4584,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -4594,7 +4594,7 @@ namespace vislib {
          */
         Rv operator()(P1 p1) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call(p1);
         }
@@ -4621,7 +4621,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -4691,7 +4691,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(P1)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4747,7 +4747,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(P1, CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -4807,7 +4807,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(P1)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -4868,7 +4868,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(P1, CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5004,7 +5004,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -5022,7 +5022,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(Rv (*funcPtr)(void)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -5036,7 +5036,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(Rv (*funcPtr)(CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -5050,7 +5050,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, Rv (C::*methPtr)(void)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -5063,7 +5063,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, Rv (C::*methPtr)(CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -5073,7 +5073,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -5083,7 +5083,7 @@ namespace vislib {
          */
         Rv operator()(void) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             return this->callee->Call();
         }
@@ -5110,7 +5110,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -5180,7 +5180,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(Rv (*func)(void)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5236,7 +5236,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(Rv (*func)(CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5296,7 +5296,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, Rv (C::*meth)(void)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5357,7 +5357,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, Rv (C::*meth)(CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5494,7 +5494,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         ~Delegate(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -5512,7 +5512,7 @@ namespace vislib {
          * @param funcPtr Function pointer to be set
          */
         void Set(void (*funcPtr)(void)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionCallee(funcPtr);
             }
@@ -5526,7 +5526,7 @@ namespace vislib {
          */
         template<class CT1, class CT2>
         void Set(void (*funcPtr)(CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (funcPtr != NULL) {
                 this->callee = new FunctionContextCallee<CT1>(funcPtr, ctxt);
             }
@@ -5540,7 +5540,7 @@ namespace vislib {
          */
         template<class C>
         void Set(C& obj, void (C::*methPtr)(void)) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodCallee<C>(obj, methPtr);
         }
 
@@ -5553,7 +5553,7 @@ namespace vislib {
          */
         template<class C, class CT1, class CT2>
         void Set(C& obj, void (C::*methPtr)(CT1), CT2 ctxt) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             this->callee = new MethodContextCallee<C, CT1>(obj, methPtr, ctxt);
         }
 
@@ -5563,7 +5563,7 @@ namespace vislib {
          * Note that no memory will be freed (user data context, etc.)
          */
         void Unset(void) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
         }
 
         /**
@@ -5573,7 +5573,7 @@ namespace vislib {
          */
         void operator()(void) {
             if (this->callee == NULL) {
-                throw the::invalid_operation_exception("Delegate target not set", __FILE__, __LINE__);
+                throw vislib::IllegalStateException("Delegate target not set", __FILE__, __LINE__);
             }
             this->callee->Call();
         }
@@ -5600,7 +5600,7 @@ namespace vislib {
          * @return A reference to this object
          */
         Delegate& operator=(const Delegate& rhs) {
-            the::safe_delete(this->callee);
+            SAFE_DELETE(this->callee);
             if (rhs.callee != NULL) {
                 this->callee = rhs.callee->Clone();
             }
@@ -5670,7 +5670,7 @@ namespace vislib {
              * @param func The function pointer (must not be NULL)
              */
             FunctionCallee(void (*func)(void)) : AbstractCallee(), func(func) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5726,7 +5726,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             FunctionContextCallee(void (*func)(CT1), CT1 ctxt) : AbstractCallee(), func(func), ctxt(ctxt) {
-                THE_ASSERT(this->func != NULL);
+                ASSERT(this->func != NULL);
             }
 
             /** Dtor */
@@ -5786,7 +5786,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodCallee(C& obj, void (C::*meth)(void)) : AbstractCallee(), obj(obj), meth(meth) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */
@@ -5847,7 +5847,7 @@ namespace vislib {
              * @param ctxt The user data context
              */
             MethodContextCallee(C& obj, void (C::*meth)(CT1), CT1 ctxt) : AbstractCallee(), obj(obj), meth(meth), ctxt(ctxt) {
-                THE_ASSERT(this->meth != NULL);
+                ASSERT(this->meth != NULL);
             }
 
             /** Dtor */

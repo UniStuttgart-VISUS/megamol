@@ -15,12 +15,12 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/Array.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/File.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/MemmappedFile.h"
-#include "the/index_out_of_range_exception.h"
-#include "the/string.h"
+#include "vislib/OutOfRangeException.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -69,7 +69,7 @@ namespace sys {
              *
              * @return The number of words in this line
              */
-            inline size_t Count(void) const {
+            inline SIZE_T Count(void) const {
                 return this->cnt;
             }
 
@@ -82,7 +82,7 @@ namespace sys {
              */
             inline const char * Pointer(void) const {
                 if (this->cnt > 0) {
-                    throw the::invalid_operation_exception(
+                    throw vislib::IllegalStateException(
                         "ASCIIFileBuffer was parsed for words. "
                         "Requesting lines is thus illegal",
                         __FILE__, __LINE__);
@@ -97,11 +97,11 @@ namespace sys {
              *
              * @return The requested word
              *
-             * @throw index_out_of_range_exception if a non-existing line is requested
+             * @throw OutOfRangeException if a non-existing line is requested
              */
-            inline const char * Word(size_t idx) const {
+            inline const char * Word(SIZE_T idx) const {
                 if (idx >= this->cnt) {
-                    throw the::index_out_of_range_exception(static_cast<int>(idx),
+                    throw vislib::OutOfRangeException(static_cast<int>(idx),
                         0, static_cast<int>(this->cnt - 1),
                         __FILE__, __LINE__);
                 }
@@ -138,7 +138,7 @@ namespace sys {
              */
             operator const char *(void) const {
                 if (this->cnt > 0) {
-                    throw the::invalid_operation_exception(
+                    throw vislib::IllegalStateException(
                         "ASCIIFileBuffer was parsed for words. "
                         "Requesting lines is thus illegal",
                         __FILE__, __LINE__);
@@ -181,7 +181,7 @@ namespace sys {
             LineBuffer& operator=(vislib::Array<char *>& words);
 
             /** The number of tokens, or Zero if only storing the line */
-            size_t cnt;
+            SIZE_T cnt;
 
             /** The pointers */
             union _pointers_t {
@@ -222,7 +222,7 @@ namespace sys {
          *
          * @return The number of lines stored in the buffer
          */
-        inline size_t Count(void) const {
+        inline SIZE_T Count(void) const {
             return this->lines.Count();
         }
 
@@ -243,9 +243,9 @@ namespace sys {
          *
          * @return The requested line
          *
-         * @throw index_out_of_range_exception if a non-existing line is requested
+         * @throw OutOfRangeException if a non-existing line is requested
          */
-        inline const LineBuffer&  Line(size_t idx) const {
+        inline const LineBuffer&  Line(SIZE_T idx) const {
             return this->lines[idx];
         }
 
@@ -258,12 +258,12 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw the::exception on any critical failure
+         * @throw vislib::Exception on any critical failure
          */
-        inline bool LoadFile(const the::astring& filename,
+        inline bool LoadFile(const vislib::StringA& filename,
                 ParsingElement elements = PARSING_DEFAULT) {
             MemmappedFile file;
-            if (!file.Open(filename.c_str(), File::READ_ONLY, File::SHARE_READ,
+            if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ,
                     File::OPEN_ONLY)) return false;
             return this->LoadFile(file, elements);
         }
@@ -277,7 +277,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw the::exception on any critical failure
+         * @throw vislib::Exception on any critical failure
          */
         inline bool LoadFile(const char *filename,
                 ParsingElement elements = PARSING_DEFAULT) {
@@ -296,12 +296,12 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw the::exception on any critical failure
+         * @throw vislib::Exception on any critical failure
          */
-        inline bool LoadFile(const the::wstring& filename,
+        inline bool LoadFile(const vislib::StringW& filename,
                 ParsingElement elements = PARSING_DEFAULT) {
             MemmappedFile file;
-            if (!file.Open(filename.c_str(), File::READ_ONLY, File::SHARE_READ,
+            if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ,
                     File::OPEN_ONLY)) return false;
             return this->LoadFile(file, elements);
         }
@@ -315,7 +315,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw the::exception on any critical failure
+         * @throw vislib::Exception on any critical failure
          */
         inline bool LoadFile(const wchar_t *filename,
                 ParsingElement elements = PARSING_DEFAULT) {
@@ -336,7 +336,7 @@ namespace sys {
          *
          * @return True on success, false on failure
          *
-         * @throw the::exception on any critical failure
+         * @throw vislib::Exception on any critical failure
          */
         bool LoadFile(File& file, ParsingElement elements = PARSING_DEFAULT);
 
@@ -355,9 +355,9 @@ namespace sys {
          *
          * @return The requested line
          *
-         * @throw index_out_of_range_exception if a non-existing line is requested
+         * @throw OutOfRangeException if a non-existing line is requested
          */
-        inline const LineBuffer& operator[](size_t idx) const {
+        inline const LineBuffer& operator[](SIZE_T idx) const {
             return this->lines[idx];
         }
 

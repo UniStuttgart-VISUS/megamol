@@ -38,7 +38,7 @@ namespace math {
          * @param parameters The storage for the plane parameters.
          */
         inline ShallowPlane(T *parameters) {
-            THE_ASSERT(parameters != NULL);
+            ASSERT(parameters != NULL);
             this->parameters = parameters;
         }
 

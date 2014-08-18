@@ -12,10 +12,11 @@
 #include <iostream>
 #include "vislib/Console.h"
 #include "vislib/MessageBox.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 /* include test implementations */
 #include "testhelper.h"
+#include "teststring.h"
 #include "testfloat16.h"
 #include "testthread.h"
 #include "testfile.h"
@@ -30,6 +31,7 @@
 #include "testcollection.h"
 #include "testpointers.h"
 #include "testdiscovery.h"
+#include "testthelog.h"
 #include "testdirectoryiterator.h"
 #include "testhash.h"
 #include "testtrayicon.h"
@@ -47,6 +49,7 @@
 #include "testrefcount.h"
 #include "testpoolallocator.h"
 #include "testpoint.h"
+#include "teststacktrace.h"
 #include "testasyncsocket.h"
 #include "testnetinfo.h"
 #include "testfrustum.h"
@@ -58,6 +61,7 @@
 #include "testtriangle.h"
 #include "testBitmapImage.h"
 #include "testReaderWriterLock.h"
+#include "testmultisz.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -89,7 +93,12 @@ VislibTest tests[] = {
     {_T("Map"), ::TestMap, "Tests vislib::Map"},
     {_T("Serialiser"), ::TestSerialiser, "Tests VISlib serialisers."},
     {_T("SmartPtr"), ::TestSmartPtr, "Tests vislib::SmartPtr"},
+    {_T("StackTrace"), ::TestStackTrace, "Tests vislib::StackTrace"},
+    {_T("String"), ::TestString, "Tests vislib::String and string utility classes"},
+    {_T("Trace"), ::TestTrace, "Tests vislib tracing"},
     {_T("RefCount"), ::TestRefCount, "Tests VISlib ReferenceCounted and SmartRef"},
+    {_T("RLEUINT"), ::TestRLEUInt, "Tests UINT RLE Encoding"},
+    {_T("multisz"), ::TestMultiSz, "Tests MultiSz container"},
     // graphics
     {_T("BitmapCodecSimple"), ::TestBitmapCodecSimple, "Performs very simple tests of vislib::graphics::*BitmapCodec"},
     {_T("NamedColours"), ::TestNamedColours, "Tests NamedColours"},
@@ -131,6 +140,8 @@ VislibTest tests[] = {
     {_T("Interlocked"), ::TestInterlocked, "Tests interlocked operations."},
     {_T("IPC"), ::TestIpc, "Tests inter-process communication"},
     {_T("IPC2"), ::TestIpc2, "For internal use only. Do not call."},
+    {_T("Log"), ::TestTheLogWithPhun, "Tests vislib::sys::Log"},
+    {_T("MTStackTrace"), ::TestMTStackTrace, "Tests vislib::sys::ThreadSafeStackTrace"},
     {_T("NamedPipe"), ::TestNamedPipe, "Tests vislib::sys::NamedPipe (also requires 'vislib::sys::Thread' and 'vislib::sys::Mutex' to work correctly)"},
     {_T("Path"), ::TestPath, "Tests vislib::sys::Path"},
     {_T("PoolAllocator"), ::TestPoolAllocator, "Tests vislib::sys::PoolAllocator"},
@@ -193,8 +204,8 @@ int main(int argc, char **argv) {
         //    } else if (rv == vislib::sys::MessageBox::RET_RETRY) {
         //        printf("There is nothing to be retried!\n");
         //    }
-        //} catch(the::exception e) {
-        //    fprintf(stderr, "Exception: %s\n", e.what());
+        //} catch(vislib::Exception e) {
+        //    fprintf(stderr, "Exception: %s\n", e.GetMsgA());
         //}
 
         fprintf(stderr, "You must specify at least one test to be performed.\n\n");
@@ -262,11 +273,11 @@ int main(int argc, char **argv) {
 
                         tests[j].testFunc();
 
-                    } catch (the::exception& e) {
+                    } catch (vislib::Exception& e) {
 #ifdef _WIN32
-                        _tprintf(_T("\nUnexpected the::exception: %s "), e.get_msg());
+                        _tprintf(_T("\nUnexpected vislib::Exception: %s "), e.GetMsg());
 #else /* _WIN32 */
-                        printf("\nUnexpected the::exception: %s ", e.what());
+                        printf("\nUnexpected vislib::Exception: %s ", e.GetMsgA());
 #endif /* _WIN32 */
                         AssertOutputFail(); // add a generic fail
                     } catch (...) {

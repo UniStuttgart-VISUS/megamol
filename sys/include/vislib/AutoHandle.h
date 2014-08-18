@@ -58,7 +58,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws the::system::system_exception If the handle could not be duplicated.
+         * @throws SystemException If the handle could not be duplicated.
          */
         AutoHandle(const AutoHandle& rhs);
 
@@ -118,7 +118,7 @@ namespace sys {
          * @param takeOwnership If true, the object takes ownership of 'handle'.
          *                      If false, a duplicate will be created.
          *
-         * @throws the::system::system_exception If the handle could not be duplicated.
+         * @throws SystemException If the handle could not be duplicated.
          */
         void Set(HANDLE handle, const bool takeOwnership);
 
@@ -133,7 +133,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws the::system::system_exception If the handle could not be duplicated.
+         * @throws SystemException If the handle could not be duplicated.
          */
         inline AutoHandle& operator =(const AutoHandle& rhs) {
             this->Set(rhs.handle, false);

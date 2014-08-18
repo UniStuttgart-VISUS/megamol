@@ -66,7 +66,7 @@ namespace net {
          *                   size for at least the header or 0 for making
          *                   the ctor interpret the message data.
          */
-        ShallowSimpleMessage(void *storage, const size_t cntStorage = 0);
+        ShallowSimpleMessage(void *storage, const SIZE_T cntStorage = 0);
 
         /** Dtor. */
         virtual ~ShallowSimpleMessage(void);
@@ -94,7 +94,7 @@ namespace net {
          *                   size for at least the header or 0 for making
          *                   the ctor interpret the message data.
          */
-        void SetStorage(void *storage, const size_t cntStorage = 0);
+        void SetStorage(void *storage, const SIZE_T cntStorage = 0);
 
         /**
          * Assignment operator.
@@ -105,7 +105,8 @@ namespace net {
          */
         inline ShallowSimpleMessage& operator =(
                 const AbstractSimpleMessage& rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("ShallowSimpleMessage::operator =",
+                __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -119,7 +120,8 @@ namespace net {
          */
         inline ShallowSimpleMessage& operator =(
                 const ShallowSimpleMessage& rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("ShallowSimpleMessage::operator =", 
+                __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -143,7 +145,7 @@ namespace net {
         *
         * @throws Exception or derived in case of an error.
         */
-        virtual bool assertStorage(void *& outStorage, const size_t size);
+        virtual bool assertStorage(void *& outStorage, const SIZE_T size);
 
     private:
 
@@ -151,7 +153,7 @@ namespace net {
         typedef AbstractSimpleMessage Super;
     
         /** User-specified size of the memory allocated for the message. */
-        size_t cntStorage;
+        SIZE_T cntStorage;
 
         /** User-specified memory for the message. */
         void *storage;

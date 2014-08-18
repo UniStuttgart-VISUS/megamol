@@ -110,7 +110,7 @@ namespace sys {
         /**
          * Wait for the operation associated with this context to complete.
          *
-         * @throws the::system::system_exception If the operation failed.
+         * @throws SystemException If the operation failed.
          */
         virtual void Wait(void) = 0;
 

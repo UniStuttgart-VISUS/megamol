@@ -14,8 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/types.h"
-#include "the/string.h"
+#include "vislib/types.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -42,8 +42,6 @@ namespace sys {
      */
     class KeyCode {
     public:
-    
-        typedef unsigned short WORD;
 
         /** Bit mask for modifier keys */
         static const WORD KEY_MOD       = 0xf000;
@@ -212,7 +210,7 @@ namespace sys {
          *
          * @return A human-readable ASCII String
          */
-        the::astring ToStringA(void) const;
+        vislib::StringA ToStringA(void) const;
 
         /**
          * Assignment operator.

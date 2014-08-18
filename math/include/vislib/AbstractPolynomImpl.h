@@ -14,10 +14,10 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/assert.h"
-#include "the/argument_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 #ifndef M_PI
 #define M_PI       3.14159265358979323846
 #endif /* !M_PI */
@@ -209,7 +209,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw argument_exception if 'rhs' has an effective degree larger
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
          *        than D.
          */
         template<class Tp, unsigned int Dp, class Sp>
@@ -423,7 +423,7 @@ namespace math {
     AbstractPolynomImpl<T, D, S, C>::operator=(const C<Tp, Dp, Sp>& rhs) {
         unsigned int rhsed = rhs.EffectiveDegree();
         if (rhsed > D) {
-            throw the::argument_exception("rhs", __FILE__, __LINE__);
+            throw vislib::IllegalParamException("rhs", __FILE__, __LINE__);
         }
 
         for (unsigned int i = 0; i <= rhsed; i++) {
@@ -476,8 +476,8 @@ namespace math {
         template<class T, unsigned int D, class S> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg1(const T& a0,
             const T& a1, T *outRoots, unsigned int size) {
-        THE_ASSERT(!IsEqual(a1, static_cast<T>(0)));
-        THE_ASSERT(size > 0);
+        ASSERT(!IsEqual(a1, static_cast<T>(0)));
+        ASSERT(size > 0);
 
         outRoots[0] = -a0 / a1;
 
@@ -492,8 +492,8 @@ namespace math {
         template<class T, unsigned int D, class S> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg2(const T& a0,
             const T& a1, const T& a2, T *outRoots, unsigned int size) {
-        THE_ASSERT(!IsEqual(a2, static_cast<T>(0)));
-        THE_ASSERT(size > 0);
+        ASSERT(!IsEqual(a2, static_cast<T>(0)));
+        ASSERT(size > 0);
 
         T a = a2 * static_cast<T>(2);
         T b = a1 * a1 - a0 * a2 * static_cast<T>(4);
@@ -525,8 +525,8 @@ namespace math {
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg3(const T& a0,
             const T& a1, const T& a2, const T& a3, T *outRoots,
             unsigned int size) {
-        THE_ASSERT(!IsEqual(a3, static_cast<T>(0)));
-        THE_ASSERT(size > 0);
+        ASSERT(!IsEqual(a3, static_cast<T>(0)));
+        ASSERT(size > 0);
         // calculation following description at
         // http://www.mathe.tu-freiberg.de/~hebisch/cafe/kubisch.html
         // (14.03.2010)
@@ -563,7 +563,7 @@ namespace math {
         T dis = (q * q) + (static_cast<T>(4) * p * p * p);
         if (dis < static_cast<T>(0)) {
             // casus irreducibilis
-            THE_ASSERT(p < static_cast<T>(0)); // or square-root would be complex
+            ASSERT(p < static_cast<T>(0)); // or square-root would be complex
 
             double cosphi = static_cast<double>(-q)
                 / (2.0 * ::sqrt(-static_cast<double>(p * p * p)));
@@ -619,8 +619,8 @@ namespace math {
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg4(const T& a0,
             const T& a1, const T& a2, const T& a3, const T& a4, T *outRoots,
             unsigned int size) {
-        THE_ASSERT(!IsEqual(a4, static_cast<T>(0)));
-        THE_ASSERT(size > 0);
+        ASSERT(!IsEqual(a4, static_cast<T>(0)));
+        ASSERT(size > 0);
 
         // Implementation of Ferrari-Lagrange method for solving
         //  x^4 + ax^3 + bx^2 + cx + d = 0
@@ -638,7 +638,7 @@ namespace math {
             T cr[3];
             unsigned int crc
                 = findRootsDeg3(r, q, p, static_cast<T>(1), cr, 3);
-            THE_ASSERT(crc > 0);
+            ASSERT(crc > 0);
             if (crc == 3) y = Min(Min(cr[0], cr[1]), cr[2]);
             else if (crc == 2) y = Min(cr[0], cr[1]);
             else y = cr[0];

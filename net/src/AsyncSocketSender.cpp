@@ -10,10 +10,10 @@
 #include <climits>
 
 #include "vislib/error.h"
-#include "the/exception.h"
+#include "vislib/Exception.h"
 #include "vislib/SocketException.h"
 #include "vislib/Thread.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 #include "vislib/unreferenced.h"
 
 
@@ -34,11 +34,11 @@ vislib::net::AsyncSocketSender::~AsyncSocketSender(void) {
     try {
         this->Terminate();
         this->lockStoragePool.Lock();
-        the::safe_delete(this->storagePool);
-    } catch (the::exception& e) {
+        SAFE_DELETE(this->storagePool);
+    } catch (Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception while destroying "
-            "AsyncSocketSender: %s\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_WARN, "Exception while destroying "
+            "AsyncSocketSender: %s\n", e.GetMsgA());
     }
 
     try {
@@ -51,7 +51,7 @@ vislib::net::AsyncSocketSender::~AsyncSocketSender(void) {
 /*
  * vislib::net::AsyncSocketSender::Run
  */
-unsigned int vislib::net::AsyncSocketSender::Run(void *socket) {
+DWORD vislib::net::AsyncSocketSender::Run(void *socket) {
     return this->Run(static_cast<Socket *>(socket));
 }
 
@@ -59,18 +59,18 @@ unsigned int vislib::net::AsyncSocketSender::Run(void *socket) {
 /*
  * vislib::net::AsyncSocketSender::Run
  */
-unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
-    THE_ASSERT(socket != NULL);
+DWORD vislib::net::AsyncSocketSender::Run(Socket *socket) {
+    ASSERT(socket != NULL);
     const void *data = NULL;
-    size_t cntSent = 0;
-    unsigned int result = 0;
+    SIZE_T cntSent = 0;
+    DWORD result = 0;
 
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Socket::Startup failed in "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Socket::Startup failed in "
             "AsyncSocketSender::Run().\n");
-        return e.get_error().native_error();
+        return e.GetErrorCode();
     }
 
     while (true) {
@@ -83,16 +83,16 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
          * We use an empty queue as trigger for a thread to leave: If we wake a
          * thread and it does not find any work to do, it should exit.
          */
-        if (!this->isQueueOpen && this->queue.empty()) {
+        if (!this->isQueueOpen && this->queue.IsEmpty()) {
             this->lockQueue.Unlock();
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "AsyncSocketSender [%u] is "
+            VLTRACE(Trace::LEVEL_VL_INFO, "AsyncSocketSender [%u] is "
                 "exiting because of empty queue ...\n",
                 sys::Thread::CurrentID());
             break;
         }
 
         /* Set send task and send it using our socket. */
-        THE_ASSERT(!this->queue.empty());
+        ASSERT(!this->queue.IsEmpty());
         SendTask task = this->queue.First();
         this->queue.RemoveFirst();
         this->lockQueue.Unlock();
@@ -103,12 +103,12 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
                                     : static_cast<const void *>(*task.data1);
         result = 0;
         try {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Sending %u bytes "
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Sending %u bytes "
                 "starting at 0x%x ...\n", task.cntBytes, data);
             cntSent = socket->Send(data, task.cntBytes, task.timeout,
                 task.flags, task.forceSend);
         } catch (SocketException e) {
-            result = e.get_error().native_error();
+            result = e.GetErrorCode();
             // TODO: Could leave the loop, if exception does not designate timeout.
         }
         this->finaliseSendTask(task, result, cntSent);
@@ -117,7 +117,7 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
     /* Do cleanup. */
     try {
         if ((this->flags & FLAG_IS_CLOSE_SOCKET) != 0) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "AsyncSocketSender [%u] is closing the "
+            VLTRACE(Trace::LEVEL_VL_INFO, "AsyncSocketSender [%u] is closing the "
                 "socket ...\n", sys::Thread::CurrentID());
             socket->Close();
         }
@@ -137,17 +137,17 @@ unsigned int vislib::net::AsyncSocketSender::Run(Socket *socket) {
  * vislib::net::AsyncSocketSender::Send
  */
 void vislib::net::AsyncSocketSender::Send(const void *data,
-        const size_t cntBytes, const CompletedFunction onCompleted,
-        void *userContext, const bool doNotCopy, const int timeout,
-        const int flags, const bool forceSend) {
+        const SIZE_T cntBytes, const CompletedFunction onCompleted,
+        void *userContext, const bool doNotCopy, const INT timeout,
+        const INT flags, const bool forceSend) {
     SendTask task;
 
     /* Sanity checks. */
     if (data == NULL) {
-        throw the::argument_exception("data", __FILE__, __LINE__);
+        throw IllegalParamException("data", __FILE__, __LINE__);
     }
     if ((onCompleted == NULL) && doNotCopy) {
-        throw the::argument_exception("onCompleted", __FILE__, __LINE__);
+        throw IllegalParamException("onCompleted", __FILE__, __LINE__);
     }
 
     this->lockQueue.Lock();
@@ -155,7 +155,7 @@ void vislib::net::AsyncSocketSender::Send(const void *data,
     /* Check the queue state. */
     if (!this->isQueueOpen) {
         this->lockQueue.Unlock();
-        throw the::invalid_operation_exception("The send queue has been closed. No more "
+        throw IllegalStateException("The send queue has been closed. No more "
             "tasks may be added.", __FILE__, __LINE__);
     }
 
@@ -211,7 +211,7 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
         this->isQueueOpen = false;
 
         if ((this->flags & FLAG_IS_LINGER) == 0) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Discarding all pending asynchronous "
+            VLTRACE(Trace::LEVEL_VL_INFO, "Discarding all pending asynchronous "
                 "socket sends ...\n");
 
             /* Notify the user about his/her task being aborted. */
@@ -229,10 +229,10 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
         }
         this->semBlockSender.Unlock();  // Ensure that the thread can run.
 
-    } catch (the::exception& e) {
+    } catch (vislib::Exception& e) {
         VL_DBGONLY_REFERENCED_LOCAL_VARIABLE(e);
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Terminating AsyncSocketSender "
-            "failed. %s\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Terminating AsyncSocketSender "
+            "failed. %s\n", e.GetMsgA());
         retval = false;
     }
 
@@ -248,8 +248,8 @@ bool vislib::net::AsyncSocketSender::Terminate(void) {
 /*
  * vislib::net::AsyncSocketSender::onSendCompletedEvt
  */
-void vislib::net::AsyncSocketSender::onSendCompletedEvt(const unsigned int result,
-        const void *data, const size_t cntBytesSent, void *userContext) {
+void vislib::net::AsyncSocketSender::onSendCompletedEvt(const DWORD result,
+        const void *data, const SIZE_T cntBytesSent, void *userContext) {
     if (userContext != NULL) {
         static_cast<sys::Event *>(userContext)->Set();
     }
@@ -259,8 +259,8 @@ void vislib::net::AsyncSocketSender::onSendCompletedEvt(const unsigned int resul
 /*
  * vislib::net::AsyncSocketSender::onSendCompletedSem
  */
-void vislib::net::AsyncSocketSender::onSendCompletedSem(const unsigned int result,
-        const void *data, const size_t cntBytesSent, void *userContext) {
+void vislib::net::AsyncSocketSender::onSendCompletedSem(const DWORD result,
+        const void *data, const SIZE_T cntBytesSent, void *userContext) {
     if (userContext != NULL) {
         static_cast<sys::Semaphore *>(userContext)->Unlock();
     }
@@ -270,20 +270,20 @@ void vislib::net::AsyncSocketSender::onSendCompletedSem(const unsigned int resul
 /*
  * vislib::net::AsyncSocketSender::FLAG_IS_CLOSE_SOCKET
  */
-const uint32_t vislib::net::AsyncSocketSender::FLAG_IS_CLOSE_SOCKET = 0x00000001;
+const UINT32 vislib::net::AsyncSocketSender::FLAG_IS_CLOSE_SOCKET = 0x00000001;
 
 
 /*
  * vislib::net::AsyncSocketSender::FLAG_IS_LINGER
  */
-const uint32_t vislib::net::AsyncSocketSender::FLAG_IS_LINGER= 0x00000002;
+const UINT32 vislib::net::AsyncSocketSender::FLAG_IS_LINGER= 0x00000002;
 
 
 /*
  * vislib::net::AsyncSocketSender::finaliseSendTask
  */
 void vislib::net::AsyncSocketSender::finaliseSendTask(SendTask& task, 
-        const unsigned int result, const size_t cntBytesSent) {
+        const DWORD result, const SIZE_T cntBytesSent) {
     /* Call completion function. */
     if (task.onCompleted != NULL) {
         task.onCompleted(result, task.data0, cntBytesSent, task.userContext);

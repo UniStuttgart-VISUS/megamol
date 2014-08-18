@@ -16,7 +16,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include <d3d9.h>
 #include <d3dx9math.h>
 
@@ -70,7 +69,7 @@ namespace d3d {
          * @param components The initial vector components.
          */
         explicit inline D3DVector3D(const T *components) : Super() {
-            THE_ASSERT(components != NULL);
+            ASSERT(components != NULL);
             ::memcpy(this->components, components, D * sizeof(T));
         }
 
@@ -203,8 +202,6 @@ namespace d3d {
 } /* end namespace d3d */
 } /* end namespace graphics */
 } /* end namespace vislib */
-
-#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

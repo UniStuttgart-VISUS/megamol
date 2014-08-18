@@ -8,7 +8,7 @@
 
 #include "vislib/AbstractD3DAdapterInformation.h"
 
-#include "the/index_out_of_range_exception.h"
+#include "vislib/OutOfRangeException.h"
 
 
 using namespace vislib::graphics::d3d;
@@ -18,7 +18,8 @@ using namespace vislib::graphics::d3d;
  * ...::d3d::AbstractD3DAdapterInformation::~AbstractD3DAdapterInformation
  */
 AbstractD3DAdapterInformation::~AbstractD3DAdapterInformation(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3DAdapterInformation::"
+        "~AbstractD3DAdapterInformation", __FILE__, __LINE__);
 }
 
 
@@ -32,12 +33,13 @@ const INT_PTR AbstractD3DAdapterInformation::INVALID_OUTPUT_IDX = -1;
  * ...::d3d::AbstractD3DAdapterInformation::FindOutputIdxForDeviceName
  */
 INT_PTR AbstractD3DAdapterInformation::FindOutputIdxForDeviceName(
-        const the::wstring& deviceName) const {
-    THE_STACK_TRACE;
+        const vislib::StringW& deviceName) const {
+    VLSTACKTRACE("AbstractD3DAdapterInformation::FindOutputIdxForDeviceName",
+        __FILE__, __LINE__);
     SIZE_T cntOutputs = this->GetOutputCount();
 
     for (SIZE_T i = 0; i < cntOutputs; i++) {
-        if (deviceName.compare(this->GetDeviceName(i)) == 0) {
+        if (deviceName.Equals(this->GetDeviceName(i))) {
             return static_cast<INT_PTR>(i);
         }
     }
@@ -54,10 +56,11 @@ vislib::math::Rectangle<LONG>&
 AbstractD3DAdapterInformation::GetDesktopCoordinates(
         vislib::math::Rectangle<LONG>& outDesktopCoordinates,
         const SIZE_T outputIdx) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3DAdapterInformation::GetDesktopCoordinates",
+        __FILE__, __LINE__);
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
-    THE_ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
+    ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
 
     outDesktopCoordinates.Set(mi.rcMonitor.left, mi.rcMonitor.bottom,
         mi.rcMonitor.right, mi.rcMonitor.top);
@@ -68,13 +71,14 @@ AbstractD3DAdapterInformation::GetDesktopCoordinates(
 /*
  * ...::d3d::AbstractD3DAdapterInformation::GetDeviceName
  */
-the::wstring AbstractD3DAdapterInformation::GetDeviceName(
+vislib::StringW AbstractD3DAdapterInformation::GetDeviceName(
         const SIZE_T outputIdx) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3DAdapterInformation::GetDeviceName",
+        __FILE__, __LINE__);
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
-    THE_ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
-    return the::wstring(mi.szDevice);
+    ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
+    return StringW(mi.szDevice);
 }
 
 
@@ -83,10 +87,11 @@ the::wstring AbstractD3DAdapterInformation::GetDeviceName(
  */
 bool AbstractD3DAdapterInformation::IsPrimaryDisplay(
         const SIZE_T outputIdx) const {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3DAdapterInformation::IsPrimaryDisplay",
+        __FILE__, __LINE__);
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
-    THE_ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
+    ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
     return ((mi.dwFlags & MONITORINFOF_PRIMARY) != 0);
 }
 
@@ -95,5 +100,6 @@ bool AbstractD3DAdapterInformation::IsPrimaryDisplay(
  * ...::d3d::AbstractD3DAdapterInformation::AbstractD3DAdapterInformation
  */
 AbstractD3DAdapterInformation::AbstractD3DAdapterInformation(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AbstractD3DAdapterInformation::"
+        "AbstractD3DAdapterInformation", __FILE__, __LINE__);
 }

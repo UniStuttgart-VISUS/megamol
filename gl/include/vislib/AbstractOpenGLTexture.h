@@ -21,7 +21,7 @@
 #include "glh/glh_genext.h"
 
 #include "vislib/ExtensionsDependent.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -85,7 +85,7 @@ namespace gl {
          * @return The ID of the texture.
          */
         inline GLuint GetId(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractOpenGLTexture::GetId", __FILE__, __LINE__);
             return this->id;
         }
 
@@ -141,7 +141,7 @@ namespace gl {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         AbstractOpenGLTexture(AbstractOpenGLTexture& rhs);
 
@@ -163,7 +163,7 @@ namespace gl {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         AbstractOpenGLTexture& operator =(const AbstractOpenGLTexture& rhs);
 

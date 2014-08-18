@@ -10,12 +10,12 @@
 
 #include <cstdlib>
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/DNS.h"
-#include "the/invalid_operation_exception.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/SocketException.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -120,10 +120,10 @@ vislib::net::IPAddress6::IPAddress6(const struct in6_addr& address) {
  * vislib::net::IPAddress6::IPAddress6
  */
 vislib::net::IPAddress6::IPAddress6(
-        const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
-        const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
-        const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
-        const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16) {
+        const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
+        const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
+        const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
+        const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16) {
 #define VLIPADDR6_INITBYTE(n) this->address.s6_addr[n - 1] = b##n
     VLIPADDR6_INITBYTE(1);
     VLIPADDR6_INITBYTE(2);
@@ -180,15 +180,15 @@ vislib::net::IPAddress6::~IPAddress6(void) {
  * vislib::net::IPAddress6::GetPrefix
  */ 
 vislib::net::IPAddress6 
-vislib::net::IPAddress6::GetPrefix(const unsigned long prefixLength) const {
+vislib::net::IPAddress6::GetPrefix(const ULONG prefixLength) const {
     IPAddress6 retval;
     int cntBytes = sizeof(retval.address.s6_addr); 
-    int cntPrefix = prefixLength > static_cast<unsigned long>(8 * cntBytes)
+    int cntPrefix = prefixLength > static_cast<ULONG>(8 * cntBytes)
         ? cntBytes : static_cast<int>(prefixLength);
     div_t cntCopy = ::div(cntPrefix, 8);
 
     /* Zero out everything. */
-    the::zero_memory(retval.address.s6_addr, cntBytes);
+    ::ZeroMemory(retval.address.s6_addr, cntBytes);
 
     /* Copy complete bytes. */
     ::memcpy(retval.address.s6_addr, this->address.s6_addr, cntCopy.quot);
@@ -218,29 +218,29 @@ void vislib::net::IPAddress6::MapV4Address(const struct in_addr& address) {
     }
 
     /* Embed IPv4 in the last 32 bits. */
-    THE_ASSERT(sizeof(in_addr) == 4);
+    ASSERT(sizeof(in_addr) == 4);
     ::memcpy(this->address.s6_addr + 12, &address, sizeof(in_addr));
 
-    THE_ASSERT(this->IsV4Mapped());
+    ASSERT(this->IsV4Mapped());
 }
 
 
 /*
  * vislib::net::IPAddress6::ToStringA
  */
-the::astring vislib::net::IPAddress6::ToStringA(void) const {
+vislib::StringA vislib::net::IPAddress6::ToStringA(void) const {
     struct sockaddr_in6 addr;   // Dummy socket address used for lookup.
     char buffer[NI_MAXHOST];    // Receives the stringised address.
     int err = 0;                // OS operation return value.
 
-    the::zero_memory(&addr, sizeof(addr));
+    ::ZeroMemory(&addr, sizeof(addr));
     addr.sin6_family = AF_INET6;
     ::memcpy(&addr.sin6_addr, &this->address, sizeof(struct in6_addr));
 
     if ((err = ::getnameinfo(reinterpret_cast<struct sockaddr *>(&addr),
             sizeof(struct sockaddr_in6), buffer, sizeof(buffer), NULL, 0,
             NI_NUMERICHOST)) != 0) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "::getnameinfo failed in "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
             "IPAddress6::ToStringA(): %s\n",
 #ifdef _WIN32
             ::gai_strerrorA(err)
@@ -251,7 +251,7 @@ the::astring vislib::net::IPAddress6::ToStringA(void) const {
         buffer[0] = 0;
     }
 
-    return the::astring(buffer);
+    return StringA(buffer);
 }
 
 
@@ -263,7 +263,7 @@ vislib::net::IPAddress vislib::net::IPAddress6::UnmapV4Address(void) const {
         return IPAddress(*reinterpret_cast<const in_addr *>(
             this->address.s6_addr + 12));
     } else {
-        throw the::invalid_operation_exception("The IPv6 address is not a mapped IPv4 "
+        throw IllegalStateException("The IPv6 address is not a mapped IPv4 "
             "address.", __FILE__, __LINE__);
     }
 }
@@ -272,11 +272,11 @@ vislib::net::IPAddress vislib::net::IPAddress6::UnmapV4Address(void) const {
 /*
  * vislib::net::IPAddress6::operator []
  */
-uint8_t vislib::net::IPAddress6::operator [](const int i) const {
+BYTE vislib::net::IPAddress6::operator [](const int i) const {
     if ((i > 0) && (i < static_cast<int>(sizeof(this->address)))) {
-        return reinterpret_cast<const uint8_t *>(&this->address)[i];
+        return reinterpret_cast<const BYTE *>(&this->address)[i];
     } else {
-        throw the::index_out_of_range_exception(i, 0, sizeof(this->address), __FILE__,
+        throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
             __LINE__);
     }
 }

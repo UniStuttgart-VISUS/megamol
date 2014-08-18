@@ -7,8 +7,8 @@
 
 #include "vislib/LamportClock.h"
 
-#include "the/argument_exception.h"
-#include "the/not_supported_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -28,7 +28,7 @@ vislib::sys::LamportClock::~LamportClock(void) {
 /*
  * vislib::sys::LamportClock::StepLocal
  */
-uint64_t vislib::sys::LamportClock::StepLocal(void) {
+UINT64 vislib::sys::LamportClock::StepLocal(void) {
     AutoLock l(this->lock);
     return ++this->value;
 }
@@ -37,7 +37,7 @@ uint64_t vislib::sys::LamportClock::StepLocal(void) {
 /*
  * vislib::sys::LamportClock::StepReceive
  */
-uint64_t vislib::sys::LamportClock::StepReceive(uint64_t timestamp) {
+UINT64 vislib::sys::LamportClock::StepReceive(UINT64 timestamp) {
     AutoLock l(this->lock);
     this->value = (this->value > timestamp) ? this->value : timestamp;
     return ++this->value;
@@ -47,7 +47,7 @@ uint64_t vislib::sys::LamportClock::StepReceive(uint64_t timestamp) {
 /*
  * vislib::sys::LamportClock::operator ++
  */
-uint64_t vislib::sys::LamportClock::operator ++(int) {
+UINT64 vislib::sys::LamportClock::operator ++(int) {
     AutoLock l(this->lock);
     return this->value++;
 }
@@ -57,7 +57,7 @@ uint64_t vislib::sys::LamportClock::operator ++(int) {
  * vislib::sys::LamportClock::LamportClock
  */
 vislib::sys::LamportClock::LamportClock(const LamportClock& rhs) {
-    throw the::not_supported_exception("LamportClock::LamportClock", __FILE__, 
+    throw UnsupportedOperationException("LamportClock::LamportClock", __FILE__, 
         __LINE__);
 }
 
@@ -68,7 +68,7 @@ vislib::sys::LamportClock::LamportClock(const LamportClock& rhs) {
 vislib::sys::LamportClock& vislib::sys::LamportClock::operator =(
         const LamportClock& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

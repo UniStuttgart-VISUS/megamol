@@ -9,7 +9,7 @@
 #include "vislib/IPCommEndPoint.h"
 
 #include "vislib/NetworkInformation.h"
-#include "the/argument_exception.h"
+#include "vislib/IllegalParamException.h"
 
 
 /*
@@ -18,7 +18,7 @@
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(
         const IPEndPoint& endPoint) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(endPoint), false);
 }
 
@@ -29,7 +29,7 @@ vislib::net::IPCommEndPoint::Create(
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(
         const IPAgnosticAddress& ipAddress, const unsigned short port) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     return IPCommEndPoint::Create(IPEndPoint(ipAddress, port));
 }
  
@@ -40,7 +40,7 @@ vislib::net::IPCommEndPoint::Create(
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(
         const IPAddress& ipAddress, const unsigned short port) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     return IPCommEndPoint::Create(IPEndPoint(ipAddress, port));
 }
  
@@ -51,7 +51,7 @@ vislib::net::IPCommEndPoint::Create(
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(
         const IPAddress6& ipAddress, const unsigned short port) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     return IPCommEndPoint::Create(IPEndPoint(ipAddress, port));
 }
 
@@ -62,7 +62,7 @@ vislib::net::IPCommEndPoint::Create(
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(
         const ProtocolVersion protocolVersion, const unsigned short port) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     switch (protocolVersion) {
         case IPV4:
             return IPCommEndPoint::Create(IPAgnosticAddress::ANY4, port);
@@ -73,7 +73,7 @@ vislib::net::IPCommEndPoint::Create(
             /* Unreachable. */
 
         default:
-            throw the::argument_exception("protocolVersion", __FILE__, __LINE__);
+            throw IllegalParamException("protocolVersion", __FILE__, __LINE__);
             /* Unreachable. */
     }
 }
@@ -87,7 +87,7 @@ vislib::net::IPCommEndPoint::Create(
             const ProtocolVersion protocolVersion,
             const char *hostNameOrAddress,
             const unsigned short port) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     switch (protocolVersion) {
         case IPV4:
             return IPCommEndPoint::Create(IPEndPoint::CreateIPv4(
@@ -100,7 +100,7 @@ vislib::net::IPCommEndPoint::Create(
             /* Unreachable. */
 
         default:
-            throw the::argument_exception("protocolVersion", __FILE__, __LINE__);
+            throw IllegalParamException("protocolVersion", __FILE__, __LINE__);
             /* Unreachable. */
     }
 }
@@ -113,11 +113,11 @@ vislib::SmartRef<vislib::net::AbstractCommEndPoint>
 vislib::net::IPCommEndPoint::Create(
         IPAgnosticAddress::AddressFamily addressFamily,
         const char *str) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     IPEndPoint ep;
     if (NetworkInformation::GuessRemoteEndPoint(ep, str, addressFamily) 
             > 0.0f) {
-        throw the::argument_exception("str", __FILE__, __LINE__);
+        throw IllegalParamException("str", __FILE__, __LINE__);
     } else {
         return IPCommEndPoint::Create(ep);
     }
@@ -130,7 +130,7 @@ vislib::net::IPCommEndPoint::Create(
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(
         const char *str) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     SmartRef<AbstractCommEndPoint> retval = IPCommEndPoint::Create(IPV4, 
         static_cast<unsigned short>(0));
     retval->Parse(str);
@@ -144,7 +144,7 @@ vislib::net::IPCommEndPoint::Create(
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(
         const wchar_t *str) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     SmartRef<AbstractCommEndPoint> retval = IPCommEndPoint::Create(IPV4, 
         static_cast<unsigned short>(0));
     retval->Parse(str);
@@ -157,7 +157,7 @@ vislib::net::IPCommEndPoint::Create(
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(const struct sockaddr_storage& address) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     IPEndPoint ep(address);
     return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(ep), false);
 }
@@ -168,7 +168,7 @@ vislib::net::IPCommEndPoint::Create(const struct sockaddr_storage& address) {
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(const struct sockaddr_in& address) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     IPEndPoint ep(address);
     return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(ep), false);
 }
@@ -179,7 +179,7 @@ vislib::net::IPCommEndPoint::Create(const struct sockaddr_in& address) {
  */
 vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 vislib::net::IPCommEndPoint::Create(const struct sockaddr_in6& address) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
     IPEndPoint ep(address);
     return SmartRef<AbstractCommEndPoint>(new IPCommEndPoint(ep), false);
 }
@@ -188,11 +188,11 @@ vislib::net::IPCommEndPoint::Create(const struct sockaddr_in6& address) {
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const the::astring& str) {
-    THE_STACK_TRACE;
+void vislib::net::IPCommEndPoint::Parse(const StringA& str) {
+    VLSTACKTRACE("IPCommEndPoint::Parse", __FILE__, __LINE__);
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str()) > 0.0f) {
-        throw the::argument_exception("str", __FILE__, __LINE__);
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer()) > 0.0f) {
+        throw IllegalParamException("str", __FILE__, __LINE__);
     } else {
         this->endPoint = ep;
     }
@@ -202,14 +202,14 @@ void vislib::net::IPCommEndPoint::Parse(const the::astring& str) {
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const the::astring& str,
+void vislib::net::IPCommEndPoint::Parse(const StringA& str,
         const ProtocolVersion preferredProtocolVersion) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Parse", __FILE__, __LINE__);
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str(),
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer(),
             static_cast<IPAgnosticAddress::AddressFamily>
             (preferredProtocolVersion)) > 0.0f) {
-        throw the::argument_exception("str", __FILE__, __LINE__);
+        throw IllegalParamException("str", __FILE__, __LINE__);
     } else {
         this->endPoint = ep;
     }
@@ -219,11 +219,11 @@ void vislib::net::IPCommEndPoint::Parse(const the::astring& str,
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const the::wstring& str)  {
-    THE_STACK_TRACE;
+void vislib::net::IPCommEndPoint::Parse(const StringW& str)  {
+    VLSTACKTRACE("IPCommEndPoint::Parse", __FILE__, __LINE__);
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str()) > 0.0f) {
-        throw the::argument_exception("str", __FILE__, __LINE__);
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer()) > 0.0f) {
+        throw IllegalParamException("str", __FILE__, __LINE__);
     } else {
         this->endPoint = ep;
     }
@@ -233,14 +233,14 @@ void vislib::net::IPCommEndPoint::Parse(const the::wstring& str)  {
 /*
  * vislib::net::IPCommEndPoint::Parse
  */
-void vislib::net::IPCommEndPoint::Parse(const the::wstring& str,
+void vislib::net::IPCommEndPoint::Parse(const StringW& str,
         const ProtocolVersion preferredProtocolVersion) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::Parse", __FILE__, __LINE__);
     IPEndPoint ep;
-    if (NetworkInformation::GuessRemoteEndPoint(ep, str.c_str(),
+    if (NetworkInformation::GuessRemoteEndPoint(ep, str.PeekBuffer(),
             static_cast<IPAgnosticAddress::AddressFamily>
             (preferredProtocolVersion)) > 0.0f) {
-        throw the::argument_exception("str", __FILE__, __LINE__);
+        throw IllegalParamException("str", __FILE__, __LINE__);
     } else {
         this->endPoint = ep;
     }
@@ -249,8 +249,8 @@ void vislib::net::IPCommEndPoint::Parse(const the::wstring& str,
 /*
  * vislib::net::IPCommEndPoint::ToStringA
  */
-the::astring vislib::net::IPCommEndPoint::ToStringA(void) const {
-    THE_STACK_TRACE;
+vislib::StringA vislib::net::IPCommEndPoint::ToStringA(void) const {
+    VLSTACKTRACE("IPCommEndPoint::ToStringA", __FILE__, __LINE__);
     return this->endPoint.ToStringA();
 }
 
@@ -258,8 +258,8 @@ the::astring vislib::net::IPCommEndPoint::ToStringA(void) const {
 /*
  * vislib::net::IPCommEndPoint::ToStringW
  */
-the::wstring vislib::net::IPCommEndPoint::ToStringW(void) const {
-    THE_STACK_TRACE;
+vislib::StringW vislib::net::IPCommEndPoint::ToStringW(void) const {
+    VLSTACKTRACE("IPCommEndPoint::ToStringW", __FILE__, __LINE__);
     return this->endPoint.ToStringW();
 }
 
@@ -286,7 +286,8 @@ bool vislib::net::IPCommEndPoint::operator ==(
 vislib::net::IPCommEndPoint::ProtocolVersion 
 vislib::net::IPCommEndPoint::convertAddressFamily(
         const IPAgnosticAddress::AddressFamily addressFamily) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::convertAddressFamily", __FILE__, 
+        __LINE__);
     switch (addressFamily) {
         case IPAgnosticAddress::FAMILY_INET:
             /* Falls through. */
@@ -295,7 +296,7 @@ vislib::net::IPCommEndPoint::convertAddressFamily(
             /* unreachable. */
 
         default:
-            throw the::argument_exception("addressFamily", __FILE__, __LINE__);
+            throw IllegalParamException("addressFamily", __FILE__, __LINE__);
             /* unreachable. */
     }
 }
@@ -306,7 +307,8 @@ vislib::net::IPCommEndPoint::convertAddressFamily(
  */
 vislib::net::IPCommEndPoint::IPCommEndPoint(
         const IPEndPoint& endPoint) : Super(), endPoint(endPoint) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::IPCommEndPoint", __FILE__, 
+        __LINE__);
 }
 
 
@@ -314,5 +316,6 @@ vislib::net::IPCommEndPoint::IPCommEndPoint(
  * vislib::net::IPCommEndPoint::~IPCommEndPoint
  */
 vislib::net::IPCommEndPoint::~IPCommEndPoint(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("IPCommEndPoint::IPCommEndPoint", __FILE__, 
+        __LINE__);
 }

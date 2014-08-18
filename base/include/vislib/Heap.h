@@ -16,8 +16,8 @@
 
 
 #include "vislib/Array.h"
-#include "the/assert.h"
-#include "the/utils.h"
+#include "vislib/assert.h"
+#include "vislib/utils.h"
 
 
 namespace vislib {
@@ -63,7 +63,7 @@ namespace vislib {
          *                 however, needs more memory, it will dynamically 
          *                 reallocate the array.
          */
-        Heap(const size_t capacity = Array<T>::DEFAULT_CAPACITY);
+        Heap(const SIZE_T capacity = Array<T>::DEFAULT_CAPACITY);
 
         /** Dtor. */
         ~Heap(void);
@@ -75,7 +75,7 @@ namespace vislib {
          */
         inline void Add(const T& element) {
             this->elements.Append(element);
-            THE_ASSERT(!this->elements.empty());
+            BECAUSE_I_KNOW(!this->elements.IsEmpty());
             this->siftUp(this->elements.Count() - 1);
         }
 
@@ -90,7 +90,7 @@ namespace vislib {
          * @throws std::bad_alloc If there was insufficient memory for 
          *                        allocating the array.
          */
-        inline void AssertCapacity(const size_t capacity) {
+        inline void AssertCapacity(const SIZE_T capacity) {
             this->elements.AssertCapacity(capacity);
         }
 
@@ -99,7 +99,7 @@ namespace vislib {
          *
          * @return The current capacity of the heap.
          */
-        inline size_t Capacity(void) const {
+        inline SIZE_T Capacity(void) const {
             return this->elements.Capacity();
         }
 
@@ -117,7 +117,7 @@ namespace vislib {
          *
          * @return The number of elements in the heap.
          */
-        inline size_t Count(void) const {
+        inline SIZE_T Count(void) const {
             return this->elements.Count();
         }
 
@@ -130,7 +130,7 @@ namespace vislib {
          *
          * @return The root element of the heap.
          *
-         * @throws index_out_of_range_exception, if the heap is empty.
+         * @throws OutOfRangeException, if the heap is empty.
          */
         inline const T& First(void) const {
             return this->elements[0];
@@ -144,8 +144,8 @@ namespace vislib {
          *
          * @return true, if no element is in the heap, false otherwise.
          */
-        inline bool empty(void) const {
-            return this->elements.empty();
+        inline bool IsEmpty(void) const {
+            return this->elements.IsEmpty();
         }
 
         /**
@@ -171,7 +171,7 @@ namespace vislib {
          * @param idx The index of the element removed. This should be the first
          *            element.
          */
-        void siftDown(size_t idx);
+        void siftDown(SIZE_T idx);
 
         /**
          * Enforces the heap property after inserting an element at 'idx'.
@@ -179,7 +179,7 @@ namespace vislib {
          * @param idx The index of the inserted element. This should be the last
          *            element.
          */
-        void siftUp(size_t idx);
+        void siftUp(SIZE_T idx);
 
         /** The array of heap elements. */
         Array<T> elements;
@@ -191,7 +191,7 @@ namespace vislib {
      * vislib::Heap<T>::Heap
      */
     template<class T> 
-    Heap<T>::Heap(const size_t capacity) : elements(capacity) {
+    Heap<T>::Heap(const SIZE_T capacity) : elements(capacity) {
     }
 
 
@@ -219,8 +219,8 @@ namespace vislib {
     /*
      * vislib::Heap<T>::siftDown
      */
-    template<class T> void Heap<T>::siftDown(size_t idx) {
-        size_t nextIdx = 0;
+    template<class T> void Heap<T>::siftDown(SIZE_T idx) {
+        SIZE_T nextIdx = 0;
 
         while (idx < this->elements.Count() / 2) {
             nextIdx = 2 * idx + 1;
@@ -233,10 +233,10 @@ namespace vislib {
                     nextIdx++;
                 }
             }
-            THE_ASSERT(idx >= 0);
-            THE_ASSERT(idx < this->elements.Count());
-            THE_ASSERT(nextIdx >= 0);
-            THE_ASSERT(nextIdx < this->elements.Count());
+            ASSERT(idx >= 0);
+            ASSERT(idx < this->elements.Count());
+            ASSERT(nextIdx >= 0);
+            ASSERT(nextIdx < this->elements.Count());
 
             if (this->elements[idx].Key() < this->elements[nextIdx].Key()) {
                 /* Heap property fulfilled. */
@@ -244,7 +244,7 @@ namespace vislib {
 
             } else {
                 /* Bubble down. */
-                std::swap(this->elements[idx], this->elements[nextIdx]);
+                Swap(this->elements[idx], this->elements[nextIdx]);
                 idx = nextIdx;
             }
         }
@@ -254,15 +254,15 @@ namespace vislib {
     /*
      * vislib::Heap<T>::siftUp
      */
-    template<class T> void Heap<T>::siftUp(size_t idx) {
-        size_t nextIdx = 0;
+    template<class T> void Heap<T>::siftUp(SIZE_T idx) {
+        SIZE_T nextIdx = 0;
 
         while (idx > 0) {
             nextIdx = (idx - 1) / 2;
-            THE_ASSERT(idx >= 0);
-            THE_ASSERT(idx < this->elements.Count());
-            THE_ASSERT(nextIdx >= 0);
-            THE_ASSERT(nextIdx < this->elements.Count());
+            ASSERT(idx >= 0);
+            ASSERT(idx < this->elements.Count());
+            ASSERT(nextIdx >= 0);
+            ASSERT(nextIdx < this->elements.Count());
 
             if (this->elements[nextIdx].Key() < this->elements[idx].Key()) {
                 /* Heap property fulfilled. */
@@ -270,7 +270,7 @@ namespace vislib {
 
             } else {
                 /* Bubble up. */
-                std::swap(this->elements[idx], this->elements[nextIdx]);
+                Swap(this->elements[idx], this->elements[nextIdx]);
                 idx = nextIdx;
             } 
         }

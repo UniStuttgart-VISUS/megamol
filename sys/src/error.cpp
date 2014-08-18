@@ -11,7 +11,7 @@
 ///*
 // * ::GetLastError
 // */
-//unsigned int GetLastError(void) {
-//	return static_cast<unsigned int>(errno);
+//DWORD GetLastError(void) {
+//	return static_cast<DWORD>(errno);
 //}
 //#endif /* !_WIN32 */

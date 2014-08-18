@@ -13,8 +13,9 @@
  */
 vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader(
 		SimpleMessageHeaderData *data) : Super() {
-	THE_STACK_TRACE;
-	THE_ASSERT(data != NULL);
+	VLSTACKTRACE("ShallowSimpleMessageHeader::ShallowSimpleMessageHeader", 
+		__FILE__, __LINE__);
+	ASSERT(data != NULL);
 	this->data = data;
 }
 
@@ -23,7 +24,8 @@ vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader(
  * vislib::net::ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader
  */
 vislib::net::ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader",
+		__FILE__, __LINE__);
 }
 
 
@@ -32,7 +34,7 @@ vislib::net::ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader(void) {
  */
 vislib::net::SimpleMessageHeaderData *
 vislib::net::ShallowSimpleMessageHeader::PeekData(void) {
-	THE_STACK_TRACE;
+	VLSTACKTRACE("ShallowSimpleMessageHeader::PeekData", __FILE__, __LINE__);
 	return this->data;
 }
 
@@ -42,7 +44,7 @@ vislib::net::ShallowSimpleMessageHeader::PeekData(void) {
  */
 const vislib::net::SimpleMessageHeaderData *
 vislib::net::ShallowSimpleMessageHeader::PeekData(void) const {
-	THE_STACK_TRACE;
+	VLSTACKTRACE("ShallowSimpleMessageHeader::PeekData", __FILE__, __LINE__);
 	return this->data;
 }
 
@@ -52,5 +54,6 @@ vislib::net::ShallowSimpleMessageHeader::PeekData(void) const {
  */
 vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader(void) 
 		: data(NULL) {
-	THE_STACK_TRACE;
+	VLSTACKTRACE("ShallowSimpleMessageHeader::ShallowSimpleMessageHeader", 
+		__FILE__, __LINE__);
 }

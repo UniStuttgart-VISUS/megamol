@@ -96,17 +96,17 @@ namespace cluster {
          *
          * @return 0 in case of success.
          *
-         * @throws invalid_operation_exception If the client node is already 
+         * @throws IllegalStateException If the client node is already 
          *                               connected.
          * @throws SocketException If it was not possible to connect to the 
          *                         server.
-         * @throws the::system::system_exception If the message receiver thread could not be
+         * @throws SystemException If the message receiver thread could not be
          *                         started.
          * @throws std::bad_alloc In case there is insufficient heap memory.
          */
-        virtual unsigned int Run(void);
+        virtual DWORD Run(void);
 
-        inline void SetReconnectAttempts(const unsigned int reconnectAttempts) {
+        inline void SetReconnectAttempts(const UINT reconnectAttempts) {
             this->reconnectAttempts = reconnectAttempts;
         }
 
@@ -145,7 +145,7 @@ namespace cluster {
          *
          * @throws SocketException If it was not possible to connect to the
          *                         server.
-         * @throws the::system::system_exception If the message receiver thread could not be
+         * @throws SystemException If the message receiver thread could not be
          *                         started.
          * @throws std::bad_alloc In case there is insufficient heap memory.
          */
@@ -161,7 +161,7 @@ namespace cluster {
          *
          * @throws SocketException In case 'isSilent' is false and a socket 
          *                         error occurred.
-         * @throws the::system::system_exception In case 'isSilent' is false and the receiver
+         * @throws SystemException In case 'isSilent' is false and the receiver
          *                         thread could not be joined.
          */
         void disconnect(const bool isSilent, const bool noReconnect);
@@ -171,7 +171,7 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        virtual size_t countPeers(void) const;
+        virtual SIZE_T countPeers(void) const;
 
         /**
          * Call 'func' for each known peer node (socket).
@@ -187,7 +187,7 @@ namespace cluster {
          * @return The number of sucessful calls to 'func' that have been made.
          *         This is at most 1 for a client node.
          */
-        virtual size_t forEachPeer(ForeachPeerFunc func, void *context);
+        virtual SIZE_T forEachPeer(ForeachPeerFunc func, void *context);
 
         /**
          * Call 'func' for the peer node that has the specified ID 'peerId'. If
@@ -250,7 +250,7 @@ namespace cluster {
             sys::CmdLineProvider<T>& inOutCmdLine);
 
         /** The number of reconnect attempts to make if disconnected. */
-        unsigned int reconnectAttempts;
+        UINT reconnectAttempts;
 
         /** The receiver thread that generates the message events. */
         sys::Thread receiver;
@@ -269,7 +269,7 @@ namespace cluster {
      */
     template<class T>
     void AbstractClientNode::initialise(sys::CmdLineProvider<T>& inOutCmdLine) {
-        typedef T String;
+        typedef vislib::String<T> String;
         typedef vislib::sys::CmdLineParser<T> Parser;
         typedef typename Parser::Argument Argument;
         typedef typename Parser::Option Option;
@@ -278,27 +278,27 @@ namespace cluster {
         Parser parser;
         Argument *arg = NULL;
 
-        Option optServer(the::text::string_converter::convert<String>(_T("server-node")), 
-            the::text::string_converter::convert<String>(_T("Specifies the name of the server node.")),
+        Option optServer(String(_T("server-node")), 
+            String(_T("Specifies the name of the server node.")),
             Option::FLAG_UNIQUE, 
             ValueDesc::ValueList(Option::STRING_VALUE, 
-                the::text::string_converter::convert<String>(_T("host")), 
-                the::text::string_converter::convert<String>(_T("The host name or IP address of the server node."))));
+                String(_T("host")), 
+                String(_T("The host name or IP address of the server node."))));
         parser.AddOption(&optServer);
 
-        Option optPort(the::text::string_converter::convert<String>(_T("server-port")), 
-            the::text::string_converter::convert<String>(_T("Specifies the post of the server node.")),
+        Option optPort(String(_T("server-port")), 
+            String(_T("Specifies the post of the server node.")),
             Option::FLAG_UNIQUE, 
             ValueDesc::ValueList(Option::INT_VALUE, 
-                the::text::string_converter::convert<String>(_T("port")), 
-                the::text::string_converter::convert<String>(_T("The port the server node is listening on."))));
+                String(_T("port")), 
+                String(_T("The port the server node is listening on."))));
         parser.AddOption(&optPort);
 
         if (parser.Parse(inOutCmdLine.ArgC(), inOutCmdLine.ArgV()) >= 0) {
             if ((arg = optServer.GetFirstOccurrence()) != NULL) {
                 // TODO: IPv6
                 this->serverAddress.SetIPAddress(IPAddress::Create(
-                    the::text::string_converter::convert<the::astring>(arg->GetValueString()).c_str()));
+                    StringA(arg->GetValueString())));
             } else {
                 // TODO: IPv6
                 this->serverAddress.SetIPAddress(IPAddress::LOCALHOST);

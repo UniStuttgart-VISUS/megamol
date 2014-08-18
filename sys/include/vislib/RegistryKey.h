@@ -17,10 +17,10 @@
 
 #include <windows.h>
 #include "vislib/Array.h"
-#include "the/multi_sz.h"
+#include "vislib/MultiSz.h"
 #include "vislib/RawStorage.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 namespace vislib {
 namespace sys {
@@ -115,7 +115,7 @@ namespace sys {
          * @return The error code
          */
         DWORD CreateSubKey(RegistryKey& outKey,
-            const the::astring& name, REGSAM sam = 0);
+            const vislib::StringA& name, REGSAM sam = 0);
 
         /**
          * Creates a new sub key
@@ -128,7 +128,7 @@ namespace sys {
          * @return The error code
          */
         DWORD CreateSubKey(RegistryKey& outKey,
-            const the::wstring& name, REGSAM sam = 0);
+            const vislib::StringW& name, REGSAM sam = 0);
 
         /**
          * Deletes a sub key
@@ -137,7 +137,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD DeleteSubKey(const the::astring& name);
+        DWORD DeleteSubKey(const vislib::StringA& name);
 
         /**
          * Deletes a sub key
@@ -146,7 +146,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD DeleteSubKey(const the::wstring& name);
+        DWORD DeleteSubKey(const vislib::StringW& name);
 
         /**
          * Deletes a value
@@ -155,7 +155,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD DeleteValue(const the::astring& name);
+        DWORD DeleteValue(const vislib::StringA& name);
 
         /**
          * Deletes a value
@@ -164,35 +164,35 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD DeleteValue(const the::wstring& name);
+        DWORD DeleteValue(const vislib::StringW& name);
 
         /**
          * Gets the names of the subkeys of this key
          *
          * @return The names of the subkeys of this key
          */
-        vislib::Array<the::astring> GetSubKeysA(void) const;
+        vislib::Array<vislib::StringA> GetSubKeysA(void) const;
 
         /**
          * Gets the names of the subkeys of this key
          *
          * @return The names of the subkeys of this key
          */
-        vislib::Array<the::wstring> GetSubKeysW(void) const;
+        vislib::Array<vislib::StringW> GetSubKeysW(void) const;
 
         /**
          * Gets the names of the values of this key. The empty name is omitted.
          *
          * @return The names of the values of this key
          */
-        vislib::Array<the::astring> GetValueNamesA(void) const;
+        vislib::Array<vislib::StringA> GetValueNamesA(void) const;
 
         /**
          * Gets the names of the values of this key. The empty name is omitted.
          *
          * @return The names of the values of this key
          */
-        vislib::Array<the::wstring> GetValueNamesW(void) const;
+        vislib::Array<vislib::StringW> GetValueNamesW(void) const;
 
         /**
          * Gets the value type of a value of this key.
@@ -201,7 +201,7 @@ namespace sys {
          *
          * @return The value type of a value of this key.
          */
-        RegValueType GetValueType(const the::astring& name) const;
+        RegValueType GetValueType(const vislib::StringA& name) const;
 
         /**
          * Gets the value type of a value of this key.
@@ -210,7 +210,7 @@ namespace sys {
          *
          * @return The value type of a value of this key.
          */
-        RegValueType GetValueType(const the::wstring& name) const;
+        RegValueType GetValueType(const vislib::StringW& name) const;
 
         /**
          * Gets a value of type REGVAL_BINARY (or any other type)
@@ -220,7 +220,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name,
+        DWORD GetValue(const vislib::StringA& name,
             vislib::RawStorage& outData) const;
 
         /**
@@ -231,7 +231,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name,
+        DWORD GetValue(const vislib::StringW& name,
             vislib::RawStorage& outData) const;
 
         /**
@@ -243,8 +243,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name, void* outData,
-            size_t dataSize) const;
+        DWORD GetValue(const vislib::StringA& name, void* outData,
+            SIZE_T dataSize) const;
 
         /**
          * Gets a value of type REGVAL_BINARY (or any other type)
@@ -255,8 +255,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name, void* outData,
-            size_t dataSize) const;
+        DWORD GetValue(const vislib::StringW& name, void* outData,
+            SIZE_T dataSize) const;
 
         /**
          * Gets a value of type REGVAL_STRING or REGVAL_EXPAND_SZ
@@ -266,8 +266,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name,
-            the::astring& outStr) const;
+        DWORD GetValue(const vislib::StringA& name,
+            vislib::StringA& outStr) const;
 
         /**
          * Gets a value of type REGVAL_STRING or REGVAL_EXPAND_SZ
@@ -277,8 +277,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name,
-            the::wstring& outStr) const;
+        DWORD GetValue(const vislib::StringW& name,
+            vislib::StringW& outStr) const;
 
         /**
          * Gets a value of type REGVAL_STRING or REGVAL_EXPAND_SZ
@@ -288,8 +288,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name,
-            the::wstring& outStr) const;
+        DWORD GetValue(const vislib::StringA& name,
+            vislib::StringW& outStr) const;
 
         /**
          * Gets a value of type REGVAL_STRING or REGVAL_EXPAND_SZ
@@ -299,8 +299,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name,
-            the::astring& outStr) const;
+        DWORD GetValue(const vislib::StringW& name,
+            vislib::StringA& outStr) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -311,8 +311,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name,
-            the::multi_sza& outStrs) const;
+        DWORD GetValue(const vislib::StringA& name,
+            vislib::MultiSzA& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -323,8 +323,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name,
-            the::multi_szw& outStrs) const;
+        DWORD GetValue(const vislib::StringW& name,
+            vislib::MultiSzW& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -335,8 +335,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name,
-            the::multi_szw& outStrs) const;
+        DWORD GetValue(const vislib::StringA& name,
+            vislib::MultiSzW& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -347,8 +347,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name,
-            the::multi_sza& outStrs) const;
+        DWORD GetValue(const vislib::StringW& name,
+            vislib::MultiSzA& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -359,8 +359,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name,
-            vislib::Array<the::astring>& outStrs) const;
+        DWORD GetValue(const vislib::StringA& name,
+            vislib::Array<vislib::StringA>& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -371,8 +371,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name,
-            vislib::Array<the::wstring>& outStrs) const;
+        DWORD GetValue(const vislib::StringW& name,
+            vislib::Array<vislib::StringW>& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -383,8 +383,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name,
-            vislib::Array<the::wstring>& outStrs) const;
+        DWORD GetValue(const vislib::StringA& name,
+            vislib::Array<vislib::StringW>& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_STRING, REGVAL_EXPAND_SZ, or
@@ -395,8 +395,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name,
-            vislib::Array<the::astring>& outStrs) const;
+        DWORD GetValue(const vislib::StringW& name,
+            vislib::Array<vislib::StringA>& outStrs) const;
 
         /**
          * Gets a value of type REGVAL_DWORD or REGVAL_QWORD
@@ -406,7 +406,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name, uint32_t& outVal) const;
+        DWORD GetValue(const vislib::StringA& name, UINT32& outVal) const;
 
         /**
          * Gets a value of type REGVAL_DWORD or REGVAL_QWORD
@@ -416,7 +416,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name, uint32_t& outVal) const;
+        DWORD GetValue(const vislib::StringW& name, UINT32& outVal) const;
 
         /**
          * Gets a value of type REGVAL_DWORD or REGVAL_QWORD
@@ -426,7 +426,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::astring& name, uint64_t& outVal) const;
+        DWORD GetValue(const vislib::StringA& name, UINT64& outVal) const;
 
         /**
          * Gets a value of type REGVAL_DWORD or REGVAL_QWORD
@@ -436,7 +436,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD GetValue(const the::wstring& name, uint64_t& outVal) const;
+        DWORD GetValue(const vislib::StringW& name, UINT64& outVal) const;
 
         /**
          * Gets the size of the data of a value in bytes
@@ -445,7 +445,7 @@ namespace sys {
          *
          * @return The size of the data in bytes
          */
-        size_t GetValueSize(const the::astring& name) const;
+        SIZE_T GetValueSize(const vislib::StringA& name) const;
 
         /**
          * Gets the size of the data of a value in bytes
@@ -454,7 +454,7 @@ namespace sys {
          *
          * @return The size of the data in bytes
          */
-        size_t GetValueSize(const the::wstring& name) const;
+        SIZE_T GetValueSize(const vislib::StringW& name) const;
 
         /**
          * Answer whether or not this object represents a valid key handle
@@ -475,7 +475,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD OpenSubKey(RegistryKey& outKey, const the::astring& name,
+        DWORD OpenSubKey(RegistryKey& outKey, const vislib::StringA& name,
             REGSAM sam = 0) const;
 
         /**
@@ -488,7 +488,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD OpenSubKey(RegistryKey& outKey, const the::wstring& name,
+        DWORD OpenSubKey(RegistryKey& outKey, const vislib::StringW& name,
             REGSAM sam = 0) const;
 
         /**
@@ -510,7 +510,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name,
+        DWORD SetValue(const vislib::StringA& name,
             const vislib::RawStorage& data);
 
         /**
@@ -521,7 +521,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name,
+        DWORD SetValue(const vislib::StringW& name,
             const vislib::RawStorage& data);
 
         /**
@@ -533,8 +533,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name, const void* data,
-            size_t size);
+        DWORD SetValue(const vislib::StringA& name, const void* data,
+            SIZE_T size);
 
         /**
          * Sets a value of this key of type 'REGVAL_BINARY'
@@ -545,8 +545,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name, const void* data,
-            size_t size);
+        DWORD SetValue(const vislib::StringW& name, const void* data,
+            SIZE_T size);
 
         /**
          * Sets a value of this key of type 'REGVAL_STRING' or
@@ -559,8 +559,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name,
-            const the::astring& str, bool expandable = false);
+        DWORD SetValue(const vislib::StringA& name,
+            const vislib::StringA& str, bool expandable = false);
 
         /**
          * Sets a value of this key of type 'REGVAL_STRING' or
@@ -573,8 +573,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name,
-            const the::wstring& str, bool expandable = false);
+        DWORD SetValue(const vislib::StringW& name,
+            const vislib::StringW& str, bool expandable = false);
 
         /**
          * Sets a value of this key of type 'REGVAL_STRING' or
@@ -587,8 +587,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name,
-            const the::wstring& str, bool expandable = false);
+        DWORD SetValue(const vislib::StringA& name,
+            const vislib::StringW& str, bool expandable = false);
 
         /**
          * Sets a value of this key of type 'REGVAL_STRING' or
@@ -601,8 +601,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name,
-            const the::astring& str, bool expandable = false);
+        DWORD SetValue(const vislib::StringW& name,
+            const vislib::StringA& str, bool expandable = false);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'
@@ -612,8 +612,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name,
-            const the::multi_sza& strs);
+        DWORD SetValue(const vislib::StringA& name,
+            const vislib::MultiSzA& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'
@@ -623,8 +623,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name,
-            const the::multi_szw& strs);
+        DWORD SetValue(const vislib::StringW& name,
+            const vislib::MultiSzW& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'
@@ -634,8 +634,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name,
-            const the::multi_szw& strs);
+        DWORD SetValue(const vislib::StringA& name,
+            const vislib::MultiSzW& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'
@@ -645,8 +645,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name,
-            const the::multi_sza& strs);
+        DWORD SetValue(const vislib::StringW& name,
+            const vislib::MultiSzA& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'. Empty strings
@@ -657,8 +657,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name,
-            const vislib::Array<the::astring>& strs);
+        DWORD SetValue(const vislib::StringA& name,
+            const vislib::Array<vislib::StringA>& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'. Empty strings
@@ -669,8 +669,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name,
-            const vislib::Array<the::wstring>& strs);
+        DWORD SetValue(const vislib::StringW& name,
+            const vislib::Array<vislib::StringW>& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'. Empty strings
@@ -681,8 +681,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name,
-            const vislib::Array<the::wstring>& strs);
+        DWORD SetValue(const vislib::StringA& name,
+            const vislib::Array<vislib::StringW>& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_MULTI_SZ'. Empty strings
@@ -693,8 +693,8 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name,
-            const vislib::Array<the::astring>& strs);
+        DWORD SetValue(const vislib::StringW& name,
+            const vislib::Array<vislib::StringA>& strs);
 
         /**
          * Sets a value of this key of type 'REGVAL_DWORD'
@@ -704,7 +704,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name, int32_t val);
+        DWORD SetValue(const vislib::StringA& name, INT32 val);
 
         /**
          * Sets a value of this key of type 'REGVAL_DWORD'
@@ -714,7 +714,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name, int32_t val);
+        DWORD SetValue(const vislib::StringW& name, INT32 val);
 
         /**
          * Sets a value of this key of type 'REGVAL_DWORD'
@@ -724,7 +724,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name, uint32_t val);
+        DWORD SetValue(const vislib::StringA& name, UINT32 val);
 
         /**
          * Sets a value of this key of type 'REGVAL_DWORD'
@@ -734,7 +734,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name, uint32_t val);
+        DWORD SetValue(const vislib::StringW& name, UINT32 val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'
@@ -744,7 +744,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name, int64_t val);
+        DWORD SetValue(const vislib::StringA& name, INT64 val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'
@@ -754,7 +754,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name, int64_t val);
+        DWORD SetValue(const vislib::StringW& name, INT64 val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'
@@ -764,7 +764,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::astring& name, uint64_t val);
+        DWORD SetValue(const vislib::StringA& name, UINT64 val);
 
         /**
          * Sets a value of this key of type 'REGVAL_QWORD'
@@ -774,7 +774,7 @@ namespace sys {
          *
          * @return The error code
          */
-        DWORD SetValue(const the::wstring& name, uint64_t val);
+        DWORD SetValue(const vislib::StringW& name, UINT64 val);
 
         /**
          * Assignment operator. This will duplicate the key 'rhs' represents

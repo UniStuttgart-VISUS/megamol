@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -58,7 +58,7 @@ namespace graphics {
 		 * Marks the beginning of a frame. Should be called immediately before 
 		 * the first rendering command (e.g. glClear) of one frame is called.
 		 *
-		 * @throws invalid_operation_exception if FrameEnd was not called since the 
+		 * @throws IllegalStateException if FrameEnd was not called since the 
 		 *								 last time FrameBegin was called.
 		 */
 		void FrameBegin(void);
@@ -67,7 +67,7 @@ namespace graphics {
 		 * Marks the end of a frame. Should be called immediately after the 
 		 * last rendering command (e.g. *SwapBuffers) of one frame is called.
 		 *
-		 * @throws invalid_operation_exception if no FrameBegin was called since the
+		 * @throws IllegalStateException if no FrameBegin was called since the
 		 *								 last time FrameEnd was called or since
 		 *                               this object was created.
 		 */
@@ -147,7 +147,7 @@ namespace graphics {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Always.
+         * @throws UnsupportedOperationException Always.
          */
         FpsCounter(const FpsCounter& rhs);
 
@@ -156,7 +156,7 @@ namespace graphics {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws argument_exception if &rhs != this.
+         * @throws IllegalParamException if &rhs != this.
          */
         FpsCounter& operator =(const FpsCounter& rhs);
 

@@ -6,7 +6,7 @@
  */
 
 #include "vislib/Ternary.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 
 
 /*
@@ -62,28 +62,28 @@ vislib::math::Ternary::~Ternary(void) {
 /*
  * vislib::math::Ternary::Parse
  */
-bool vislib::math::Ternary::Parse(const the::astring& str) {
-    if (the::text::string_utility::equals(str, "yes", false) || the::text::string_utility::equals(str, "y", false)
-            || the::text::string_utility::equals(str, "true", false) || the::text::string_utility::equals(str, "t", false)
-            || the::text::string_utility::equals(str, "on", false)) {
+bool vislib::math::Ternary::Parse(const vislib::StringA& str) {
+    if (str.Equals("yes", false) || str.Equals("y", false)
+            || str.Equals("true", false) || str.Equals("t", false)
+            || str.Equals("on", false)) {
         this->value = 1;
         return true;
     }
-    if (the::text::string_utility::equals(str, "no", false) || the::text::string_utility::equals(str, "n", false)
-            || the::text::string_utility::equals(str, "false", false) || the::text::string_utility::equals(str, "f", false)
-            || the::text::string_utility::equals(str, "off", false)) {
+    if (str.Equals("no", false) || str.Equals("n", false)
+            || str.Equals("false", false) || str.Equals("f", false)
+            || str.Equals("off", false)) {
         this->value = -1;
         return true;
     }
-    if (the::text::string_utility::equals(str, "undefined", false) || the::text::string_utility::equals(str, "undef", false)
-            || the::text::string_utility::equals(str, "unknown", false) || the::text::string_utility::equals(str, "u", false)
-            || the::text::string_utility::equals(str, "x", false)) { // x comes from 'digital design' VHDL
+    if (str.Equals("undefined", false) || str.Equals("undef", false)
+            || str.Equals("unknown", false) || str.Equals("u", false)
+            || str.Equals("x", false)) { // x comes from 'digital design' VHDL
         this->value = 0;
         return true;
     }
 
     try {
-        *this = the::text::string_utility::parse_int(str);
+        *this = CharTraitsA::ParseInt(str);
     } catch(...) {
     }
 
@@ -94,21 +94,21 @@ bool vislib::math::Ternary::Parse(const the::astring& str) {
 /*
  * vislib::math::Ternary::Parse
  */
-bool vislib::math::Ternary::Parse(const the::wstring& str) {
+bool vislib::math::Ternary::Parse(const vislib::StringW& str) {
     // I know, I am lazy ... I don't care
-    return this->Parse(the::text::string_converter::to_a(str));
+    return this->Parse(vislib::StringA(str));
 }
 
 
 /*
  * vislib::math::Ternary::ToStringA
  */
-the::astring vislib::math::Ternary::ToStringA(void) const {
+vislib::StringA vislib::math::Ternary::ToStringA(void) const {
     switch (this->value) {
         case 1: return "true";
         case 0: return "unknown";
         case -1: return "false";
-        default: THE_ASSERT(false);
+        default: ASSERT(false);
     }
     return "";
 }
@@ -117,12 +117,12 @@ the::astring vislib::math::Ternary::ToStringA(void) const {
 /*
  * vislib::math::Ternary::ToStringW
  */
-the::wstring vislib::math::Ternary::ToStringW(void) const {
+vislib::StringW vislib::math::Ternary::ToStringW(void) const {
     switch (this->value) {
         case 1: return L"true";
         case 0: return L"unknown";
         case -1: return L"false";
-        default: THE_ASSERT(false);
+        default: ASSERT(false);
     }
     return L"";
 }

@@ -18,7 +18,7 @@
 #include "vislib/InputModifiers.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/PtrArray.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 /*
@@ -81,11 +81,11 @@ private:
     template<class T> class BoxTest : public AbstractTest {
     protected:
         float w, h;
-        T txt;
+        vislib::String<vislib::CharTraits<T> > txt;
     public:
         BoxTest(float x, float y, float w, float h, float z, unsigned char colr, unsigned char colg, unsigned char colb,
                 vislib::graphics::AbstractFont *& font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align,
-                const T& txt)
+                const vislib::String<vislib::CharTraits<T> >& txt)
                 : AbstractTest(x, y, z, colr, colg, colb, font, size, flipY, align), w(w), h(h), txt(txt) {
         }
         virtual ~BoxTest(void) {
@@ -95,11 +95,11 @@ private:
 
     template<class T> class LineTest : public AbstractTest {
     protected:
-        T txt;
+        vislib::String<vislib::CharTraits<T> > txt;
     public:
         LineTest(float x, float y, float z, unsigned char colr, unsigned char colg, unsigned char colb,
                 vislib::graphics::AbstractFont *& font, float size, bool flipY, vislib::graphics::AbstractFont::Alignment align,
-                const T& txt)
+                const vislib::String<vislib::CharTraits<T> >& txt)
                 : AbstractTest(x, y, z, colr, colg, colb, font, size, flipY, align), txt(txt) {
         }
         virtual ~LineTest(void) {

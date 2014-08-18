@@ -23,8 +23,8 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/Socket.h"
 #include "vislib/SmartPtr.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 
@@ -86,7 +86,7 @@ namespace cluster {
              */
             PeerNode(const IPEndPoint& discoveryAddress, 
                 const IPEndPoint& responseAddress,
-                const unsigned int cntResponseChances, 
+                const UINT cntResponseChances, 
                 DiscoveryConfigEx *discoverySource);
 
             /**
@@ -127,7 +127,7 @@ namespace cluster {
              *
              * @return The IPv4 address of the peer node.
              *
-             * @throws invalid_operation_exception If the peer node is not IPv4.
+             * @throws IllegalStateException If the peer node is not IPv4.
              */
             inline IPAddress getDiscoveryAddress4(void) const {
                 return this->discoveryAddress.GetIPAddress4();
@@ -143,7 +143,7 @@ namespace cluster {
             }
 
             inline const DiscoveryConfigEx& getDiscoverySource(void) const {
-                THE_ASSERT(this->discoverySource != NULL);
+                ASSERT(this->discoverySource != NULL);
                 return *this->discoverySource;
             }
 
@@ -169,7 +169,7 @@ namespace cluster {
             bool isValid(void) const;
 
             /** Implicit disconnect detection counter. */
-            unsigned int cntResponseChances;
+            UINT cntResponseChances;
 
             /** Discovery service address of the peer node (remote address). */
             IPEndPoint discoveryAddress;
@@ -232,7 +232,7 @@ namespace cluster {
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
                 const IPAddress& bcastAddress,
-                const uint16_t bindPort = DEFAULT_PORT);
+                const USHORT bindPort = DEFAULT_PORT);
 
             /**
              * Create a new configuration with all parameters manually 
@@ -265,7 +265,7 @@ namespace cluster {
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
                 const IPAddress6& bcastAddress,
-                const uint16_t bindPort = DEFAULT_PORT);
+                const USHORT bindPort = DEFAULT_PORT);
 
             /**
              * Create a new configuration with all parameters manually 
@@ -299,7 +299,7 @@ namespace cluster {
              */
             DiscoveryConfig(const IPEndPoint& responseAddress, 
                 const IPAgnosticAddress& bcastAddress,
-                const uint16_t bindPort = DEFAULT_PORT);
+                const USHORT bindPort = DEFAULT_PORT);
 
             /**
              * Create a new configuration with all parameters manually 
@@ -332,12 +332,12 @@ namespace cluster {
              *                        All discovery requests are directed to
              *                        this port.
              *
-             * @throws argument_exception If the broadcast address to send
+             * @throws IllegalParamException If the broadcast address to send
              *                               alive beacons to cannot be 
              *                               determined from 'responseAddress'.
              */
             DiscoveryConfig(const IPEndPoint& responseAddress,
-                const uint16_t bindPort = DEFAULT_PORT);
+                const USHORT bindPort = DEFAULT_PORT);
 
             /**
              * Clone 'rhs'.
@@ -465,19 +465,19 @@ namespace cluster {
         typedef vislib::SmartPtr<PeerNode> PeerHandle;
 
         /** The default port number used by the discovery service. */
-        static const uint16_t DEFAULT_PORT;
+        static const USHORT DEFAULT_PORT;
 
         /** The default request interval in milliseconds. */
-        static const unsigned int DEFAULT_REQUEST_INTERVAL;
+        static const UINT DEFAULT_REQUEST_INTERVAL;
 
         /** The default number of chances to respond before disconnect. */
-        static const unsigned int DEFAULT_RESPONSE_CHANCES;
+        static const UINT DEFAULT_RESPONSE_CHANCES;
 
         /** 
          * If this behaviour flag is set, the discovery service will only 
          * collect other nodes and not send alive message itself. 
          */
-        static const uint32_t FLAG_OBSERVE_ONLY;
+        static const UINT32 FLAG_OBSERVE_ONLY;
 
         /**
          * If this behaviour flag is set, the receiver threads will not use
@@ -486,23 +486,23 @@ namespace cluster {
          * if multiple instances of the DiscoveryService are running on the
          * same machine and want to serve the same cluster.
          */
-        static const uint32_t FLAG_SHARE_SOCKETS;
+        static const UINT32 FLAG_SHARE_SOCKETS;
 
         /**
          * The maximum size of user data that can be sent via the cluster
          * discovery service in bytes.
          */
-        static const size_t MAX_USER_DATA = 256;
+        static const SIZE_T MAX_USER_DATA = 256;
 
         /** 
          * The maximum length of a cluster name in characters, including the
          * trailing zero. 
          */
-        static const size_t MAX_NAME_LEN = MAX_USER_DATA 
+        static const SIZE_T MAX_NAME_LEN = MAX_USER_DATA 
             - sizeof(struct sockaddr_storage);
 
         /** The first message ID that can be used for a user message. */
-        static const uint32_t MSG_TYPE_USER = 16;
+        static const UINT32 MSG_TYPE_USER = 16;
 
         /**
          * Create a new instance.
@@ -549,9 +549,9 @@ namespace cluster {
          *
          * @return The number of known peer nodes.
          */
-        inline size_t CountPeers(void) const {
+        inline SIZE_T CountPeers(void) const {
             this->peerNodesCritSect.Lock();
-            size_t retval = this->peerNodes.Count();
+            SIZE_T retval = this->peerNodes.Count();
             this->peerNodesCritSect.Unlock();
             return retval;
         }
@@ -572,7 +572,7 @@ namespace cluster {
          *
          * @return The number of chances for a node to answer.
          */
-        inline unsigned int GetCntResponseChances(void) const {
+        inline UINT GetCntResponseChances(void) const {
             return this->cntResponseChances;
         }
 
@@ -609,7 +609,7 @@ namespace cluster {
          *
          * @return The configuration flags of the discovery service.
          */
-        inline uint32_t GetFlags(void) const {
+        inline UINT32 GetFlags(void) const {
             return this->flags;
         }
 
@@ -618,7 +618,7 @@ namespace cluster {
          *
          * @return The name.
          */
-        inline const the::astring& GetName(void) const {
+        inline const StringA& GetName(void) const {
             return this->name;
         }
 
@@ -627,7 +627,7 @@ namespace cluster {
          *
          * @return The interval between two discovery  requests in milliseconds.
          */
-        inline unsigned int GetRequestInterval(void) const {
+        inline UINT GetRequestInterval(void) const {
             return this->requestInterval;
         }
 
@@ -641,7 +641,7 @@ namespace cluster {
          * @return The end point that has been specified by the peer node for 
          *         user communication.
          *
-         * @throws argument_exception If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          */
         inline IPEndPoint GetResponseAddress(const PeerHandle& hPeer) const {
             return (*this)[hPeer];
@@ -687,9 +687,9 @@ namespace cluster {
          *
          * @return true if the specified node is this node, false otherwise.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
+         * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        bool IsSelf(const int idx) const;
+        bool IsSelf(const INT idx) const;
 
         /**
          * Answer whether the sockets of the receiver threads may be shared or 
@@ -743,12 +743,12 @@ namespace cluster {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws argument_exception If 'msgType' is below MSG_TYPE_USER,
+         * @throws IllegalParamException If 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const uint32_t msgType, const void *msgBody, 
-            const size_t msgSize);
+        UINT SendUserMessage(const UINT32 msgType, const void *msgBody, 
+            const SIZE_T msgSize);
 
         /**
          * Send a user-defined message to the node that is identified with the
@@ -770,13 +770,13 @@ namespace cluster {
          *
          * @throws SocketException       If the datagram socket for sending the 
          *                               user message could not be created.
-         * @throws argument_exception If 'hPeer' is not a valid handle.
+         * @throws IllegalParamException If 'hPeer' is not a valid handle.
          *                               or 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        unsigned int SendUserMessage(const PeerHandle& hPeer, const uint32_t msgType,
-            const void *msgBody, const size_t msgSize);
+        UINT SendUserMessage(const PeerHandle& hPeer, const UINT32 msgType,
+            const void *msgBody, const SIZE_T msgSize);
 
         /**
          * Change the interval between two discovery requests.
@@ -787,10 +787,10 @@ namespace cluster {
          * @param requestInterval The interval between two discovery  requests 
          *                        in milliseconds.
          */
-        //inline void SetRequestInterval(const unsigned int requestInterval) {
+        //inline void SetRequestInterval(const UINT requestInterval) {
         //    sys::Interlocked::Exchange(
-        //        reinterpret_cast<int32_t *>(&this->requestInterval),
-        //        static_cast<int32_t>(requestInterval));
+        //        reinterpret_cast<INT32 *>(&this->requestInterval),
+        //        static_cast<INT32>(requestInterval));
         //}
 
         /**
@@ -826,18 +826,18 @@ namespace cluster {
          *                                 removed from this nodes list of 
          *                                 known peers.
          *
-         * @throws the::system::system_exception If the creation of one or more threads 
+         * @throws SystemException If the creation of one or more threads 
          *                         failed.
          * @throws std::bad_alloc  If there is not enough memory for the threads
          *                         available.
          */
         virtual void Start(const char *name, 
-            const DiscoveryConfig *configs, const size_t cntConfigs,
-            const unsigned int cntExpectedNodes = 0,
-            const uint32_t flags = 0,
-            const unsigned int requestInterval = DEFAULT_REQUEST_INTERVAL,
-            const unsigned int requestIntervalIntensive = DEFAULT_REQUEST_INTERVAL / 2,
-            const unsigned int cntResponseChances = DEFAULT_RESPONSE_CHANCES);
+            const DiscoveryConfig *configs, const SIZE_T cntConfigs,
+            const UINT cntExpectedNodes = 0,
+            const UINT32 flags = 0,
+            const UINT requestInterval = DEFAULT_REQUEST_INTERVAL,
+            const UINT requestIntervalIntensive = DEFAULT_REQUEST_INTERVAL / 2,
+            const UINT cntResponseChances = DEFAULT_RESPONSE_CHANCES);
 
         /**
          * Answer a string representation of the discovery service, which is 
@@ -845,7 +845,7 @@ namespace cluster {
          *
          * @return A string representation.
          */
-        inline the::astring ToStringA(void) const {
+        inline StringA ToStringA(void) const {
             return this->GetName();
         }
 
@@ -858,7 +858,7 @@ namespace cluster {
          *
          * @return A string representing the peer node.
          */
-        the::astring ToStringA(const PeerHandle& hPeer) const;
+        StringA ToStringA(const PeerHandle& hPeer) const;
 
         /**
          * Answer a string representation of the discovery service, which is 
@@ -866,8 +866,8 @@ namespace cluster {
          *
          * @return A string representation.
          */
-        inline the::wstring ToStringW(void) const {
-            return the::text::string_converter::to_w(this->GetName());
+        inline StringW ToStringW(void) const {
+            return StringW(this->GetName());
         }
 
         /**
@@ -879,7 +879,7 @@ namespace cluster {
          *
          * @return A string representing the peer node.
          */
-        the::wstring ToStringW(const PeerHandle& hPeer) const;
+        StringW ToStringW(const PeerHandle& hPeer) const;
 
         /** 
          * Stop the discovery service.
@@ -890,7 +890,7 @@ namespace cluster {
          * @param noWait If set true, the method will not block.
          *
          * @return true, if the threads have been terminated without any
-         *         problem, false, if a the::system::system_exception has been thrown by 
+         *         problem, false, if a SystemException has been thrown by 
          *         one of the threads or if the thread did not acknowledge
          *         a 'noWait' terminate.
          */
@@ -905,9 +905,9 @@ namespace cluster {
          *
          * @return The response address of the 'idx'th node.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
+         * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline IPEndPoint operator [](const int idx) const {
+        inline IPEndPoint operator [](const INT idx) const {
             this->peerNodesCritSect.Lock();
             IPEndPoint retval = this->peerNodes[idx]->responseAddress;
             this->peerNodesCritSect.Unlock();
@@ -923,9 +923,9 @@ namespace cluster {
          *
          * @return The response address of the 'idx'th node.
          *
-         * @throws index_out_of_range_exception If 'idx' is not a valid node index.
+         * @throws OutOfRangeException If 'idx' is not a valid node index.
          */
-        inline IPEndPoint operator [](const size_t idx) const {
+        inline IPEndPoint operator [](const SIZE_T idx) const {
             this->peerNodesCritSect.Lock();
             IPEndPoint retval = this->peerNodes[idx]->responseAddress;
             this->peerNodesCritSect.Unlock();
@@ -941,7 +941,7 @@ namespace cluster {
          * @return The socket address that has been specified by the peer node
          *         for user communication.
          *
-         * @throws argument_exception If 'hPeer' is not a valid handle for
+         * @throws IllegalParamException If 'hPeer' is not a valid handle for
          *                               a cluster member.
          */
         IPEndPoint operator [](const PeerHandle& hPeer) const;
@@ -966,14 +966,14 @@ namespace cluster {
          * UDP datagrams in advance.
          */
         typedef struct Message_t {
-            uint32_t MagicNumber;						    //< Always MAGIC_NUMBER.
-            uint32_t MsgType;							    //< The type identifier.
+            UINT32 MagicNumber;						    //< Always MAGIC_NUMBER.
+            UINT32 MsgType;							    //< The type identifier.
             // Note: 'magicNumber' and 'msgType' can be 32 bit now, because 
             // struct sockaddr_storage must be 64 bit aligned any way.
             union {
                 SenderMessageBody SenderBody;           //< I am here messages.
                 struct sockaddr_storage ResponseAddress;//< Response peer addr.
-                uint8_t UserData[MAX_USER_DATA];		    //< User defined data.
+                BYTE UserData[MAX_USER_DATA];		    //< User defined data.
             };
         } Message;
 
@@ -1003,7 +1003,7 @@ namespace cluster {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual unsigned int Run(void *dcfg);
+            virtual DWORD Run(void *dcfg);
 
             /**
              * Ask the thread to terminate.
@@ -1015,7 +1015,7 @@ namespace cluster {
         private:
 
             /** Flag for terminating the thread safely. */
-            int32_t isRunning;
+            INT32 isRunning;
 
             /** The socket used for receiving messages. */
             Socket socket;
@@ -1043,7 +1043,7 @@ namespace cluster {
             virtual ~DiscoveryConfigEx(void);
 
             inline DiscoveryService& GetDiscoveryService(void) {
-                THE_ASSERT(this->cds != NULL);
+                ASSERT(this->cds != NULL);
                 return *(this->cds);
             }
 
@@ -1155,7 +1155,7 @@ namespace cluster {
              * @return 0, if the work was successfully finished, an error code
              *         otherwise.
              */
-            virtual unsigned int Run(void *cds);
+            virtual DWORD Run(void *cds);
 
             /**
              * Ask the thread to terminate.
@@ -1170,7 +1170,7 @@ namespace cluster {
         private:
 
             /** Flag for terminating the thread safely. */
-            int32_t isRunning;
+            INT32 isRunning;
 
         }; /* end class Sender */
 
@@ -1232,8 +1232,8 @@ namespace cluster {
           * @param msgBody         The body of the message.
           */
          void fireUserMessage(const IPEndPoint& sender, 
-             DiscoveryConfigEx *discoverySource, const uint32_t msgType, 
-             const uint8_t *msgBody); 
+             DiscoveryConfigEx *discoverySource, const UINT32 msgType, 
+             const BYTE *msgBody); 
 
         /**
          * Answer whether 'hPeer' is a valid peer node handle.
@@ -1255,7 +1255,7 @@ namespace cluster {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        intptr_t peerFromResponseAddress(const IPEndPoint& addr) const;
+        INT_PTR peerFromResponseAddress(const IPEndPoint& addr) const;
 
         /**
          * Answer the index of the peer node that runs its discovery 
@@ -1270,7 +1270,7 @@ namespace cluster {
          *
          * @return The index of the peer node or -1, if not found.
          */
-        intptr_t peerFromDiscoveryAddr(const IPEndPoint& addr) const;
+        INT_PTR peerFromDiscoveryAddr(const IPEndPoint& addr) const;
 
         /**
          * Prepares the list of known peer nodes for a new request. 
@@ -1292,7 +1292,7 @@ namespace cluster {
          * The following steps are taken:
          *
          * All user input, i. e. 'msgType', 'msgBody' and 'msgSize' is validated
-         * and an argument_exception is thrown, if 'msgType' is not in the
+         * and an IllegalParamException is thrown, if 'msgType' is not in the
          * user message range, if 'msgBody' is a NULL pointer of 'msgSize' is 
          * too large.
          *
@@ -1307,12 +1307,12 @@ namespace cluster {
          *                most MAX_USER_DATA. All bytes between 'msgSize' and
          *                MAX_USER_DATA will be zeroed.
          *
-         * @throws argument_exception If 'msgType' is below MSG_TYPE_USER,
+         * @throws IllegalParamException If 'msgType' is below MSG_TYPE_USER,
          *                               or 'msgBody' is a NULL pointer,
          *                               or 'msgSize' > MAX_USER_DATA.
          */
-        void prepareUserMessage(Message& outMsg, const uint32_t msgType,
-            const void *msgBody, const size_t msgSize);
+        void prepareUserMessage(Message& outMsg, const UINT32 msgType,
+            const void *msgBody, const SIZE_T msgSize);
 
         /**
          * Remove the peer node having the user communication address 'address'.
@@ -1327,37 +1327,37 @@ namespace cluster {
         void removePeerNode(const IPEndPoint& address);
 
         /** The magic number at the begin of each message. */
-        static const uint32_t MAGIC_NUMBER;
+        static const UINT32 MAGIC_NUMBER;
 
         /** Message type ID of a repeated discovery request. */
-        static const uint32_t MSG_TYPE_IAMALIVE = 2;
+        static const UINT32 MSG_TYPE_IAMALIVE = 2;
 
         /** Message type ID of an initial discovery request. */
-        static const uint32_t MSG_TYPE_IAMHERE = 1;
+        static const UINT32 MSG_TYPE_IAMHERE = 1;
 
         /** Message type ID of the explicit disconnect notification. */
-        static const uint32_t MSG_TYPE_SAYONARA = 3;
+        static const UINT32 MSG_TYPE_SAYONARA = 3;
 
         /** 
          * The number of expected nodes. Until this number is reached, the
          * discovery service performs an intensive search for peer nodes.
          */
-        unsigned int cntExpectedNodes;
+        UINT cntExpectedNodes;
 
         /** 
          * The number of chances a node gets to respond before it is implicitly 
          * disconnected from the cluster.
          */
-        unsigned int cntResponseChances;
+        UINT cntResponseChances;
 
         /** Boolean flags that specialise the behaviour of the object. */
-        unsigned int flags;
+        UINT flags;
 
         /** The time in milliseconds between two discovery requests. */
-        unsigned int requestInterval;
+        UINT requestInterval;
 
         /** The interval for intensive search in milliseconds. */
-        unsigned int requestIntervalIntensive;
+        UINT requestIntervalIntensive;
 
         /** The per-adapter configurations. */
         ConfigList configs;
@@ -1366,7 +1366,7 @@ namespace cluster {
         ListenerList listeners;
 
         /** The name of the cluster this discovery service should form. */
-        the::astring name;
+        StringA name;
 
         /** 
          * The thread sending the alive beacons of this node to the broadcast

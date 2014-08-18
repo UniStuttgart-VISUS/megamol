@@ -23,8 +23,8 @@
 #endif /* _MSC_VER */
 
 
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -42,10 +42,10 @@ namespace sys {
     public:
 
         /** This type is used for offsets when seeking in files. */
-        typedef int64_t FileOffset;
+        typedef INT64 FileOffset;
 
         /** This type is used for size information of files. */
-        typedef uint64_t FileSize;
+        typedef UINT64 FileSize;
 
         /** Possible values for the access mode. */
         enum AccessMode { READ_WRITE = 1, READ_ONLY, WRITE_ONLY };
@@ -94,7 +94,7 @@ namespace sys {
          *         assign the returned pointer to a 'SmartPtr' object). The
          *         return value is 'NULL' if there was an unexpected error.
          *
-         * @throws the::system::system_exception in most error cases.
+         * @throws SystemException in most error cases.
          */
         static File* CreateTempFile(void);
 
@@ -105,7 +105,7 @@ namespace sys {
          *
          * @return outFn
          */
-        static the::astring& CreateTempFileName(the::astring& outFn);
+        static vislib::StringA& CreateTempFileName(vislib::StringA& outFn);
 
         /**
          * Creates a file name for a temporary file
@@ -114,15 +114,15 @@ namespace sys {
          *
          * @return outFn
          */
-        static the::wstring& CreateTempFileName(the::wstring& outFn);
+        static vislib::StringW& CreateTempFileName(vislib::StringW& outFn);
 
         /**
          * Creates a file name for a temporary file
          *
          * @return the file name created
          */
-        static inline the::astring CreateTempFileNameA(void) {
-            the::astring s;
+        static inline vislib::StringA CreateTempFileNameA(void) {
+            vislib::StringA s;
             return CreateTempFileName(s);
         }
 
@@ -131,8 +131,8 @@ namespace sys {
          *
          * @return the file name created
          */
-        static inline the::wstring CreateTempFileNameW(void) {
-            the::wstring s;
+        static inline vislib::StringW CreateTempFileNameW(void) {
+            vislib::StringW s;
             return CreateTempFileName(s);
         }
 
@@ -183,7 +183,7 @@ namespace sys {
          *
          * @return The size of the file.
          *
-         * @throws the::system::system_exception in most error cases.
+         * @throws SystemException in most error cases.
          */
         static FileSize GetSize(const char *filename);
 
@@ -194,7 +194,7 @@ namespace sys {
          *
          * @return The size of the file.
          *
-         * @throws the::system::system_exception in most error cases.
+         * @throws SystemException in most error cases.
          */
         static FileSize GetSize(const wchar_t *filename);
 
@@ -278,7 +278,7 @@ namespace sys {
         /**
          * Forces all buffered data to be written. 
          *
-         * @throws the::system::io::io_exception
+         * @throws IOException
          */
         virtual void Flush(void);
 
@@ -287,7 +287,7 @@ namespace sys {
          *
          * @return The size of the file in bytes.
          *
-         * @throws the::system::io::io_exception If the file size cannot be retrieve, e. g. 
+         * @throws IOException If the file size cannot be retrieve, e. g. 
          *                     because the file has not been opened.
          */
         virtual FileSize GetSize(void) const;
@@ -297,7 +297,7 @@ namespace sys {
          *
          * @return true, if the eof flag is set, false otherwise.
          *
-         * @throws the::system::io::io_exception If the file is not open or the file pointer is at an
+         * @throws IOException If the file is not open or the file pointer is at an
          *                     invalid position at the moment.
          */
         inline bool IsEOF(void) const {
@@ -327,7 +327,7 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws argument_exception
+         * @throws IllegalParamException
          */
         virtual bool Open(const char *filename, const AccessMode accessMode, 
             const ShareMode shareMode, const CreationMode creationMode);
@@ -348,11 +348,11 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws argument_exception
+         * @throws IllegalParamException
          */
-        inline bool Open(const the::astring& filename, const AccessMode accessMode, 
+        inline bool Open(const StringA& filename, const AccessMode accessMode, 
                 const ShareMode shareMode, const CreationMode creationMode) {
-            return this->Open(filename.c_str(), accessMode, shareMode, 
+            return this->Open(filename.PeekBuffer(), accessMode, shareMode, 
                 creationMode);
         }
 
@@ -372,7 +372,7 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws argument_exception
+         * @throws IllegalParamException
          */
         virtual bool Open(const wchar_t *filename, const AccessMode accessMode, 
             const ShareMode shareMode, const CreationMode creationMode);
@@ -393,11 +393,11 @@ namespace sys {
          *         otherwise. In case of an error you can receive additional
          *         information using 'GetLastError'.
          *
-         * @throws argument_exception
+         * @throws IllegalParamException
          */
-        inline bool Open(const the::wstring& filename, const AccessMode accessMode, 
+        inline bool Open(const StringW& filename, const AccessMode accessMode, 
                 const ShareMode shareMode, const CreationMode creationMode) {
-            return this->Open(filename.c_str(), accessMode, shareMode, 
+            return this->Open(filename.PeekBuffer(), accessMode, shareMode, 
                 creationMode);
         }
 
@@ -409,7 +409,7 @@ namespace sys {
          *
          * @return The number of bytes actually read.
          *
-         * @throws the::system::io::io_exception
+         * @throws IOException
          */
         virtual FileSize Read(void *outBuf, const FileSize bufSize);
 
@@ -426,7 +426,7 @@ namespace sys {
          * @return The new offset in bytes of the file pointer from the begin of 
          *         the file.
          *
-         * @throws the::system::io::io_exception If the file pointer could not be moved, e. g. 
+         * @throws IOException If the file pointer could not be moved, e. g. 
          *                     because the file was not open or the offset was
          *                     invalid.
          */
@@ -439,7 +439,7 @@ namespace sys {
          * @return The new offset of the file pointer from the beginning of the
          *         file. This should be zero ...
          *
-         * @throws the::system::io::io_exception If the file pointer could not be moved.
+         * @throws IOException If the file pointer could not be moved.
          */
         inline FileSize SeekToBegin(void) {
             return this->Seek(0, BEGIN);
@@ -451,7 +451,7 @@ namespace sys {
          * @return The new offset of the file pointer from the beginning of the
          *         file. This should be the size of the file.
          *
-         * @throws the::system::io::io_exception If the file pointer could not be moved.
+         * @throws IOException If the file pointer could not be moved.
          */
         inline FileSize SeekToEnd(void) {
             return this->Seek(0, END);
@@ -463,7 +463,7 @@ namespace sys {
          * @return Position of the file pointer in bytes from the beginning
          *         of the file.
          *
-         * @throws the::system::io::io_exception
+         * @throws IOException
          */
         virtual FileSize Tell(void) const;
 
@@ -475,7 +475,7 @@ namespace sys {
          *
          * @return The number of bytes acutally written.
          *
-         * @throws the::system::io::io_exception
+         * @throws IOException
          */
         virtual FileSize Write(const void *buf, const FileSize bufSize);
 
@@ -486,7 +486,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         File(const File& rhs);
 
@@ -497,7 +497,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If &'rhs' != this.
+         * @throws IllegalParamException If &'rhs' != this.
          */
         File& operator =(const File& rhs);
 

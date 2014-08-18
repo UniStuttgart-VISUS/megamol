@@ -34,14 +34,14 @@ namespace sys {
         /**
          * Acquire the lock.
          *
-         * @throws the::system::system_exception If the lock could not be acquired.
+         * @throws SystemException If the lock could not be acquired.
          */
         virtual void Lock(void) = 0;
 
         /**
          * Release the lock.
          *
-         * @throw the::system::system_exception If the lock could not be released.
+         * @throw SystemException If the lock could not be released.
          */
         virtual void Unlock(void) = 0;
 

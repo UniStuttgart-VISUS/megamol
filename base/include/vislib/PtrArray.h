@@ -54,7 +54,7 @@ namespace vislib {
          *
          * @param capacity The initial capacity of the array.
          */
-        PtrArray(const size_t capacity = Super::DEFAULT_CAPACITY);
+        PtrArray(const SIZE_T capacity = Super::DEFAULT_CAPACITY);
 
         /**
          * Create a new array with the specified initial capacity and
@@ -63,7 +63,7 @@ namespace vislib {
          * @param capacity The initial capacity of the array.
          * @param element  The default value to set.
          */
-        inline PtrArray(const size_t capacity, const T& element)
+        inline PtrArray(const SIZE_T capacity, const T& element)
                 : Super(capacity, element) {}
 
         /**
@@ -82,7 +82,7 @@ namespace vislib {
      * vislib::PtrArray<T, L, A>::PtrArray
      */
     template<class T, class L , class A>
-    PtrArray<T, L, A>::PtrArray(const size_t capacity) : Super(capacity) {
+    PtrArray<T, L, A>::PtrArray(const SIZE_T capacity) : Super(capacity) {
         // Nothing to do. The constructor/destructor functor also works in
         // ctor and dtor as it is not dependent on the virtual table.
     }

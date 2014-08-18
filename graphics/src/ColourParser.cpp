@@ -6,30 +6,27 @@
  */
 
 #include "vislib/ColourParser.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/NamedColours.h"
-#include "the/not_supported_exception.h"
-#include "the/string.h"
-#include "the/text/string_builder.h"
-#include "the/assert.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
  * vislib::graphics::ColourParser::FromString
  */
-void vislib::graphics::ColourParser::FromString(const the::astring& inStr,
+void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
         unsigned char &outR, unsigned char &outG, unsigned char &outB,
         unsigned char &outA, bool allowQuantization) {
-    the::astring sb(inStr);
-    the::text::string_utility::trim(sb);
-    if (sb.empty()) {
-        throw the::format_exception("inStr was empty", __FILE__, __LINE__);
+    vislib::StringA sb(inStr);
+    sb.TrimSpaces();
+    if (sb.IsEmpty()) {
+        throw vislib::FormatException("inStr was empty", __FILE__, __LINE__);
     }
 
     // try parse named colour
     try {
-        ColourRGBAu8 c = NamedColours::GetColourByName(sb.c_str());
+        ColourRGBAu8 c = NamedColours::GetColourByName(sb);
         outR = c.R();
         outG = c.G();
         outB = c.B();
@@ -74,24 +71,24 @@ void vislib::graphics::ColourParser::FromString(const the::astring& inStr,
         }
     }
 
-    throw the::format_exception("Unexpected format", __FILE__, __LINE__);
+    throw vislib::FormatException("Unexpected format", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::graphics::ColourParser::FromString
  */
-void vislib::graphics::ColourParser::FromString(const the::astring& inStr,
+void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
         float &outR, float &outG, float &outB, float &outA) {
-    the::astring sb(inStr);
-    the::text::string_utility::trim(sb);
-    if (sb.empty()) {
-        throw the::format_exception("inStr was empty", __FILE__, __LINE__);
+    vislib::StringA sb(inStr);
+    sb.TrimSpaces();
+    if (sb.IsEmpty()) {
+        throw vislib::FormatException("inStr was empty", __FILE__, __LINE__);
     }
 
     // try parse named colour
     try {
-        ColourRGBAu8 c = NamedColours::GetColourByName(sb.c_str());
+        ColourRGBAu8 c = NamedColours::GetColourByName(sb);
         outR = static_cast<float>(c.R()) / 255.0f;
         outG = static_cast<float>(c.G()) / 255.0f;
         outB = static_cast<float>(c.B()) / 255.0f;
@@ -120,15 +117,15 @@ void vislib::graphics::ColourParser::FromString(const the::astring& inStr,
         return;
     }
 
-    throw the::format_exception("Unexpected format", __FILE__, __LINE__);
+    throw vislib::FormatException("Unexpected format", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::graphics::ColourParser::ToString
  */
-the::astring& vislib::graphics::ColourParser::ToString(
-        the::astring& outStr, unsigned char inR, unsigned char inG,
+vislib::StringA& vislib::graphics::ColourParser::ToString(
+        vislib::StringA& outStr, unsigned char inR, unsigned char inG,
         unsigned char inB, unsigned char inA, int repType) {
 
     if ((repType & REPTYPE_NAMED) == REPTYPE_NAMED) {
@@ -142,31 +139,31 @@ the::astring& vislib::graphics::ColourParser::ToString(
 
     if ((repType & REPTYPE_BYTE) == REPTYPE_BYTE) {
         if (inA == 255) {
-            the::text::astring_builder::format_to(outStr, "(%u; %u; %u)", inR, inG, inB);
+            outStr.Format("(%u; %u; %u)", inR, inG, inB);
         } else {
-            the::text::astring_builder::format_to(outStr, "(%u; %u; %u; %u)", inR, inG, inB, inA);
+            outStr.Format("(%u; %u; %u; %u)", inR, inG, inB, inA);
         }
         return outStr;
     }
 
     if ((repType & REPTYPE_HTML) == REPTYPE_HTML) {
         if (inA == 255) {
-            the::text::astring_builder::format_to(outStr, "#%.2x%.2x%.2x", inR, inG, inB);
+            outStr.Format("#%.2x%.2x%.2x", inR, inG, inB);
         } else {
              // non-standard, but i don't care
-            the::text::astring_builder::format_to(outStr, "#%.2x%.2x%.2x%.2x", inR, inG, inB, inA);
+            outStr.Format("#%.2x%.2x%.2x%.2x", inR, inG, inB, inA);
         }
         return outStr;
     }
 
     if ((repType & REPTYPE_FLOAT) == REPTYPE_FLOAT) {
         if (inA == 255) {
-            the::text::astring_builder::format_to(outStr, "(%f; %f; %f)",
+            outStr.Format("(%f; %f; %f)",
                 static_cast<float>(inR) / 255.0f,
                 static_cast<float>(inG) / 255.0f,
                 static_cast<float>(inB) / 255.0f);
         } else {
-            the::text::astring_builder::format_to(outStr, "(%f; %f; %f; %f)",
+            outStr.Format("(%f; %f; %f; %f)",
                 static_cast<float>(inR) / 255.0f,
                 static_cast<float>(inG) / 255.0f,
                 static_cast<float>(inB) / 255.0f,
@@ -175,7 +172,7 @@ the::astring& vislib::graphics::ColourParser::ToString(
         return outStr;
     }
 
-    throw the::format_exception(
+    throw vislib::FormatException(
         "Cannot generate string in requested representation type",
         __FILE__, __LINE__);
     return outStr;
@@ -185,8 +182,8 @@ the::astring& vislib::graphics::ColourParser::ToString(
 /*
  * vislib::graphics::ColourParser::ToString
  */
-the::astring& vislib::graphics::ColourParser::ToString(
-        the::astring& outStr, float inR, float inG, float inB, float inA,
+vislib::StringA& vislib::graphics::ColourParser::ToString(
+        vislib::StringA& outStr, float inR, float inG, float inB, float inA,
         int repType) {
 
     const float eps = 0.0001f;
@@ -211,19 +208,19 @@ the::astring& vislib::graphics::ColourParser::ToString(
 
         if ((repType & REPTYPE_BYTE) == REPTYPE_BYTE) {
             if (ai == 255) {
-                the::text::astring_builder::format_to(outStr, "(%u; %u; %u)", ri, gi, bi);
+                outStr.Format("(%u; %u; %u)", ri, gi, bi);
             } else {
-                the::text::astring_builder::format_to(outStr, "(%u; %u; %u; %u)", ri, gi, bi, ai);
+                outStr.Format("(%u; %u; %u; %u)", ri, gi, bi, ai);
             }
             return outStr;
         }
 
         if ((repType & REPTYPE_HTML) == REPTYPE_HTML) {
             if (ai == 255) {
-                the::text::astring_builder::format_to(outStr, "#%.2x%.2x%.2x", ri, gi, bi);
+                outStr.Format("#%.2x%.2x%.2x", ri, gi, bi);
             } else {
                  // non-standard, but i don't care
-                the::text::astring_builder::format_to(outStr, "#%.2x%.2x%.2x%.2x", ri, gi, bi, ai);
+                outStr.Format("#%.2x%.2x%.2x%.2x", ri, gi, bi, ai);
             }
             return outStr;
         }
@@ -232,14 +229,14 @@ the::astring& vislib::graphics::ColourParser::ToString(
 
     if ((repType & REPTYPE_FLOAT) == REPTYPE_FLOAT) {
         if (vislib::math::IsEqual(inA, 1.0f)) {
-            the::text::astring_builder::format_to(outStr, "(%f; %f; %f)", inR, inG, inB);
+            outStr.Format("(%f; %f; %f)", inR, inG, inB);
         } else {
-            the::text::astring_builder::format_to(outStr, "(%f; %f; %f; %f)", inR, inG, inB, inA);
+            outStr.Format("(%f; %f; %f; %f)", inR, inG, inB, inA);
         }
         return outStr;
     }
 
-    throw the::format_exception(
+    throw vislib::FormatException(
         "Cannot generate string in requested representation type",
         __FILE__, __LINE__);
     return outStr;
@@ -260,23 +257,23 @@ unsigned char vislib::graphics::ColourParser::hexToNum(const char& c) {
 /*
  * vislib::graphics::ColourParser::parseArray
  */
-bool vislib::graphics::ColourParser::parseArray(const the::astring& inStr,
+bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
         float &outR, float &outG, float &outB, float &outA) {
-    THE_ASSERT(!inStr.empty());
+    ASSERT(!inStr.IsEmpty());
 
     // remove any parentheses
     if (inStr[0] == '(') {
-        the::astring::size_type len = inStr.size();
+        vislib::StringA::Size len = inStr.Length();
         if ((len > 2) && (inStr[len - 1] == ')')) {
-            return parseArray(inStr.substr(1, len - 2),
+            return parseArray(inStr.Substring(1, len - 2),
                 outR, outG, outB, outA);
         } else {
             return false;
         }
     } else if (inStr[0] == '{') {
-        the::astring::size_type len = inStr.size();
+        vislib::StringA::Size len = inStr.Length();
         if ((len > 2) && (inStr[len - 1] == '}')) {
-            return parseArray(inStr.substr(1, len - 2),
+            return parseArray(inStr.Substring(1, len - 2),
                 outR, outG, outB, outA);
         } else {
             return false;
@@ -284,131 +281,131 @@ bool vislib::graphics::ColourParser::parseArray(const the::astring& inStr,
     }
 
     // detect separators
-    size_t scsc = the::text::string_utility::count(inStr, ';');
-    size_t csc = the::text::string_utility::count(inStr, ',');
+    SIZE_T scsc = inStr.Count(';');
+    SIZE_T csc = inStr.Count(',');
 
-    the::astring rStr, gStr, bStr, aStr;
+    vislib::StringA rStr, gStr, bStr, aStr;
     if ((scsc == 3) || (scsc == 2)) {
         // separated by semicolon
-        the::astring::size_type p1 = inStr.find(';');
-        if (p1 == the::astring::npos) return false;
-        rStr = inStr.substr(0, p1);
-        the::text::string_utility::trim(rStr);
+        vislib::StringA::Size p1 = inStr.Find(';');
+        if (p1 == vislib::StringA::INVALID_POS) return false;
+        rStr = inStr.Substring(0, p1);
+        rStr.TrimSpaces();
         p1++;
-        the::astring::size_type p2 = inStr.find(';', p1);
-        if (p2 == the::astring::npos) return false;
-        gStr = inStr.substr(p1, p2 - p1);
-        the::text::string_utility::trim(gStr);
+        vislib::StringA::Size p2 = inStr.Find(';', p1);
+        if (p2 == vislib::StringA::INVALID_POS) return false;
+        gStr = inStr.Substring(p1, p2 - p1);
+        gStr.TrimSpaces();
 
         if (scsc == 3) {
             p2++;
-            p1 = inStr.find(';', p2);
-            if (p1 == the::astring::npos) return false;
-            bStr = inStr.substr(p2, p1 - p2);
-            the::text::string_utility::trim(bStr);
-            aStr = inStr.substr(p1 + 1);
-            the::text::string_utility::trim(aStr);
+            p1 = inStr.Find(';', p2);
+            if (p1 == vislib::StringA::INVALID_POS) return false;
+            bStr = inStr.Substring(p2, p1 - p2);
+            bStr.TrimSpaces();
+            aStr = inStr.Substring(p1 + 1);
+            aStr.TrimSpaces();
 
         } else {
-            bStr = inStr.substr(p2 + 1);
-            the::text::string_utility::trim(bStr);
-            aStr.clear();
+            bStr = inStr.Substring(p2 + 1);
+            bStr.TrimSpaces();
+            aStr.Clear();
         }
 
     } else if (scsc == 0) {
         // semicolon cannot be part of int or float
         if ((csc == 3) || (csc == 2)) {
             // if float, they use dots (EN)
-            the::astring::size_type p1 = inStr.find(',');
-            if (p1 == the::astring::npos) return false;
-            rStr = inStr.substr(0, p1);
-            the::text::string_utility::trim(rStr);
+            vislib::StringA::Size p1 = inStr.Find(',');
+            if (p1 == vislib::StringA::INVALID_POS) return false;
+            rStr = inStr.Substring(0, p1);
+            rStr.TrimSpaces();
             p1++;
-            the::astring::size_type p2 = inStr.find(',', p1);
-            if (p2 == the::astring::npos) return false;
-            gStr = inStr.substr(p1, p2 - p1);
-            the::text::string_utility::trim(gStr);
+            vislib::StringA::Size p2 = inStr.Find(',', p1);
+            if (p2 == vislib::StringA::INVALID_POS) return false;
+            gStr = inStr.Substring(p1, p2 - p1);
+            gStr.TrimSpaces();
 
             if (scsc == 3) {
                 p2++;
-                p1 = inStr.find(',', p2);
-                if (p1 == the::astring::npos) return false;
-                bStr = inStr.substr(p2, p1 - p2);
-                the::text::string_utility::trim(bStr);
-                aStr = inStr.substr(p1 + 1);
-                the::text::string_utility::trim(aStr);
+                p1 = inStr.Find(',', p2);
+                if (p1 == vislib::StringA::INVALID_POS) return false;
+                bStr = inStr.Substring(p2, p1 - p2);
+                bStr.TrimSpaces();
+                aStr = inStr.Substring(p1 + 1);
+                aStr.TrimSpaces();
 
             } else {
-                bStr = inStr.substr(p2 + 1);
-                the::text::string_utility::trim(bStr);
-                aStr.clear();
+                bStr = inStr.Substring(p2 + 1);
+                bStr.TrimSpaces();
+                aStr.Clear();
             }
 
         } else {
             // colons for separation AND fraction :-/
             // (Activate super-power-fake heuristic)
-            the::astring::size_type p1 = inStr.find(", ");
+            vislib::StringA::Size p1 = inStr.Find(", ");
 
-            if (p1 != the::astring::npos) {
-                the::astring::size_type p2 = inStr.find(", ", p1 + 1);
-                if (p2 != the::astring::npos) {
-                    the::astring::size_type p3 = inStr.find(", ", p2 + 1);
-                    rStr = inStr.substr(0, p1);
-                    the::text::string_utility::trim(rStr);
-                    gStr = inStr.substr(p1 + 1, p2 - (p1 + 1));
-                    the::text::string_utility::trim(gStr);
-                    if (p3 != the::astring::npos) {
-                        bStr = inStr.substr(p2 + 1, p3 - (p2 + 1));
-                        the::text::string_utility::trim(bStr);
-                        aStr = inStr.substr(p3 + 1);
-                        the::text::string_utility::trim(aStr);
+            if (p1 != vislib::StringA::INVALID_POS) {
+                vislib::StringA::Size p2 = inStr.Find(", ", p1 + 1);
+                if (p2 != vislib::StringA::INVALID_POS) {
+                    vislib::StringA::Size p3 = inStr.Find(", ", p2 + 1);
+                    rStr = inStr.Substring(0, p1);
+                    rStr.TrimSpaces();
+                    gStr = inStr.Substring(p1 + 1, p2 - (p1 + 1));
+                    gStr.TrimSpaces();
+                    if (p3 != vislib::StringA::INVALID_POS) {
+                        bStr = inStr.Substring(p2 + 1, p3 - (p2 + 1));
+                        bStr.TrimSpaces();
+                        aStr = inStr.Substring(p3 + 1);
+                        aStr.TrimSpaces();
                     } else {
-                        bStr = inStr.substr(p2 + 1);
-                        the::text::string_utility::trim(bStr);
-                        aStr.clear();
+                        bStr = inStr.Substring(p2 + 1);
+                        bStr.TrimSpaces();
+                        aStr.Clear();
                     }
-                } else p1 = the::astring::npos;
+                } else p1 = vislib::StringA::INVALID_POS;
             }
 
-            if (p1 == the::astring::npos) {
+            if (p1 == vislib::StringA::INVALID_POS) {
                 if (csc == 5) {
-                    the::astring::size_type p1 = inStr.find(",");
-                    if (p1 == the::astring::npos) return false;
-                    p1 = inStr.find(",", p1 + 1);
-                    if (p1 == the::astring::npos) return false;
-                    the::astring::size_type p2 = inStr.find(",", p1 + 1);
-                    if (p2 == the::astring::npos) return false;
-                    p2 = inStr.find(",", p2 + 1);
-                    if (p2 == the::astring::npos) return false;
-                    rStr = inStr.substr(0, p1);
-                    the::text::string_utility::trim(rStr);
-                    gStr = inStr.substr(p1 + 1, p2 - (p1 + 1));
-                    the::text::string_utility::trim(gStr);
-                    bStr = inStr.substr(p2 + 1);
-                    the::text::string_utility::trim(bStr);
-                    aStr.clear();
+                    vislib::StringA::Size p1 = inStr.Find(",");
+                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    p1 = inStr.Find(",", p1 + 1);
+                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    vislib::StringA::Size p2 = inStr.Find(",", p1 + 1);
+                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    p2 = inStr.Find(",", p2 + 1);
+                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    rStr = inStr.Substring(0, p1);
+                    rStr.TrimSpaces();
+                    gStr = inStr.Substring(p1 + 1, p2 - (p1 + 1));
+                    gStr.TrimSpaces();
+                    bStr = inStr.Substring(p2 + 1);
+                    bStr.TrimSpaces();
+                    aStr.Clear();
 
                 } else if (csc == 7) {
-                    the::astring::size_type p1 = inStr.find(",");
-                    if (p1 == the::astring::npos) return false;
-                    p1 = inStr.find(",", p1 + 1);
-                    if (p1 == the::astring::npos) return false;
-                    the::astring::size_type p2 = inStr.find(",", p1 + 1);
-                    if (p2 == the::astring::npos) return false;
-                    p2 = inStr.find(",", p2 + 1);
-                    if (p2 == the::astring::npos) return false;
-                    the::astring::size_type p3 = inStr.find(",", p2 + 1);
-                    if (p3 == the::astring::npos) return false;
-                    p3 = inStr.find(",", p3 + 1);
-                    if (p3 == the::astring::npos) return false;
-                    rStr = inStr.substr(0, p1);
-                    the::text::string_utility::trim(rStr);
-                    gStr = inStr.substr(p1 + 1, p2 - (p1 + 1));
-                    the::text::string_utility::trim(gStr);
-                    bStr = inStr.substr(p2 + 1, p3 - (p2 + 1));
-                    the::text::string_utility::trim(bStr);
-                    aStr = inStr.substr(p3 + 1);
-                    the::text::string_utility::trim(aStr);
+                    vislib::StringA::Size p1 = inStr.Find(",");
+                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    p1 = inStr.Find(",", p1 + 1);
+                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    vislib::StringA::Size p2 = inStr.Find(",", p1 + 1);
+                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    p2 = inStr.Find(",", p2 + 1);
+                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    vislib::StringA::Size p3 = inStr.Find(",", p2 + 1);
+                    if (p3 == vislib::StringA::INVALID_POS) return false;
+                    p3 = inStr.Find(",", p3 + 1);
+                    if (p3 == vislib::StringA::INVALID_POS) return false;
+                    rStr = inStr.Substring(0, p1);
+                    rStr.TrimSpaces();
+                    gStr = inStr.Substring(p1 + 1, p2 - (p1 + 1));
+                    gStr.TrimSpaces();
+                    bStr = inStr.Substring(p2 + 1, p3 - (p2 + 1));
+                    bStr.TrimSpaces();
+                    aStr = inStr.Substring(p3 + 1);
+                    aStr.TrimSpaces();
                 }
             }
         }
@@ -417,49 +414,49 @@ bool vislib::graphics::ColourParser::parseArray(const the::astring& inStr,
         return false; // no separators at all
     }
 
-    if (rStr.empty() || gStr.empty() || bStr.empty()) return false;
+    if (rStr.IsEmpty() || gStr.IsEmpty() || bStr.IsEmpty()) return false;
 
     bool isFloat = false;
 
-    if ((the::text::string_utility::contains(rStr, '.') || the::text::string_utility::contains(gStr, '.') || the::text::string_utility::contains(bStr, '.')) && (aStr.empty() || the::text::string_utility::contains(aStr, '.'))) isFloat = true;
-    if (the::text::string_utility::contains(rStr, ',')) {
-        the::text::string_utility::replace(rStr, ',', '.');
+    if ((rStr.Contains('.') || gStr.Contains('.') || bStr.Contains('.')) && (aStr.IsEmpty() || aStr.Contains('.'))) isFloat = true;
+    if (rStr.Contains(',')) {
+        rStr.Replace(',', '.');
         isFloat = true;
     }
-    if (the::text::string_utility::contains(gStr, ',')) {
-        the::text::string_utility::replace(gStr, ',', '.');
+    if (gStr.Contains(',')) {
+        gStr.Replace(',', '.');
         isFloat = true;
     }
-    if (the::text::string_utility::contains(bStr, ',')) {
-        the::text::string_utility::replace(bStr, ',', '.');
+    if (bStr.Contains(',')) {
+        bStr.Replace(',', '.');
         isFloat = true;
     }
-    if (!aStr.empty() && the::text::string_utility::contains(aStr, ',')) {
-        the::text::string_utility::replace(aStr, ',', '.');
+    if (!aStr.IsEmpty() && aStr.Contains(',')) {
+        aStr.Replace(',', '.');
         isFloat = true;
     }
 
     float r, g, b, a;
     try {
-        r = static_cast<float>(the::text::string_utility::parse_double_invariant(rStr));
+        r = static_cast<float>(vislib::CharTraitsA::ParseDouble(rStr));
     } catch(...) {
         return false;
     }
     try {
-        g = static_cast<float>(the::text::string_utility::parse_double_invariant(gStr));
+        g = static_cast<float>(vislib::CharTraitsA::ParseDouble(gStr));
     } catch(...) {
         return false;
     }
     try {
-        b = static_cast<float>(the::text::string_utility::parse_double_invariant(bStr));
+        b = static_cast<float>(vislib::CharTraitsA::ParseDouble(bStr));
     } catch(...) {
         return false;
     }
-    if (aStr.empty()) {
+    if (aStr.IsEmpty()) {
         a = isFloat ? 1.0f : 255.0f;
     } else {
         try {
-            a = static_cast<float>(the::text::string_utility::parse_double_invariant(aStr));
+            a = static_cast<float>(vislib::CharTraitsA::ParseDouble(aStr));
         } catch(...) {
             return false;
         }
@@ -485,12 +482,12 @@ bool vislib::graphics::ColourParser::parseArray(const the::astring& inStr,
  * vislib::graphics::ColourParser::parseHTML
  */
 vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
-        const the::astring& inStr) {
+        const vislib::StringA& inStr) {
     vislib::graphics::ColourRGBAu8 col;
     unsigned char c, b;
-    THE_ASSERT(!inStr.empty() && (inStr[0] == '#'));
+    ASSERT(!inStr.IsEmpty() && (inStr[0] == '#'));
 
-    if (inStr.size() == 4) { // short RGB
+    if (inStr.Length() == 4) { // short RGB
         c = hexToNum(inStr[1]);
         if (c < 16) {
             col.SetR(c * 16 + c);
@@ -505,7 +502,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
             col.SetA(255);
         }
 
-    } else if (inStr.size() == 5) { // short RGBA
+    } else if (inStr.Length() == 5) { // short RGBA
         c = hexToNum(inStr[1]);
         if (c < 16) {
             col.SetR(c * 16 + c);
@@ -522,7 +519,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
             col.SetA(c * 16 + c);
         }
 
-    } else if (inStr.size() == 7) { // normal RGB
+    } else if (inStr.Length() == 7) { // normal RGB
         c = hexToNum(inStr[1]);
         if (c < 16) {
             b = c * 16;
@@ -549,7 +546,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
             col.SetA(255);
         }
 
-    } else if (inStr.size() == 9) { // normal RGBA
+    } else if (inStr.Length() == 9) { // normal RGBA
         c = hexToNum(inStr[1]);
         if (c < 16) {
             b = c * 16;
@@ -589,12 +586,12 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
         }
 
     } else {
-        throw the::format_exception(
+        throw vislib::FormatException(
             "Illegal length of HTML input", __FILE__, __LINE__);
     }
 
     if (c > 15) {
-        throw the::format_exception(
+        throw vislib::FormatException(
             "Illegal character in HTML input", __FILE__, __LINE__);
     }
 
@@ -606,7 +603,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
  * vislib::graphics::ColourParser::ColourParser
  */
 vislib::graphics::ColourParser::ColourParser(void) {
-    throw the::not_supported_exception("ColourParser::ctor",
+    throw vislib::UnsupportedOperationException("ColourParser::ctor",
         __FILE__, __LINE__);
 }
 
@@ -615,6 +612,6 @@ vislib::graphics::ColourParser::ColourParser(void) {
  * vislib::graphics::ColourParser::~ColourParser
  */
 vislib::graphics::ColourParser::~ColourParser(void) {
-    throw the::not_supported_exception("ColourParser::dtor",
+    throw vislib::UnsupportedOperationException("ColourParser::dtor",
         __FILE__, __LINE__);
 }

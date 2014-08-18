@@ -6,9 +6,10 @@
  */
 
 #include "vislib/ASCIIFileBuffer.h"
-#include "the/assert.h"
-#include "the/memory.h"
-#include "the/trace.h"
+#include "vislib/assert.h"
+#include "vislib/CharTraits.h"
+#include "vislib/memutils.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -138,7 +139,7 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(vislib::Array<char *>& words
 vislib::sys::ASCIIFileBuffer::ASCIIFileBuffer(ParsingElement elements)
         : buffer(NULL), lines(), defElements(elements) {
     if (this->defElements == PARSING_DEFAULT) {
-THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT) illegal\n");
+VLTRACE(VISLIB_TRCELVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT) illegal\n");
         this->defElements = PARSING_LINES;
     }
 }
@@ -149,8 +150,8 @@ THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT)
  */
 vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer(void) {
     this->Clear();
-    THE_ASSERT(this->lines.Count() == 0);
-    THE_ASSERT(this->buffer == NULL);
+    ASSERT(this->lines.Count() == 0);
+    ASSERT(this->buffer == NULL);
 }
 
 
@@ -159,7 +160,7 @@ vislib::sys::ASCIIFileBuffer::~ASCIIFileBuffer(void) {
  */
 void vislib::sys::ASCIIFileBuffer::Clear(void) {
     this->lines.Clear(); // DO NOT DELETE individual pointers
-    the::safe_array_delete(this->buffer);
+    ARY_SAFE_DELETE(this->buffer);
 }
 
 
@@ -171,7 +172,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
     if (elements == PARSING_DEFAULT) {
         elements = this->defElements;
     }
-    size_t l = static_cast<size_t>(file.GetSize());
+    SIZE_T l = static_cast<SIZE_T>(file.GetSize());
     file.SeekToBegin();
 
     this->Clear();
@@ -180,10 +181,10 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
     this->buffer = new char[l + 1];
     this->buffer[l] = 0;
     if (this->buffer == NULL) {
-        throw the::exception("Cannot allocate memory to store file",
+        throw vislib::Exception("Cannot allocate memory to store file",
             __FILE__, __LINE__);
     }
-    size_t rl = static_cast<size_t>(file.Read(this->buffer, l));
+    SIZE_T rl = static_cast<SIZE_T>(file.Read(this->buffer, l));
     if (rl != l) {
         if (rl == 0) {
             return false; // cannot read from file; "file.read" should have
@@ -274,7 +275,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
         words.Clear();
 
     } else {
-        throw the::invalid_operation_exception("ParsingElements illegal value",
+        throw vislib::IllegalStateException("ParsingElements illegal value",
             __FILE__, __LINE__);
 
     }

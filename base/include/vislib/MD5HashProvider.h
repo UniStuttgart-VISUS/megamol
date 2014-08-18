@@ -59,9 +59,9 @@ namespace vislib {
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
          *
-         * @throws invalid_operation_exception If the hash has not been initialised.
+         * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual void TransformBlock(const uint8_t *input, const size_t cntInput);
+        virtual void TransformBlock(const BYTE *input, const SIZE_T cntInput);
 
         /**
          * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -79,18 +79,18 @@ namespace vislib {
          * @param input     The data to be added to the hash.
          * @param cntInput  The number of bytes in 'input'.
          *
-         * @throws invalid_operation_exception If the hash has not been initialised.
+         * @throws IllegalStateException If the hash has not been initialised.
          */
-        virtual bool TransformFinalBlock(uint8_t *outHash, size_t& inOutSize,
-            const uint8_t *input, const size_t cntInput);
+        virtual bool TransformFinalBlock(BYTE *outHash, SIZE_T& inOutSize,
+            const BYTE *input, const SIZE_T cntInput);
 
     private:
 
         /** MD5 context. */
         typedef struct MD5_CTX_t {
-            uint32_t state[4];    // state (ABCD)
-            uint32_t count[2];    // number of bits, modulo 2^64 (lsb first)
-            uint8_t buffer[64];    // input buffer
+            UINT32 state[4];    // state (ABCD)
+            UINT32 count[2];    // number of bits, modulo 2^64 (lsb first)
+            BYTE buffer[64];    // input buffer
         } MD5_CTX;
 
         /**
@@ -100,7 +100,7 @@ namespace vislib {
          * @param input  The stream to decode.
          * @param len    The number of elements in 'input'.
          */
-        static void decode(uint32_t *output, const uint8_t *input, const unsigned int len);
+        static void decode(UINT32 *output, const BYTE *input, const UINT len);
 
         /**
          * Encodes 'input' into 'output'. Assumes 'len' is a multiple of 4.
@@ -109,7 +109,7 @@ namespace vislib {
          * @param input  The stream to decode.
          * @param len    The number of elements in 'input'.
          */
-        static void encode(uint8_t *output, const uint32_t *input, const unsigned int len);
+        static void encode(BYTE *output, const UINT32 *input, const UINT len);
 
         /**
          * MD5 finalization. Ends an MD5 message-digest operation, writing the
@@ -119,7 +119,7 @@ namespace vislib {
          * @param context The context to compute the digest for and which will
          *                be erased afterwards.
          */
-        static void finalise(uint8_t *output, MD5_CTX *context);
+        static void finalise(BYTE *output, MD5_CTX *context);
 
         /**
          * MD5 basic transformation. Transforms 'state' based on 'block'. 
@@ -127,7 +127,7 @@ namespace vislib {
          * @param state The state of the MD5 context that is to be transformed.
          * @param block The input block.
          */
-        static void transform(uint32_t state[4], const uint8_t block[64]);
+        static void transform(UINT32 state[4], const BYTE block[64]);
 
         /**
          * MD5 block update operation. Continues an MD5 message-digest
@@ -138,11 +138,11 @@ namespace vislib {
          * @param input    A new block of data to be added to the hash.
          * @param cntInput The size of the input in bytes.
          */
-        static void update(MD5_CTX *context, const uint8_t *input, 
-            const size_t cntInput);
+        static void update(MD5_CTX *context, const BYTE *input, 
+            const SIZE_T cntInput);
 
         /** The size of the MD5 hash in bytes. */
-        static const size_t HASH_SIZE;
+        static const SIZE_T HASH_SIZE;
 
         /**
          * Forbidden assignemt operator.
@@ -151,7 +151,7 @@ namespace vislib {
          *
          * @return *this
          *
-         * @throws argument_exception If this != &rhs.
+         * @throws IllegalParamException If this != &rhs.
          */
         MD5HashProvider& operator =(const MD5HashProvider& rhs);
 

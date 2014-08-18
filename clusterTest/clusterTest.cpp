@@ -14,8 +14,8 @@
 #include <iostream>
 
 #include "vislib/CmdLineParser.h"
-#include "the/string.h"
-#include "the/trace.h"
+#include "vislib/String.h"
+#include "vislib/Trace.h"
 
 #include "GlutClient.h"
 #include "GlutServer.h"
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
     typedef Parser::Option Option;
     typedef Option::ValueDesc ValueDesc;
 
-    the::trace::get_instance().set_default_level(THE_TRCLVL_INFO);
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL_VERBOSE);
 
     Parser parser;
     Option optTest(_T("test"),
@@ -83,28 +83,28 @@ int main(int argc, char **argv) {
     Argument *arg = NULL;
     if ((arg = optTest.GetFirstOccurrence()) != NULL) {
         try {
-            the::tstring val = arg->GetValueString();
-            if (the::text::string_utility::equals(val, _T("plainserver"), false)) {
+            vislib::TString val = arg->GetValueString();
+            if (val.Equals(_T("plainserver"), false)) {
                 PlainServer::GetInstance().Initialise(cmdLine);
                 return PlainServer::GetInstance().Run();
-            } else if (the::text::string_utility::equals(val, _T("plainclient"), false)) {
+            } else if (val.Equals(_T("plainclient"), false)) {
                 PlainClient::GetInstance().Initialise(cmdLine);
                 return PlainClient::GetInstance().Run();
 #if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)
-            } else if (the::text::string_utility::equals(val, _T("glutserver"), false)) {
+            } else if (val.Equals(_T("glutserver"), false)) {
                 GlutServer::GetInstance().Initialise(cmdLine);
                 return GlutServer::GetInstance().Run();
-            } else if (the::text::string_utility::equals(val, _T("glutclient"), false)) {
+            } else if (val.Equals(_T("glutclient"), false)) {
                 GlutClient::GetInstance().Initialise(cmdLine);
                 return GlutClient::GetInstance().Run();
 #endif /*defined(VISLIB_CLUSTER_WITH_OPENGL) && ... */
-            } else if (the::text::string_utility::equals(val, _T("discovery"), false)) {
+            } else if (val.Equals(_T("discovery"), false)) {
                 DiscoveryTestApp::GetInstance().Initialise(cmdLine);
                 return DiscoveryTestApp::GetInstance().Run();
             }
-        } catch (the::exception& e) {
-            std::cerr << e.what() << " @ " << e.get_file() << ":" 
-                << e.get_line() << std::endl;
+        } catch (vislib::Exception& e) {
+            std::cerr << e.GetMsgA() << " @ " << e.GetFile() << ":" 
+                << e.GetLine() << std::endl;
             return -1;
         } catch (...) {
         }

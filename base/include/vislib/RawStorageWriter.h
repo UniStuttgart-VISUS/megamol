@@ -14,9 +14,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/RawStorage.h"
-#include "the/string.h"
+#include "vislib/String.h"
 #include <climits>
 
 
@@ -31,7 +31,7 @@ namespace vislib {
     public:
 
         /** The default memory increment value */
-        static const size_t DEFAULT_INCREMENT = 4 * 1024;
+        static const SIZE_T DEFAULT_INCREMENT = 4 * 1024;
 
         /**
          * Ctor.
@@ -44,8 +44,8 @@ namespace vislib {
          * @param inc The memory increment value. If this is zero, the default
          *            increment value is used.
          */
-        RawStorageWriter(vislib::RawStorage &store, size_t pos = 0,
-            size_t end = SIZE_MAX, size_t inc = DEFAULT_INCREMENT);
+        RawStorageWriter(vislib::RawStorage &store, SIZE_T pos = 0,
+            SIZE_T end = SIZE_MAX, SIZE_T inc = DEFAULT_INCREMENT);
 
         /** Dtor. */
         ~RawStorageWriter(void);
@@ -64,7 +64,7 @@ namespace vislib {
          *
          * @return The end-of-data pointer
          */
-        inline size_t End(void) const {
+        inline SIZE_T End(void) const {
             return this->end;
         }
 
@@ -73,7 +73,7 @@ namespace vislib {
          *
          * @return The memory increment step size
          */
-        inline size_t Increment(void) const {
+        inline SIZE_T Increment(void) const {
             return this->inc;
         }
 
@@ -82,7 +82,7 @@ namespace vislib {
          *
          * @return The position pointer
          */
-        inline size_t Position(void) const {
+        inline SIZE_T Position(void) const {
             return this->pos;
         }
 
@@ -95,7 +95,7 @@ namespace vislib {
          *
          * @param end The new value for the end-of-data pointer
          */
-        void SetEnd(size_t end);
+        void SetEnd(SIZE_T end);
 
         /**
          * Sets the memory increment step size.
@@ -103,7 +103,7 @@ namespace vislib {
          * @param inc The new memory increment step size; If this is zero, the
          *            default increment value is used.
          */
-        void SetIncrement(size_t inc);
+        void SetIncrement(SIZE_T inc);
 
         /**
          * Sets the position pointer. If the new value is more then the
@@ -114,7 +114,7 @@ namespace vislib {
          *
          * @param pos The new value for the position pointer.
          */
-        void SetPosition(size_t pos);
+        void SetPosition(SIZE_T pos);
 
         /**
          * Writes 'size' bytes from 'buf' into the RawStorage at the current
@@ -125,44 +125,44 @@ namespace vislib {
          * @param buf Pointer to the data to be written.
          * @param size The number of bytes to be written.
          */
-        void Write(const void *buf, size_t size);
+        void Write(const void *buf, SIZE_T size);
 
         /**
          * TODO: Document
          */
-        // notice there is no 'int' or 'size_t' since these differ between plattforms
-        inline void Write(uint8_t d) { this->Write(&d, 1); }
-        inline void Write(int8_t d) { this->Write(&d, 1); }
-        inline void Write(uint16_t d) { this->Write(&d, 2); }
-        inline void Write(int16_t d) { this->Write(&d, 2); }
-        inline void Write(uint32_t d) { this->Write(&d, 4); }
-        inline void Write(int32_t d) { this->Write(&d, 4); }
-        inline void Write(uint64_t d) { this->Write(&d, 8); }
-        inline void Write(int64_t d) { this->Write(&d, 8); }
+        // notice there is no 'int' or 'SIZE_T' since these differ between plattforms
+        inline void Write(UINT8 d) { this->Write(&d, 1); }
+        inline void Write(INT8 d) { this->Write(&d, 1); }
+        inline void Write(UINT16 d) { this->Write(&d, 2); }
+        inline void Write(INT16 d) { this->Write(&d, 2); }
+        inline void Write(UINT32 d) { this->Write(&d, 4); }
+        inline void Write(INT32 d) { this->Write(&d, 4); }
+        inline void Write(UINT64 d) { this->Write(&d, 8); }
+        inline void Write(INT64 d) { this->Write(&d, 8); }
         inline void Write(float d) { this->Write(&d, 4); }
         inline void Write(double d) { this->Write(&d, 8); }
-        inline void Write(const the::astring& d) {
-            this->Write(static_cast<unsigned int>(d.size()));
-            this->Write(d.c_str(), d.size() * sizeof(char));
+        inline void Write(const vislib::StringA& d) {
+            this->Write(static_cast<unsigned int>(d.Length()));
+            this->Write(d.PeekBuffer(), d.Length() * sizeof(char));
         }
         // You really do not want to use unicode, since linux has f**ked it up
-        //inline Write(const the::wstring& d) {
-        //    this->Write(static_cast<uint64_t>(d.Length()));
-        //    this->Write(d.c_str(), d.Length() * sizeof(wchar_t));
+        //inline Write(const vislib::StringW& d) {
+        //    this->Write(static_cast<UINT64>(d.Length()));
+        //    this->Write(d.PeekBuffer(), d.Length() * sizeof(wchar_t));
         //}
         inline void Write(const char *d) {
-            size_t l = the::text::string_utility::c_str_len(d);
+            SIZE_T l = vislib::CharTraitsA::SafeStringLength(d);
             this->Write(static_cast<unsigned int>(l));
             this->Write(d, l);
         }
         // You really do not want to use unicode, since linux has f**ked it up
         //inline Write(const wchar_t *d) {
-        //    uint64_t l = static_cast<uint64_t>(vislib::CharTraitsA::SafeStringLength(d));
+        //    UINT64 l = static_cast<UINT64>(vislib::CharTraitsA::SafeStringLength(d));
         //    this->Write(d, l * sizeof(wchar_t));
         //}
         inline void Write(const vislib::RawStorage& d) {
-            size_t l = d.GetSize();
-            this->Write(static_cast<uint64_t>(l));
+            SIZE_T l = d.GetSize();
+            this->Write(static_cast<UINT64>(l));
             this->Write(d, l);
         }
         template<class T> inline RawStorageWriter& operator<<(const T& d) {
@@ -178,19 +178,19 @@ namespace vislib {
          *
          * @param e The new size to be available.
          */
-        void assertSize(size_t e);
+        void assertSize(SIZE_T e);
 
         /** The raw data store */
         vislib::RawStorage &data;
 
         /** The end-of-data pointer */
-        size_t end;
+        SIZE_T end;
 
         /** The memory size increment value */
-        size_t inc;
+        SIZE_T inc;
 
         /** The position pointer */
-        size_t pos;
+        SIZE_T pos;
 
     };
     

@@ -17,7 +17,7 @@
 
 #include "vislib/RawStorage.h"
 #include "vislib/SingleLinkedList.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -71,7 +71,7 @@ namespace vislib {
          * @throws std::bad_alloc If the request cannot be fulfilled because
          *                        of too low memory.
          */
-        RawStorage *RaiseAtLeast(const size_t size);
+        RawStorage *RaiseAtLeast(const SIZE_T size);
 
         /**
          * Return 'storage' for reuse.
@@ -79,7 +79,7 @@ namespace vislib {
          * @param storage The RawStorage object to be returned. This must have
          *                been acquired from the same RawStoragePool before.
          *
-         * @throws argument_exception If 'storage' was not created by this 
+         * @throws IllegalParamException If 'storage' was not created by this 
          *                               RawStoragePool.
          */
         void Return(RawStorage *storage);
@@ -94,7 +94,7 @@ namespace vislib {
          * @param storage The RawStorage object to be returned. This must have
          *                been acquired from the same RawStoragePool before.
          *
-         * @throws argument_exception If 'storage' was not created by this 
+         * @throws IllegalParamException If 'storage' was not created by this 
          *                               RawStoragePool.
          */
         void SafeReturn(RawStorage *storage);
@@ -119,7 +119,7 @@ namespace vislib {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         RawStoragePool(const RawStoragePool& rhs);
 
@@ -130,7 +130,7 @@ namespace vislib {
          *
          * @return *this.
          *
-         * @throws argument_exception If (&rhs != this).
+         * @throws IllegalParamException If (&rhs != this).
          */
         RawStoragePool& operator =(const RawStoragePool& rhs);
 

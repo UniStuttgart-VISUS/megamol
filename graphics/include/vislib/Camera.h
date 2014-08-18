@@ -95,7 +95,7 @@ namespace graphics {
          *
          * @return 'outFrustum'. The out parameter is returned for convenience.
          *
-         * @throws invalid_operation_exception If the projection type of the camera 
+         * @throws IllegalStateException If the projection type of the camera 
          *                               is not supported. 
          */
         SceneSpaceFrustum& CalcViewFrustum(SceneSpaceFrustum& outFrustum);
@@ -107,7 +107,7 @@ namespace graphics {
          *
          * @return 'outFrustum'. The out parameter is returned for convenience.
          *
-         * @throws invalid_operation_exception If the projection type of the camera 
+         * @throws IllegalStateException If the projection type of the camera 
          *                               is not supported.
          */
         SceneSpaceViewFrustum& CalcViewFrustum(

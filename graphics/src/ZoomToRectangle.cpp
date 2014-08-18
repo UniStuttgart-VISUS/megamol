@@ -9,7 +9,7 @@
 
 #include "vislib/ZoomToRectangle.h"
 #include "vislib/Camera.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/mathfunctions.h"
 #include "vislib/Vector.h"
 
@@ -49,10 +49,10 @@ vislib::graphics::ZoomToRectangle::~ZoomToRectangle(void) {
 void vislib::graphics::ZoomToRectangle::Zoom(void) {
     // check preconditions
     if (!this->IsCameraParamsValid()) {
-        throw the::invalid_operation_exception("Camera not set", __FILE__, __LINE__);
+        throw IllegalStateException("Camera not set", __FILE__, __LINE__);
     }
     if (this->targetRect.IsEmpty()) {
-        throw the::invalid_operation_exception("Zoom target rectangle is empty", 
+        throw IllegalStateException("Zoom target rectangle is empty", 
             __FILE__, __LINE__);
     }
 
@@ -85,11 +85,11 @@ vislib::graphics::ZoomToRectangle&
  * vislib::graphics::ZoomToRectangle::zoomOrthographicCamera
  */
 void vislib::graphics::ZoomToRectangle::zoomOrthographicCamera(void) {
-    THE_ASSERT(this->IsCameraParamsValid());
-    THE_ASSERT(this->CameraParams()->Projection() 
+    ASSERT(this->IsCameraParamsValid());
+    ASSERT(this->CameraParams()->Projection() 
         == CameraParameters::MONO_ORTHOGRAPHIC);
-    THE_ASSERT(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
-    THE_ASSERT(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
+    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
+    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
 
     // move the camera to center the target area
     math::Point<ImageSpaceType, 2> center = this->targetRect.CalcCenter();
@@ -148,11 +148,11 @@ void vislib::graphics::ZoomToRectangle::zoomOrthographicCamera(void) {
  * vislib::graphics::ZoomToRectangle::zoomProjectiveCamera
  */
 void vislib::graphics::ZoomToRectangle::zoomProjectiveCamera(void) {
-    THE_ASSERT(this->IsCameraParamsValid());
-    THE_ASSERT(this->CameraParams()->Projection() 
+    ASSERT(this->IsCameraParamsValid());
+    ASSERT(this->CameraParams()->Projection() 
         != CameraParameters::MONO_ORTHOGRAPHIC);
-    THE_ASSERT(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
-    THE_ASSERT(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
+    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Width() > 0.0f);
+    BECAUSE_I_KNOW(this->CameraParams()->VirtualViewSize().Height() > 0.0f);
 
     // calculate distance of the image plane
     SceneSpaceType imgDist = (this->CameraParams()->VirtualViewSize().Height()

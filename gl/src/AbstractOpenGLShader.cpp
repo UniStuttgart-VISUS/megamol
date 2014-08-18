@@ -14,10 +14,10 @@
 #include "glh/glh_genext.h"
 
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/File.h"
-#include "the/memory.h"
-#include "the/trace.h"
+#include "vislib/memutils.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -55,7 +55,7 @@ const char* vislib::graphics::gl::AbstractOpenGLShader::CompileException
  * AbstractOpenGLShader::CompileException::CompileException
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
-        const char *file, const int line) : the::exception(file, line), 
+        const char *file, const int line) : Exception(file, line), 
         action(ACTION_UNKNOWN) {
 }
 
@@ -65,7 +65,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
         const char *msg, const char *file, const int line) 
-        : the::exception(msg, file, line), action(ACTION_UNKNOWN) {
+        : Exception(msg, file, line), action(ACTION_UNKNOWN) {
 }
 
 
@@ -74,7 +74,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
         const wchar_t *msg, const char *file, const int line) 
-        : the::exception(msg, file, line), action(ACTION_UNKNOWN) {
+        : Exception(msg, file, line), action(ACTION_UNKNOWN) {
 }
 
 
@@ -83,7 +83,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
         const char *msg, CompileAction action, const char *file, 
-        const int line) : the::exception(msg, file, line), action(action) {
+        const int line) : Exception(msg, file, line), action(action) {
 }
 
 
@@ -92,7 +92,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
         const wchar_t *msg, CompileAction action, const char *file, 
-        const int line) : the::exception(msg, file, line), action(action) {
+        const int line) : Exception(msg, file, line), action(action) {
 }
 
 
@@ -100,7 +100,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
  * AbstractOpenGLShader::CompileException::CompileException
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
-        const CompileException& rhs) : the::exception(rhs), action(rhs.action) {
+        const CompileException& rhs) : Exception(rhs), action(rhs.action) {
 }
 
 
@@ -108,7 +108,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileException(
  * AbstractOpenGLShader::CompileException::~CompileException
  */
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::~CompileException(
-        void) throw() {
+        void) {
 }
 
 
@@ -118,7 +118,7 @@ vislib::graphics::gl::AbstractOpenGLShader::CompileException::~CompileException(
 vislib::graphics::gl::AbstractOpenGLShader::CompileException& 
 vislib::graphics::gl::AbstractOpenGLShader::CompileException::operator =(
         const CompileException& rhs) {
-    the::exception::operator =(rhs);
+    Exception::operator =(rhs);
     this->action = rhs.action;
     return *this;
 }

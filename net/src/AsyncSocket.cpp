@@ -10,10 +10,10 @@
 
 #include "vislib/AsyncSocketContext.h"
 #include "vislib/error.h"
-#include "the/argument_exception.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/SocketException.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 #include "vislib/unreferenced.h"
 
 
@@ -21,13 +21,13 @@
  * vislib::net::AsyncSocket::~AsyncSocket
  */
 vislib::net::AsyncSocket::~AsyncSocket(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AsyncSocket::~AsyncSocket", __FILE__, __LINE__);
 
 #if (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
     try {
         this->threadPool.Terminate(true);
     } catch (...) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Exception in AsyncSocket dtor.");
+        VLTRACE(Trace::LEVEL_VL_WARN, "Exception in AsyncSocket dtor.");
     }
 #endif /* (!defined(_WIN32) || defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 }
@@ -37,13 +37,13 @@ vislib::net::AsyncSocket::~AsyncSocket(void) {
  * vislib::net::AsyncSocket::BeginReceive
  */
 void vislib::net::AsyncSocket::BeginReceive(void *outData, 
-        const size_t cntBytes, AsyncSocketContext *context, const int timeout, 
-        const int flags) {
-    THE_STACK_TRACE;
+        const SIZE_T cntBytes, AsyncSocketContext *context, const INT timeout, 
+        const INT flags) {
+    VLSTACKTRACE("AsyncSocket::BeginReceive", __FILE__, __LINE__);
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw the::argument_exception("context", __FILE__, __LINE__);
+        throw IllegalParamException("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
@@ -75,23 +75,23 @@ void vislib::net::AsyncSocket::BeginReceive(void *outData,
  * vislib::net::AsyncSocket::BeginReceive
  */
 void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr, 
-        void *outData, const size_t cntBytes, AsyncSocketContext *context, 
-        const int timeout, const int flags) {
-    THE_STACK_TRACE;
+        void *outData, const SIZE_T cntBytes, AsyncSocketContext *context, 
+        const INT timeout, const INT flags) {
+    VLSTACKTRACE("AsyncSocket::BeginReceive", __FILE__, __LINE__);
 
     /* Sanity checks. */
     if (outFromAddr == NULL) {
-        throw the::argument_exception("outFromAddr", __FILE__, __LINE__);
+        throw IllegalParamException("outFromAddr", __FILE__, __LINE__);
     }
     if (context == NULL) {
-        throw the::argument_exception("context", __FILE__, __LINE__);
+        throw IllegalParamException("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
     DWORD errorCode = 0;        // WSA error during last operation.
     DWORD cntReceived = 0;      // Receives # of received bytes.
     DWORD inOutFlags = flags;   // Flags for WSA.
-    int fromLen = sizeof(struct sockaddr_storage);
+    INT fromLen = sizeof(struct sockaddr_storage);
 
     context->setWsaParams(outData, cntBytes);
 
@@ -118,13 +118,13 @@ void vislib::net::AsyncSocket::BeginReceive(IPEndPoint *outFromAddr,
  * vislib::net::AsyncSocket::BeginSend
  */
 void vislib::net::AsyncSocket::BeginSend(const void *data, 
-        const size_t cntBytes, AsyncSocketContext *context, const int timeout,
-        const int flags) {
-    THE_STACK_TRACE;
+        const SIZE_T cntBytes, AsyncSocketContext *context, const INT timeout,
+        const INT flags) {
+    VLSTACKTRACE("AsyncSocket::BeginSend", __FILE__, __LINE__);
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw the::argument_exception("context", __FILE__, __LINE__);
+        throw IllegalParamException("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
@@ -154,19 +154,19 @@ void vislib::net::AsyncSocket::BeginSend(const void *data,
  * vislib::net::AsyncSocket::BeginSend
  */
 void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr, 
-        const void *data, const size_t cntBytes, AsyncSocketContext *context,
-        const int timeout, const int flags) {
-    THE_STACK_TRACE;
+        const void *data, const SIZE_T cntBytes, AsyncSocketContext *context,
+        const INT timeout, const INT flags) {
+    VLSTACKTRACE("AsyncSocket::BeginSend", __FILE__, __LINE__);
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw the::argument_exception("context", __FILE__, __LINE__);
+        throw IllegalParamException("context", __FILE__, __LINE__);
     }
 
 #if (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN))
     DWORD errorCode = 0;        // WSA error during last operation.
     DWORD cntSent = 0;          // Receives # of sent bytes.
-    int toLen = sizeof(struct sockaddr_storage);
+    INT toLen = sizeof(struct sockaddr_storage);
 
     context->setWsaParams(data, cntBytes);
 
@@ -193,10 +193,10 @@ void vislib::net::AsyncSocket::BeginSend(const IPEndPoint& toAddr,
 /*
  * vislib::net::AsyncSocket::Receive
  */
-size_t vislib::net::AsyncSocket::Receive(void *outData, const size_t cntBytes,
-        const int timeout, const int flags, const bool forceReceive) {
-    THE_STACK_TRACE;
-    size_t retval = 0;
+SIZE_T vislib::net::AsyncSocket::Receive(void *outData, const SIZE_T cntBytes,
+        const INT timeout, const INT flags, const bool forceReceive) {
+    VLSTACKTRACE("AsyncSocket::Receive", __FILE__, __LINE__);
+    SIZE_T retval = 0;
 
     this->lockRecv.Lock();
     try {
@@ -214,11 +214,11 @@ size_t vislib::net::AsyncSocket::Receive(void *outData, const size_t cntBytes,
 /*
  * vislib::net::AsyncSocket::Receive
  */
-size_t vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
-        const size_t cntBytes, const int timeout, const int flags, 
+SIZE_T vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
+        const SIZE_T cntBytes, const INT timeout, const INT flags, 
         const bool forceReceive) {
-    THE_STACK_TRACE;
-    size_t retval = 0;
+    VLSTACKTRACE("AsyncSocket::Receive", __FILE__, __LINE__);
+    SIZE_T retval = 0;
 
     this->lockRecv.Lock();
     try {
@@ -237,11 +237,11 @@ size_t vislib::net::AsyncSocket::Receive(IPEndPoint& outFromAddr, void *outData,
 /*
  * vislib::net::AsyncSocket::Receive
  */
-size_t vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr, 
-        void *outData, const size_t cntBytes, const int timeout, 
-        const int flags, const bool forceReceive) {
-    THE_STACK_TRACE;
-    size_t retval = 0;
+SIZE_T vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr, 
+        void *outData, const SIZE_T cntBytes, const INT timeout, 
+        const INT flags, const bool forceReceive) {
+    VLSTACKTRACE("AsyncSocket::Receive", __FILE__, __LINE__);
+    SIZE_T retval = 0;
 
     this->lockRecv.Lock();
     try {
@@ -260,10 +260,10 @@ size_t vislib::net::AsyncSocket::Receive(SocketAddress& outFromAddr,
 /*
  * vislib::net::AsyncSocket::Send
  */
-size_t vislib::net::AsyncSocket::Send(const void *data, const size_t cntBytes, 
-        const int timeout, const int flags, const bool forceSend) {
-    THE_STACK_TRACE;
-    size_t retval = 0;
+SIZE_T vislib::net::AsyncSocket::Send(const void *data, const SIZE_T cntBytes, 
+        const INT timeout, const INT flags, const bool forceSend) {
+    VLSTACKTRACE("AsyncSocket::Send", __FILE__, __LINE__);
+    SIZE_T retval = 0;
 
     this->lockSend.Lock();
     try {
@@ -281,11 +281,11 @@ size_t vislib::net::AsyncSocket::Send(const void *data, const size_t cntBytes,
 /*
  * vislib::net::AsyncSocket::Send
  */
-size_t vislib::net::AsyncSocket::Send(const IPEndPoint& toAddr, const void *data, 
-        const size_t cntBytes, const int timeout, const int flags, 
+SIZE_T vislib::net::AsyncSocket::Send(const IPEndPoint& toAddr, const void *data, 
+        const SIZE_T cntBytes, const INT timeout, const INT flags, 
         const bool forceSend) {
-    THE_STACK_TRACE;
-    size_t retval = 0;
+    VLSTACKTRACE("AsyncSocket::Send", __FILE__, __LINE__);
+    SIZE_T retval = 0;
 
     this->lockSend.Lock();
     try {
@@ -307,7 +307,7 @@ size_t vislib::net::AsyncSocket::Send(const IPEndPoint& toAddr, const void *data
  */
 void CALLBACK vislib::net::AsyncSocket::completedFunc(DWORD dwError, 
         DWORD cbTransferred, LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("AsyncSocket::completedFunc", __FILE__, __LINE__);
     AsyncSocketContext *ctx = reinterpret_cast<AsyncSocketContext *>(
         lpOverlapped->hEvent);
     ctx->notifyCompleted(cbTransferred, dwError);
@@ -319,22 +319,22 @@ void CALLBACK vislib::net::AsyncSocket::completedFunc(DWORD dwError,
 /*
  * vislib::net::AsyncSocket::receiveFunc
  */
-unsigned int vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
-    THE_STACK_TRACE;
+DWORD vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
+    VLSTACKTRACE("AsyncSocket::receiveFunc", __FILE__, __LINE__);
     AsyncSocketContext *ctx = static_cast<AsyncSocketContext *>(
         asyncSocketContext);
-    unsigned int retval = 0;   // The return value (error code of socket call).
-    unsigned int cnt = 0;      // The number of bytes received.
+    DWORD retval = 0;   // The return value (error code of socket call).
+    DWORD cnt = 0;      // The number of bytes received.
 
     // Assert this as we require the overridden methods for locking!
     // The call to the overloaded ctx->socket->Receive will ensure locking, 
     // we do not have to do this ourselves in the thread function.
-    THE_ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
+    ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
 
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        return e.get_error().native_error();
+        return e.GetErrorCode();
     }
 
     try {
@@ -349,18 +349,18 @@ unsigned int vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
         }
 
         ctx->notifyCompleted(cnt, 0);
-    } catch (the::system::system_exception& e) {
-        retval = e.get_error().native_error();
+    } catch (sys::SystemException& e) {
+        retval = e.GetErrorCode();
         ctx->notifyCompleted(cnt, retval);
     } catch (...) {
         ctx->notifyCompleted(0, ::GetLastError());
-        THE_ASSERT(false);
+        ASSERT(false);
     }
 
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Socket::Cleanup failed in AsyncSocket "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Socket::Cleanup failed in AsyncSocket "
             "AsyncSocket::receiveFunc.");
     }
 
@@ -371,22 +371,22 @@ unsigned int vislib::net::AsyncSocket::receiveFunc(void *asyncSocketContext) {
 /*
  * vislib::net::AsyncSocket::sendFunc
  */
-unsigned int vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
-    THE_STACK_TRACE;
+DWORD vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
+    VLSTACKTRACE("AsyncSocket::sendFunc", __FILE__, __LINE__);
     AsyncSocketContext *ctx = static_cast<AsyncSocketContext *>(
         asyncSocketContext);
-    unsigned int retval = 0;   // The return value (error code of socket call).
-    unsigned int cnt = 0;      // The number of bytes sent.
+    DWORD retval = 0;   // The return value (error code of socket call).
+    DWORD cnt = 0;      // The number of bytes sent.
 
     // Assert this as we require the overridden methods for locking!
     // The call to the overloaded ctx->socket->Send will ensure locking,
     // we do not have to do this ourselves in the thread function.
-    THE_ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
+    ASSERT(dynamic_cast<AsyncSocket *>(ctx->socket) != NULL);
 
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        return e.get_error().native_error();
+        return e.GetErrorCode();
     }
 
     try {
@@ -401,18 +401,18 @@ unsigned int vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
         }
 
         ctx->notifyCompleted(cnt, 0);
-    } catch (the::system::system_exception& e) {
-        retval = e.get_error().native_error();
+    } catch (sys::SystemException& e) {
+        retval = e.GetErrorCode();
         ctx->notifyCompleted(cnt, retval);
     } catch (...) {
         ctx->notifyCompleted(0, ::GetLastError());
-        THE_ASSERT(false);
+        ASSERT(false);
     }
 
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Socket::Cleanup failed in AsyncSocket "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Socket::Cleanup failed in AsyncSocket "
             "AsyncSocket::sendFunc.");
     }
 
@@ -424,21 +424,18 @@ unsigned int vislib::net::AsyncSocket::sendFunc(void *asyncSocketContext) {
 /*
  * vislib::net::AsyncSocket::endAsync
  */
-size_t vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
-    THE_STACK_TRACE;
-
-#ifdef _WIN32
+SIZE_T vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
+    VLSTACKTRACE("AsyncSocket::endAsync", __FILE__, __LINE__);
     DWORD retval = 0;
     DWORD flags = 0;
-#else /* _WIN32 */
-    unsigned int retval = 0;
-    unsigned int flags = 0;
+
+#ifndef _WIN32
     VL_UNREFERENCED_LOCAL_VARIABLE(flags);
 #endif /* _WIN32 */
 
     /* Sanity checks. */
     if (context == NULL) {
-        throw the::argument_exception("context", __FILE__, __LINE__);
+        throw IllegalParamException("context", __FILE__, __LINE__);
     }
 
     /* Check for success of the operation. */
@@ -451,8 +448,8 @@ size_t vislib::net::AsyncSocket::endAsync(AsyncSocketContext *context) {
     if (context->errorCode != 0) {
         throw SocketException(context->errorCode, __FILE__, __LINE__);
     }
-    retval = static_cast<unsigned int>(context->cntData);
+    retval = static_cast<DWORD>(context->cntData);
 #endif /* (defined(_WIN32) && !defined(VISLIB_ASYNCSOCKET_LIN_IMPL_ON_WIN)) */
 
-    return static_cast<size_t>(retval);
+    return static_cast<SIZE_T>(retval);
 }

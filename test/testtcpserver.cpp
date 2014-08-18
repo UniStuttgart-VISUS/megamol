@@ -9,14 +9,14 @@
 
 #include "vislib/TcpServer.h"
 #include "vislib/SocketException.h"
-#include "the/system/system_exception.h"
+#include "vislib/SystemException.h"
 #include "vislib/Thread.h"
 #include "testhelper.h"
 
 #include <iostream>
 
 /** Port used for test server. */
-static const uint16_t TEST_PORT = 8665;
+static const SHORT TEST_PORT = 8665;
 
 
 class ConnectionListener : public vislib::net::TcpServer::Listener {
@@ -38,7 +38,7 @@ ConnectionListener::~ConnectionListener(void) {
 bool ConnectionListener::OnNewConnection(vislib::net::Socket& socket,
         const vislib::net::IPEndPoint& addr) throw() {
     std::cout << "The TCP server accepted the connection from "
-        << addr.ToStringA().c_str() << std::endl;
+        << addr.ToStringA().PeekBuffer() << std::endl;
     this->cntConnections++;
     return false;
 }

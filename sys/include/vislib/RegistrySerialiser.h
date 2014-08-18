@@ -18,12 +18,12 @@
 
 #include <windows.h>
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/RegistryKey.h"
 #include "vislib/Serialiser.h"
 #include "vislib/Stack.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -53,13 +53,13 @@ namespace sys {
         /**
          * TODO: documentation
          */
-        RegistrySerialiser(const the::astring& subKey, 
+        RegistrySerialiser(const vislib::StringA& subKey, 
             HKEY hKey = HKEY_CURRENT_USER);
 
         /**
          * TODO: documentation
          */
-        RegistrySerialiser(const the::wstring& subKey, 
+        RegistrySerialiser(const vislib::StringW& subKey, 
             HKEY hKey = HKEY_CURRENT_USER);
 
         /**
@@ -70,7 +70,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throw the::system::system_exception If the registry handle could not be 
+         * @throw SystemException If the registry handle could not be 
          *                        duplicated.
          */
         RegistrySerialiser(const RegistrySerialiser& rhs);
@@ -99,52 +99,52 @@ namespace sys {
         virtual void Deserialise(wchar_t& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(int8_t& outValue, 
+        virtual void Deserialise(INT8& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(int8_t& outValue, 
+        virtual void Deserialise(INT8& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(uint8_t& outValue, 
+        virtual void Deserialise(UINT8& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(uint8_t& outValue, 
+        virtual void Deserialise(UINT8& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(int16_t& outValue, 
+        virtual void Deserialise(INT16& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(int16_t& outValue, 
+        virtual void Deserialise(INT16& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(uint16_t& outValue, 
+        virtual void Deserialise(UINT16& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(uint16_t& outValue, 
+        virtual void Deserialise(UINT16& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(int32_t& outValue, 
+        virtual void Deserialise(INT32& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(int32_t& outValue, 
+        virtual void Deserialise(INT32& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(uint32_t& outValue, 
+        virtual void Deserialise(UINT32& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(uint32_t& outValue, 
+        virtual void Deserialise(UINT32& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(int64_t& outValue, 
+        virtual void Deserialise(INT64& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(int64_t& outValue, 
+        virtual void Deserialise(INT64& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(uint64_t& outValue, 
+        virtual void Deserialise(UINT64& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(uint64_t& outValue, 
+        virtual void Deserialise(UINT64& outValue, 
             const wchar_t *name);
 
         virtual void Deserialise(float& outValue, 
@@ -159,16 +159,16 @@ namespace sys {
         virtual void Deserialise(double& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(the::astring& outValue, 
+        virtual void Deserialise(StringA& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(the::astring& outValue, 
+        virtual void Deserialise(StringA& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(the::wstring& outValue, 
+        virtual void Deserialise(StringW& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(the::wstring& outValue, 
+        virtual void Deserialise(StringW& outValue, 
             const wchar_t *name);
 
         /**
@@ -201,8 +201,8 @@ namespace sys {
          *
          * @param name The name of the new key.
          */
-        inline void PushKey(const the::astring& name) {
-            this->PushKey(name.c_str());
+        inline void PushKey(const StringA& name) {
+            this->PushKey(name.PeekBuffer());
         }
 
         /**
@@ -210,8 +210,8 @@ namespace sys {
          *
          * @param name The name of the new key.
          */
-        inline void PushKey(const the::wstring& name) {
-            this->PushKey(name.c_str());
+        inline void PushKey(const StringW& name) {
+            this->PushKey(name.PeekBuffer());
         }
 
         virtual void Serialise(const bool value, 
@@ -226,52 +226,52 @@ namespace sys {
         virtual void Serialise(const wchar_t value,
             const wchar_t *name);
 
-        virtual void Serialise(const int8_t value,
+        virtual void Serialise(const INT8 value,
             const char *name = NULL);
 
-        virtual void Serialise(const int8_t value,
+        virtual void Serialise(const INT8 value,
             const wchar_t *name);
 
-        virtual void Serialise(const uint8_t value,
+        virtual void Serialise(const UINT8 value,
             const char *name = NULL);
 
-        virtual void Serialise(const uint8_t value,
+        virtual void Serialise(const UINT8 value,
             const wchar_t *name);
 
-        virtual void Serialise(const int16_t value,
+        virtual void Serialise(const INT16 value,
             const char *name = NULL);
 
-        virtual void Serialise(const int16_t value,
+        virtual void Serialise(const INT16 value,
             const wchar_t *name);
 
-        virtual void Serialise(const uint16_t value,
+        virtual void Serialise(const UINT16 value,
             const char *name = NULL);
 
-        virtual void Serialise(const uint16_t value,
+        virtual void Serialise(const UINT16 value,
             const wchar_t *name);
 
-        virtual void Serialise(const int32_t value,
+        virtual void Serialise(const INT32 value,
             const char *name = NULL);
 
-        virtual void Serialise(const int32_t value,
+        virtual void Serialise(const INT32 value,
             const wchar_t *name);
 
-        virtual void Serialise(const uint32_t value,
+        virtual void Serialise(const UINT32 value,
             const char *name = NULL);
 
-        virtual void Serialise(const uint32_t value,
+        virtual void Serialise(const UINT32 value,
             const wchar_t *name);
 
-        virtual void Serialise(const int64_t value,
+        virtual void Serialise(const INT64 value,
             const char *name = NULL);
 
-        virtual void Serialise(const int64_t value,
+        virtual void Serialise(const INT64 value,
             const wchar_t *name);
 
-        virtual void Serialise(const uint64_t value,
+        virtual void Serialise(const UINT64 value,
             const char *name = NULL);
 
-        virtual void Serialise(const uint64_t value,
+        virtual void Serialise(const UINT64 value,
             const wchar_t *name);
 
         virtual void Serialise(const float value,
@@ -286,16 +286,16 @@ namespace sys {
         virtual void Serialise(const double value,
             const wchar_t *name);
 
-        virtual void Serialise(const the::astring& value,
+        virtual void Serialise(const StringA& value,
             const char *name = NULL);
 
-        virtual void Serialise(const the::astring& value,
+        virtual void Serialise(const StringA& value,
             const wchar_t *name);
 
-        virtual void Serialise(const the::wstring& value,
+        virtual void Serialise(const StringW& value,
             const char *name = NULL);
 
-        virtual void Serialise(const the::wstring& value,
+        virtual void Serialise(const StringW& value,
             const wchar_t *name);
 
         /**
@@ -309,7 +309,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throw the::system::system_exception If the registry handle could not be 
+         * @throw SystemException If the registry handle could not be 
          *                        duplicated.
          */
         RegistrySerialiser& operator =(const RegistrySerialiser& rhs);
@@ -323,8 +323,8 @@ namespace sys {
 
         /**
          * Generic convenience method for deserialisation of integral types 
-         * that are at most as large as a DWORD (uint32_t). The method just 
-         * delegates the job to the uint32_t deserialisation. The intent of 
+         * that are at most as large as a DWORD (UINT32). The method just 
+         * delegates the job to the UINT32 deserialisation. The intent of 
          * this template is not to duplicate the implementation of 
          * serialisation methods for small types. It can, however, not be used
          * for all types. E.g. bool deserialisation produces a compiler warning
@@ -342,17 +342,17 @@ namespace sys {
          * @param outValue Recevies the deserialised value.
          * @param name     The name of the stored value.
          *
-         * @throws argument_exception If 'name' is NULL or the type of the 
+         * @throws IllegalParamException If 'name' is NULL or the type of the 
          *                               value parameter does not match the 
          *                               type of the stored element.
-         * @throws the::system::system_exception If the registry access failed.
+         * @throws SystemException If the registry access failed.
          */
         template<class T, class R, class C>
         inline void deserialiseAsDword(T& outValue, const C *name) {
-            THE_ASSERT(sizeof(T) <= sizeof(DWORD));
-            THE_ASSERT(sizeof(DWORD) == sizeof(uint32_t));
-            THE_ASSERT(sizeof(DWORD) == sizeof(R));
-            uint32_t value;
+            ASSERT(sizeof(T) <= sizeof(DWORD));
+            ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            ASSERT(sizeof(DWORD) == sizeof(R));
+            UINT32 value;
             this->Deserialise(value, name);
             outValue = static_cast<T>(*reinterpret_cast<R *>(&value));
         }
@@ -369,14 +369,14 @@ namespace sys {
          * @param outValue Recevies the deserialised value.
          * @param name     The name of the stored value.
          *
-         * @throws argument_exception If 'name' is NULL or the type of the 
+         * @throws IllegalParamException If 'name' is NULL or the type of the 
          *                               value parameter does not match the 
          *                               type of the stored element.
-         * @throws the::system::system_exception If the registry access failed.
+         * @throws SystemException If the registry access failed.
          */
         template<class T, class C>
         inline void deserialiseSignedAsDword(T& outValue, const C *name) {
-            this->deserialiseAsDword<T, int32_t, C>(outValue, name);
+            this->deserialiseAsDword<T, INT32, C>(outValue, name);
         }
 
         /**
@@ -391,14 +391,14 @@ namespace sys {
          * @param outValue Recevies the deserialised value.
          * @param name     The name of the stored value.
          *
-         * @throws argument_exception If 'name' is NULL or the type of the 
+         * @throws IllegalParamException If 'name' is NULL or the type of the 
          *                               value parameter does not match the 
          *                               type of the stored element.
-         * @throws the::system::system_exception If the registry access failed.
+         * @throws SystemException If the registry access failed.
          */
         template<class T, class C>
         inline void deserialiseUnsignedAsDword(T& outValue, const C *name) {
-            this->deserialiseAsDword<T, uint32_t, C>(outValue, name);
+            this->deserialiseAsDword<T, UINT32, C>(outValue, name);
         }
 
         /**
@@ -407,7 +407,7 @@ namespace sys {
          * @param subKey Name of the subkey to write to.
          * @param hKey   Key to create the subkey at.
          *
-         * @throws the::system::system_exception In case of an error.
+         * @throws SystemException In case of an error.
          */
         void initialise(const char *subKey, HKEY hKey);
 
@@ -417,7 +417,7 @@ namespace sys {
          * @param subKey Name of the subkey to write to.
          * @param hKey   Key to create the subkey at.
          *
-         * @throws the::system::system_exception In case of an error.
+         * @throws SystemException In case of an error.
          */
         void initialise(const wchar_t *subKey, HKEY hKey);
 
@@ -429,7 +429,7 @@ namespace sys {
          * @param value The value to save.
          * @param name  The name of the stored value.
          *
-         * @throws the::system::system_exception If the registry access failed.
+         * @throws SystemException If the registry access failed.
          */
         template<class T, class C>
         inline void serialiseAsDword(const T& value, const C *name) {
@@ -438,14 +438,14 @@ namespace sys {
 
         /**
          * Generic serialisation of integral types that are at most as large
-         * as a DWORD (uint32_t). The method just delegates the job to the uint32_t
+         * as a DWORD (UINT32). The method just delegates the job to the UINT32
          * serialisation. The intent of this template is not to duplicate the
          * implementation of serialisation methods for small types.
          *
          * The template parameters have the following meaning:
          * T: An integral type of the target variable, which must be at most as
-         *    large as a uint32_t.
-         * R: Before casting the value to uint32_t, its address is 
+         *    large as a UINT32.
+         * R: Before casting the value to UINT32, its address is 
          *    reinterpret_casted to a pointer to R. This allows serialising
          *    signed integral and floating point variables using this method.
          * C: char or wchar_t
@@ -453,14 +453,14 @@ namespace sys {
          * @param value The value to save.
          * @param name  The name of the stored value.
          *
-         * @throws the::system::system_exception If the registry access failed.
+         * @throws SystemException If the registry access failed.
          */
         template<class T, class R, class C>
         inline void serialiseAsDword0(const T& value, const C *name) {
-            THE_ASSERT(sizeof(T) <= sizeof(DWORD));
-            THE_ASSERT(sizeof(DWORD) == sizeof(uint32_t));
-            THE_ASSERT(sizeof(T) == sizeof(R));
-            uint32_t v = static_cast<uint32_t>(*reinterpret_cast<const R *>(
+            ASSERT(sizeof(T) <= sizeof(DWORD));
+            ASSERT(sizeof(DWORD) == sizeof(UINT32));
+            ASSERT(sizeof(T) == sizeof(R));
+            UINT32 v = static_cast<UINT32>(*reinterpret_cast<const R *>(
                 &value));
             this->Serialise(v, name);
         }

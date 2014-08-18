@@ -15,10 +15,10 @@
 
 #include <cmath>
 
-#include "the/assert.h"
-#include "the/argument_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/mathfunctions.h"
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/Vector.h"
 
 #ifndef M_PI
@@ -282,7 +282,7 @@ namespace math {
          * @param m32 Matrix component row 3, column 2.
          * @param m33 Matrix component row 3, column 3.
          *
-         * @throw argument_exception if the matrix components do not seem
+         * @throw IllegalParamException if the matrix components do not seem
          *                              to form a rotation-only matrix.
          */
         void SetFromRotationMatrix(const T& m11, const T& m12, const T& m13,
@@ -515,16 +515,16 @@ namespace math {
     protected:
 
         /** The index of the w component. */
-        static const uintptr_t IDX_W;
+        static const UINT_PTR IDX_W;
 
         /** The index of the x component. */
-        static const uintptr_t IDX_X;
+        static const UINT_PTR IDX_X;
 
         /** The index of the y component. */
-        static const uintptr_t IDX_Y;
+        static const UINT_PTR IDX_Y;
 
         /** The index of the z component. */
-        static const uintptr_t IDX_Z;
+        static const UINT_PTR IDX_Z;
 
         /**
          * Disallow instances of this class.
@@ -543,7 +543,7 @@ namespace math {
          */
         inline AbstractQuaternion(const T& x, const T& y, const T& z, 
                 const T& w) {
-            THE_ASSERT(sizeof(this->components) == 4 * sizeof(T));
+            BECAUSE_I_KNOW(sizeof(this->components) == 4 * sizeof(T));
             this->components[IDX_X] = x;
             this->components[IDX_Y] = y;
             this->components[IDX_Z] = z;
@@ -591,7 +591,7 @@ namespace math {
             outAngle = 0.0f;
         } 
 
-        THE_ASSERT(outAxis.IsNormalised());
+        ASSERT(outAxis.IsNormalised());
     }
 
 
@@ -719,7 +719,7 @@ namespace math {
                 xb = q1 * xo;
             }
             if (xb != xi) {
-                throw the::argument_exception("Matrix is not rotation-only",
+                throw IllegalParamException("Matrix is not rotation-only",
                     __FILE__, __LINE__);
             }
 
@@ -729,7 +729,7 @@ namespace math {
         if (yi == yb) {
             // rot 0°
             if ((q1 * zo) != zi) {
-                throw the::argument_exception("Matrix is not rotation-only",
+                throw IllegalParamException("Matrix is not rotation-only",
                     __FILE__, __LINE__);
             }
 
@@ -753,7 +753,7 @@ namespace math {
                 yc = q2 * yb;
             }
             if (yc != yi) {
-                throw the::argument_exception("Matrix is not rotation-only",
+                throw IllegalParamException("Matrix is not rotation-only",
                     __FILE__, __LINE__);
             }
             q1 = q2 * q1;
@@ -764,7 +764,7 @@ namespace math {
         yb = q1 * yo;
         Vector<T, 3> zb = q1 * zo;
         if ((xb != xi) || (yb != yi) || (zb!= zi)) {
-            throw the::argument_exception("Matrix is not rotation-only",
+            throw IllegalParamException("Matrix is not rotation-only",
                 __FILE__, __LINE__);
         }
 
@@ -938,28 +938,28 @@ namespace math {
      * vislib::math::AbstractQuaternion<T, S>::IDX_W
      */
     template<class T, class S> 
-    const uintptr_t AbstractQuaternion<T, S>::IDX_W = 3;
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_W = 3;
 
 
     /*
      * vislib::math::AbstractQuaternion<T, S>::IDX_X
      */
     template<class T, class S> 
-    const uintptr_t AbstractQuaternion<T, S>::IDX_X = 0;
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_X = 0;
 
 
     /*
      * vislib::math::AbstractQuaternion<T, S>::IDX_Y
      */
     template<class T, class S> 
-    const uintptr_t AbstractQuaternion<T, S>::IDX_Y = 1;
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_Y = 1;
 
 
     /*
      * vislib::math::AbstractQuaternion<T, S>::IDX_Z
      */
     template<class T, class S> 
-    const uintptr_t AbstractQuaternion<T, S>::IDX_Z = 2;
+    const UINT_PTR AbstractQuaternion<T, S>::IDX_Z = 2;
 
 } /* end namespace math */
 } /* end namespace vislib */

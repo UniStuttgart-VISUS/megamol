@@ -15,9 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/exception.h"
-
-#ifdef HAVE_OFED_SDK
+#include "vislib/Exception.h"
 
 
 namespace vislib {
@@ -28,11 +26,7 @@ namespace ib {
     /**
      * These exceptions are thrown by the RDMA communication channels.
      */
-    class IbRdmaException : public the::exception {
-    private:
-
-        /** Superclass typedef. */
-        typedef the::exception Super;
+    class IbRdmaException : public Exception {
 
     public:
 
@@ -54,6 +48,9 @@ namespace ib {
 
     private:
 
+        /** Superclass typedef. */
+        typedef Exception Super;
+
         int errorCode;
 
     };
@@ -61,8 +58,6 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
-
-#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

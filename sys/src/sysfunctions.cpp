@@ -16,17 +16,18 @@
 #include <climits>
 #endif /* _WIN32 */
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/File.h"
-#include "the/argument_exception.h"
-#include "the/system/io/io_exception.h"
-#include "the/memory.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IOException.h"
+#include "vislib/memutils.h"
 #include "vislib/Path.h"
-#include "the/string.h"
-#include "the/text/string_converter.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/String.h"
+#include "vislib/StringConverter.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/UTF8Encoder.h"
 
 
 #ifdef _WIN32
@@ -40,30 +41,30 @@
  *
  * @returns 'out'.
  *
- * @throws the::system::system_exception If the resource lookup or loading the resource
+ * @throws SystemException If the resource lookup or loading the resource
  *                         failed.
  */
 static vislib::RawStorage& loadResource(vislib::RawStorage& out, 
         HMODULE hModule, HRSRC hRes) {
-    THE_ASSERT(hRes != NULL);
+    ASSERT(hRes != NULL);
     HGLOBAL hGlobal = NULL;
     void *data = NULL;
-    unsigned int size = 0;
+    DWORD size = 0;
 
     if ((hGlobal = ::LoadResource(hModule, hRes)) == NULL) {
         // From MSDN: The return type of LoadResource is HGLOBAL for backward 
         // compatibility, not because the function returns a handle to a 
         // global memory block. Do not pass this handle to the GlobalLock 
         // or GlobalFree function.
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
 
     if ((size = ::SizeofResource(hModule, hRes)) == 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
 
     data = ::LockResource(hGlobal);
-    THE_ASSERT(data != NULL);
+    ASSERT(data != NULL);
     out.EnforceSize(0);
     out.Append(data, size);
     UnlockResource(hGlobal);
@@ -81,7 +82,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
     HRSRC hRes = NULL;
     
     if ((hRes = ::FindResourceA(hModule, resourceID, resourceType)) == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
     
     return ::loadResource(out, hModule, hRes);
@@ -89,7 +90,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
 #else /* _WIN32 */
 vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
         const char *resourceID, const char *resourceType) {
-    throw the::not_supported_exception("LoadResource", __FILE__, __LINE__);
+    throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
 }
 #endif /* _WIN32 */
 
@@ -104,7 +105,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
     HRSRC hRes = NULL;
     
     if ((hRes = ::FindResourceW(hModule, resourceID, resourceType)) == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
     
     return ::loadResource(out, hModule, hRes);
@@ -112,7 +113,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
 #else /* _WIN32 */
 vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
         const wchar_t *resourceID, const wchar_t *resourceType) {
-    throw the::not_supported_exception("LoadResource", __FILE__, __LINE__);
+    throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
 }
 #endif /* _WIN32 */      
 
@@ -120,7 +121,7 @@ vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule,
 /*
  * vislib::sys::ReadLineFromFileA
  */
-the::astring vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
+vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
     char *buf = new char[size + 1];
     unsigned int pos;
 
@@ -148,17 +149,17 @@ the::astring vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
         }
         buf[pos] = '\0';
 
-    } catch(the::system::io::io_exception e) {
-        the::safe_array_delete(buf);
-        throw the::system::io::io_exception(e);
-    } catch(the::exception e) {
-        the::safe_array_delete(buf);
-        throw the::exception(e);
+    } catch(IOException e) {
+        ARY_SAFE_DELETE(buf);
+        throw IOException(e);
+    } catch(Exception e) {
+        ARY_SAFE_DELETE(buf);
+        throw Exception(e);
     } catch(...) {
-        the::safe_array_delete(buf);
-        throw the::exception("Unexcepted exception", __FILE__, __LINE__);
+        ARY_SAFE_DELETE(buf);
+        throw Exception("Unexcepted exception", __FILE__, __LINE__);
     }
-    the::astring str(buf);
+    StringA str(buf);
     delete[] buf;
     return str;
 }
@@ -167,7 +168,7 @@ the::astring vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
 /*
  * vislib::sys::ReadLineFromFileW
  */
-the::wstring vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
+vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
     wchar_t *buf = new wchar_t[size + 1];
     unsigned int pos;
 
@@ -195,17 +196,17 @@ the::wstring vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
         }
         buf[pos] = L'\0';
 
-    } catch(the::system::io::io_exception e) {
-        the::safe_array_delete(buf);
-        throw the::system::io::io_exception(e);
-    } catch(the::exception e) {
-        the::safe_array_delete(buf);
-        throw the::exception(e);
+    } catch(IOException e) {
+        ARY_SAFE_DELETE(buf);
+        throw IOException(e);
+    } catch(Exception e) {
+        ARY_SAFE_DELETE(buf);
+        throw Exception(e);
     } catch(...) {
-        the::safe_array_delete(buf);
-        throw the::exception("Unexcepted exception", __FILE__, __LINE__);
+        ARY_SAFE_DELETE(buf);
+        throw Exception("Unexcepted exception", __FILE__, __LINE__);
     }
-    the::wstring str(buf);
+    StringW str(buf);
     delete[] buf;
     return str;
 }
@@ -314,20 +315,19 @@ void checkFileFormat(vislib::sys::File& file,
 /*
  * vislib::sys::ReadTextFile
  */
-bool vislib::sys::ReadTextFile(the::astring& outStr, 
+bool vislib::sys::ReadTextFile(vislib::StringA& outStr, 
         vislib::sys::File& file, vislib::sys::TextFileFormat format,
         bool forceFormat) {
     if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
         checkFileFormat(file, format,
             (format == TEXTFF_UNSPECIFIC) ? TEXTFF_ASCII : format);
     }
-    THE_ASSERT(format != TEXTFF_UNSPECIFIC);
+    ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
 
     switch (format) {
     case TEXTFF_ASCII: {
-        outStr = the::astring(len + 1, '\0');
-        char *src = const_cast<char*>(outStr.c_str());
+        char *src = outStr.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
         return true;
@@ -337,58 +337,58 @@ bool vislib::sys::ReadTextFile(the::astring& outStr,
 CASE_TEXTFF_UNICODE: 
 #endif /* _WIN32 */
     {
-        the::wstring tmp(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L'\0');
-        wchar_t *src = const_cast<wchar_t*>(tmp.c_str());
+        vislib::StringW tmp;
+        wchar_t *src = tmp.AllocateBuffer(static_cast<unsigned int>(
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
-        the::text::string_converter::convert(outStr, tmp);
+        outStr = tmp;
         return true;
     } break;
     case TEXTFF_UTF8: {
-        the::astring bytes(static_cast<unsigned int>(len + 1), '\0');
-        char *src = const_cast<char *>(bytes.c_str());
+        vislib::StringA bytes;
+        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
-        the::text::string_converter::convert_from_utf8(outStr, bytes);
+        UTF8Encoder::Decode(outStr, bytes);
         return true;
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
 
@@ -399,23 +399,23 @@ CASE_TEXTFF_UNICODE:
 /*
  * vislib::sys::ReadTextFile
  */
-bool vislib::sys::ReadTextFile(the::wstring& outStr, 
+bool vislib::sys::ReadTextFile(vislib::StringW& outStr, 
         vislib::sys::File& file, vislib::sys::TextFileFormat format,
         bool forceFormat) {
     if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
         checkFileFormat(file, format,
             (format == TEXTFF_UNSPECIFIC) ? TEXTFF_UNICODE : format);
     }
-    THE_ASSERT(format != TEXTFF_UNSPECIFIC);
+    ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
 
     switch (format) {
     case TEXTFF_ASCII: {
-        the::astring tmp(static_cast<unsigned int>(len + 1), '\0');
-        char *src = const_cast<char*>(tmp.c_str());
+        vislib::StringA tmp;
+        char *src = tmp.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
-        the::text::string_converter::convert(outStr, tmp);
+        outStr = tmp;
         return true;
     } break;
     case TEXTFF_UNICODE:
@@ -423,57 +423,56 @@ bool vislib::sys::ReadTextFile(the::wstring& outStr,
 CASE_TEXTFF_UNICODE:
 #endif /* WIN32 */
     {
-        outStr = the::wstring(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)), L'\0');
-        wchar_t *src = const_cast<wchar_t*>(outStr.c_str());
+        wchar_t *src = outStr.AllocateBuffer(static_cast<unsigned int>(
+            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
         return true;
     } break;
     case TEXTFF_UTF8: {
-        the::astring bytes(static_cast<unsigned int>(len + 1), '\0');
-        char *src = const_cast<char*>(bytes.c_str());
+        vislib::StringA bytes;
+        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
-        the::text::string_converter::convert_from_utf8(outStr, bytes);
+        UTF8Encoder::Decode(outStr, bytes);
         return true;
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
 
@@ -523,12 +522,12 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
     HMODULE hModule = NULL;
 
     if ((hModule = ::LoadLibraryA(moduleName)) == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
             hModule, "DllGetVersion"))) == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return dllGetVersion(&outVersion);
@@ -544,12 +543,12 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
     HMODULE hModule = NULL;
 
     if ((hModule = ::LoadLibraryW(moduleName)) == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
             hModule, "DllGetVersion"))) == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return dllGetVersion(&outVersion);
@@ -560,12 +559,12 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
 /*
  * vislib::sys::RemoveKernelNamespace
  */
-the::astring vislib::sys::RemoveKernelNamespace(const char *name) {
-    the::astring n(name);
+vislib::StringA vislib::sys::RemoveKernelNamespace(const char *name) {
+    StringA n(name);
 
-    if (the::text::string_utility::starts_with(n, "global\\", false)
-            || the::text::string_utility::starts_with(n, "local\\", false)) {
-        n.erase(n.begin(), std::find(n.begin(), n.end(), '\\'));
+    if (n.StartsWithInsensitive("global\\") 
+            || n.StartsWithInsensitive("local\\")) {
+        n.Remove(0, n.Find('\\') + 1);
     }
 
     return n;
@@ -575,12 +574,12 @@ the::astring vislib::sys::RemoveKernelNamespace(const char *name) {
 /*
  * vislib::sys::RemoveKernelNamespace
  */
-the::wstring vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
-    the::wstring n(name);
+vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
+    StringW n(name);
 
-    if (the::text::string_utility::starts_with(n, L"global\\", false)
-            || the::text::string_utility::starts_with(n, L"local\\", false)) {
-        n.erase(n.begin(), std::find(n.begin(), n.end(), '\\'));
+    if (n.StartsWithInsensitive(L"global\\") 
+            || n.StartsWithInsensitive(L"local\\")) {
+        n.Remove(0, n.Find(L'\\') + 1);
     }
 
     return n;
@@ -590,9 +589,9 @@ the::wstring vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
 /*
  * vislib::sys::TranslateWinIpc2PosixName
  */
-the::astring vislib::sys::TranslateWinIpc2PosixName(const char *name) {
-    the::astring retval = RemoveKernelNamespace(name);
-    retval.insert(0, "//");
+vislib::StringA vislib::sys::TranslateWinIpc2PosixName(const char *name) {
+    StringA retval = RemoveKernelNamespace(name);
+    retval.Prepend('/');
     return retval;
 }
 
@@ -600,9 +599,9 @@ the::astring vislib::sys::TranslateWinIpc2PosixName(const char *name) {
 /*
  * vislib::sys::TranslateWinIpc2PosixName
  */
-the::wstring vislib::sys::TranslateWinIpc2PosixName(const wchar_t *name) {
-    the::wstring retval = RemoveKernelNamespace(name);
-    retval.insert(0, L"//");
+vislib::StringW vislib::sys::TranslateWinIpc2PosixName(const wchar_t *name) {
+    StringW retval = RemoveKernelNamespace(name);
+    retval.Prepend(L'/');
     return retval;
 }
 
@@ -616,16 +615,16 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
     
     
     /* Remove Windows kernel namespaces from the name. */
-    the::astring n = RemoveKernelNamespace(name);
-    THE_ASSERT(n.size() > 0);
+    StringA n = RemoveKernelNamespace(name);
+    ASSERT(n.Length() > 0);
 
     // TODO: Ist das Verzeichnis sinnvoll? Eher nicht ...
-    retval = ::ftok(Path::GetUserHomeDirectoryA().c_str(), the::text::string_utility::hash_code(n));
+    retval = ::ftok(Path::GetUserHomeDirectoryA().PeekBuffer(), n.HashCode());
     if (retval == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
+    VLTRACE(Trace::LEVEL_VL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
         retval);
     return retval;
 }
@@ -636,7 +635,7 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
  * vislib::sys::WriteTextFile
  */
 bool vislib::sys::WriteTextFile(vislib::sys::File& file,
-        const the::astring& text, vislib::sys::TextFileFormat format,
+        const vislib::StringA& text, vislib::sys::TextFileFormat format,
         TextFileFormatBOM bom) {
     switch (format) {
     case TEXTFF_UNSPECIFIC:
@@ -645,8 +644,8 @@ bool vislib::sys::WriteTextFile(vislib::sys::File& file,
     case TEXTFF_ASCII:
 CASE_TEXTFF_ASCII: {
         // no BOM possible
-        the::astring::size_type len = text.size();
-        return (static_cast<the::astring::size_type>(file.Write(text.c_str(), len))
+        StringA::Size len = text.Length();
+        return (static_cast<StringA::Size>(file.Write(text.PeekBuffer(), len))
             == len);
     } break;
     case TEXTFF_UNICODE:
@@ -654,58 +653,58 @@ CASE_TEXTFF_ASCII: {
 CASE_TEXTFF_UNICODE:
 #endif /* _WIN32 */
         // write BOM as sfx
-        return WriteTextFile(file, the::text::string_converter::to_w(text), format, bom);
+        return WriteTextFile(file, vislib::StringW(text), format, bom);
         break;
     case TEXTFF_UTF8: {
-        the::astring bytes;
-        the::text::string_converter::convert_to_utf8(bytes, text);
+        vislib::StringA bytes;
+        UTF8Encoder::Encode(bytes, text);
         if (bom != TEXTFF_BOM_NO) {
             unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
             file.Write(BOM, 3);
         }
-        the::astring::size_type len = bytes.size();
-        return (static_cast<the::astring::size_type>(file.Write(bytes.c_str(), len)) == len);
+        StringA::Size len = bytes.Length();
+        return (static_cast<StringA::Size>(file.Write(bytes, len)) == len);
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
-    //size_t len = text.Length();
-    //return (file.Write(text.c_str(), len) == len);
+    //SIZE_T len = text.Length();
+    //return (file.Write(text.PeekBuffer(), len) == len);
 
     return false;
 }
@@ -715,7 +714,7 @@ CASE_TEXTFF_UNICODE:
  * vislib::sys::WriteTextFile
  */
 bool vislib::sys::WriteTextFile(vislib::sys::File& file,
-        const the::wstring& text, vislib::sys::TextFileFormat format,
+        const vislib::StringW& text, vislib::sys::TextFileFormat format,
         TextFileFormatBOM bom) {
     switch (format) {
     case TEXTFF_UNSPECIFIC:
@@ -723,7 +722,7 @@ bool vislib::sys::WriteTextFile(vislib::sys::File& file,
         break;
     case TEXTFF_ASCII:
         // no BOM possible
-        return WriteTextFile(file, the::text::string_converter::to_a(text), format, bom);
+        return WriteTextFile(file, vislib::StringA(text), format, bom);
         break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
@@ -736,61 +735,61 @@ CASE_TEXTFF_UNICODE:
             file.Write(BOM, 2);
         }
 #endif /* _WIN32 */
-        the::wstring::size_type len = text.size() * sizeof(wchar_t);
-        return (static_cast<the::wstring::size_type>(file.Write(text.c_str(), len))
+        StringW::Size len = text.Length() * sizeof(wchar_t);
+        return (static_cast<StringW::Size>(file.Write(text.PeekBuffer(), len))
             == len);
     } break;
     case TEXTFF_UTF8:
 CASE_TEXTFF_UTF8: {
-        the::astring bytes;
-        the::text::string_converter::convert_to_utf8(bytes, text);
+        vislib::StringA bytes;
+        UTF8Encoder::Encode(bytes, text);
         if (bom != TEXTFF_BOM_NO) {
             unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
             file.Write(BOM, 3);
         }
-        the::astring::size_type len = bytes.size();
-        return (static_cast<the::astring::size_type>(file.Write(bytes.c_str(), len)) == len);
+        StringA::Size len = bytes.Length();
+        return (static_cast<StringA::Size>(file.Write(bytes, len)) == len);
     } break;
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
 #else /* _WIN32 */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
     case TEXTFF_UTF16_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF32_BE:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF7:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_UTF_EBCDIC:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_SCSU:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_BOCU1:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     case TEXTFF_GB18030:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unsupported text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
         break;
     default:
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unknown text file format %d\n", format);
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Unknown text file format %d\n", format);
         break;
     }
-    //the::astring tmp(text);
-    //size_t len = tmp.Length();
-    //return (file.Write(tmp.c_str(), len) == len);
+    //vislib::StringA tmp(text);
+    //SIZE_T len = tmp.Length();
+    //return (file.Write(tmp.PeekBuffer(), len) == len);
     return false;
 }

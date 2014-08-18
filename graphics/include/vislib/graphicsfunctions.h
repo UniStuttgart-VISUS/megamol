@@ -36,7 +36,7 @@ namespace graphics {
         if (polygon.Count() < 3) return; // no need for sort
 
         Point center(polygon[0]);
-        for (size_t i = 1; i < polygon.Count(); i++) {
+        for (SIZE_T i = 1; i < polygon.Count(); i++) {
             center.Set(center.X() + polygon[i].X(),
                 center.Y() + polygon[i].Y(),
                 center.Z() + polygon[i].Z());
@@ -49,7 +49,7 @@ namespace graphics {
         Vector x(polygon[0] - center);
         x.Normalise();
         normal.SetNull();
-        size_t i = 0;
+        SIZE_T i = 0;
         while (normal.IsNull()) {
             i++;
             if (i >= polygon.Count()) return; // all points in the same place?
@@ -58,9 +58,9 @@ namespace graphics {
         normal.Normalise();
         Vector y = x.Cross(normal);
 
-        Array<Pair<size_t, double> > as;
+        Array<Pair<SIZE_T, double> > as;
         as.SetCount(polygon.Count());
-        for (size_t i = 0; i < polygon.Count(); i++) {
+        for (SIZE_T i = 0; i < polygon.Count(); i++) {
             Vector v(polygon[i] - center);
             as[i].First() = i;
             as[i].Second() = ::atan2(static_cast<double>(v.Dot(y)),
@@ -71,7 +71,7 @@ namespace graphics {
 
         Array<Point> tmp(polygon);
         polygon.Clear();
-        for (size_t i = 0; i < tmp.Count(); i++) {
+        for (SIZE_T i = 0; i < tmp.Count(); i++) {
             polygon.Add(tmp[as[i].First()]);
         }
     }

@@ -12,13 +12,13 @@
 #include <sched.h>
 #endif /* _WIN32 */
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/AutoLock.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/SystemInformation.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -43,8 +43,8 @@ vislib::sys::ThreadPool::~ThreadPool(void) {
 /*
  * vislib::sys::ThreadPool::AbortPendingUserWorkItems
  */
-size_t vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
-    size_t retval = 0;
+SIZE_T vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
+    SIZE_T retval = 0;
     AutoLock lock(this->lockQueue);
 
     SingleLinkedList<WorkItem>::Iterator it = this->queue.GetIterator();
@@ -54,7 +54,7 @@ size_t vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
         this->fireUserWorkItemAborted(workItem);
     }
 
-    for (size_t i = 0; i < retval; i++) {
+    for (SIZE_T i = 0; i < retval; i++) {
         this->queue.RemoveFirst();
     }
 
@@ -66,7 +66,7 @@ size_t vislib::sys::ThreadPool::AbortPendingUserWorkItems(void) {
  * vislib::sys::ThreadPool::AddListener
  */
 void vislib::sys::ThreadPool::AddListener(ThreadPoolListener *listener) {
-    THE_ASSERT(listener != NULL);
+    ASSERT(listener != NULL);
 
     this->lockListeners.Lock();
     if ((listener != NULL) && !this->listeners.Contains(listener)) {
@@ -79,7 +79,7 @@ void vislib::sys::ThreadPool::AddListener(ThreadPoolListener *listener) {
 /*
  * vislib::sys::ThreadPool::GetActiveThreads
  */
-size_t vislib::sys::ThreadPool::GetActiveThreads(void) const {
+SIZE_T vislib::sys::ThreadPool::GetActiveThreads(void) const {
     AutoLock lock(this->lockThreadCounters);
     return this->cntActiveThreads;
 }
@@ -88,7 +88,7 @@ size_t vislib::sys::ThreadPool::GetActiveThreads(void) const {
 /*
  * vislib::sys::ThreadPool::GetAvailableThreads
  */
-size_t vislib::sys::ThreadPool::GetAvailableThreads(void) const {
+SIZE_T vislib::sys::ThreadPool::GetAvailableThreads(void) const {
     AutoLock lock(this->lockThreadCounters);
     return (this->cntTotalThreads - this->cntActiveThreads);
 }
@@ -97,7 +97,7 @@ size_t vislib::sys::ThreadPool::GetAvailableThreads(void) const {
 /*
  * vislib::sys::ThreadPool::GetTotalThreads
  */
-size_t vislib::sys::ThreadPool::GetTotalThreads(void) const {
+SIZE_T vislib::sys::ThreadPool::GetTotalThreads(void) const {
     AutoLock lock(this->lockThreadCounters);
     return (this->cntTotalThreads);
 }
@@ -106,7 +106,7 @@ size_t vislib::sys::ThreadPool::GetTotalThreads(void) const {
 /*
  * vislib::sys::ThreadPool::CountUserWorkItems
  */
-size_t vislib::sys::ThreadPool::CountUserWorkItems(void) const {
+SIZE_T vislib::sys::ThreadPool::CountUserWorkItems(void) const {
     AutoLock lock(this->lockQueue);
     return this->queue.Count();
 }
@@ -144,7 +144,7 @@ void vislib::sys::ThreadPool::QueueUserWorkItem(Runnable::Function runnable,
  * vislib::sys::ThreadPool::RemoveListener
  */
 void vislib::sys::ThreadPool::RemoveListener(ThreadPoolListener *listener) {
-    THE_ASSERT(listener != NULL);
+    ASSERT(listener != NULL);
 
     this->lockListeners.Lock();
     this->listeners.RemoveAll(listener);
@@ -156,11 +156,11 @@ void vislib::sys::ThreadPool::RemoveListener(ThreadPoolListener *listener) {
 /*
  * vislib::sys::ThreadPool::SetThreadCount
  */
-void vislib::sys::ThreadPool::SetThreadCount(const size_t threadCount) {
+void vislib::sys::ThreadPool::SetThreadCount(const SIZE_T threadCount) {
     AutoLock lock(this->lockThreadCounters);
 
     if (threadCount < this->cntTotalThreads) {
-        throw the::argument_exception("The number of threads in the thread pool "
+        throw IllegalParamException("The number of threads in the thread pool "
             "cannot be reduced.", __FILE__, __LINE__);
     }
 
@@ -190,11 +190,11 @@ void vislib::sys::ThreadPool::Terminate(const bool abortPending) {
 
         this->lockQueue.Lock();
         this->lockThreadCounters.Lock();
-        THE_ASSERT(this->queue.empty());
-        THE_ASSERT(!this->semBlockWorker.TryLock());
+        ASSERT(this->queue.IsEmpty());
+        ASSERT(!this->semBlockWorker.TryLock());
 
         this->evtAllCompleted.Reset();
-        for (size_t i = 0; i < this->cntTotalThreads; i++) {
+        for (SIZE_T i = 0; i < this->cntTotalThreads; i++) {
             this->semBlockWorker.Unlock();
         }
 
@@ -227,19 +227,19 @@ vislib::sys::ThreadPool::Worker::~Worker(void) {
 
 
 /*
- * unsigned int vislib::sys::ThreadPool::Worker::Run
+ * DWORD vislib::sys::ThreadPool::Worker::Run
  */
-unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
-    THE_ASSERT(pool != NULL);
+DWORD vislib::sys::ThreadPool::Worker::Run(void *pool) {
+    ASSERT(pool != NULL);
     this->pool = static_cast<ThreadPool *>(pool);
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Worker thread [%u] started.\n", 
+    VLTRACE(Trace::LEVEL_VL_INFO, "Worker thread [%u] started.\n", 
         Thread::CurrentID());
 
     while (true) {
 
         /* Wait for work. */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] is waiting for "
+        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is waiting for "
             "work ...\n", Thread::CurrentID());
         this->pool->semBlockWorker.Lock();
 
@@ -251,8 +251,8 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
          * We use an empty queue as trigger for a thread to leave: If we wake a
          * thread and it does not find any work to do, it should exit.
          */
-        if (this->pool->queue.empty()) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] is "
+        if (this->pool->queue.IsEmpty()) {
+            VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is "
                 "exiting ...\n", Thread::CurrentID());
             if (--this->pool->cntTotalThreads == 0) {
                 this->pool->evtAllCompleted.Set();
@@ -264,7 +264,7 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
         }
 
         /* Get the work item and mark thread as active. */
-        THE_ASSERT(!this->pool->queue.empty());
+        ASSERT(!this->pool->queue.IsEmpty());
         WorkItem workItem = this->pool->queue.First();
         this->pool->queue.RemoveFirst();
         this->pool->cntActiveThreads++;
@@ -274,14 +274,14 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
         this->pool->lockQueue.Unlock();
 
         /* Do the work. */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] is working ...\n",
+        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] is working ...\n",
             Thread::CurrentID());
-        THE_ASSERT((workItem.runnable != NULL) 
+        ASSERT((workItem.runnable != NULL) 
             || (workItem.runnableFunction != NULL));
-        unsigned int exitCode = (workItem.runnable != NULL)
+        DWORD exitCode = (workItem.runnable != NULL)
             ? workItem.runnable->Run(workItem.userData)
             : workItem.runnableFunction(workItem.userData);
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "ThreadPool thread [%u] completed work "
+        VLTRACE(Trace::LEVEL_VL_INFO, "ThreadPool thread [%u] completed work "
             "item with exit code %u\n", Thread::CurrentID(), exitCode);
 
         this->pool->fireUserWorkItemCompleted(workItem, exitCode);
@@ -290,7 +290,7 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
         this->pool->lockQueue.Lock();
         this->pool->lockThreadCounters.Lock();
         if ((--this->pool->cntActiveThreads == 0)   // SFX. Must be first!
-                && this->pool->queue.empty()) {
+                && this->pool->queue.IsEmpty()) {
             this->pool->evtAllCompleted.Set();
         }
         this->pool->lockThreadCounters.Unlock();
@@ -303,7 +303,7 @@ unsigned int vislib::sys::ThreadPool::Worker::Run(void *pool) {
  * vislib::sys::ThreadPool::ThreadPool
  */
 vislib::sys::ThreadPool::ThreadPool(const ThreadPool& rhs) {
-    throw the::not_supported_exception("ThreadPool::ThreadPool", __FILE__, 
+    throw UnsupportedOperationException("ThreadPool::ThreadPool", __FILE__, 
         __LINE__);
 }
 
@@ -322,7 +322,7 @@ void vislib::sys::ThreadPool::fireUserWorkItemAborted(WorkItem& workItem) {
                 workItem.userData);
         }
     } else {
-        THE_ASSERT(workItem.runnableFunction != NULL);
+        ASSERT(workItem.runnableFunction != NULL);
         while (it.HasNext()) {
             it.Next()->OnUserWorkItemAborted(*this, workItem.runnableFunction,
                 workItem.userData);
@@ -335,7 +335,7 @@ void vislib::sys::ThreadPool::fireUserWorkItemAborted(WorkItem& workItem) {
  * vislib::sys::ThreadPool::fireUserWorkItemCompleted
  */
 void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem,
-                                                        const unsigned int exitCode) {
+                                                        const DWORD exitCode) {
     AutoLock lock(this->lockListeners);
 
     SingleLinkedList<ThreadPoolListener *>::Iterator it 
@@ -346,7 +346,7 @@ void vislib::sys::ThreadPool::fireUserWorkItemCompleted(WorkItem& workItem,
                 workItem.userData, exitCode);
         }
     } else {
-        THE_ASSERT(workItem.runnableFunction != NULL);
+        ASSERT(workItem.runnableFunction != NULL);
         while (it.HasNext()) {
             it.Next()->OnUserWorkItemCompleted(*this, workItem.runnableFunction,
                 workItem.userData, exitCode);
@@ -362,10 +362,10 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
         const bool createDefaultThreads) {
     /* Sanity checks. */
     if ((workItem.runnable == NULL) && (workItem.runnableFunction == NULL)) {
-        throw the::argument_exception("workItem", __FILE__, __LINE__);
+        throw vislib::IllegalParamException("workItem", __FILE__, __LINE__);
     }
     if ((workItem.runnable != NULL) && (workItem.runnableFunction != NULL)) {
-        throw the::argument_exception("workItem", __FILE__, __LINE__);
+        throw vislib::IllegalParamException("workItem", __FILE__, __LINE__);
     }
 
     /* Add work item to queue. */
@@ -381,7 +381,7 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
 #endif /* _WIN32 */
     } else {
         this->lockQueue.Unlock();
-        throw the::invalid_operation_exception("The user work item queue has been closed, "
+        throw IllegalStateException("The user work item queue has been closed, "
             "because the thread pool is being terminated.", __FILE__, __LINE__);
     }
 
@@ -400,7 +400,7 @@ void vislib::sys::ThreadPool::queueUserWorkItem(WorkItem& workItem,
 vislib::sys::ThreadPool& vislib::sys::ThreadPool::operator =(
         const ThreadPool& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

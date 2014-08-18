@@ -60,7 +60,7 @@ namespace sys {
          * @return true, if the user was impersonated, false, if logging on 
          *         failed.
          *
-         * @throws the::system::system_exception If the impersonation failed.
+         * @throws SystemException If the impersonation failed.
          *                         On Windows, this exception is throws, if 
          *                         logging on or impersonation failed.
          *                         On Linux, this exception is only thrown, if 
@@ -83,7 +83,7 @@ namespace sys {
          * @return true, if the user was impersonated, false, if logging on 
          *         failed.
          *
-         * @throws the::system::system_exception If the impersonation failed.
+         * @throws SystemException If the impersonation failed.
          */
         void Impersonate(const wchar_t *username, const wchar_t *domain,
             const wchar_t *password);
@@ -91,7 +91,7 @@ namespace sys {
         /**
          * Revert to original user.
          *
-         * @throws the::system::system_exception If reverting to own user failed.
+         * @throws SystemException If reverting to own user failed.
          */
         inline void Revert(void) {
             this->revert(false);
@@ -104,7 +104,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         ImpersonationContext(const ImpersonationContext& rhs);
 
@@ -114,7 +114,7 @@ namespace sys {
          *
          * @param isSilent Supress exceptions in case of an error.
          *
-         * @throws the::system::system_exception If the operation failed.
+         * @throws SystemException If the operation failed.
          */
         void revert(const bool isSilent);
 
@@ -123,7 +123,7 @@ namespace sys {
          *
          * @param rhs The right hand side operand.
          *
-         * @throws argument_exception If (this != rhs).
+         * @throws IllegalParamException If (this != rhs).
          */
         ImpersonationContext& operator =(const ImpersonationContext& rhs);
 

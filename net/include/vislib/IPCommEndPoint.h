@@ -18,8 +18,8 @@
 
 #include "vislib/IPEndPoint.h"                  // Must be first.
 #include "vislib/AbstractCommEndPoint.h"
-#include "the/stack_trace.h"
-#include "the/text/string_converter.h"
+#include "vislib/StackTrace.h"
+#include "vislib/StringConverter.h"
 
 
 namespace vislib {
@@ -152,12 +152,12 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily, 
                 const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(
                 IPCommEndPoint::convertAddressFamily(addressFamily), 
                 port);
@@ -180,12 +180,12 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(addressFamily), 
                 port);
@@ -209,7 +209,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'hostNameOrAddress' is not a valid
+         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
          */
         static SmartRef<AbstractCommEndPoint> Create(
@@ -235,16 +235,16 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'hostNameOrAddress' is not a valid
+         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const ProtocolVersion protocolVersion,
                 const wchar_t *hostNameOrAddress,
                 const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(protocolVersion, 
-                THE_W2A(hostNameOrAddress), port);
+                W2A(hostNameOrAddress), port);
         }
 
         /**
@@ -265,15 +265,15 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'hostNameOrAddress' is not a valid
+         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily, 
                 const char *hostNameOrAddress,
                 const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(
                 IPCommEndPoint::convertAddressFamily(addressFamily), 
                 hostNameOrAddress, port);
@@ -297,17 +297,17 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'hostNameOrAddress' is not a valid
+         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily, 
                 const wchar_t *hostNameOrAddress,
                 const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(addressFamily, 
-                THE_W2A(hostNameOrAddress), port);
+                W2A(hostNameOrAddress), port);
         }
 
         /**
@@ -328,15 +328,15 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'hostNameOrAddress' is not a valid
+         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const char *hostNameOrAddress,
                 const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(addressFamily), 
                 hostNameOrAddress, port);
@@ -360,17 +360,17 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'hostNameOrAddress' is not a valid
+         * @throws IllegalParamException If 'hostNameOrAddress' is not a valid
          *                               host name or IP address.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const wchar_t *hostNameOrAddress,
                 const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(addressFamily, 
-                THE_W2A(hostNameOrAddress), port);
+                W2A(hostNameOrAddress), port);
         }
 
         /**
@@ -391,7 +391,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
@@ -399,7 +399,7 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const ProtocolVersion protocolVersion,
                 const char *str) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(protocolVersion),
                  str);
@@ -423,7 +423,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
@@ -431,8 +431,8 @@ namespace net {
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const ProtocolVersion protocolVersion,
                 const wchar_t *str) {
-            THE_STACK_TRACE;
-            return IPCommEndPoint::Create(protocolVersion, THE_W2A(str));
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            return IPCommEndPoint::Create(protocolVersion, W2A(str));
         }
 
         /**
@@ -453,11 +453,11 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         static SmartRef<AbstractCommEndPoint> Create(
             const IPAgnosticAddress::AddressFamily addressFamily,
@@ -481,17 +481,17 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPAgnosticAddress::AddressFamily addressFamily,
                 const wchar_t *str) {
-            THE_STACK_TRACE;
-            return IPCommEndPoint::Create(addressFamily, THE_W2A(str));
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            return IPCommEndPoint::Create(addressFamily, W2A(str));
         }
 
         /**
@@ -512,16 +512,16 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const char *str) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
             return IPCommEndPoint::Create(
                 static_cast<IPAgnosticAddress::AddressFamily>(addressFamily), 
                 str);
@@ -545,17 +545,17 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address. "Valid" also means that the
          *                               string representation is compatible
          *                               with the given protocol version.
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         inline static SmartRef<AbstractCommEndPoint> Create(
                 const IPEndPoint::AddressFamily addressFamily, 
                 const wchar_t *str) {
-            THE_STACK_TRACE;
-            return IPCommEndPoint::Create(addressFamily, THE_W2A(str));
+            VLSTACKTRACE("IPCommEndPoint::Create", __FILE__, __LINE__);
+            return IPCommEndPoint::Create(addressFamily, W2A(str));
         }
 
         /**
@@ -576,7 +576,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address.
          */
         static SmartRef<AbstractCommEndPoint> Create(const char *str);
@@ -599,7 +599,7 @@ namespace net {
          *
          * @returns A new IPCommEndPoint that represents the input.
          *
-         * @throws argument_exception If 'str' is not a valid end point 
+         * @throws IllegalParamException If 'str' is not a valid end point 
          *                               address.
          */
         static SmartRef<AbstractCommEndPoint> Create(const wchar_t *str);
@@ -635,7 +635,8 @@ namespace net {
          * @return The IP address part of the end point address.
          */
         inline IPAgnosticAddress GetIPAddress(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::GetIPAddress", __FILE__, 
+                __LINE__);
             return this->endPoint.GetIPAddress();
         }
 
@@ -645,7 +646,7 @@ namespace net {
          * @return The port of the end point address.
          */
         inline unsigned short GetPort(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::GetPort", __FILE__, __LINE__);
             return this->endPoint.GetPort();
         }
 
@@ -655,7 +656,8 @@ namespace net {
          * @return The protocol version of the end point address.
          */
         inline ProtocolVersion GetProtocolVersion(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::GetProtocolVersion", __FILE__,
+                __LINE__);
             return static_cast<ProtocolVersion>(
                 this->endPoint.GetAddressFamily());
         }
@@ -672,10 +674,10 @@ namespace net {
          *
          * @param str A string representation of an end point address.
          *
-         * @throws the::exception Or derived in case that 'str' could not
+         * @throws vislib::Exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const the::astring& str);
+        virtual void Parse(const StringA& str);
 
         /**
          * Parses a string as a end point address and sets the current
@@ -690,10 +692,10 @@ namespace net {
          * @param preferredProtocolVersion The preferred protocol version if
          *                                 more than one is possible.
          *
-         * @throws the::exception Or derived in case that 'str' could not
+         * @throws vislib::Exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const the::astring& str, 
+        virtual void Parse(const StringA& str, 
             const ProtocolVersion preferredProtocolVersion);
 
         /**
@@ -708,10 +710,10 @@ namespace net {
          *
          * @param str A string representation of an end point address.
          *
-         * @throws the::exception Or derived in case that 'str' could not
+         * @throws vislib::Exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const the::wstring& str);
+        virtual void Parse(const StringW& str);
 
         /**
          * Parses a string as a end point address and sets the current
@@ -726,10 +728,10 @@ namespace net {
          * @param preferredProtocolVersion The preferred protocol version if
          *                                 more than one is possible.
          *
-         * @throws the::exception Or derived in case that 'str' could not
+         * @throws vislib::Exception Or derived in case that 'str' could not
          *                           be parsed as an end point address.
          */
-        virtual void Parse(const the::wstring& str, 
+        virtual void Parse(const StringW& str, 
             const ProtocolVersion preferredProtocolVersion);
 
         /**
@@ -738,7 +740,8 @@ namespace net {
          * @param endPoint The new end point address.
          */
         inline void SetEndPoint(const IPEndPoint& endPoint) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::SetEndPoint", __FILE__, 
+                __LINE__);
             this->endPoint = endPoint;
         }
 
@@ -748,7 +751,8 @@ namespace net {
          * @param ipAddress The new IP address.
          */
         inline void SetIPAddress(const IPAgnosticAddress& ipAddress) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::SetIPAddress", __FILE__, 
+                __LINE__);
             this->endPoint.SetIPAddress(ipAddress);
         }
 
@@ -758,7 +762,8 @@ namespace net {
          * @param ipAddress The new IP address.
          */
         inline void SetIPAddress(const IPAddress& ipAddress) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::SetIPAddress", __FILE__, 
+                __LINE__);
             this->endPoint.SetIPAddress(ipAddress);
         }
 
@@ -768,7 +773,8 @@ namespace net {
          * @param ipAddress The new IP address.
          */
         inline void SetIPAddress(const IPAddress6& ipAddress) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::SetIPAddress", __FILE__, 
+                __LINE__);
             this->endPoint.SetIPAddress(ipAddress);
         }
 
@@ -778,7 +784,7 @@ namespace net {
          * @param ipAddress The new port.
          */
         inline void SetPort(const unsigned short port) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("IPCommEndPoint::SetPort", __FILE__, __LINE__);
             this->endPoint.SetPort(port);
         }
 
@@ -787,14 +793,14 @@ namespace net {
          *
          * @return A string representation of the address.
          */
-        virtual the::astring ToStringA(void) const;
+        virtual StringA ToStringA(void) const;
 
         /**
          * Answer a string representation of the address.
          *
          * @return A string representation of the address.
          */
-        virtual the::wstring ToStringW(void) const;
+        virtual StringW ToStringW(void) const;
 
         /**
          * Check for equality.
@@ -837,7 +843,7 @@ namespace net {
          * @return The protocol version that represents the given address
          *         family.
          *
-         * @throws argument_exception If 'addressFamily' is not supported.
+         * @throws IllegalParamException If 'addressFamily' is not supported.
          */
         static ProtocolVersion convertAddressFamily(
             const IPAgnosticAddress::AddressFamily addressFamily);

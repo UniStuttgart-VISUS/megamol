@@ -7,7 +7,7 @@
 
 #include "vislib/CameraAdjust3D.h"
 #include "vislib/RelativeCursor3D.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 #include "vislib/Quaternion.h"
 #include "vislib/Matrix4.h"
 #include <climits>
@@ -46,10 +46,10 @@ void vislib::graphics::CameraAdjust3D::Trigger(
         unsigned int param) {
 
     RelativeCursor3D *cursor = dynamic_cast<RelativeCursor3D *>(caller);
-    THE_ASSERT(cursor != NULL);
+    ASSERT(cursor != NULL);
 
     // otherwise this would be very strange
-    THE_ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
+    ASSERT(cursor->CameraParams()->IsSimilar(this->CameraParams()));
 
     if (reason == REASON_MOVE) {
 

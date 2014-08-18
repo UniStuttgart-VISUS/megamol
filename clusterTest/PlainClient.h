@@ -25,14 +25,14 @@ public:
 
     virtual void Initialise(vislib::sys::CmdLineProviderW& inOutCmdLine);
 
-    virtual unsigned int Run(void);
+    virtual DWORD Run(void);
 
 protected:
 
     PlainClient(void);
 
     virtual bool onMessageReceived(const vislib::net::Socket& src, 
-        const unsigned int msgId, const uint8_t *body, const size_t cntBody);
+        const UINT msgId, const BYTE *body, const SIZE_T cntBody);
 };
 
 #endif /* VISLIBTEST_PLAINCLIENT_H_INCLUDED */

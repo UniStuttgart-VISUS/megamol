@@ -10,7 +10,7 @@
 #include "testhelper.h"
 #include "vislib/Event.h"
 #include "vislib/FatReaderWriterLock.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/Thread.h"
 
 
@@ -18,7 +18,7 @@
 using vislib::sys::Thread;
 using vislib::sys::Event;
 using vislib::sys::FatReaderWriterLock;
-using the::invalid_operation_exception;
+using vislib::IllegalStateException;
 
 
 /** locking auto-reset event 1 */
@@ -53,7 +53,7 @@ static void sync2(void) {
  *
  * @return 0
  */
-unsigned int testThread(void * userData) {
+DWORD testThread(void * userData) {
     FatReaderWriterLock& lock = *static_cast<FatReaderWriterLock*>(userData);
     sync2();
 
@@ -176,14 +176,14 @@ void TestFatReaderWriterLock(void) {
 
 
     // trigger exceptions
-    AssertException("Cannot release open Sh lock", lock.UnlockShared(), invalid_operation_exception);
-    AssertException("Cannot release open Ex lock", lock.UnlockExclusive(), invalid_operation_exception);
+    AssertException("Cannot release open Sh lock", lock.UnlockShared(), IllegalStateException);
+    AssertException("Cannot release open Ex lock", lock.UnlockExclusive(), IllegalStateException);
 
     lock.LockShared();
     AssertFalse("Lock Ex open", lock.HasExclusiveLock());
     AssertTrue("Lock Sh locked", lock.HasSharedLock());
 
-    AssertException("Cannot upgrade to Ex lock", lock.LockExclusive(), invalid_operation_exception);
+    AssertException("Cannot upgrade to Ex lock", lock.LockExclusive(), IllegalStateException);
 
     lock.UnlockShared();
     AssertFalse("Lock Ex open", lock.HasExclusiveLock());

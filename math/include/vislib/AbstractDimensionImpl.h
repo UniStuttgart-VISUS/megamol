@@ -14,9 +14,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/mathfunctions.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/OutOfRangeException.h"
 #include <memory.h>
 
 
@@ -150,7 +150,7 @@ namespace math {
          *
          * @return The component's value.
          *
-         * @throws index_out_of_range_exception If 'i' is out of range.
+         * @throws OutOfRangeException If 'i' is out of range.
          */
         T& operator [](const int i);
 
@@ -161,7 +161,7 @@ namespace math {
          *
          * @return The component's value.
          *
-         * @throws index_out_of_range_exception If 'i' is out of range.
+         * @throws OutOfRangeException If 'i' is out of range.
          */
         const T& operator [](const int i) const;
 
@@ -285,13 +285,13 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C> 
     T& AbstractDimensionImpl<T, D, S, C>::operator [](const int i) {
-        THE_ASSERT(0 <= i);
-        THE_ASSERT(i < static_cast<int>(D));
+        ASSERT(0 <= i);
+        ASSERT(i < static_cast<int>(D));
 
         if ((0 <= i) && (i < static_cast<int>(D))) {
             return this->dimension[i];
         } else {
-            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
 
@@ -302,13 +302,13 @@ namespace math {
     template<class T, unsigned int D, class S, 
         template<class T, unsigned int D, class S> class C> 
     const T& AbstractDimensionImpl<T, D, S, C>::operator [](const int i) const {
-        THE_ASSERT(0 <= i);
-        THE_ASSERT(i < static_cast<int>(D));
+        ASSERT(0 <= i);
+        ASSERT(i < static_cast<int>(D));
 
         if ((0 <= i) && (i < static_cast<int>(D))) {
             return this->dimension[i];
         } else {
-            throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+            throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
         }
     }
     

@@ -84,7 +84,7 @@ namespace sys {
          */
         virtual void OnUserWorkItemCompleted(ThreadPool& src, 
             Runnable *runnable, void *userData, 
-            const unsigned int exitCode) throw() = 0;
+            const DWORD exitCode) throw() = 0;
 
 
         /**
@@ -102,7 +102,7 @@ namespace sys {
          */
         virtual void OnUserWorkItemCompleted(ThreadPool& src, 
             Runnable::Function runnable, void *userData, 
-            const unsigned int exitCode) throw() = 0;
+            const DWORD exitCode) throw() = 0;
 
     protected:
 

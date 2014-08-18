@@ -51,9 +51,9 @@ namespace sys {
         /**
          * behaves like File::Flush, except that it flushes only dirty buffers.
          *
-         * @throws the::system::io::io_exception with ERROR_WRITE_FAULT (EFBIG on linux) if a buffer in write mode
+         * @throws IOException with ERROR_WRITE_FAULT (EFBIG on linux) if a buffer in write mode
          *                    could not be flushed to disk. GetLastError() will provide details (Windows).
-         * @throws the::system::io::io_exception with details (linux).
+         * @throws IOException with details (linux).
          */
         virtual void Flush(void);
 
@@ -70,7 +70,7 @@ namespace sys {
         /**
          * behaves mostly like File::GetSize
          *
-         * @throws invalid_operation_exception if the file is not open
+         * @throws IllegalStateException if the file is not open
          */
         virtual File::FileSize GetSize(void) const;
 
@@ -79,7 +79,7 @@ namespace sys {
          * since there is no such thing as a memory-mapped WRITE_ONLY file (also under linux even if no one
          * tells you that there is NO SUCH THING as a O_WRONLY memmapped file *hate*).
          *
-         * @throws the::system::io::io_exception
+         * @throws IOException
          */
         virtual bool Open(const char *filename, const File::AccessMode accessMode, 
             const File::ShareMode shareMode, const File::CreationMode creationMode);
@@ -89,7 +89,7 @@ namespace sys {
          * since there is no such thing as a memory-mapped WRITE_ONLY file (also under linux even if no one
          * tells you that there is NO SUCH THING as a O_WRONLY memmapped file *hate*).
          *
-         * @throws the::system::io::io_exception
+         * @throws IOException
          */
         virtual bool Open(const wchar_t *filename, const File::AccessMode accessMode, 
             const File::ShareMode shareMode, const File::CreationMode creationMode);
@@ -98,10 +98,10 @@ namespace sys {
          * behaves like File::Read
          * Performs an implicit flush if the view is dirty and changed.
          *
-         * @throws the::system::io::io_exception ERROR_WRITE_FAULT (EFBIG on linux) if flushing
-         * @throws the::system::io::io_exception ERROR_ACCESS_DENIED (windows) or EACCES (linux) if called on write-only files
-         * @throws the::system::io::io_exception on mapping failures. Use GetLastError().
-         * @throws invalid_operation_exception if file is not open, or access mode unsuitable, for example
+         * @throws IOException ERROR_WRITE_FAULT (EFBIG on linux) if flushing
+         * @throws IOException ERROR_ACCESS_DENIED (windows) or EACCES (linux) if called on write-only files
+         * @throws IOException on mapping failures. Use GetLastError().
+         * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
          */
         virtual File::FileSize Read(void *outBuf, const File::FileSize bufSize);
 
@@ -129,7 +129,7 @@ namespace sys {
         /**
          * behaves like File::Tell
          *
-         * @throws invalid_operation_exception if the file is not open
+         * @throws IllegalStateException if the file is not open
          */
         virtual File::FileSize Tell(void) const;
 
@@ -137,10 +137,10 @@ namespace sys {
          * behaves like File::Write
          * Performs an implicit flush if the view is dirty and changed.
          *
-         * @throws the::system::io::io_exception ERROR_WRITE_FAULT (EFBIG on linux) if flushing fails
-         * @throws the::system::io::io_exception ERROR_ACCESS_DENIED (EACCES on linux) if called on read-only files
-         * @throws the::system::io::io_exception on mapping failures. Use GetLastError().
-         * @throws invalid_operation_exception if file is not open, or access mode unsuitable, for example
+         * @throws IOException ERROR_WRITE_FAULT (EFBIG on linux) if flushing fails
+         * @throws IOException ERROR_ACCESS_DENIED (EACCES on linux) if called on read-only files
+         * @throws IOException on mapping failures. Use GetLastError().
+         * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
          */
         virtual File::FileSize Write(const void *buf, const File::FileSize bufSize);
 
@@ -159,7 +159,7 @@ namespace sys {
          * If file is in write mode, this calls for a Flush(). Then it unmaps the current view,
          * if there is any. mappedData will be NULL afterwards.
          *
-         * @throws the::system::io::io_exception if unmapping fails. Use GetLastError().
+         * @throws IOException if unmapping fails. Use GetLastError().
          */
         inline void SafeUnmapView();
 
@@ -172,7 +172,7 @@ namespace sys {
          *
          * @param mappingsize the maximum file size to be mapped; this will be available for views.
          *
-         * @throws the::system::io::io_exception if creation fails.
+         * @throws IOException if creation fails.
          */
         inline void SafeCreateMapping(File::FileSize mappingsize);
 
@@ -181,7 +181,7 @@ namespace sys {
          * Closes the mapping applied to handle. If views still exist, the mapping will persist
          * until these are unmapped as well.
          *
-         * @throws the::system::io::io_exception if closing fails. Use GetLastError().
+         * @throws IOException if closing fails. Use GetLastError().
          */
         inline void SafeCloseMapping();
 #endif /* _WIN32 */
@@ -204,8 +204,8 @@ namespace sys {
          * 
          * @return pointer to the memory where the view resides
          *
-         * @throws the::system::io::io_exception if view creation fails. Use GetLastError().
-         * @throws invalid_operation_exception if the current mapping is invalid or the file is closed, or the access type is wrong
+         * @throws IOException if view creation fails. Use GetLastError().
+         * @throws IllegalStateException if the current mapping is invalid or the file is closed, or the access type is wrong
          */
         inline char* SafeMapView();
 
@@ -214,7 +214,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         MemmappedFile(const MemmappedFile& rhs);
 
@@ -225,7 +225,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If &'rhs' != this.
+         * @throws IllegalParamException If &'rhs' != this.
          */
         MemmappedFile& operator =(const MemmappedFile& rhs);
 
@@ -261,7 +261,7 @@ namespace sys {
          * paging mode, writing needs this parameter for each new mapping...
          */
 #ifdef _WIN32
-        unsigned int protect;
+        DWORD protect;
 #else /* _WIN32 */
         int protect;
 #endif

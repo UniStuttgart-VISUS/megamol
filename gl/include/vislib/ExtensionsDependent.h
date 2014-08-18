@@ -18,12 +18,14 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#ifndef VISLIB_SYMBOL_EXPORT
 #define GLH_EXT_IMPORT  // TODO: This is extremely hughly because of LNK4049, but works.
+#endif /* !VISLIB_SYMBOL_EXPORT */
 #include "glh/glh_extensions.h"
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#include "the/string.h"
+#include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 
 
@@ -91,10 +93,10 @@ namespace gl {
         // check required extensions individually
         StringTokeniserA extensions(T::RequiredExtensions(), ' ');
         while (extensions.HasNext()) {
-            the::astring str = extensions.Next();
-            the::text::string_utility::trim(str);
-            if (str.empty()) continue;
-            if (glh_extension_supported(str.c_str()) == 0) {
+            StringA str = extensions.Next();
+            str.TrimSpaces();
+            if (str.IsEmpty()) continue;
+            if (glh_extension_supported(str.PeekBuffer()) == 0) {
                 return false; // this extension is missing
             }
         }

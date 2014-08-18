@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -37,7 +37,7 @@ namespace sys {
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        typedef unsigned int (* Function)(void *userData); 
+        typedef DWORD (* Function)(void *userData); 
 
         /** Dtor. */
         virtual ~Runnable(void);
@@ -69,7 +69,7 @@ namespace sys {
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        virtual unsigned int Run(void *userData) = 0;
+        virtual DWORD Run(void *userData) = 0;
 
         /**
          * The Runnable should abort its work as soon as possible. This method

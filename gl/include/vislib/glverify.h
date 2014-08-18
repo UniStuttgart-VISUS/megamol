@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/OpenGLException.h"
 
 
@@ -25,7 +25,7 @@
  * @param call The OpenGL call to make.
  */
 #define GL_VERIFY(call) ::glGetError(); call;\
-    THE_ASSERT(::glGetError() == GL_NO_ERROR)
+    ASSERT(::glGetError() == GL_NO_ERROR)
 
 
 /**
@@ -35,7 +35,7 @@
  * @param expr The expression to execute and evaluate.
  */
 #if defined(DEBUG) || defined(_DEBUG)
-#define GL_VERIFY_EXPR(expr) THE_ASSERT(expr == GL_NO_ERROR) 
+#define GL_VERIFY_EXPR(expr) ASSERT(expr == GL_NO_ERROR) 
 #else /* defined(DEBUG) || defined(_DEBUG) */
 #define GL_VERIFY_EXPR(expr) (expr)
 #endif /* defined(DEBUG) || defined(_DEBUG) */
@@ -157,7 +157,7 @@
     } catch (vislib::graphics::gl::OpenGLException __glvDeferredOGLe) {\
         if (__glvDeferred_glError == GL_NO_ERROR) {\
             __glvDeferred_glError = __glvDeferredOGLe.GetErrorCode();\
-            __glvDeferred_Line = __glvDeferredOGLe.get_line();\
+            __glvDeferred_Line = __glvDeferredOGLe.GetLine();\
         }\
     }
 

@@ -100,6 +100,6 @@ void AbstractTest::OnTestEnable(void) {
 /*
  * AbstractTest::AbstractTest
  */
-AbstractTest::AbstractTest(const the::wstring& name) 
+AbstractTest::AbstractTest(const vislib::StringW& name) 
         : aspectRatio(1.0f), name(name){
 }

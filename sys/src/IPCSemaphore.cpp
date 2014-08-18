@@ -12,16 +12,16 @@
 #include <sys/ipc.h>
 #include <sys/types.h>
 
-#include "the/string.h"
+#include "vislib/String.h"
 #endif /* !_WIN32 */
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/error.h"
-#include "the/argument_exception.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/sysfunctions.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -78,7 +78,7 @@ void vislib::sys::IPCSemaphore::Lock(void) {
     struct sembuf lock = { MEMBER_IDX, -1, 0 };
 
     if ((::semop(this->id, &lock, 1)) == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 }
 
@@ -98,7 +98,7 @@ bool vislib::sys::IPCSemaphore::TryLock(void) {
         if ((error = ::GetLastError()) == EAGAIN) {
             return false;
         } else {
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
         }
     }
 
@@ -119,7 +119,7 @@ void vislib::sys::IPCSemaphore::Unlock(void) {
     //}
 
     if ((::semop(this->id, &unlock, 1)) == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 }
 
@@ -143,7 +143,7 @@ const int vislib::sys::IPCSemaphore::MEMBER_IDX = 0;
 int vislib::sys::IPCSemaphore::getCount(void) {
     int retval = ::semctl(this->id, MEMBER_IDX, GETVAL, 0);
     if (retval == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return retval;
@@ -157,7 +157,7 @@ int vislib::sys::IPCSemaphore::getCount(void) {
  * vislib::sys::IPCSemaphore::IPCSemaphore
  */
 vislib::sys::IPCSemaphore::IPCSemaphore(const IPCSemaphore& rhs) {
-    throw the::not_supported_exception("IPCSemaphore::IPCSemaphore",
+    throw UnsupportedOperationException("IPCSemaphore::IPCSemaphore",
         __FILE__, __LINE__);
 }
 
@@ -168,7 +168,7 @@ vislib::sys::IPCSemaphore::IPCSemaphore(const IPCSemaphore& rhs) {
 vislib::sys::IPCSemaphore& vislib::sys::IPCSemaphore::operator =(
         const IPCSemaphore& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;
@@ -183,19 +183,19 @@ void vislib::sys::IPCSemaphore::init(const char *name, const long initialCount,
     long m = (maxCount > 0) ? maxCount : 1;
     long i = (initialCount < 0) ? 0 : ((initialCount > m) ? m : initialCount);
 
-    THE_ASSERT(m > 0);
-    THE_ASSERT(i >= 0);
-    THE_ASSERT(i <= m);
+    ASSERT(m > 0);
+    ASSERT(i >= 0);
+    ASSERT(i <= m);
 
 #ifdef _WIN32
-    THE_ASSERT(this->handle == NULL);
+    ASSERT(this->handle == NULL);
 
     /* Try to open existing semaphore. */
     if ((this->handle = ::OpenSemaphoreA(SYNCHRONIZE | SEMAPHORE_MODIFY_STATE, 
             FALSE, name)) == NULL) {
         this->handle = ::CreateSemaphoreA(NULL, i, m, name);
     }
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 
 #else /* _WIN32 */
 
@@ -205,20 +205,20 @@ void vislib::sys::IPCSemaphore::init(const char *name, const long initialCount,
     /* Try to create new semaphore. */
     if ((this->id = ::semget(key, 1, IPC_CREAT | IPC_EXCL | DFT_PERMS)) != -1) {
         /* Set initial count if new semaphore was created. */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Semaphore %u created.\n", this->id);
+        VLTRACE(Trace::LEVEL_VL_INFO, "Semaphore %u created.\n", this->id);
 
         this->isOwner = true;
         ::semctl(this->id, MEMBER_IDX, SETVAL, i);
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Inital semaphore value: %d\n", 
+        VLTRACE(Trace::LEVEL_VL_INFO, "Inital semaphore value: %d\n", 
             this->getCount());
 
     } else if (errno == EEXIST) {
         /* Semaphore already exists, try to open it. */
         this->id = ::semget(key, 1, DFT_PERMS);
         this->isOwner = false;
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Semaphore %u opened.\n", this->id);
+        VLTRACE(Trace::LEVEL_VL_INFO, "Semaphore %u opened.\n", this->id);
     }
-    THE_ASSERT(this->id != -1); // TODO: Throw exception here?
+    ASSERT(this->id != -1); // TODO: Throw exception here?
 
 #endif /* _WIN32 */
 }

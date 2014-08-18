@@ -20,7 +20,7 @@
 #include "vislib/clustermessages.h"
 #include "vislib/ObservableCameraParams.h"
 #include "vislib/SmartPtr.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -217,8 +217,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed, 
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const uint8_t *body, const size_t cntBody);
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody);
 
         /**
          * If a peer node connects, send initial camera configuration to it.
@@ -270,8 +270,8 @@ namespace cluster {
          * @param value The value.
          */
         template<class T> 
-        inline void sendIntegralCamParam(const uint32_t msgId, const T value) {
-            uint8_t msg[sizeof(MessageHeader) + sizeof(T)];
+        inline void sendIntegralCamParam(const UINT32 msgId, const T value) {
+            BYTE msg[sizeof(MessageHeader) + sizeof(T)];
             MessageHeader *header = reinterpret_cast<MessageHeader *>(msg);
             T *body = reinterpret_cast<T *>(msg + sizeof(MessageHeader));
 
@@ -290,9 +290,9 @@ namespace cluster {
          * @param msgId The message ID.
          * @param value Pointer to the value.
          */
-        template<class T, unsigned int D>
-        inline void sendVectorialCamParam(const uint32_t msgId, const T *value) {
-            uint8_t msg[sizeof(MessageHeader) + D * sizeof(T)];
+        template<class T, UINT D>
+        inline void sendVectorialCamParam(const UINT32 msgId, const T *value) {
+            BYTE msg[sizeof(MessageHeader) + D * sizeof(T)];
             MessageHeader *header = reinterpret_cast<MessageHeader *>(msg);
             T *body = reinterpret_cast<T *>(msg + sizeof(MessageHeader));
 

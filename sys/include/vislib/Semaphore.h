@@ -24,8 +24,8 @@
 
 #include "Lockable.h"
 #include "vislib/SyncObject.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -118,7 +118,7 @@ namespace sys {
          * successfully acquired, the counter is decremented by one and if the
          * counter reaches zero, the state of the semaphore becomes nonsignaled.
          *
-         * @throws the::system::system_exception If the lock could not be acquired.
+         * @throws SystemException If the lock could not be acquired.
          */
         virtual void Lock(void);
 
@@ -130,7 +130,7 @@ namespace sys {
          *
          * @return true, if the lock was acquired, false, if not.
          *
-         * @throws the::system::system_exception If an error occurred when trying to acquire
+         * @throws SystemException If an error occurred when trying to acquire
          *                         the lock.
          */
         virtual bool TryLock(void);
@@ -143,10 +143,10 @@ namespace sys {
          *
          * @return true, if the lock was acquired, false, if not.
          *
-         * @throws the::system::system_exception If an error occurred when trying to acquire
+         * @throws SystemException If an error occurred when trying to acquire
          *                         the lock.
          */
-        virtual bool TryLock(const unsigned int timeout);
+        virtual bool TryLock(const DWORD timeout);
 
         /**
          * Release the semaphore.
@@ -155,7 +155,7 @@ namespace sys {
          * signaled, as the counter becomes greater than zero, if the semaphore
          * was successfully released.
          *
-         * @throw the::system::system_exception If the lock could not be released.
+         * @throw SystemException If the lock could not be released.
          */
         virtual void Unlock(void);
 
@@ -180,7 +180,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         Semaphore(const Semaphore& rhs);
 
@@ -191,7 +191,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         Semaphore& operator =(const Semaphore& rhs);
 
@@ -205,7 +205,7 @@ namespace sys {
         sem_t *handle;
 
         /** The name of the semaphore if it is named. */
-        the::astring name;
+        vislib::StringA name;
 
 #endif /* _WIN32 */
     };

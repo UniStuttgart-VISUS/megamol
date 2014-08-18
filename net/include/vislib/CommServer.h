@@ -20,8 +20,8 @@
 #include "vislib/CriticalSection.h"
 #include "vislib/Runnable.h"
 #include "vislib/SingleLinkedList.h"
-#include "the/stack_trace.h"
-#include "the/text/string_converter.h"
+#include "vislib/StackTrace.h"
+#include "vislib/StringConverter.h"
 #include "vislib/TcpCommChannel.h"
 
 
@@ -124,7 +124,7 @@ namespace net {
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        virtual unsigned int Run(void *config);
+        virtual DWORD Run(void *config);
 
         /**
          * Abort the work of the server by forcefully closing the underlying
@@ -161,7 +161,7 @@ namespace net {
          *
          * @return Accumulated (ANDed) return values of all listeners.
          */
-        bool fireServerError(const the::exception& exception);
+        bool fireServerError(const vislib::Exception& exception);
 
         /**
          * Inform all registered listener about that the server is exiting.
@@ -184,7 +184,7 @@ namespace net {
          * Flag indicating that the server should proceed with accepting 
          * clients.
          */
-        int32_t doServe;
+        INT32 doServe;
 
         /** The list of listeners. */
         ListenerList listeners;

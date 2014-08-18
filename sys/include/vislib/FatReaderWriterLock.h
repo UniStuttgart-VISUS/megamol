@@ -18,7 +18,7 @@
 #include "vislib/Array.h"
 #include "vislib/CriticalSection.h"
 #include "vislib/Event.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -93,7 +93,7 @@ namespace sys {
          * thread can aquire any further shared locks, unless that thread
          * currently holds the exclusive lock.
          *
-         * @throws invalid_operation_exception if the calling thread holds a shared
+         * @throws IllegalStateException if the calling thread holds a shared
          *                               lock
          */
         virtual void LockExclusive(void);
@@ -116,7 +116,7 @@ namespace sys {
          * This method must be called for each time 'LockExclusive' was called
          * to release the exclusive lock.
          *
-         * @throws invalid_operation_exception if the current thread does not hold
+         * @throws IllegalStateException if the current thread does not hold
          *                               the exclusive lock
          */
         virtual void UnlockExclusive(void);
@@ -127,7 +127,7 @@ namespace sys {
          * This method must be called for each time 'LockShared' was called to
          * release all shared locks.
          *
-         * @throws invalid_operation_exception if the current thread does not hold
+         * @throws IllegalStateException if the current thread does not hold
          *                               any shared lock
          */
         virtual void UnlockShared(void);
@@ -144,7 +144,7 @@ namespace sys {
         vislib::sys::CriticalSection exclusiveLock;
 
         /** ID of the thread currently locked exclusively */
-        unsigned int exThread;
+        DWORD exThread;
 
         /** Number of exclusive locks issued */
         unsigned int exThreadCnt;
@@ -159,7 +159,7 @@ namespace sys {
         vislib::sys::CriticalSection sharedLock;
 
         /** List of IDs of the threads that have aquired shared locks */
-        Array<unsigned int> shThreads;
+        Array<DWORD> shThreads;
 
     };
     

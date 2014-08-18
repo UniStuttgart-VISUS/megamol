@@ -14,9 +14,10 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "vislib/CharTraits.h"
 #include "vislib/Array.h"
 #include "vislib/SmartPtr.h"
-#include "the/string.h"
+#include "vislib/String.h"
 #include <memory.h>
 
 
@@ -119,7 +120,7 @@ namespace sys {
              *
              * @param text The string to be used for file name elements.
              */
-            FileNameStringElement(const T& text)
+            FileNameStringElement(const vislib::String<T>& text)
                     : FileNameElement(), text(text) {
                 // Intentionally empty
             }
@@ -145,7 +146,7 @@ namespace sys {
              *
              * @param text The string for this file name element.
              */
-            void SetText(const T& text) {
+            void SetText(const String<T>& text) {
                 this->text = text;
             }
 
@@ -155,7 +156,7 @@ namespace sys {
              *
              * @return The text of this file name element.
              */
-            const T& Text(void) const {
+            const String<T>& Text(void) const {
                 return this->text;
             }
 
@@ -169,12 +170,11 @@ namespace sys {
              * @return A textual representation of this file name element.
              */
             virtual char * makeTextA(void) const {
-                unsigned int len = static_cast<unsigned int>(this->text.size());
+                unsigned int len = this->text.Length();
                 char *c = new char[len + 1];
-                the::astring str;
-                the::text::string_converter::convert(str, text);
+                StringA str(text);
                 c[len] = static_cast<char>(0);
-                memcpy(c, str.c_str(), len * sizeof(char));
+                memcpy(c, str.PeekBuffer(), len * sizeof(char));
                 return c;
             }
 
@@ -186,28 +186,27 @@ namespace sys {
              * @return A textual representation of this file name element.
              */
             virtual wchar_t * makeTextW(void) const {
-                unsigned int len = static_cast<unsigned int>(this->text.size());
+                unsigned int len = this->text.Length();
                 wchar_t *c = new wchar_t[len + 1];
-                the::wstring str;
-                the::text::string_converter::convert(str, text);
+                StringW str(text);
                 c[len] = static_cast<wchar_t>(0);
-                memcpy(c, str.c_str(), len * sizeof(wchar_t));
+                memcpy(c, str.PeekBuffer(), len * sizeof(wchar_t));
                 return c;
             }
 
             /** The fixed string a file name element */
-            T text;
+            String<T> text;
 
         };
 
         /** Typedef for ANSI string file name elements */
-        typedef FileNameStringElement<the::astring> FileNameStringElementA;
+        typedef FileNameStringElement<CharTraitsA> FileNameStringElementA;
 
         /** Typedef for unicode string file name elements */
-        typedef FileNameStringElement<the::wstring> FileNameStringElementW;
+        typedef FileNameStringElement<CharTraitsW> FileNameStringElementW;
 
         /** Typedef for autotype string file name elements */
-        typedef FileNameStringElement<the::tstring> TFileNameStringElement;
+        typedef FileNameStringElement<TCharTraits> TFileNameStringElement;
 
         /**
          * Class for counting file name elements
@@ -397,7 +396,7 @@ namespace sys {
          * @param firstFileName The file name of the first file of the
          *                      potential file sequence to be autodetected.
          */
-        void Autodetect(const the::astring& firstFileName);
+        void Autodetect(const StringA& firstFileName);
 
         /**
          * Performs an autodetection for a file name sequence based on the
@@ -407,7 +406,7 @@ namespace sys {
          * @param firstFileName The file name of the first file of the
          *                      potential file sequence to be autodetected.
          */
-        void Autodetect(const the::wstring& firstFileName);
+        void Autodetect(const StringW& firstFileName);
 
         /**
          * Answers the number of file names defined by this sequence.
@@ -443,7 +442,7 @@ namespace sys {
          *
          * @return The 'idx'-th file name of the sequence.
          */
-        the::astring FileNameA(unsigned int idx);
+        StringA FileNameA(unsigned int idx);
 
         /**
          * Answer the 'idx'-th file name of the sequence. You must not call
@@ -451,7 +450,7 @@ namespace sys {
          *
          * @return The 'idx'-th file name of the sequence.
          */
-        the::wstring FileNameW(unsigned int idx);
+        StringW FileNameW(unsigned int idx);
 
         /**
          * Checks whether this sequence is valid or not.
@@ -526,7 +525,7 @@ namespace sys {
          *                 file sequence to be autodetected.
          */
         template<class T>
-        void autodetect(const T& filename);
+        void autodetect(const vislib::String<T>& filename);
 
         /**
          * Sets the indices of all elements so that they form the requested

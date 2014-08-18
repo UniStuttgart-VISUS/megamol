@@ -10,11 +10,10 @@
 #define _WINXP32_LEGACY_SUPPORT
 
 #ifdef _WIN32
-#include "the/not_implemented_exception.h"
+#include "vislib/MissingImplementationException.h"
 #ifdef _WINXP32_LEGACY_SUPPORT
 #include "DynamicFunctionPointer.h"
 #endif /* _WINXP32_LEGACY_SUPPORT */
-#include "the/text/string_buffer.h"
 
 
 #ifdef _WINXP32_LEGACY_SUPPORT
@@ -158,11 +157,11 @@ void vislib::sys::RegistryKey::Close(void) {
  * vislib::sys::RegistryKey::CreateSubKey
  */
 DWORD vislib::sys::RegistryKey::CreateSubKey(
-        vislib::sys::RegistryKey& outKey, const the::astring& name,
+        vislib::sys::RegistryKey& outKey, const vislib::StringA& name,
         REGSAM sam) {
     outKey.Close();
     outKey.sam = (sam == 0) ? this->sam : sam; // TODO: WOW64-Stuff
-    DWORD errcode = ::RegCreateKeyExA(this->key, name.c_str(), 0, NULL,
+    DWORD errcode = ::RegCreateKeyExA(this->key, name, 0, NULL,
         REG_OPTION_NON_VOLATILE, outKey.sam, NULL, &outKey.key, NULL);
     if (errcode != NULL) {
         outKey.key = INVALID_HKEY;
@@ -176,11 +175,11 @@ DWORD vislib::sys::RegistryKey::CreateSubKey(
  * vislib::sys::RegistryKey::CreateSubKey
  */
 DWORD vislib::sys::RegistryKey::CreateSubKey(
-        vislib::sys::RegistryKey& outKey, const the::wstring& name,
+        vislib::sys::RegistryKey& outKey, const vislib::StringW& name,
         REGSAM sam) {
     outKey.Close();
     outKey.sam = (sam == 0) ? this->sam : sam; // TODO: WOW64-Stuff
-    DWORD errcode = ::RegCreateKeyExW(this->key, name.c_str(), 0, NULL,
+    DWORD errcode = ::RegCreateKeyExW(this->key, name, 0, NULL,
         REG_OPTION_NON_VOLATILE, outKey.sam, NULL, &outKey.key, NULL);
     if (errcode != NULL) {
         outKey.key = INVALID_HKEY;
@@ -194,14 +193,14 @@ DWORD vislib::sys::RegistryKey::CreateSubKey(
  * vislib::sys::RegistryKey::DeleteSubKey
  */
 DWORD vislib::sys::RegistryKey::DeleteSubKey(
-        const the::astring& name) {
+        const vislib::StringA& name) {
     DWORD errcode;
     RegistryKey sc;
 
     errcode = this->OpenSubKey(sc, name);
     if (errcode != ERROR_SUCCESS) return errcode;
-    Array<the::astring> subkeys(sc.GetSubKeysA());
-    for (size_t i = 0; i < subkeys.Count(); i++) {
+    Array<StringA> subkeys(sc.GetSubKeysA());
+    for (SIZE_T i = 0; i < subkeys.Count(); i++) {
         errcode = sc.DeleteSubKey(subkeys[i]);
         if (errcode != ERROR_SUCCESS) return errcode;
     }
@@ -209,13 +208,13 @@ DWORD vislib::sys::RegistryKey::DeleteSubKey(
 
 #ifdef _WINXP32_LEGACY_SUPPORT
     if (dynRegDeleteKeyExA.IsValid()) {
-        errcode = dynRegDeleteKeyExA(this->key, name.c_str(),
+        errcode = dynRegDeleteKeyExA(this->key, name,
             this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
     } else {
-        errcode = ::RegDeleteKeyA(this->key, name.c_str());
+        errcode = ::RegDeleteKeyA(this->key, name);
     }
 #else /* _WINXP32_LEGACY_SUPPORT */
-    errcode = ::RegDeleteKeyExA(this->key, name.c_str(),
+    errcode = ::RegDeleteKeyExA(this->key, name,
         this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
 #endif /* _WINXP32_LEGACY_SUPPORT */
     return errcode;
@@ -226,14 +225,14 @@ DWORD vislib::sys::RegistryKey::DeleteSubKey(
  * vislib::sys::RegistryKey::DeleteSubKey
  */
 DWORD vislib::sys::RegistryKey::DeleteSubKey(
-        const the::wstring& name) {
+        const vislib::StringW& name) {
     DWORD errcode;
     RegistryKey sc;
 
     errcode = this->OpenSubKey(sc, name);
     if (errcode != ERROR_SUCCESS) return errcode;
-    Array<the::wstring> subkeys(sc.GetSubKeysW());
-    for (size_t i = 0; i < subkeys.Count(); i++) {
+    Array<StringW> subkeys(sc.GetSubKeysW());
+    for (SIZE_T i = 0; i < subkeys.Count(); i++) {
         errcode = sc.DeleteSubKey(subkeys[i]);
         if (errcode != ERROR_SUCCESS) return errcode;
     }
@@ -241,13 +240,13 @@ DWORD vislib::sys::RegistryKey::DeleteSubKey(
 
 #ifdef _WINXP32_LEGACY_SUPPORT
     if (dynRegDeleteKeyExW.IsValid()) {
-        errcode = dynRegDeleteKeyExW(this->key, name.c_str(),
+        errcode = dynRegDeleteKeyExW(this->key, name,
             this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
     } else {
-        errcode = ::RegDeleteKeyW(this->key, name.c_str());
+        errcode = ::RegDeleteKeyW(this->key, name);
     }
 #else /* _WINXP32_LEGACY_SUPPORT */
-    errcode = ::RegDeleteKeyExW(this->key, name.c_str(),
+    errcode = ::RegDeleteKeyExW(this->key, name,
         this->sam & (KEY_WOW64_32KEY | KEY_WOW64_64KEY), 0);
 #endif /* _WINXP32_LEGACY_SUPPORT */
     return errcode;
@@ -258,8 +257,8 @@ DWORD vislib::sys::RegistryKey::DeleteSubKey(
  * vislib::sys::RegistryKey::DeleteValue
  */
 DWORD vislib::sys::RegistryKey::DeleteValue(
-        const the::astring& name) {
-    return ::RegDeleteValueA(this->key, name.c_str());
+        const vislib::StringA& name) {
+    return ::RegDeleteValueA(this->key, name);
 }
 
 
@@ -267,21 +266,21 @@ DWORD vislib::sys::RegistryKey::DeleteValue(
  * vislib::sys::RegistryKey::DeleteValue
  */
 DWORD vislib::sys::RegistryKey::DeleteValue(
-        const the::wstring& name) {
-    return ::RegDeleteValueW(this->key, name.c_str());
+        const vislib::StringW& name) {
+    return ::RegDeleteValueW(this->key, name);
 }
 
 
 /*
  * vislib::sys::RegistryKey::GetSubKeysA
  */
-vislib::Array<the::astring>
+vislib::Array<vislib::StringA>
 vislib::sys::RegistryKey::GetSubKeysA(void) const {
-    Array<the::astring> rv;
+    Array<StringA> rv;
     DWORD errcode;
     DWORD subKeyCount;
     DWORD subKeyMaxNameLen;
-    the::astring str;
+    StringA str;
     char *strptr;
     errcode = ::RegQueryInfoKeyA(this->key, NULL, NULL, NULL, &subKeyCount,
         &subKeyMaxNameLen, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -289,8 +288,7 @@ vislib::sys::RegistryKey::GetSubKeysA(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::astring(subKeyMaxNameLen, '\0');
-    strptr = const_cast<char*>(str.c_str());
+    strptr = str.AllocateBuffer(subKeyMaxNameLen);
 
     for (DWORD i = 0; i < subKeyCount; i++) {
         DWORD strptrlen = subKeyMaxNameLen + 1;
@@ -310,13 +308,13 @@ vislib::sys::RegistryKey::GetSubKeysA(void) const {
 /*
  * vislib::sys::RegistryKey::GetSubKeysW
  */
-vislib::Array<the::wstring>
+vislib::Array<vislib::StringW>
 vislib::sys::RegistryKey::GetSubKeysW(void) const {
-    Array<the::wstring> rv;
+    Array<StringW> rv;
     DWORD errcode;
     DWORD subKeyCount;
     DWORD subKeyMaxNameLen;
-    the::wstring str;
+    StringW str;
     wchar_t *strptr;
     errcode = ::RegQueryInfoKeyW(this->key, NULL, NULL, NULL, &subKeyCount,
         &subKeyMaxNameLen, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -324,8 +322,7 @@ vislib::sys::RegistryKey::GetSubKeysW(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::wstring(subKeyMaxNameLen, L'\0');
-    strptr = const_cast<wchar_t*>(str.c_str());
+    strptr = str.AllocateBuffer(subKeyMaxNameLen);
 
     for (DWORD i = 0; i < subKeyCount; i++) {
         DWORD strptrlen = subKeyMaxNameLen + 1;
@@ -345,13 +342,13 @@ vislib::sys::RegistryKey::GetSubKeysW(void) const {
 /*
  * vislib::sys::RegistryKey::GetValueNamesA
  */
-vislib::Array<the::astring>
+vislib::Array<vislib::StringA>
 vislib::sys::RegistryKey::GetValueNamesA(void) const {
-    Array<the::astring> rv;
+    Array<StringA> rv;
     DWORD errcode;
     DWORD valuesCount;
     DWORD valuesMaxNameLen;
-    the::astring str;
+    StringA str;
     char *strptr;
     errcode = ::RegQueryInfoKeyA(this->key, NULL, NULL, NULL, NULL, NULL,
         NULL, &valuesCount, &valuesMaxNameLen, NULL, NULL, NULL);
@@ -359,8 +356,7 @@ vislib::sys::RegistryKey::GetValueNamesA(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::astring(valuesMaxNameLen, '\0');
-    strptr = const_cast<char*>(str.c_str());
+    strptr = str.AllocateBuffer(valuesMaxNameLen);
 
     for (DWORD i = 0; i < valuesCount; i++) {
         DWORD strptrlen = valuesMaxNameLen + 1;
@@ -380,13 +376,13 @@ vislib::sys::RegistryKey::GetValueNamesA(void) const {
 /*
  * vislib::sys::RegistryKey::GetValueNamesW
  */
-vislib::Array<the::wstring>
+vislib::Array<vislib::StringW>
 vislib::sys::RegistryKey::GetValueNamesW(void) const {
-    Array<the::wstring> rv;
+    Array<StringW> rv;
     DWORD errcode;
     DWORD valuesCount;
     DWORD valuesMaxNameLen;
-    the::wstring str;
+    StringW str;
     wchar_t *strptr;
     errcode = ::RegQueryInfoKeyW(this->key, NULL, NULL, NULL, NULL, NULL,
         NULL, &valuesCount, &valuesMaxNameLen, NULL, NULL, NULL);
@@ -394,8 +390,7 @@ vislib::sys::RegistryKey::GetValueNamesW(void) const {
         rv.Clear();
         return rv;
     }
-    str = the::wstring(valuesMaxNameLen, L'\0');
-    strptr = const_cast<wchar_t*>(str.c_str());
+    strptr = str.AllocateBuffer(valuesMaxNameLen);
 
     for (DWORD i = 0; i < valuesCount; i++) {
         DWORD strptrlen = valuesMaxNameLen + 1;
@@ -416,9 +411,9 @@ vislib::sys::RegistryKey::GetValueNamesW(void) const {
  * vislib::sys::RegistryKey::GetValueType
  */
 vislib::sys::RegistryKey::RegValueType vislib::sys::RegistryKey::GetValueType(
-        const the::astring& name) const {
+        const vislib::StringA& name) const {
     DWORD valtype;
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, &valtype,
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, &valtype,
         NULL, NULL);
     if (errcode != ERROR_SUCCESS) return REGVAL_NONE;
     switch (valtype) {
@@ -439,9 +434,9 @@ vislib::sys::RegistryKey::RegValueType vislib::sys::RegistryKey::GetValueType(
  * vislib::sys::RegistryKey::GetValueType
  */
 vislib::sys::RegistryKey::RegValueType vislib::sys::RegistryKey::GetValueType(
-        const the::wstring& name) const {
+        const vislib::StringW& name) const {
     DWORD valtype;
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, &valtype,
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, &valtype,
         NULL, NULL);
     if (errcode != ERROR_SUCCESS) return REGVAL_NONE;
     switch (valtype) {
@@ -462,14 +457,14 @@ vislib::sys::RegistryKey::RegValueType vislib::sys::RegistryKey::GetValueType(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, vislib::RawStorage& outData) const {
+        const vislib::StringA& name, vislib::RawStorage& outData) const {
     DWORD size;
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL, NULL,
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, NULL, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return errcode;
     outData.AssertSize(size);
-    errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-        outData.As<uint8_t>(), &size);
+    errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+        outData.As<BYTE>(), &size);
     return errcode;
 }
 
@@ -478,14 +473,14 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, vislib::RawStorage& outData) const {
+        const vislib::StringW& name, vislib::RawStorage& outData) const {
     DWORD size;
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL, NULL,
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, NULL, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return errcode;
     outData.AssertSize(size);
-    errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-        outData.As<uint8_t>(), &size);
+    errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+        outData.As<BYTE>(), &size);
     return errcode;
 }
 
@@ -494,11 +489,11 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, void* outData,
-        size_t dataSize) const {
+        const vislib::StringA& name, void* outData,
+        SIZE_T dataSize) const {
     DWORD size = static_cast<DWORD>(dataSize);
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-        static_cast<uint8_t*>(outData), &size);
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+        static_cast<BYTE*>(outData), &size);
     return errcode;
 }
 
@@ -507,11 +502,11 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, void* outData,
-        size_t dataSize) const {
+        const vislib::StringW& name, void* outData,
+        SIZE_T dataSize) const {
     DWORD size = static_cast<DWORD>(dataSize);
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-        static_cast<uint8_t*>(outData), &size);
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+        static_cast<BYTE*>(outData), &size);
     return errcode;
 }
 
@@ -520,18 +515,17 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, the::astring& outStr) const {
+        const vislib::StringA& name, vislib::StringA& outStr) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, &type, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return errcode;
     if ((type != REG_SZ) && (type != REG_EXPAND_SZ)) {
         return ERROR_INVALID_DATATYPE;
     }
-    errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-        reinterpret_cast<uint8_t*>(the::text::string_buffer_allocate(outStr, size).operator char *()),
-        &size);
+    errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+        reinterpret_cast<BYTE*>(outStr.AllocateBuffer(size)), &size);
     return errcode;
 }
 
@@ -540,18 +534,17 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, the::wstring& outStr) const {
+        const vislib::StringW& name, vislib::StringW& outStr) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, &type, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return errcode;
     if ((type != REG_SZ) && (type != REG_EXPAND_SZ)) {
         return ERROR_INVALID_DATATYPE;
     }
-    errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-        reinterpret_cast<uint8_t*>(the::text::string_buffer_allocate(outStr, size).operator wchar_t *()),
-        &size);
+    errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+        reinterpret_cast<BYTE*>(outStr.AllocateBuffer(size)), &size);
     return errcode;
 }
 
@@ -560,11 +553,11 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, the::wstring& outStr) const {
-    the::astring v;
+        const vislib::StringA& name, vislib::StringW& outStr) const {
+    vislib::StringA v;
     DWORD rv = this->GetValue(name, v);
     if (rv == ERROR_SUCCESS) {
-        the::text::string_converter::convert(outStr, v);
+        outStr = v;
     }
     return rv;
 }
@@ -574,11 +567,11 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, the::astring& outStr) const {
-    the::wstring v;
+        const vislib::StringW& name, vislib::StringA& outStr) const {
+    vislib::StringW v;
     DWORD rv = this->GetValue(name, v);
     if (rv == ERROR_SUCCESS) {
-        the::text::string_converter::convert(outStr, v);
+        outStr = v;
     }
     return rv;
 }
@@ -588,22 +581,22 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, the::multi_sza& outStrs) const {
+        const vislib::StringA& name, vislib::MultiSzA& outStrs) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, &type, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return errcode;
     if ((type == REG_SZ) || (type == REG_EXPAND_SZ)) {
-        the::astring val;
+        StringA val;
         errcode = this->GetValue(name, val);
         if (errcode != ERROR_SUCCESS) return errcode;
-        outStrs.clear();
-        outStrs.add(val.c_str());
+        outStrs.Clear();
+        outStrs.Append(val);
 
     } else if (type == REG_MULTI_SZ) {
-        errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(outStrs.allocate(size)), &size);
+        errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(outStrs.AllocateBuffer(size)), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -617,22 +610,22 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, the::multi_szw& outStrs) const {
+        const vislib::StringW& name, vislib::MultiSzW& outStrs) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, &type, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return errcode;
     if ((type == REG_SZ) || (type == REG_EXPAND_SZ)) {
-        the::wstring val;
+        StringW val;
         errcode = this->GetValue(name, val);
         if (errcode != ERROR_SUCCESS) return errcode;
-        outStrs.clear();
-        outStrs.add(val);
+        outStrs.Clear();
+        outStrs.Append(val);
 
     } else if (type == REG_MULTI_SZ) {
-        errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(outStrs.allocate(size)), &size);
+        errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(outStrs.AllocateBuffer(size)), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -646,8 +639,8 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, the::multi_szw& outStrs) const {
-    return this->GetValue(THE_A2W(name), outStrs);
+        const vislib::StringA& name, vislib::MultiSzW& outStrs) const {
+    return this->GetValue(StringW(name), outStrs);
 }
 
 
@@ -655,8 +648,8 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, the::multi_sza& outStrs) const {
-    return this->GetValue(THE_W2A(name), outStrs);
+        const vislib::StringW& name, vislib::MultiSzA& outStrs) const {
+    return this->GetValue(StringA(name), outStrs);
 }
 
 
@@ -664,13 +657,13 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name,
-        vislib::Array<the::astring>& outStrs) const {
-    the::multi_sza strs;
+        const vislib::StringA& name,
+        vislib::Array<vislib::StringA>& outStrs) const {
+    MultiSzA strs;
     DWORD errcode = this->GetValue(name, strs);
     if (errcode != ERROR_SUCCESS) return errcode;
-    outStrs.SetCount(strs.count());
-    for (size_t i = 0; i < outStrs.Count(); i++) {
+    outStrs.SetCount(strs.Count());
+    for (SIZE_T i = 0; i < outStrs.Count(); i++) {
         outStrs[i] = strs[i];
     }
     return ERROR_SUCCESS;
@@ -681,13 +674,13 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name,
-        vislib::Array<the::wstring>& outStrs) const {
-    the::multi_szw strs;
+        const vislib::StringW& name,
+        vislib::Array<vislib::StringW>& outStrs) const {
+    MultiSzW strs;
     DWORD errcode = this->GetValue(name, strs);
     if (errcode != ERROR_SUCCESS) return errcode;
-    outStrs.SetCount(strs.count());
-    for (size_t i = 0; i < outStrs.Count(); i++) {
+    outStrs.SetCount(strs.Count());
+    for (SIZE_T i = 0; i < outStrs.Count(); i++) {
         outStrs[i] = strs[i];
     }
     return ERROR_SUCCESS;
@@ -698,14 +691,14 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name,
-        vislib::Array<the::wstring>& outStrs) const {
-    the::multi_sza strs;
+        const vislib::StringA& name,
+        vislib::Array<vislib::StringW>& outStrs) const {
+    MultiSzA strs;
     DWORD errcode = this->GetValue(name, strs);
     if (errcode != ERROR_SUCCESS) return errcode;
-    outStrs.SetCount(strs.count());
-    for (size_t i = 0; i < outStrs.Count(); i++) {
-        the::text::string_converter::convert(outStrs[i], strs[i]);
+    outStrs.SetCount(strs.Count());
+    for (SIZE_T i = 0; i < outStrs.Count(); i++) {
+        outStrs[i] = strs[i];
     }
     return ERROR_SUCCESS;
 }
@@ -715,14 +708,14 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name,
-        vislib::Array<the::astring>& outStrs) const {
-    the::multi_szw strs;
+        const vislib::StringW& name,
+        vislib::Array<vislib::StringA>& outStrs) const {
+    MultiSzW strs;
     DWORD errcode = this->GetValue(name, strs);
     if (errcode != ERROR_SUCCESS) return errcode;
-    outStrs.SetCount(strs.count());
-    for (size_t i = 0; i < outStrs.Count(); i++) {
-        the::text::string_converter::convert(outStrs[i], strs[i]);
+    outStrs.SetCount(strs.Count());
+    for (SIZE_T i = 0; i < outStrs.Count(); i++) {
+        outStrs[i] = strs[i];
     }
     return ERROR_SUCCESS;
 }
@@ -732,24 +725,24 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, uint32_t& outVal) const {
+        const vislib::StringA& name, UINT32& outVal) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, &type, NULL,
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        size = sizeof(uint32_t);
-        errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&outVal), &size);
+        size = sizeof(UINT32);
+        errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&outVal), &size);
 
     } else if (type == REG_QWORD) {
-        uint64_t val;
-        size = sizeof(uint64_t);
-        errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&val), &size);
+        UINT64 val;
+        size = sizeof(UINT64);
+        errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
-            outVal = static_cast<uint32_t>(val);
+            outVal = static_cast<UINT32>(val);
         }
 
     } else {
@@ -764,24 +757,24 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, uint32_t& outVal) const {
+        const vislib::StringW& name, UINT32& outVal) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, &type, NULL,
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        size = sizeof(uint32_t);
-        errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&outVal), &size);
+        size = sizeof(UINT32);
+        errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&outVal), &size);
 
     } else if (type == REG_QWORD) {
-        uint64_t val;
-        size = sizeof(uint64_t);
-        errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&val), &size);
+        UINT64 val;
+        size = sizeof(UINT64);
+        errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
-            outVal = static_cast<uint32_t>(val);
+            outVal = static_cast<UINT32>(val);
         }
 
     } else {
@@ -796,25 +789,25 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::astring& name, uint64_t& outVal) const {
+        const vislib::StringA& name, UINT64& outVal) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, &type, NULL,
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        uint32_t val;
-        size = sizeof(uint32_t);
-        errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&val), &size);
+        UINT32 val;
+        size = sizeof(UINT32);
+        errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
-            outVal = static_cast<uint64_t>(val);
+            outVal = static_cast<UINT64>(val);
         }
 
     } else if (type == REG_QWORD) {
-        size = sizeof(uint64_t);
-        errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&outVal), &size);
+        size = sizeof(UINT64);
+        errcode = ::RegQueryValueExA(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&outVal), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -828,25 +821,25 @@ DWORD vislib::sys::RegistryKey::GetValue(
  * vislib::sys::RegistryKey::GetValue
  */
 DWORD vislib::sys::RegistryKey::GetValue(
-        const the::wstring& name, uint64_t& outVal) const {
+        const vislib::StringW& name, UINT64& outVal) const {
     DWORD size;
     DWORD type;
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, &type, NULL,
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, &type, NULL,
         NULL);
     if (errcode != ERROR_SUCCESS) return errcode;
     if (type == REG_DWORD) {
-        uint32_t val;
-        size = sizeof(uint32_t);
-        errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&val), &size);
+        UINT32 val;
+        size = sizeof(UINT32);
+        errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&val), &size);
         if (errcode == ERROR_SUCCESS) {
-            outVal = static_cast<uint64_t>(val);
+            outVal = static_cast<UINT64>(val);
         }
 
     } else if (type == REG_QWORD) {
-        size = sizeof(uint64_t);
-        errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL,
-            reinterpret_cast<uint8_t*>(&outVal), &size);
+        size = sizeof(UINT64);
+        errcode = ::RegQueryValueExW(this->key, name, NULL, NULL,
+            reinterpret_cast<BYTE*>(&outVal), &size);
 
     } else {
         errcode = ERROR_INVALID_DATATYPE;
@@ -859,26 +852,26 @@ DWORD vislib::sys::RegistryKey::GetValue(
 /*
  * vislib::sys::RegistryKey::GetValueSize
  */
-size_t
-vislib::sys::RegistryKey::GetValueSize(const the::astring& name) const {
+SIZE_T
+vislib::sys::RegistryKey::GetValueSize(const vislib::StringA& name) const {
     DWORD size;
-    DWORD errcode = ::RegQueryValueExA(this->key, name.c_str(), NULL, NULL, NULL,
+    DWORD errcode = ::RegQueryValueExA(this->key, name, NULL, NULL, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return 0;
-    return static_cast<size_t>(size);
+    return static_cast<SIZE_T>(size);
 }
 
 
 /*
  * vislib::sys::RegistryKey::GetValueSize
  */
-size_t
-vislib::sys::RegistryKey::GetValueSize(const the::wstring& name) const {
+SIZE_T
+vislib::sys::RegistryKey::GetValueSize(const vislib::StringW& name) const {
     DWORD size;
-    DWORD errcode = ::RegQueryValueExW(this->key, name.c_str(), NULL, NULL, NULL,
+    DWORD errcode = ::RegQueryValueExW(this->key, name, NULL, NULL, NULL,
         &size);
     if (errcode != ERROR_SUCCESS) return 0;
-    return static_cast<size_t>(size);
+    return static_cast<SIZE_T>(size);
 }
 
 
@@ -886,11 +879,11 @@ vislib::sys::RegistryKey::GetValueSize(const the::wstring& name) const {
  * vislib::sys::RegistryKey::OpenSubKey
  */
 DWORD vislib::sys::RegistryKey::OpenSubKey(
-        vislib::sys::RegistryKey& outKey, const the::astring& name,
+        vislib::sys::RegistryKey& outKey, const vislib::StringA& name,
         REGSAM sam) const {
     outKey.Close();
     outKey.sam = (sam == 0) ? this->sam : sam; // TODO: WOW64-Stuff
-    DWORD errcode = ::RegOpenKeyExA(this->key, name.c_str(), 0,
+    DWORD errcode = ::RegOpenKeyExA(this->key, name, 0,
         outKey.sam, &outKey.key);
     if (errcode != ERROR_SUCCESS) {
         outKey.sam = 0;
@@ -904,11 +897,11 @@ DWORD vislib::sys::RegistryKey::OpenSubKey(
  * vislib::sys::RegistryKey::OpenSubKey
  */
 DWORD vislib::sys::RegistryKey::OpenSubKey(
-        vislib::sys::RegistryKey& outKey, const the::wstring& name,
+        vislib::sys::RegistryKey& outKey, const vislib::StringW& name,
         REGSAM sam) const {
     outKey.Close();
     outKey.sam = (sam == 0) ? this->sam : sam; // TODO: WOW64-Stuff
-    DWORD errcode = ::RegOpenKeyExW(this->key, name.c_str(), 0,
+    DWORD errcode = ::RegOpenKeyExW(this->key, name, 0,
         outKey.sam, &outKey.key);
     if (errcode != ERROR_SUCCESS) {
         outKey.sam = 0;
@@ -941,7 +934,7 @@ DWORD vislib::sys::RegistryKey::ReopenKey(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, const vislib::RawStorage& data) {
+        const vislib::StringA& name, const vislib::RawStorage& data) {
     return this->SetValue(name, data.As<void>(), data.GetSize());
 }
 
@@ -950,7 +943,7 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, const vislib::RawStorage& data) {
+        const vislib::StringW& name, const vislib::RawStorage& data) {
     return this->SetValue(name, data.As<void>(), data.GetSize());
 }
 
@@ -959,9 +952,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, const void* data, size_t size) {
-    return ::RegSetValueExA(this->key, name.c_str(), NULL, REG_BINARY,
-        reinterpret_cast<const uint8_t*>(data), static_cast<DWORD>(size));
+        const vislib::StringA& name, const void* data, SIZE_T size) {
+    return ::RegSetValueExA(this->key, name, NULL, REG_BINARY,
+        reinterpret_cast<const BYTE*>(data), static_cast<DWORD>(size));
 }
 
 
@@ -969,9 +962,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, const void* data, size_t size) {
-    return ::RegSetValueExW(this->key, name.c_str(), NULL, REG_BINARY,
-        reinterpret_cast<const uint8_t*>(data), static_cast<DWORD>(size));
+        const vislib::StringW& name, const void* data, SIZE_T size) {
+    return ::RegSetValueExW(this->key, name, NULL, REG_BINARY,
+        reinterpret_cast<const BYTE*>(data), static_cast<DWORD>(size));
 }
 
 
@@ -979,12 +972,11 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, const the::astring& str,
+        const vislib::StringA& name, const vislib::StringA& str,
         bool expandable) {
-    return ::RegSetValueExA(this->key, name.c_str(), NULL,
+    return ::RegSetValueExA(this->key, name, NULL,
         expandable ? REG_EXPAND_SZ : REG_SZ,
-        reinterpret_cast<const uint8_t*>(str.c_str()),
-        static_cast<DWORD>(str.size() + 1));
+        reinterpret_cast<const BYTE*>(str.PeekBuffer()), str.Length() + 1);
 }
 
 
@@ -992,12 +984,12 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, const the::wstring& str,
+        const vislib::StringW& name, const vislib::StringW& str,
         bool expandable) {
-    return ::RegSetValueExW(this->key, name.c_str(), NULL,
+    return ::RegSetValueExW(this->key, name, NULL,
         expandable ? REG_EXPAND_SZ : REG_SZ,
-        reinterpret_cast<const uint8_t*>(str.c_str()),
-        static_cast<DWORD>((str.size() + 1) * sizeof(wchar_t)));
+        reinterpret_cast<const BYTE*>(str.PeekBuffer()),
+        (str.Length() + 1) * sizeof(wchar_t));
 }
 
 
@@ -1005,10 +997,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, const the::wstring& str,
+        const vislib::StringA& name, const vislib::StringW& str,
         bool expandable) {
-    return this->SetValue(name, the::text::string_converter::to_a(str),
-        expandable);
+    return this->SetValue(name, vislib::StringA(str), expandable);
 }
 
 
@@ -1016,10 +1007,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, const the::astring& str,
+        const vislib::StringW& name, const vislib::StringA& str,
         bool expandable) {
-    return this->SetValue(name, the::text::string_converter::to_w(str),
-        expandable);
+    return this->SetValue(name, vislib::StringW(str), expandable);
 }
 
 
@@ -1027,10 +1017,10 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, const the::multi_sza& strs) {
-    return ::RegSetValueExA(this->key, name.c_str(), NULL, REG_MULTI_SZ,
-        reinterpret_cast<const uint8_t*>(strs.data()),
-        static_cast<DWORD>(strs.size()));
+        const vislib::StringA& name, const vislib::MultiSzA& strs) {
+    return ::RegSetValueExA(this->key, name, NULL, REG_MULTI_SZ,
+        reinterpret_cast<const BYTE*>(strs.PeekBuffer()),
+        static_cast<DWORD>(strs.Length()));
 }
 
 
@@ -1038,10 +1028,10 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, const the::multi_szw& strs) {
-    return ::RegSetValueExW(this->key, name.c_str(), NULL, REG_MULTI_SZ,
-        reinterpret_cast<const uint8_t*>(strs.data()),
-        static_cast<DWORD>(strs.size() * sizeof(wchar_t)));
+        const vislib::StringW& name, const vislib::MultiSzW& strs) {
+    return ::RegSetValueExW(this->key, name, NULL, REG_MULTI_SZ,
+        reinterpret_cast<const BYTE*>(strs.PeekBuffer()),
+        static_cast<DWORD>(strs.Length() * sizeof(wchar_t)));
 }
 
 
@@ -1049,10 +1039,10 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, const the::multi_szw& strs) {
-    the::multi_sza msz;
-    for (size_t i = 0; i < strs.size(); i++) {
-        msz.add(the::text::string_converter::to_a(strs[i]));
+        const vislib::StringA& name, const vislib::MultiSzW& strs) {
+    vislib::MultiSzA msz;
+    for (SIZE_T i = 0; i < strs.Count(); i++) {
+        msz.Append(vislib::StringA(strs[i]));
     }
     return this->SetValue(name, msz);
 }
@@ -1062,10 +1052,10 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, const the::multi_sza& strs) {
-    the::multi_szw msz;
-    for (size_t i = 0; i < strs.size(); i++) {
-        msz.add(the::text::string_converter::to_w(strs[i]));
+        const vislib::StringW& name, const vislib::MultiSzA& strs) {
+    vislib::MultiSzW msz;
+    for (SIZE_T i = 0; i < strs.Count(); i++) {
+        msz.Append(vislib::StringW(strs[i]));
     }
     return this->SetValue(name, msz);
 }
@@ -1075,11 +1065,11 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name,
-        const vislib::Array<the::astring>& strs) {
-    the::multi_sza msz;
-    for (size_t i = 0; i < strs.Count(); i++) {
-        if (!strs[i].empty()) msz.add(strs[i]);
+        const vislib::StringA& name,
+        const vislib::Array<vislib::StringA>& strs) {
+    vislib::MultiSzA msz;
+    for (SIZE_T i = 0; i < strs.Count(); i++) {
+        if (!strs[i].IsEmpty()) msz.Append(strs[i]);
     }
     return this->SetValue(name, msz);
 }
@@ -1089,11 +1079,11 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name,
-        const vislib::Array<the::wstring>& strs) {
-    the::multi_szw msz;
-    for (size_t i = 0; i < strs.Count(); i++) {
-        if (!strs[i].empty()) msz.add(strs[i]);
+        const vislib::StringW& name,
+        const vislib::Array<vislib::StringW>& strs) {
+    vislib::MultiSzW msz;
+    for (SIZE_T i = 0; i < strs.Count(); i++) {
+        if (!strs[i].IsEmpty()) msz.Append(strs[i]);
     }
     return this->SetValue(name, msz);
 }
@@ -1103,11 +1093,11 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name,
-        const vislib::Array<the::wstring>& strs) {
-    the::multi_sza msz;
-    for (size_t i = 0; i < strs.Count(); i++) {
-        if (!strs[i].empty()) msz.add(the::text::string_converter::to_a(strs[i]));
+        const vislib::StringA& name,
+        const vislib::Array<vislib::StringW>& strs) {
+    vislib::MultiSzA msz;
+    for (SIZE_T i = 0; i < strs.Count(); i++) {
+        if (!strs[i].IsEmpty()) msz.Append(vislib::StringA(strs[i]));
     }
     return this->SetValue(name, msz);
 }
@@ -1117,11 +1107,11 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name,
-        const vislib::Array<the::astring>& strs) {
-    the::multi_szw msz;
-    for (size_t i = 0; i < strs.Count(); i++) {
-        if (!strs[i].empty()) msz.add(the::text::string_converter::to_w(strs[i]));
+        const vislib::StringW& name,
+        const vislib::Array<vislib::StringA>& strs) {
+    vislib::MultiSzW msz;
+    for (SIZE_T i = 0; i < strs.Count(); i++) {
+        if (!strs[i].IsEmpty()) msz.Append(vislib::StringW(strs[i]));
     }
     return this->SetValue(name, msz);
 }
@@ -1131,8 +1121,8 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, int32_t val) {
-    return this->SetValue(name, static_cast<uint32_t>(val));
+        const vislib::StringA& name, INT32 val) {
+    return this->SetValue(name, static_cast<UINT32>(val));
 }
 
 
@@ -1140,8 +1130,8 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, int32_t val) {
-    return this->SetValue(name, static_cast<uint32_t>(val));
+        const vislib::StringW& name, INT32 val) {
+    return this->SetValue(name, static_cast<UINT32>(val));
 }
 
 
@@ -1149,9 +1139,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, uint32_t val) {
-    return ::RegSetValueExA(this->key, name.c_str(), NULL, REG_DWORD,
-        reinterpret_cast<const uint8_t*>(&val), sizeof(uint32_t));
+        const vislib::StringA& name, UINT32 val) {
+    return ::RegSetValueExA(this->key, name, NULL, REG_DWORD,
+        reinterpret_cast<const BYTE*>(&val), sizeof(UINT32));
 }
 
 
@@ -1159,9 +1149,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, uint32_t val) {
-    return ::RegSetValueExW(this->key, name.c_str(), NULL, REG_DWORD,
-        reinterpret_cast<const uint8_t*>(&val), sizeof(uint32_t));
+        const vislib::StringW& name, UINT32 val) {
+    return ::RegSetValueExW(this->key, name, NULL, REG_DWORD,
+        reinterpret_cast<const BYTE*>(&val), sizeof(UINT32));
 }
 
 
@@ -1169,8 +1159,8 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, int64_t val) {
-    return this->SetValue(name, static_cast<uint64_t>(val));
+        const vislib::StringA& name, INT64 val) {
+    return this->SetValue(name, static_cast<UINT64>(val));
 }
 
 
@@ -1178,8 +1168,8 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, int64_t val) {
-    return this->SetValue(name, static_cast<uint64_t>(val));
+        const vislib::StringW& name, INT64 val) {
+    return this->SetValue(name, static_cast<UINT64>(val));
 }
 
 
@@ -1187,9 +1177,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::astring& name, uint64_t val) {
-    return ::RegSetValueExA(this->key, name.c_str(), NULL, REG_QWORD,
-        reinterpret_cast<const uint8_t*>(&val), sizeof(uint64_t));
+        const vislib::StringA& name, UINT64 val) {
+    return ::RegSetValueExA(this->key, name, NULL, REG_QWORD,
+        reinterpret_cast<const BYTE*>(&val), sizeof(UINT64));
 }
 
 
@@ -1197,9 +1187,9 @@ DWORD vislib::sys::RegistryKey::SetValue(
  * vislib::sys::RegistryKey::SetValue
  */
 DWORD vislib::sys::RegistryKey::SetValue(
-        const the::wstring& name, uint64_t val) {
-    return ::RegSetValueExW(this->key, name.c_str(), NULL, REG_QWORD,
-        reinterpret_cast<const uint8_t*>(&val), sizeof(uint64_t));
+        const vislib::StringW& name, UINT64 val) {
+    return ::RegSetValueExW(this->key, name, NULL, REG_QWORD,
+        reinterpret_cast<const BYTE*>(&val), sizeof(UINT64));
 }
 
 

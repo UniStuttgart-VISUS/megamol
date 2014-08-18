@@ -13,7 +13,7 @@
 
 
 #include "vislib/IPEndPoint.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -40,7 +40,7 @@ namespace cluster {
          * @param rhs The object to be cloned.
          */
         inline NodeIdentifier(const NodeIdentifier& rhs) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("NodeIdentifier::NodeIdentifier", __FILE__, __LINE__);
             *this = rhs;
         }
 
@@ -56,7 +56,7 @@ namespace cluster {
          * @return true if the identifier is undeterminate, false otherwise.
          */
         inline bool IsNull(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("NodeIdentifier::IsNull", __FILE__, __LINE__);
             return (this->id.GetIPAddress().IsAny() 
                 && (this->id.GetPort() == 0));
         }
@@ -66,8 +66,8 @@ namespace cluster {
          *
          * @return A string representation of the ID.
          */
-        the::astring ToStringA(void) const {
-            THE_STACK_TRACE;
+        StringA ToStringA(void) const {
+            VLSTACKTRACE("NodeIdentifier::ToStringA", __FILE__, __LINE__);
             return this->id.ToStringA();
         }
 
@@ -76,8 +76,8 @@ namespace cluster {
          *
          * @return A string representation of the ID.
          */
-        the::wstring ToStringW(void) const {
-            THE_STACK_TRACE;
+        StringW ToStringW(void) const {
+            VLSTACKTRACE("NodeIdentifier::ToStringW", __FILE__, __LINE__);
             return this->id.ToStringW();
         }
 
@@ -89,7 +89,7 @@ namespace cluster {
          * @return true if this object and 'rhs' are equal, false otherwise.
          */
         inline bool operator ==(const NodeIdentifier& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("NodeIdentifier::operator ==", __FILE__, __LINE__);
             return (this->id == rhs.id);
         }
 
@@ -101,7 +101,7 @@ namespace cluster {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const NodeIdentifier& rhs) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("NodeIdentifier::operator !=", __FILE__, __LINE__);
             return (this->id != rhs.id);
         }
 

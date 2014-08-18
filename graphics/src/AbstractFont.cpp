@@ -6,8 +6,8 @@
  */
 
 #include "vislib/AbstractFont.h"
-#include "the/assert.h"
-#include "the/argument_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 
 
 /*
@@ -15,7 +15,7 @@
  */
 vislib::graphics::AbstractFont::~AbstractFont(void) {
     // Deinitialise must be called from the dtor of the implementing class.
-    THE_ASSERT(this->initialised == false);
+    ASSERT(this->initialised == false);
 }
 
 
@@ -65,7 +65,7 @@ void vislib::graphics::AbstractFont::SetFlipY(bool flipY) {
  */
 void vislib::graphics::AbstractFont::SetSize(float size) {
     if (size < 0.0f) {
-        throw the::argument_exception("size", __FILE__, __LINE__);
+        throw vislib::IllegalParamException("size", __FILE__, __LINE__);
     }
     this->size = size;
 }

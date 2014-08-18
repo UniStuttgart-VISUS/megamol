@@ -22,7 +22,7 @@
 #include "vislib/SimpleMessage.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartRef.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 #include "vislib/TcpCommChannel.h"
 #include "vislib/UdpCommChannel.h"
 
@@ -141,7 +141,7 @@ namespace net {
          * @return The application dependent return code of the thread. This 
          *         must not be STILL_ACTIVE (259).
          */
-        virtual unsigned int Run(void *config);
+        virtual DWORD Run(void *config);
 
         /**
          * Abort the work of the dispatcher by forcefully closing the underlying
@@ -166,7 +166,7 @@ namespace net {
          *
          * @return Accumulated (ANDed) return values of all listeners.
          */
-        bool fireCommunicationError(const the::exception& exception);
+        bool fireCommunicationError(const vislib::Exception& exception);
 
         /**
          * Inform all registered listener about that the listener is exiting.

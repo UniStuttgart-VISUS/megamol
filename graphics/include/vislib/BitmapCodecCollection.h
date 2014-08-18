@@ -21,7 +21,7 @@
 #include "vislib/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SmartPtr.h"
-#include "the/string.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -44,6 +44,13 @@ namespace graphics {
          * @return A new collection with the built-in codecs
          */
         static BitmapCodecCollection BuildDefaultCollection();
+
+        /**
+         * Answer the built-in default collection
+         *
+         * @return The built-in default codec collection
+         */
+        static BitmapCodecCollection& DefaultCollection();
 
         /** Ctor. */
         BitmapCodecCollection(void);
@@ -94,7 +101,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline SmartPtr<AbstractBitmapCodec> Codec(size_t idx) {
+        inline SmartPtr<AbstractBitmapCodec> Codec(SIZE_T idx) {
             return this->codecs[idx];
         }
 
@@ -105,7 +112,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline const SmartPtr<AbstractBitmapCodec> Codec(size_t idx) const {
+        inline const SmartPtr<AbstractBitmapCodec> Codec(SIZE_T idx) const {
             return this->codecs[idx];
         }
 
@@ -114,7 +121,7 @@ namespace graphics {
          *
          * @return The number of codecs in the collection
          */
-        inline size_t Count(void) const {
+        inline SIZE_T Count(void) const {
             return this->codecs.Count();
         }
 
@@ -126,10 +133,10 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw the::exception or derived class on error
+         * @throw vislib::Exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
-            const the::astring& filename);
+            const vislib::StringA& filename);
 
         /**
          * Loads a bitmap image by automatically choosing the proper codec
@@ -139,10 +146,10 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw the::exception or derived class on error
+         * @throw vislib::Exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
-            const the::wstring& filename);
+            const vislib::StringW& filename);
 
         /**
          * Loads a bitmap image by automatically choosing the proper codec
@@ -152,11 +159,11 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw the::exception or derived class on error
+         * @throw vislib::Exception or derived class on error
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const char *filename) {
-            return this->LoadBitmapImage(outImg, the::astring(filename));
+            return this->LoadBitmapImage(outImg, vislib::StringA(filename));
         }
 
         /**
@@ -167,11 +174,11 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw the::exception or derived class on error
+         * @throw vislib::Exception or derived class on error
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const wchar_t *filename) {
-            return this->LoadBitmapImage(outImg, the::wstring(filename));
+            return this->LoadBitmapImage(outImg, vislib::StringW(filename));
         }
 
         /**
@@ -182,7 +189,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw the::exception or derived class on error
+         * @throw vislib::Exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg, vislib::sys::File& file);
 
@@ -195,10 +202,10 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw the::exception or derived class on error
+         * @throw vislib::Exception or derived class on error
          */
         bool LoadBitmapImage(BitmapImage& outImg,
-            const void *mem, size_t size);
+            const void *mem, SIZE_T size);
 
         /**
          * Loads a bitmap image by automatically choosing the proper codec
@@ -208,7 +215,7 @@ namespace graphics {
          *
          * @return True on success
          *
-         * @throw the::exception or derived class on error
+         * @throw vislib::Exception or derived class on error
          */
         inline bool LoadBitmapImage(BitmapImage& outImg,
                 const vislib::RawStorage& mem) {
@@ -229,7 +236,7 @@ namespace graphics {
          *
          * @param idx The zero-based index of the codec to be removed
          */
-        inline void RemoveCodec(size_t idx) {
+        inline void RemoveCodec(SIZE_T idx) {
             this->codecs.RemoveAt(idx);
         }
 
@@ -263,7 +270,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline SmartPtr<AbstractBitmapCodec>& operator[](size_t idx) {
+        inline SmartPtr<AbstractBitmapCodec>& operator[](SIZE_T idx) {
             return this->codecs[idx];
         }
 
@@ -274,7 +281,7 @@ namespace graphics {
          *
          * @return The idx-th codec
          */
-        inline const SmartPtr<AbstractBitmapCodec>& operator[](size_t idx) const {
+        inline const SmartPtr<AbstractBitmapCodec>& operator[](SIZE_T idx) const {
             return this->codecs[idx];
         }
 
@@ -286,7 +293,7 @@ namespace graphics {
          * @param filename The file name
          * @param outCodecs The codec array receiving the matching codecs
          */
-        void selectCodecsByFilename(const the::astring& filename,
+        void selectCodecsByFilename(const vislib::StringA& filename,
             CodecArray& outCodecs) const;
 
         /**
@@ -295,7 +302,7 @@ namespace graphics {
          * @param filename The file name
          * @param outCodecs The codec array receiving the matching codecs
          */
-        void selectCodecsByFilename(const the::wstring& filename,
+        void selectCodecsByFilename(const vislib::StringW& filename,
             CodecArray& outCodecs) const;
 
         /**
@@ -309,7 +316,7 @@ namespace graphics {
          * @param outUnsureCodecs The codecs out of 'codecs' which may be able
          *                        to load the image (return value -1)
          */
-        void autodetecCodec(const void *mem, size_t size,
+        void autodetecCodec(const void *mem, SIZE_T size,
             const CodecArray& codecs, CodecArray& outMatchingCodecs,
             CodecArray& outUnsureCodecs) const;
 

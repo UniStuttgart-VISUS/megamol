@@ -17,9 +17,9 @@
 
 #include "vislib/BitmapImage.h"
 #include "vislib/File.h"
-#include "the/multi_sz.h"
+#include "vislib/MultiSz.h"
 #include "vislib/RawStorage.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -62,7 +62,7 @@ namespace graphics {
          *         1 if the file can be loaded by this codec (loading might
          *           still fail however, e.g. if file data is corrupt).
          */
-        virtual int AutoDetect(const void *mem, size_t size) const;
+        virtual int AutoDetect(const void *mem, SIZE_T size) const;
 
         /**
          * Answers whether this codec can autodetect if an image is supported
@@ -163,8 +163,8 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        inline bool Load(const the::astring& filename) {
-            return this->Load(filename.c_str());
+        inline bool Load(const vislib::StringA& filename) {
+            return this->Load(filename.PeekBuffer());
         }
 
         /**
@@ -189,8 +189,8 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        inline bool Load(const the::wstring& filename) {
-            return this->Load(filename.c_str());
+        inline bool Load(const vislib::StringW& filename) {
+            return this->Load(filename.PeekBuffer());
         }
 
         /**
@@ -218,7 +218,7 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully loaded.
          */
-        bool Load(const void *mem, size_t size);
+        bool Load(const void *mem, SIZE_T size);
 
         /**
          * Loads an image from a memory buffer.
@@ -278,9 +278,9 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        inline bool Save(const the::astring& filename,
+        inline bool Save(const vislib::StringA& filename,
                 bool overwrite = true) const {
-            return this->Save(filename.c_str(), overwrite);
+            return this->Save(filename.PeekBuffer(), overwrite);
         }
 
         /**
@@ -313,9 +313,9 @@ namespace graphics {
          *
          * @return 'true' if the file was successfully saved.
          */
-        inline bool Save(const the::wstring& filename,
+        inline bool Save(const vislib::StringW& filename,
                 bool overwrite = true) const {
-            return this->Save(filename.c_str(), overwrite);
+            return this->Save(filename.PeekBuffer(), overwrite);
         }
 
         /**
@@ -354,7 +354,7 @@ namespace graphics {
          *
          * @return The image to be used.
          *
-         * @throw invalid_operation_exception if no image is set
+         * @throw IllegalStateException if no image is set
          */
         BitmapImage& image(void);
 
@@ -363,7 +363,7 @@ namespace graphics {
          *
          * @return The image to be used.
          *
-         * @throw invalid_operation_exception if no image is set
+         * @throw IllegalStateException if no image is set
          */
         const BitmapImage& image(void) const;
 
@@ -413,7 +413,7 @@ namespace graphics {
          *
          * @return true on success, false on failure
          */
-        virtual bool loadFromMemory(const void *mem, size_t size);
+        virtual bool loadFromMemory(const void *mem, SIZE_T size);
 
         /**
          * Answer whether or not 'loadFromMemory' has been implement.

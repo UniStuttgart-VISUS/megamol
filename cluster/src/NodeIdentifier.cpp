@@ -7,15 +7,15 @@
 
 #include "vislib/NodeIdentifier.h"
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 
 
 /*
  * vislib::net::cluster::NodeIdentifier::NodeIdentifier
  */
 vislib::net::cluster::NodeIdentifier::NodeIdentifier(void) {
-    THE_STACK_TRACE;
-    THE_ASSERT(this->IsNull());
+    VLSTACKTRACE("NodeIdentifier::NodeIdentifier", __FILE__, __LINE__);
+    ASSERT(this->IsNull());
 }
 
 
@@ -23,7 +23,7 @@ vislib::net::cluster::NodeIdentifier::NodeIdentifier(void) {
  * vislib::net::cluster::NodeIdentifier::~NodeIdentifier
  */
 vislib::net::cluster::NodeIdentifier::~NodeIdentifier(void) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("NodeIdentifier::~NodeIdentifier", __FILE__, __LINE__);
 }
 
 
@@ -32,7 +32,7 @@ vislib::net::cluster::NodeIdentifier::~NodeIdentifier(void) {
  */
 vislib::net::cluster::NodeIdentifier& 
 vislib::net::cluster::NodeIdentifier::operator =(const NodeIdentifier& rhs) {
-    THE_STACK_TRACE;
+    VLSTACKTRACE("NodeIdentifier::operator =", __FILE__, __LINE__);
     if (this != &rhs) {
         this->id = rhs.id;
     }

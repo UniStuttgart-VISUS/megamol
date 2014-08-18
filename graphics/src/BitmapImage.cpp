@@ -7,11 +7,11 @@
  */
 
 #include "vislib/BitmapImage.h"
-#include "the/assert.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/mathfunctions.h"
-#include "the/memory.h"
+#include "vislib/memutils.h"
 #include <climits>
 
 /****************************************************************************/
@@ -269,7 +269,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::grayFromRGB(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::rgbFromCMY(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    THE_ASSERT((param >= 0) && (param <= 2));
+    ASSERT((param >= 0) && (param <= 2));
     float Cmy = conv->func[SC_CMY_CYAN](conv, conv->param[SC_CMY_CYAN]);
     float cMy = conv->func[SC_CMY_MAGENTA](conv, conv->param[SC_CMY_MAGENTA]);
     float cmY = conv->func[SC_CMY_YELLOW](conv, conv->param[SC_CMY_YELLOW]);
@@ -295,7 +295,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::rgbFromCMY(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromRGB(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    THE_ASSERT((param >= 0) && (param <= 2));
+    ASSERT((param >= 0) && (param <= 2));
     float Rgb = conv->func[SC_RED](conv, conv->param[SC_RED]);
     float rGb = conv->func[SC_GREEN](conv, conv->param[SC_GREEN]);
     float rgB = conv->func[SC_BLUE](conv, conv->param[SC_BLUE]);
@@ -321,7 +321,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromRGB(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromCMYK(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    THE_ASSERT((param >= 0) && (param <= 2));
+    ASSERT((param >= 0) && (param <= 2));
     float Cmyk = conv->func[SC_CMYK_CYAN](conv, conv->param[SC_CMYK_CYAN]);
     float cMyk = conv->func[SC_CMYK_MAGENTA](conv, conv->param[SC_CMYK_MAGENTA]);
     float cmYk = conv->func[SC_CMYK_YELLOW](conv, conv->param[SC_CMYK_YELLOW]);
@@ -348,7 +348,7 @@ float vislib::graphics::BitmapImage::Conversion<ST>::cmyFromCMYK(
 template<class ST>
 float vislib::graphics::BitmapImage::Conversion<ST>::cmykFromCMY(
         vislib::graphics::BitmapImage::Conversion<ST> *conv, int param) {
-    THE_ASSERT((param >= 0) && (param <= 3));
+    ASSERT((param >= 0) && (param <= 3));
     float Cmy = conv->func[SC_CMY_CYAN](conv, conv->param[SC_CMY_CYAN]);
     float cMy = conv->func[SC_CMY_MAGENTA](conv, conv->param[SC_CMY_MAGENTA]);
     float cmY = conv->func[SC_CMY_YELLOW](conv, conv->param[SC_CMY_YELLOW]);
@@ -592,10 +592,10 @@ vislib::graphics::BitmapImage::BitmapImage(
  * vislib::graphics::BitmapImage::~BitmapImage
  */
 vislib::graphics::BitmapImage::~BitmapImage(void) {
-    the::safe_array_delete(this->data);
+    ARY_SAFE_DELETE(this->data);
     this->height = 0;   // set for paranoia reasons
     this->exts.Clear();
-    the::safe_array_delete(this->labels);
+    ARY_SAFE_DELETE(this->labels);
     this->numChans = 0;
     this->width = 0;
 }
@@ -607,19 +607,19 @@ vislib::graphics::BitmapImage::~BitmapImage(void) {
 void vislib::graphics::BitmapImage::CopyFrom(
         const vislib::graphics::BitmapImage& src, bool copyExt) {
     unsigned int len = src.width * src.height * src.BytesPerPixel();
-    the::safe_array_delete(this->data);
+    ARY_SAFE_DELETE(this->data);
     this->data = new char[len];
     memcpy(this->data, src.data, len);
     this->exts.Clear();
-    if (copyExt && (!src.exts.empty())) {
-        size_t eCnt = src.exts.Count();
-        for (size_t i = 0; i < eCnt; i++) {
+    if (copyExt && (!src.exts.IsEmpty())) {
+        SIZE_T eCnt = src.exts.Count();
+        for (SIZE_T i = 0; i < eCnt; i++) {
             this->exts.Append(src.exts[i]->Clone(*this));
         }
     }
     this->chanType = src.chanType;
     this->height = src.height;
-    the::safe_array_delete(this->labels);
+    ARY_SAFE_DELETE(this->labels);
     this->labels = new ChannelLabel[src.numChans];
     memcpy(this->labels, src.labels, sizeof(ChannelLabel) * src.numChans);
     this->numChans = src.numChans;
@@ -882,7 +882,7 @@ void vislib::graphics::BitmapImage::Crop(unsigned int left, unsigned int top,
         height = this->height - top;
     }
     unsigned int bpp = this->BytesPerPixel();
-    if (bpp < 1) throw the::invalid_operation_exception(
+    if (bpp < 1) throw vislib::IllegalStateException(
         "Image has no colour channels", __FILE__, __LINE__);
 
     char *newData = new char[bpp * width * height];
@@ -909,8 +909,8 @@ void vislib::graphics::BitmapImage::Crop(unsigned int left, unsigned int top,
 void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
         unsigned int height, unsigned int channels,
         vislib::graphics::BitmapImage::ChannelType type, const void *data) {
-    the::safe_array_delete(this->data);
-    the::safe_array_delete(this->labels);
+    ARY_SAFE_DELETE(this->data);
+    ARY_SAFE_DELETE(this->labels);
     this->chanType = type;
     this->height = height;
     this->numChans = channels;
@@ -926,7 +926,7 @@ void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
     if (data != NULL) {
         memcpy(this->data, data, len);
     } else {
-        the::zero_memory(this->data, len);
+        ZeroMemory(this->data, len);
     }
 }
 
@@ -937,7 +937,7 @@ void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
 void vislib::graphics::BitmapImage::CreateImage(unsigned int width,
         unsigned int height, const vislib::graphics::BitmapImage& tmpl,
         const void *data) {
-    THE_ASSERT(&tmpl != this);
+    ASSERT(&tmpl != this);
 
     ChannelLabel *tmplLabels = new ChannelLabel[tmpl.numChans];
     ::memcpy(tmplLabels, tmpl.labels, tmpl.numChans * sizeof(ChannelLabel));
@@ -983,7 +983,7 @@ void vislib::graphics::BitmapImage::ExtractFrom(
         height = src.Height() - top;
     }
     unsigned int bpp = src.BytesPerPixel();
-    if (bpp < 1) throw the::invalid_operation_exception(
+    if (bpp < 1) throw vislib::IllegalStateException(
         "Source image has no colour channels", __FILE__, __LINE__);
 
     this->CreateImage(width, height, src);
@@ -1071,14 +1071,14 @@ void vislib::graphics::BitmapImage::cropCopy(char *to, char *from,
         unsigned int fromWidth, unsigned int fromHeight, unsigned int cropX,
         unsigned int cropY, unsigned int cropWidth, unsigned int cropHeight,
         unsigned int bpp) {
-    THE_ASSERT(cropX < fromWidth);
-    THE_ASSERT(cropY < fromHeight);
-    THE_ASSERT(cropX + cropWidth <= fromWidth);
-    THE_ASSERT(cropY + cropHeight <= fromHeight);
-    THE_ASSERT((cropWidth < fromWidth) || (cropHeight < fromHeight));
-    THE_ASSERT(bpp > 0);
-    THE_ASSERT(to != NULL);
-    THE_ASSERT(from != NULL);
+    ASSERT(cropX < fromWidth);
+    ASSERT(cropY < fromHeight);
+    ASSERT(cropX + cropWidth <= fromWidth);
+    ASSERT(cropY + cropHeight <= fromHeight);
+    ASSERT((cropWidth < fromWidth) || (cropHeight < fromHeight));
+    ASSERT(bpp > 0);
+    ASSERT(to != NULL);
+    ASSERT(from != NULL);
 
     from += (cropY * fromWidth * bpp); // skip 'cropY' lines
     for (unsigned int y = 0; y < cropHeight; y++) {

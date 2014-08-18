@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/argument_exception.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/AbstractCursorEvent.h"
 #include "vislib/InputModifiers.h"
@@ -63,7 +63,7 @@ namespace graphics {
          * @param btn The number of the button whichs state will be set.
          * @param down The new value for the buttons state.
          *
-         * @throws argument_exception if btn is larger or equal to the 
+         * @throws IllegalParamException if btn is larger or equal to the 
          *         number of buttons of this cursor.
          */
         virtual void SetButtonState(unsigned int btn, bool down);
@@ -75,12 +75,12 @@ namespace graphics {
          *
          * @return The state of the button.
          *
-         * @throws argument_exception if btn is larger or equal to the 
+         * @throws IllegalParamException if btn is larger or equal to the 
          *         number of buttons of this cursor.
          */
         inline bool GetButtonState(unsigned int btn) {
             if (btn >= this->btnCnt) {
-                throw the::argument_exception("btn", __FILE__, __LINE__);
+                throw IllegalParamException("btn", __FILE__, __LINE__);
             }
             return this->btnStates[btn];
         }

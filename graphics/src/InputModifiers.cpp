@@ -6,7 +6,7 @@
  */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/InputModifiers.h"
 
 
@@ -64,7 +64,7 @@ void vislib::graphics::InputModifiers::SetModifierCount(unsigned int modCnt) {
  */
 void vislib::graphics::InputModifiers::SetModifierState(Modifier modifier, bool down) {
     if (modifier >= this->modCount) {
-        throw the::argument_exception("modifier", __FILE__, __LINE__);
+        throw IllegalParamException("modifier", __FILE__, __LINE__);
     }
 
     // no update message required

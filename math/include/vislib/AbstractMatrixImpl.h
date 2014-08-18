@@ -18,16 +18,16 @@
 #include <ios>
 #include <iostream>
 
-#include "the/assert.h"
-#include "the/exception.h"
-#include "the/force_inline.h"
+#include "vislib/assert.h"
+#include "vislib/Exception.h"
+#include "vislib/forceinline.h"
 #include "vislib/mathfunctions.h"
-#include "the/memory.h"
-#include "the/index_out_of_range_exception.h"
+#include "vislib/memutils.h"
+#include "vislib/OutOfRangeException.h"
 #include "vislib/Point.h"
 #include "vislib/Polynom.h"
 #include "vislib/ShallowVector.h"
-#include "the/string.h"
+#include "vislib/String.h"
 #include "vislib/Vector.h"
 
 
@@ -92,7 +92,7 @@ namespace math {
          *
          * @return The matrix value at 'row', 'col'.
          *
-         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
+         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
          *         valid matrix component within [0, D[.
          */
         inline T GetAt(const int row, const int col) const {
@@ -107,7 +107,7 @@ namespace math {
          *
          * @return A reference to 'row', 'col'.
          *
-         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
+         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
          *                             valid matrix component within [0, D[.
          */
         inline T& GetAt(const int row, const int col) {
@@ -121,7 +121,7 @@ namespace math {
          *
          * @return The requested vector.
          *
-         * @throws index_out_of_range_exception If 'col' is not within [0, D[.
+         * @throws OutOfRangeException If 'col' is not within [0, D[.
          */
         Vector<T, D> GetColumn(const int col) const;
 
@@ -132,7 +132,7 @@ namespace math {
          *
          * @return The requested vector.
          *
-         * @throws index_out_of_range_exception If 'row' is not within [0, D[.
+         * @throws OutOfRangeException If 'row' is not within [0, D[.
          */
         Vector<T, D> GetRow(const int row) const;
 
@@ -505,7 +505,7 @@ namespace math {
         // *
         // * @return A reference to the 'i'th component.
         // *
-        // * @throws index_out_of_range_exception, if 'i' is not within [0, D * D[.
+        // * @throws OutOfRangeException, if 'i' is not within [0, D * D[.
         // */
         //T& operator [](const int i);
 
@@ -518,7 +518,7 @@ namespace math {
         // *
         // * @return Tthe 'i'th component.
         // *
-        // * @throws index_out_of_range_exception, if 'i' is not within [0, D * D[.
+        // * @throws OutOfRangeException, if 'i' is not within [0, D * D[.
         // */
         //T operator [](const int i) const;
 
@@ -530,7 +530,7 @@ namespace math {
          *
          * @return The matrix value at 'row', 'col'.
          *
-         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
+         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
          *         valid matrix component within [0, D[.
          */
         T operator ()(const int row, const int col) const;
@@ -543,7 +543,7 @@ namespace math {
          *
          * @return A reference to 'row', 'col'.
          *
-         * @throws index_out_of_range_exception If 'row' and 'col' does not designate a 
+         * @throws OutOfRangeException If 'row' and 'col' does not designate a 
          *         valid matrix component within [0, D[.
          */
         T& operator ()(const int row, const int col);
@@ -571,7 +571,7 @@ namespace math {
          *
          * @return The determinant of the matrix
          */
-        static THE_FORCE_INLINE T determinant2x2(const T& a00, const T& a10,
+        static VISLIB_FORCEINLINE T determinant2x2(const T& a00, const T& a10,
             const T& a01, const T& a11);
 
         /**
@@ -592,7 +592,7 @@ namespace math {
          *
          * @return The determinant of the matrix
          */
-        static THE_FORCE_INLINE T determinant3x3(const T& a00, const T& a10,
+        static VISLIB_FORCEINLINE T determinant3x3(const T& a00, const T& a10,
             const T& a20, const T& a01, const T& a11, const T& a21,
             const T& a02, const T& a12, const T& a22);
 
@@ -622,7 +622,7 @@ namespace math {
          *
          * @return The determinant of the matrix
          */
-        static THE_FORCE_INLINE T determinant4x4(const T& a00, const T& a10,
+        static VISLIB_FORCEINLINE T determinant4x4(const T& a00, const T& a10,
             const T& a20, const T& a30, const T& a01, const T& a11,
             const T& a21, const T& a31, const T& a02, const T& a12,
             const T& a22, const T& a32, const T& a03, const T& a13,
@@ -974,7 +974,7 @@ namespace math {
             this->components[idx] = value;
 
         } else {
-            throw the::index_out_of_range_exception(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
+            throw OutOfRangeException(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
                 __LINE__);
         }        
     }
@@ -1145,7 +1145,7 @@ namespace math {
     Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::operator *(
             const AbstractVector<T, D, Sp>& rhs) const {
         Vector<T, D> retval;
-        THE_ASSERT(retval.IsNull());
+        ASSERT(retval.IsNull());
 
         for (unsigned int r = 0; r < D; r++) {
             for (unsigned int c = 0; c < D; c++) {
@@ -1166,7 +1166,7 @@ namespace math {
     Vector<T, D - 1> AbstractMatrixImpl<T, D, L, S, C>::operator *(
             const AbstractVector<T, D - 1, Sp>& rhs) const {
         Vector<T, D - 1> retval;
-        THE_ASSERT(retval.IsNull());
+        ASSERT(retval.IsNull());
 
         /* Compute w-component of result. */
         T w = this->components[indexOf(D - 1, D - 1)];
@@ -1255,7 +1255,7 @@ namespace math {
     //    if ((i >= 0) && (i < static_cast<int>(CNT_COMPONENTS))) {
     //        return this->components[i];
     //    } else {
-    //        throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+    //        throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
     //    }
     //}
 
@@ -1270,7 +1270,7 @@ namespace math {
     //    if ((i >= 0) && (i < static_cast<int>(CNT_COMPONENTS))) {
     //        return this->components[i];
     //    } else {
-    //        throw the::index_out_of_range_exception(i, 0, D - 1, __FILE__, __LINE__);
+    //        throw OutOfRangeException(i, 0, D - 1, __FILE__, __LINE__);
     //    }
     //}
 
@@ -1287,7 +1287,7 @@ namespace math {
         if ((idx >= 0) && (idx < static_cast<int>(CNT_COMPONENTS))) {
             return this->components[idx];
         } else {
-            throw the::index_out_of_range_exception(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
+            throw OutOfRangeException(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
                 __LINE__);
         }
     }
@@ -1305,7 +1305,7 @@ namespace math {
         if ((idx >= 0) && (idx < static_cast<int>(CNT_COMPONENTS))) {
             return this->components[idx];
         } else {
-            throw the::index_out_of_range_exception(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
+            throw OutOfRangeException(idx, 0, CNT_COMPONENTS - 1, __FILE__, 
                 __LINE__);
         }
     }
@@ -1381,7 +1381,7 @@ namespace math {
         }
 
         if (!B[0].IsNull()) {
-            throw the::exception("Characteristic polynom calculation failed",
+            throw Exception("Characteristic polynom calculation failed",
                 __FILE__, __LINE__);
         }
 
@@ -1555,7 +1555,7 @@ namespace math {
                 }
                 if (m != l) {
                     if (iter++ == MAX_ITER) {
-                        throw the::exception(
+                        throw vislib::Exception(
                             "Too many iterations in FindEigenvalues",
                             __FILE__, __LINE__);
                     }

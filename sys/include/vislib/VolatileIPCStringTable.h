@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/string.h"
+#include "vislib/String.h"
 #include "vislib/SmartPtr.h"
 
 
@@ -78,9 +78,9 @@ namespace sys {
             /** 
              * Creates the entry.
              *
-             * @throw the::already_exists_exception if there already is an entry
+             * @throw vislib::AlreadyExistsException if there already is an entry
              *        in the string tabe with the specified name.
-             * @throw the::exception in case of an generic error.
+             * @throw vislib::Exception in case of an generic error.
              */
             void Create(void);
 
@@ -103,21 +103,21 @@ namespace sys {
              *
              * @return The name of the entry.
              */
-            void GetName(the::astring& outName) const;
+            void GetName(StringA& outName) const;
 
             /**
              * Answer the name of the entry.
              *
              * @return The name of the entry.
              */
-            void GetName(the::wstring& outName) const;
+            void GetName(StringW& outName) const;
 
         private:
 
 #ifdef _WIN32
 
             /** The name of the entry */
-            the::wstring name;
+            StringW name;
 
             /** The registry key handle of the entry */
             HKEY key;
@@ -125,7 +125,7 @@ namespace sys {
 #else /* _WIN32 */
 
             /** The name of the entry */
-            the::astring name;
+            StringA name;
 
 #endif /* _WIN32 */
 
@@ -163,8 +163,8 @@ namespace sys {
              *
              * @param value The new value of the entry.
              */
-            inline void SetValue(const the::astring& value) {
-                this->SetValue(value.c_str());
+            inline void SetValue(const StringA& value) {
+                this->SetValue(value.PeekBuffer());
             }
 
             /**
@@ -179,8 +179,8 @@ namespace sys {
              *
              * @param value The new value of the entry.
              */
-            inline void SetValue(const the::wstring& value) {
-                this->SetValue(value.c_str());
+            inline void SetValue(const StringW& value) {
+                this->SetValue(value.PeekBuffer());
             }
 
             /**
@@ -188,14 +188,14 @@ namespace sys {
              *
              * @return The name of the entry as ANSI string.
              */
-            the::astring NameA() const;
+            StringA NameA() const;
 
             /**
              * Answer the name of the entry as unicode string.
              *
              * @return The name of the entry as unicode string.
              */
-            the::wstring NameW() const;
+            StringW NameW() const;
 
             /**
              * Assignment operator.
@@ -235,7 +235,7 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static the::astring GetValue(const char *name);
+        static StringA GetValue(const char *name);
 
         /**
          * Answer the value of the entry with the given name. If there is no
@@ -246,8 +246,8 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static inline the::astring GetValue(const the::astring& name) {
-            return VolatileIPCStringTable::GetValue(name.c_str());
+        static inline StringA GetValue(const StringA& name) {
+            return VolatileIPCStringTable::GetValue(name.PeekBuffer());
         }
 
         /**
@@ -259,7 +259,7 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static the::wstring GetValue(const wchar_t *name);
+        static StringW GetValue(const wchar_t *name);
 
         /**
          * Answer the value of the entry with the given name. If there is no
@@ -270,8 +270,8 @@ namespace sys {
          *
          * @return The value of the entry with the given name.
          */
-        static the::wstring GetValue(const the::wstring& name) {
-            return VolatileIPCStringTable::GetValue(name.c_str());
+        static StringW GetValue(const StringW& name) {
+            return VolatileIPCStringTable::GetValue(name.PeekBuffer());
         }
 
         /**
@@ -287,9 +287,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
         static Entry Create(const char *name, const char *value = NULL);
 
@@ -306,13 +306,13 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
-        static inline Entry Create(const the::astring& name, 
+        static inline Entry Create(const StringA& name, 
                 const char *value = NULL) {
-            return VolatileIPCStringTable::Create(name.c_str(), value);
+            return VolatileIPCStringTable::Create(name.PeekBuffer(), value);
         }
 
         /**
@@ -328,12 +328,12 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
-        static inline Entry Create(const char *name, const the::astring& value) {
-            return VolatileIPCStringTable::Create(name, value.c_str());
+        static inline Entry Create(const char *name, const StringA& value) {
+            return VolatileIPCStringTable::Create(name, value.PeekBuffer());
         }
 
         /**
@@ -349,13 +349,13 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
-        static inline Entry Create(const the::astring& name, const the::astring& value) {
-            return VolatileIPCStringTable::Create(name.c_str(), 
-                value.c_str());
+        static inline Entry Create(const StringA& name, const StringA& value) {
+            return VolatileIPCStringTable::Create(name.PeekBuffer(), 
+                value.PeekBuffer());
         }
 
         /**
@@ -371,9 +371,9 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
         static Entry Create(const wchar_t *name, const wchar_t *value = NULL);
 
@@ -390,13 +390,13 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
-        static inline Entry Create(const the::wstring& name, 
+        static inline Entry Create(const StringW& name, 
                 const wchar_t *value = NULL) {
-            return VolatileIPCStringTable::Create(name.c_str(), value);
+            return VolatileIPCStringTable::Create(name.PeekBuffer(), value);
         }
 
         /**
@@ -412,12 +412,12 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
-        static inline Entry Create(const wchar_t *name, const the::wstring& value) {
-            return VolatileIPCStringTable::Create(name, value.c_str());
+        static inline Entry Create(const wchar_t *name, const StringW& value) {
+            return VolatileIPCStringTable::Create(name, value.PeekBuffer());
         }
 
         /**
@@ -433,13 +433,13 @@ namespace sys {
          *
          * @return An 'Entry' object representing the newly created entry.
          *
-         * @throw the::already_exists_exception if there already is an entry
+         * @throw vislib::AlreadyExistsException if there already is an entry
          *        in the string tabe with the specified name.
-         * @throw the::exception in case of an generic error.
+         * @throw vislib::Exception in case of an generic error.
          */
-        static inline Entry Create(const the::wstring& name, const the::wstring& value) {
-            return VolatileIPCStringTable::Create(name.c_str(), 
-                value.c_str());
+        static inline Entry Create(const StringW& name, const StringW& value) {
+            return VolatileIPCStringTable::Create(name.PeekBuffer(), 
+                value.PeekBuffer());
         }
 
     private:

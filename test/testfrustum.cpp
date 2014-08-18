@@ -65,11 +65,11 @@ void TestWorldSpaceFrustum(void) {
     //AssertTrue("Near clipping plane normal vector", plane1.Normal() == Vector<float, 3>(0.0f, 0.0f, -1.0f));
     //AssertTrue("Near and far clipping plane normals are in same direction", 
     //    plane1.Normal().Dot(plane2.Normal()) == (float) (M_PI));
-    //AssertTrue("Near clipping plane contains expected point", the::text::string_utility::contains(plane1, Point<float, 3>(1, 1, 2)));
-    //AssertTrue("Far clipping plane contains expected point", the::text::string_utility::contains(plane2, Point<float, 3>(1, 1, 11)));
+    //AssertTrue("Near clipping plane contains expected point", plane1.Contains(Point<float, 3>(1, 1, 2)));
+    //AssertTrue("Far clipping plane contains expected point", plane2.Contains(Point<float, 3>(1, 1, 11)));
 
     //pt1.Set(1, 1, 4);
-    //the::text::string_utility::contains(f1, pt1);
+    //f1.Contains(pt1);
 
 }
 

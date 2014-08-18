@@ -137,9 +137,9 @@ namespace gl {
          *                         fails.
          */
         virtual bool Compile(const char **vertexShaderSrc, 
-            const size_t cntVertexShaderSrc, const char **geometryShaderSrc,
-            const size_t cntGeometryShaderSrc, const char **fragmentShaderSrc,
-            const size_t cntFragmentShaderSrc, 
+            const SIZE_T cntVertexShaderSrc, const char **geometryShaderSrc,
+            const SIZE_T cntGeometryShaderSrc, const char **fragmentShaderSrc,
+            const SIZE_T cntFragmentShaderSrc, 
             bool insertLineDirective = true);
 
         /**
@@ -161,7 +161,7 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char *vertexShaderFile, 
@@ -194,15 +194,15 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char **vertexShaderFiles,
-            const size_t cntVertexShaderFiles,
+            const SIZE_T cntVertexShaderFiles,
             const char **geometryShaderFiles,
-            const size_t cntGeometryShaderFiles,
+            const SIZE_T cntGeometryShaderFiles,
             const char **fragmentShaderFiles,
-            const size_t cntFragmentShaderFiles,
+            const SIZE_T cntFragmentShaderFiles,
             bool insertLineDirective = true);
 
         /**

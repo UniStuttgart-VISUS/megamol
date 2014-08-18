@@ -13,11 +13,11 @@
 
 #include "vislib/IPAddress.h"
 
-#include "the/assert.h"
-#include "the/argument_exception.h"
+#include "vislib/assert.h"
+#include "vislib/IllegalParamException.h"
 #include "vislib/NetworkInformation.h"
-#include "the/index_out_of_range_exception.h"
-#include "the/text/string_converter.h"
+#include "vislib/OutOfRangeException.h"
+#include "vislib/StringConverter.h"
 
 
 /*
@@ -77,7 +77,7 @@ vislib::net::IPAddress vislib::net::IPAddress::Create(const char *address) {
     IPAddress retval;
 
     if (!retval.Lookup(address)) {
-        throw the::argument_exception("address", __FILE__, __LINE__);
+        throw IllegalParamException("address", __FILE__, __LINE__);
     }
 
     return retval;
@@ -89,7 +89,7 @@ vislib::net::IPAddress vislib::net::IPAddress::Create(const char *address) {
  * vislib::net::IPAddress::IPAddress
  */
 vislib::net::IPAddress::IPAddress(const char *address) {
-    THE_VERIFY(this->Lookup(address));
+    VERIFY(this->Lookup(address));
 }
 
 
@@ -133,7 +133,7 @@ vislib::net::IPAddress::~IPAddress(void) {
  * vislib::net::IPAddress::GetPrefix
  */
 vislib::net::IPAddress vislib::net::IPAddress::GetPrefix(
-        const unsigned long prefixLength) const {
+        const ULONG prefixLength) const {
     IPAddress netmask = NetworkInformation::PrefixToNetmask4(prefixLength);
     return (netmask & *this);
 }
@@ -167,8 +167,8 @@ bool vislib::net::IPAddress::Lookup(const char *hostname) {
 /*
  * vislib::net::IPAddress::ToStringA
  */
-the::astring vislib::net::IPAddress::ToStringA(void) const {
-    the::astring retval(::inet_ntoa(this->address));
+vislib::StringA vislib::net::IPAddress::ToStringA(void) const {
+    StringA retval(::inet_ntoa(this->address));
     return retval;
 }
 
@@ -176,11 +176,11 @@ the::astring vislib::net::IPAddress::ToStringA(void) const {
 /*
  * vislib::net::IPAddress::operator []
  */
-uint8_t vislib::net::IPAddress::operator [](const int i) const {
+BYTE vislib::net::IPAddress::operator [](const int i) const {
     if ((i > 0) && (i < static_cast<int>(sizeof(this->address)))) {
-        return reinterpret_cast<const uint8_t *>(&this->address)[i];
+        return reinterpret_cast<const BYTE *>(&this->address)[i];
     } else {
-        throw the::index_out_of_range_exception(i, 0, sizeof(this->address), __FILE__,
+        throw OutOfRangeException(i, 0, sizeof(this->address), __FILE__,
             __LINE__);
     }
 }

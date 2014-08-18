@@ -7,13 +7,13 @@
 
 #include "messagereceiver.h"
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/clustermessages.h"
-#include "the/argument_exception.h"
-#include "the/memory.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/memutils.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SocketException.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 
 /*
@@ -34,41 +34,41 @@ vislib::net::cluster::AllocateRecvMsgCtx(AbstractClusterNode *receiver,
  * vislib::net::cluster::FreeRecvMsgCtx
  */
 void vislib::net::cluster::FreeRecvMsgCtx(ReceiveMessagesCtx *& ctx) {
-    the::safe_delete(ctx);
+    SAFE_DELETE(ctx);
 }
 
 
 /*
  * vislib::net::cluster::ReceiveMessages
  */
-unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
+DWORD vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
     ReceiveMessagesCtx *ctx = static_cast<ReceiveMessagesCtx *>(
         receiveMessagesCtx);            // Receive context.
     const MessageHeader *msgHdr = NULL; // Pointer to header area of 'recvBuf'.
     const BlockHeader *blkHdr = NULL;   // Pointer to a block header.
-    size_t msgSize = 0;                 // Total message size (header + body).
+    SIZE_T msgSize = 0;                 // Total message size (header + body).
     RawStorage recvBuf;                 // Receives data from network.
-    unsigned int retval = 0;                   // Function return value.
+    DWORD retval = 0;                   // Function return value.
     AbstractClusterNode::PeerIdentifier peerId; // Peer address of socket.
 
     /* Sanity checks. */
-    THE_ASSERT(ctx != NULL);
-    THE_ASSERT(ctx->Receiver != NULL);
-    THE_ASSERT(ctx->Socket != NULL);
+    ASSERT(ctx != NULL);
+    ASSERT(ctx->Receiver != NULL);
+    ASSERT(ctx->Socket != NULL);
     if ((ctx == NULL) || (ctx->Receiver == NULL) || (ctx->Socket == NULL)) {
-        throw the::argument_exception("receiveMessagesCtx", __FILE__, __LINE__);
+        throw IllegalParamException("receiveMessagesCtx", __FILE__, __LINE__);
     }
 
     try {
         peerId = ctx->Socket->GetPeerEndPoint();
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Message receiver thread could not "
-            "retrieve identifier of peer node: %s\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Message receiver thread could not "
+            "retrieve identifier of peer node: %s\n", e.GetMsgA());
     }
 
     try {
 
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "The cluster message receiver thread is "
+        VLTRACE(Trace::LEVEL_VL_INFO, "The cluster message receiver thread is "
             "starting ...\n");
 
         while (true) {
@@ -79,15 +79,15 @@ unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             if (ctx->Socket->Receive(static_cast<void *>(recvBuf), 
                     sizeof(MessageHeader), Socket::TIMEOUT_INFINITE, 
                     0, true) == 0) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "vislib::net::cluster::"
+                VLTRACE(Trace::LEVEL_VL_INFO, "vislib::net::cluster::"
                     "ReceiveMessages exits because of graceful disconnect.\n");
             }
 
             /* Sanity check. */
-            THE_ASSERT(recvBuf.GetSize() >= sizeof(MessageHeader));
-            //THE_ASSERT(msgHdr->MagicNumber == MAGIC_NUMBER);
+            ASSERT(recvBuf.GetSize() >= sizeof(MessageHeader));
+            //ASSERT(msgHdr->MagicNumber == MAGIC_NUMBER);
             if (msgHdr->MagicNumber != MAGIC_NUMBER) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Discarding data packet without "
+                VLTRACE(Trace::LEVEL_WARN, "Discarding data packet without "
                     "valid magic number. Expected %u, but received %u.\n",
                     MAGIC_NUMBER, msgHdr->MagicNumber);
                 break;
@@ -97,25 +97,25 @@ unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             msgSize = sizeof(MessageHeader) + msgHdr->Header.BlockLength;
             recvBuf.AssertSize(msgSize, true);
             msgHdr = recvBuf.As<MessageHeader>();
-            if (ctx->Socket->Receive(recvBuf.As<uint8_t>() + sizeof(MessageHeader),
+            if (ctx->Socket->Receive(recvBuf.As<BYTE>() + sizeof(MessageHeader),
                     msgHdr->Header.BlockLength, Socket::TIMEOUT_INFINITE, 0, 
                     true) == 0) {
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "vislib::net::cluster::"
+                VLTRACE(Trace::LEVEL_VL_INFO, "vislib::net::cluster::"
                     "ReceiveMessages exits because of graceful disconnect.\n");
             }
 
             /* Call the handler method to process the message. */
             if (msgHdr->Header.BlockId == MSGID_MULTIPLE) {
                 /* Received a compound message, so split it. */
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Splitting compond message ...\n");
-                int remBody = static_cast<int>(msgHdr->Header.BlockLength);
-                const uint8_t *d = recvBuf.As<uint8_t>() + sizeof(MessageHeader);
+                VLTRACE(Trace::LEVEL_VL_INFO, "Splitting compond message ...\n");
+                INT remBody = static_cast<INT>(msgHdr->Header.BlockLength);
+                const BYTE *d = recvBuf.As<BYTE>() + sizeof(MessageHeader);
 
                 while (remBody > 0) {
                     blkHdr = reinterpret_cast<const BlockHeader *>(d);
-                    const uint8_t *body = d + sizeof(BlockHeader);
+                    const BYTE *body = d + sizeof(BlockHeader);
 
-                    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Received message %u.\n", 
+                    VLTRACE(Trace::LEVEL_VL_INFO, "Received message %u.\n", 
                         blkHdr->BlockId);
                     ctx->Receiver->onMessageReceived(*ctx->Socket,
                         blkHdr->BlockId, 
@@ -129,9 +129,9 @@ unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             } else {
                 /* Receive single message. */
                 const BlockHeader *blkHdr = &msgHdr->Header;
-                const uint8_t *body = recvBuf.As<uint8_t>() + sizeof(MessageHeader);
+                const BYTE *body = recvBuf.As<BYTE>() + sizeof(MessageHeader);
 
-                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Cluster service "
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "Cluster service "
                     "received message %u.\n", blkHdr->BlockId);
                 ctx->Receiver->onMessageReceived(*ctx->Socket,
                     blkHdr->BlockId, 
@@ -140,14 +140,14 @@ unsigned int vislib::net::cluster::ReceiveMessages(void *receiveMessagesCtx) {
             }
         } /* end while (true) */
     } catch (SocketException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "vislib::net::cluster::ReceiveMessages "
-            "exits because of communication error: %s\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "vislib::net::cluster::ReceiveMessages "
+            "exits because of communication error: %s\n", e.GetMsgA());
         // TODO: Remove HOTFIX
         //ctx->Receiver->onCommunicationError(peerId, 
         //    AbstractClusterNode::RECEIVE_COMMUNICATION_ERROR, e);
-        retval = e.get_error().native_error();
+        retval = e.GetErrorCode();
     } catch (...) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Unexpected exception caught in "
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Unexpected exception caught in "
             "vislib::net::cluster::ReceiveMessages.\n");
         retval = -1;
     }

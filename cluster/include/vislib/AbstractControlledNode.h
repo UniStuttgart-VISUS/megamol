@@ -17,7 +17,7 @@
 
 #include "vislib/Socket.h"  // Must be first
 #include "vislib/AbstractClusterNode.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/Camera.h"
 
 
@@ -80,8 +80,8 @@ namespace cluster {
          * @return true in order to signal that the message has been processed, 
          *         false if the implementation did ignore it.
          */
-        virtual bool onMessageReceived(const Socket& src, const unsigned int msgId,
-            const uint8_t *body, const size_t cntBody);
+        virtual bool onMessageReceived(const Socket& src, const UINT msgId,
+            const BYTE *body, const SIZE_T cntBody);
 
         /**
          * Set new camera parameters to update.
@@ -90,7 +90,7 @@ namespace cluster {
          */
         inline void setParameters(
                 const SmartPtr<graphics::CameraParameters>& params) {
-            THE_ASSERT(!params.IsNull());
+            ASSERT(!params.IsNull());
             this->parameters = params;
         }
 

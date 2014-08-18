@@ -15,12 +15,11 @@
 #include <cstdlib>
 #endif /* _WIn32 */
 
-#include "the/assert.h"
-#include "the/memory.h"
-#include "the/text/string_converter.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
-#include "the/text/string_buffer.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
+#include "vislib/StringConverter.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 
 #ifndef _WIN32
 /** Gain access to the global environment data provided by the system. */
@@ -41,7 +40,7 @@ vislib::sys::Environment::Snapshot::Snapshot(void) : data(NULL) {
 vislib::sys::Environment::Snapshot::Snapshot(const char *variable, ...) 
         : data(NULL) {
     va_list argptr;
-    size_t dataSize = 0;
+    SIZE_T dataSize = 0;
     const char *arg;
     
     if (variable != NULL) {
@@ -58,17 +57,17 @@ vislib::sys::Environment::Snapshot::Snapshot(const char *variable, ...)
         va_end(argptr);
 
         /* Allocate buffer. */
-        insPos = this->data.allocate(dataSize);
+        insPos = this->data.AllocateBuffer(dataSize);
 
         /* Copy the input. */
         dataSize = ::strlen(variable) + 1;
-        ::memcpy(insPos, THE_A2W(variable), dataSize * sizeof(wchar_t));
+        ::memcpy(insPos, A2W(variable), dataSize * sizeof(wchar_t));
         insPos += dataSize;
 
         va_start(argptr, variable);
         while ((arg = va_arg(argptr, const char *)) != NULL) {
             dataSize = ::strlen(arg) + 1;
-            ::memcpy(insPos, THE_A2W(arg), dataSize * sizeof(wchar_t));
+            ::memcpy(insPos, A2W(arg), dataSize * sizeof(wchar_t));
             insPos += dataSize;
         }
         va_end(argptr);
@@ -118,7 +117,7 @@ vislib::sys::Environment::Snapshot::Snapshot(const char *variable, ...)
 vislib::sys::Environment::Snapshot::Snapshot(const wchar_t *variable, ...) 
         : data(NULL) {
     va_list argptr;
-    size_t dataSize = 0;
+    SIZE_T dataSize = 0;
     const wchar_t *arg;
     
     if (variable != NULL) {
@@ -135,7 +134,7 @@ vislib::sys::Environment::Snapshot::Snapshot(const wchar_t *variable, ...)
         va_end(argptr);
 
         /* Allocate buffer. */
-        insPos = this->data.allocate(dataSize);
+        insPos = this->data.AllocateBuffer(dataSize);
 
         /* Copy the input. */
         dataSize = ::wcslen(variable) + 1;
@@ -170,13 +169,13 @@ vislib::sys::Environment::Snapshot::Snapshot(const wchar_t *variable, ...)
 
         /* Allocate variable memory and copy data. */
         *insPos = new char[::wcslen(variable) + 1];
-        ::strcpy(*insPos, THE_W2A(variable));
+        ::strcpy(*insPos, W2A(variable));
         insPos++;
 
         va_start(argptr, variable);
         while ((arg = va_arg(argptr, const wchar_t *)) != NULL) {
             *insPos = new char[::wcslen(arg) + 1];
-            ::strcpy(*insPos, THE_W2A(arg));
+            ::strcpy(*insPos, W2A(arg));
             insPos++;
         }
         va_end(argptr);
@@ -214,20 +213,20 @@ vislib::sys::Environment::Snapshot::~Snapshot(void) {
  */
 void vislib::sys::Environment::Snapshot::Clear(void) {
 #ifdef _WIN32
-    this->data.clear();
+    this->data.Clear();
 
 #else /* _WIN32 */
     if (this->data != NULL) {
         char **cursor = this->data;
 
         while (*cursor != NULL) {
-            the::safe_array_delete(*cursor);
+            ARY_SAFE_DELETE(*cursor);
             cursor++;
         }
     }
 
-    the::safe_array_delete(this->data);
-    THE_ASSERT(this->data == NULL);
+    ARY_SAFE_DELETE(this->data);
+    ASSERT(this->data == NULL);
 #endif /* !_WIN32 */
 }
 
@@ -235,23 +234,23 @@ void vislib::sys::Environment::Snapshot::Clear(void) {
 /*
  * vislib::sys::Environment::Snapshot::GetAt
  */
-void vislib::sys::Environment::Snapshot::GetAt(const size_t idx,
-        the::astring& outName, the::astring& outValue) {
+void vislib::sys::Environment::Snapshot::GetAt(const SIZE_T idx,
+        StringA& outName, StringA& outValue) {
 #ifdef _WIN32
-    the::wstring name, value;
+    StringW name, value;
     this->GetAt(idx, name, value);
-    the::text::string_converter::convert(outName, name);
-    the::text::string_converter::convert(outValue, value);
+    outName = name;
+    outValue = value;
 #else /* _WIN32 */
-    size_t cntVariables = Snapshot::count(const_cast<const char **>(data));
+    SIZE_T cntVariables = Snapshot::count(const_cast<const char **>(data));
 
     if (idx < cntVariables) {
         const char *tmp = this->data[idx];
         while (*tmp++ != '=');
-        outName = the::astring(this->data[idx], tmp - this->data[idx] - 1);
-        outValue = the::astring(tmp);
+        outName = StringA(this->data[idx], tmp - this->data[idx] - 1);
+        outValue = StringA(tmp);
     } else {
-        throw the::index_out_of_range_exception(static_cast<int>(idx), 0, cntVariables - 1,
+        throw OutOfRangeException(static_cast<int>(idx), 0, cntVariables - 1,
             __FILE__, __LINE__);
     }
 #endif /* _WIN32 */
@@ -261,19 +260,19 @@ void vislib::sys::Environment::Snapshot::GetAt(const size_t idx,
 /*
  * vislib::sys::Environment::Snapshot::GetAt
  */
-void vislib::sys::Environment::Snapshot::GetAt(const size_t idx, 
-        the::wstring& outName, the::wstring& outValue)  {
+void vislib::sys::Environment::Snapshot::GetAt(const SIZE_T idx, 
+        StringW& outName, StringW& outValue)  {
 #ifdef _WIN32
-    the::wstring tmp = this->data[idx];
-    auto splitPos = tmp.find(L'=');
-    THE_ASSERT(splitPos != the::wstring::npos);
-    outName = tmp.substr(0, splitPos);
-    outValue = tmp.substr(splitPos + 1);
+    StringW tmp = this->data[idx];
+    StringW::Size splitPos = tmp.Find(L'=');
+    ASSERT(splitPos != StringW::INVALID_POS);
+    outName = tmp.Substring(0, splitPos);
+    outValue = tmp.Substring(splitPos + 1);
 #else /* _WIN32 */
-    the::astring name, value;
+    StringA name, value;
     this->GetAt(idx, name, value);
-    the::text::string_converter::convert(outName, name);
-    the::text::string_converter::convert(outValue, value);
+    outName = name;
+    outValue = value;
 #endif /* _WIN32 */
 }
 
@@ -281,41 +280,41 @@ void vislib::sys::Environment::Snapshot::GetAt(const size_t idx,
 /*
  * vislib::sys::Environment::Snapshot::GetVariable
  */
-the::astring vislib::sys::Environment::Snapshot::GetVariable(
+vislib::StringA vislib::sys::Environment::Snapshot::GetVariable(
         const char *name) const {
 #ifdef _WIN32
-    return the::text::string_converter::to_a(this->GetVariable(THE_A2W(name)));
+    return StringA(this->GetVariable(A2W(name)));
 #else /* _WIN32 */
     if ((name != NULL) && (*name != 0)) {
         const char *value = Snapshot::find(name, 
             const_cast<const char **>(this->data));
         if (value != NULL) {
             while (*value++ != '=');
-            return the::astring(value);
+            return StringA(value);
         }
     }
 
-    return the::astring();
+    return StringA();
 #endif /* _WIN32 */
 }
 
 /*
  * vislib::sys::Environment::Snapshot::GetVariable
  */
-the::wstring vislib::sys::Environment::Snapshot::GetVariable(
+vislib::StringW vislib::sys::Environment::Snapshot::GetVariable(
         const wchar_t *name) const {
 #ifdef _WIN32
     if ((name != NULL) && (*name != 0)) {
-        const wchar_t *value = Snapshot::find(name, this->data.data());
+        const wchar_t *value = Snapshot::find(name, this->data.PeekBuffer());
         if (value != NULL) {
             while (*value++ != L'=');
-            return the::wstring(value);
+            return StringW(value);
         }
     }
 
-    return the::wstring();
+    return StringW();
 #else /* _WIN32 */
-    return the::text::string_converter::to_w(this->GetVariable(THE_W2A(name)));
+    return StringW(this->GetVariable(W2A(name)));
 #endif /* _WIN32 */
 }
 
@@ -325,7 +324,7 @@ the::wstring vislib::sys::Environment::Snapshot::GetVariable(
  */
 bool vislib::sys::Environment::Snapshot::IsSet(const char *name) const {
 #ifdef _WIN32
-    return (Snapshot::find(THE_A2W(name), this->data.data()) != NULL);
+    return (Snapshot::find(A2W(name), this->data.PeekBuffer()) != NULL);
 #else /* _WIN32 */
     return (Snapshot::find(name, const_cast<const char **>(this->data)) 
         != NULL);
@@ -338,9 +337,9 @@ bool vislib::sys::Environment::Snapshot::IsSet(const char *name) const {
  */
 bool vislib::sys::Environment::Snapshot::IsSet(const wchar_t *name) const {
 #ifdef _WIN32
-    return (Snapshot::find(name, this->data.data()) != NULL);
+    return (Snapshot::find(name, this->data.PeekBuffer()) != NULL);
 #else /* _WIN32 */
-    return (Snapshot::find(THE_W2A(name), const_cast<const char **>(this->data)) 
+    return (Snapshot::find(W2A(name), const_cast<const char **>(this->data)) 
         != NULL);
 #endif /* _WIN32 */
 }
@@ -367,7 +366,7 @@ vislib::sys::Environment::Snapshot::operator =(const Snapshot& rhs) {
 /*
  * vislib::sys::Environment::Snapshot::count
  */
-size_t vislib::sys::Environment::Snapshot::count(const char **const data) {
+SIZE_T vislib::sys::Environment::Snapshot::count(const char **const data) {
     const char **cursor = data;
 
     if (cursor != NULL) {
@@ -388,7 +387,7 @@ size_t vislib::sys::Environment::Snapshot::count(const char **const data) {
 const wchar_t *vislib::sys::Environment::Snapshot::find(const wchar_t *name,
         const wchar_t *data) {
     const wchar_t *cursor = data;
-    size_t cntName = ::wcslen(name);
+    SIZE_T cntName = ::wcslen(name);
     
     if (cursor != NULL) {
         while (*cursor != 0) {
@@ -411,10 +410,10 @@ const wchar_t *vislib::sys::Environment::Snapshot::find(const wchar_t *name,
 #else /* _WIN32 */
 const char *vislib::sys::Environment::Snapshot::find(const char *name, 
         const char **const data) {
-    size_t cntVariables = Snapshot::count(data);
-    size_t cntName = ::strlen(name);
+    SIZE_T cntVariables = Snapshot::count(data);
+    SIZE_T cntName = ::strlen(name);
     
-    for (size_t i = 0; i < cntVariables; i++) {
+    for (SIZE_T i = 0; i < cntVariables; i++) {
         // Linux environment variables are case sensitive.
         if ((::strncmp(name, data[i], cntName) == 0) 
                 && (data[i][cntName] == '=')) {
@@ -434,10 +433,10 @@ const char *vislib::sys::Environment::Snapshot::find(const char *name,
  * vislib::sys::Environment::Snapshot::assign
  */
 void vislib::sys::Environment::Snapshot::assign(const char **const data) {
-    size_t dataSize = 0;
+    SIZE_T dataSize = 0;
 
     this->Clear();
-    THE_ASSERT(this->data == NULL);
+    ASSERT(this->data == NULL);
     
     if (data != NULL) {
         /* Count parameters. */
@@ -447,12 +446,12 @@ void vislib::sys::Environment::Snapshot::assign(const char **const data) {
         this->data = new char *[dataSize + 1];
 
         /* Allocate variable memory and copy data. */
-        for (size_t i = 0; i < dataSize; i++) {
+        for (SIZE_T i = 0; i < dataSize; i++) {
             this->data[i] = new char[::strlen(data[i]) + 1];
             ::strcpy(this->data[i], data[i]);
         }
 
-    this->data[dataSize] = NULL;
+	this->data[dataSize] = NULL;
     }
 }
 #endif /* !_WIN32 */
@@ -468,13 +467,13 @@ vislib::sys::Environment::CreateSnapshot(void) {
 #ifdef _WIN32
     wchar_t *env = ::GetEnvironmentStringsW();
     if (env == NULL) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     retval.data = env;
     
     if (!::FreeEnvironmentStringsW(env)) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
@@ -488,26 +487,26 @@ vislib::sys::Environment::CreateSnapshot(void) {
 /*
  * vislib::sys::Environment::GetVariable
  */
-the::astring vislib::sys::Environment::GetVariable(const char *name, 
+vislib::StringA vislib::sys::Environment::GetVariable(const char *name, 
                                                       const bool isLenient) {
 #ifdef _WIN32
-    the::astring retval;
-    unsigned int error = NO_ERROR;
-    unsigned int size = ::GetEnvironmentVariableA(name, NULL, 0);
+    vislib::StringA retval;
+    DWORD error = NO_ERROR;
+    DWORD size = ::GetEnvironmentVariableA(name, NULL, 0);
     
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw the::system::system_exception(error, __FILE__, __LINE__);
+            throw SystemException(error, __FILE__, __LINE__);
         }
     }
 
-    size = ::GetEnvironmentVariableA(name,
-        the::text::string_buffer_allocate(retval, size + 1), size + 1);
+    size = ::GetEnvironmentVariableA(name, retval.AllocateBuffer(size), 
+        size + 1);
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw the::system::system_exception(error, __FILE__, __LINE__);
+            throw SystemException(error, __FILE__, __LINE__);
         } else {
             retval[0] = 0;
         }
@@ -516,7 +515,7 @@ the::astring vislib::sys::Environment::GetVariable(const char *name,
     return retval;
 
 #else /* _WIN32 */
-    return the::astring(::getenv(name));
+    return vislib::StringA(::getenv(name));
 #endif /* _WIN32 */
 }
 
@@ -524,26 +523,26 @@ the::astring vislib::sys::Environment::GetVariable(const char *name,
 /*
  * vislib::sys::Environment::GetVariable
  */
-the::wstring vislib::sys::Environment::GetVariable(const wchar_t *name,
+vislib::StringW vislib::sys::Environment::GetVariable(const wchar_t *name,
                                                       const bool isLenient) {
 #ifdef _WIN32
-    the::wstring retval;
-    unsigned int error = NO_ERROR;
-    unsigned int size = ::GetEnvironmentVariableW(name, NULL, 0);
+    vislib::StringW retval;
+    DWORD error = NO_ERROR;
+    DWORD size = ::GetEnvironmentVariableW(name, NULL, 0);
     
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw the::system::system_exception(error, __FILE__, __LINE__);
+            throw SystemException(error, __FILE__, __LINE__);
         }
     }
 
-    size = ::GetEnvironmentVariableW(name,
-        the::text::string_buffer_allocate(retval, size + 1), size + 1);
+    size = ::GetEnvironmentVariableW(name, retval.AllocateBuffer(size), 
+        size + 1);
     if (size == 0) {
         if (!isLenient || ((error = ::GetLastError()) 
                 != ERROR_ENVVAR_NOT_FOUND)) {
-            throw the::system::system_exception(error, __FILE__, __LINE__);
+            throw SystemException(error, __FILE__, __LINE__);
         } else {
             retval[0] = 0;
         }
@@ -551,7 +550,7 @@ the::wstring vislib::sys::Environment::GetVariable(const wchar_t *name,
 
     return retval;
 #else /* _WIN32 */
-    return the::text::string_converter::to_w(Environment::GetVariable(THE_W2A(name)));
+    return vislib::StringW(Environment::GetVariable(W2A(name)));
 #endif /* _WIN32 */
 }
 
@@ -562,7 +561,7 @@ the::wstring vislib::sys::Environment::GetVariable(const wchar_t *name,
 bool vislib::sys::Environment::IsSet(const char *name) {
 #ifdef _WIN32
     if (::GetEnvironmentVariableA(name, NULL, 0) == 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return (::GetLastError() != ERROR_ENVVAR_NOT_FOUND);
@@ -578,12 +577,12 @@ bool vislib::sys::Environment::IsSet(const char *name) {
 bool vislib::sys::Environment::IsSet(const wchar_t *name) {
 #ifdef _WIN32
     if (::GetEnvironmentVariableW(name, NULL, 0) == 0) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return (::GetLastError() != ERROR_ENVVAR_NOT_FOUND);
 #else /* _WIN32 */
-    return Environment::IsSet(THE_W2A(name));
+    return Environment::IsSet(W2A(name));
 #endif /* _WIN32 */
 }
 
@@ -595,16 +594,16 @@ void vislib::sys::Environment::SetVariable(const char *name,
                                            const char *value) {
 #ifdef _WIN32
     if (!::SetEnvironmentVariableA(name, value)) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
     if (value != NULL) {
         if (::setenv(name, value, 1) == -1) {
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
         }
     } else {
         if (::unsetenv(name) == -1) {
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
         }
     }
 #endif /* _WIN32 */
@@ -618,10 +617,10 @@ void vislib::sys::Environment::SetVariable(const wchar_t *name,
                                            const wchar_t *value) {
 #ifdef _WIN32
     if (!::SetEnvironmentVariableW(name, value)) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 #else /* _WIN32 */
-    Environment::SetVariable(THE_W2A(name), THE_W2A(value));
+    Environment::SetVariable(W2A(name), W2A(value));
 #endif /* _WIN32 */
 }
 

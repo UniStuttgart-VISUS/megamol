@@ -199,22 +199,22 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
     static VersionNumber number(0, 0, 0, 0);
     if (number.GetMajorVersionNumber() == 0) {
         // fetch version string
-        the::astring verStr(reinterpret_cast<const char*>(
+        vislib::StringA verStr(reinterpret_cast<const char*>(
             glGetString(GL_VERSION)));
-        the::text::string_utility::trim(verStr);
+        verStr.TrimSpaces();
         int major = 1, minor = 0, release = 0;
 
         // truncate vendor information
-        the::astring::size_type pos = verStr.find(' ');
-        if (pos != the::astring::npos) {
-            verStr.resize(pos);
+        int pos = verStr.Find(' ');
+        if (pos > 0) {
+            verStr.Truncate(pos);
         }
 
         // parse major version
-        pos = verStr.find('.');
-        if (pos != the::astring::npos) {
-            major = the::text::string_utility::parse_int(verStr.substr(0, pos));
-            verStr = verStr.substr(pos + 1);
+        pos = verStr.Find('.');
+        if (pos > 0) {
+            major = CharTraitsA::ParseInt(verStr.Substring(0, pos));
+            verStr = verStr.Substring(pos + 1);
         } else {
             // error fallback
             number.Set(1, 0, 0, 0);
@@ -222,16 +222,16 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
         }
 
         // parse minor version
-        pos = verStr.find('.');
-        if (pos != the::astring::npos) {
-            minor = the::text::string_utility::parse_int(verStr.substr(0, pos));
-            verStr = verStr.substr(pos + 1);
+        pos = verStr.Find('.');
+        if (pos > 0) {
+            minor = CharTraitsA::ParseInt(verStr.Substring(0, pos));
+            verStr = verStr.Substring(pos + 1);
 
             // parse release number
-            release = the::text::string_utility::parse_int(verStr);
+            release = CharTraitsA::ParseInt(verStr);
 
         } else {
-            minor = the::text::string_utility::parse_int(verStr);
+            minor = CharTraitsA::ParseInt(verStr);
         }
 
         number.Set(major, minor, release);

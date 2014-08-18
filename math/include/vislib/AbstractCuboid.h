@@ -14,10 +14,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/Dimension.h"
 #include "vislib/Point.h"
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/mathfunctions.h"
 
 
@@ -35,25 +35,25 @@ namespace math {
     public:
 
         /** A bitmask representing all cuboid faces. */
-        static const uint32_t FACE_ALL;
+        static const UINT32 FACE_ALL;
 
         /** A bitmask representing the back face of the cuboid. */
-        static const uint32_t FACE_BACK;
+        static const UINT32 FACE_BACK;
 
         /** A bitmask representing the bottom face of the cuboid. */
-        static const uint32_t FACE_BOTTOM;
+        static const UINT32 FACE_BOTTOM;
 
         /** A bitmask representing the front face of the cuboid. */
-        static const uint32_t FACE_FRONT;
+        static const UINT32 FACE_FRONT;
 
         /** A bitmask representing the left face of the cuboid. */
-        static const uint32_t FACE_LEFT;
+        static const UINT32 FACE_LEFT;
 
         /** A bitmask representing the right face of the cuboid. */
-        static const uint32_t FACE_RIGHT;
+        static const UINT32 FACE_RIGHT;
 
         /** A bitmask representing the top face of the cuboid. */
-        static const uint32_t FACE_TOP;
+        static const UINT32 FACE_TOP;
 
         /** Dtor. */
         ~AbstractCuboid(void);
@@ -102,7 +102,7 @@ namespace math {
          */
         template<class Sp>
         bool Contains(const AbstractPoint<T, 3, Sp>& point, 
-            const uint32_t includeFace = 0) const;
+            const UINT32 includeFace = 0) const;
 
         /**
          * Answer the depth of the cuboid.
@@ -683,22 +683,22 @@ namespace math {
     protected:
 
         /** The index of the back coordinate in 'bounds'. */
-        static const uintptr_t IDX_BACK;
+        static const UINT_PTR IDX_BACK;
 
         /** The index of the bottom coordinate in 'bounds'. */
-        static const uintptr_t IDX_BOTTOM;
+        static const UINT_PTR IDX_BOTTOM;
 
         /** The index of the front coordinate in 'bounds'. */
-        static const uintptr_t IDX_FRONT;
+        static const UINT_PTR IDX_FRONT;
 
         /** The index of the right coordinate in 'bounds'. */
-        static const uintptr_t IDX_RIGHT;
+        static const UINT_PTR IDX_RIGHT;
 
         /** The index of the left coordinate in 'bounds'. */
-        static const uintptr_t IDX_LEFT;
+        static const UINT_PTR IDX_LEFT;
 
         /** The index of the top coordinate in 'bounds'. */
-        static const uintptr_t IDX_TOP;
+        static const UINT_PTR IDX_TOP;
 
         /**
          * Forbidden default ctor. This does nothing.
@@ -718,7 +718,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_ALL
      */
     template<class T, class S>
-    const uint32_t AbstractCuboid<T, S>::FACE_ALL
+    const UINT32 AbstractCuboid<T, S>::FACE_ALL
         = AbstractCuboid<T, S>::FACE_LEFT
         | AbstractCuboid<T, S>::FACE_BOTTOM
         | AbstractCuboid<T, S>::FACE_BACK
@@ -731,7 +731,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_BACK
      */
     template<class T, class S>
-    const uint32_t AbstractCuboid<T, S>::FACE_BACK 
+    const UINT32 AbstractCuboid<T, S>::FACE_BACK 
         = 1 << AbstractCuboid<T, S>::IDX_BACK;
 
 
@@ -739,7 +739,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_BOTTOM
      */
     template<class T, class S>
-    const uint32_t AbstractCuboid<T, S>::FACE_BOTTOM 
+    const UINT32 AbstractCuboid<T, S>::FACE_BOTTOM 
         = 1 << AbstractCuboid<T, S>::IDX_BOTTOM;
 
 
@@ -747,7 +747,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_FRONT
      */
     template<class T, class S>
-    const uint32_t AbstractCuboid<T, S>::FACE_FRONT 
+    const UINT32 AbstractCuboid<T, S>::FACE_FRONT 
         = 1 << AbstractCuboid<T, S>::IDX_FRONT;
 
 
@@ -755,7 +755,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_LEFT
      */
     template<class T, class S>
-    const uint32_t AbstractCuboid<T, S>::FACE_LEFT 
+    const UINT32 AbstractCuboid<T, S>::FACE_LEFT 
         = 1 << AbstractCuboid<T, S>::IDX_LEFT;
 
 
@@ -763,7 +763,7 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::FACE_RIGHT
      */
     template<class T, class S>
-    const uint32_t AbstractCuboid<T, S>::FACE_RIGHT 
+    const UINT32 AbstractCuboid<T, S>::FACE_RIGHT 
         = 1 << AbstractCuboid<T, S>::IDX_RIGHT;
 
 
@@ -771,7 +771,7 @@ namespace math {
      * vislib::math::AbstractRectangle<T, S>::FACE_TOP
      */
     template<class T, class S>
-    const uint32_t AbstractCuboid<T, S>::FACE_TOP
+    const UINT32 AbstractCuboid<T, S>::FACE_TOP
         = 1 << AbstractCuboid<T, S>::IDX_TOP;
 
 
@@ -802,7 +802,7 @@ namespace math {
     template<class T, class S> 
     template<class Sp>
     bool AbstractCuboid<T, S>::Contains(const AbstractPoint<T, 3, Sp>& point,
-            const uint32_t includeFace) const {
+            const UINT32 includeFace) const {
 
         if ((point.X() < this->bounds[IDX_LEFT])
                 || ((((includeFace & FACE_LEFT) == 0))
@@ -930,12 +930,12 @@ namespace math {
 
         this->EnforcePositiveSize();
 
-        THE_ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
-        THE_ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
-        THE_ASSERT(this->bounds[IDX_BACK] <= this->bounds[IDX_FRONT]);
-        THE_ASSERT(cubLeft <= cubRight);
-        THE_ASSERT(cubBottom <= cubTop);
-        THE_ASSERT(cubBack <= cubFront);
+        ASSERT(this->bounds[IDX_LEFT] <= this->bounds[IDX_RIGHT]);
+        ASSERT(this->bounds[IDX_BOTTOM] <= this->bounds[IDX_TOP]);
+        ASSERT(this->bounds[IDX_BACK] <= this->bounds[IDX_FRONT]);
+        ASSERT(cubLeft <= cubRight);
+        ASSERT(cubBottom <= cubTop);
+        ASSERT(cubBack <= cubFront);
 
         if (cubLeft < this->bounds[IDX_LEFT]) {
             this->bounds[IDX_LEFT] = cubLeft;
@@ -1018,42 +1018,42 @@ namespace math {
      * vislib::math::AbstractCuboid<T, S>::IDX_BACK
      */
     template<class T, class S> 
-    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_BACK = 2;
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_BACK = 2;
 
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM
      */
     template<class T, class S> 
-    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM = 1;
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_BOTTOM = 1;
     
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_FRONT
      */
     template<class T, class S> 
-    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_FRONT = 5;
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_FRONT = 5;
     
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_RIGHT
      */
     template<class T, class S> 
-    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_RIGHT = 3;
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_RIGHT = 3;
 
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_LEFT
      */
     template<class T, class S> 
-    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_LEFT = 0;
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_LEFT = 0;
 
 
     /*
      * vislib::math::AbstractCuboid<T, S>::IDX_TOP
      */
     template<class T, class S> 
-    const uintptr_t vislib::math::AbstractCuboid<T, S>::IDX_TOP = 4;
+    const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_TOP = 4;
 
 
     ///*
@@ -1114,7 +1114,7 @@ namespace math {
     //            break;
 
     //        default:
-    //            throw util::RangeEx c e p t ion(i, 0, 7, __FILE__, __LINE__);
+    //            throw util::RangeException(i, 0, 7, __FILE__, __LINE__);
     //    }
 
     //    return vislib::math::Point<T, 3>(tmp);

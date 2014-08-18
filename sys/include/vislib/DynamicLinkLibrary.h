@@ -15,11 +15,11 @@
 
 
 #ifndef _WIN32
-#include "the/memory.h"
+#include "vislib/memutils.h"
 #endif /* _WIN32 */
-#include "the/string.h"
-#include "the/system/system_exception.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/SystemException.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -35,9 +35,9 @@ namespace sys {
      * Exception on Linux.
      */
 #ifdef _WIN32
-    typedef the::system::system_exception DLLException;
+    typedef SystemException DLLException;
 #else /* _WIN32 */
-    typedef the::exception DLLException;
+    typedef Exception DLLException;
 #endif /* _WIN32 */
 
 
@@ -77,7 +77,7 @@ namespace sys {
 #ifdef _WIN32
         FARPROC GetProcAddress(const CHAR *procName) const;
 #else /* _WIN32 */
-        void *GetProcAddress(const char *procName) const;
+        void *GetProcAddress(const CHAR *procName) const;
 #endif /* _WIN32 */
 
         /**
@@ -95,7 +95,7 @@ namespace sys {
          *
          * @return A human-readable error message from the last call of 'Load'
          */
-        inline const the::astring& LastLoadErrorMessage(void) const {
+        inline const vislib::StringA& LastLoadErrorMessage(void) const {
             return this->loadErrorMsg;
         }
 
@@ -118,7 +118,7 @@ namespace sys {
          *         loaded. If 'false' is returned, use 'LastLoadErrorMessage'
          *         to get a human-readable error message.
          *
-         * @throws invalid_operation_exception If a library was already loaded and not
+         * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
          */
         bool Load(const char *moduleName, bool dontResolveReferences = false,
@@ -143,7 +143,7 @@ namespace sys {
          *         loaded. If 'false' is returned, use 'LastLoadErrorMessage'
          *         to get a human-readable error message.
          *
-         * @throws invalid_operation_exception If a library was already loaded and not
+         * @throws IllegalStateException If a library was already loaded and not
          *                               freed before this call to Load().
          */
         bool Load(const wchar_t *moduleName, bool dontResolveReferences = false,
@@ -156,7 +156,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         DynamicLinkLibrary(const DynamicLinkLibrary& rhs);
 
@@ -167,7 +167,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         DynamicLinkLibrary& operator =(const DynamicLinkLibrary& rhs);
 
@@ -179,7 +179,7 @@ namespace sys {
 #endif /* _WIN32 */
 
         /** The error message describing the error during the last 'Load' */
-        the::astring loadErrorMsg;
+        vislib::StringA loadErrorMsg;
 
     };
 

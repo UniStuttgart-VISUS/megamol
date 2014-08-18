@@ -13,7 +13,7 @@
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/ShallowPoint.h"
 #include "vislib/ShallowVector.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 
 
 
@@ -38,13 +38,13 @@ vislib::net::cluster::AbstractControlledNode::AbstractControlledNode(void)
  * vislib::net::cluster::AbstractControlledNode::onMessageReceived
  */
 bool vislib::net::cluster::AbstractControlledNode::onMessageReceived(
-        const Socket& src, const unsigned int msgId, const uint8_t *body, 
-        const size_t cntBody) {
+        const Socket& src, const UINT msgId, const BYTE *body, 
+        const SIZE_T cntBody) {
 #define SET_AS_INTEGRAL_PARAM(type, name)                                      \
     this->parameters->Set##name(*reinterpret_cast<const type *>(body))
 #define SET_AS_SHALLOW_PARAM(type, space, name) {                              \
     graphics::Shallow##space##type sh(                                         \
-        reinterpret_cast<graphics::space##Type *>(const_cast<uint8_t *>(body)));  \
+        reinterpret_cast<graphics::space##Type *>(const_cast<BYTE *>(body)));  \
     this->parameters->Set##name(sh);                                           \
     }
 

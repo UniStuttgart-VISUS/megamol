@@ -3,8 +3,8 @@
 #include <iostream>
 #include "vislibGlutInclude.h"
 
-#include "the/assert.h"
-#include "the/memory.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
 
 
 /*
@@ -23,7 +23,7 @@ CamGlMatrixTest::CamGlMatrixTest(void)
  * CamGlMatrixTest::~CamGlMatrixTest
  */
 CamGlMatrixTest::~CamGlMatrixTest(void) {
-    the::safe_delete(this->mia);
+    SAFE_DELETE(this->mia);
 }
 
 

@@ -293,25 +293,25 @@ namespace math {
         typedef AbstractPyramidalFrustum<T> Super;
 
         /** The number of elements in 'offset'. */
-        static const uintptr_t CNT_ELEMENTS;
+        static const UINT_PTR CNT_ELEMENTS;
 
         /** The index of the bottom plane offset. */
-        static const uintptr_t IDX_BOTTOM;
+        static const UINT_PTR IDX_BOTTOM;
 
         /** The index of the far plane offset. */
-        static const uintptr_t IDX_FAR;
+        static const UINT_PTR IDX_FAR;
 
         /** The index of the left plane offset. */
-        static const uintptr_t IDX_LEFT;
+        static const UINT_PTR IDX_LEFT;
 
         /** The index of the near plane offset. */
-        static const uintptr_t IDX_NEAR;
+        static const UINT_PTR IDX_NEAR;
 
         /** The index of the right plane offset. */
-        static const uintptr_t IDX_RIGHT;
+        static const UINT_PTR IDX_RIGHT;
 
         /** The index of the top plane offset. */
-        static const uintptr_t IDX_TOP;
+        static const UINT_PTR IDX_TOP;
 
         /** 
          * Disallow instances of this class.
@@ -332,7 +332,8 @@ namespace math {
      */
     template<class T, class S> 
     AbstractViewFrustum<T, S>::~AbstractViewFrustum(void) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::~AbstractViewFrustum", __FILE__, 
+            __LINE__);
         // Must not do anything about 'offsets' due to the Crowbar pattern(TM).
     }
 
@@ -343,7 +344,8 @@ namespace math {
     template<class T, class S> 
     void AbstractViewFrustum<T, S>::GetBottomBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::GetBottomBasePoints", __FILE__, 
+            __LINE__);
         outPoints.Clear();
         outPoints.SetCount(4);
         outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(
@@ -371,7 +373,8 @@ namespace math {
     template<class T, class S> 
     void AbstractViewFrustum<T, S>::GetTopBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::GetTopBasePoints", __FILE__, 
+            __LINE__);
         outPoints.Clear();
         outPoints.SetCount(4);
         outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(
@@ -399,7 +402,7 @@ namespace math {
     template<class T, class S> 
     void AbstractViewFrustum<T, S>::Set(const T fovy, 
             const double aspectRatio, const T zNear, const T zFar) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::Set", __FILE__, __LINE__);
         T height = static_cast<T>(tan(static_cast<double>(fovy) * 0.5));
         T width = static_cast<T>(static_cast<double>(height) * aspectRatio);
         this->Set(-width, width, -height, height, zNear, zFar);
@@ -412,7 +415,7 @@ namespace math {
     template<class T, class S>
     AbstractViewFrustum<T, S>& AbstractViewFrustum<T, S>::operator =(
             const AbstractViewFrustum& rhs) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::operator =", __FILE__, __LINE__);
         if (this != &rhs) {
             ::memcpy(this->offsets, rhs.offsets, CNT_ELEMENTS * sizeof(T));
         }
@@ -428,7 +431,7 @@ namespace math {
     template<class Tp, class Sp>
     AbstractViewFrustum<T, S>& AbstractViewFrustum<T, S>::operator =(
             const AbstractViewFrustum<Tp, Sp>& rhs) {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::operator =", __FILE__, __LINE__);
         if (static_cast<void *>(this) != static_cast<const void *>(&rhs)) {
             this->offsets[IDX_BOTTOM] 
                 = static_cast<T>(rhs.GetBottomDistance());
@@ -449,7 +452,7 @@ namespace math {
     template<class T, class S>
     bool AbstractViewFrustum<T, S>::operator ==(
             const AbstractViewFrustum& rhs) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::operator ==", __FILE__, __LINE__);
         return (IsEqual(this->offsets[IDX_BOTTOM], rhs.offsets[IDX_BOTTOM])
             && IsEqual(this->offsets[IDX_TOP], rhs.offsets[IDX_TOP])
             && IsEqual(this->offsets[IDX_LEFT], rhs.offsets[IDX_LEFT])
@@ -466,7 +469,7 @@ namespace math {
     template<class Tp, class Sp> 
     bool AbstractViewFrustum<T, S>::operator ==(
             const AbstractViewFrustum<Tp, Sp>& rhs) const {
-        THE_STACK_TRACE;
+        VLSTACKTRACE("AbstractViewFrustum::operator ==", __FILE__, __LINE__);
         return (IsEqual<T>(this->offsets[IDX_BOTTOM], rhs.offsets[IDX_BOTTOM])
             && IsEqual<T>(this->offsets[IDX_TOP], rhs.offsets[IDX_TOP])
             && IsEqual<T>(this->offsets[IDX_LEFT], rhs.offsets[IDX_LEFT])
@@ -480,49 +483,49 @@ namespace math {
      * vislib::math::AbstractViewFrustum<T, S>::CNT_ELEMENTS
      */
     template<class T, class S>
-    const uintptr_t AbstractViewFrustum<T, S>::CNT_ELEMENTS = 6;
+    const UINT_PTR AbstractViewFrustum<T, S>::CNT_ELEMENTS = 6;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_BOTTOM
      */
     template<class T, class S>
-    const uintptr_t AbstractViewFrustum<T, S>::IDX_BOTTOM = 0;
+    const UINT_PTR AbstractViewFrustum<T, S>::IDX_BOTTOM = 0;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_FAR
      */
     template<class T, class S>
-    const uintptr_t AbstractViewFrustum<T, S>::IDX_FAR = 4;
+    const UINT_PTR AbstractViewFrustum<T, S>::IDX_FAR = 4;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_LEFT
      */
     template<class T, class S>
-    const uintptr_t AbstractViewFrustum<T, S>::IDX_LEFT = 2;
+    const UINT_PTR AbstractViewFrustum<T, S>::IDX_LEFT = 2;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_NEAR
      */
     template<class T, class S>
-    const uintptr_t AbstractViewFrustum<T, S>::IDX_NEAR = 5;
+    const UINT_PTR AbstractViewFrustum<T, S>::IDX_NEAR = 5;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_RIGHT
      */    
     template<class T, class S>
-    const uintptr_t AbstractViewFrustum<T, S>::IDX_RIGHT = 3;
+    const UINT_PTR AbstractViewFrustum<T, S>::IDX_RIGHT = 3;
 
 
     /*
      * vislib::math::AbstractViewFrustum<T, S>::IDX_TOP
      */
     template<class T, class S>
-    const uintptr_t AbstractViewFrustum<T, S>::IDX_TOP = 1;
+    const UINT_PTR AbstractViewFrustum<T, S>::IDX_TOP = 1;
     
 } /* end namespace math */
 } /* end namespace vislib */

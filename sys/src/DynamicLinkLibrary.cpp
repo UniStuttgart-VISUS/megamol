@@ -11,14 +11,14 @@
 #endif /* _WIN32 */
 
 #include "vislib/DynamicLinkLibrary.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
 #include "vislib/Path.h"
-#include "the/text/string_converter.h"
+#include "vislib/StringConverter.h"
 #ifdef _WIN32
-#include "the/system/system_message.h"
+#include "vislib/SystemMessage.h"
 #endif /* _WIN32 */
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
@@ -69,7 +69,7 @@ FARPROC vislib::sys::DynamicLinkLibrary::GetProcAddress(
 }
 #else /* _WIN32 */
 void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
-        const char *procName) const {
+        const CHAR *procName) const {
     // TODO: Error handling using dlerror
     // Using an exception is probably not useful because of the error-code
     // incompatibility.
@@ -83,16 +83,16 @@ void *vislib::sys::DynamicLinkLibrary::GetProcAddress(
  */
 bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
         bool dontResolveReferences, bool alternateSearchPath) {
-    this->loadErrorMsg.clear();
+    this->loadErrorMsg.Clear();
     if (this->IsLoaded()) {
         this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.";
-        throw the::invalid_operation_exception(this->loadErrorMsg.c_str(), __FILE__, __LINE__);
+        throw IllegalStateException(this->loadErrorMsg, __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    unsigned int flags = 0;
-    unsigned int oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
+    DWORD flags = 0;
+    UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
     if (dontResolveReferences) flags |= DONT_RESOLVE_DLL_REFERENCES;
     if (alternateSearchPath && vislib::sys::Path::IsAbsolute(moduleName)) {
         flags |= LOAD_WITH_ALTERED_SEARCH_PATH;
@@ -100,7 +100,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
     this->hModule = ::LoadLibraryExA(moduleName, NULL, flags);
     ::SetErrorMode(oldErrorMode);
     if (this->hModule == NULL) {
-        this->loadErrorMsg = the::astring(the::system::system_message(::GetLastError()).operator the::astring().c_str());
+        this->loadErrorMsg = vislib::sys::SystemMessage(::GetLastError());
     }
 #else /* _WIN32 */
 
@@ -118,16 +118,16 @@ bool vislib::sys::DynamicLinkLibrary::Load(const char *moduleName,
  */
 bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
         bool dontResolveReferences, bool alternateSearchPath) {
-    this->loadErrorMsg.clear();
+    this->loadErrorMsg.Clear();
     if (this->IsLoaded()) {
         this->loadErrorMsg = "Call to DynamicLinLibrary::Load() when"
             "a library was already loaded.";
-        throw the::invalid_operation_exception(this->loadErrorMsg.c_str(), __FILE__, __LINE__);
+        throw IllegalStateException(this->loadErrorMsg, __FILE__, __LINE__);
     }
 
 #ifdef _WIN32
-    unsigned int flags = 0;
-    unsigned int oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
+    DWORD flags = 0;
+    UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS);
     if (dontResolveReferences) flags |= DONT_RESOLVE_DLL_REFERENCES;
     if (alternateSearchPath && vislib::sys::Path::IsAbsolute(moduleName)) {
         flags |= LOAD_WITH_ALTERED_SEARCH_PATH;
@@ -135,11 +135,11 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
     this->hModule = ::LoadLibraryExW(moduleName, NULL, flags);
     ::SetErrorMode(oldErrorMode);
     if (this->hModule == NULL) {
-        this->loadErrorMsg = static_cast<std::string>(the::system::system_message(::GetLastError())).c_str();
+        this->loadErrorMsg = vislib::sys::SystemMessage(::GetLastError());
     }
 #else /* _WIN32 */
     // Because we know, that Linux does not support a chefmäßige Unicode-API.
-    if (!this->Load(THE_W2A(moduleName))) return false;
+    if (!this->Load(W2A(moduleName))) return false;
 #endif /* _WIN32 */
     return (this->hModule!= NULL);
 
@@ -151,7 +151,7 @@ bool vislib::sys::DynamicLinkLibrary::Load(const wchar_t *moduleName,
  */
 vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(
         const DynamicLinkLibrary& rhs) {
-    throw the::not_supported_exception(
+    throw UnsupportedOperationException(
         "vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary", __FILE__, 
         __LINE__);
 }
@@ -163,7 +163,7 @@ vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(
 vislib::sys::DynamicLinkLibrary& vislib::sys::DynamicLinkLibrary::operator =(
         const DynamicLinkLibrary& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

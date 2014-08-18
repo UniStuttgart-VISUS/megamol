@@ -12,34 +12,34 @@
 #include "vislib/Console.h"
 #include "vislib/ConsoleProgressBar.h"
 #include "vislib/ColumnFormatter.h"
-#include "the/exception.h"
-#include "the/system/system_exception.h"
+#include "vislib/Exception.h"
+#include "vislib/SystemException.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/SingleLinkedList.h"
-#include "the/text/string_converter.h"
-#include "the/system/system_message.h"
+#include "vislib/StringConverter.h"
+#include "vislib/SystemMessage.h"
 #include "vislib/sysfunctions.h"
 #include "vislib/Path.h"
-#include "the/trace.h"
+#include "vislib/Trace.h"
 #include "vislib/FileNameSequence.h"
 #include "vislib/RawStorage.h"
 #include "vislib/NamedColours.h"
 #include "vislib/ColourParser.h"
-#include "the/utils.h"
+#include "vislib/utils.h"
 
 // #define USE_UNICODE_COLUMNFORMATTER
 
 #ifndef USE_UNICODE_COLUMNFORMATTER
 typedef vislib::ColumnFormatterA ColumnFormatter;
-typedef the::astring CFString;
+typedef vislib::StringA CFString;
 typedef char CFChar;
-#define CFS(A) the::astring(A)
+#define CFS(A) A
 
 #else // USE_UNICODE_COLUMNFORMATTER
 typedef vislib::ColumnFormatterW ColumnFormatter;
-typedef the::wstring CFString;
+typedef vislib::StringW CFString;
 typedef wchar_t CFChar;
-#define CFS(A) the::wstring(L ## A)
+#define CFS(A) L ## A
 
 #endif // USE_UNICODE_COLUMNFORMATTER
 
@@ -143,11 +143,11 @@ void TestColumnFormatterHelper(CFString &result, CFString &expected) {
     vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
     std::cout << "Expected:" << std::endl;
     vislib::sys::Console::RestoreDefaultColors();
-    std::cout << expected.c_str() << std::endl;
+    std::cout << expected.PeekBuffer() << std::endl;
     vislib::sys::Console::SetForegroundColor(vislib::sys::Console::RED);
     std::cout << "Result:" << std::endl;
     vislib::sys::Console::RestoreDefaultColors();
-    std::cout << result.c_str() << std::endl;
+    std::cout << result.PeekBuffer() << std::endl;
 }
 
 void TestColumnFormatter(void) {
@@ -211,7 +211,7 @@ void TestColumnFormatter(void) {
     AssertEqual("Column[1] Text = \"This is 1. test\"", ColFormatter[1].GetText(), CFS("This is 1. test"));
     AssertEqual("Column[2] Text = \"All Text fits into line\"", ColFormatter[2].GetText(), CFS("All Text fits into line"));
 
-    AssertException("Accessing Column[3]: InvalidParamException", ColFormatter[3].SetWidth(0), the::argument_exception);
+    AssertException("Accessing Column[3]: InvalidParamException", ColFormatter[3].SetWidth(0), vislib::IllegalParamException);
 
     ColFormatter.SetColumnCount(4);
     AssertEqual<unsigned int>("Column Count = 4", ColFormatter.GetColumnCount(), 4);
@@ -261,8 +261,8 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
     expected = CFS("Second | The second test      | But no out of columns    | So the wrapping is\n")
-             + CFS("       | comes with some word |                          | very easy.\n")
-             + CFS("       | wraps.               |                          |");
+               CFS("       | comes with some word |                          | very easy.\n")
+               CFS("       | wraps.               |                          |");
     if (!AssertEqual("Formatted 2. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -281,8 +281,8 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
     expected = CFS("The Third Test | TTT performs | A short out of column    | Seeing forward to\n")
-             + CFS("       | some out of column   | test!                    | test 4.\n")
-             + CFS("       | tests.               |                          |");
+               CFS("       | some out of column   | test!                    | test 4.\n")
+               CFS("       | tests.               |                          |");
     if (!AssertEqual("Formatted 3. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -301,9 +301,9 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  123456 | 12345678901234567890 | 123456789012345678901234 | 12345678901234567890
     expected = CFS("The fourth test comes with a very very very very very very very very very very\n")
-             + CFS("very long first column as hardcore test. | The 3. Column | This was the fourth\n")
-             + CFS("       | 2. Column is in 3.   | starts where it should   | test.\n")
-             + CFS("       | line                 | be.                      |");
+               CFS("very long first column as hardcore test. | The 3. Column | This was the fourth\n")
+               CFS("       | 2. Column is in 3.   | starts where it should   | test.\n")
+               CFS("       | line                 | be.                      |");
     if (!AssertEqual("Formatted 4. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -325,7 +325,7 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
     expected = CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
-             + CFS("                    .--.                              .--.123456789");
+               CFS("                    .--.                              .--.123456789");
     if (!AssertEqual("Formatted 5. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -337,7 +337,7 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
     expected = CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
-             + CFS("                    .--.                              .--.123456789");
+               CFS("                    .--.                              .--.123456789");
     if (!AssertEqual("Formatted 6. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -350,8 +350,8 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
     expected = CFS("01234567890123456789.--.0123456789012345678901234567890123456789012345678901234\n")
-             + CFS("                    .--.56789                         .--.012345678901234567890\n")
-             + CFS("                    .--.                              .--.123456789");
+               CFS("                    .--.56789                         .--.012345678901234567890\n")
+               CFS("                    .--.                              .--.123456789");
     if (!AssertEqual("Formatted 7. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -363,7 +363,7 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
     expected = CFS("01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890\n")
-             + CFS("                    .--.012345678901234567890123456789.--.123456789");
+               CFS("                    .--.012345678901234567890123456789.--.123456789");
     if (!AssertEqual("Formatted 8. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -378,7 +378,7 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.012345678901234567890123456789.--.012345678901234567890123456789
     expected = CFS("012345678901234567890123456789012345678901234567890   .--.012345678901234567890\n")
-             + CFS("                    .--.Horst                         .--.123456789");
+               CFS("                    .--.Horst                         .--.123456789");
     if (!AssertEqual("Formatted 9. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -403,7 +403,7 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.01234.--.012345678901234567890123456789
     expected = CFS("First Column        .--.The second column now gets a very very long text to\n")
-             + CFS("                    .--.push into a new line..--.Third Column");
+               CFS("                    .--.push into a new line..--.Third Column");
     if (!AssertEqual("Formatted 11. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -415,7 +415,7 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.01234.--.012345678901234567890123456789
     expected = CFS("First Column        .--.The second column is now shorter, But still too long\n")
-             + CFS("                    .--..--.Third Column");
+               CFS("                    .--..--.Third Column");
     if (!AssertEqual("Formatted 12. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -427,8 +427,8 @@ void TestColumnFormatter(void) {
 //                  1234567890123456789012345678901234567890123456789012345678901234567890123456789
 //                  01234567890123456789.--.01234.--.012345678901234567890123456789
     expected = CFS("First Column        .--.The second column is now a bit longer again.  I want to\n")
-             + CFS("                    .--.check space interpretation on word wrap here..--.Third\n")
-             + CFS("                    .--.                                             .--.Column");
+               CFS("                    .--.check space interpretation on word wrap here..--.Third\n")
+               CFS("                    .--.                                             .--.Column");
     if (!AssertEqual("Formatted 13. output as expected", output, expected)) {
         TestColumnFormatterHelper(output, expected);
     }
@@ -436,16 +436,23 @@ void TestColumnFormatter(void) {
 }
 
 
-void TestExceptions(void) {
-    the::system::system_exception e1(2, __FILE__, __LINE__);
-    ::_tprintf(_T("%s\n"), e1.what());
-
-    the::exception e2(__FILE__, __LINE__);
-    ::_tprintf(_T("%s\n"), e2.what()); 
+void TestTrace(void) {
+    vislib::Trace::GetInstance().EnableFileOutput("trace.txt");
+    vislib::Trace::GetInstance().EnableDebuggerOutput(true);
+    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_ALL);
+    VLTRACE(1, "HORST!\n");
 }
 
-void Test_system_message(void) {
-    the::system::system_message sysMsg(4);
+void TestExceptions(void) {
+    vislib::sys::SystemException e1(2, __FILE__, __LINE__);
+    ::_tprintf(_T("%s\n"), e1.GetMsg());
+
+    vislib::Exception e2(__FILE__, __LINE__);
+    ::_tprintf(_T("%s\n"), e2.GetMsg()); 
+}
+
+void TestSystemMessage(void) {
+    vislib::sys::SystemMessage sysMsg(4);
     ::_tprintf(_T("%s\n"), static_cast<const TCHAR *>(sysMsg));
 }
 
@@ -469,10 +476,10 @@ void TestPathManipulations(void) {
     //try {
     //    vislib::sys::Path::MakeDirectory(L"Horst/Hugo/Heinz/Hans/Helmut");
     //    vislib::sys::Path::DeleteDirectory("Wurst", true);
-    //} catch(the::system::system_exception e) {
-    //    fprintf(stderr, "the::system::system_exception: %s\n", e.what());
-    //} catch(the::exception e) {
-    //    fprintf(stderr, "Exception: %s\n", e.what());
+    //} catch(vislib::sys::SystemException e) {
+    //    fprintf(stderr, "SystemException: %s\n", e.GetMsgA());
+    //} catch(vislib::Exception e) {
+    //    fprintf(stderr, "Exception: %s\n", e.GetMsgA());
     //} catch(...) {
     //    fprintf(stderr, "Unknown Exception.\n");
     //}
@@ -522,27 +529,27 @@ void TestFileNameSequence(void) {
 
     AssertFalse("Sequence is in normal order", seq.ReversedCounterPriority());
 
-    AssertEqual("File 0 is correct", seq.FileNameA(0).c_str(), "C:\\Some\\Directory\\AndFileName01_0000.dmy");
-    AssertEqual("File 0 is correct", seq.FileNameW(0).c_str(), L"C:\\Some\\Directory\\AndFileName01_0000.dmy");
-    AssertEqual("File 1 is correct", seq.FileNameA(1).c_str(), "C:\\Some\\Directory\\AndFileName01_0003.dmy");
-    AssertEqual("File 2 is correct", seq.FileNameA(2).c_str(), "C:\\Some\\Directory\\AndFileName01_0006.dmy");
-    AssertEqual("File 3 is correct", seq.FileNameA(3).c_str(), "C:\\Some\\Directory\\AndFileName01_0009.dmy");
-    AssertEqual("File 4 is correct", seq.FileNameA(4).c_str(), "C:\\Some\\Directory\\AndFileName02_0000.dmy");
-    AssertEqual("File 5 is correct", seq.FileNameA(5).c_str(), "C:\\Some\\Directory\\AndFileName02_0003.dmy");
-    AssertEqual("File 6 is correct", seq.FileNameA(6).c_str(), "C:\\Some\\Directory\\AndFileName02_0006.dmy");
-    AssertEqual("File 7 is correct", seq.FileNameA(7).c_str(), "C:\\Some\\Directory\\AndFileName02_0009.dmy");
+    AssertEqual("File 0 is correct", seq.FileNameA(0), "C:\\Some\\Directory\\AndFileName01_0000.dmy");
+    AssertEqual("File 0 is correct", seq.FileNameW(0), L"C:\\Some\\Directory\\AndFileName01_0000.dmy");
+    AssertEqual("File 1 is correct", seq.FileNameA(1), "C:\\Some\\Directory\\AndFileName01_0003.dmy");
+    AssertEqual("File 2 is correct", seq.FileNameA(2), "C:\\Some\\Directory\\AndFileName01_0006.dmy");
+    AssertEqual("File 3 is correct", seq.FileNameA(3), "C:\\Some\\Directory\\AndFileName01_0009.dmy");
+    AssertEqual("File 4 is correct", seq.FileNameA(4), "C:\\Some\\Directory\\AndFileName02_0000.dmy");
+    AssertEqual("File 5 is correct", seq.FileNameA(5), "C:\\Some\\Directory\\AndFileName02_0003.dmy");
+    AssertEqual("File 6 is correct", seq.FileNameA(6), "C:\\Some\\Directory\\AndFileName02_0006.dmy");
+    AssertEqual("File 7 is correct", seq.FileNameA(7), "C:\\Some\\Directory\\AndFileName02_0009.dmy");
 
     seq.SetReversedCounterPriority(true);
     AssertTrue("Sequence is in reversed order", seq.ReversedCounterPriority());
 
-    AssertEqual("File 0 is correct", seq.FileNameA(0).c_str(), "C:\\Some\\Directory\\AndFileName01_0000.dmy");
-    AssertEqual("File 1 is correct", seq.FileNameA(1).c_str(), "C:\\Some\\Directory\\AndFileName02_0000.dmy");
-    AssertEqual("File 2 is correct", seq.FileNameA(2).c_str(), "C:\\Some\\Directory\\AndFileName01_0003.dmy");
-    AssertEqual("File 3 is correct", seq.FileNameA(3).c_str(), "C:\\Some\\Directory\\AndFileName02_0003.dmy");
-    AssertEqual("File 4 is correct", seq.FileNameA(4).c_str(), "C:\\Some\\Directory\\AndFileName01_0006.dmy");
-    AssertEqual("File 5 is correct", seq.FileNameA(5).c_str(), "C:\\Some\\Directory\\AndFileName02_0006.dmy");
-    AssertEqual("File 6 is correct", seq.FileNameA(6).c_str(), "C:\\Some\\Directory\\AndFileName01_0009.dmy");
-    AssertEqual("File 7 is correct", seq.FileNameA(7).c_str(), "C:\\Some\\Directory\\AndFileName02_0009.dmy");
+    AssertEqual("File 0 is correct", seq.FileNameA(0), "C:\\Some\\Directory\\AndFileName01_0000.dmy");
+    AssertEqual("File 1 is correct", seq.FileNameA(1), "C:\\Some\\Directory\\AndFileName02_0000.dmy");
+    AssertEqual("File 2 is correct", seq.FileNameA(2), "C:\\Some\\Directory\\AndFileName01_0003.dmy");
+    AssertEqual("File 3 is correct", seq.FileNameA(3), "C:\\Some\\Directory\\AndFileName02_0003.dmy");
+    AssertEqual("File 4 is correct", seq.FileNameA(4), "C:\\Some\\Directory\\AndFileName01_0006.dmy");
+    AssertEqual("File 5 is correct", seq.FileNameA(5), "C:\\Some\\Directory\\AndFileName02_0006.dmy");
+    AssertEqual("File 6 is correct", seq.FileNameA(6), "C:\\Some\\Directory\\AndFileName01_0009.dmy");
+    AssertEqual("File 7 is correct", seq.FileNameA(7), "C:\\Some\\Directory\\AndFileName02_0009.dmy");
 
     // no need to clean up s1, s2, s3, c1, and c2 because they have been
     // assigned to smart pointers ;-)
@@ -553,7 +560,7 @@ void TestFileNameSequence(void) {
         unsigned int cnt = seq.Count();
         printf("Autodetected %u files:\n", cnt);
         for (unsigned int i = 0; i < cnt; i++) {
-            printf("  %s\n", seq.FileNameA(i).c_str());
+            printf("  %s\n", seq.FileNameA(i).PeekBuffer());
         }
     } else {
         printf("Autodetection failed (Sequence is invalid).\n");
@@ -577,37 +584,37 @@ void TestAsciiFile(void) {
 
     pc.SetMark();
     AssertTrue("Loading text file", afb.LoadFile(filename));
-    uint64_t e = pc.Difference();
+    UINT64 e = pc.Difference();
 #ifdef KLASSIK_TEST
-    AssertEqual<size_t>("All lines loaded", afb.Count(), 40000008UL);
+    AssertEqual<SIZE_T>("All lines loaded", afb.Count(), 40000008UL);
 #else
-    AssertEqual<size_t>("All lines loaded", afb.Count(), 17UL);
+    AssertEqual<SIZE_T>("All lines loaded", afb.Count(), 17UL);
 #endif
     //printf("%d\n", afb.Count());
     printf("Loaded in %f seconds\n", pc.ToMillis(e) / 1000.0);
 
 #ifdef KLASSIK_TEST
-    AssertEqual<size_t>("Length of line 0 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[0])), 17);
-    AssertEqual<size_t>("Length of line 1 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[1])), 9);
-    AssertEqual<size_t>("Length of line 2 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[2])), 11);
-    AssertEqual<size_t>("Length of line 3 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[3])), 11);
-    AssertEqual<size_t>("Length of line 4 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[4])), 11);
-    AssertEqual<size_t>("Length of line 5 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[5])), 76);
-    AssertEqual<size_t>("Length of line 6 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[6])), 3);
-    AssertEqual<size_t>("Length of line 7 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[7])), 49);
-    AssertEqual<size_t>("Length of line 8 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[8])), 48);
-    AssertEqual<size_t>("Length of line 9 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[9])), 48);
+    AssertEqual<SIZE_T>("Length of line 0 correct", vislib::CharTraitsA::SafeStringLength(afb[0]), 17);
+    AssertEqual<SIZE_T>("Length of line 1 correct", vislib::CharTraitsA::SafeStringLength(afb[1]), 9);
+    AssertEqual<SIZE_T>("Length of line 2 correct", vislib::CharTraitsA::SafeStringLength(afb[2]), 11);
+    AssertEqual<SIZE_T>("Length of line 3 correct", vislib::CharTraitsA::SafeStringLength(afb[3]), 11);
+    AssertEqual<SIZE_T>("Length of line 4 correct", vislib::CharTraitsA::SafeStringLength(afb[4]), 11);
+    AssertEqual<SIZE_T>("Length of line 5 correct", vislib::CharTraitsA::SafeStringLength(afb[5]), 76);
+    AssertEqual<SIZE_T>("Length of line 6 correct", vislib::CharTraitsA::SafeStringLength(afb[6]), 3);
+    AssertEqual<SIZE_T>("Length of line 7 correct", vislib::CharTraitsA::SafeStringLength(afb[7]), 49);
+    AssertEqual<SIZE_T>("Length of line 8 correct", vislib::CharTraitsA::SafeStringLength(afb[8]), 48);
+    AssertEqual<SIZE_T>("Length of line 9 correct", vislib::CharTraitsA::SafeStringLength(afb[9]), 48);
 #else
-    AssertEqual<size_t>("Length of line 0 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[0])), 9);
-    AssertEqual<size_t>("Length of line 1 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[1])), 21);
-    AssertEqual<size_t>("Length of line 2 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[2])), 17);
-    AssertEqual<size_t>("Length of line 3 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[3])), 17);
-    AssertEqual<size_t>("Length of line 4 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[4])), 17);
-    AssertEqual<size_t>("Length of line 5 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[5])), 22);
-    AssertEqual<size_t>("Length of line 6 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[6])), 22);
-    AssertEqual<size_t>("Length of line 7 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[7])), 22);
-    AssertEqual<size_t>("Length of line 8 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[8])), 19);
-    AssertEqual<size_t>("Length of line 9 correct", the::text::string_utility::c_str_len(static_cast<const char*>(afb[9])), 20);
+    AssertEqual<SIZE_T>("Length of line 0 correct", vislib::CharTraitsA::SafeStringLength(afb[0]), 9);
+    AssertEqual<SIZE_T>("Length of line 1 correct", vislib::CharTraitsA::SafeStringLength(afb[1]), 21);
+    AssertEqual<SIZE_T>("Length of line 2 correct", vislib::CharTraitsA::SafeStringLength(afb[2]), 17);
+    AssertEqual<SIZE_T>("Length of line 3 correct", vislib::CharTraitsA::SafeStringLength(afb[3]), 17);
+    AssertEqual<SIZE_T>("Length of line 4 correct", vislib::CharTraitsA::SafeStringLength(afb[4]), 17);
+    AssertEqual<SIZE_T>("Length of line 5 correct", vislib::CharTraitsA::SafeStringLength(afb[5]), 22);
+    AssertEqual<SIZE_T>("Length of line 6 correct", vislib::CharTraitsA::SafeStringLength(afb[6]), 22);
+    AssertEqual<SIZE_T>("Length of line 7 correct", vislib::CharTraitsA::SafeStringLength(afb[7]), 22);
+    AssertEqual<SIZE_T>("Length of line 8 correct", vislib::CharTraitsA::SafeStringLength(afb[8]), 19);
+    AssertEqual<SIZE_T>("Length of line 9 correct", vislib::CharTraitsA::SafeStringLength(afb[9]), 20);
 #endif
 
 #ifdef KLASSIK_TEST
@@ -625,21 +632,21 @@ void TestAsciiFile(void) {
     AssertTrue("Loading text file again (word-wise)", afb.LoadFile(filename, vislib::sys::ASCIIFileBuffer::PARSING_WORDS));
     e = pc.Difference();
     printf("Loaded (word-wise) in %f seconds\n", pc.ToMillis(e) / 1000.0);
-    AssertEqual<size_t>("Still all lines loaded", afb.Count(), 17UL);
-    AssertEqual<size_t>("Line 0 has 2 words", afb[0].Count(), 2);
+    AssertEqual<SIZE_T>("Still all lines loaded", afb.Count(), 17UL);
+    AssertEqual<SIZE_T>("Line 0 has 2 words", afb[0].Count(), 2);
     AssertEqual("Line 0 word 0 correct", afb[0][0], "SIFFa");
     AssertEqual("Line 0 word 1 correct", afb[0][1], "1.0");
-    AssertEqual<size_t>("Line 1 has 1 words", afb[1].Count(), 7);
+    AssertEqual<SIZE_T>("Line 1 has 1 words", afb[1].Count(), 7);
     AssertEqual("Line 1 word 0 correct", afb[1][0], "0");
-    AssertEqual<size_t>("Line 2 has 6 words", afb[2].Count(), 7);
+    AssertEqual<SIZE_T>("Line 2 has 6 words", afb[2].Count(), 7);
     AssertEqual("Line 2 word 0 correct", afb[2][0], "1");
-    AssertEqual<size_t>("Line 3 has 7 words", afb[3].Count(), 7);
-    AssertEqual<size_t>("Line 4 has 7 words", afb[4].Count(), 7);
-    AssertEqual<size_t>("Line 5 has 7 words", afb[5].Count(), 7);
-    AssertEqual<size_t>("Line 6 has 7 words", afb[6].Count(), 7);
-    AssertEqual<size_t>("Line 7 has 7 words", afb[7].Count(), 7);
-    AssertEqual<size_t>("Line 8 has 7 words", afb[8].Count(), 7);
-    AssertEqual<size_t>("Line 9 has 7 words", afb[9].Count(), 7);
+    AssertEqual<SIZE_T>("Line 3 has 7 words", afb[3].Count(), 7);
+    AssertEqual<SIZE_T>("Line 4 has 7 words", afb[4].Count(), 7);
+    AssertEqual<SIZE_T>("Line 5 has 7 words", afb[5].Count(), 7);
+    AssertEqual<SIZE_T>("Line 6 has 7 words", afb[6].Count(), 7);
+    AssertEqual<SIZE_T>("Line 7 has 7 words", afb[7].Count(), 7);
+    AssertEqual<SIZE_T>("Line 8 has 7 words", afb[8].Count(), 7);
+    AssertEqual<SIZE_T>("Line 9 has 7 words", afb[9].Count(), 7);
 #endif
 }
 
@@ -652,9 +659,9 @@ void TestNamedColours(void) {
     using vislib::graphics::ColourRGBAu8;
     using vislib::graphics::ColourParser;
 
-    AssertEqual<size_t>("CountNamedColours == 149", NamedColours::CountNamedColours(), 149);
-    for (size_t i = 0; i < NamedColours::CountNamedColours(); i++) {
-        the::astring n = NamedColours::GetNameByIndex(i);
+    AssertEqual<SIZE_T>("CountNamedColours == 149", NamedColours::CountNamedColours(), 149);
+    for (SIZE_T i = 0; i < NamedColours::CountNamedColours(); i++) {
+        vislib::StringA n = NamedColours::GetNameByIndex(i);
         const ColourRGBAu8& c = NamedColours::GetColourByIndex(i);
         const char *n2 = NamedColours::GetNameByColour(c, false);
         AssertNotEqual<const char*>("Named colour has name", n2, NULL);
@@ -663,11 +670,11 @@ void TestNamedColours(void) {
         //if (    !n.Equals("Transparent")
         //        && !n.Equals("Fuchsia")
         //        && !n.Equals("Aqua")) {
-        //    the::astring msg;
-        //    the::text::astring_builder::format_to(msg, "Named colours name %s is correct", n.c_str());
-        //    AssertTrue(msg.c_str(), n.Equals(n2, false));
+        //    vislib::StringA msg;
+        //    msg.Format("Named colours name %s is correct", n.PeekBuffer());
+        //    AssertTrue(msg.PeekBuffer(), n.Equals(n2, false));
         //}
-        const ColourRGBAu8 c1 = NamedColours::GetColourByName(n.c_str());
+        const ColourRGBAu8 c1 = NamedColours::GetColourByName(n);
         const ColourRGBAu8 c2 = NamedColours::GetColourByName(n2);
         AssertEqual("Colour[i] == Colour[Name[i]]", c, c1);
         AssertEqual("Colour[i] == Colour[Name[Colour[i]]]", c, c2);
@@ -700,19 +707,19 @@ void TestNamedColours(void) {
     AssertNoException("ColourParser::FromString #3", ColourParser::FromString("(1,0, 0.5, 0,25, 1.0)", col, true));
     AssertEqual("FromString #3 Colour correct", col, ColourRGBAu8(255, 128, 64, 255));
 
-    the::astring txt;
+    vislib::StringA txt;
     ColourParser::ToString(txt, NamedColours::Crimson, ColourParser::REPTYPE_HTML);
-    AssertTrue("Crimson in HTML correct", the::text::string_utility::compare(txt, "#dc143c", false) == 0);
+    AssertTrue("Crimson in HTML correct", txt.Equals("#dc143c", false));
     ColourParser::FromString(txt, col);
     AssertEqual("Crimson parsed back correctly from html", col, NamedColours::Crimson);
 
     ColourParser::ToString(txt, NamedColours::CornflowerBlue, ColourParser::REPTYPE_BYTE);
-    AssertTrue("CornflowerBlue in Bytes correct", the::text::string_utility::compare(txt, "(100; 149; 237)", false) == 0);
+    AssertTrue("CornflowerBlue in Bytes correct", txt.Equals("(100; 149; 237)", false));
     ColourParser::FromString(txt, col);
     AssertEqual("CornflowerBlue parsed back correctly from bytes", col, NamedColours::CornflowerBlue);
 
     ColourParser::ToString(txt, NamedColours::MediumVioletRed, ColourParser::REPTYPE_NAMED);
-    AssertTrue("MediumVioletRed in Named correct", the::text::string_utility::compare(txt, "MediumVioletRed", false) == 0);
+    AssertTrue("MediumVioletRed in Named correct", txt.Equals("MediumVioletRed", false));
     ColourParser::FromString(txt, col);
     AssertEqual("MediumVioletRed parsed back correctly from name", col, NamedColours::MediumVioletRed);
 
@@ -724,7 +731,7 @@ void TestNamedColours(void) {
 #else /* _WIN32 */
         sscanf
 #endif /* _WIN32 */
-        (txt.c_str(), "(%f; %f; %f)", &r, &g, &b);
+        (txt.PeekBuffer(), "(%f; %f; %f)", &r, &g, &b);
     AssertTrue("SpringGreen in Floats correct", 
          (cnt == 3)
          && vislib::math::IsEqual(r, 0.0f)
@@ -732,5 +739,58 @@ void TestNamedColours(void) {
          && vislib::math::IsEqual(b, 0.49803901f) );
     ColourParser::FromString(txt, col);
     AssertEqual("SpringGreen parsed back correctly from floats", col, NamedColours::SpringGreen);
+
+}
+
+
+void TestRLEUInt(void) {
+    UINT64 v = 0;
+    UINT64 d;
+    unsigned char buf[10];
+    unsigned int len;
+
+    // test working paths
+    for (int i = 0; i < 10; i++) {
+        len = 10;
+        AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
+        printf("Memory consumption: %u\n", len);
+        //AssertEqual("Memory consumption correct", len, 1u);
+        AssertEqual("Memory estimation correct", len, vislib::UIntRLELength(v));
+        AssertTrue("Can decode", vislib::UIntRLEDecode(d, buf, len));
+        AssertEqual("Decode successful", v, d);
+        v *= 100;
+        v += 21;
+    }
+
+    v = -1;
+    len = 10;
+    AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
+    printf("Memory consumption: %u\n", len);
+    AssertEqual("Memory consumption correct", len, 10u);
+    AssertEqual("Memory estimation correct", len, vislib::UIntRLELength(v));
+    AssertTrue("Can decode", vislib::UIntRLEDecode(d, buf, len));
+    AssertEqual("Decode successful", v, d);
+
+    // test some failure passes
+    v = 0;
+    len = 0;
+    AssertFalse("Fail encode", vislib::UIntRLEEncode(buf, len, v));
+
+    v = 128;
+    len = 1;
+    AssertFalse("Fail encode", vislib::UIntRLEEncode(buf, len, v));
+
+    v = -1;
+    len = 10;
+    AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
+    buf[9] = 0xFF;
+    AssertFalse("Fail decode", vislib::UIntRLEDecode(d, buf, len));
+    v = 300;
+    len = 10;
+    AssertTrue("Can encode", vislib::UIntRLEEncode(buf, len, v));
+    len = 1;
+    AssertFalse("Fail decode", vislib::UIntRLEDecode(d, buf, len));
+
+    // okey. Basic path coverage reached (not regarding the while loops)
 
 }

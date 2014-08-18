@@ -13,24 +13,24 @@
 #include <sys/time.h>
 #endif /* _WIN32 */
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/error.h"
-#include "the/memory.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
+#include "vislib/memutils.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 
 
 /*
  * vislib::sys::PerformanceCounter::Query
  */
-uint64_t vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
+UINT64 vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 #ifdef _WIN32
     LARGE_INTEGER timerCount;
 
     if (!::QueryPerformanceCounter(&timerCount)) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "QueryPerformanceCounter failed in "
+        VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceCounter failed in "
             "vislib::sys::PerformanceCounter::Query\n");
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if (useFullPrecision) {
@@ -42,13 +42,13 @@ uint64_t vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 #else /* _WIN32 */
     struct timeval t;
     if (::gettimeofday(&t, NULL) == -1) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     if (useFullPrecision) {
-        return static_cast<uint64_t>(t.tv_sec * 1e6 + t.tv_usec);
+        return static_cast<UINT64>(t.tv_sec * 1e6 + t.tv_usec);
     } else {
-        return static_cast<uint64_t>((t.tv_sec * 1e6 + t.tv_usec) / 1000.0);
+        return static_cast<UINT64>((t.tv_sec * 1e6 + t.tv_usec) / 1000.0);
     }
 
 #endif /* _WIN32 */
@@ -58,14 +58,14 @@ uint64_t vislib::sys::PerformanceCounter::Query(const bool useFullPrecision) {
 /*
  * vislib::sys::PerformanceCounter::QueryFrequency
  */
-uint64_t vislib::sys::PerformanceCounter::QueryFrequency(void) {
+UINT64 vislib::sys::PerformanceCounter::QueryFrequency(void) {
 #ifdef _WIN32
     LARGE_INTEGER timerFreq;
 
     if (!::QueryPerformanceFrequency(&timerFreq)) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "QueryPerformanceFrequency failed in "
+        VLTRACE(Trace::LEVEL_ERROR, "QueryPerformanceFrequency failed in "
             "vislib::sys::PerformanceCounter::Query\n");
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
     return timerFreq.QuadPart;

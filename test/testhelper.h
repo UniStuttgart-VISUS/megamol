@@ -12,9 +12,9 @@
 
 #include <iostream>
 
-#include "the/types.h"
+#include "vislib/types.h"
 #include "vislib/mathfunctions.h"
-#include "the/string.h"
+#include "vislib/String.h"
 
 
 bool AssertTrue(const char *desc, const bool cond);
@@ -27,39 +27,28 @@ template<class T> bool AssertEqual(const char *desc,
     return ::AssertTrue(desc, (lhs == rhs));
 }
 
-template<class TC, class TT, class TA>
-bool AssertEqual(const char *desc, 
-        const std::basic_string<TC, TT, TA>& lhs, 
-        const std::basic_string<TC, TT, TA>& rhs) {
-    return ::AssertTrue(desc, the::text::string_utility::equals(lhs, rhs));
-}
-
 template<class T> bool AssertEqual(const char *desc, 
                                    const char *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, the::text::string_utility::equals(lhs, rhs));
+    return ::AssertTrue(desc, vislib::StringA(lhs).Equals(vislib::StringA(rhs)));
 }
 
 template<class T> bool AssertEqual(const char *desc, 
                                    const wchar_t *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, the::text::string_utility::equals(lhs, rhs));
+    return ::AssertTrue(desc, vislib::StringW(lhs).Equals(vislib::StringW(rhs)));
 }
 
 template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
                                    const char *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, the::text::string_utility::equals(
-        the::text::string_converter::to_a(lhs),
-        the::text::string_converter::to_a(rhs), false));
+    return ::AssertTrue(desc, vislib::StringA(lhs).Equals(vislib::StringA(rhs), false));
 }
 
 template<class T> bool AssertEqualCaseInsensitive(const char *desc, 
                                    const wchar_t *lhs, 
                                    const T& rhs) {
-    return ::AssertTrue(desc, the::text::string_utility::equals(
-        the::text::string_converter::to_w(lhs),
-        the::text::string_converter::to_w(rhs), false));
+    return ::AssertTrue(desc, vislib::StringW(lhs).Equals(vislib::StringW(rhs), false));
 }
 
 template<class T> bool AssertNotEqual(const char *desc,

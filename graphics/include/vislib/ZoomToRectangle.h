@@ -135,7 +135,7 @@ namespace graphics {
          * image in the specified way. The beholder and the camera will be
          * changed.
          *
-         * @throws invalid_operation_exception if either no beholder or no camera is
+         * @throws IllegalStateException if either no beholder or no camera is
          *         set, if the camera uses orthographic projection or if the 
          *         zoom target rectangle is empty.
          */

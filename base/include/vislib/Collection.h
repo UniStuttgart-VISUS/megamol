@@ -15,9 +15,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/memory.h"
+#include "vislib/memutils.h"
 #include "vislib/NullLockable.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 
@@ -89,7 +89,7 @@ namespace vislib {
          *
          * @return Number of items in the collection.
          */
-        virtual size_t Count(void) const = 0;
+        virtual SIZE_T Count(void) const = 0;
 
         /**
          * Answer a pointer to the first copy of 'element' in the collection. 
@@ -120,7 +120,7 @@ namespace vislib {
          *
          * @return true, if the collection is empty, false otherwise.
          */
-        virtual bool empty(void) const = 0;
+        virtual bool IsEmpty(void) const = 0;
 
         /**
          * Acquires the lock of the collection.
@@ -129,7 +129,7 @@ namespace vislib {
          * lock. We do not use a mutable member to avoid additional memory
          * used in non-synchronised collections.
          */
-        THE_FORCE_INLINE void Lock(void) const {
+        VISLIB_FORCEINLINE void Lock(void) const {
             const_cast<L *>(static_cast<const L *>(this))->Lock();
         }
 
@@ -147,7 +147,7 @@ namespace vislib {
          * lock. We do not use a mutable member to avoid additional memory
          * used in non-synchronised collections.
          */
-        THE_FORCE_INLINE void Unlock(void) const {
+        VISLIB_FORCEINLINE void Unlock(void) const {
             const_cast<L *>(static_cast<const L *>(this))->Unlock();
         }
 

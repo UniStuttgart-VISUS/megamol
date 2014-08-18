@@ -50,7 +50,8 @@ namespace d3d {
         virtual ~D3D9AdapterInformation(void);
 
         inline UINT GetAdapterOrdinal(const SIZE_T outputIdx) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("D3D9AdapterInformation::GetAdapterOrdinal", 
+                __FILE__,__LINE__);
             return this->GetDirect3DCapabilites(outputIdx).AdapterOrdinal;
         }
 
@@ -72,7 +73,7 @@ namespace d3d {
          * @return Reference to the monitor description. The value designated 
          *         must live as long as this object lives.
          *
-         * @throws index_out_of_range_exception If 'outputIdx' does not designate a valid
+         * @throws OutOfRangeException If 'outputIdx' does not designate a valid
          *                             output attached to the adapter.
          */
         virtual const MONITORINFOEXW& getMonitorInfo(

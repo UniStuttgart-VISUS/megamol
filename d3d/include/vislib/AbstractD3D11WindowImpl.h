@@ -19,7 +19,7 @@
 #include <DXGI.h>
 
 #include "vislib/Array.H"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -124,7 +124,8 @@ namespace d3d {
             DXGI_SWAP_CHAIN_DESC& inOutSwapChainDesc) throw();
 
         inline ID3D11DepthStencilView *peekDepthStencilView(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractD3D11WindowImpl::peekDepthStencilView", 
+                __FILE__, __LINE__);
             return this->depthStencilView;
         }
 
@@ -134,7 +135,7 @@ namespace d3d {
          * @return The D3D device.
          */
         inline ID3D11Device *peekDevice(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractD3D11WindowImpl::peekDevice", __FILE__, __LINE__);
             return this->device;
         }
 
@@ -145,17 +146,20 @@ namespace d3d {
          * @reutnr THe D3D immediate context.
          */
         inline ID3D11DeviceContext *peekDeviceContext(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractD3D11WindowImpl::peekDeviceContext", __FILE__, 
+                __LINE__);
             return this->deviceContext;
         }
 
         inline ID3D11RenderTargetView *peekRenderTargetView(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractD3D11WindowImpl::peekRenderTargetView",
+                __FILE__, __LINE__);
             return this->renderTargetView;
         }
 
         inline IDXGISwapChain *peekSwapChain(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("AbstractD3D11WindowImpl::peekSwapChain",__FILE__, 
+                __LINE__);
             return this->swapChain;
         }
 

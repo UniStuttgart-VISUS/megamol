@@ -55,15 +55,15 @@ namespace net {
          * @param result       Indicate the success of the operation. If
          *                     successful, this is 0, otherwise a 
          *                     system-dependent error code that can be converted
-         *                     to a the::system::system_message.
+         *                     to a vislib::sys::SystemMessage.
          * @param data         The data pointer that was passed to Send(). If
          *                     Send() created a local copy for the queue, this
          *                     parameter will be NULL.
          * @param cntBytesSent The number of bytes actually sent.
          * @param userContext  A user-defined pointer that was passed to Send().
          */
-        typedef void (* CompletedFunction)(const unsigned int result, const void *data,
-            const size_t cntBytesSent, void *userContext);
+        typedef void (* CompletedFunction)(const DWORD result, const void *data,
+            const SIZE_T cntBytesSent, void *userContext);
 
         /** Ctor. */
         AsyncSocketSender(void);
@@ -100,7 +100,7 @@ namespace net {
          *
          * @return 0, or a socket error code if the thread could not start.
          */
-        virtual unsigned int Run(void *socket);
+        virtual DWORD Run(void *socket);
 
         /**
          * Start sending data on the specified socket.
@@ -111,24 +111,24 @@ namespace net {
          *
          * @return 0, or a socket error code if the thread could not start.
          */
-        unsigned int Run(Socket *socket);
+        DWORD Run(Socket *socket);
 
         /**
          * TODO
          */
-        void Send(const void *data, const size_t cntBytes,
+        void Send(const void *data, const SIZE_T cntBytes,
             const CompletedFunction onCompleted, void *userContext,
             const bool doNotCopy = false,
-            const int timeout = Socket::TIMEOUT_INFINITE,
-            const int flags = 0, const bool forceSend = true);
+            const INT timeout = Socket::TIMEOUT_INFINITE,
+            const INT flags = 0, const bool forceSend = true);
 
         /**
          * TODO
          */
-        inline void Send(const void *data, const size_t cntBytes,
+        inline void Send(const void *data, const SIZE_T cntBytes,
                 sys::Event *evt, const bool doNotCopy,
-                const int timeout = Socket::TIMEOUT_INFINITE,
-                const int flags = 0, const bool forceSend = true) {
+                const INT timeout = Socket::TIMEOUT_INFINITE,
+                const INT flags = 0, const bool forceSend = true) {
             this->Send(data, cntBytes, AsyncSocketSender::onSendCompletedEvt,
                 evt, doNotCopy, timeout, flags, forceSend);
         }
@@ -136,10 +136,10 @@ namespace net {
         /**
          * TODO
          */
-        inline void Send(const void *data, const size_t cntBytes,
+        inline void Send(const void *data, const SIZE_T cntBytes,
                 sys::Semaphore *semaphore, const bool doNotCopy,
-                const int timeout = Socket::TIMEOUT_INFINITE,
-                const int flags = 0, const bool forceSend = true) {
+                const INT timeout = Socket::TIMEOUT_INFINITE,
+                const INT flags = 0, const bool forceSend = true) {
             this->Send(data, cntBytes, AsyncSocketSender::onSendCompletedSem,
                 semaphore, doNotCopy, timeout, flags, forceSend);    
         }
@@ -156,11 +156,11 @@ namespace net {
          *                  made.
          *
          * @throws SocketException       If the operation fails.
-         * @throws argument_exception If 'timeout' is not TIMEOUT_INFINITE 
+         * @throws IllegalParamException If 'timeout' is not TIMEOUT_INFINITE 
          *                               and 'forceSend' is true.
          */
-        inline void Send(const void *data, const size_t cntBytes,
-                const int flags = 0) {
+        inline void Send(const void *data, const SIZE_T cntBytes,
+                const INT flags = 0) {
             this->Send(data, cntBytes, NULL, NULL, false, 
                 Socket::TIMEOUT_INFINITE, flags, true);
         }
@@ -199,11 +199,11 @@ namespace net {
         typedef struct SendTask_t {
             const void *data0;
             RawStorage *data1;
-            size_t cntBytes;
+            SIZE_T cntBytes;
             CompletedFunction onCompleted;
             void *userContext;
-            int timeout;
-            int flags;
+            INT timeout;
+            INT flags;
             bool forceSend;
 
             inline bool operator ==(const struct SendTask_t& rhs) const {
@@ -227,8 +227,8 @@ namespace net {
          * @param lpOverlapped
          * @param dwFlags
          */
-        void CALLBACK completionRoutine(unsigned int dwError, unsigned int cbTransferred,
-            LPWSAOVERLAPPED lpOverlapped, unsigned int dwFlags);
+        void CALLBACK completionRoutine(DWORD dwError, DWORD cbTransferred,
+            LPWSAOVERLAPPED lpOverlapped, DWORD dwFlags);
 #endif /* _WIN32 */
 
         /**
@@ -240,8 +240,8 @@ namespace net {
          * @param cntBytesSent
          * @param userContext
          */
-        static void onSendCompletedEvt(const unsigned int result, const void *data,
-            const size_t cntBytesSent, void *userContext);
+        static void onSendCompletedEvt(const DWORD result, const void *data,
+            const SIZE_T cntBytesSent, void *userContext);
 
         /**
          * Internal completed callback that is used to unlock a Semaphore 
@@ -252,8 +252,8 @@ namespace net {
          * @param cntBytesSent
          * @param userContext
          */
-        static void onSendCompletedSem(const unsigned int result, const void *data,
-            const size_t cntBytesSent, void *userContext);
+        static void onSendCompletedSem(const DWORD result, const void *data,
+            const SIZE_T cntBytesSent, void *userContext);
 
         /**
          * Call the completion callback of 'task', if there is one, and return
@@ -263,14 +263,14 @@ namespace net {
          * @param cntBytesSent The number of bytes sent passed to the completion
          *                     callback.
          */
-        void finaliseSendTask(SendTask& task, const unsigned int result, 
-            const size_t cntBytesSent);
+        void finaliseSendTask(SendTask& task, const DWORD result, 
+            const SIZE_T cntBytesSent);
 
         /**
          * This flag determines whether the thread should close the socket when
          * it exits.
          */
-        static const uint32_t FLAG_IS_CLOSE_SOCKET;
+        static const UINT32 FLAG_IS_CLOSE_SOCKET;
 
         /**
          * This flag determines the termination behaviour of the thread: If set
@@ -278,10 +278,10 @@ namespace net {
          * still tasks in the queue. If false, the queue is emptied immediately
          * on calling terminate.
          */
-        static const uint32_t FLAG_IS_LINGER;
+        static const UINT32 FLAG_IS_LINGER;
 
         /** A bitmask of behaviour flags. */
-        uint32_t flags;
+        UINT32 flags;
 
         /** 
          * This flag determines whether it is possible to add new tasks in

@@ -9,15 +9,15 @@
 
 #include <stdexcept>
 
-#include "the/assert.h"
-#include "the/memory.h"
-#include "the/trace.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
+#include "vislib/Trace.h"
 
 
 /*
  * vislib::RawStorage::RawStorage
  */
-vislib::RawStorage::RawStorage(const size_t size) : data(NULL), size(size) {
+vislib::RawStorage::RawStorage(const SIZE_T size) : data(NULL), size(size) {
     this->EnforceSize(this->size);
 }
 
@@ -38,19 +38,19 @@ vislib::RawStorage::RawStorage(const RawStorage& rhs)
  * vislib::RawStorage::~RawStorage
  */
 vislib::RawStorage::~RawStorage(void) {
-    the::safe_free(this->data);
+    SAFE_FREE(this->data);
 }
 
 
 /*
  * vislib::RawStorage::Append
  */
-void *vislib::RawStorage::Append(const void *data, const size_t cntData) {
-    size_t offset = this->size;
+void *vislib::RawStorage::Append(const void *data, const SIZE_T cntData) {
+    SIZE_T offset = this->size;
     void *retval = NULL;
 
     this->EnforceSize(this->size + cntData, true);
-    retval = static_cast<uint8_t *>(this->data) + offset;
+    retval = static_cast<BYTE *>(this->data) + offset;
 
     if (data != NULL) {
         ::memcpy(retval, data, cntData);
@@ -63,7 +63,7 @@ void *vislib::RawStorage::Append(const void *data, const size_t cntData) {
 /*
  * vislib::RawStorage::AssertSize
  */
-bool vislib::RawStorage::AssertSize(const size_t size, const bool keepContent) {
+bool vislib::RawStorage::AssertSize(const SIZE_T size, const bool keepContent) {
 	if (!this->TestSize(size)) {
         this->EnforceSize(size, keepContent);
         return true;
@@ -77,20 +77,20 @@ bool vislib::RawStorage::AssertSize(const size_t size, const bool keepContent) {
 /*
  * vislib::RawStorage::EnforceSize
  */
-void vislib::RawStorage::EnforceSize(const size_t size, 
+void vislib::RawStorage::EnforceSize(const SIZE_T size, 
                                      const bool keepContent) {
     
     if ((this->size = size) > 0) {
                                          
         if (keepContent) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO,
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
                 "RawStorage::AssertSize reallocates %u bytes.\n", this->size);
             this->data = ::realloc(this->data, this->size);
 
         } else {
-            //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, 
+            //VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, 
             //    "RawStorage::AssertSize allocates %u bytes.\n", this->size);
-            the::safe_free(this->data);
+            SAFE_FREE(this->data);
             this->data = ::malloc(this->size);
         }
 
@@ -108,7 +108,7 @@ void vislib::RawStorage::EnforceSize(const size_t size,
  */
 void vislib::RawStorage::ZeroAll(void) {
     if (this->data != NULL) {
-        the::zero_memory(this->data, this->size);
+        ::ZeroMemory(this->data, this->size);
     }
 }
 
@@ -121,7 +121,7 @@ vislib::RawStorage& vislib::RawStorage::operator =(const RawStorage& rhs) {
         this->EnforceSize(rhs.size);
         ::memcpy(this->data, rhs.data, rhs.size);
         
-        THE_ASSERT(this->size == rhs.size);
+        ASSERT(this->size == rhs.size);
     }
 
     return *this;

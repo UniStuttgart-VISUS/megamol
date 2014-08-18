@@ -10,13 +10,13 @@
 #include <climits>
 
 #include "vislib/glverify.h"
-#include "the/argument_exception.h"
-#include "the/invalid_operation_exception.h"
-#include "the/memory.h"
-#include "the/index_out_of_range_exception.h"
-#include "the/stack_trace.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/memutils.h"
+#include "vislib/OutOfRangeException.h"
+#include "vislib/StackTrace.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 
@@ -31,14 +31,14 @@ const char *vislib::graphics::gl::FramebufferObject::RequiredExtensions(void) {
 /*
  * vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments
  */
-unsigned int vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
-    THE_STACK_TRACE;
+UINT vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(void) {
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
     GLint retval = 0;
 
     GL_VERIFY_THROW(::glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &retval));
 
-    return static_cast<unsigned int>(retval);
+    return static_cast<UINT>(retval);
 }
 
 
@@ -48,7 +48,7 @@ unsigned int vislib::graphics::gl::FramebufferObject::GetMaxColourAttachments(vo
 vislib::graphics::gl::FramebufferObject::FramebufferObject(void) 
         : attachmentColour(NULL), cntColourAttachments(0), idFb(UINT_MAX), 
         height(0), oldDrawBuffer(0), oldFb(0), oldReadBuffer(0), width(0) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
 
     this->attachmentOther[0].state = ATTACHMENT_DISABLED;
     this->attachmentOther[1].state = ATTACHMENT_DISABLED;
@@ -61,18 +61,18 @@ vislib::graphics::gl::FramebufferObject::FramebufferObject(void)
  * vislib::graphics::gl::FramebufferObject::~FramebufferObject
  */
 vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     try {
         this->Disable();
         this->Release();
     } catch (OpenGLException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "\"%s\" at line %d in \"%s\" when "
-            "destroying FramebufferObject", e.what(), e.get_line(), 
-            e.get_file());
+        VLTRACE(Trace::LEVEL_VL_WARN, "\"%s\" at line %d in \"%s\" when "
+            "destroying FramebufferObject", e.GetMsgA(), e.GetLine(), 
+            e.GetFile());
     }
 
     // Dtor must ensure deallocation in any case!
-    the::safe_array_delete(this->attachmentColour);
+    ARY_SAFE_DELETE(this->attachmentColour);
 }
 
 
@@ -80,8 +80,8 @@ vislib::graphics::gl::FramebufferObject::~FramebufferObject(void) {
  * vislib::graphics::gl::FramebufferObject::BindColourTexture
  */
 GLenum vislib::graphics::gl::FramebufferObject::BindColourTexture(
-        const unsigned int which) {
-    THE_STACK_TRACE;
+        const UINT which) {
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
     
     if (which < this->cntColourAttachments) {
@@ -89,13 +89,13 @@ GLenum vislib::graphics::gl::FramebufferObject::BindColourTexture(
             GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
                 this->attachmentColour[which].id));
         } else {
-            throw the::invalid_operation_exception("The requested colour attachment "
+            throw IllegalStateException("The requested colour attachment "
                 "must be a texture attachment in order to be bound as a "
                 "texture.", __FILE__, __LINE__);
         }
 
     } else {
-        throw the::index_out_of_range_exception(which, 0, this->cntColourAttachments, 
+        throw OutOfRangeException(which, 0, this->cntColourAttachments, 
             __FILE__, __LINE__);
     }
 
@@ -107,7 +107,7 @@ GLenum vislib::graphics::gl::FramebufferObject::BindColourTexture(
  * vislib::graphics::gl::FramebufferObject::BindDepthTexture
  */
 GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
 
     if ((this->attachmentOther[ATTACH_IDX_DEPTH].state == ATTACHMENT_TEXTURE)
@@ -116,7 +116,7 @@ GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
         GL_VERIFY_RETURN(::glBindTexture(GL_TEXTURE_2D, 
             this->attachmentOther[ATTACH_IDX_DEPTH].id));
     } else {
-        throw the::invalid_operation_exception("The depth attachment must be "
+        throw IllegalStateException("The depth attachment must be "
             "a texture attachment in order to be bound as a texture.", 
             __FILE__, __LINE__);
     }
@@ -128,11 +128,11 @@ GLenum vislib::graphics::gl::FramebufferObject::BindDepthTexture(void) {
 /*
  * vislib::graphics::gl::FramebufferObject::Create
  */
-bool vislib::graphics::gl::FramebufferObject::Create(const unsigned int width, 
-        const unsigned int height, const unsigned int cntColourAttachments, 
+bool vislib::graphics::gl::FramebufferObject::Create(const UINT width, 
+        const UINT height, const UINT cntColourAttachments, 
         const ColourAttachParams *cap, const DepthAttachParams& dap, 
         const StencilAttachParams& sap) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_DEFERRED_VERIFY;
     GLint oldFb = 0;
     bool retval = true;
@@ -145,7 +145,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const unsigned int width,
     try {
         this->Release();    // TODO: Could also return false instead of recreate.
     } catch (OpenGLException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Release() of old FBO failed in Create(). "
+        VLTRACE(Trace::LEVEL_VL_WARN, "Release() of old FBO failed in Create(). "
             "This error is not critical.\n");
     }
 
@@ -164,7 +164,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const unsigned int width,
 
     /* Create colour buffers and attach it to FBO. */
     this->attachmentColour = new AttachmentProps[this->cntColourAttachments];
-    for (unsigned int i = 0; i < cntColourAttachments; i++) {
+    for (UINT i = 0; i < cntColourAttachments; i++) {
         this->attachmentColour[i].state = ATTACHMENT_TEXTURE;
         this->createTexture(this->attachmentColour[i].id, cap[i].internalFormat,
             cap[i].format, cap[i].type);
@@ -235,7 +235,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const unsigned int width,
     //}
     //this->attachmentOther[ATTACH_IDX_STENCIL].state = sap.state;
     // TODO: Find format that makes stencil attachment work.
-    THE_ASSERT(sap.state == ATTACHMENT_DISABLED);
+    ASSERT(sap.state == ATTACHMENT_DISABLED);
     this->attachmentOther[ATTACH_IDX_STENCIL].state = ATTACHMENT_DISABLED;
 
     /* Check for completeness and unbind FBO before returning. */
@@ -257,7 +257,7 @@ bool vislib::graphics::gl::FramebufferObject::Create(const unsigned int width,
  * vislib::graphics::gl::FramebufferObject::Disable
  */
 GLenum vislib::graphics::gl::FramebufferObject::Disable(void) throw() {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
 
     if (::glBindFramebufferEXT == NULL) {
@@ -265,14 +265,14 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) throw() {
          * Extensions might not have been initialised, but dtor will call
          * Disable anyway.
          */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "glBindFramebuffer is not available.\n");
+        VLTRACE(Trace::LEVEL_VL_WARN, "glBindFramebuffer is not available.\n");
         return GL_INVALID_OPERATION;
     }
 
 #if (defined(DEBUG) || defined(_DEBUG)) 
     try {
         if (!this->IsEnabled()) {
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Trying to disable an FBO which is "
+            VLTRACE(Trace::LEVEL_VL_WARN, "Trying to disable an FBO which is "
                 "not enabled. This might indicate a bug in the application.\n");
         }
     } catch (OpenGLException e) { /* Ignore this. */ }
@@ -300,13 +300,13 @@ GLenum vislib::graphics::gl::FramebufferObject::Disable(void) throw() {
  * vislib::graphics::gl::FramebufferObject::Enable
  */
 GLenum vislib::graphics::gl::FramebufferObject::Enable(
-        const unsigned int colourAttachment) {
-    THE_STACK_TRACE;
+        const UINT colourAttachment) {
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
 
     /* Ensure that we enable only valid FBOs. */
     if (!this->IsValid()) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot enable invalid FBO.\n");
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
         return GL_INVALID_OPERATION;
     }
 
@@ -315,7 +315,7 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
      * state.
      */
     if (this->IsEnabled()) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "FBO is already enabled.\n");
+        VLTRACE(Trace::LEVEL_VL_INFO, "FBO is already enabled.\n");
         return GL_NO_ERROR;
     }
 
@@ -323,8 +323,8 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
     try {
         this->saveState();
     } catch (OpenGLException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not save OpenGL state before "
-            "enabling FBO (\"%s\").\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
+            "enabling FBO (\"%s\").\n", e.GetMsgA());
         return e.GetErrorCode();
     }
 
@@ -346,8 +346,8 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
 
     } else {
         /* Illegal colour attachment id. */
-        THE_ASSERT(colourAttachment >= this->cntColourAttachments);
-        throw the::index_out_of_range_exception(colourAttachment, 0, 
+        ASSERT(colourAttachment >= this->cntColourAttachments);
+        throw OutOfRangeException(colourAttachment, 0, 
             this->cntColourAttachments, __FILE__, __LINE__);
     }
 
@@ -362,8 +362,8 @@ GLenum vislib::graphics::gl::FramebufferObject::Enable(
  * vislib::graphics::gl::FramebufferObject::EnableMultipleV
  */
 GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
-        unsigned int cntColourAttachments, const unsigned int* colourAttachments) {
-    THE_STACK_TRACE;
+        UINT cntColourAttachments, const UINT* colourAttachments) {
+    VLAUTOSTACKTRACE;
     if (cntColourAttachments == 0) {
         return this->Enable();
     } else if (cntColourAttachments == 1) {
@@ -374,7 +374,7 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
 
     /* Ensure that we enable only valid FBOs. */
     if (!this->IsValid()) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Cannot enable invalid FBO.\n");
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Cannot enable invalid FBO.\n");
         return GL_INVALID_OPERATION;
     }
 
@@ -382,8 +382,8 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
     try {
         this->saveState();
     } catch (OpenGLException e) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "Could not save OpenGL state before "
-            "enabling FBO (\"%s\").\n", e.what());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "Could not save OpenGL state before "
+            "enabling FBO (\"%s\").\n", e.GetMsgA());
         return e.GetErrorCode();
     }
 
@@ -405,13 +405,13 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultipleV(
  * vislib::graphics::gl::FramebufferObject::EnableMultiple
  */
 GLenum vislib::graphics::gl::FramebufferObject::EnableMultiple(
-        unsigned int cntColourAttachments, ...) {
-    THE_STACK_TRACE;
+        UINT cntColourAttachments, ...) {
+    VLAUTOSTACKTRACE;
     va_list argptr;
     va_start(argptr, cntColourAttachments);
-    unsigned int *atts = new unsigned int[cntColourAttachments];
-    for (unsigned int i = 0; i < cntColourAttachments; i++) {
-        atts[i] = va_arg(argptr, unsigned int);
+    UINT *atts = new UINT[cntColourAttachments];
+    for (UINT i = 0; i < cntColourAttachments; i++) {
+        atts[i] = va_arg(argptr, UINT);
     }
     va_end(argptr);
     GLenum rv = this->EnableMultipleV(cntColourAttachments, atts);
@@ -424,12 +424,12 @@ GLenum vislib::graphics::gl::FramebufferObject::EnableMultiple(
  * vislib::graphics::gl::FramebufferObject::GetColourTextureID
  */
 GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
-        const unsigned int colourAttachment) const {
-    THE_STACK_TRACE;
+        const UINT colourAttachment) const {
+    VLAUTOSTACKTRACE;
 
     if (this->cntColourAttachments < 1) {
         /* No colour attachment, this request is illegal. */
-        throw the::invalid_operation_exception("The requested colour "
+        throw vislib::IllegalStateException("The requested colour "
             "attachment is not a texture attachment.", __FILE__, __LINE__);
 
     } else if (colourAttachment < this->cntColourAttachments) {
@@ -438,8 +438,8 @@ GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
 
     } else {
         /* Illegal colour attachment id. */
-        THE_ASSERT(colourAttachment >= this->cntColourAttachments);
-        throw the::index_out_of_range_exception(colourAttachment, 0, 
+        ASSERT(colourAttachment >= this->cntColourAttachments);
+        throw OutOfRangeException(colourAttachment, 0, 
             this->cntColourAttachments, __FILE__, __LINE__);
     }
 }
@@ -449,11 +449,11 @@ GLuint vislib::graphics::gl::FramebufferObject::GetColourTextureID(
  * vislib::graphics::gl::FramebufferObject::GetDepthTextureID
  */
 GLuint vislib::graphics::gl::FramebufferObject::GetDepthTextureID(void) const {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     if ((this->attachmentOther[ATTACH_IDX_DEPTH].state != ATTACHMENT_TEXTURE)
             && (this->attachmentOther[ATTACH_IDX_DEPTH].state 
             != ATTACHMENT_EXTERNAL_TEXTURE)) {
-        throw the::invalid_operation_exception("The depth attachment must be a "
+        throw vislib::IllegalStateException("The depth attachment must be a "
             "texture attachment in order to retrieve the texture id.",
             __FILE__, __LINE__);
     }
@@ -466,7 +466,7 @@ GLuint vislib::graphics::gl::FramebufferObject::GetDepthTextureID(void) const {
  * vislib::graphics::gl::FramebufferObject::IsEnabled
  */
 bool vislib::graphics::gl::FramebufferObject::IsEnabled(void) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
     GLint tmp;
 
@@ -480,7 +480,7 @@ bool vislib::graphics::gl::FramebufferObject::IsEnabled(void) {
  * vislib::graphics::gl::FramebufferObject::IsValid
  */
 bool vislib::graphics::gl::FramebufferObject::IsValid(void) const throw() {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     try {
         if (this->cntColourAttachments > 0) {
             // TODO: This might not be sufficient. It could be required to 
@@ -500,12 +500,12 @@ bool vislib::graphics::gl::FramebufferObject::IsValid(void) const throw() {
  * vislib::graphics::gl::FramebufferObject::Release
  */
 void vislib::graphics::gl::FramebufferObject::Release(void) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
     USES_GL_DEFERRED_VERIFY;
 
     //if (GL_FAILED(this->Disable())) {
-    //    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "Disabling FBO before release failed. "
+    //    VLTRACE(Trace::LEVEL_VL_WARN, "Disabling FBO before release failed. "
     //        "This is not a critical error.\n");
     //}
 
@@ -515,13 +515,13 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
          * Extensions might not have been initialised, but dtor will call 
          * Release anyway. 
          */
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_WARN, "glDeleteRenderbuffers or "
+        VLTRACE(Trace::LEVEL_VL_WARN, "glDeleteRenderbuffers or "
             "glDeleteFramebuffers is not available.\n");
         return;
     }
 
     /* Release depth and stencil buffers, if any. */
-    for (unsigned int i = 0; i < 2; i++) {
+    for (UINT i = 0; i < 2; i++) {
         switch (this->attachmentOther[i].state) {
 
             case ATTACHMENT_TEXTURE:
@@ -550,7 +550,7 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
     }
 
     /* Release colour attachments, if any. */
-    for (unsigned int i = 0; i < this->cntColourAttachments; i++) {
+    for (UINT i = 0; i < this->cntColourAttachments; i++) {
         switch (this->attachmentColour[i].state) {
     
             case ATTACHMENT_TEXTURE:
@@ -562,12 +562,12 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
 
             default:
                 /* Should not allocate disabled or RB attachments. */
-                THE_ASSERT(false);
+                ASSERT(false);
                 break;
         }
     }
     this->cntColourAttachments = 0;
-    the::safe_array_delete(this->attachmentColour);
+    ARY_SAFE_DELETE(this->attachmentColour);
 
     /* Release framebuffer itself. */
     if (::glIsFramebufferEXT(this->idFb)) {
@@ -586,13 +586,13 @@ void vislib::graphics::gl::FramebufferObject::Release(void) {
 /*
  * vislib::graphics::gl::FramebufferObject::ATTACH_IDX_DEPTH
  */
-const unsigned int vislib::graphics::gl::FramebufferObject::ATTACH_IDX_DEPTH = 0;
+const UINT vislib::graphics::gl::FramebufferObject::ATTACH_IDX_DEPTH = 0;
 
 
 /*
  * vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL
  */
-const unsigned int vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL = 1;
+const UINT vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL = 1;
 
 
 /*
@@ -600,8 +600,8 @@ const unsigned int vislib::graphics::gl::FramebufferObject::ATTACH_IDX_STENCIL =
  */
 vislib::graphics::gl::FramebufferObject::FramebufferObject(
         const FramebufferObject& rhs) {
-    THE_STACK_TRACE;
-    throw the::not_supported_exception("FramebufferObject::FramebufferObject", 
+    VLAUTOSTACKTRACE;
+    throw UnsupportedOperationException("FramebufferObject::FramebufferObject", 
         __FILE__, __LINE__);
 }
 
@@ -611,7 +611,7 @@ vislib::graphics::gl::FramebufferObject::FramebufferObject(
  */
 void vislib::graphics::gl::FramebufferObject::createRenderbuffer(
         GLuint& outID, const GLenum format) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_DEFERRED_VERIFY;
 
     GL_DEFERRED_VERIFY(::glGenRenderbuffersEXT(1, &outID), __LINE__);
@@ -634,7 +634,7 @@ void vislib::graphics::gl::FramebufferObject::createRenderbuffer(
 void vislib::graphics::gl::FramebufferObject::createTexture(GLuint& outID,
         const GLenum internalFormat, const GLenum format, 
         const GLenum type) const {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_DEFERRED_VERIFY;
     GLint oldID;                // Old texture bound for reverting state.
     
@@ -668,7 +668,7 @@ void vislib::graphics::gl::FramebufferObject::createTexture(GLuint& outID,
 GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
         const GLuint id, const GLint minFilter, const GLint magFilter,
         const double depth) const {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
 
     ::glPushAttrib(GL_TEXTURE_BIT | GL_TRANSFORM_BIT);
@@ -713,7 +713,7 @@ GLenum vislib::graphics::gl::FramebufferObject::drawTexture(
  * vislib::graphics::gl::FramebufferObject::isComplete
  */
 bool vislib::graphics::gl::FramebufferObject::isComplete(void) const {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     GLenum status = ::glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
     
     switch (status) {
@@ -723,12 +723,12 @@ bool vislib::graphics::gl::FramebufferObject::isComplete(void) const {
             /* Unreachable. */
 
         case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The selected framebuffer format is "
+            VLTRACE(Trace::LEVEL_ERROR, "The selected framebuffer format is "
                 "unsupported.\n");
             /* falls through. */
 
         default:
-            THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_ERROR, "The framebuffer object is not complete "
+            VLTRACE(Trace::LEVEL_ERROR, "The framebuffer object is not complete "
                 "(%u).\n", status);
             return false;
             /* Unreachable. */
@@ -741,7 +741,7 @@ bool vislib::graphics::gl::FramebufferObject::isComplete(void) const {
  */
 GLenum vislib::graphics::gl::FramebufferObject::readTexture(void *outData, 
         const GLuint id, const GLenum format, const GLenum type) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
     USES_GL_DEFERRED_VERIFY;
     GLint oldTexState = 0;
@@ -770,7 +770,7 @@ GLenum vislib::graphics::gl::FramebufferObject::readTexture(void *outData,
  * vislib::graphics::gl::FramebufferObject::saveState
  */
 void vislib::graphics::gl::FramebufferObject::saveState(void) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     USES_GL_VERIFY;
     GLint tmp;
 
@@ -785,7 +785,7 @@ void vislib::graphics::gl::FramebufferObject::saveState(void) {
 
     GL_VERIFY_THROW(::glGetIntegerv(GL_VIEWPORT, this->oldVp));
 
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "FBO saved state:\n"
+    VLTRACE(Trace::LEVEL_VL_INFO, "FBO saved state:\n"
         "\tGL_FRAMEBUFFER_BINDING = %d\n"
         "\tGL_DRAW_BUFFER = %d\n"
         "\tGL_READ_BUFFER = %d\n"
@@ -801,9 +801,9 @@ void vislib::graphics::gl::FramebufferObject::saveState(void) {
 vislib::graphics::gl::FramebufferObject& 
 vislib::graphics::gl::FramebufferObject::operator =(
         const FramebufferObject& rhs) {
-    THE_STACK_TRACE;
+    VLAUTOSTACKTRACE;
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;

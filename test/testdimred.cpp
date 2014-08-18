@@ -68,7 +68,7 @@ void TestFastMap(void) {
 
     vislib::math::FastMap<myObject, float, OUTDIMS> fm(source, destination);
 
-    for (size_t i = 0; i < source.Count(); i++) {
+    for (SIZE_T i = 0; i < source.Count(); i++) {
         printf("item %u: (", static_cast<unsigned int>(i));
         for (unsigned int j = 0; j < OUTDIMS; j++) {
             printf("%f", destination[i][j]);
@@ -137,10 +137,10 @@ void TestForceDirected(void) {
     destination.SetCount(source.Count());
 
     vislib::math::ForceDirected<myOtherObject, float, 1> fm(source, destination, 20, 0.1f, 3, 1, 0.0001f, 0.9f);
-    fm.Init();
-    for (size_t loop = 0; loop < 20; loop++) {
+
+    for (SIZE_T loop = 0; loop < 20; loop++) {
         fm.SingleStep();
-        for (size_t i = 0; i < source.Count(); i++) {
+        for (SIZE_T i = 0; i < source.Count(); i++) {
             printf("item %u: (", static_cast<unsigned int>(i));
             for (unsigned int j = 0; j < 1; j++) {
                 printf("%f", destination[i][j]);

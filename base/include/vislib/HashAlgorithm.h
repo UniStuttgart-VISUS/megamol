@@ -15,8 +15,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -58,8 +58,8 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool ComputeHash(uint8_t *outHash, size_t& inOutSize, 
-            const uint8_t *input, const size_t cntInput);
+        bool ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
+            const BYTE *input, const SIZE_T cntInput);
 
         /**
          * Computes the hash of the zero-terminated string 'input'. This is 
@@ -81,7 +81,7 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool ComputeHash(uint8_t *outHash, size_t& inOutSize, 
+        bool ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
             const char *input);
 
         /**
@@ -104,7 +104,7 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool ComputeHash(uint8_t *outHash, size_t& inOutSize, 
+        bool ComputeHash(BYTE *outHash, SIZE_T& inOutSize, 
             const wchar_t *input);
 
         /**
@@ -112,7 +112,7 @@ namespace vislib {
          *
          * @return The size of the hash in bytes.
          */
-        size_t GetHashSize(void) const;
+        SIZE_T GetHashSize(void) const;
 
         /**
          * Answer the hash value until now.
@@ -128,7 +128,7 @@ namespace vislib {
          *         retrieved in principle. 'inOutSize' is set to the required
          *         size of 'outHash' in the latter case.
          */
-        bool GetHashValue(uint8_t *outHash, size_t& inOutSize) const;
+        bool GetHashValue(BYTE *outHash, SIZE_T& inOutSize) const;
 
         /**
          * Initialise the hash. This method must be called before any other 
@@ -148,8 +148,8 @@ namespace vislib {
          * @param input    The data to be added to the hash.
          * @param cntInput The number of bytes in 'input'.
          */
-        virtual void TransformBlock(const uint8_t *input, 
-            const size_t cntInput) = 0;
+        virtual void TransformBlock(const BYTE *input, 
+            const SIZE_T cntInput) = 0;
 
         /**
          * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -167,22 +167,22 @@ namespace vislib {
          * @param input     The data to be added to the hash.
          * @param cntInput  The number of bytes in 'input'.
          */
-        virtual bool TransformFinalBlock(uint8_t *outHash, size_t& inOutSize, 
-            const uint8_t *input, const size_t cntInput) = 0;
+        virtual bool TransformFinalBlock(BYTE *outHash, SIZE_T& inOutSize, 
+            const BYTE *input, const SIZE_T cntInput) = 0;
 
         /**
          * Answer a hexadecimal string representation of the hash.
          *
          * @return The hash as string.
          */
-        virtual the::astring ToStringA(void) const;
+        virtual StringA ToStringA(void) const;
 
         /**
          * Answer a hexadecimal string representation of the hash.
          *
          * @return The hash as string.
          */
-        virtual the::wstring ToStringW(void) const;
+        virtual StringW ToStringW(void) const;
 
     protected:
 

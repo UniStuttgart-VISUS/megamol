@@ -17,7 +17,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/ExtensionsDependent.h"
 #include "vislib/glverify.h"
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -131,8 +131,8 @@ namespace gl {
          *                         fails.
          */
         virtual bool Compile(const char **vertexShaderSrc, 
-            const size_t cntVertexShaderSrc, const char **fragmentShaderSrc,
-            const size_t cntFragmentShaderSrc, 
+            const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
+            const SIZE_T cntFragmentShaderSrc, 
             bool insertLineDirective = true);
 
         /**
@@ -149,7 +149,7 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char *vertexShaderFile,
@@ -176,12 +176,12 @@ namespace gl {
          *
          * @throws OpenGLException If an OpenGL call for compiling the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CompileFromFile(const char **vertexShaderFiles,
-            const size_t cntVertexShaderFiles, const char **fragmentShaderFiles,
-            const size_t cntFragmentShaderFiles, 
+            const SIZE_T cntVertexShaderFiles, const char **fragmentShaderFiles,
+            const SIZE_T cntFragmentShaderFiles, 
             bool insertLineDirective = true);
 
         /**
@@ -230,8 +230,8 @@ namespace gl {
          *                         fails.
          */
         virtual bool Create(const char **vertexShaderSrc, 
-            const size_t cntVertexShaderSrc, const char **fragmentShaderSrc,
-            const size_t cntFragmentShaderSrc, 
+            const SIZE_T cntVertexShaderSrc, const char **fragmentShaderSrc,
+            const SIZE_T cntFragmentShaderSrc, 
             bool insertLineDirective = true);
 
         /**
@@ -246,7 +246,7 @@ namespace gl {
          * 
          * @throws OpenGLException If an OpenGL call for creating the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CreateFromFile(const char *vertexShaderFile,
@@ -271,12 +271,12 @@ namespace gl {
          * 
          * @throws OpenGLException If an OpenGL call for creating the shader
          *                         fails.
-         * @throws the::system::io::io_exception     If reading the shader code from an open
+         * @throws IOException     If reading the shader code from an open
          *                         file failed.
          */
         virtual bool CreateFromFile(const char **vertexShaderFiles,
-            const size_t cntVertexShaderFiles, const char **fragmentShaderFiles,
-            const size_t cntFragmentShaderFiles, 
+            const SIZE_T cntVertexShaderFiles, const char **fragmentShaderFiles,
+            const SIZE_T cntFragmentShaderFiles, 
             bool insertLineDirective = true);
 
         /**
@@ -894,7 +894,7 @@ namespace gl {
          *                         i. e. because 'hProg' is not a valid shader
          *                         program.
          */
-        static the::astring getProgramInfoLog(GLhandleARB hProg);
+        static StringA getProgramInfoLog(GLhandleARB hProg);
 
         /** 
          * Answer the compile status of the program designated by 'hProg'.

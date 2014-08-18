@@ -15,7 +15,7 @@
 
 
 #include "vislib/AbstractMatrix.h"
-#include "the/assert.h"
+#include "vislib/assert.h"
 
 
 namespace vislib {
@@ -52,7 +52,7 @@ namespace math {
          *                   NULL and according to the matrix layout L.
          */
         inline Matrix(const T *components) : Super() {
-            THE_ASSERT(components != NULL);
+            ASSERT(components != NULL);
             ::memcpy(this->components, components, Super::CNT_COMPONENTS
                 * sizeof(T));
         }
@@ -178,7 +178,7 @@ namespace math {
          *                   NULL and according to the matrix layout L.
          */
         inline Matrix(const T *components) : Super() {
-            THE_ASSERT(components != NULL);
+            ASSERT(components != NULL);
             ::memcpy(this->components, components, Super::CNT_COMPONENTS
                 * sizeof(T));
         }
@@ -358,7 +358,7 @@ namespace math {
          *                   NULL and according to the matrix layout L.
          */
         inline Matrix(const T *components) : Super() {
-            THE_ASSERT(components != NULL);
+            ASSERT(components != NULL);
             ::memcpy(this->components, components, Super::CNT_COMPONENTS
                 * sizeof(T));
         }

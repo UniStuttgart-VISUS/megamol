@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/types.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -48,7 +48,7 @@ namespace vislib {
          *
          * @return 'NULL'
          */
-        static inline TargetPtrType Allocate(const size_t cnt = 0) {
+        static inline TargetPtrType Allocate(const SIZE_T cnt = 0) {
             return NULL;
         }
 

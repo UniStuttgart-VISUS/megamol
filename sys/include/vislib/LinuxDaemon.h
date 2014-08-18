@@ -18,9 +18,9 @@
 
 #ifndef _WIN32
 
-#include "the/string.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
+#include "vislib/String.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -69,7 +69,7 @@ namespace sys {
          *
          * @return The return code of the daemon.
          */
-        virtual unsigned int OnRun(const unsigned int argc, const Char **argv) = 0;
+        virtual DWORD OnRun(const DWORD argc, const Char **argv) = 0;
 
     protected:
 
@@ -107,7 +107,7 @@ template<class T> bool vislib::sys::LinuxDaemon<T>::Run(void) {
     pid = ::fork();
     if (pid < 0) {
         /* Forking failed. */
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
 
     } else if (pid > 0) {
         /* Forking succeeded, leave parent process. */

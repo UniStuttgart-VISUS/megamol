@@ -68,10 +68,10 @@ namespace sys {
          * 
          * @returns true, if the thread has been terminated, false, otherwise.
          *
-         * @throws invalid_operation_exception If 'forceTerminate' is false and the
+         * @throws IllegalStateException If 'forceTerminate' is false and the
          *                               thread has been constructed using a 
          *                               RunnableFunc.
-         * @throws the::system::system_exception       If terminating the thread forcefully
+         * @throws SystemException       If terminating the thread forcefully
          *                               failed.
          */
         bool Terminate(const bool forceTerminate, const int exitCode = 0);
@@ -83,7 +83,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         RunnableThread(const RunnableThread& rhs);
 
@@ -94,7 +94,7 @@ namespace sys {
          *
          * @return *this.
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         RunnableThread& operator =(const RunnableThread& rhs);
 

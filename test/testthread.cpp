@@ -29,24 +29,24 @@ class MyRunnable : public Runnable {
 
 public:
 
-    inline MyRunnable(const unsigned int id = 0) : cnt(1), id(id) {};
+    inline MyRunnable(const UINT id = 0) : cnt(1), id(id) {};
 
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 
 private:
 
-    unsigned int cnt;
+    UINT cnt;
 
-    unsigned int id;
+    UINT id;
 };
 
 
-unsigned int MyRunnable::Run(void *userData) {
+DWORD MyRunnable::Run(void *userData) {
     if (userData != NULL) {
-        this->cnt = *static_cast<const unsigned int *>(userData);
+        this->cnt = *static_cast<const DWORD *>(userData);
     }
 
-    for (unsigned int i = 0; i < cnt; i++) {
+    for (UINT i = 0; i < cnt; i++) {
         //std::cout << "Thread " << this->id << " [" << Thread::CurrentID() 
         //    << "] " << i << std::endl;
         Thread::Sleep(20);
@@ -67,7 +67,7 @@ public:
 
     inline SynchronisedRunnable() {}
 
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 
 private:
 
@@ -77,9 +77,9 @@ private:
 
 };
 
-unsigned int SynchronisedRunnable::Run(void *userData) {
-    unsigned int cnt = (userData != NULL) 
-        ? *static_cast<const unsigned int *>(userData)
+DWORD SynchronisedRunnable::Run(void *userData) {
+    UINT cnt = (userData != NULL) 
+        ? *static_cast<const DWORD *>(userData)
         : 100;
 
     if (UseSemaphore) {
@@ -92,7 +92,7 @@ unsigned int SynchronisedRunnable::Run(void *userData) {
         UNLOCK_COUT;
     }
 
-    for (unsigned int i = 0; i < cnt; i++) {
+    for (UINT i = 0; i < cnt; i++) {
         if (UseSemaphore) {
             semaphore.Lock();
             SynchronisedRunnable::Cnt++;
@@ -121,7 +121,7 @@ class EventRunnable : public Runnable {
 
 public:
     typedef struct UserData_t {
-        unsigned int cnt;
+        UINT cnt;
         vislib::sys::Event *evt;
         bool isSignalDude;
         vislib::sys::Semaphore *resetSem;
@@ -129,7 +129,7 @@ public:
 
     inline EventRunnable() {}
 
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 
 private:
 
@@ -137,9 +137,9 @@ private:
 
 };
 
-unsigned int EventRunnable::Run(void *userData) {
+DWORD EventRunnable::Run(void *userData) {
     UserData *ud = static_cast<UserData *>(userData);
-    unsigned int retval = 0;
+    DWORD retval = 0;
     
     if (ud->isSignalDude) {
         LOCK_COUT;
@@ -150,7 +150,7 @@ unsigned int EventRunnable::Run(void *userData) {
             << "manually." << std::endl;
         UNLOCK_COUT;
 
-        for (unsigned int i = 0; i < ((ud->resetSem != NULL) ? 1 : 2 * ud->cnt); i++) {
+        for (UINT i = 0; i < ((ud->resetSem != NULL) ? 1 : 2 * ud->cnt); i++) {
             LOCK_COUT;
             std::cout << "Event is being signaled " << i << "." << std::endl;
             UNLOCK_COUT;
@@ -160,7 +160,7 @@ unsigned int EventRunnable::Run(void *userData) {
                 LOCK_COUT;
                 std::cout << "Waiting to reset manually." << std::endl;
                 UNLOCK_COUT;
-                for (unsigned int j = 0; j < 2 * ud->cnt; j++) {
+                for (UINT j = 0; j < 2 * ud->cnt; j++) {
                     ud->resetSem->Lock();
                 }
 
@@ -183,7 +183,7 @@ unsigned int EventRunnable::Run(void *userData) {
             << "a manual reset event." << std::endl;
         UNLOCK_COUT;
 
-        for (unsigned int i = 0; i < ud->cnt; i++) {
+        for (UINT i = 0; i < ud->cnt; i++) {
             ud->evt->Wait();
             if (ud->resetSem != NULL) {
                 ud->resetSem->Unlock();
@@ -217,7 +217,7 @@ EventRunnable e2;
 EventRunnable e3;
 
 void TestThread(void) {
-    unsigned int cntLoops = 100;
+    DWORD cntLoops = 100;
     
     // Thread tests
     std::cout << std::endl << "Initial thread tests" << std::endl;
@@ -288,7 +288,7 @@ void TestThread(void) {
 
     ::AssertEqual("Exit code is number of loops", t3.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of loops", t4.GetExitCode(), cntLoops);
-    ::AssertEqual("Counter twice number of loops", static_cast<unsigned int>(SynchronisedRunnable::Cnt), 2 * cntLoops);
+    ::AssertEqual("Counter twice number of loops", DWORD(SynchronisedRunnable::Cnt), 2 * cntLoops);
 
 
     SynchronisedRunnable::Cnt = 0;
@@ -304,7 +304,7 @@ void TestThread(void) {
 
     ::AssertEqual("Exit code is number of loops", t5.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of loops", t6.GetExitCode(), cntLoops);
-    ::AssertEqual("Counter twice number of loops", static_cast<unsigned int>(SynchronisedRunnable::Cnt), 2 * cntLoops);
+    ::AssertEqual("Counter twice number of loops", DWORD(SynchronisedRunnable::Cnt), 2 * cntLoops);
 
 
     // Event tests.
@@ -325,7 +325,7 @@ void TestThread(void) {
     t8.Join();
     t9.Join();
 
-    ::AssertEqual("Signal Dude Thread has never waited", t7.GetExitCode(), static_cast<unsigned int>(0));
+    ::AssertEqual("Signal Dude Thread has never waited", t7.GetExitCode(), DWORD(0));
     ::AssertEqual("Exit code is number of event being signaled", t8.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of event being signaled", t9.GetExitCode(), cntLoops);
 
@@ -349,7 +349,7 @@ void TestThread(void) {
     t11.Join();
     t12.Join();
 
-    ::AssertEqual("Signal Dude Thread has never waited", t10.GetExitCode(), static_cast<unsigned int>(0));
+    ::AssertEqual("Signal Dude Thread has never waited", t10.GetExitCode(), DWORD(0));
     ::AssertEqual("Exit code is number of event being signaled", t11.GetExitCode(), cntLoops);
     ::AssertEqual("Exit code is number of event being signaled", t12.GetExitCode(), cntLoops);
 

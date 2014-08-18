@@ -35,16 +35,14 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
-    <Import Project="..\ibcomm\ofedsdk.props" />
-    <Import Project="..\thelib.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\ibcomm\ofedsdk.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
-    <Import Project="..\ibcomm\ofedsdk.props" />
-    <Import Project="..\thelib.props" />
     <Import Project="..\vislib.props" />
+    <Import Project="..\ibcomm\ofedsdk.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -69,8 +67,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibibcomm$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winverbs.lib;librdmacm.lib;libibverbs.lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibibcomm$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -89,8 +87,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibibcomm$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(OfedSdkDir)Lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winverbs.lib;librdmacm.lib;libibverbs.lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibibcomm$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -100,14 +98,6 @@
   <ItemGroup>
     <ClCompile Include="ibtest.cpp" />
     <ClCompile Include="stdafx.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ibcomm\ibcomm.vcxproj">
-      <Project>{59deb5ce-352f-43b4-b250-60bd6d19201c}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\thelib\thelib++.vcxproj">
-      <Project>{5cbe665d-74e2-4028-9a08-f627975f110d}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

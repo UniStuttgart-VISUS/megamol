@@ -14,7 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "the/string.h"
+#include "vislib/String.h"
 
 namespace vislib {
 namespace graphics {
@@ -102,8 +102,8 @@ namespace graphics {
          * @return The height of the text block in number of lines.
          */
         inline unsigned int BlockLines(float maxWidth,
-                const the::astring& txt) const {
-            return this->BlockLines(maxWidth, this->size, txt.c_str());
+                const vislib::StringA& txt) const {
+            return this->BlockLines(maxWidth, this->size, txt.PeekBuffer());
         }
 
         /**
@@ -118,8 +118,8 @@ namespace graphics {
          * @return The height of the text block in number of lines.
          */
         inline unsigned int BlockLines(float maxWidth, float size,
-                const the::astring& txt) const {
-            return this->BlockLines(maxWidth, size, txt.c_str());
+                const vislib::StringA& txt) const {
+            return this->BlockLines(maxWidth, size, txt.PeekBuffer());
         }
 
         /**
@@ -148,8 +148,8 @@ namespace graphics {
          * @return The height of the text block in number of lines.
          */
         inline unsigned int BlockLines(float maxWidth,
-                const the::wstring& txt) const {
-            return this->BlockLines(maxWidth, this->size, txt.c_str());
+                const vislib::StringW& txt) const {
+            return this->BlockLines(maxWidth, this->size, txt.PeekBuffer());
         }
 
         /**
@@ -164,8 +164,8 @@ namespace graphics {
          * @return The height of the text block in number of lines.
          */
         inline unsigned int BlockLines(float maxWidth, float size,
-                const the::wstring& txt) const {
-            return this->BlockLines(maxWidth, size, txt.c_str());
+                const vislib::StringW& txt) const {
+            return this->BlockLines(maxWidth, size, txt.PeekBuffer());
         }
 
         /**
@@ -223,9 +223,9 @@ namespace graphics {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const the::astring& txt,
+        inline void DrawString(float x, float y, const vislib::StringA& txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, this->flipY, txt.c_str(),
+            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(),
                 align);
         }
 
@@ -257,10 +257,10 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h,
-                const the::astring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
             this->DrawString(x, y, w, h, this->size, this->flipY,
-                txt.c_str(), align);
+                txt.PeekBuffer(), align);
         }
 
         /**
@@ -273,9 +273,9 @@ namespace graphics {
          * @param align The alignment of the text.
          */
         inline void DrawString(float x, float y, float size,
-                const the::astring &txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, size, this->flipY, txt.c_str(), align);
+            this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -305,9 +305,9 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h, float size,
-                const the::astring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, w, h, size, this->flipY, txt.c_str(),
+            this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
                 align);
         }
 
@@ -352,9 +352,9 @@ namespace graphics {
          * @param align The alignment of the text.
          */
         inline void DrawString(float x, float y, bool flipY,
-                const the::astring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, this->size, flipY, txt.c_str(), align);
+            this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -387,7 +387,7 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h, bool flipY,
-                const the::astring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringA& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
             this->DrawString(x, y, w, h, this->size, flipY, txt, align);
         }
@@ -403,9 +403,9 @@ namespace graphics {
          * @param align The alignment of the text.
          */
         inline void DrawString(float x, float y, float size, bool flipY,
-                const the::astring &txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringA &txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, size, flipY, txt.c_str(), align);
+            this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -435,9 +435,9 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h, float size,
-                bool flipY, const the::astring& txt,
+                bool flipY, const vislib::StringA& txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, flipY, txt.c_str(), align);
+            this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -478,9 +478,9 @@ namespace graphics {
          * @param txt The zero-terminated string to draw.
          * @param align The alignment of the text.
          */
-        inline void DrawString(float x, float y, const the::wstring& txt,
+        inline void DrawString(float x, float y, const vislib::StringW& txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, this->size, this->flipY, txt.c_str(),
+            this->DrawString(x, y, this->size, this->flipY, txt.PeekBuffer(),
                 align);
         }
 
@@ -512,10 +512,10 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h,
-                const the::wstring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
             this->DrawString(x, y, w, h, this->size, this->flipY,
-                txt.c_str(), align);
+                txt.PeekBuffer(), align);
         }
 
         /**
@@ -528,9 +528,9 @@ namespace graphics {
          * @param align The alignment of the text.
          */
         inline void DrawString(float x, float y, float size,
-                const the::wstring &txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, size, this->flipY, txt.c_str(), align);
+            this->DrawString(x, y, size, this->flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -560,9 +560,9 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h, float size,
-                const the::wstring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, w, h, size, this->flipY, txt.c_str(),
+            this->DrawString(x, y, w, h, size, this->flipY, txt.PeekBuffer(),
                 align);
         }
 
@@ -607,9 +607,9 @@ namespace graphics {
          * @param align The alignment of the text.
          */
         inline void DrawString(float x, float y, bool flipY,
-                const the::wstring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, this->size, flipY, txt.c_str(), align);
+            this->DrawString(x, y, this->size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -642,7 +642,7 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h, bool flipY,
-                const the::wstring& txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringW& txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
             this->DrawString(x, y, w, h, this->size, flipY, txt, align);
         }
@@ -658,9 +658,9 @@ namespace graphics {
          * @param align The alignment of the text.
          */
         inline void DrawString(float x, float y, float size, bool flipY,
-                const the::wstring &txt, Alignment align = ALIGN_LEFT_TOP)
+                const vislib::StringW &txt, Alignment align = ALIGN_LEFT_TOP)
                 const {
-            this->DrawString(x, y, size, flipY, txt.c_str(), align);
+            this->DrawString(x, y, size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -690,9 +690,9 @@ namespace graphics {
          * @param align The alignment of the text inside the area.
          */
         inline void DrawString(float x, float y, float w, float h, float size,
-                bool flipY, const the::wstring& txt,
+                bool flipY, const vislib::StringW& txt,
                 Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(x, y, w, h, size, flipY, txt.c_str(), align);
+            this->DrawString(x, y, w, h, size, flipY, txt.PeekBuffer(), align);
         }
 
         /**
@@ -793,8 +793,8 @@ namespace graphics {
          *
          * @return The width in the text in logical units.
          */
-        inline float LineWidth(const the::astring& txt) const {
-            return this->LineWidth(this->size, txt.c_str());
+        inline float LineWidth(const vislib::StringA& txt) const {
+            return this->LineWidth(this->size, txt.PeekBuffer());
         }
 
         /**
@@ -817,8 +817,8 @@ namespace graphics {
          *
          * @return The width in the text in logical units.
          */
-        inline float LineWidth(float size, const the::astring& txt) const {
-            return this->LineWidth(size, txt.c_str());
+        inline float LineWidth(float size, const vislib::StringA& txt) const {
+            return this->LineWidth(size, txt.PeekBuffer());
         }
 
         /**
@@ -841,8 +841,8 @@ namespace graphics {
          *
          * @return The width in the text in logical units.
          */
-        inline float LineWidth(const the::wstring& txt) const {
-            return this->LineWidth(this->size, txt.c_str());
+        inline float LineWidth(const vislib::StringW& txt) const {
+            return this->LineWidth(this->size, txt.PeekBuffer());
         }
 
         /**
@@ -865,8 +865,8 @@ namespace graphics {
          *
          * @return The width in the text in logical units.
          */
-        inline float LineWidth(float size, const the::wstring& txt) const {
-            return this->LineWidth(size, txt.c_str());
+        inline float LineWidth(float size, const vislib::StringW& txt) const {
+            return this->LineWidth(size, txt.PeekBuffer());
         }
 
         /**
@@ -883,7 +883,7 @@ namespace graphics {
          *
          * @param size The new default size of the font.
          *
-         * @throw argument_exception if size is less than zero.
+         * @throw IllegalParamException if size is less than zero.
          */
         virtual void SetSize(float size);
 

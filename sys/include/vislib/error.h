@@ -20,8 +20,8 @@
 
 #else  /* _WIN32 */
 #include <errno.h>
-#include "the/system/system_error.h"
-#include "the/types.h"
+
+#include "vislib/types.h"
 
 /**
  * Answer the last system error (::errno). This function is for enabling 
@@ -29,8 +29,8 @@
  *
  * @return The last error.
  */
-static inline the::system::system_error::native_error_type GetLastError(void) {
-    return static_cast<the::system::system_error::native_error_type>(errno);
+static inline DWORD GetLastError(void) {
+    return static_cast<DWORD>(errno);
 }
 
 #endif /* !_WIN32 */

@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/AbstractPolynomImpl.h"
-#include "the/not_supported_exception.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 namespace vislib {
@@ -79,7 +79,7 @@ namespace math {
 
             // TODO: Implement numeric root finding (bairstow?)
 
-            throw the::not_supported_exception("FindRoots",
+            throw UnsupportedOperationException("FindRoots",
                 __FILE__, __LINE__);
 
             return 0;
@@ -92,7 +92,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw argument_exception if 'rhs' has an effective degree larger
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
          *        than D.
          */
         template<class Tp, unsigned int Dp, class Sp>
@@ -195,7 +195,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw argument_exception if 'rhs' has an effective degree larger
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
          *        than D.
          */
         template<class Tp, unsigned int Dp, class Sp>
@@ -296,7 +296,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw argument_exception if 'rhs' has an effective degree larger
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
          *        than D.
          */
         template<class Tp, unsigned int Dp, class Sp>
@@ -406,7 +406,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw argument_exception if 'rhs' has an effective degree larger
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
          *        than D.
          */
         template<class Tp, unsigned int Dp, class Sp>
@@ -524,7 +524,7 @@ namespace math {
          *
          * @return A reference to this
          *
-         * @throw argument_exception if 'rhs' has an effective degree larger
+         * @throw IllegalParamException if 'rhs' has an effective degree larger
          *        than D.
          */
         template<class Tp, unsigned int Dp, class Sp>

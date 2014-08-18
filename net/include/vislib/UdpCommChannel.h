@@ -17,7 +17,7 @@
 
 #include "vislib/Socket.h"                      // Must be first!
 #include "vislib/AbstractCommChannel.h"
-#include "the/stack_trace.h"
+#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -37,8 +37,8 @@ namespace net {
          *
          * @param flags The flags for the channel.
          */
-        static inline SmartRef<UdpCommChannel> Create(const uint64_t flags = 0) {
-            THE_STACK_TRACE;
+        static inline SmartRef<UdpCommChannel> Create(const UINT64 flags = 0) {
+            VLSTACKTRACE("UdpCommChannel::Create", __FILE__, __LINE__);
             return SmartRef<UdpCommChannel>(new UdpCommChannel(flags), false);
         }
 
@@ -46,14 +46,14 @@ namespace net {
          * This flag enables transmission and receipt of broadcast messages 
          * using the channel
          */
-        static const uint64_t FLAG_BROADCAST;
+        static const UINT64 FLAG_BROADCAST;
 
         /**
          * This flag enables or disables the reuse of addresses already bound.
          * Setting the flag has an effect on the communication channel itself 
          * as well as on the child channels created in server mode.
          */
-        static const uint64_t FLAG_REUSE_ADDRESS;
+        static const UINT64 FLAG_REUSE_ADDRESS;
 
         /**
          * Permit incoming connection attempt on the communication channel.
@@ -72,7 +72,7 @@ namespace net {
          *
          * @param endPoint The end point address to bind to.
          *
-         * @throws argument_exception If the specified end point is no 
+         * @throws IllegalParamException If the specified end point is no 
          *                               IP end point.
          * @throws SocketException If the socket could not be bound to the
          *                         specified end point address.
@@ -103,7 +103,7 @@ namespace net {
          * @return The underlying socket.
          */
         inline Socket& GetSocket(void) {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("UdpCommChannel::GetSocket", __FILE__, __LINE__);
             return this->socket;
         }
 
@@ -141,7 +141,7 @@ namespace net {
          * @return true if broadcast is enabled, false otherwise.
          */
         inline bool IsSetBroadcast(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("UdpCommChannel::IsSetBroadcast", __FILE__, __LINE__);
             return ((this->flags & FLAG_BROADCAST) != 0);
         }
 
@@ -151,7 +151,8 @@ namespace net {
          * @return true if address reuse is enabled, false otherwise.
          */
         inline bool IsSetReuseAddress(void) const {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("UdpCommChannel::IsSetReuseAddress", __FILE__, 
+                __LINE__);
             return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
         }
 
@@ -193,8 +194,8 @@ namespace net {
          *                                   disconnect gracefully.
          * @throws SocketException In case the operation fails.
          */
-        virtual size_t Receive(void *outData, const size_t cntBytes,
-            const unsigned int timeout = TIMEOUT_INFINITE, 
+        virtual SIZE_T Receive(void *outData, const SIZE_T cntBytes,
+            const UINT timeout = TIMEOUT_INFINITE, 
             const bool forceReceive = true);
 
         /**
@@ -220,8 +221,8 @@ namespace net {
          *
          * @throws SocketException In case the operation fails.
          */
-        virtual size_t Send(const void *data, const size_t cntBytes,
-            const unsigned int timeout = TIMEOUT_INFINITE, 
+        virtual SIZE_T Send(const void *data, const SIZE_T cntBytes,
+            const UINT timeout = TIMEOUT_INFINITE, 
             const bool forceSend = true);
 
     private:
@@ -234,14 +235,14 @@ namespace net {
          *
          * @param flags The flags for the channel.
          */
-        explicit UdpCommChannel(const uint64_t flags);
+        explicit UdpCommChannel(const UINT64 flags);
 
         /**
          * Create a communication channel from an existing socket.
          *
          * @param socket The socket to be used.
          */
-        UdpCommChannel(Socket& socket, const uint64_t flags);
+        UdpCommChannel(Socket& socket, const UINT64 flags);
 
         /** Dtor. */
         virtual ~UdpCommChannel(void);
@@ -261,7 +262,7 @@ namespace net {
         void createSocket(const IPEndPoint& endPoint);
 
         /** Behaviour flags for the channel. */
-        uint64_t flags;
+        UINT64 flags;
 
         /** The socket that performs the actual work. */
         Socket socket;

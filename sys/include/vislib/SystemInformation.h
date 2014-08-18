@@ -19,8 +19,8 @@
 
 #include "vislib/Array.h"
 #include "vislib/Rectangle.h"
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 
 namespace vislib {
@@ -61,13 +61,13 @@ namespace sys {
          *
          * @return The allocation granularity in bytes.
          *
-         * @throws the::system::system_exception If the page size could not be retrieved 
+         * @throws SystemException If the page size could not be retrieved 
          *                         (Linux only).
          */
 #ifdef _WIN32
-        static unsigned int AllocationGranularity(void);
+        static DWORD AllocationGranularity(void);
 #else /* _WIN32 */
-        static inline unsigned int AllocationGranularity(void) {
+        static inline DWORD AllocationGranularity(void) {
             return PageSize();
         }
 #endif /* _WIN32 */
@@ -78,9 +78,9 @@ namespace sys {
          *
          * @return The size of available memory.
          *
-         * @throws the::system::system_exception on failure.
+         * @throws SystemException on failure.
          */
-        static uint64_t AvailableMemorySize(void);
+        static UINT64 AvailableMemorySize(void);
 
         /**
          * Returns an ansi string with the local computers name.
@@ -89,9 +89,9 @@ namespace sys {
          *                previous content of the string might be destroied, 
          *                even if the function fails.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        static void ComputerName(the::astring &outName);
+        static void ComputerName(vislib::StringA &outName);
 
         /**
          * Returns an unicode string with the local computers name.
@@ -100,19 +100,19 @@ namespace sys {
          *                previous content of the string might be destroied, 
          *                even if the function fails.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        static void ComputerName(the::wstring &outName);
+        static void ComputerName(vislib::StringW &outName);
 
         /**
          * Returns a string with the local computers name.
          *
          * @return The computer name.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        inline static the::astring ComputerNameA(void) {
-            the::astring retval;
+        inline static StringA ComputerNameA(void) {
+            StringA retval;
             SystemInformation::ComputerName(retval);
             return retval;
         }
@@ -122,10 +122,10 @@ namespace sys {
          *
          * @return The computer name.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        inline static the::wstring ComputerNameW(void) {
-            the::wstring retval;
+        inline static StringW ComputerNameW(void) {
+            StringW retval;
             SystemInformation::ComputerName(retval);
             return retval;
         }
@@ -138,38 +138,38 @@ namespace sys {
          *
          * @return The number of entries in 'outMonitorRects'.
          *
-         * @throws the::system::system_exception If a system call required for retrieving
+         * @throws SystemException If a system call required for retrieving
          *                         the information failed.
          * @throws Exception       On Linux, if the X11 display could not be
          *                         opened.
          */
-        static unsigned int MonitorRects(MonitorRectArray& outMonitorRects);
+        static DWORD MonitorRects(MonitorRectArray& outMonitorRects);
 
         /**
          * Answer the page size
          *
          * @return The page size in bytes.
          *
-         * @throws the::system::system_exception If the page size could not be retrieved 
+         * @throws SystemException If the page size could not be retrieved 
          *                         (Linux only).
          */
-        static unsigned int PageSize(void);
+        static DWORD PageSize(void);
 
         /**
          * Return the size of physical memory in bytes.
          *
          * @return The size of physical memory.
          *
-         * @throws the::system::system_exception on failure.
+         * @throws SystemException on failure.
          */
-        static uint64_t PhysicalMemorySize(void);
+        static UINT64 PhysicalMemorySize(void);
 
         /**
          * Answer the size and origin of the primary monitor. 
          *
          * @return The dimension of the primary monitor.
          *
-         * @throws the::system::system_exception If a system call required for retrieving
+         * @throws SystemException If a system call required for retrieving
          *                         the information failed or no monitor was
          *                         found.
          * @throws Exception       On Linux, if the X11 display could not be
@@ -182,7 +182,7 @@ namespace sys {
          *
          * @return The number of processors.
          *
-         * @throws the::system::system_exception on failure.
+         * @throws SystemException on failure.
          */
         static unsigned int ProcessorCount(void);
 
@@ -210,8 +210,8 @@ namespace sys {
          * @return The endianness of the machine.
          */
         inline static Endianness SystemEndianness(void) {
-            uint32_t endianTestInt = 0x12345678;
-            uint8_t endianTestBytes[4];
+            UINT32 endianTestInt = 0x12345678;
+            UINT8 endianTestBytes[4];
             ::memcpy(endianTestBytes, &endianTestInt, 4);
             bool machineBigEndian = ((endianTestBytes[0] == 0x12)
                 && (endianTestBytes[1] == 0x34)
@@ -250,9 +250,9 @@ namespace sys {
          * @param outMajor Receives the major version.
          * @param outMinor Receives the minor version.
          *
-         * @throws the::system::system_exception If the version could not be retrieved.
+         * @throws SystemException If the version could not be retrieved.
          */
-        static void SystemVersion(unsigned int& outMajor, unsigned int& outMinor);
+        static void SystemVersion(DWORD& outMajor, DWORD& outMinor);
 
         /**
          * Returns the size of a word in bit of current operating system. This
@@ -271,9 +271,9 @@ namespace sys {
          *                previous content of the string might be destroied, 
          *                even if the function fails.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        static void UserName(the::astring &outName);
+        static void UserName(vislib::StringA &outName);
 
         /**
          * Returns an unicode string with the local user name running this
@@ -283,9 +283,9 @@ namespace sys {
          *                previous content of the string might be destroied, 
          *                even if the function fails.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        static void UserName(the::wstring &outName);
+        static void UserName(vislib::StringW &outName);
 
         /**
          * Returns a string with the local user name running this vislib 
@@ -293,10 +293,10 @@ namespace sys {
          *
          * @return The user name.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        inline static the::astring UserNameA(void) {
-            the::astring retval;
+        inline static StringA UserNameA(void) {
+            StringA retval;
             SystemInformation::UserName(retval);
             return retval;
         }
@@ -307,10 +307,10 @@ namespace sys {
          *
          * @return The user name.
          *
-         * @throws the::system::system_exception on failure
+         * @throws SystemException on failure
          */
-        inline static the::wstring UserNameW(void) {
-            the::wstring retval;
+        inline static StringW UserNameW(void) {
+            StringW retval;
             SystemInformation::UserName(retval);
             return retval;
         }
@@ -385,7 +385,7 @@ namespace sys {
          *
          * @return TRUE if the enumeration should be continued, FALSE otherwise.
          *
-         * @throws the::system::system_exception If it was not possible to determine whether 
+         * @throws SystemException If it was not possible to determine whether 
          *                         'hMonitor' designates the primary monitor.
          */
         static BOOL CALLBACK findPrimaryMonitorProc(HMONITOR hMonitor, 

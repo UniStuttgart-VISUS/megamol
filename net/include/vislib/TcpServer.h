@@ -100,21 +100,21 @@ namespace net {
          * already in use and in a TIME_WAIT state. This does not allow
          * multiple servers to use the same address.
          */
-        static const uint32_t FLAGS_REUSE_ADDRESS;
+        static const UINT32 FLAGS_REUSE_ADDRESS;
 
         /** 
          * If this flag is set, the server address is not used exclusively, but
          * can be used by different sockets. Setting this flag is a possible 
          * security issue for the application.
          */
-        static const uint32_t FLAGS_SHARE_ADDRESS;
+        static const UINT32 FLAGS_SHARE_ADDRESS;
 
         /**
          * Ctor.
          *
          * @param flags Special behaviour flags for the server
          */
-        TcpServer(const uint32_t flags = 0);
+        TcpServer(const UINT32 flags = 0);
 
         /** Dtor. */
         ~TcpServer(void);
@@ -136,7 +136,7 @@ namespace net {
          *
          * @return The behaviour flags.
          */
-        inline uint32_t GetFlags(void) const {
+        inline UINT32 GetFlags(void) const {
             return this->flags;
         }
 
@@ -177,9 +177,9 @@ namespace net {
          *
          * @return 0 in case of success, an error code otherwise.
          *
-         * @throws argument_exception if 'userData' is NULL.
+         * @throws IllegalParamException if 'userData' is NULL.
          */
-        virtual unsigned int Run(void *userData);
+        virtual DWORD Run(void *userData);
 
         /**
          * Start the server.
@@ -190,7 +190,7 @@ namespace net {
          *
          * @return 0 in case of success, an error code otherwise.
          */
-        virtual unsigned int Run(const IPEndPoint& serverAddr);
+        virtual DWORD Run(const IPEndPoint& serverAddr);
 
         /**
          * Sets the behaviour flags. This method has no effect after the
@@ -198,7 +198,7 @@ namespace net {
          *
          * @param flags The new behaviour flags
          */
-        void SetFlags(uint32_t flags);
+        void SetFlags(UINT32 flags);
 
         /**
          * Terminate the server.
@@ -231,7 +231,7 @@ namespace net {
         void fireServerStopped(void);
 
         /** The server flags. */
-        uint32_t flags;
+        UINT32 flags;
 
         /** The server socket. */
         Socket socket;

@@ -7,8 +7,7 @@
 
 #include "stdafx.h"
 
-#if HAVE_OFED_SDK
-#include "the/system/com_exception.h"
+#include "vislib/COMException.h"
 #include "vislib/Event.h"
 #include "vislib/IbvCommChannel.h"
 #include "vislib/IbvCommServerChannel.h"
@@ -18,11 +17,7 @@
 #include "vislib/IbvInformation.h"
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/RunnableThread.h"
-#include "the/trace.h"
-
-#pragma comment(lib, "winverbs.lib")
-#pragma comment(lib, "librdmacm.lib")
-#pragma comment(lib, "libibverbs.lib")
+#include "vislib/Trace.h"
 
 
 typedef vislib::SmartRef<vislib::net::AbstractCommEndPoint> IbEndPoint;
@@ -40,10 +35,10 @@ static const int CNT_CLIENTS = 2;
 class Server : public vislib::sys::Runnable {
 public:
     inline Server(void) { }
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 };
 
-unsigned int Server::Run(void *userData) {
+DWORD Server::Run(void *userData) {
     using namespace vislib;
     using namespace vislib::net;
     using namespace vislib::net::ib;
@@ -64,7 +59,7 @@ unsigned int Server::Run(void *userData) {
         ::evtServerReady.Set();
 
         std::cout << "Server is bound to " 
-            << channel->GetLocalEndPoint()->ToStringA().c_str()
+            << channel->GetLocalEndPoint()->ToStringA().PeekBuffer() 
             << std::endl;
 
         char *data = new char[sizeof(REFERENCE_DATA)];
@@ -81,7 +76,7 @@ unsigned int Server::Run(void *userData) {
         return 0;
 
     } catch (IbRdmaException e) {
-        std::cerr << "IB server failed: " << e.get_msg_astr() << std::endl;
+        std::cerr << "IB server failed: " << e.GetMsgA() << std::endl;
         return static_cast<DWORD>(e.GetErrorCode());
     }
 }
@@ -90,10 +85,10 @@ unsigned int Server::Run(void *userData) {
 class Client : public vislib::sys::Runnable {
 public:
     inline Client(void) { }
-    virtual unsigned int Run(void *userData);
+    virtual DWORD Run(void *userData);
 };
 
-unsigned int Client::Run(void *userData) {
+DWORD Client::Run(void *userData) {
     using namespace vislib;
     using namespace vislib::net;
     using namespace vislib::net::ib;
@@ -112,9 +107,9 @@ unsigned int Client::Run(void *userData) {
         channel->Connect(ep);
 
         std::cout << "Client is connected to " 
-            << channel->GetRemoteEndPoint()->ToStringA().c_str() 
+            << channel->GetRemoteEndPoint()->ToStringA().PeekBuffer() 
             << " using the local end point " 
-            << channel->GetLocalEndPoint()->ToStringA().c_str() 
+            << channel->GetLocalEndPoint()->ToStringA().PeekBuffer() 
             << std::endl;
 
         channel->Send(REFERENCE_DATA, sizeof(REFERENCE_DATA));
@@ -123,7 +118,7 @@ unsigned int Client::Run(void *userData) {
         std::cout << "Client leaving..." << std::endl;
         return 0;
     } catch (IbRdmaException e) {
-        std::cerr << "IB client failed: " << e.get_msg_astr() << ", " << e.GetErrorCode() << std::endl;
+        std::cerr << "IB client failed: " << e.GetMsgA() << ", " << e.GetErrorCode() << std::endl;
         return static_cast<DWORD>(e.GetErrorCode());
     }
 }
@@ -136,7 +131,7 @@ int _tmain(int argc, _TCHAR **argv) {
     using namespace vislib::net::ib;
     using namespace vislib::sys;
 
-    //vislib::Trace::GetInstance().SetLevel(Trace::LEVEL_ALL);
+    vislib::Trace::GetInstance().SetLevel(Trace::LEVEL_ALL);
 
     IbvInformation::DeviceList devices;
 
@@ -147,11 +142,11 @@ int _tmain(int argc, _TCHAR **argv) {
             std::cout << "Device #" << i << ":" << std::endl;
 
             std::cout << "\tGUID: " 
-                << devices[i].GetNodeGuidA().c_str() 
+                << devices[i].GetNodeGuidA().PeekBuffer() 
                 << ": " << std::endl;
 
             std::cout << "\tSystem Image GUID: " 
-                << devices[i].GetSystemImageGuidA().c_str() << std::endl;
+                << devices[i].GetSystemImageGuidA().PeekBuffer() << std::endl;
 
             std::cout << "\tNumber of ports: " << devices[i].GetPortCount() 
                 << std::endl;
@@ -161,20 +156,20 @@ int _tmain(int argc, _TCHAR **argv) {
                 std::cout << "\tPort #" << j << ": " << std::endl;
 
                 std::cout << "\t\tGUID: "
-                    << port.GetPortGuidA().c_str()
+                    << port.GetPortGuidA().PeekBuffer()
                     << std::endl;
 
-                std::cout << "\t\tState: " << port.GetStateA().c_str()
+                std::cout << "\t\tState: " << port.GetStateA().PeekBuffer()
                     << std::endl;
 
                 std::cout << "\t\tPhysical State: " 
-                    << port.GetPhysicalStateA().c_str()
+                    << port.GetPhysicalStateA().PeekBuffer()
                     << std::endl;
             }
         }
 
     } catch (IbRdmaException e) {
-        std::cerr << "Retrieving IB devices failed: " << e.get_msg_astr() 
+        std::cerr << "Retrieving IB devices failed: " << e.GetMsgA() 
             << std::endl;
     }
 
@@ -217,21 +212,11 @@ int _tmain(int argc, _TCHAR **argv) {
         //channel->Bind(ep);
         //channel->Listen();
         //channel->Accept();
-    } catch (the::system::com_exception e) {
-        std::cerr << "Starting IB server failed: " << e.get_msg_astr() 
+    } catch (COMException e) {
+        std::cerr << "Starting IB server failed: " << e.GetMsgA() 
             << std::endl;
     }
 
     ::_getch();
     return 0;
 }
-
-#else /* HAVE_OFED_SDK */
-#include <iostream>
-
-int _tmain(int argc, _TCHAR **argv) {
-    std::cerr << "Test cannot be performed as VISlib has been compiled without "
-        << "OFED SDK." << std::endl;
-}
-
-#endif /* HAVE_OFED_SDK */

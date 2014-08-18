@@ -14,9 +14,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "the/string.h"
-#include <the/not_supported_exception.h>
-#include <the/argument_exception.h>
+#include <vislib/CharTraits.h>
+#include <vislib/String.h>
+#include <vislib/UnsupportedOperationException.h>
+#include <vislib/IllegalParamException.h>
 
 
 namespace vislib {
@@ -32,10 +33,10 @@ namespace vislib {
     public:
 
         /** Define a local name for the character type. */
-        typedef typename T::value_type Char;
+        typedef typename T::Char Char;
 
         /** Define a local name for the string type. */
-        typedef T String;
+        typedef typename vislib::String<T> String;
 
         /**
          * Nested class representing a single column.
@@ -214,7 +215,7 @@ namespace vislib {
          *
          * @return The reference to the Column object specified by col.
          *
-         * @throw argument_exception if col is greater or equal the number
+         * @throw IllegalParamException if col is greater or equal the number
          *        of columns.
          */
         Column& AccessColumn(unsigned int col);
@@ -226,7 +227,7 @@ namespace vislib {
          *
          * @return The reference to the Column object specified by col.
          *
-         * @throw argument_exception if col is greater or equal the number
+         * @throw IllegalParamException if col is greater or equal the number
          *        of columns.
          */
         inline Column& operator[](unsigned int col) {
@@ -363,7 +364,7 @@ namespace vislib {
      */
     template<class T>
     ColumnFormatter<T>::Column::Column(const Column& rhs) {
-        throw the::not_supported_exception("Column copy ctor", __FILE__, __LINE__);
+        throw UnsupportedOperationException("Column copy ctor", __FILE__, __LINE__);
     }
 
 
@@ -388,7 +389,7 @@ namespace vislib {
     template<class T>
     void ColumnFormatter<T>::Column::SetText(const String& text) {
         this->text = text;
-        the::text::string_utility::trim(this->text);
+        this->text.TrimSpaces();
     }
 
 
@@ -430,7 +431,7 @@ namespace vislib {
      */
     template<class T>
     ColumnFormatter<T>::~ColumnFormatter(void) {
-        the::safe_array_delete(this->cols);
+        ARY_SAFE_DELETE(this->cols);
     }
 
     
@@ -450,7 +451,7 @@ namespace vislib {
             }
 
             this->colCount = colCount;
-            the::safe_array_delete(oc);
+            ARY_SAFE_DELETE(oc);
         }
     }
 
@@ -461,7 +462,7 @@ namespace vislib {
     template<class T>
     typename ColumnFormatter<T>::Column& ColumnFormatter<T>::AccessColumn(unsigned int col) {
         if (col >= this->colCount) {
-            throw the::argument_exception("col", __FILE__, __LINE__);
+            throw IllegalParamException("col", __FILE__, __LINE__);
         }
 
         return this->cols[col];
@@ -473,18 +474,18 @@ namespace vislib {
      */
     template<class T>
     typename ColumnFormatter<T>::String& ColumnFormatter<T>::FormatColumns(String &outString) {
-        outString.clear();
+        outString.Clear();
         if (this->colCount == 0) return outString;
 
         // calculate the columns starts, ends and widths.
         this->CalcColumnPlacment();
         // initialize
         for (unsigned int i = 0; i < this->colCount; i++) {
-            this->cols[i].rmTextBuf = const_cast<Char*>(this->cols[i].text.c_str());
+            this->cols[i].rmTextBuf = const_cast<Char*>(this->cols[i].text.PeekBuffer());
         }
         
-        String bufStr(this->maxWidth + 10, static_cast<Char>(' ')); // 10 is a paranoia value
-        Char *linebuf = const_cast<Char*>(bufStr.c_str());
+        String bufStr;
+        Char *linebuf = bufStr.AllocateBuffer(this->maxWidth + 10); // 10 is a paranoia value
         linebuf[0] = static_cast<Char>('\n');
         Char *buffer = linebuf + 1;
 
@@ -512,10 +513,10 @@ namespace vislib {
                 Column *col = &this->cols[ci];
                 if (col->rmTextBuf[0] == 0) {
                     if (ci > 0) { // prepend separator if not first column
-                        const Char *sepBuf = this->separator.c_str();
+                        const Char *sepBuf = this->separator.PeekBuffer();
                         while (*sepBuf != 0) {
                             buffer[pos++] = *(sepBuf++);
-                            THE_ASSERT(pos <= this->maxWidth + 1);
+                            ASSERT(pos <= this->maxWidth + 1);
                         }
                     }
 
@@ -524,7 +525,7 @@ namespace vislib {
                 }
     
                 if (pos >= col->colEnd) continue; // omit column if the space is already used
-                if (pos + this->separator.size() > col->colEnd) { 
+                if (pos + this->separator.Length() > col->colEnd) { 
                     pos = col->colEnd;
                     continue; // omit column if insufficient space
                 }
@@ -535,18 +536,18 @@ namespace vislib {
                 }
                 
                 if (ci > 0) { // prepend separator if not first column
-                    const Char *sepBuf = this->separator.c_str();
+                    const Char *sepBuf = this->separator.PeekBuffer();
                     while (*sepBuf != 0) {
                         buffer[pos++] = *(sepBuf++);
-                        THE_ASSERT(pos <= this->maxWidth + 1);
+                        ASSERT(pos <= this->maxWidth + 1);
                     }
                 }
 
-                if (static_cast<unsigned int>(the::text::string_utility::c_str_len(col->rmTextBuf)) <= (col->colEnd - pos)) {
+                if (static_cast<unsigned int>(T::SafeStringLength(col->rmTextBuf)) <= (col->colEnd - pos)) {
                     // remaining column content fits into column
                     while (*col->rmTextBuf != 0) {
                         buffer[pos++] = *(col->rmTextBuf++);
-                        THE_ASSERT(pos <= this->maxWidth + 1);
+                        ASSERT(pos <= this->maxWidth + 1);
                     }
                     pos = col->colEnd;
                     continue;
@@ -554,7 +555,7 @@ namespace vislib {
 
                 // remaining column content does NOT fit into the remaining column
                 unsigned int right = (canWrap ? col->colEnd : this->maxWidth);
-                unsigned int len = static_cast<unsigned int>(the::text::string_utility::c_str_len(col->rmTextBuf));
+                unsigned int len = T::SafeStringLength(col->rmTextBuf);
                 if (len > right - pos) {
                     len = right - pos;
                 }
@@ -563,8 +564,8 @@ namespace vislib {
                 unsigned int textlen = len;
                 if (col->rmTextBuf[textlen] != 0) {
                     // breaking the string!
-                    while ((textlen > 0) && (!the::text::char_utility::is_space(col->rmTextBuf[textlen]))) textlen--;
-                    while ((textlen > 0) && (the::text::char_utility::is_space(col->rmTextBuf[textlen]))) textlen--;
+                    while ((textlen > 0) && (!T::IsSpace(col->rmTextBuf[textlen]))) textlen--;
+                    while ((textlen > 0) && (T::IsSpace(col->rmTextBuf[textlen]))) textlen--;
                     if (textlen == 0) {
                         textlen = len; // no spaces were found, so break hard
                     } else {
@@ -576,25 +577,25 @@ namespace vislib {
                 for (unsigned int i = 0; i < textlen; i++) {
                     buffer[pos++] = *col->rmTextBuf;
                     col->rmTextBuf++;
-                    THE_ASSERT(pos <= this->maxWidth + 1);
+                    ASSERT(pos <= this->maxWidth + 1);
                 }
                 pos += len - textlen;
 
                 // omit upcoming spaces in col->rmTextBuf
-                while ((*col->rmTextBuf != 0) && the::text::char_utility::is_space(*col->rmTextBuf)) {
+                while ((*col->rmTextBuf != 0) && T::IsSpace(*col->rmTextBuf)) {
                     col->rmTextBuf++;
                 }
 
             }
 
-            while((pos > 0) && (the::text::char_utility::is_space(buffer[pos - 1]))) pos--;
+            while((pos > 0) && (T::IsSpace(buffer[pos - 1]))) pos--;
             buffer[pos] = 0;
 
-            outString += ((outString.empty()) ? (buffer) : (linebuf));
+            outString += ((outString.IsEmpty()) ? (buffer) : (linebuf));
 
         }
 
-        the::text::string_utility::trim_end(outString);
+        outString.TrimSpacesEnd();
 
         return outString;
     }
@@ -626,7 +627,7 @@ namespace vislib {
     template<class T>
     void ColumnFormatter<T>::CalcColumnPlacment(void) {
         unsigned int left = 0;
-        unsigned int sepW = static_cast<unsigned int>(this->separator.size());
+        unsigned int sepW = this->separator.Length();
         unsigned int maxW;
         Column *col;
         bool wrap;
@@ -641,13 +642,13 @@ namespace vislib {
             if ((col->colWidth == 0) || (col->colWidth > maxW)) {
                 // columns is auto-grow
                 wrap = false; // go into no wrap mode
-                col->colWidth = static_cast<unsigned int>(col->text.size());
+                col->colWidth = col->text.Length();
 
                 if (col->colWidth > maxW) {
                     // columns content exceeds a single line
 
                     // Do the word wrap
-                    Char *buf = const_cast<Char*>(col->text.c_str());
+                    Char *buf = const_cast<Char*>(col->text.PeekBuffer());
                     Char *lastWordStart = NULL;
                     unsigned int len = 0;
                     unsigned int lines = 1;
@@ -655,16 +656,16 @@ namespace vislib {
 
                     while(*buf != 0) {
                         len++;
-                        bool s = the::text::char_utility::is_space(*buf);
+                        bool s = T::IsSpace(*buf);
                         if (lastS && ! s) {
                             lastWordStart = buf;
                         }
                         if (len > (this->maxWidth - left)) {
                             if (s) { // omit unneeded spaces
-                                while ((*buf != 0) && (the::text::char_utility::is_space(*buf))) {
+                                while ((*buf != 0) && (T::IsSpace(*buf))) {
                                     buf++;
                                 }
-                                THE_ASSERT(buf != 0); // because all strings had been trimmed right
+                                ASSERT(buf != 0); // because all strings had been trimmed right
                                 lastWordStart = NULL;
                             }
 
@@ -686,7 +687,7 @@ namespace vislib {
                         // column content is too large to place the following 
                         // columns right aside, but is short enough that the
                         // content fits into a single line.
-                        THE_ASSERT(lines == 1);
+                        ASSERT(lines == 1);
                         col->colWidth = 0; 
                     }
                 }
@@ -724,13 +725,13 @@ namespace vislib {
 
     
     /** Template instantiation for ANSI strings. */
-    typedef ColumnFormatter<the::astring> ColumnFormatterA;
+    typedef ColumnFormatter<CharTraitsA> ColumnFormatterA;
 
     /** Template instantiation for wide strings. */
-    typedef ColumnFormatter<the::wstring> ColumnFormatterW;
+    typedef ColumnFormatter<CharTraitsW> ColumnFormatterW;
 
     /** Template instantiation for TCHARs. */
-    typedef ColumnFormatter<the::tstring> TColumnFormatter;
+    typedef ColumnFormatter<TCharTraits> TColumnFormatter;
 
 } /* end namespace vislib */
 

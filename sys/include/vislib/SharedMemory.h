@@ -23,7 +23,7 @@
 
 
 #include "vislib/File.h"
-#include "the/string.h"
+#include "vislib/String.h"
 
 
 namespace vislib {
@@ -93,7 +93,7 @@ namespace sys {
          * If the object does not designate an open segment, the method does 
          * nothing.
          *
-         * @throws the::system::system_exception If an existing shared memory segment could 
+         * @throws SystemException If an existing shared memory segment could 
          *                         not be destroyed.
          */
         void Close(void);
@@ -116,7 +116,7 @@ namespace sys {
          * @param creationMode Specifies whether to create or to open a segment.
          * @param size         Size of the shared memory segment in bytes.
          *
-         * @throws the::system::system_exception If the shared memory segment could not be
+         * @throws SystemException If the shared memory segment could not be
          *                         created or not be mapped.
          */
         void Open(const char *name, const AccessMode accessMode, 
@@ -133,7 +133,7 @@ namespace sys {
          * @param creationMode Specifies whether to create or to open a segment.
          * @param size         Size of the shared memory segment in bytes.
          *
-         * @throws the::system::system_exception If the shared memory segment could not be
+         * @throws SystemException If the shared memory segment could not be
          *                         created or not be mapped.
          */
         void Open(const wchar_t *name, const AccessMode accessMode, 
@@ -169,7 +169,7 @@ namespace sys {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         SharedMemory(const SharedMemory& rhs);
 
@@ -180,7 +180,7 @@ namespace sys {
          *
          * @return *this
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         SharedMemory& operator =(const SharedMemory& rhs);
 
@@ -193,7 +193,7 @@ namespace sys {
         int hSharedMem;
 
         /** Linux requires to preserve the name for unlinking the memory. */
-        the::astring name;
+        StringA name;
 
         /** Linux requires to preserve the mapping size for unmapping. */
         size_t size;

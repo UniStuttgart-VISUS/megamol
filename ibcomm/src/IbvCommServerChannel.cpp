@@ -8,15 +8,15 @@
 //#include "vislib/IbvCommServerChannel.h"
 //
 //#include "vislib/IPCommEndPoint.h"
-//#include "the/trace.h"
-//#include "the/not_supported_exception.h"
+//#include "vislib/Trace.h"
+//#include "vislib/UnsupportedOperationException.h"
 //
 //
 //vislib::SmartRef<vislib::net::AbstractCommChannel> 
 //vislib::net::ib::IbvCommServerChannel::Accept(void) {
 //    VLSTACKTRACE("IbvCommServerChannel::Bind", __FILE__, __LINE__);
 //
-//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Waiting for IB connection "
+//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Waiting for IB connection "
 //        "request...\n");
 //    //this->evtAccept.Wait();
 //
@@ -42,8 +42,8 @@
 //    IPCommEndPoint *cep = endPoint.DynamicPeek<IPCommEndPoint>();
 //    IPEndPoint& ep = static_cast<IPEndPoint&>(*cep);
 //
-//    //THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Binding IB end point to %s...\n",
-//    //    ep.ToStringA().c_str());
+//    //VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Binding IB end point to %s...\n",
+//    //    ep.ToStringA().PeekBuffer());
 //    //int x = ::rdma_bind_addr(this->id, static_cast<sockaddr *>(ep));
 //    //int y = ::GetLastError();
 //
@@ -54,9 +54,9 @@
 //    ::ZeroMemory(&hints, sizeof(hints));
 //    hints.ai_flags = RAI_PASSIVE;
 //    hints.ai_port_space = RDMA_PS_TCP;
-//    the::astring str;
-//    the::text::astring_builder::format_to(str, "%d", ep.GetPort());
-//    retval = ::rdma_getaddrinfo(NULL, (char *) str.c_str(), &hints, &addrInfo);
+//    StringA str;
+//    str.Format("%d", ep.GetPort());
+//    retval = ::rdma_getaddrinfo(NULL, (char *) str.PeekBuffer(), &hints, &addrInfo);
 //
 //
 //    ::ZeroMemory(&attr, sizeof(attr));
@@ -76,7 +76,7 @@
 //
 //void vislib::net::ib::IbvCommServerChannel::Connect(
 //        SmartRef<AbstractCommEndPoint> endPoint) {
-//    throw the::not_supported_exception("IbvCommServerChannel::Connect", 
+//    throw UnsupportedOperationException("IbvCommServerChannel::Connect", 
 //        __FILE__, __LINE__);
 //}
 //
@@ -89,7 +89,7 @@
 //
 //vislib::SmartRef<vislib::net::AbstractCommEndPoint> 
 //vislib::net::ib::IbvCommServerChannel::GetRemoteEndPoint(void) const {
-//    throw the::not_supported_exception("IbvCommServerChannel::"
+//    throw UnsupportedOperationException("IbvCommServerChannel::"
 //        "GetRemoteEndPoint", __FILE__, __LINE__);
 //}
 //
@@ -101,16 +101,16 @@
 //}
 //
 //
-//size_t vislib::net::ib::IbvCommServerChannel::Receive(void *outData, 
-//        const size_t cntBytes, const unsigned int timeout, const bool forceReceive) {
-//    throw the::not_supported_exception("IbvCommServerChannel::Receive", 
+//SIZE_T vislib::net::ib::IbvCommServerChannel::Receive(void *outData, 
+//        const SIZE_T cntBytes, const UINT timeout, const bool forceReceive) {
+//    throw UnsupportedOperationException("IbvCommServerChannel::Receive", 
 //        __FILE__, __LINE__);
 //}
 //
 //
-//size_t vislib::net::ib::IbvCommServerChannel::Send(const void *data, 
-//        const size_t cntBytes, const unsigned int timeout, const bool forceSend) {
-//    throw the::not_supported_exception("IbvCommServerChannel::Send", __FILE__, 
+//SIZE_T vislib::net::ib::IbvCommServerChannel::Send(const void *data, 
+//        const SIZE_T cntBytes, const UINT timeout, const bool forceSend) {
+//    throw UnsupportedOperationException("IbvCommServerChannel::Send", __FILE__, 
 //        __LINE__);
 //}
 //
@@ -118,13 +118,13 @@
 ///*
 // * vislib::net::ib::IbvCommServerChannel::messagePump
 // */
-//unsigned int vislib::net::ib::IbvCommServerChannel::messagePump(void *userData) {
+//DWORD vislib::net::ib::IbvCommServerChannel::messagePump(void *userData) {
 //    VLSTACKTRACE("IbvCommServerChannel::messagePump", __FILE__, __LINE__);
 //    IbvCommServerChannel *channel = static_cast<IbvCommServerChannel *>(
 //        userData);
 //    int retval = 0;
 //
-//    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Entering RDMA CM message "
+//    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Entering RDMA CM message "
 //        "loop...\n");
 //    while ((retval = ::rdma_get_cm_event(channel->channel, 
 //            &channel->evt)) == 0) {
@@ -134,7 +134,7 @@
 //
 //        switch (e.event) {
 //            case RDMA_CM_EVENT_CONNECT_REQUEST:
-//                THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Received "
+//                VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Received "
 //                    "RDMA_CM_EVENT_CONNECT_REQUEST.\n");
 //                retval = channel->onConnectRequest(e);
 //                break;

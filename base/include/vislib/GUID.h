@@ -20,8 +20,8 @@
 #include <uuid/uuid.h>
 #endif /* _WIN32 */
 
-#include "the/string.h"
-#include "the/types.h"
+#include "vislib/String.h"
+#include "vislib/types.h"
 
 #ifdef _MSC_VER
 #pragma comment(lib, "rpcrt4")
@@ -69,7 +69,7 @@ namespace vislib {
          *
          * @param b An array of 16 bytes.
          */
-        GUID(const uint8_t b[16]);
+        GUID(const BYTE b[16]);
 
         /**
          * Create a GUID from 16 bytes.
@@ -91,10 +91,10 @@ namespace vislib {
          * @param b15 Byte # 15.
          * @param b16 Byte # 16.
          */
-        GUID(const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
-            const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8,
-            const uint8_t b9, const uint8_t b10, const uint8_t b11, const uint8_t b12,
-            const uint8_t b13, const uint8_t b14, const uint8_t b15, const uint8_t b16);
+        GUID(const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
+            const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8,
+            const BYTE b9, const BYTE b10, const BYTE b11, const BYTE b12,
+            const BYTE b13, const BYTE b14, const BYTE b15, const BYTE b16);
 
         /**
          * Create a GUID from an integer, two shorts and eight bytes.
@@ -111,9 +111,9 @@ namespace vislib {
          * @param b15 Byte # 15.
          * @param b16 Byte # 16.
          */
-        GUID(const uint32_t i, const uint16_t s1, const uint16_t s2,
-            const uint8_t b1, const uint8_t b2, const uint8_t b3, const uint8_t b4,
-            const uint8_t b5, const uint8_t b6, const uint8_t b7, const uint8_t b8);
+        GUID(const UINT32 i, const UINT16 s1, const UINT16 s2,
+            const BYTE b1, const BYTE b2, const BYTE b3, const BYTE b4,
+            const BYTE b5, const BYTE b6, const BYTE b7, const BYTE b8);
 
         /**
          * Create a GUID from an integer, two shorts and an array of eight 
@@ -125,7 +125,7 @@ namespace vislib {
          * @param b9  Byte # 9.
          * @param b   The last eight bytes.
          */
-        GUID(const uint32_t i, const uint16_t s1, const uint16_t s2, const uint8_t b[8]);
+        GUID(const UINT32 i, const UINT16 s1, const UINT16 s2, const BYTE b[8]);
 
         /**
          * Clone 'rhs'.
@@ -167,7 +167,7 @@ namespace vislib {
          * @return true in case of success, false if 'str' could not be parsed 
          *         as GUID.
          */
-        bool Parse(const the::astring& str);
+        bool Parse(const StringA& str);
 
         /**
          * Parse the GUID from a string representation.
@@ -177,14 +177,14 @@ namespace vislib {
          * @return true in case of success, false if 'str' could not be parsed 
          *         as GUID.
          */
-        bool Parse(const the::wstring& str);
+        bool Parse(const StringW& str);
 
         /**
          * Answer a hash code of the GUID.
          *
          * @return A hash code of the GUID.
          */
-        uint32_t HashCode(void) const;
+        UINT32 HashCode(void) const;
 
         /**
          * Set the whole GUID zero.
@@ -198,7 +198,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc In case there is insufficient memory.
          */
-        the::astring ToStringA(void) const;
+        StringA ToStringA(void) const;
 
         /**
          * Return a string representation of the GUID.
@@ -207,7 +207,7 @@ namespace vislib {
          *
          * @throws std::bad_alloc In case there is insufficient memory.
          */
-        the::wstring ToStringW(void) const;
+        StringW ToStringW(void) const;
 
         /**
          * Assignment.

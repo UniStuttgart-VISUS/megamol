@@ -42,7 +42,7 @@ namespace d3d {
         /** Ctor. */
         inline D3D11Window(ID3D11Device *device = NULL) : AbstractWindow(),
                 AbstractD3D11WindowImpl(device), ReferenceCounted() {
-            THE_STACK_TRACE;
+            VLSTACKTRACE("D3D11Window::D3D11Window", __FILE__, __LINE__);
         }
 
         /** Dtor. */
@@ -56,7 +56,8 @@ namespace d3d {
         // * created.
         // */
         //inline bool GetIsFullscreen(void) const {
-        //    THE_STACK_TRACE;
+        //    VLSTACKTRACE("AbstractD3D11Window::GetIsFullscreen", __FILE__, 
+        //        __LINE__);
         //    return this->isFullscreen;
         //}
 

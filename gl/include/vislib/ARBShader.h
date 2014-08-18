@@ -67,7 +67,7 @@ namespace gl {
          *                          compiled.
          * @throws OpenGLException  If an OpenGL error occurred during 
          *                          construction of the shader.
-         * @throws the::system::io::io_exception      If reading from the shader file failed.
+         * @throws IOException      If reading from the shader file failed.
          */
         virtual bool CreateFromFile(const char *filename);
 
@@ -90,7 +90,7 @@ namespace gl {
          * @return GL_NO_ERROR in case of success, an error code, if the
          *         shader could not be enabled.
          *
-         * @throws invalid_operation_exception If the shader is not valid, i. e. has
+         * @throws IllegalStateException If the shader is not valid, i. e. has
          *                               not been successfully created.
          */
         virtual GLenum Enable(void);
@@ -226,7 +226,7 @@ namespace gl {
          *
          * @param rhs The object to be cloned.
          *
-         * @throws not_supported_exception Unconditionally.
+         * @throws UnsupportedOperationException Unconditionally.
          */
         ARBShader(const ARBShader& rhs);
 
@@ -237,7 +237,7 @@ namespace gl {
          *
          * @return *this
          *
-         * @throws argument_exception If (this != &rhs).
+         * @throws IllegalParamException If (this != &rhs).
          */
         ARBShader& operator =(const ARBShader& rhs);
 

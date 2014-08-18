@@ -169,11 +169,11 @@ namespace vislib {
             /** 
              * Behaves like Iterator<T>::Next 
              *
-             * @throw invalid_operation_exception if there is no next element
+             * @throw IllegalStateException if there is no next element
              */
             virtual ElementPair& Next(void) {
                 if (!this->HasNext()) {
-                    throw the::invalid_operation_exception("There is no next element",
+                    throw IllegalStateException("There is no next element",
                         __FILE__, __LINE__);
                 }
                 this->retval.key = &this->owner->keys[this->idx];
@@ -211,7 +211,7 @@ namespace vislib {
             Map<K, V>* owner;
 
             /** The next index */
-            size_t idx;
+            SIZE_T idx;
 
             /** The returned value */
             ElementPair retval;
@@ -253,7 +253,7 @@ namespace vislib {
          *
          * @return The number of entries in the map.
          */
-        virtual size_t Count(void) const;
+        virtual SIZE_T Count(void) const;
 
         /**
          * Finds all keys which are associated to a given value. The order of
@@ -310,7 +310,7 @@ namespace vislib {
          *
          * @return 'true' if the map is empty, 'false' otherwise.
          */
-        virtual bool empty(void) const;
+        virtual bool IsEmpty(void) const;
 
         /**
          * Removes the given key from the map.
@@ -351,12 +351,12 @@ namespace vislib {
      */
     template<class K, class V> 
     void Map<K, V>::Set(const K &key, const V &value) {
-        intptr_t idx = this->keys.IndexOf(key);
+        INT_PTR idx = this->keys.IndexOf(key);
         if (idx == Array<K>::INVALID_POS) {
             this->keys.Append(key);
             this->values.Append(value);
         } else {
-            this->values[static_cast<size_t>(idx)] = value;
+            this->values[static_cast<SIZE_T>(idx)] = value;
         }
     }
 
@@ -381,7 +381,7 @@ namespace vislib {
     /*
      * vislib::Map::Count
      */
-    template<class K, class V> size_t Map<K, V>::Count(void) const {
+    template<class K, class V> SIZE_T Map<K, V>::Count(void) const {
         return this->keys.Count();
     }
 
@@ -392,8 +392,8 @@ namespace vislib {
     template<class K, class V> 
     SingleLinkedList<K> Map<K, V>::FindKeys(const V &value) const {
         SingleLinkedList<K> retval;
-        size_t len = static_cast<size_t>(this->values.Count());
-        for (size_t i = 0; i < len; i++) {
+        SIZE_T len = static_cast<SIZE_T>(this->values.Count());
+        for (SIZE_T i = 0; i < len; i++) {
             if (this->values[i] == value) {
                 retval.Append(this->keys[i]);
             }
@@ -407,11 +407,11 @@ namespace vislib {
      */
     template<class K, class V>
     const V * Map<K, V>::FindValue(const K &key) const {
-        intptr_t idx = this->keys.IndexOf(key);
+        INT_PTR idx = this->keys.IndexOf(key);
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
-            return &this->values[static_cast<size_t>(idx)];
+            return &this->values[static_cast<SIZE_T>(idx)];
         }
     }
 
@@ -420,20 +420,20 @@ namespace vislib {
      * vislib::Map::FindValue
      */
     template<class K, class V> V * Map<K, V>::FindValue(const K &key) {
-        intptr_t idx = this->keys.IndexOf(key);
+        INT_PTR idx = this->keys.IndexOf(key);
         if (idx == Array<K>::INVALID_POS) {
             return NULL;
         } else {
-            return &this->values[static_cast<size_t>(idx)];
+            return &this->values[static_cast<SIZE_T>(idx)];
         }
     }
 
 
     /*
-     * vislib::Map::empty
+     * vislib::Map::IsEmpty
      */
-    template<class K, class V> bool Map<K, V>::empty(void) const {
-        return this->keys.empty();
+    template<class K, class V> bool Map<K, V>::IsEmpty(void) const {
+        return this->keys.IsEmpty();
     }
 
 
@@ -441,7 +441,7 @@ namespace vislib {
      * vislib::Map::Remove
      */
     template<class K, class V> void Map<K, V>::Remove(const K &key) {
-        intptr_t idx = this->keys.IndexOf(key);
+        INT_PTR idx = this->keys.IndexOf(key);
         if (idx != Array<K>::INVALID_POS) {
             this->values.Erase(idx);
             this->keys.Erase(idx);

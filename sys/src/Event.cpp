@@ -11,21 +11,21 @@
 #include <climits>
 #endif /* !_WIN32 */
 
-#include "the/assert.h"
+#include "vislib/assert.h"
 #include "vislib/error.h"
-#include "the/argument_exception.h"
-#include "the/system/system_exception.h"
-#include "the/trace.h"
-#include "the/not_supported_exception.h"
+#include "vislib/IllegalParamException.h"
+#include "vislib/SystemException.h"
+#include "vislib/Trace.h"
+#include "vislib/UnsupportedOperationException.h"
 
 
 /*
  * vislib::sys::Event::TIMEOUT_INFINITE
  */
 #ifdef _WIN32
-const unsigned int vislib::sys::Event::TIMEOUT_INFINITE = INFINITE;
+const DWORD vislib::sys::Event::TIMEOUT_INFINITE = INFINITE;
 #else /* _WIN32 */
-const unsigned int vislib::sys::Event::TIMEOUT_INFINITE = UINT_MAX;
+const DWORD vislib::sys::Event::TIMEOUT_INFINITE = UINT_MAX;
 #endif /* _WIN32 */
 
 
@@ -43,7 +43,7 @@ vislib::sys::Event::Event(const bool isManualReset,
     this->handle = ::CreateEventA(NULL, isManualReset ? TRUE : FALSE,
         isInitiallySignaled ? TRUE : FALSE, 
         NULL);
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
 }
 
@@ -73,7 +73,7 @@ vislib::sys::Event::Event(const char *name, const bool isManualReset,
             *outIsNew = true;
         }
     }
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
 }
 
@@ -103,7 +103,7 @@ vislib::sys::Event::Event(const wchar_t *name, const bool isManualReset,
             *outIsNew = true;
         }
     }
-    THE_ASSERT(this->handle != NULL);
+    ASSERT(this->handle != NULL);
 #endif /* _WIN32 */
 }
 
@@ -128,14 +128,14 @@ vislib::sys::Event::~Event(void) {
 void vislib::sys::Event::Reset(void) {
 #ifdef _WIN32
     if (!::ResetEvent(this->handle)) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Reset\n");
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Reset\n");
     
     this->semaphore.TryLock();
-    THE_ASSERT(!this->semaphore.TryLock());
+    ASSERT(!this->semaphore.TryLock());
 
 #endif /* _WIN32 */
 }
@@ -147,11 +147,11 @@ void vislib::sys::Event::Reset(void) {
 void vislib::sys::Event::Set(void) {
 #ifdef _WIN32
     if (!::SetEvent(this->handle)) {
-        throw the::system::system_exception(__FILE__, __LINE__);
+        throw SystemException(__FILE__, __LINE__);
     }
 
 #else /* _WIN32 */
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Set\n");
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Set\n");
 
     this->semaphore.TryLock();
     this->semaphore.Unlock();
@@ -163,7 +163,7 @@ void vislib::sys::Event::Set(void) {
 /*
  * vislib::sys::Event::Wait
  */
-bool vislib::sys::Event::Wait(const unsigned int timeout) {
+bool vislib::sys::Event::Wait(const DWORD timeout) {
 #ifdef _WIN32
     switch (::WaitForSingleObject(this->handle, timeout)) {
 
@@ -178,12 +178,12 @@ bool vislib::sys::Event::Wait(const unsigned int timeout) {
             /* Unreachable. */
 
         default:
-            throw the::system::system_exception(__FILE__, __LINE__);
+            throw SystemException(__FILE__, __LINE__);
             /* Unreachable. */
     }
 
 #else /* _WIN32 */
-    THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Wait\n");
+    VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Wait\n");
     bool retval = false;
 
     if (timeout == TIMEOUT_INFINITE) {
@@ -195,7 +195,7 @@ bool vislib::sys::Event::Wait(const unsigned int timeout) {
     }
 
     if (retval && this->isManualReset) {
-        THE_TRACE(THE_TRCCHL_DEFAULT, THE_TRCLVL_INFO, "Event::Wait signal again\n");
+        VLTRACE(vislib::Trace::LEVEL_VL_VERBOSE, "Event::Wait signal again\n");
         this->semaphore.Unlock();
     }
 
@@ -208,7 +208,7 @@ bool vislib::sys::Event::Wait(const unsigned int timeout) {
  * vislib::sys::Event::Event
  */
 vislib::sys::Event::Event(const Event& rhs) {
-    throw the::not_supported_exception("vislib::sys::Event::Event", 
+    throw UnsupportedOperationException("vislib::sys::Event::Event", 
         __FILE__, __LINE__);
 }
 
@@ -218,7 +218,7 @@ vislib::sys::Event::Event(const Event& rhs) {
  */
 vislib::sys::Event& vislib::sys::Event::operator =(const Event& rhs) {
     if (this != &rhs) {
-        throw the::argument_exception("rhs", __FILE__, __LINE__);
+        throw IllegalParamException("rhs", __FILE__, __LINE__);
     }
 
     return *this;
