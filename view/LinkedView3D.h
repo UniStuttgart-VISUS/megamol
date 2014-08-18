@@ -51,7 +51,11 @@ class LinkedView3D: public core::view::View3D {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
+#if (VISLIB_VERSION_MAJOR > 1) || (VISLIB_VERSION_MINOR > 0)
+        	return false;
+#else
             return true;
+#endif
         }
 
         /** Ctor. */
