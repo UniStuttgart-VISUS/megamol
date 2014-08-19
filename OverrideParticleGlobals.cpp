@@ -99,7 +99,7 @@ bool datatools::OverrideParticleGlobals::manipulateData(
             p.SetGlobalRadius(radius);
             if (p.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 p.SetVertexData(MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-                    p.GetVertexData(), p.GetVertexDataStride());
+                    p.GetVertexData(), std::max<unsigned int>(16, p.GetVertexDataStride()));
             }
         }
 
