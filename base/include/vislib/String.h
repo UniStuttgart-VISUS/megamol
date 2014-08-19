@@ -63,14 +63,15 @@ namespace vislib {
         String(const Char *data);
 
         /**
-         * Create a string with the first 'cnt' characters from 'data'. It is 
-         * safe to pass a zero-terminated string that is shorter than 'cnt'
-         * characters. No padding occurs in this case.
+         * Create a string with the first 'cnt' characters from 'data'.
          *
-         * @param data A string of at least 'cnt' characters.
-         * @param cnt  The number of characters to read.
+         * @param data A string of at least 'cnt' characters. It is safe to pass
+         *             a non-zero-terminated string, but it must never be 
+         *             shorter than 'cnt'.
+         * @param cnt  The number of characters to read, the terminating zero
+         *             not included.
          */
-        String(const Char *data, const Size& cnt);
+        String(const Char *data, const Size cnt);
 
         /**
          * Create a string with the initial data 'data'. This constructor 
@@ -1295,14 +1296,18 @@ namespace vislib {
     /*
      * vislib::String<T>::String
      */
-    template<class T> String<T>::String(const Char *data, const Size& cnt) 
+    template<class T> String<T>::String(const Char *data, const Size cnt)
             : data(NULL) {
-        Size newLen = T::SafeStringLength(data);
+        Size newLen = cnt;
+        // mueller: We must trust the caller here! It is not possible to check
+        // whether 'cnt' is too large, because 'data' might not be
+        // zero-terminated which in turn makes the method crash.
+        //Size newLen = T::SafeStringLength(data);
 
-        if (cnt < newLen) {
-            newLen = cnt;
-        }
-            
+        //if (cnt < newLen) {
+        //    newLen = cnt;
+        //}
+
         this->data = new Char[newLen + 1];
         if (data != NULL) {
             ::memcpy(this->data, data, newLen * T::CharSize());

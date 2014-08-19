@@ -52,21 +52,25 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease32.props" />
+    <Import Project="..\d3d\directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug32.props" />
+    <Import Project="..\d3d\directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetRelease64.props" />
+    <Import Project="..\d3d\directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\VSProps\TargetDebug64.props" />
+    <Import Project="..\d3d\directx_legacy.props" />
     <Import Project="..\vislib.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -101,19 +105,19 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\DXUT\Core;.\DXUT\Optional;$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\d3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;DXUT_AUTOLIB;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <DisableSpecificWarnings>4995;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>dxerr.lib;dxguid.lib;d3dx9d.lib;d3dx10d.lib;d3d9.lib;winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(LegacyDirectXDir)Lib\x86\;%(AdditionalLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -132,19 +136,19 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\DXUT\Core;.\DXUT\Optional;$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\d3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;DXUT_AUTOLIB;_DEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4995;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>dxerr.lib;dxguid.lib;d3dx9d.lib;d3dx10d.lib;d3d9.lib;winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(LegacyDirectXDir)Lib\x64\;%(AdditionalLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -160,17 +164,17 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>.\DXUT\Core;.\DXUT\Optional;$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\d3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;DXUT_AUTOLIB;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4995;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>dxerr.lib;dxguid.lib;d3dx9.lib;d3dx10.lib;d3d9.lib;winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(LegacyDirectXDir)Lib\x86\;%(AdditionalLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -191,17 +195,17 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>.\DXUT\Core;.\DXUT\Optional;$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\d3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;DXUT_AUTOLIB;NDEBUG;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>DXUT.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4995;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>dxerr.lib;dxguid.lib;d3dx9d.lib;d3dx10d.lib;d3d9.lib;winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>winmm.lib;comctl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibsys$(BitsD).lib;vislibd3d$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(LegacyDirectXDir)Lib\x64\;%(AdditionalLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -216,27 +220,32 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractTest.cpp" />
-    <ClCompile Include="D3D9SimpleCameraTest.cpp" />
-    <ClCompile Include="D3D9TestBoxGeometry.cpp" />
-    <ClCompile Include="D3D9VisLogoTest.cpp" />
-    <ClCompile Include="dxutTest.cpp" />
-    <ClCompile Include="TestManager.cpp" />
-    <ClCompile Include="DXUT\Core\DXUT.cpp">
+    <ClCompile Include="AbstractTest.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="D3D9SimpleCameraTest.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="D3D9TestBoxGeometry.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="D3D9VisLogoTest.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="dxutTest.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="TestManager.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Core\DXUT.cpp" Condition="$(LegacyDirectXDir) != ''">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="DXUT\Optional\DXUTcamera.cpp" />
-    <ClCompile Include="DXUT\Core\DXUTenum.cpp" />
-    <ClCompile Include="DXUT\Optional\DXUTgui.cpp" />
-    <ClCompile Include="DXUT\Core\DXUTmisc.cpp" />
-    <ClCompile Include="DXUT\Optional\DXUTres.cpp" />
-    <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp" />
-    <ClCompile Include="DXUT\Optional\DXUTShapes.cpp" />
-    <ClCompile Include="DXUT\Optional\SDKmesh.cpp" />
-    <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
+    <ClCompile Include="DXUT\Optional\DXUTcamera.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Core\DXUTenum.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Optional\DXUTgui.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Core\DXUTmisc.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Optional\DXUTres.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Optional\DXUTsettingsdlg.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Optional\DXUTShapes.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Optional\SDKmesh.cpp" Condition="$(LegacyDirectXDir) != ''" />
+    <ClCompile Include="DXUT\Optional\SDKmisc.cpp" Condition="$(LegacyDirectXDir) != ''" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractTest.h" />

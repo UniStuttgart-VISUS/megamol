@@ -13,6 +13,7 @@
 #include "vislib/StackTrace.h"
 
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 /**
  * Answer whether the resolution of the display mode 'displayMode' is larger 
  * than the given resolution of 'width' x 'height' with respect to 'criterion'.
@@ -47,14 +48,16 @@ static bool IsDisplayModeLargerThan(const D3DDISPLAYMODE& displayMode,
                 __LINE__);
     }
 }
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::GetBackbufferSize
  */
 void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
         IDirect3DDevice9 *device) {
-    VLSTACKTRACE("GetBackbufferSize", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -79,8 +82,10 @@ void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
     outWidth = backBufferDesc.Width;
     outHeight = backBufferDesc.Height;
 }
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::GetMaximumFullscreenResolution
  */
@@ -92,7 +97,7 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
         const UINT adapterID, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    VLSTACKTRACE("GetMaximumFullscreenResolution", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -121,8 +126,10 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
         }
     }
 }
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::GetMaximumSharedFullscreenResolution
  */
@@ -133,7 +140,7 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
         IDirect3D9 *d3d, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    VLSTACKTRACE("GetMaximumSharedFullscreenResolution", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;                // API return values.
@@ -201,8 +208,10 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
 
     return retval;
 }
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 /*
  * vislib::graphics::d3d::IsFullscreenResolutionSupported
  */
@@ -213,7 +222,7 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
         const UINT width,
         const UINT height,
         UINT *outRefreshRate) {
-    VLSTACKTRACE("GetMaximumFullscreenResolution", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -244,3 +253,4 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
 
     return false;
 }
+#endif /* HAVE_LEGACY_DIRECTX_SDK */

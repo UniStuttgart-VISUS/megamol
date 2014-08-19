@@ -1,8 +1,10 @@
-s//--------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------
 // File: SimpleSample.cpp
 //
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
+
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include "DXUT.h"
 #include "DXUTgui.h"
 #include "DXUTmisc.h"
@@ -15,7 +17,6 @@ s//-----------------------------------------------------------------------------
 #include "D3D9SimpleCameraTest.h"
 #include "D3D9VisLogoTest.h"
 #include "TestManager.h"
-
 
 //#define DEBUG_VS   // Uncomment this line to debug D3D9 vertex shaders 
 //#define DEBUG_PS   // Uncomment this line to debug D3D9 pixel shaders 
@@ -449,6 +450,15 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bo
     return 0;
 }
 
+#else /* HAVE_LEGACY_DIRECTX_SDK */
+#include <tchar.h>
+#include <Windows.h>
 
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
+        LPWSTR lpCmdLine, int nCmdShow) {
+    ::MessageBox(NULL, _T("Cannot run Direct3D 9 tests due to missing ")
+        _T("Direct3D SDK."), NULL, MB_ICONERROR);
+    return 0;
+}
 
-
+#endif /* HAVE_LEGACY_DIRECTX_SDK */

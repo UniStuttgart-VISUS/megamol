@@ -502,4 +502,3 @@ vislib::net::ib::IbvInformation::operator =(const IbvInformation& rhs) {
 
     return *this;
 }
-

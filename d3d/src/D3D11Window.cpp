@@ -15,7 +15,7 @@
  * vislib::graphics::d3d::D3D11Window::~D3D11Window
  */
 vislib::graphics::d3d::D3D11Window::~D3D11Window(void) {
-    VLSTACKTRACE("D3D11Window::~D3D11Window", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 }
 
 
@@ -23,7 +23,7 @@ vislib::graphics::d3d::D3D11Window::~D3D11Window(void) {
  * vislib::graphics::d3d::D3D11Window::onCreated
  */
 void vislib::graphics::d3d::D3D11Window::onCreated(HWND hWnd) {
-    VLSTACKTRACE("D3D11Window::onCreated", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     AbstractWindow::onCreated(hWnd);
     this->initialise(hWnd);
 }
@@ -34,6 +34,6 @@ void vislib::graphics::d3d::D3D11Window::onCreated(HWND hWnd) {
  */
 void vislib::graphics::d3d::D3D11Window::onResized(const int width, 
         const int height) {
-    VLSTACKTRACE("D3D11Window::onResized", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     this->resizeSwapChain(width, height);
 }

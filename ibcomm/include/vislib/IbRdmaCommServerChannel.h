@@ -21,6 +21,7 @@
 #include "vislib/IbRdmaException.h"
 #include "vislib/StackTrace.h"
 
+#ifdef HAVE_OFED_SDK
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"
 
@@ -88,6 +89,8 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
+
+#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -20,6 +20,7 @@
 #include "vislib/IbRdmaException.h"
  #include "vislib/StackTrace.h"
 
+#ifdef HAVE_OFED_SDK
 #include "rdma/rdma_cma.h"
 #include "rdma/rdma_verbs.h"
 
@@ -106,8 +107,7 @@ namespace ib {
          * @return
          */
         inline bool IsZeroCopyReceive(void) const {
-            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopyReceive",
-                __FILE__, __LINE__);
+            VLAUTOSTACKTRACE;
             return (this->bufRecvEnd != NULL);
         }
 
@@ -118,8 +118,7 @@ namespace ib {
          * @return
          */
         inline bool IsZeroCopySend(void) const {
-            VLSTACKTRACE("IbRdmaCommClientChannel::IsZeroCopySend", 
-                __FILE__, __LINE__);
+            VLAUTOSTACKTRACE;
             return (this->bufSendEnd != NULL);
         }
 
@@ -242,6 +241,8 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
+
+#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

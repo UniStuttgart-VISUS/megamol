@@ -16,6 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include "vislib/D3DCamera.h"
 #include "vislib/D3DVISLogo.h"
 #include "vislib/MouseInteractionAdapter.h"
@@ -62,6 +63,7 @@ private:
     vislib::graphics::MouseInteractionAdapter *mia;
 };
 
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

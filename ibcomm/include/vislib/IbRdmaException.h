@@ -15,6 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
+#ifdef HAVE_OFED_SDK
 #include "vislib/Exception.h"
 
 
@@ -58,6 +59,8 @@ namespace ib {
 } /* end namespace ib */
 } /* end namespace net */
 } /* end namespace vislib */
+
+#endif /* HAVE_OFED_SDK */
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

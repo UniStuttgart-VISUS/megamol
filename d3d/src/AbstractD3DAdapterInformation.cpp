@@ -18,8 +18,7 @@ using namespace vislib::graphics::d3d;
  * ...::d3d::AbstractD3DAdapterInformation::~AbstractD3DAdapterInformation
  */
 AbstractD3DAdapterInformation::~AbstractD3DAdapterInformation(void) {
-    VLSTACKTRACE("AbstractD3DAdapterInformation::"
-        "~AbstractD3DAdapterInformation", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 }
 
 
@@ -34,8 +33,7 @@ const INT_PTR AbstractD3DAdapterInformation::INVALID_OUTPUT_IDX = -1;
  */
 INT_PTR AbstractD3DAdapterInformation::FindOutputIdxForDeviceName(
         const vislib::StringW& deviceName) const {
-    VLSTACKTRACE("AbstractD3DAdapterInformation::FindOutputIdxForDeviceName",
-        __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     SIZE_T cntOutputs = this->GetOutputCount();
 
     for (SIZE_T i = 0; i < cntOutputs; i++) {
@@ -56,8 +54,7 @@ vislib::math::Rectangle<LONG>&
 AbstractD3DAdapterInformation::GetDesktopCoordinates(
         vislib::math::Rectangle<LONG>& outDesktopCoordinates,
         const SIZE_T outputIdx) const {
-    VLSTACKTRACE("AbstractD3DAdapterInformation::GetDesktopCoordinates",
-        __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
     ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
@@ -73,8 +70,7 @@ AbstractD3DAdapterInformation::GetDesktopCoordinates(
  */
 vislib::StringW AbstractD3DAdapterInformation::GetDeviceName(
         const SIZE_T outputIdx) const {
-    VLSTACKTRACE("AbstractD3DAdapterInformation::GetDeviceName",
-        __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
     ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
@@ -87,8 +83,7 @@ vislib::StringW AbstractD3DAdapterInformation::GetDeviceName(
  */
 bool AbstractD3DAdapterInformation::IsPrimaryDisplay(
         const SIZE_T outputIdx) const {
-    VLSTACKTRACE("AbstractD3DAdapterInformation::IsPrimaryDisplay",
-        __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 
     const MONITORINFOEXW& mi = this->getMonitorInfo(outputIdx);
     ASSERT(mi.cbSize >= sizeof(MONITORINFOEXW));
@@ -100,6 +95,5 @@ bool AbstractD3DAdapterInformation::IsPrimaryDisplay(
  * ...::d3d::AbstractD3DAdapterInformation::AbstractD3DAdapterInformation
  */
 AbstractD3DAdapterInformation::AbstractD3DAdapterInformation(void) {
-    VLSTACKTRACE("AbstractD3DAdapterInformation::"
-        "AbstractD3DAdapterInformation", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 }

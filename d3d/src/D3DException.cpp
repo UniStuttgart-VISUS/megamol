@@ -7,15 +7,21 @@
 
 #include "vislib/D3DException.h"
 
+#ifdef HAVE_LEGACY_DIRECTX_SDK
 #include <dxerr.h>
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
 
 
 /*
  * vislib::graphics::d3d::D3DException::D3DException
  */
 vislib::graphics::d3d::D3DException::D3DException(const HRESULT result, 
-        const char *file, const int line) 
-        : vislib::Exception(::DXGetErrorString(result), file, line), 
+        const char *file, const int line)
+#ifdef HAVE_LEGACY_DIRECTX_SDK
+        : vislib::Exception(::DXGetErrorString(result), file, line),
+#else /* HAVE_LEGACY_DIRECTX_SDK */
+        : vislib::Exception(file, line),
+#endif /* HAVE_LEGACY_DIRECTX_SDK */
         result(result) {
 }
 

@@ -16,7 +16,6 @@
 
 
 #include <windows.h>
-#include <d3d9.h>
 
 #include "vislib/Exception.h"
 
@@ -75,7 +74,7 @@ namespace d3d {
         /** The error code that was the reason for this exception. */
         HRESULT result;
     };
-    
+
 } /* end namespace d3d */
 } /* end namespace graphics */
 } /* end namespace vislib */

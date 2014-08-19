@@ -18,8 +18,7 @@
 void vislib::graphics::d3d::D3D9AdapterInformation::GetAdapterInformation(
             vislib::PtrArray<D3D9AdapterInformation>& outAdapterInformation,
             IDirect3D9 *d3d) {
-    VLSTACKTRACE("D3D9AdapterInformation::GetAdapterInformation",
-        __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     USES_D3D_VERIFY;
     D3DCAPS9 d3dCaps;           // Capabilities of the hardware.
 
@@ -46,8 +45,7 @@ void vislib::graphics::d3d::D3D9AdapterInformation::GetAdapterInformation(
  */
 vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
         IDirect3D9 *d3d, const UINT adapterOrdinal) {
-    VLSTACKTRACE("D3D9AdapterInformation::D3D9AdapterInformation",
-        __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 
     HRESULT hr = D3D_OK;            // Direct3D API results.
     Output output;                  // Receives current output infos.
@@ -107,8 +105,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
  * vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation
  */
 vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation(void) {
-    VLSTACKTRACE("D3D9AdapterInformation::D3D9AdapterInformation",
-        __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     this->infos.Clear(true);
 }
 
@@ -119,8 +116,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation(void) {
 const D3DCAPS9& 
 vislib::graphics::d3d::D3D9AdapterInformation::GetDirect3DCapabilites(
         const SIZE_T outputIdx) {
-    VLSTACKTRACE("D3D9AdapterInformation::GetDirect3DCapabilites", __FILE__, 
-        __LINE__);
+    VLAUTOSTACKTRACE;
 
     /* Range check. */
     if (outputIdx > this->infos.Count()) {
@@ -137,7 +133,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::GetDirect3DCapabilites(
  */
 SIZE_T vislib::graphics::d3d::D3D9AdapterInformation::GetOutputCount(
         void) const {
-    VLSTACKTRACE("D3D9AdapterInformation::GetOutputCount", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
     return this->infos.Count();
 }
 
@@ -148,7 +144,7 @@ SIZE_T vislib::graphics::d3d::D3D9AdapterInformation::GetOutputCount(
 vislib::graphics::d3d::D3D9AdapterInformation& 
 vislib::graphics::d3d::D3D9AdapterInformation::operator =(
         const D3D9AdapterInformation& rhs) {
-    VLSTACKTRACE("D3D9AdapterInformation::operator =", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 
     if (this != &rhs) {
         this->infos = rhs.infos;
@@ -164,7 +160,7 @@ vislib::graphics::d3d::D3D9AdapterInformation::operator =(
 const MONITORINFOEXW&
 vislib::graphics::d3d::D3D9AdapterInformation::getMonitorInfo(
         const SIZE_T outputIdx) const {
-    VLSTACKTRACE("D3D9AdapterInformation::getMonitorInfo", __FILE__, __LINE__);
+    VLAUTOSTACKTRACE;
 
     for (SIZE_T i = 0; i < this->infos.Count(); i++) {
         if (this->infos[i].d3dCaps.AdapterOrdinalInGroup == outputIdx) {

@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 
+#if HAVE_OFED_SDK
 #include "vislib/COMException.h"
 #include "vislib/Event.h"
 #include "vislib/IbvCommChannel.h"
@@ -18,6 +19,10 @@
 #include "vislib/IPCommEndPoint.h"
 #include "vislib/RunnableThread.h"
 #include "vislib/Trace.h"
+
+#pragma comment(lib, "winverbs.lib")
+#pragma comment(lib, "librdmacm.lib")
+#pragma comment(lib, "libibverbs.lib")
 
 
 typedef vislib::SmartRef<vislib::net::AbstractCommEndPoint> IbEndPoint;
@@ -220,3 +225,13 @@ int _tmain(int argc, _TCHAR **argv) {
     ::_getch();
     return 0;
 }
+
+#else /* HAVE_OFED_SDK */
+#include <iostream>
+
+int _tmain(int argc, _TCHAR **argv) {
+    std::cerr << "Test cannot be performed as VISlib has been compiled without "
+        << "OFED SDK." << std::endl;
+}
+
+#endif /* HAVE_OFED_SDK */

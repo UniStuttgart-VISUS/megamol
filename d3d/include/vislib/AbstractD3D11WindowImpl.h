@@ -124,8 +124,7 @@ namespace d3d {
             DXGI_SWAP_CHAIN_DESC& inOutSwapChainDesc) throw();
 
         inline ID3D11DepthStencilView *peekDepthStencilView(void) {
-            VLSTACKTRACE("AbstractD3D11WindowImpl::peekDepthStencilView", 
-                __FILE__, __LINE__);
+            VLAUTOSTACKTRACE;
             return this->depthStencilView;
         }
 
@@ -135,7 +134,7 @@ namespace d3d {
          * @return The D3D device.
          */
         inline ID3D11Device *peekDevice(void) {
-            VLSTACKTRACE("AbstractD3D11WindowImpl::peekDevice", __FILE__, __LINE__);
+            VLAUTOSTACKTRACE;
             return this->device;
         }
 
@@ -146,20 +145,17 @@ namespace d3d {
          * @reutnr THe D3D immediate context.
          */
         inline ID3D11DeviceContext *peekDeviceContext(void) {
-            VLSTACKTRACE("AbstractD3D11WindowImpl::peekDeviceContext", __FILE__, 
-                __LINE__);
+            VLAUTOSTACKTRACE;
             return this->deviceContext;
         }
 
         inline ID3D11RenderTargetView *peekRenderTargetView(void) {
-            VLSTACKTRACE("AbstractD3D11WindowImpl::peekRenderTargetView",
-                __FILE__, __LINE__);
+            VLAUTOSTACKTRACE;
             return this->renderTargetView;
         }
 
         inline IDXGISwapChain *peekSwapChain(void) {
-            VLSTACKTRACE("AbstractD3D11WindowImpl::peekSwapChain",__FILE__, 
-                __LINE__);
+            VLAUTOSTACKTRACE;
             return this->swapChain;
         }
 

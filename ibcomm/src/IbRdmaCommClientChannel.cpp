@@ -537,4 +537,3 @@ void vislib::net::ib::IbRdmaCommClientChannel::setBuffers(BYTE *bufRecv,
         }
     }
 }
-
