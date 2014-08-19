@@ -17,7 +17,7 @@
 /*
  * mmplgPluginAPIVersion
  */
-MMSTD.VOLUME_API int mmplgPluginAPIVersion(void) {
+MMSTD_VOLUME_API int mmplgPluginAPIVersion(void) {
     return 100;
 }
 
@@ -25,7 +25,7 @@ MMSTD.VOLUME_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgPluginName
  */
-MMSTD.VOLUME_API const char * mmplgPluginName(void) {
+MMSTD_VOLUME_API const char * mmplgPluginName(void) {
     return "mmstd.volume";
 }
 
@@ -33,7 +33,7 @@ MMSTD.VOLUME_API const char * mmplgPluginName(void) {
 /*
  * mmplgPluginDescription
  */
-MMSTD.VOLUME_API const char * mmplgPluginDescription(void) {
+MMSTD_VOLUME_API const char * mmplgPluginDescription(void) {
     return "Template for MegaMol Plugins (TODO: CHANGE this description)";
 }
 
@@ -41,7 +41,7 @@ MMSTD.VOLUME_API const char * mmplgPluginDescription(void) {
 /*
  * mmplgCoreCompatibilityValue
  */
-MMSTD.VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
+MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
     static const mmplgCompatibilityValues compRev = {
         sizeof(mmplgCompatibilityValues),
         MEGAMOL_CORE_COMP_REV,
@@ -54,7 +54,7 @@ MMSTD.VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
 /*
  * mmplgModuleCount
  */
-MMSTD.VOLUME_API int mmplgModuleCount(void) {
+MMSTD_VOLUME_API int mmplgModuleCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -62,7 +62,7 @@ MMSTD.VOLUME_API int mmplgModuleCount(void) {
 /*
  * mmplgModuleDescription
  */
-MMSTD.VOLUME_API void* mmplgModuleDescription(int idx) {
+MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -70,7 +70,7 @@ MMSTD.VOLUME_API void* mmplgModuleDescription(int idx) {
 /*
  * mmplgCallCount
  */
-MMSTD.VOLUME_API int mmplgCallCount(void) {
+MMSTD_VOLUME_API int mmplgCallCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -78,7 +78,7 @@ MMSTD.VOLUME_API int mmplgCallCount(void) {
 /*
  * mmplgCallDescription
  */
-MMSTD.VOLUME_API void* mmplgCallDescription(int idx) {
+MMSTD_VOLUME_API void* mmplgCallDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -86,7 +86,7 @@ MMSTD.VOLUME_API void* mmplgCallDescription(int idx) {
 /*
  * mmplgConnectStatics
  */
-MMSTD.VOLUME_API bool mmplgConnectStatics(int which, void* value) {
+MMSTD_VOLUME_API bool mmplgConnectStatics(int which, void* value) {
     switch (which) {
 
         case 1: // vislib::log
