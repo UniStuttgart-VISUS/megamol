@@ -47,8 +47,8 @@ view::LinkedView3D::~LinkedView3D(void) {
  */
 void view::LinkedView3D::Render(const mmcRenderViewContext& context) {
 
-#if (VISLIB_VERSION_MAJOR == 1) && (VISLIB_VERSION_MINOR == 0)
-	this->observableCamParams->CopyChangedParamsFrom(this->camParams);
+#if (VISLIB_VERSION_MAJOR >= 1) && (VISLIB_VERSION_MINOR >= 0)
+    this->observableCamParams->CopyChangedParamsFrom(this->camParams);
 #endif
 
     // Get camera parameters call
