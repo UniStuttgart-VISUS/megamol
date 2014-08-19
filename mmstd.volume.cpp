@@ -1,12 +1,12 @@
 /*
- * MegaMolPlugin.cpp
+ * mmstd.volume.cpp
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "MegaMolPlugin.h"
+#include "mmstd.volume.h"
 #include "api/MegaMolCore.std.h"
 #include "ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
@@ -17,7 +17,7 @@
 /*
  * mmplgPluginAPIVersion
  */
-MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void) {
+MMSTD.VOLUME_API int mmplgPluginAPIVersion(void) {
     return 100;
 }
 
@@ -25,15 +25,15 @@ MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgPluginName
  */
-MEGAMOLPLUGIN_API const char * mmplgPluginName(void) {
-    return "PluginTemplate";
+MMSTD.VOLUME_API const char * mmplgPluginName(void) {
+    return "mmstd.volume";
 }
 
 
 /*
  * mmplgPluginDescription
  */
-MEGAMOLPLUGIN_API const char * mmplgPluginDescription(void) {
+MMSTD.VOLUME_API const char * mmplgPluginDescription(void) {
     return "Template for MegaMol Plugins (TODO: CHANGE this description)";
 }
 
@@ -41,7 +41,7 @@ MEGAMOLPLUGIN_API const char * mmplgPluginDescription(void) {
 /*
  * mmplgCoreCompatibilityValue
  */
-MEGAMOLPLUGIN_API const void * mmplgCoreCompatibilityValue(void) {
+MMSTD.VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
     static const mmplgCompatibilityValues compRev = {
         sizeof(mmplgCompatibilityValues),
         MEGAMOL_CORE_COMP_REV,
@@ -54,7 +54,7 @@ MEGAMOLPLUGIN_API const void * mmplgCoreCompatibilityValue(void) {
 /*
  * mmplgModuleCount
  */
-MEGAMOLPLUGIN_API int mmplgModuleCount(void) {
+MMSTD.VOLUME_API int mmplgModuleCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -62,7 +62,7 @@ MEGAMOLPLUGIN_API int mmplgModuleCount(void) {
 /*
  * mmplgModuleDescription
  */
-MEGAMOLPLUGIN_API void* mmplgModuleDescription(int idx) {
+MMSTD.VOLUME_API void* mmplgModuleDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -70,7 +70,7 @@ MEGAMOLPLUGIN_API void* mmplgModuleDescription(int idx) {
 /*
  * mmplgCallCount
  */
-MEGAMOLPLUGIN_API int mmplgCallCount(void) {
+MMSTD.VOLUME_API int mmplgCallCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -78,7 +78,7 @@ MEGAMOLPLUGIN_API int mmplgCallCount(void) {
 /*
  * mmplgCallDescription
  */
-MEGAMOLPLUGIN_API void* mmplgCallDescription(int idx) {
+MMSTD.VOLUME_API void* mmplgCallDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -86,7 +86,7 @@ MEGAMOLPLUGIN_API void* mmplgCallDescription(int idx) {
 /*
  * mmplgConnectStatics
  */
-MEGAMOLPLUGIN_API bool mmplgConnectStatics(int which, void* value) {
+MMSTD.VOLUME_API bool mmplgConnectStatics(int which, void* value) {
     switch (which) {
 
         case 1: // vislib::log
