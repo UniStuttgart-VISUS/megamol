@@ -11,7 +11,7 @@ include ExtLibs.mk
 
 # Target name
 # TODO: Change the name "Template" to the name of your plugin
-TargetName := mmstd.datatools
+TargetName := mmstd_datatools
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
 InputDirs := .
@@ -20,7 +20,7 @@ VISlibs := sys math base graphics gl
 
 
 # Additional compiler flags
-CompilerFlags := $(CompilerFlags) -fPIC
+CompilerFlags := $(CompilerFlags) -fPIC -std=c++0x -fopenmp
 ExcludeFromBuild += ./dllmain.cpp
 
 
@@ -29,7 +29,7 @@ LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid
 
 
 # Additional linker flags
-LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic
+LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic -lgomp
 
 
 # Collect Files
