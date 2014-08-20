@@ -3121,11 +3121,11 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
     glPopMatrix();
 
-    // Unlock frames
-    mol1->Unlock();
-    mol2->Unlock();
-    vti1->Unlock();
-    vti2->Unlock();
+//    // Unlock frames
+//    mol1->Unlock();
+//    mol2->Unlock();
+//    vti1->Unlock();
+//    vti2->Unlock();
 
     this->oldCalltime = calltime;
     return CheckForGLError();
