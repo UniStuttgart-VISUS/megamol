@@ -119,18 +119,18 @@ bool vislib::graphics::gl::GLSLTesselationShader::Compile(
         insertLineDirective);
 
     /* Assemble program object. */
-    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgramObjectARB());
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hVertexShader));
+    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgram());
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hVertexShader));
     if (cntTessControlShaderSrc != 0) {
-        GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hTessControlShader));
+        GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hTessControlShader));
     }
     if (cntTessEvalShaderSrc != 0) {
-        GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hTessEvalShader));
+        GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hTessEvalShader));
     }
     if (cntGeometryShaderSrc != 0) {
-        GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hGeometryShader));
+        GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hGeometryShader));
     }
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hPixelShader));
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hPixelShader));
 
     return true;
 }

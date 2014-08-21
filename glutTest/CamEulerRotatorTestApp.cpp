@@ -6,8 +6,8 @@
  */
 #include "CamEulerRotatorTestApp.h"
 
+#include "vislib/IncludeAllGL.h"
 #include "vislibGlutInclude.h"
-#include <GL/gl.h>
 #include <GL/glu.h>
 #include <cstdio>
 

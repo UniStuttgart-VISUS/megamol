@@ -26,10 +26,10 @@ bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint status;
 
-    if ((glGetObjectParameterivARB != NULL)
-            && GL_SUCCEEDED(::glGetObjectParameterivARB(hProg, 
-                GL_OBJECT_DELETE_STATUS_ARB, &status))) {
-        return (status == 0);
+    if ((glGetProgramiv != NULL)
+            && GL_SUCCEEDED(::glGetProgramiv(hProg, 
+                GL_DELETE_STATUS, &status))) {
+        return (status == GL_FALSE);
     } else {
         return false;
     }
@@ -40,7 +40,7 @@ bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
  * vislib::graphics::gl::GLSLShader::RequiredExtensions
  */
 const char * vislib::graphics::gl::GLSLShader::RequiredExtensions(void) {
-    return "GL_ARB_shader_objects GL_ARB_vertex_shader GL_ARB_vertex_program ";
+    return "GL_ARB_shading_language_100 ";
 }
 
 
@@ -114,9 +114,9 @@ bool vislib::graphics::gl::GLSLShader::Compile(const char **vertexShaderSrc,
         insertLineDirective);
 
     /* Assemble program object. */
-    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgramObjectARB());
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hVertexShader));
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hPixelShader));
+    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgram());
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hVertexShader));
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hPixelShader));
 
     return true;
 }
@@ -279,9 +279,9 @@ GLenum vislib::graphics::gl::GLSLShader::Disable(void) {
     USES_GL_VERIFY;
     ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
-    GL_VERIFY_RETURN(::glUseProgramObjectARB(0));
-    GL_VERIFY_RETURN(::glDisable(GL_VERTEX_PROGRAM_ARB));
-    GL_VERIFY_RETURN(::glDisable(GL_FRAGMENT_PROGRAM_ARB));
+    GL_VERIFY_RETURN(::glUseProgram(0));
+    //GL_VERIFY_RETURN(::glDisable(GL_VERTEX_PROGRAM_ARB));
+    //GL_VERIFY_RETURN(::glDisable(GL_FRAGMENT_PROGRAM_ARB));
     return GL_NO_ERROR;
 }
         
@@ -293,9 +293,9 @@ GLenum vislib::graphics::gl::GLSLShader::Enable(void) {
     USES_GL_VERIFY;
     ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
 
-    GL_VERIFY_RETURN(::glEnable(GL_VERTEX_PROGRAM_ARB));
-    GL_VERIFY_RETURN(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
-    GL_VERIFY_RETURN(::glUseProgramObjectARB(this->hProgObj));
+    //GL_VERIFY_RETURN(::glEnable(GL_VERTEX_PROGRAM_ARB));
+    //GL_VERIFY_RETURN(::glEnable(GL_FRAGMENT_PROGRAM_ARB));
+    GL_VERIFY_RETURN(::glUseProgram(this->hProgObj));
     return GL_NO_ERROR;
 }
 
@@ -307,7 +307,7 @@ bool vislib::graphics::gl::GLSLShader::Link() {
     USES_GL_VERIFY;
     ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
     
-    GL_VERIFY_THROW(::glLinkProgramARB(this->hProgObj));
+    GL_VERIFY_THROW(::glLinkProgram(this->hProgObj));
     if (!this->isLinked(this->hProgObj)) {
         throw CompileException(this->getProgramInfoLog(this->hProgObj), 
             CompileException::ACTION_LINK, __FILE__, __LINE__);
@@ -323,7 +323,7 @@ bool vislib::graphics::gl::GLSLShader::Link() {
 GLint vislib::graphics::gl::GLSLShader::ParameterLocation(const char *name) const {
     ASSERT(name != NULL);
     ASSERT(GLSLShader::IsValidHandle(this->hProgObj));
-    return ::glGetUniformLocationARB(this->hProgObj, name);
+    return ::glGetUniformLocation(this->hProgObj, name);
 }
 
 
@@ -336,20 +336,21 @@ GLenum vislib::graphics::gl::GLSLShader::Release(void) {
     if (GLSLShader::IsValidHandle(this->hProgObj)) {
         GLint objCnt;
 
-        if (GL_SUCCEEDED(::glGetObjectParameterivARB(this->hProgObj, 
-                GL_OBJECT_ATTACHED_OBJECTS_ARB, &objCnt))) {
+        if (GL_SUCCEEDED(::glGetProgramiv(this->hProgObj, 
+            GL_ATTACHED_SHADERS, &objCnt))) {
             GLhandleARB *objs = new GLhandleARB[objCnt];
 
-            if (GL_SUCCEEDED(::glGetAttachedObjectsARB(this->hProgObj, 
+            if (GL_SUCCEEDED(::glGetAttachedShaders(this->hProgObj, 
                     objCnt, &objCnt, objs))) {
                 for (GLint i = 0; i < objCnt; i++) {
-                    ::glDeleteObjectARB(objs[i]);
+                    ::glDetachShader(this->hProgObj, objs[i]);
+                    ::glDeleteShader(objs[i]);
                 }
             }
             delete[] objs;
         }
 
-        GL_VERIFY_RETURN(::glDeleteObjectARB(this->hProgObj));
+        GL_VERIFY_RETURN(::glDeleteProgram(this->hProgObj));
     }
 
     return GL_NO_ERROR;
@@ -367,7 +368,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform1fARB(name, v1));
+    GL_VERIFY_RETURN(::glUniform1f(name, v1));
     return GL_NO_ERROR;
 
 }
@@ -384,7 +385,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform2fARB(name, v1, v2));
+    GL_VERIFY_RETURN(::glUniform2f(name, v1, v2));
     return GL_NO_ERROR;
 }
 
@@ -400,7 +401,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform3fARB(name, v1, v2, v3));
+    GL_VERIFY_RETURN(::glUniform3f(name, v1, v2, v3));
     return GL_NO_ERROR;
 }
 
@@ -416,7 +417,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform4fARB(name, v1, v2, v3, v4));
+    GL_VERIFY_RETURN(::glUniform4f(name, v1, v2, v3, v4));
     return GL_NO_ERROR;
 }
 
@@ -432,7 +433,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform1iARB(name, v1));
+    GL_VERIFY_RETURN(::glUniform1i(name, v1));
     return GL_NO_ERROR;
 }
 
@@ -448,7 +449,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform2iARB(name, v1, v2));
+    GL_VERIFY_RETURN(::glUniform2i(name, v1, v2));
     return GL_NO_ERROR;
 }
 
@@ -464,7 +465,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform3iARB(name, v1, v2, v3));
+    GL_VERIFY_RETURN(::glUniform3i(name, v1, v2, v3));
     return GL_NO_ERROR;
 }
 
@@ -480,7 +481,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameter(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform4iARB(name, v1, v2, v3, v4));
+    GL_VERIFY_RETURN(::glUniform4i(name, v1, v2, v3, v4));
     return GL_NO_ERROR;
 }
 
@@ -496,7 +497,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform1fvARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform1fv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -512,7 +513,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform2fvARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform2fv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -528,7 +529,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform3fvARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform3fv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -544,7 +545,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform4fvARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform4fv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -560,7 +561,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray1(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform1ivARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform1iv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -576,7 +577,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray2(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform2ivARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform2iv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -592,7 +593,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray3(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform3ivARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform3iv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -608,7 +609,7 @@ GLenum vislib::graphics::gl::GLSLShader::SetParameterArray4(const GLint name,
     if (name < 0) {
         return GL_INVALID_VALUE;
     }
-    GL_VERIFY_RETURN(::glUniform4ivARB(name, count, value));
+    GL_VERIFY_RETURN(::glUniform4iv(name, count, value));
     return GL_NO_ERROR;
 }
 
@@ -648,9 +649,9 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
         src = powerMemory.As<const char*>();
     }
 
-    GL_VERIFY_THROW(shader = ::glCreateShaderObjectARB(type));
-    GL_VERIFY_THROW(::glShaderSourceARB(shader, cnt, src, NULL));
-    GL_VERIFY_THROW(::glCompileShaderARB(shader));
+    GL_VERIFY_THROW(shader = ::glCreateShader(type));
+    GL_VERIFY_THROW(::glShaderSource(shader, cnt, src, NULL));
+    GL_VERIFY_THROW(::glCompileShader(shader));
 
     if (!isCompiled(shader)) {
         throw CompileException(getProgramInfoLog(shader), 
@@ -673,12 +674,12 @@ vislib::StringA vislib::graphics::gl::GLSLShader::getProgramInfoLog(
     StringA retval;
     char *log = NULL;
 
-    GL_VERIFY_THROW(::glGetObjectParameterivARB(hProg, 
-        GL_OBJECT_INFO_LOG_LENGTH_ARB, &len));
+    GL_VERIFY_THROW(::glGetProgramiv(hProg, 
+        GL_INFO_LOG_LENGTH, &len));
 
     if (len > 0) {
         log = retval.AllocateBuffer(len);
-        GL_VERIFY_THROW(::glGetInfoLogARB(hProg, len, &written, log));
+        GL_VERIFY_THROW(::glGetProgramInfoLog(hProg, len, &written, log));
     }
 
     return retval;
@@ -690,12 +691,27 @@ vislib::StringA vislib::graphics::gl::GLSLShader::getProgramInfoLog(
  */
 bool vislib::graphics::gl::GLSLShader::isCompiled(GLhandleARB hProg) {
     USES_GL_VERIFY;
-    GLint status;
+    GLint s, objCnt;
+    bool status = true;
 
-    GL_VERIFY_THROW(::glGetObjectParameterivARB(hProg, 
-        GL_OBJECT_COMPILE_STATUS_ARB, &status));
+    // NOPE
+    //GL_VERIFY_THROW(::glGetProgramiv(hProg, 
+    //    GL_OBJECT_COMPILE_STATUS_ARB, &status));
+    if (GL_SUCCEEDED(::glGetProgramiv(hProg,
+        GL_ATTACHED_SHADERS, &objCnt))) {
+        GLhandleARB *objs = new GLhandleARB[objCnt];
 
-    return (status != GL_FALSE);
+        if (GL_SUCCEEDED(::glGetAttachedShaders(hProg, 
+                objCnt, &objCnt, objs))) {
+            for (GLint i = 0; i < objCnt; i++) {
+                glGetShaderiv(objs[i], GL_COMPILE_STATUS, &s);
+                status = status && (s == GL_TRUE);
+            }
+        }
+        delete[] objs;
+    }
+
+    return status;
 }
 
 
@@ -706,8 +722,8 @@ bool vislib::graphics::gl::GLSLShader::isLinked(GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint status;
 
-    GL_VERIFY_THROW(::glGetObjectParameterivARB(hProg, 
-        GL_OBJECT_LINK_STATUS_ARB, &status));
+    GL_VERIFY_THROW(::glGetProgramiv(hProg, 
+        GL_LINK_STATUS, &status));
 
     return (status != GL_FALSE);
 }

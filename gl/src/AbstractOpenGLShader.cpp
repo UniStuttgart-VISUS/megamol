@@ -11,7 +11,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 
 #include <climits>
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 
 
 #include "vislib/assert.h"

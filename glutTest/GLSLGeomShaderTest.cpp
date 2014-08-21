@@ -6,8 +6,8 @@
 #define _USE_MATH_DEFINES
 #include "GLSLGeomShaderTest.h"
 
+#include "vislib/IncludeAllGL.h"
 #include "vislibGlutInclude.h"
-#include <GL/gl.h>
 #include <GL/glu.h>
 #include <cstdio>
 

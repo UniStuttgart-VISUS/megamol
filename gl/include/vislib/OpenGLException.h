@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 
 #include "vislib/Exception.h"
 

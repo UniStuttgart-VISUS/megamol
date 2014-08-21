@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "SimpleFontTest.h"
 
 #include "vislibGlutInclude.h"

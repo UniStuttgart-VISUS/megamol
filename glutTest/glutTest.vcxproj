@@ -113,8 +113,8 @@
       <UndefinePreprocessorDefinitions>GL_SGIX_async;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -148,8 +148,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -178,8 +178,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -213,8 +213,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>

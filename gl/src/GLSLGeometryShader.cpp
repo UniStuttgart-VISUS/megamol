@@ -94,10 +94,10 @@ bool vislib::graphics::gl::GLSLGeometryShader::Compile(
         insertLineDirective);
 
     /* Assemble program object. */
-    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgramObjectARB());
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hVertexShader));
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hGeometryShader));
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, hPixelShader));
+    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgram());
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hVertexShader));
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hGeometryShader));
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, hPixelShader));
 
     return true;
 }

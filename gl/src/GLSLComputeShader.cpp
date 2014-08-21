@@ -25,7 +25,7 @@ const char *
 vislib::graphics::gl::GLSLComputeShader::RequiredExtensions(void) {
     static vislib::StringA exts = vislib::StringA(
         vislib::graphics::gl::GLSLShader::RequiredExtensions())
-        + " GL_VERSION_4_3 ";
+        + " GL_ARB_compute_shader ";
     return exts.PeekBuffer();
 }
 
@@ -81,8 +81,8 @@ bool vislib::graphics::gl::GLSLComputeShader::Compile(
         insertLineDirective);
 
     /* Assemble program object. */
-    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgramObjectARB());
-    GL_VERIFY_THROW(::glAttachObjectARB(this->hProgObj, computeShader));
+    GL_VERIFY_THROW(this->hProgObj = ::glCreateProgram());
+    GL_VERIFY_THROW(::glAttachShader(this->hProgObj, computeShader));
     GL_VERIFY_THROW(glLinkProgram(this->hProgObj));
 
     return true;

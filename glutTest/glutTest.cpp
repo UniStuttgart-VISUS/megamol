@@ -7,8 +7,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#define GLH_EXT_SINGLE_FILE
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -22,6 +21,7 @@
 #else /* _WIN32 */
 #endif /* _WIN32 */
 
+#include "vislib/IncludeAllGL.h"
 #include <stdio.h>
 #include "vislibGlutInclude.h"
 #include <cassert>
@@ -35,8 +35,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#define GLH_EXT_SINGLE_FILE
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -164,6 +163,8 @@ int main(int argc, char* argv[]) {
     glutInitWindowSize(512, 512);                               // TODO: should be configured by AbstractGlutApp
     glutInitWindowPosition(128, 128);                           // TODO: should be configured by AbstractGlutApp
     glutCreateWindow("VISlib Glut Test");                       // TODO: should be configured by AbstractGlutApp
+
+    vislib::graphics::gl::LoadAllGL();
 
 #ifdef _WIN32
 #if defined(VISGLUT_EXTENSIONS)

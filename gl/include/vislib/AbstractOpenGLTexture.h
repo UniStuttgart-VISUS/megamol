@@ -18,7 +18,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 
 #include "vislib/ExtensionsDependent.h"
 #include "vislib/StackTrace.h"

@@ -5,19 +5,20 @@
  */
 
 #include "vislib/glfunctions.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 
 #include <stdlib.h>
 
-#ifdef _WIN32
-#include "GL/wglext.h"
-#else /* _WIN32 */
-// HAHA!
-#endif /* _WIN32 */
+//#ifdef _WIN32
+//#include "GL/wglext.h"
+//#else /* _WIN32 */
+//// HAHA!
+//#endif /* _WIN32 */
 
 #ifdef _WIN32
 /**
  * Answers whether or not a given wgl extension is supported.
+ * HINT: This is basically useless since you can ask glload as well...
  *
  * @param extensionName The name of the extension to search for.
  *
@@ -26,23 +27,11 @@
  *         -1 if there was an error while asking for the extension strings.
  */
 int WGLExtensionSupported(const char *extensionName) {
-    // this is pointer to function which returns pointer to string with list of all wgl extensions
-    PFNWGLGETEXTENSIONSSTRINGEXTPROC wglGetExtensionsStringEXT = NULL;
-
-    // determine pointer to wglGetExtensionsStringEXT function
-    wglGetExtensionsStringEXT = (PFNWGLGETEXTENSIONSSTRINGEXTPROC) wglGetProcAddress("wglGetExtensionsStringEXT");
-
-    if (wglGetExtensionsStringEXT == NULL) {
-        return -1;
-    }
-
-    if (strstr(wglGetExtensionsStringEXT(), extensionName) == NULL) {
-        // string was not found
+    if (isExtAvailable(extensionName)) {
+        return 1;
+    } else {
         return 0;
     }
-
-    // extension is supported
-    return 1;
 }
 #else /* _WIN32 */
 // HAHA!
@@ -162,16 +151,6 @@ void vislib::graphics::gl::DrawCuboidLines(
  */
 bool vislib::graphics::gl::EnableVSync(bool enable) {
 #ifdef _WIN32
-    static PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
-    static bool initialised = false;
-    if (!initialised) {
-        initialised = true;
-        int support = WGLExtensionSupported("WGL_EXT_swap_control");
-        if (support == 1) {
-            wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)
-                wglGetProcAddress("wglSwapIntervalEXT");
-        }
-    }
     if (wglSwapIntervalEXT != NULL) {
         wglSwapIntervalEXT(enable ? 1 : 0);
         bool rvError = false;
@@ -246,18 +225,6 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
  */
 bool vislib::graphics::gl::IsVSyncEnabled(bool *error) {
 #ifdef _WIN32
-    static PFNWGLGETSWAPINTERVALEXTPROC wglGetSwapIntervalEXT = NULL;
-    if (wglGetSwapIntervalEXT == NULL) {
-        if (WGLExtensionSupported("WGL_EXT_swap_control") == 1) {
-            wglGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC)
-                wglGetProcAddress("wglGetSwapIntervalEXT");
-        }
-        if (wglGetSwapIntervalEXT == NULL) {
-            if (error != NULL) *error = true;
-            return false;
-        }
-    }
-    if (error != NULL) *error = false;
     return (wglGetSwapIntervalEXT() == 1);
 #else /* _WIN32 */
     // LINUX DOES NOT WORK AT ALL!!!

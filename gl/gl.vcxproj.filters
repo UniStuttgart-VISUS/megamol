@@ -139,11 +139,11 @@
     <ClInclude Include="include\vislib\GLSLTesselationShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\IncludeAllGL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Makefile" />
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="include\glh\extgen.pl" />
   </ItemGroup>
 </Project>

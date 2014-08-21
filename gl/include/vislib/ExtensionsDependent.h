@@ -21,13 +21,12 @@
 #ifndef VISLIB_SYMBOL_EXPORT
 #define GLH_EXT_IMPORT  // TODO: This is extremely hughly because of LNK4049, but works.
 #endif /* !VISLIB_SYMBOL_EXPORT */
-#include "glh/glh_extensions.h"
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
-
+#include "vislib/IncludeAllGL.h"
 
 namespace vislib {
 namespace graphics {
@@ -82,7 +81,7 @@ namespace gl {
      * ExtensionsDependent::InitialiseExtensions
      */
     template<class T> bool ExtensionsDependent<T>::InitialiseExtensions(void) {
-        return (::glh_init_extensions(T::RequiredExtensions()) != 0);
+        return AreExtensionsAvailable();
     }
 
 
@@ -90,13 +89,14 @@ namespace gl {
      * ExtensionsDependent::InitialiseExtensions
      */
     template<class T> bool ExtensionsDependent<T>::AreExtensionsAvailable(void) {
+        LoadAllGL();
         // check required extensions individually
         StringTokeniserA extensions(T::RequiredExtensions(), ' ');
         while (extensions.HasNext()) {
             StringA str = extensions.Next();
             str.TrimSpaces();
             if (str.IsEmpty()) continue;
-            if (glh_extension_supported(str.PeekBuffer()) == 0) {
+            if (isExtAvailable(str) != GL_TRUE) {
                 return false; // this extension is missing
             }
         }
