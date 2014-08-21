@@ -17,11 +17,11 @@ OutName := vislibgluttest
 
 
 # C++ compiler flags:
-CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -ggdb -Wno-missing-braces
+CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -ggdb -Wno-missing-braces -std=c++11
 # removed: -pedantic 
 
 # Linker flags:
-LDFLAGS := -ldl -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL -lX11 
+LDFLAGS := -ldl -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL -lX11 -L../gl/include/glload
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
@@ -35,10 +35,10 @@ IntDir := Lin$(BITSEX)
 ifeq ($(PLATFORM), x64)
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
-	LDFLAGS += -lvislibgl64 -lvislibgraphics64 -lvislibmath64 -lvislibsys64 -lvislibbase64
+	LDFLAGS += -lvislibgl64 -lvislibgraphics64 -lvislibmath64 -lvislibsys64 -lvislibbase64 -lglload
 else
 	OutDir := ../Lin32
-	LDFLAGS += -lvislibgl32 -lvislibgraphics32 -lvislibmath32 -lvislibsys32 -lvislibbase32
+	LDFLAGS += -lvislibgl32 -lvislibgraphics32 -lvislibmath32 -lvislibsys32 -lvislibbase32 -lglload
 endif
 
 LDFLAGS += -lX11 -lXxf86vm -lpthread

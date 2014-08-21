@@ -35,12 +35,13 @@ endif
 -include ../librules.mk
 
 
-# add dependancy to glh
-$(CPP_DEPS_DEBUG): ./include/glh/glh_genext.h
+# add dependancy to glload
+$(CPP_DEPS_DEBUG): ./include/glload/libglload.a
 
-$(CPP_DEPS_RELEASE): ./include/glh/glh_genext.h
+$(CPP_DEPS_RELEASE): ./include/glload/libglload.a
 
 # build target for glh
-./include/glh/glh_genext.h:
-	perl ./include/glh/extgen.pl ./include/glh/glh_genext.h ./include/GL/glext.h
-#	$(Q)$(MAKE) -C ./include/glh glh_genext.h
+./include/glload/libglload.a:
+	cd include/glload
+	make
+

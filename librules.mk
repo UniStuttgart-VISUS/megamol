@@ -20,7 +20,7 @@ OBJS_RELEASE := $(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp,
 OBJS_RELEASE_EXPORT := $(addprefix $(IntDir)/$(ReleaseDir)Export/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 OBJS_RELEASE_IMPORT := $(addprefix $(IntDir)/$(ReleaseDir)Import/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS))))
 
-CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
+CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir)) -std=c++11
 LDFLAGS := $(LinkerFlags)
 
 EXPORTCOMPILEFLAGS := -DVISLIB_SYMBOL_EXPORT
