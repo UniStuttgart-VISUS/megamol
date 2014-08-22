@@ -10,6 +10,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)\include;..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ProgramDataBaseFileName>$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb</ProgramDataBaseFileName>
+      <PreprocessorDefinitions>GL_LOAD_DLL;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)vislib$(ProjectName)$(BitsD).lib</OutputFile>
