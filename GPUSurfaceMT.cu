@@ -20,6 +20,8 @@
 #include "cuda_helper.h"
 
 #include <cuda_runtime.h>
+#include "vislib/IncludeAllGL.h"
+#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
 #include <thrust/scan.h>

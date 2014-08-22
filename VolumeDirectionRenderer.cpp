@@ -86,7 +86,7 @@ void VolumeDirectionRenderer::release(void) {
  * protein::VolumeDirectionRenderer::create
  */
 bool VolumeDirectionRenderer::create(void) {
-    if( !glh_init_extensions( "GL_VERSION_2_0") )
+    if( !ogl_IsVersionGEQ(2,0) )
         return false;
 
     if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )

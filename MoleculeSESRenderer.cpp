@@ -22,12 +22,11 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "utility/ColourParser.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <ctime>
@@ -285,11 +284,11 @@ void MoleculeSESRenderer::release( void ) {
  * MoleculeSESRenderer::create
  */
 bool MoleculeSESRenderer::create( void ) {
-    if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float") )
+    if(!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float") )
         return false;
 
 #ifdef WITH_PUXELS
-	allowPuxels = glh_init_extensions( "GL_VERSION_3_0 GL_VERSION_4_3" );
+    allowPuxels = ogl_IsVersionGEQ(4,3);
 #else
     allowPuxels = false;
 #endif

@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <stdafx.h>
-#include <glh/glh_extensions.h>
+#include "vislib/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein {
@@ -139,9 +139,8 @@ public:
      */
     static bool InitExtensions() {
         // Init extensions
-        if (!glh_init_extensions("\
-                GL_ARB_copy_buffer \
-                GL_ARB_vertex_buffer_object")) {
+        if (!isExtAvailable("GL_ARB_copy_buffer")
+            || !isExtAvailable("GL_ARB_vertex_buffer_object")) {
             return false;
         }
         return true;

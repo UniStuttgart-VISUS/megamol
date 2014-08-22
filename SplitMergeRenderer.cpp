@@ -15,14 +15,18 @@
 #include <math.h>
 #include "misc/ImageViewer.h"
 #include "utility/ResourceWrapper.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <float.h>
+#include "vislib/FastMap.h"
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace vislib::graphics::gl;
 using vislib::sys::Log;
+
+vislib::Array<int> *SplitMergeRenderer::FastMapWrapper::sortedSeries;
+SplitMergeCall *SplitMergeRenderer::FastMapWrapper::diagram;
 
 /*
  * SplitMergeRenderer::SplitMergeRenderer (CTOR)
@@ -39,7 +43,9 @@ SplitMergeRenderer::SplitMergeRenderer( void ) : Renderer2DModule (),
         fgColor(vislib::math::Vector<float, 4>(1.0f, 1.0f, 1.0f, 1.0f)),
         diagram(NULL), selectedSeries(NULL), selectionCall(NULL), hiddenCall(NULL),
         unselectedColor(vislib::math::Vector<float, 4>(0.5f, 0.5f, 0.5f, 1.0f)),
-        noseLength(0.1f), fontSize(1.0f), seriesSpacing(2.0f), sortedSeries(), sortedSeriesInverse(), seriesVisible() {
+        noseLength(0.1f), fontSize(1.0f), seriesSpacing(2.0f), sortedSeries(), seriesVisible()
+        //sortedSeriesInverse(),
+        {
 
     // segmentation data caller slot
     this->dataCallerSlot.SetCompatibleCall<SplitMergeCallDescription>();
@@ -76,7 +82,7 @@ SplitMergeRenderer::~SplitMergeRenderer( void ) {
  */
 bool SplitMergeRenderer::create() {
 
-    if (glh_init_extensions("GL_NV_path_rendering") != GL_TRUE) {
+    if (isExtAvailable("GL_NV_path_rendering") != GL_TRUE) {
         return false;
     }
 
@@ -284,16 +290,30 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
 
     // array for indirection/sorting/hiding/whatever
     sortedSeries.AssertCapacity(diagram->GetSeriesCount());
-    sortedSeriesInverse.AssertCapacity(diagram->GetSeriesCount());
+    //sortedSeriesInverse.AssertCapacity(diagram->GetSeriesCount());
     //selectionLevel.AssertCapacity(diagram->GetSeriesCount());
     selectionLevel.SetCount(diagram->GetSeriesCount());
     sortedSeries.Clear();
-    sortedSeriesInverse.SetCount(diagram->GetSeriesCount());
+    //sortedSeriesInverse.SetCount(diagram->GetSeriesCount());
+
     for (int i = 0; i < diagram->GetSeriesCount(); i++) {
         sortedSeries.Add(i);
-        sortedSeriesInverse[i] = i;
+        //sortedSeriesInverse[i] = i;
         selectionLevel[i] = 0;
     }
+
+#if 0
+    vislib::Array<FastMapWrapper> fmps;
+    FastMapWrapper::sortedSeries = &sortedSeries;
+    FastMapWrapper::diagram = diagram;
+    fmps.AssertCapacity(diagram->GetSeriesCount());
+    fmps.SetCount(diagram->GetSeriesCount());
+    for (int i = 0; i < diagram->GetSeriesCount(); i++) {
+        fmps[i].index = i;
+    }
+    vislib::math::Fastmap<FastMapWrapper, int, 1> fm;
+#endif
+
     if (this->visibilityFromSelection.Param<param::BoolParam>()->Value()) {
         for (int i = 0; i < sortedSeries.Count(); i++) {
             if (diagram->GetSeries(sortedSeries[i]) == selectedSeries) {
@@ -334,7 +354,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     } 
     for (int i = sortedSeries.Count() - 1; i >= 0; i--) {
         if (!seriesVisible[sortedSeries[i]]) {
-            sortedSeriesInverse[sortedSeries[i]] = -1;
+            //sortedSeriesInverse[sortedSeries[i]] = -1;
             sortedSeries.RemoveAt(i);
         }
     }

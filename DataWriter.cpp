@@ -18,7 +18,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "vislib/Log.h"

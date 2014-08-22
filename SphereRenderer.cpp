@@ -21,7 +21,7 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 
 using namespace megamol;
@@ -78,7 +78,7 @@ void protein::SphereRenderer::release(void) {
  */
 bool protein::SphereRenderer::create(void)
 {
-    if (glh_init_extensions("GL_ARB_vertex_program") == 0) {
+    if (!isExtAvailable( "GL_ARB_vertex_program") ) {
         return false;
     }
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {

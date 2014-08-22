@@ -33,10 +33,10 @@
 #include "vislib/StringConverter.h"
 #include "vislib/PerformanceCounter.h"
 #include "vislib/Matrix.h"
-#include <glh/glh_extensions.h>
 #include <GL/glu.h>
-#include <cuda_gl_interop.h>
+#include "vislib/IncludeAllGL.h"
 #include "cuda_helper.h"
+#include <cuda_gl_interop.h>
 #include <thrust/version.h>
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
@@ -281,7 +281,7 @@ bool VolumeMeshRenderer::create(void) {
     using vislib::sys::Log;
     using namespace vislib::graphics::gl;
 
-    if (glh_init_extensions("GL_VERSION_2_0 GL_ARB_vertex_buffer_object GL_EXT_framebuffer_object") != GL_TRUE) {
+    if (!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("GL_ARB_vertex_buffer_object GL_EXT_framebuffer_object")) {
         return false;
     }
     if  (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
@@ -3270,7 +3270,8 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         // sum up edge length and reset edge as not visited
         length = 0.0f;
         for( auto edge : this->clEdges[fIdx-1] ) {
-            length += (edge->node1->p - edge->node2->p).Length();
+            //length += (edge->node1->p - edge->node2->p).Length();
+            length++;
             //length++;
             edge->visited = false;
         }
@@ -3302,7 +3303,8 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
         }
         length = 0;
         ms->AppendValue( length, node1->minimumDistance);
-        length += (node1->p - node2->p).Length();
+        //length += (node1->p - node2->p).Length();
+        length++;
         //length++;
         ms->AppendValue( length, node2->minimumDistance);
         while( node2 != nullptr && !node2->isStartNode ) {
@@ -3313,15 +3315,15 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
                     // TODO support branching! (recursion)
                     if( nextEdge->node1 == node1 ) {
                         node2 = nextEdge->node2;
-                        length += (node1->p - node2->p).Length();
-                        //length++;
+                        //length += (node1->p - node2->p).Length();
+                        length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;
                     } else if( nextEdge->node2 == node1 ) {
                         node2 = nextEdge->node1;
-                        length += (node1->p - node2->p).Length();
-                        //length++;
+                        //length += (node1->p - node2->p).Length();
+                        length++;
                         ms->AppendValue( length, node2->minimumDistance);
                         nextEdge->visited = true;
                         break;

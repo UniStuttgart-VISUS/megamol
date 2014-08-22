@@ -27,6 +27,8 @@
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include "vislib/IncludeAllGL.h"
+#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
 namespace megamol {

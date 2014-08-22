@@ -360,7 +360,7 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
-    if(!glh_init_extensions("GL_VERSION_2_0 GL_EXT_texture3D GL_ARB_multitexture")) {
+    if(!ogl_IsVersionGEQ(2,0) || !isExtAvailable("GL_EXT_texture3D") || !isExtAvailable("GL_ARB_multitexture")) {
             return false;
     }
 

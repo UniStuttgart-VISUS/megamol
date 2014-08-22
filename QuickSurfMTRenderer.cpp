@@ -30,7 +30,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <omp.h>
 
@@ -187,7 +187,7 @@ void QuickSurfMTRenderer::release(void) {
  * protein::QuickSurfMTRenderer::create
  */
 bool QuickSurfMTRenderer::create(void) {
-	if( !glh_init_extensions( "GL_ARB_vertex_program GL_VERSION_2_0") )
+    if( !isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
         return false;
 
     if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )

@@ -24,6 +24,8 @@
 #include <cstdio>
 #include <string.h>
 
+#include "vislib/IncludeAllGL.h"
+#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
 #include "thrust/device_ptr.h"

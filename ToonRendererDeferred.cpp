@@ -19,7 +19,7 @@
 #include <vislib/Log.h>
 
 #include "ToonRendererDeferred.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 
 using namespace megamol::protein;
 
@@ -93,7 +93,7 @@ bool ToonRendererDeferred::create(void) {
         return false;
     }
 
-    if(!glh_init_extensions("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
+    if(!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
         return false;
     }
 
@@ -101,7 +101,7 @@ bool ToonRendererDeferred::create(void) {
         return false;
     }
 
-    if(!glh_init_extensions("GL_ARB_texture_non_power_of_two")) return false;
+    if(!isExtAvailable("GL_ARB_texture_non_power_of_two")) return false;
 
     // Try to load the gradient shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::sobel::vertex", vertSrc)) {

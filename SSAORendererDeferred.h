@@ -51,7 +51,7 @@ namespace protein {
                  return false;
              if(!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable())
                  return false;
-             if(!glh_extension_supported("GL_ARB_texture_rectangle"))
+             if(!isExtAvailable("GL_ARB_texture_rectangle"))
                  return false;
              return true;
          }

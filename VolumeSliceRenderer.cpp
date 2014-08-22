@@ -11,7 +11,7 @@
 
 #include "VolumeSliceRenderer.h"
 #include "CoreInstance.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 

@@ -24,13 +24,14 @@
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <iostream>
 
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
 
 #include "cuda_helper.h"
+#include "vislib/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 #include "cuda_error_check.h"
 
@@ -126,10 +127,11 @@ void protein::MoleculeCudaSESRenderer::release( void ) {
  * MoleculeCudaSESRenderer::create
  */
 bool MoleculeCudaSESRenderer::create( void ) {
-    if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform") )
+    if( !areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform")
+        || !ogl_IsVersionGEQ(2,0))
         return false;
 
-    if( !glh_init_extensions( "GL_NV_transform_feedback") )
+    if( !isExtAvailable( "GL_NV_transform_feedback") )
         return false;
 
     if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )

@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <glh/glh_genext.h>
+#include "vislib/IncludeAllGL.h"
 #include "VTIDataCall.h"
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
