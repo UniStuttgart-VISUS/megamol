@@ -21,7 +21,7 @@ CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -gg
 # removed: -pedantic 
 
 # Linker flags:
-LDFLAGS := -ldl -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL -lX11 -L../gl/include/glload
+LDFLAGS := -ldl -lXext -lXxf86vm -L../lib -lm -lpthread -lGLU -lGL -lX11 -L../gl/include/glload/build
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)

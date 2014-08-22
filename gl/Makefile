@@ -36,12 +36,11 @@ endif
 
 
 # add dependancy to glload
-$(CPP_DEPS_DEBUG): ./include/glload/libglload.a
+$(CPP_DEPS_DEBUG): ./include/glload/build/libglload.so
 
-$(CPP_DEPS_RELEASE): ./include/glload/libglload.a
+$(CPP_DEPS_RELEASE): ./include/glload/build/libglload.so
 
 # build target for glh
-./include/glload/libglload.a:
-	cd include/glload
-	make
+./include/glload/build/libglload.so:
+	$(shell include/glload/build.sh)
 
