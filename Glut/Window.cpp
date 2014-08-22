@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "Window.h"
 #include "visglut.h"
 #include "vislib/glfunctions.h"
@@ -34,6 +34,8 @@ megamol::viewer::Window::Window(megamol::viewer::Viewer& owner)
     }
 
     this->glutID = ::glutCreateWindow("MegaMol");
+    // even less nice :(
+    vislib::graphics::gl::LoadAllGL();
     ::glutSetWindowData(static_cast<void*>(this));
     ::glutDisplayFunc(megamol::viewer::Window::glutDisplayCallback);
     ::glutReshapeFunc(megamol::viewer::Window::glutReshapeCallback);

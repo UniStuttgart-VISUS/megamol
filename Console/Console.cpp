@@ -41,6 +41,7 @@
 #include "vislib/ThreadSafeStackTrace.h"
 #include "vislib/Trace.h"
 #include "vislib/DateTime.h"
+#include "vislib/IncludeAllGL.h"
 #ifdef _WIN32
 #include "vislib/SystemInformation.h"
 #endif /* _WIN32 */
@@ -1349,6 +1350,11 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                 retval = -28;
                 continue;
             }
+
+            // we have the context and can load all function points now
+            // no modules have been instantiated yet!
+            // this is not nice, but we have no better solution ATM
+            vislib::graphics::gl::LoadAllGL();
 
 #ifndef NOWINDOWPOSFIX
 			int predictedX, predictedY, predictedWidth, predictedHeight;

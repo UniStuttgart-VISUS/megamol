@@ -6,7 +6,6 @@
  */
 
 #include "stdafx.h"
-#define GLH_EXT_SINGLE_FILE
 #include "MegaMolViewer.h"
 #include "ApiHandle.h"
 #include "Instance.h"
@@ -15,10 +14,7 @@
 #include "vislib/memutils.h"
 #include "vislib/String.h"
 #include "vislib/ThreadSafeStackTrace.h"
-#pragma warning(disable: 4996)
-#include "glh/glh_extensions.h"
-#pragma warning(default: 4996)
-
+#include "vislib/IncludeAllGL.h"
 
 #ifdef _WIN32
 /* windows dll entry point */

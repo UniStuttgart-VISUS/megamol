@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #ifdef WITH_TWEAKBAR
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "GUILayer.h"
 #include "MegaMolCore.h"
 #include "vislib/assert.h"

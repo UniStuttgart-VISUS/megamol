@@ -119,7 +119,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\api;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -132,8 +132,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;$(LibTweakbarDebug);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;$(LibTweakbarDebug);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(VISlibPath)\gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -145,6 +145,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
 xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+xcopy "$(VISlibPath)gl\include\glload\lib\glload$(BitsD).dll" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -162,7 +163,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\api;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -175,8 +176,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;$(LibTweakbarDebug);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;$(LibTweakbarDebug);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(VISlibPath)\gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -188,6 +189,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
 xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+xcopy "$(VISlibPath)gl\include\glload\lib\glload$(BitsD).dll" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -201,7 +203,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\api;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -212,8 +214,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;$(LibTweakbarRelease);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;$(LibTweakbarRelease);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(VISlibPath)\gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -227,6 +229,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
 xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+xcopy "$(VISlibPath)gl\include\glload\lib\glload$(BitsD).dll" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -243,7 +246,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </Midl>
     <ClCompile>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\api;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -254,8 +257,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;$(LibTweakbarRelease);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;$(LibTweakbarRelease);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(VISlibPath)\gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -269,6 +272,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
 xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+xcopy "$(VISlibPath)gl\include\glload\lib\glload$(BitsD).dll" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>

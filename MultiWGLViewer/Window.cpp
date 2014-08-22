@@ -6,16 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "Window.h"
 #include "MegaMolCore.h"
 #include <tchar.h>
 #include <cstdio>
 #include <gl/GL.h>
 //#include "NVSwapGroup.h"
-#pragma warning(disable: 4996)
-#include "glh/glh_extensions.h"
-#pragma warning(default: 4996)
 
 using namespace megamol::wgl;
 

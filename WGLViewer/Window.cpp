@@ -6,16 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "Window.h"
 #include "MegaMolCore.h"
 #include <tchar.h>
 #include <cstdio>
-#include <gl/GL.h>
 //#include "NVSwapGroup.h"
-#pragma warning(disable: 4996)
-#include "glh/glh_extensions.h"
-#pragma warning(default: 4996)
+
 
 #include "vislib/Log.h"
 
@@ -518,7 +515,7 @@ bool Window::setupContextAffinity(HWND window) {
 
 	unsigned int gpuIndex = 0;
     this->hGpu = nullptr;
-	GPU_DEVICE deviceInfo;
+	_GPU_DEVICE deviceInfo;
 
 	while (wglEnumGpusNV(gpuIndex, &this->hGpu)) {
 		unsigned int deviceIndex = 0;

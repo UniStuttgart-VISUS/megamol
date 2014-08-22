@@ -14,7 +14,7 @@
 #include "ApiHandle.h"
 #include "CallbackSlot.h"
 #include "Instance.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "vislib/Event.h"
 #include "vislib/Thread.h"
 
