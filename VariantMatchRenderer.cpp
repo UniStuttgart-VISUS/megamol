@@ -71,14 +71,14 @@ bool VariantMatchRenderer::create(void) {
         return false;
     }
 
-    if(!glh_init_extensions("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
+    if(!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers")) {
         return false;
     }
     if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 
-    if (!glh_init_extensions("GL_ARB_texture_non_power_of_two")) {
+    if (!isExtAvailable("GL_ARB_texture_non_power_of_two")) {
         return false;
     }
 

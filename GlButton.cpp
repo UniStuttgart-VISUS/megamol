@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "GlButton.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 
 

@@ -18,7 +18,7 @@
 #include "CallAutoDescription.h"
 #include "vislib/Cuboid.h"
 #include "view/CallRender3D.h"
-#include <GL/gl.h>
+#include "vislib/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein {

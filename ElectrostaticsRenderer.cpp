@@ -21,7 +21,7 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <string>
 #include <iostream>

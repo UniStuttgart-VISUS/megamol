@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "slicing.h"
 #include "Color.h"
 #include "MolecularDataCall.h"

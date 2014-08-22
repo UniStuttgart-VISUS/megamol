@@ -35,7 +35,7 @@
 #include "vislib/AbstractOpenGLShader.h"
 #include "vislib/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 #include <time.h>
@@ -288,9 +288,9 @@ bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader
  * protein::SolventVolumeRenderer::create
  */
 bool protein::SolventVolumeRenderer::create ( void ) {
-    if( !glh_init_extensions( "GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
+    if( !areExtsAvailable( "GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
         return false;
-    if( !glh_init_extensions( "GL_ARB_vertex_program" ) )
+    if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
         return false;
     if( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;

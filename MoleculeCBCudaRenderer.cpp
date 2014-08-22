@@ -27,10 +27,9 @@
 #include "vislib/Trace.h"
 #include "vislib/ShaderSource.h"
 #include "vislib/AbstractOpenGLShader.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "vislib/Matrix.h"
 #include "vislib/ColourRGBAu8.h"
-#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 #include <iostream>
 #include <ctime>
@@ -144,7 +143,7 @@ bool MoleculeCBCudaRenderer::create( void ) {
 	// try to initialize the necessary extensions for GLSL shader support
 	if ( !GLSLShader::InitialiseExtensions() )
 		return false;
-    if (::glh_init_extensions("GL_VERSION_2_0 GL_ARB_multitexture GL_EXT_framebuffer_object") != GL_TRUE) {
+    if (!areExtsAvailable("GL_ARB_multitexture GL_EXT_framebuffer_object") || !ogl_IsVersionGEQ(2,0)) {
         return false;
     }
 

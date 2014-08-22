@@ -7,7 +7,7 @@
 
 #include "CUDAStreamlines.h"
 #include "stdafx.h"
-#include <glh/glh_extensions.h>
+#include "vislib/IncludeAllGL.h"
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
 #include "CUDAGrid.cuh"
@@ -16,6 +16,7 @@
 #include "vislib/Log.h"
 
 #include <cuda_runtime.h>
+#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
 using namespace megamol;

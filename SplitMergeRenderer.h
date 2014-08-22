@@ -156,11 +156,36 @@ namespace protein {
         float noseLength;
         float fontSize;
         vislib::Array<int> sortedSeries;
-        vislib::Array<int> sortedSeriesInverse;
+        //vislib::Array<int> sortedSeriesInverse;
         vislib::math::Rectangle<float> bounds;
         SplitMergeCall::SplitMergeSeries *selectedSeries;
         vislib::Array<bool> seriesVisible;
         vislib::Array<int> selectionLevel;
+
+        class FastMapWrapper {
+        public:
+            int index;
+            static vislib::Array<int> *sortedSeries;
+            static SplitMergeCall *diagram;
+
+            float Distance(FastMapWrapper &other) {
+                int s1 = (*sortedSeries)[this->index];
+                int s2 = (*sortedSeries)[other.index];
+                int sameCount = 0;
+                for(int i = 0; i < diagram->GetTransitionCount(); i++) {
+                    SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(i);
+                    if ((smt->DestinationSeries() == s1 && smt->SourceSeries() == s2)
+                        || (smt->DestinationSeries() == s2 && smt->SourceSeries() == s1)) {
+                            sameCount++;
+                    }
+                }
+                return 1.0f / (sameCount + 1.0f);
+            }
+            bool operator==(const FastMapWrapper &rhs) const {
+                return this->index == rhs.index;
+            }
+        };
+
     };
 
 } /* end namespace protein */

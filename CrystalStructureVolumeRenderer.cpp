@@ -42,14 +42,12 @@
 #include <vislib/Quaternion.h>
 #include <vislib/Matrix.h>
 #include "vislib/FramebufferObject.h"
-#include <glh/glh_genext.h>
-#include <glh/glh_extensions.h>
+#include "vislib/IncludeAllGL.h"
 
 #include <thrust/version.h>
 #include "cuda_helper.h"
 #include "cuda_gl_interop.h"
 
-#include "glh/glh_extensions.h"
 #include <GL/glu.h>
 
 #include <cmath>
@@ -1290,8 +1288,9 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
     }
 
     // Init extensions
-    if(!glh_init_extensions("GL_VERSION_2_0 GL_EXT_texture3D \
-            GL_EXT_framebuffer_object GL_ARB_multitexture GL_ARB_draw_buffers")) {
+    if(!ogl_IsVersionGEQ(2,0) || !isExtAvailable("GL_EXT_texture3D")
+        || !isExtAvailable("GL_EXT_framebuffer_object") || !isExtAvailable("GL_ARB_multitexture")
+        || !isExtAvailable("GL_ARB_draw_buffers")) {
         return false;
     }
     if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {

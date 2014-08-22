@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include <param/EnumParam.h>
@@ -106,14 +106,14 @@ bool protein::DofRendererDeferred::create(void) {
 		return false;
 	}
 
-	if(!glh_init_extensions("GL_EXT_framebuffer_object GL_ARB_draw_buffers"))
+	if(!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers"))
 		return false;
 
 	if(!graphics::gl::GLSLShader::InitialiseExtensions()) {
 		return false;
 	}
 
-	if(!glh_init_extensions("GL_ARB_texture_non_power_of_two")) return false;
+	if(!isExtAvailable("GL_ARB_texture_non_power_of_two")) return false;
 
 	// Try to load depth of field shader (mipmap, reduce)
 	if(!ci->ShaderSourceFactory().MakeShaderSource("proteinDeferred::dof::reduceVertex", vertSrc)) {

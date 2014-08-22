@@ -38,8 +38,7 @@
 #include "vislib/FramebufferObject.h"
 #include "vislib/Matrix.h"
 
-#include <glh/glh_genext.h>
-#include <glh/glh_extensions.h>
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include <cmath>
@@ -533,8 +532,8 @@ bool PotentialVolumeRaycaster::create() {
     }
 
     // Init extensions
-    if(!glh_init_extensions("\
-            GL_VERSION_2_0 GL_EXT_texture3D \
+    if(! ogl_IsVersionGEQ(2,0) || !areExtsAvailable("\
+            GL_EXT_texture3D \
             GL_EXT_framebuffer_object \
             GL_ARB_multitexture \
             GL_ARB_draw_buffers \

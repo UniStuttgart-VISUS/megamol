@@ -9,7 +9,7 @@
 //
 #include "stdafx.h"
 
-#include <glh/glh_extensions.h>
+#include "vislib/IncludeAllGL.h"
 #include "DeformableGPUSurfaceMT.h"
 #ifdef WITH_CUDA
 
@@ -25,6 +25,7 @@
 #include "cuda_helper.h"
 
 #include <cuda_runtime.h>
+#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 #include <thrust/sort.h>
 #include <thrust/reduce.h>

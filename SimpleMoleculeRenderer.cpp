@@ -9,8 +9,7 @@
 
 #define _USE_MATH_DEFINES 1
 
-#define GLH_EXT_SINGLE_FILE
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 
 #include "SimpleMoleculeRenderer.h"
 #include "CoreInstance.h"
@@ -205,7 +204,7 @@ void SimpleMoleculeRenderer::release(void) {
  * protein::SimpleMoleculeRenderer::create
  */
 bool SimpleMoleculeRenderer::create(void) {
-    if (!glh_init_extensions("GL_ARB_vertex_program GL_VERSION_2_0"))
+    if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
         return false;
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())

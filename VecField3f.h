@@ -17,6 +17,7 @@
 #include <vector_types.h>
 
 #include "cuda_helper.h"
+#include "vislib/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 #endif
 //#include "vislib_vector_typedefs.h"

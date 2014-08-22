@@ -12,7 +12,7 @@
 #include "vislib/Rectangle.h"
 #include "vislib/BufferedFile.h"
 #include "vislib/sysfunctions.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 #include <vislib/Verdana.inc>
@@ -990,6 +990,7 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     for (int i = 0; i < maxYValues.Count(); i++) {
         maxYValues[i] = 0.0f;
     }
+    // there is a difference between not finding an x value and having a hole which is explicitly returned as NULL
     localXIndexToGlobal.SetCount(diagram->GetSeriesCount());
 
 #if 1
@@ -1081,6 +1082,8 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
                             y = dm->GetOrdinateValue(j);
                             found = true;
                         }
+                    } else {
+                        // this is a hole! but where?
                     }
                 } else {
                     ret = dm->GetAbscissaValue(j, 0, &x);
@@ -1092,6 +1095,8 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
                             y = dm->GetOrdinateValue(j);
                             found = true;
                         }
+                    } else {
+                        // this is a hole! but where?
                     }
                 }
                 if (found) {

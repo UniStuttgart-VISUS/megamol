@@ -26,12 +26,13 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <cuda.h>
+#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
 #if CUDART_VERSION < 4000
@@ -2214,7 +2215,7 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
   cudaMalloc((void**)&gpuh->c3f_d, 3 * chunkmaxverts * sizeof(float4));
 
     // GL
-    if( glh_init_extensions("GL_VERSION_2_0") != GL_TRUE ) {
+  if( ogl_IsVersionGEQ(2,0) != GL_TRUE ) {
         return -1;
     }
     glGenBuffers( 1, &gpuh->v3f_vbo);

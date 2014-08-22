@@ -12,7 +12,7 @@
 
 #include "view/Renderer3DModule.h"
 #include "param/ParamSlot.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "vislib/GLSLShader.h"
 #include "Call.h"
 #include "CallerSlot.h"

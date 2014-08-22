@@ -12,7 +12,7 @@
 
 #include <math.h>
 
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include <CoreInstance.h>
@@ -89,10 +89,10 @@ protein::SphereRendererMouse::~SphereRendererMouse() {
  * protein::SphereRendererMouse::create
  */
 bool protein::SphereRendererMouse::create(void) {
-    glh_init_extensions( "GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform");
-    glh_init_extensions( "GL_VERSION_2_0");
-    glh_init_extensions( "GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects");
-    if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
+    if (!areExtsAvailable( "GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform")
+        || !ogl_IsVersionGEQ(2,0)
+        || !areExtsAvailable( "GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects")
+        || !vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
         return false;
     }
 

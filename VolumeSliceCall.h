@@ -19,7 +19,7 @@
 #include "vislib/Cuboid.h"
 #include "vislib/Vector.h"
 #include <vector>
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein {

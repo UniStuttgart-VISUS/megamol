@@ -19,7 +19,7 @@
 #include "view/CallRender3D.h"
 #include "vislib/GLSLShader.h"
 #include "vislib/GLSLGeometryShader.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 #include "vislib/FramebufferObject.h"
 
