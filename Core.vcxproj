@@ -133,8 +133,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -176,8 +176,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -213,8 +213,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -255,8 +255,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;datraw$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(SolutionDir)datraw\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
