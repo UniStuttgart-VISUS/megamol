@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 
 #define _USE_MATH_DEFINES 1
 #define STOP_SEGMENTATION
@@ -117,15 +117,7 @@ void moldyn::DirectVolumeRenderer::release (void) {
  * DirectVolumeRenderer::create
  */
 bool moldyn::DirectVolumeRenderer::create (void) {
-    if (!glh_init_extensions("GL_VERSION_2_0 GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform"))
-        return false;
-    if (!glh_init_extensions("GL_ARB_vertex_program"))
-        return false;
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
-        return false;
-    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions())
-        return false;
-
+    ASSERT(IsAvailable());
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);

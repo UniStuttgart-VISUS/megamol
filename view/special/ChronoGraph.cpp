@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "view/special/ChronoGraph.h"
 #include "CoreInstance.h"
 #include "vislib/mathfunctions.h"

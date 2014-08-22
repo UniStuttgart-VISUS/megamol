@@ -54,7 +54,8 @@ namespace special {
          */
         static bool IsAvailable(void) {
             return vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
-                && vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+                && vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && isExtAvailable("GL_ARB_multitexture");
         }
 
         /** Ctor. */

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 #include "MipDepthSphereRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
@@ -52,10 +52,7 @@ moldyn::MipDepthSphereRenderer::~MipDepthSphereRenderer(void) {
  * moldyn::MipDepthSphereRenderer::create
  */
 bool moldyn::MipDepthSphereRenderer::create(void) {
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()
-            || !vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
-        return false;
-    }
+    ASSERT(IsAvailable());
 
     vislib::graphics::gl::ShaderSource vert, frag;
 
@@ -276,10 +273,10 @@ bool moldyn::MipDepthSphereRenderer::Render(Call& call) {
 
     ::glScalef(scaling, scaling, scaling);
 
-    glUniform4fvARB(this->initDepthShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->initDepthShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(this->initDepthShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(this->initDepthShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->initDepthShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
     // no clipping plane for now
     glColor4ub(192, 192, 192, 255);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -293,12 +290,12 @@ bool moldyn::MipDepthSphereRenderer::Render(Call& call) {
                 continue;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4fARB(this->initDepthShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
+                glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
                 glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4fARB(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
+                glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
                 glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             default:

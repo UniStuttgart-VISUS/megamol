@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "cluster/AbstractClusterView.h"
 #include "cluster/InfoIconRenderer.h"
 #include "cluster/NetMessages.h"

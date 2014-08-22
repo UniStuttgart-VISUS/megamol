@@ -25,7 +25,7 @@
 #include "cluster/simple/ClientViewRegistration.h"
 #include "cluster/simple/CommUtil.h"
 
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 
 #include "param/BoolParam.h"
 #include "param/IntParam.h"
@@ -46,10 +46,10 @@
 #include "vislib/UTF8Encoder.h"
 
 
-#define _TRACE_INFO(fmt, ...)
+//#define _TRACE_INFO(fmt, ...)
 #define _TRACE_MESSAGING(fmt, ...)
 //#define _TRACE_PACKAGING(fmt, ...)
-#define _TRACE_BARRIERS(fmt, ...)
+//#define _TRACE_BARRIERS(fmt, ...)
 #define _TRACE_GSYNC(fmt, ...)
 #define _TRACE_LOCKS(fmt, ...)
 
@@ -422,6 +422,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
     _TRACE_BARRIERS("Rank %d is before swap barrier.\n", this->mpiRank);
     ::MPI_Barrier(MPI_COMM_WORLD);
     _TRACE_BARRIERS("Rank %d is after swap barrier.\n", this->mpiRank);
+        _TRACE_BARRIERS("Rank %d is after swap barrier.\n", this->mpiRank);
 #endif /* WITH_MPI */
 
     if (state.InitSwapGroup && this->isBcastMaster()) {

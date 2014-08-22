@@ -16,9 +16,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 
-#include "glh/glh_genext.h"
-#include "glh/glh_extensions.h"
-#include <GL/gl.h>
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "vislib/GLSLComputeShader.h"
@@ -71,7 +69,8 @@ namespace moldyn {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return true;
+            return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && ogl_IsVersionGEQ(4, 3);
         }
 
         /**

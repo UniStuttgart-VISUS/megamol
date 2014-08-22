@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "moldyn/AbstractSimpleSphereRenderer.h"
 #include "CoreInstance.h"
 #include "view/CallClipPlane.h"

@@ -15,7 +15,7 @@
 #include "Call.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 #include "vislib/CameraParameters.h"
 #include "vislib/Cuboid.h"
 #include "vislib/forceinline.h"
@@ -62,8 +62,9 @@ namespace moldyn {
         static bool IsAvailable(void) {
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
                 && vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
-                && (glh_extension_supported("GL_NV_occlusion_query") != 0)
-                && (glh_extension_supported("GL_ARB_multitexture") != 0);
+                && (isExtAvailable("GL_NV_occlusion_query") != GL_FALSE)
+                && (isExtAvailable("GL_ARB_multitexture") != GL_FALSE)
+                && (isExtAvailable("GL_ARB_vertex_buffer_object") != GL_FALSE);
         }
 
         /** Ctor. */

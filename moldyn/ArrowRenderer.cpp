@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 #include "ArrowRenderer.h"
 #include "DirectionalParticleDataCall.h"
 #include "CoreInstance.h"
@@ -228,10 +228,10 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
 
     this->arrowShader.Enable();
 
-    glUniform4fvARB(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
     this->arrowShader.SetParameter("lengthScale", lengthScale);
     this->arrowShader.SetParameter("lengthFilter", lengthFilter);
 
@@ -284,7 +284,7 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                         colTabSize = 2;
                     }
 
-                    glUniform1iARB(this->arrowShader.ParameterLocation("colTab"), 0);
+                    glUniform1i(this->arrowShader.ParameterLocation("colTab"), 0);
                     minC = parts.GetMinColourIndexValue();
                     maxC = parts.GetMaxColourIndexValue();
                     glColor3ub(127, 127, 127);
@@ -300,12 +300,12 @@ bool moldyn::ArrowRenderer::Render(Call& call) {
                     continue;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->arrowShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+                    glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                     glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     break;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->arrowShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+                    glUniform4f(this->arrowShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
                     glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                     break;
                 default:

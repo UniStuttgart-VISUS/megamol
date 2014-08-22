@@ -13,7 +13,7 @@
 #include "view/CallRenderView.h"
 #include "vislib/Log.h"
 #include "vislib/Trace.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 
 using namespace megamol::core;
 
@@ -215,21 +215,7 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
  * view::special::AnaglyphStereoView::create
  */
 bool view::special::AnaglyphStereoView::create(void) {
-    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to initialize graphic extensions for frame buffer objects");
-        return false;
-    }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to initialize graphic extensions for glsl shader objects");
-        return false;
-    }
-    if (glh_init_extensions("GL_ARB_multitexture") != GL_TRUE) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to activate GL_ARB_multitexture");
-        return false;
-    }
+    ASSERT(IsAvailable());
 
     if (!this->leftBuffer.Create(1, 1)) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,

@@ -55,7 +55,7 @@ namespace moldyn {
         static bool IsAvailable(void) {
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
                 && vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
-                && (glh_extension_supported("GL_ARB_multitexture") == 1);
+                && (isExtAvailable("GL_ARB_multitexture") == GL_TRUE);
         }
 
         /**

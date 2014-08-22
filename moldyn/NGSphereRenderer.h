@@ -1,28 +1,28 @@
 /*
- * SimpleGeoSphereRenderer.h
+ * NGSphereRenderer.h
  *
- * Copyright (C) 2012 by CGV (TU Dresden)
+ * Copyright (C) 2014 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SIMPLEGEOSPHERERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SIMPLEGEOSPHERERENDERER_H_INCLUDED
+#ifndef MEGAMOLCORE_NGSPHERERENDERER_H_INCLUDED
+#define MEGAMOLCORE_NGSPHERERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "moldyn/AbstractSimpleSphereRenderer.h"
-#include "vislib/GLSLGeometryShader.h"
-
+#include "vislib/GLSLShader.h"
+#include "vislib/IncludeAllGL.h"
 
 namespace megamol {
 namespace core {
 namespace moldyn {
 
     /**
-     * Renderer for simple sphere glyphs with geometry shader
+     * Renderer for simple sphere glyphs
      */
-    class SimpleGeoSphereRenderer : public AbstractSimpleSphereRenderer {
+    class NGSphereRenderer : public AbstractSimpleSphereRenderer {
     public:
 
         /**
@@ -31,7 +31,7 @@ namespace moldyn {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "SimpleGeoSphereRenderer";
+            return "NGSphereRenderer";
         }
 
         /**
@@ -40,7 +40,7 @@ namespace moldyn {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Renderer for sphere glyphs using geometry shader";
+            return "Renderer for sphere glyphs with a bit of bleeding-edge features";
         }
 
         /**
@@ -58,19 +58,14 @@ namespace moldyn {
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && vislib::graphics::gl::GLSLGeometryShader::AreExtensionsAvailable()
-                && ogl_IsVersionGEQ(2, 0)
-                && isExtAvailable("GL_EXT_geometry_shader4")
-                && isExtAvailable("GL_EXT_gpu_shader4")
-                && isExtAvailable("GL_EXT_bindable_uniform")
-                && isExtAvailable("GL_ARB_shader_objects");
+                && (isExtAvailable("GL_ARB_buffer_storage") != GL_FALSE);
         }
 
         /** Ctor. */
-        SimpleGeoSphereRenderer(void);
+        NGSphereRenderer(void);
 
         /** Dtor. */
-        virtual ~SimpleGeoSphereRenderer(void);
+        virtual ~NGSphereRenderer(void);
 
     protected:
 
@@ -98,7 +93,7 @@ namespace moldyn {
     private:
 
         /** The sphere shader */
-        vislib::graphics::gl::GLSLGeometryShader sphereShader;
+        vislib::graphics::gl::GLSLShader sphereShader;
 
     };
 
@@ -106,4 +101,4 @@ namespace moldyn {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_SIMPLEGEOSPHERERENDERER_H_INCLUDED */
+#endif /* MEGAMOLCORE_NGSPHERERENDERER_H_INCLUDED */

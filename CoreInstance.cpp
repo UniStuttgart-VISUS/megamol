@@ -6,12 +6,10 @@
  */
 
 #include "stdafx.h"
-/* create symbols for the opengl extensions in this object file */
-#define GLH_EXT_SINGLE_FILE 1
 #if (_MSC_VER > 1000)
 #pragma warning(disable: 4996)
 #endif /* (_MSC_VER > 1000) */
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #if (_MSC_VER > 1000)
 #pragma warning(default: 4996)
 #endif /* (_MSC_VER > 1000) */
@@ -700,13 +698,13 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
         return NULL;
     }
 
-    { // glh "fix"
-        vislib::Array<vislib::StringA> exts(vislib::StringTokeniserA::Split(
-            vislib::StringA(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS))), ' ', true));
-        for (SIZE_T i = 0; i < exts.Count(); i++) {
-            glh_init_extension(exts[i]);
-        }
-    }
+    //{ // glh "fix"
+    //    vislib::Array<vislib::StringA> exts(vislib::StringTokeniserA::Split(
+    //        vislib::StringA(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS))), ' ', true));
+    //    for (SIZE_T i = 0; i < exts.Count(); i++) {
+    //        glh_init_extension(exts[i]);
+    //    }
+    //}
 
     // instantiate modules
     for (unsigned int idx = 0; idx < request.Description()->ModuleCount(); idx++) {
@@ -2044,7 +2042,7 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
 
     if (!desc->IsAvailable()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to make module \"%s\" (%s): Module type is installed by not available.",
+            "Unable to make module \"%s\" (%s): Module type is installed but not available.",
             desc->ClassName(), path.PeekBuffer());
         return NULL;
     }

@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES 1
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "ColStereoDisplay.h"
 #ifdef _WIN32
 #include <windows.h>

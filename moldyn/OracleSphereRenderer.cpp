@@ -6,14 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "OracleSphereRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
 #include "view/CallClipPlane.h"
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender3D.h"
-//#include <GL/gl.h>
 #include <GL/glu.h>
 #include "vislib/assert.h"
 #include "vislib/ShallowPoint.h"
@@ -55,15 +54,7 @@ moldyn::OracleSphereRenderer::~OracleSphereRenderer(void) {
  * moldyn::OracleSphereRenderer::create
  */
 bool moldyn::OracleSphereRenderer::create(void) {
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-    if (!vislib::graphics::gl::FramebufferObject::InitialiseExtensions()) {
-        return false;
-    }
-    if (glh_init_extensions("GL_ARB_multitexture") == GL_FALSE) {
-        return false;
-    }
+    ASSERT(IsAvailable());
 
     this->fbo.Create(1, 1);
 
@@ -322,18 +313,18 @@ bool moldyn::OracleSphereRenderer::Render(Call& call) {
 
     glScalef(scaling, scaling, scaling);
 
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"),
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"),
         1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"),
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"),
         1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"),
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"),
         1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"),
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"),
         1, cr->GetCameraParameters()->Up().PeekComponents());
-    glUniform1fARB(this->sphereShader.ParameterLocation("datascale"), scaling); // not nice, but ok for now
+    glUniform1f(this->sphereShader.ParameterLocation("datascale"), scaling); // not nice, but ok for now
 
-    glUniform4fvARB(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
+    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
+    glUniform3fv(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
 
     if (c2 != NULL) {
         unsigned int cial = glGetAttribLocationARB(this->sphereShader, "colIdx");
@@ -385,7 +376,7 @@ bool moldyn::OracleSphereRenderer::Render(Call& call) {
                         colTabSize = 2;
                     }
 
-                    glUniform1iARB(this->sphereShader.ParameterLocation("colTab"), 0);
+                    glUniform1i(this->sphereShader.ParameterLocation("colTab"), 0);
                     minC = parts.GetMinColourIndexValue();
                     maxC = parts.GetMaxColourIndexValue();
                     glColor3ub(127, 127, 127);
@@ -401,14 +392,14 @@ bool moldyn::OracleSphereRenderer::Render(Call& call) {
                     continue;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->sphereShader.ParameterLocation("inConsts1"),
+                    glUniform4f(this->sphereShader.ParameterLocation("inConsts1"),
                         parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                     glVertexPointer(3, GL_FLOAT,
                         parts.GetVertexDataStride(), parts.GetVertexData());
                     break;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->sphereShader.ParameterLocation("inConsts1"),
+                    glUniform4f(this->sphereShader.ParameterLocation("inConsts1"),
                         -1.0f, minC, maxC, float(colTabSize));
                     glVertexPointer(4, GL_FLOAT,
                         parts.GetVertexDataStride(), parts.GetVertexData());
@@ -441,8 +432,8 @@ bool moldyn::OracleSphereRenderer::Render(Call& call) {
     this->mixShader.SetParameter("paramTex", 0);
     this->mixShader.SetParameter("colourTex", 1);
 
-    glUniform4fvARB(this->mixShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->mixShader.ParameterLocation("globCamPos"), 1, cr->GetCameraParameters()->EyePosition().PeekCoordinates());
+    glUniform4fv(this->mixShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fv(this->mixShader.ParameterLocation("globCamPos"), 1, cr->GetCameraParameters()->EyePosition().PeekCoordinates());
 
     double mvMat[16];
     double pMat[16];

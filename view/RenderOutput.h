@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "view/AbstractRenderOutput.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "vislib/Array.h"
 #include "vislib/FramebufferObject.h"
 #include "vislib/Rectangle.h"

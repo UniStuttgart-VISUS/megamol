@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 #include "SimpleGeoSphereRenderer.h"
 #include "view/CallRender3D.h"
 #include "vislib/ShaderSource.h"
@@ -40,26 +40,7 @@ moldyn::SimpleGeoSphereRenderer::~SimpleGeoSphereRenderer(void) {
  */
 bool moldyn::SimpleGeoSphereRenderer::create(void) {
     using vislib::sys::Log;
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        Log::DefaultLog.WriteError("Failed to init OpenGL extensions: GLSLShader");
-        return false;
-    }
-    if (!vislib::graphics::gl::GLSLGeometryShader::InitialiseExtensions()) {
-        Log::DefaultLog.WriteError("Failed to init OpenGL extensions: GLSLGeometryShader");
-        return false;
-    }
-    if (glh_init_extensions("GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform") != GL_TRUE) {
-        Log::DefaultLog.WriteError("Failed to init OpenGL extensions: shader4 and bindable_uniform");
-        return false;
-    }
-    if (glh_init_extensions("GL_VERSION_2_0") != GL_TRUE) {
-        Log::DefaultLog.WriteError("Failed to init OpenGL extensions: GL_VERSION_2_0");
-        return false;
-    }
-    if (glh_init_extensions("GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects") != GL_TRUE) {
-        Log::DefaultLog.WriteError("Failed to init OpenGL extensions: arb shader");
-        return false;
-    }
+    ASSERT(IsAvailable());
 
     vislib::graphics::gl::ShaderSource vert, geom, frag;
 
@@ -173,17 +154,17 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
     this->sphereShader.Enable();
 
     // Set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
 
-    glUniformMatrix4fvARB(this->sphereShader.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-    glUniformMatrix4fvARB(this->sphereShader.ParameterLocation("proj"), 1, false, projMatrix_column);
-    glUniform4fvARB(this->sphereShader.ParameterLocation("lightPos"), 1, lightPos);
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+    glUniformMatrix4fv(this->sphereShader.ParameterLocation("proj"), 1, false, projMatrix_column);
+    glUniform4fv(this->sphereShader.ParameterLocation("lightPos"), 1, lightPos);
 
-    glUniform4fvARB(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
-    glUniform4fvARB(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
+    glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
+    glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
 
     // Vertex attributes
     GLint vertexPos = glGetAttribLocation(this->sphereShader, "vertex");
@@ -234,7 +215,7 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
                     colTabSize = 2;
                 }
 
-                glUniform1iARB(this->sphereShader.ParameterLocation("colTab"), 0);
+                glUniform1i(this->sphereShader.ParameterLocation("colTab"), 0);
                 minC = parts.GetMinColourIndexValue();
                 maxC = parts.GetMaxColourIndexValue();
             } break;
@@ -250,12 +231,12 @@ bool moldyn::SimpleGeoSphereRenderer::Render(Call& call) {
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 ::glEnableVertexAttribArray(vertexPos);
                 ::glVertexAttribPointer(vertexPos, 3, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), parts.GetVertexData());
-                ::glUniform4fARB(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+                ::glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 ::glEnableVertexAttribArray(vertexPos);
                 ::glVertexAttribPointer(vertexPos, 4, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), parts.GetVertexData());
-                ::glUniform4fARB(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+                ::glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
                 break;
             default:
                 continue;

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 #include "AbstractRenderingView.h"
 #include "AbstractNamedObject.h"
 #include "vislib/String.h"

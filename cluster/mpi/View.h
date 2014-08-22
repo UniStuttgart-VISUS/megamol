@@ -17,9 +17,7 @@
 #ifdef _WIN32
 #include <WinSock2.h>
 #include <windows.h>
-#include "glh/glh_extensions.h"
-#include <GL/gl.h>
-#include "GL/wglext.h"
+#include "vislib/IncludeAllGL.h"
 #endif /* _WIN32 */
 
 #include "CallerSlot.h"

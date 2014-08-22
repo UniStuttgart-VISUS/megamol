@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 #include "ScreenShooter.h"
 #include "AbstractNamedObject.h"
 #include "AbstractNamedObjectContainer.h"

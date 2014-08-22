@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "MegaMolLogo.h"
 #ifdef _WIN32
 #include <windows.h>

@@ -23,12 +23,10 @@
 #ifndef _SLICING_H_
 #define _SLICING_H_
 
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #ifdef _WIN32
 #  include <windows.h>
 #endif
-
-//#include <GL/gl.h>
 
 #define VS_EPS      1.0e-8
 

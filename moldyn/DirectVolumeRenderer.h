@@ -56,7 +56,11 @@ namespace moldyn {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return true;
+            return vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()
+                && vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && isExtAvailable("GL_ARB_texture_float")
+                && isExtAvailable("GL_EXT_gpu_shader4")
+                && isExtAvailable("GL_EXT_bindable_uniform");
         }
 
         /** Ctor. */

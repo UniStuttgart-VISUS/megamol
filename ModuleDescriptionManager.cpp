@@ -40,6 +40,7 @@
 #include "moldyn/SIFFDataSource.h"
 #include "moldyn/SimpleGeoSphereRenderer.h"
 #include "moldyn/SimpleSphereRenderer.h"
+#include "moldyn/NGSphereRenderer.h"
 #include "moldyn/ClusteredSphereRenderer.h"
 #include "moldyn/SphereOutlineRenderer.h"
 #include "moldyn/VIMDataSource.h"
@@ -151,6 +152,7 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
     instance->registerAutoDescription<moldyn::SIFFDataSource>();
     instance->registerAutoDescription<moldyn::SimpleGeoSphereRenderer>();
     instance->registerAutoDescription<moldyn::SimpleSphereRenderer>();
+    instance->registerAutoDescription<moldyn::NGSphereRenderer>();
     instance->registerAutoDescription<moldyn::ClusteredSphereRenderer>();
     instance->registerAutoDescription<moldyn::SphereOutlineRenderer>();
     instance->registerAutoDescription<moldyn::OracleSphereRenderer>();

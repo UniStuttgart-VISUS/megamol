@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "cluster/InfoIconRenderer.h"
 #include "view/graphicsresources.h"
 #include <cmath>

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "GrimRenderer.h"
 #include "ParticleGridDataCall.h"
 #include "CoreInstance.h"
@@ -16,7 +16,6 @@
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender3D.h"
 #include <climits>
-#include "glh/glh_genext.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/Camera.h"
@@ -125,11 +124,7 @@ moldyn::GrimRenderer::~GrimRenderer(void) {
  * moldyn::GrimRenderer::create
  */
 bool moldyn::GrimRenderer::create(void) {
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()
-            || !vislib::graphics::gl::FramebufferObject::InitialiseExtensions()
-            || (glh_init_extensions("GL_NV_occlusion_query GL_ARB_multitexture GL_ARB_vertex_buffer_object") == GL_FALSE)) {
-        return false;
-    }
+    ASSERT(IsAvailable());
 
     vislib::graphics::gl::ShaderSource vert, geom, frag;
 
@@ -736,10 +731,10 @@ bool moldyn::GrimRenderer::Render(Call& call) {
 
     this->initDepthShader.Enable();
 
-    glUniform4fvARB(this->initDepthShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->initDepthShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fvARB(this->initDepthShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fvARB(this->initDepthShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform4fv(this->initDepthShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
     // no clipping plane for now
     glColor4ub(192, 192, 192, 255);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -855,7 +850,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                     continue;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->initDepthShader.ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
+                    glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
                     if (ci.data[0] != 0) {
                         ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                         ::glVertexPointer(3, GL_FLOAT, 0, NULL);
@@ -865,7 +860,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                     break;
                 case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
+                    glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"), -1.0f, 0.0f, 0.0f, 0.0f);
                     if (ci.data[0] != 0) {
                         ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                         ::glVertexPointer(4, GL_FLOAT, 0, NULL);
@@ -876,7 +871,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                 case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                     float skale = cell->GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4fARB(this->initDepthShader.ParameterLocation("inConsts1"),
+                    glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"),
                         ptype.GetGlobalRadius() / skale, 0.0f, 0.0f, 0.0f);
                     if (ci.data[0] != 0) {
                         ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1174,10 +1169,10 @@ bool moldyn::GrimRenderer::Render(Call& call) {
         if (useVertCull) {
             this->vertCntShade2r.Enable();
 
-            glUniform4fvARB(this->vertCntShade2r.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fvARB(this->vertCntShade2r.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-            glUniform3fvARB(this->vertCntShade2r.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-            glUniform3fvARB(this->vertCntShade2r.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+            glUniform4fv(this->vertCntShade2r.ParameterLocation("viewAttr"), 1, viewportStuff);
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
             this->vertCntShade2r.SetParameter("depthTexParams", this->depthmap[0].GetWidth(),
                 this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
 
@@ -1231,7 +1226,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
-                            glUniform4fARB(this->vertCntShade2r.ParameterLocation("inConsts1"),
+                            glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
                                 ptype.GetGlobalRadius(), minC, maxC, float(colTabSize));
                         }
                         if (ci.data[0] != 0) {
@@ -1244,7 +1239,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
-                            glUniform4fARB(this->vertCntShade2r.ParameterLocation("inConsts1"),
+                            glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
                                 -1.0f, minC, maxC, float(colTabSize));
                         }
                         if (ci.data[0] != 0) {
@@ -1258,7 +1253,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                         glEnableClientState(GL_VERTEX_ARRAY);
                         if (useVertCull) {
-                            glUniform4fARB(this->vertCntShade2r.ParameterLocation("inConsts1"),
+                            glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
                                 ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
                         }
                         if (ci.data[0] != 0) {
@@ -1438,7 +1433,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             colTabSize = 2;
                         }
 
-                        glUniform1iARB(daPointShader->ParameterLocation("colTab"), 0);
+                        glUniform1i(daPointShader->ParameterLocation("colTab"), 0);
                         minC = ptype.GetMinColourIndexValue();
                         maxC = ptype.GetMaxColourIndexValue();
                         glColor3ub(127, 127, 127);
@@ -1455,7 +1450,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         continue;
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4fARB(daPointShader->ParameterLocation("inConsts1"),
+                        glUniform4f(daPointShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius(), minC, maxC, float(colTabSize));
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1466,7 +1461,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         break;
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4fARB(daPointShader->ParameterLocation("inConsts1"),
+                        glUniform4f(daPointShader->ParameterLocation("inConsts1"),
                             -1.0f, minC, maxC, float(colTabSize));
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1480,7 +1475,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                     case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4fARB(daPointShader->ParameterLocation("inConsts1"),
+                        glUniform4f(daPointShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1529,10 +1524,10 @@ bool moldyn::GrimRenderer::Render(Call& call) {
         for (int supsamppass = 0; supsamppass < SUPSAMP_LOOPCNT; supsamppass++) {
 #endif /* SUPSAMP_LOOP */
 
-        glUniform4fvARB(daSphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(daSphereShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fvARB(daSphereShader->ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fvARB(daSphereShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+        glUniform4fv(daSphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
+        glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+        glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+        glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
         if (useVertCull) {
             daSphereShader->SetParameter("depthTexParams", this->depthmap[0].GetWidth(), this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
 
@@ -1643,7 +1638,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                             colTabSize = 2;
                         }
 
-                        glUniform1iARB(daSphereShader->ParameterLocation("colTab"), 0);
+                        glUniform1i(daSphereShader->ParameterLocation("colTab"), 0);
                         minC = ptype.GetMinColourIndexValue();
                         maxC = ptype.GetMaxColourIndexValue();
                         glColor3ub(127, 127, 127);
@@ -1660,7 +1655,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         continue;
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4fARB(daSphereShader->ParameterLocation("inConsts1"),
+                        glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius(), minC, maxC, float(colTabSize));
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1671,7 +1666,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                         break;
                     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4fARB(daSphereShader->ParameterLocation("inConsts1"),
+                        glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
                             -1.0f, minC, maxC, float(colTabSize));
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1683,7 +1678,7 @@ bool moldyn::GrimRenderer::Render(Call& call) {
                     case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
                         float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4fARB(daSphereShader->ParameterLocation("inConsts1"),
+                        glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
                             ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
                         if (ci.data[0] != 0) {
                             ::glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);

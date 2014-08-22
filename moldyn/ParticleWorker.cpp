@@ -57,11 +57,9 @@ bool moldyn::ParticleWorker::create(void) {
 	using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    if( !glh_init_extensions( "GL_VERSION_2_0 GL_VERSION_3_0 GL_VERSION_4_0 GL_VERSION_4_1 GL_VERSION_4_2 GL_VERSION_4_3") )
-        return false;
-	
-    if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
-        return false;
+    ASSERT(IsAvailable());
+
+
 
     if( !this->GetCoreInstance() ) return false;
 

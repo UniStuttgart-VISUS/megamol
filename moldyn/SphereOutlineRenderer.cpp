@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #define USE_MATH_DEFINES
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "SphereOutlineRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"

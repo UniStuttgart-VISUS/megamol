@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_genext.h"
+#include "vislib/IncludeAllGL.h"
 #define _USE_MATH_DEFINES
 #include "TitleRenderer.h"
 #include <cmath>

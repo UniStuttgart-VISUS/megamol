@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "cluster/simple/View.h"
 #include "cluster/simple/ClientViewRegistration.h"
 #include "cluster/simple/Client.h"

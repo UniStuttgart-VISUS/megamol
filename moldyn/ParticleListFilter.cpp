@@ -229,14 +229,17 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
             doStuff = true;
         }
 
+        // TODO this is wrong
         // make a deep copy (also of content pointers)
         //*inDpdc = *outDpdc;
+        //inDpdc->AbstractGetDataCall::operator =(*outDpdc);
         // call DataCallback, updating content
         if (!(*inDpdc)(0)) {
             return false;
         }
         // copy diffs back (maybe)
         //*outDpdc = *inDpdc;
+        //outDpdc->AbstractGetData3DCall::operator =(*inDpdc);
 
         if (inDpdc->DataHash() != this->datahashParticlesIn) {
             doStuff = true;
@@ -248,7 +251,7 @@ bool moldyn::ParticleListFilter::getDataCallback(Call& call) {
         }
 
         if (!doStuff) {
-            return true;
+            //return true;
         }
 
         unsigned int cnt = inDpdc->GetParticleListCount();
