@@ -40,12 +40,10 @@
 #include "vislib/Matrix.h"
 #include "vislib/Cuboid.h"
 
-#include <glh/glh_genext.h>
-#include <glh/glh_extensions.h>
+#include "vislib/IncludeAllGL.h"
 #include <GL/glu.h>
-
-#include <cuda_gl_interop.h>
 #include "cuda_helper.h"
+#include <cuda_gl_interop.h>
 
 using namespace megamol;
 using namespace megamol::core;
