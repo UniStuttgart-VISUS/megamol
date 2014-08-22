@@ -114,6 +114,15 @@ namespace simple {
          */
         bool RequestTCUpdate(void);
 
+        /**
+         * Get the Server Address.
+         *
+         * @return The server address.
+         */
+        inline const vislib::StringA ConServerAddress() const {
+            return conServerAddr;
+        }
+
     protected:
 
         /**

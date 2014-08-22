@@ -64,6 +64,13 @@ namespace param {
          */
         virtual vislib::TString ValueString(void) const = 0;
 
+        /**
+         * Must be public for Button Press - Manuel Graeber
+         * Sets the dirty flag of the owning parameter slot and might call the
+         * update callback.
+         */
+        void setDirty(void);
+
     protected:
 
         /**
@@ -78,12 +85,6 @@ namespace param {
          *         slot, 'false' otherwise.
          */
         bool isSlotPublic(void) const;
-
-        /**
-         * Sets the dirty flag of the owning parameter slot and might call the
-         * update callback.
-         */
-        void setDirty(void);
 
     private:
 

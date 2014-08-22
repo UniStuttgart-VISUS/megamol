@@ -109,6 +109,27 @@ namespace param {
             return this->val;
         }
 
+
+        /**
+         * Needed for RemoteControl - Manuel Gräber
+         * Gets the minimum value of the parameter
+         *
+         * @return The minimum value of the parameter
+         */
+        inline int MinValue(void) const {
+            return this->minVal;
+        }
+
+        /**
+         * Needed for RemoteControl - Manuel Gräber
+         * Gets the maximum value of the parameter
+         *
+         * @return The maximum value of the parameter
+         */
+        inline int MaxValue(void) const {
+            return this->maxVal;
+        }
+
     private:
 
         /** The value of the parameter */

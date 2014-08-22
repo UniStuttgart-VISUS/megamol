@@ -115,6 +115,10 @@ namespace param {
             return this->val;
         }
 
+        inline vislib::Map<int, vislib::TString> getMap() {
+            return this->typepairs;
+        }
+
         /**
          * Returns the value of the parameter as string.
          *

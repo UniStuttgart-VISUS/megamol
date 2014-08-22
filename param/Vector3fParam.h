@@ -96,7 +96,25 @@ namespace param {
         inline const vislib::math::Vector<float,3>& Value(void) const {
             return this->val;
         }
+        /**
+         * Needed for RemoteControl - Manuel Gräber
+         * Gets the minimum value of the parameter
+         *
+         * @return The minimum value of the parameter
+         */
+        inline const vislib::math::Vector<float,3>& MinValue(void) const {
+            return this->minVal;
+        }
 
+        /**
+         * Needed for RemoteControl - Manuel Gräber
+         * Gets the maximum value of the parameter
+         *
+         * @return The maximum value of the parameter
+         */
+        inline const vislib::math::Vector<float,3>& MaxValue(void) const {
+            return this->maxVal;
+        }
         /**
          * Returns the value of the parameter as string.
          *

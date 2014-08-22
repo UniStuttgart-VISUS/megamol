@@ -78,7 +78,7 @@ ReleaseDir := Release
 
 
 # Common compiler flags
-CompilerFlags := -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -D_LIN$(BITS) -DMEGAMOLCORE_EXPORTS -Wall -ansi -pedantic -fopenmp
+CompilerFlags := -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -D_LIN$(BITS) -DMEGAMOLCORE_EXPORTS -Wall -ansi -pedantic -fopenmp -std=c++11
 
 CPPVersionInfo := $(shell $(CPP) --version | tr "[:upper:]" "[:lower:]")
 ifneq (,$(findstring gcc,$(CPPVersionInfo)))
@@ -94,7 +94,7 @@ endif
 
 
 # Additional compiler flags for special configurations
-DebugCompilerFlags := -DDEBUG -D_DEBUG -O0 -ggdb
+DebugCompilerFlags := -DDEBUG -D_DEBUG -O0 -ggdb 
 ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
 
 

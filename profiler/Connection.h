@@ -22,7 +22,7 @@ namespace profiler {
     /**
      * Connection of a call to the profiling manager
      */
-    class Connection {
+    class MEGAMOLCORE_API Connection {
     public:
 
         /** smart pointer type */
