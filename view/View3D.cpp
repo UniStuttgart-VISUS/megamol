@@ -289,8 +289,8 @@ void view::View3D::DeserialiseCamera(vislib::Serialiser& serialiser) {
  * view::View3D::Render
  */
 void view::View3D::Render(const mmcRenderViewContext& context) {
-    float time = context.Time;
-    float instTime = context.InstanceTime;
+    float time = static_cast<float>(context.Time);
+    float instTime = static_cast<float>(context.InstanceTime);
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -612,7 +612,10 @@ bool view::View3D::OnRenderView(Call& call) {
     // TODO: Affinity
     this->Render(context);
 
-    this->overrideCall = NULL;
+	if (this->overrideCall != NULL) {
+		this->overrideCall->DisableOutputBuffer();
+		this->overrideCall = NULL;
+	}
 
     if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
         this->cam.SetParameters(this->frozenValues ? this->frozenValues->camParams : this->camParams);

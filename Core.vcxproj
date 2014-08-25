@@ -319,6 +319,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="MegaMolCore.cpp" />
     <ClCompile Include="misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="misc\PngBitmapCodec.cpp" />
+    <ClCompile Include="misc\QRCodeDataCall.cpp" />
+    <ClCompile Include="misc\CalloutImageCall.cpp" />
     <ClCompile Include="misc\TestSpheresDataSource.cpp" />
     <ClCompile Include="misc\VolumeCache.cpp" />
     <ClCompile Include="misc\VolumetricDataCall.cpp" />
@@ -583,6 +585,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="LoaderADModuleAutoDescription.h" />
     <ClInclude Include="misc\BezierCurvesListDataCall.h" />
     <ClInclude Include="misc\PngBitmapCodec.h" />
+    <ClInclude Include="misc\QRCodeDataCall.h" />
+    <ClInclude Include="misc\CalloutImageCall.h" />
     <ClInclude Include="misc\TestSpheresDataSource.h" />
     <ClInclude Include="misc\VolumeCache.h" />
     <ClInclude Include="misc\VolumetricDataCall.h" />

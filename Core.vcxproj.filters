@@ -793,6 +793,12 @@
     <ClCompile Include="moldyn\NGSphereRenderer.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="misc\QRCodeDataCall.cpp">
+      <Filter>misc\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="misc\CalloutImageCall.cpp">
+      <Filter>misc\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1445,6 +1451,12 @@
     </ClInclude>
     <ClInclude Include="moldyn\NGSphereRenderer.h">
       <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="misc\QRCodeDataCall.h">
+      <Filter>misc\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="misc\CalloutImageCall.h">
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

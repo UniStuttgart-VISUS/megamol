@@ -98,8 +98,14 @@ namespace view {
         /** The intents that are provided by the call. */
         static const char *INTENTS[1];
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4251)
+#endif /* _MSC_VER */
         /** The payload of the call. */
         CamParams camParams;
+#ifdef _MSC_VER
+#pragma warning(default: 4251)
+#endif /* _MSC_VER */
     };
 
     /** Description class typedef. */

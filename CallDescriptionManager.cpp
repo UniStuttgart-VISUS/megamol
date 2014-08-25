@@ -32,6 +32,8 @@
 #include "moldyn/VolumeDataCall.h"
 #include "misc/BezierCurvesListDataCall.h"
 #include "misc/VolumetricDataCall.h"
+#include "misc/QRCodeDataCall.h"
+#include "misc/CalloutImageCall.h"
 
 using namespace megamol::core;
 
@@ -85,6 +87,8 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<view::CallUpdateDirect3D>();
         instance->registerAutoDescription<view::CallCamParams>();
         instance->registerAutoDescription<view::CallCamParamSync>();
+		instance->registerAutoDescription<misc::QRCodeDataCall>();
+		instance->registerAutoDescription<misc::CalloutImageCall>();
     //}
     //return instance;
 }
