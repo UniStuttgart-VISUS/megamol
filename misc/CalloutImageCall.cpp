@@ -58,7 +58,7 @@ int qr_id_value = -1;
 int width_value = 0;
 int height_value = 0;
 
-misc::CalloutImageCall::CalloutImageCall(void) : qr_id(&qr_id_value), qr_image(NULL), qr_pointer(NULL), width(&width_value), height(&height_value)
+megamol::core::misc::CalloutImageCall::CalloutImageCall(void) : qr_id(&qr_id_value), qr_image(NULL), qr_pointer(NULL), width(&width_value), height(&height_value)
 {
 
 }

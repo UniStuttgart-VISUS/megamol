@@ -24,7 +24,7 @@ namespace megamol {
 namespace core {
 namespace misc {
 
-    class QRCodeDataCall : public megamol::core::Call {
+    class MEGAMOLCORE_API QRCodeDataCall : public megamol::core::Call {
     public:
         /**
          * Answer the name of the objects of this description.

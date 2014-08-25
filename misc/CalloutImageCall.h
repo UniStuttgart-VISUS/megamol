@@ -41,7 +41,7 @@ namespace misc {
 	 * point at.
 	 */
 
-    class CalloutImageCall : public Call {
+    class MEGAMOLCORE_API CalloutImageCall : public Call {
     public:
         /**
          * Answer the name of the objects of this description.
