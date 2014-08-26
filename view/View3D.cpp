@@ -318,6 +318,12 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
             static_cast<GLsizei>(this->camParams->TileRect().Height()));
     }
 
+	if (this->overrideCall != NULL) {
+        this->overrideCall->EnableOutputBuffer();
+    } else {
+        cr3d->SetOutputBuffer(GL_BACK);
+    }
+
     const float *bkgndCol = (this->overrideBkgndCol != NULL)
         ? this->overrideBkgndCol : this->bkgndColour();
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
@@ -342,11 +348,16 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->removeTitleRenderer();
     }
 
-    if (this->overrideCall != NULL) {
-        this->overrideCall->EnableOutputBuffer();
-    } else {
-        cr3d->SetOutputBuffer(GL_BACK);
-    }
+	// mueller: I moved the following code block before clearing the back buffer,
+	// because in case the FBO is enabled here, the depth buffer is not cleared
+	// (but the one of the previous buffer) and the renderer might not create any
+	// fragment in this case - besides that the FBO content is not cleared, 
+	// which could be a problem if the FBO is reused.
+    //if (this->overrideCall != NULL) {
+    //    this->overrideCall->EnableOutputBuffer();
+    //} else {
+    //    cr3d->SetOutputBuffer(GL_BACK);
+    //}
 
     // camera settings
     if (this->stereoEyeDistSlot.IsDirty()) {
@@ -613,6 +624,9 @@ bool view::View3D::OnRenderView(Call& call) {
     this->Render(context);
 
 	if (this->overrideCall != NULL) {
+		// mueller: I added the DisableOutputBuffer (resetting the override was here 
+		// before) in order to make sure that the viewport is reset that has been
+		// set by an override call.
 		this->overrideCall->DisableOutputBuffer();
 		this->overrideCall = NULL;
 	}
