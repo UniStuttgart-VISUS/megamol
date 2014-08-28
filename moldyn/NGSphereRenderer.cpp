@@ -14,6 +14,7 @@
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender3D.h"
 #include "vislib/assert.h"
+#include "vislib/mathfunctions.h"
 
 using namespace megamol::core;
 
@@ -22,7 +23,7 @@ using namespace megamol::core;
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 moldyn::NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-        sphereShader() {
+    sphereShader(), bufSize(50 * 1024 * 1024) {
     // intentionally empty
 }
 
@@ -39,10 +40,6 @@ moldyn::NGSphereRenderer::~NGSphereRenderer(void) {
  * moldyn::SimpleSphereRenderer::create
  */
 bool moldyn::NGSphereRenderer::create(void) {
-    //if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()
-    //    || (glh_init_extensions("GL_VERSION_4_4") == GL_FALSE)) {
-    //    return false;
-    //}
 
     vislib::graphics::gl::ShaderSource vert, frag;
 
@@ -80,6 +77,20 @@ bool moldyn::NGSphereRenderer::create(void) {
         return false;
     }
 
+    glGenVertexArrays(1, &this->vertArray);
+    glBindVertexArray(this->vertArray);
+    glGenBuffers(1, &this->vertBuffer);
+    glGenBuffers(1, &this->colBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, this->vertBuffer);
+    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
+    glBindBuffer(GL_ARRAY_BUFFER, this->colBuffer);
+    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    mappedVertexMem = glMapNamedBufferRangeEXT(this->vertBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT);
+    mappedColorMem = glMapNamedBufferRangeEXT(this->colBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT);
+
     return AbstractSimpleSphereRenderer::create();
 }
 
@@ -88,8 +99,84 @@ bool moldyn::NGSphereRenderer::create(void) {
  * moldyn::SimpleSphereRenderer::release
  */
 void moldyn::NGSphereRenderer::release(void) {
+    glUnmapNamedBufferEXT(this->vertBuffer);
+    glUnmapNamedBufferEXT(this->colBuffer);
     this->sphereShader.Release();
+    glDeleteBuffers(1, &this->vertBuffer);
+    glDeleteBuffers(1, &this->colBuffer);
+    glDeleteVertexArrays(1, &this->vertArray);
     AbstractSimpleSphereRenderer::release();
+}
+
+
+void moldyn::NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr) {
+    float minC = 0.0f, maxC = 0.0f;
+    unsigned int colTabSize = 0;
+
+    // colour
+    glBindBuffer(GL_ARRAY_BUFFER, colBuf);
+    switch (parts.GetColourDataType()) {
+        case MultiParticleDataCall::Particles::COLDATA_NONE:
+            glColor3ubv(parts.GetGlobalColour());
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), colPtr);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), colPtr);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
+            glEnableClientState(GL_COLOR_ARRAY);
+            glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), colPtr);
+            break;
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+            glEnableVertexAttribArrayARB(colIdxAttribLoc);
+            glVertexAttribPointerARB(colIdxAttribLoc, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), colPtr);
+
+            glEnable(GL_TEXTURE_1D);
+
+            view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+            if ((cgtf != NULL) && ((*cgtf)())) {
+                glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
+                colTabSize = cgtf->TextureSize();
+            } else {
+                glBindTexture(GL_TEXTURE_1D, this->greyTF);
+                colTabSize = 2;
+            }
+
+            glUniform1i(this->sphereShader.ParameterLocation("colTab"), 0);
+            minC = parts.GetMinColourIndexValue();
+            maxC = parts.GetMaxColourIndexValue();
+            glColor3ub(127, 127, 127);
+        } break;
+        default:
+            glColor3ub(127, 127, 127);
+            break;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, vertBuf);
+    // radius and position
+    switch (parts.GetVertexDataType()) {
+        case MultiParticleDataCall::Particles::VERTDATA_NONE:
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
+            glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
+            break;
+        case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+            glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
+            break;
+        default:
+            break;
+    }
 }
 
 
@@ -131,56 +218,36 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
 
     glScalef(scaling, scaling, scaling);
 
-    unsigned int cial = glGetAttribLocationARB(this->sphereShader, "colIdx");
+    colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
-        float minC = 0.0f, maxC = 0.0f;
-        unsigned int colTabSize = 0;
 
-        // colour
+
+        unsigned int colBytes = 0, vertBytes = 0;
         switch (parts.GetColourDataType()) {
             case MultiParticleDataCall::Particles::COLDATA_NONE:
-                glColor3ubv(parts.GetGlobalColour());
+                // nothing
                 break;
             case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(3, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
+                colBytes = vislib::math::Max(colBytes, 3U);
                 break;
             case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
+                colBytes = vislib::math::Max(colBytes, 4U);
                 break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(3, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
+                colBytes = vislib::math::Max(colBytes, 3 * 4U);
                 break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-                glEnableClientState(GL_COLOR_ARRAY);
-                glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
+                colBytes = vislib::math::Max(colBytes, 4 * 4U);
                 break;
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-                glEnableVertexAttribArrayARB(cial);
-                glVertexAttribPointerARB(cial, 1, GL_FLOAT, GL_FALSE, parts.GetColourDataStride(), parts.GetColourData());
-
-                glEnable(GL_TEXTURE_1D);
-
-                view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
-                if ((cgtf != NULL) && ((*cgtf)())) {
-                    glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
-                    colTabSize = cgtf->TextureSize();
-                } else {
-                    glBindTexture(GL_TEXTURE_1D, this->greyTF);
-                    colTabSize = 2;
+                    colBytes = vislib::math::Max(colBytes, 1 * 4U);
+                    // nothing else
                 }
-
-                glUniform1i(this->sphereShader.ParameterLocation("colTab"), 0);
-                minC = parts.GetMinColourIndexValue();
-                maxC = parts.GetMaxColourIndexValue();
-                glColor3ub(127, 127, 127);
-            } break;
+                break;
             default:
-                glColor3ub(127, 127, 127);
+                // nothing
                 break;
         }
 
@@ -189,24 +256,62 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
             case MultiParticleDataCall::Particles::VERTDATA_NONE:
                 continue;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
-                glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+                vertBytes = vislib::math::Max(vertBytes, 3 * 4U);
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-                glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
+                vertBytes = vislib::math::Max(vertBytes, 4 * 4U);
                 break;
             default:
                 continue;
         }
 
-        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
+        unsigned int colStride = parts.GetColourDataStride();
+        colStride = colStride < colBytes ? colBytes : colStride;
+        unsigned int vertStride = parts.GetVertexDataStride();
+        vertStride = vertStride < vertBytes ? vertBytes : vertStride;
+        UINT64 numVerts, vertCounter;
 
+        // does all data reside interleaved in the same memory?
+        if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) 
+                - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
+                && vertStride == colStride) || colStride == 0)  {
+                    GLuint vb = this->vertBuffer;
+                    numVerts = this->bufSize / vertStride;
+                    const char *currVert = static_cast<const char *>(parts.GetVertexData());
+                    const char *currCol = static_cast<const char *>(parts.GetColourData());
+                    vertCounter = 0;
+                    while (vertCounter < parts.GetCount()) {
+                        currCol = colStride == 0 ? currVert : currCol;
+                        const char *whence = currVert < currCol ? currVert : currCol;
+                        UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
+                        //mappedVertexMem = glMapNamedBufferRangeEXT(this->vertBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+                        //mappedColorMem = glMapNamedBufferRangeEXT(this->colBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
+                        //void *buf = glMapNamedBufferRangeEXT(this->vertBuffer, 0, vertsThisTime * vertStride, GL_WRITE_ONLY | GL_MAP_FLUSH_EXPLICIT_BIT);
+                        //memcpy(buf, whence, vertsThisTime * vertStride);
+                        //glUnmapNamedBufferEXT(this->vertBuffer);
+                        //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+                        memcpy(this->mappedVertexMem, whence, vertsThisTime * vertStride);
+                        glFlushMappedNamedBufferRangeEXT(this->vertBuffer, 0, vertsThisTime * vertStride);
+                        //glUnmapNamedBufferEXT(this->vertBuffer);
+                        //glUnmapNamedBufferEXT(this->colBuffer);
+
+                        this->setPointers(parts, vb, reinterpret_cast<const void *>(currVert - whence), vb, reinterpret_cast<const void *>(currCol - whence));
+                        glDrawArrays(GL_POINTS, 0, vertsThisTime);
+                        vertCounter += vertsThisTime;
+                        currVert += vertsThisTime * vertStride;
+                        currCol += vertsThisTime * colStride;
+                    }
+        } else {
+
+        }
+
+
+
+        //glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableVertexAttribArrayARB(cial);
+        glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
     }
 

@@ -58,7 +58,8 @@ namespace moldyn {
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
-                && (isExtAvailable("GL_ARB_buffer_storage") != GL_FALSE);
+                && isExtAvailable("GL_ARB_buffer_storage")
+                && ogl_IsVersionGEQ(4,4);
         }
 
         /** Ctor. */
@@ -92,8 +93,18 @@ namespace moldyn {
 
     private:
 
+        void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
+
         /** The sphere shader */
         vislib::graphics::gl::GLSLShader sphereShader;
+
+        GLuint vertArray;
+        GLuint colBuffer;
+        GLuint vertBuffer;
+        GLuint colIdxAttribLoc;
+        GLsizeiptr bufSize;
+        void *mappedVertexMem;
+        void *mappedColorMem;
 
     };
 
