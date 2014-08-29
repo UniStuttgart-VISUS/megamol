@@ -98,9 +98,9 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 moldyn::NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-    sphereShader(), bufSize(50 * 1024 * 1024), currBuf(0),
-    bufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    bufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_COHERENT_BIT) {
+    sphereShader(), bufSize(10 * 1024 * 1024), currBuf(0),
+    bufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
+	bufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
     // intentionally empty
 }
 
@@ -308,6 +308,9 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
 
     colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
 
+		// fixme!
+		GLsync fences[2] = { 0, 0 };
+
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
 
@@ -375,14 +378,26 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
 #ifdef MAP_BUFFER_LOCALLY
                         this->mappedMem[currBuf] = glMapNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride, bufferMappingBits);
 #endif
+						if (fences[currBuf] > 0)
+						{
+							while (glClientWaitSync(fences[currBuf], GL_SYNC_FLUSH_COMMANDS_BIT, 0) == GL_TIMEOUT_EXPIRED)
+							{
+								// zzzzz
+							}
+							glDeleteSync(fences[currBuf]);
+						}
                         memcpy(this->mappedMem[currBuf], whence, vertsThisTime * vertStride);
                         GL_VERIFY_THROW(glFlushMappedNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride));
+#if 0
                         glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+#endif
 #ifdef MAP_BUFFER_LOCALLY
                         glUnmapNamedBufferEXT(this->theBuffers[currBuf]);
 #endif
                         this->setPointers(parts, vb, reinterpret_cast<const void *>(currVert - whence), vb, reinterpret_cast<const void *>(currCol - whence));
                         GL_VERIFY_THROW(glDrawArrays(GL_POINTS, 0, vertsThisTime));
+						// http://www.opengl.org/wiki/Sync_Object
+						fences[currBuf] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
                         currBuf = (currBuf + 1) % 2;
                         vertCounter += vertsThisTime;
                         currVert += vertsThisTime * vertStride;
@@ -392,8 +407,6 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
 
         }
 
-
-
         //glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDisableClientState(GL_COLOR_ARRAY);
@@ -401,6 +414,16 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
         glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
     }
+
+	// fixme
+	for (int i(0); i < 2; ++i)
+	{
+		while (glClientWaitSync(fences[i], GL_SYNC_FLUSH_COMMANDS_BIT, 0) == GL_TIMEOUT_EXPIRED)
+		{
+			// zzzzz
+		}
+		glDeleteSync(fences[i]);
+	}
 
     c2->Unlock();
 
