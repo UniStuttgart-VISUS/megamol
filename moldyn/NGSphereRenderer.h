@@ -99,12 +99,13 @@ namespace moldyn {
         vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
-        GLuint colBuffer;
-        GLuint vertBuffer;
+        GLuint theBuffers[2];
+        unsigned int currBuf;
         GLuint colIdxAttribLoc;
         GLsizeiptr bufSize;
-        void *mappedVertexMem;
-        void *mappedColorMem;
+        void *mappedMem[2];
+        GLuint bufferCreationBits;
+        GLuint bufferMappingBits;
 
     };
 

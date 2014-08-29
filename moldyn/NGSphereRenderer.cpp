@@ -17,13 +17,90 @@
 #include "vislib/mathfunctions.h"
 
 using namespace megamol::core;
+//#define MAP_BUFFER_LOCALLY
+#define DEBUG_BLAHBLAH
+
+//typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
+void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+    const GLchar* message, const GLvoid* userParam) {
+        char *sourceText, *typeText, *severityText;
+        switch(source) {
+            case GL_DEBUG_SOURCE_API:
+                sourceText = "API";
+                break;
+            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+                sourceText = "Window System";
+                break;
+            case GL_DEBUG_SOURCE_SHADER_COMPILER:
+                sourceText = "Shader Compiler";
+                break;
+            case GL_DEBUG_SOURCE_THIRD_PARTY:
+                sourceText = "Third Party";
+                break;
+            case GL_DEBUG_SOURCE_APPLICATION:
+                sourceText = "Application";
+                break;
+            case GL_DEBUG_SOURCE_OTHER:
+                sourceText = "Other";
+                break;
+            default:
+                sourceText = "Unknown";
+                break;
+        }
+        switch(type) {
+            case GL_DEBUG_TYPE_ERROR:
+                typeText = "Error";
+                break;
+            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+                typeText = "Deprecated Behavior";
+                break;
+            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+                typeText = "Undefined Behavior";
+                break;
+            case GL_DEBUG_TYPE_PORTABILITY:
+                typeText = "Portability";
+                break;
+            case GL_DEBUG_TYPE_PERFORMANCE:
+                typeText = "Performance";
+                break;
+            case GL_DEBUG_TYPE_OTHER:
+                typeText = "Other";
+                break;
+            case GL_DEBUG_TYPE_MARKER:
+                typeText = "Marker";
+                break;
+            default:
+                typeText = "Unknown";
+                break;
+        }
+        switch(severity) {
+            case GL_DEBUG_SEVERITY_HIGH:
+                severityText = "High";
+                break;
+            case GL_DEBUG_SEVERITY_MEDIUM:
+                severityText = "Medium";
+                break;
+            case GL_DEBUG_SEVERITY_LOW:
+                severityText = "Low";
+                break;
+            case GL_DEBUG_SEVERITY_NOTIFICATION:
+                severityText = "Notification";
+                break;
+            default:
+                severityText = "Unknown";
+                break;
+        }
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+}
 
 
 /*
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 moldyn::NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-    sphereShader(), bufSize(50 * 1024 * 1024) {
+    sphereShader(), bufSize(50 * 1024 * 1024), currBuf(0),
+    bufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
+    bufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_COHERENT_BIT) {
     // intentionally empty
 }
 
@@ -40,6 +117,9 @@ moldyn::NGSphereRenderer::~NGSphereRenderer(void) {
  * moldyn::SimpleSphereRenderer::create
  */
 bool moldyn::NGSphereRenderer::create(void) {
+#ifdef DEBUG_BLAHBLAH
+    glDebugMessageCallback(MyFunkyDebugCallback, NULL);
+#endif
 
     vislib::graphics::gl::ShaderSource vert, frag;
 
@@ -79,17 +159,18 @@ bool moldyn::NGSphereRenderer::create(void) {
 
     glGenVertexArrays(1, &this->vertArray);
     glBindVertexArray(this->vertArray);
-    glGenBuffers(1, &this->vertBuffer);
-    glGenBuffers(1, &this->colBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, this->vertBuffer);
-    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
-    glBindBuffer(GL_ARRAY_BUFFER, this->colBuffer);
-    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT);
+    glGenBuffers(2, this->theBuffers);
+    glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[0]);
+    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
+    glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[1]);
+    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    mappedVertexMem = glMapNamedBufferRangeEXT(this->vertBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT);
-    mappedColorMem = glMapNamedBufferRangeEXT(this->colBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT | GL_MAP_PERSISTENT_BIT);
+#ifndef MAP_BUFFER_LOCALLY
+    mappedMem[0] = glMapNamedBufferRangeEXT(this->theBuffers[0], 0, this->bufSize, bufferMappingBits);
+    mappedMem[1] = glMapNamedBufferRangeEXT(this->theBuffers[1], 0, this->bufSize, bufferMappingBits);
+#endif
 
     return AbstractSimpleSphereRenderer::create();
 }
@@ -99,11 +180,12 @@ bool moldyn::NGSphereRenderer::create(void) {
  * moldyn::SimpleSphereRenderer::release
  */
 void moldyn::NGSphereRenderer::release(void) {
-    glUnmapNamedBufferEXT(this->vertBuffer);
-    glUnmapNamedBufferEXT(this->colBuffer);
+#ifndef MAP_BUFFER_LOCALLY
+    glUnmapNamedBufferEXT(this->theBuffers[0]);
+    glUnmapNamedBufferEXT(this->theBuffers[1]);
+#endif
     this->sphereShader.Release();
-    glDeleteBuffers(1, &this->vertBuffer);
-    glDeleteBuffers(1, &this->colBuffer);
+    glDeleteBuffers(2, this->theBuffers);
     glDeleteVertexArrays(1, &this->vertArray);
     AbstractSimpleSphereRenderer::release();
 }
@@ -184,6 +266,12 @@ void moldyn::NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &par
  * moldyn::SimpleSphereRenderer::Render
  */
 bool moldyn::NGSphereRenderer::Render(Call& call) {
+    USES_GL_VERIFY;
+#ifdef DEBUG_BLAHBLAH
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
+
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -275,28 +363,27 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
         if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) 
                 - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
                 && vertStride == colStride) || colStride == 0)  {
-                    GLuint vb = this->vertBuffer;
                     numVerts = this->bufSize / vertStride;
                     const char *currVert = static_cast<const char *>(parts.GetVertexData());
                     const char *currCol = static_cast<const char *>(parts.GetColourData());
                     vertCounter = 0;
                     while (vertCounter < parts.GetCount()) {
+                        GLuint vb = this->theBuffers[currBuf];
                         currCol = colStride == 0 ? currVert : currCol;
                         const char *whence = currVert < currCol ? currVert : currCol;
                         UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
-                        //mappedVertexMem = glMapNamedBufferRangeEXT(this->vertBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
-                        //mappedColorMem = glMapNamedBufferRangeEXT(this->colBuffer, 0, this->bufSize, GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
-                        //void *buf = glMapNamedBufferRangeEXT(this->vertBuffer, 0, vertsThisTime * vertStride, GL_WRITE_ONLY | GL_MAP_FLUSH_EXPLICIT_BIT);
-                        //memcpy(buf, whence, vertsThisTime * vertStride);
-                        //glUnmapNamedBufferEXT(this->vertBuffer);
-                        //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-                        memcpy(this->mappedVertexMem, whence, vertsThisTime * vertStride);
-                        glFlushMappedNamedBufferRangeEXT(this->vertBuffer, 0, vertsThisTime * vertStride);
-                        //glUnmapNamedBufferEXT(this->vertBuffer);
-                        //glUnmapNamedBufferEXT(this->colBuffer);
-
+#ifdef MAP_BUFFER_LOCALLY
+                        this->mappedMem[currBuf] = glMapNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride, bufferMappingBits);
+#endif
+                        memcpy(this->mappedMem[currBuf], whence, vertsThisTime * vertStride);
+                        GL_VERIFY_THROW(glFlushMappedNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride));
+                        glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+#ifdef MAP_BUFFER_LOCALLY
+                        glUnmapNamedBufferEXT(this->theBuffers[currBuf]);
+#endif
                         this->setPointers(parts, vb, reinterpret_cast<const void *>(currVert - whence), vb, reinterpret_cast<const void *>(currCol - whence));
-                        glDrawArrays(GL_POINTS, 0, vertsThisTime);
+                        GL_VERIFY_THROW(glDrawArrays(GL_POINTS, 0, vertsThisTime));
+                        currBuf = (currBuf + 1) % 2;
                         vertCounter += vertsThisTime;
                         currVert += vertsThisTime * vertStride;
                         currCol += vertsThisTime * colStride;
@@ -320,6 +407,10 @@ bool moldyn::NGSphereRenderer::Render(Call& call) {
     this->sphereShader.Disable();
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+#ifdef DEBUG_BLAHBLAH
+    glDisable(GL_DEBUG_OUTPUT);
+    glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
 
     return true;
 }
