@@ -49,7 +49,7 @@ void megamol::core::utility::LogEchoTarget::SetTarget(
  */
 void megamol::core::utility::LogEchoTarget::Msg(UINT level, vislib::sys::Log::TimeStamp time,
         vislib::sys::Log::SourceID sid, const char *msg) {
-    if (this->target) {
+    if (this->target && level <= this->Level()) {
         this->target(level, msg);
     }
 }
