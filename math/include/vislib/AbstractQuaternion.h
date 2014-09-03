@@ -182,6 +182,18 @@ namespace math {
             return rv;
         }
 
+		/**
+		 * Answer the inverse of the quaternion.
+		 *
+		 * @return The inverse of the quaternion.
+		 */
+		inline AbstractQuaternion<T, T[4]> Inverse(void) const {
+			AbstractQuaternion<T, T[4]> retval(this->X(), this->Y(), this->Z(), 
+				this->W());
+			retval.Invert();
+			return retval;
+		}
+
         /** 
          * Invert the quaternion.
          */
@@ -216,6 +228,18 @@ namespace math {
          * @return The norm BEFORE the normalisation.
          */
         T Normalise(void);
+
+		/**
+		 * Answer a normalised copy of the quaternion.
+		 *
+		 * @return A normalised copy of the quaternion.
+		 */
+		inline AbstractQuaternion<T, T[4]> Normalised(void) const {
+			AbstractQuaternion<T, T[4]> retval(this->X(), this->Y(), this->Z(), 
+				this->W());
+			retval.Normalise();
+			return retval;
+		}
 
         /**
          * Provide direct access to the components of the quaternion.
