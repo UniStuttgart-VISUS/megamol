@@ -293,10 +293,10 @@ bool PDBLoader::Frame::writeFrame(std::ofstream *outfile, float precision,
     unsigned int bitoffset = 0;
 
     byteSize = ((bitsize+1) * (AtomCount() + 1)) / 8 + 1;
-    
+
     // byteSize = actual size of the datablock
     // leave the rest filled with zeros
-    char *charbuff = new char[byteSize + (4 -  byteSize % 4) % 4]; 
+    char *charbuff = new char[byteSize + (4 -  byteSize % 4) % 4];
     char *charPt = charbuff;
 
     // important for bit-operations to work properly
@@ -754,10 +754,9 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
         solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
-        usePDBBBoxSlot("usePDBBBox", "Determine whether to use the PDB bounding box"),
+        calcBBoxPerFrameSlot("calcBBoxPerFrame", "Calculate the bounding box for each frame separately"),
 
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
-        bboxPDB(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
         datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
         XTCFrameOffset( 0), xtcFileValid(false) {
@@ -784,8 +783,8 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
     this->solventResidues << new param::StringParam("");
     this->MakeSlotAvailable( &this->solventResidues);
 
-    this->usePDBBBoxSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable( &this->usePDBBBoxSlot);
+    this->calcBBoxPerFrameSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable( &this->calcBBoxPerFrameSlot);
 
     mdd = NULL; // no mdd object
 }
@@ -830,7 +829,7 @@ bool PDBLoader::getData( core::Call& call) {
     }
 
     dc->SetDataHash( this->datahash);
-    
+
     if( !xtcFileValid ) {
         // no XTC file set or loaded --> use number of loaded frames
         dc->SetFrameCount( vislib::math::Max(1U,
@@ -939,7 +938,7 @@ bool PDBLoader::getData( core::Call& call) {
     dc->SetResidues( static_cast<unsigned int>(this->residue.Count()),
         (const MolecularDataCall::Residue**)this->residue.PeekElements());
 //	dc->SetAtomResidueIndices(this->atomResidueIdx.PeekElements());
-    dc->SetSolventResidueIndices( static_cast<unsigned int>(this->solventResidueIdx.Count()), 
+    dc->SetSolventResidueIndices( static_cast<unsigned int>(this->solventResidueIdx.Count()),
         this->solventResidueIdx.PeekElements());
     dc->SetResidueTypeNames( static_cast<unsigned int>(this->residueTypeName.Count()),
         (vislib::StringA*)this->residueTypeName.PeekElements());
@@ -981,8 +980,8 @@ bool PDBLoader::getExtent( core::Call& call) {
 
     // grow bounding box by 3.0 Angstrom (for volume rendering / SAS)
     vislib::math::Cuboid<float> bBoxPlus3;
-    if (this->usePDBBBoxSlot.Param<core::param::BoolParam>()->Value()) {
-        bBoxPlus3 = this->bboxPDB;
+    if (this->calcBBoxPerFrameSlot.Param<core::param::BoolParam>()->Value()) {
+        bBoxPlus3 = this->bboxPerFrame[dc->FrameID()];
     } else {
         bBoxPlus3 = this->bbox;
     }
@@ -1109,7 +1108,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
     SIZE_T atomEntriesCapacity = 10000;
     SIZE_T frameCapacity = 10000;
     atomEntries.AssertCapacity( atomEntriesCapacity);
-    
+
     Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Loading PDB file: %s", T2A( filename.PeekBuffer())); // DEBUG
     // try to load the file
     if( file.LoadFile( T2A( filename) ) ) {
@@ -1119,17 +1118,17 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             // get the current line from the file
             line = file.Line( lineCnt);
             // Store bounding box if provided
-            if( line.StartsWith( "BBOX") ) {
-                this->parseBBoxEntry(line);
-                Log::DefaultLog.WriteMsg( Log::LEVEL_INFO,
-                        "Found PDB bounding box (%f %f %f, %f %f %f)",
-                        this->bboxPDB.Left(),
-                        this->bboxPDB.Bottom(),
-                        this->bboxPDB.Back(),
-                        this->bboxPDB.Right(),
-                        this->bboxPDB.Top(),
-                        this->bboxPDB.Front()); // DEBUG
-            }
+//            if( line.StartsWith( "BBOX") ) {
+//                this->parseBBoxEntry(line);
+//                Log::DefaultLog.WriteMsg( Log::LEVEL_INFO,
+//                        "Found PDB bounding box (%f %f %f, %f %f %f)",
+//                        this->bboxPDB.Left(),
+//                        this->bboxPDB.Bottom(),
+//                        this->bboxPDB.Back(),
+//                        this->bboxPDB.Right(),
+//                        this->bboxPDB.Top(),
+//                        this->bboxPDB.Front()); // DEBUG
+//            }
             // store all atom entries
             if( line.StartsWith( "ATOM") ) {
                 // ignore alternate locations
@@ -1206,7 +1205,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 firstConIdx = static_cast<unsigned int>(this->connectivity.Count());
             }
             // add new chain
-            this->chain.Add( MolecularDataCall::Chain( static_cast<unsigned int>(this->molecule.Count() - 1), 
+            this->chain.Add( MolecularDataCall::Chain( static_cast<unsigned int>(this->molecule.Count() - 1),
                 1, this->chainName[chainCnt], this->chainType[chainCnt]));
             // get the residue range of the current chain
             first = this->chainFirstRes[chainCnt];
@@ -1426,8 +1425,10 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
         pos.Z() + this->atomType[this->atomTypeIdx[atom]].Radius());
     if( atom == 0 ) {
         this->bbox = atomBBox;
+        this->bboxPerFrame.Add(atomBBox);
     } else {
         this->bbox.Union( atomBBox);
+        this->bboxPerFrame[frame].Union(atomBBox);
     }
 
     // get chain id
@@ -1586,7 +1587,7 @@ float PDBLoader::getElementRadius( vislib::StringA name) {
     while( vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }
-    
+
 #ifdef SFB716DEMO
     if( name.Equals("Po") ) // Pore
         return 1.5f;
@@ -1706,6 +1707,12 @@ void PDBLoader::setAtomPositionToFrame( vislib::StringA &atomEntry, unsigned int
         pos.Y() + this->atomType[this->atomTypeIdx[atom]].Radius(),
         pos.Z() + this->atomType[this->atomTypeIdx[atom]].Radius());
     this->bbox.Union( atomBBox);
+
+    if( atom == 0 ) {
+        this->bboxPerFrame.Add(atomBBox);
+    } else {
+        this->bboxPerFrame[frame].Union(atomBBox);
+    }
 
     // get the temperature factor (b-factor)
     tmpStr = atomEntry.Substring( 60, 6);
@@ -1983,7 +1990,7 @@ bool PDBLoader::readNumXTCFrames() {
             (float)minint[0] / precision - 0.3f,
             (float)minint[1] / precision - 0.3f,
             (float)minint[2] / precision - 0.3f,
-            
+
             (float)maxint[0] / precision + 0.3f,
             (float)maxint[1] / precision + 0.3f,
             (float)maxint[2] / precision + 0.3f);
@@ -2077,8 +2084,8 @@ void PDBLoader::parseBBoxEntry(vislib::StringA &bboxEntry){
     float bboxRight = float(atof(bboxEntry.Substring(33, 39)));
     float bboxTop = float(atof(bboxEntry.Substring(42, 48)));
     float bboxFront = float(atof(bboxEntry.Substring(51, 71)));
-    this->bboxPDB.Set(bboxLeft, bboxBottom, bboxBack,
-            bboxRight, bboxTop, bboxFront);
+//    this->bboxPDB.Set(bboxLeft, bboxBottom, bboxBack,
+//            bboxRight, bboxTop, bboxFront);
 }
 
 

@@ -25,6 +25,7 @@
 #include "MDDriverConnector.h"
 #include <fstream>
 #include "MultiPDBLoader.h"
+#include "vislib/Vector.h"
 
 
 
@@ -622,13 +623,14 @@ namespace protein {
         /** slot to specify a ;-list of residues to be merged into separate chains ... */
         core::param::ParamSlot solventResidues;
         /** Determine whether to use the PDB bbox */
-        core::param::ParamSlot usePDBBBoxSlot;
+        core::param::ParamSlot calcBBoxPerFrameSlot;
 
         /** The data */
         vislib::Array<Frame*> data;
 
         /** The bounding box */
-        vislib::math::Cuboid<float> bbox, bboxPDB;
+        vislib::math::Cuboid<float> bbox;
+        vislib::Array< vislib::math::Cuboid<float> > bboxPerFrame;
 
         /** The data hash */
         SIZE_T datahash;
