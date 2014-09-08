@@ -89,7 +89,8 @@ static void generateBigOne(File& f1) {
 		std::cout << e.GetMsgA() << std::endl;
 	}
 	f1.Open(fname, File::READ_ONLY, File::SHARE_READWRITE, File::OPEN_ONLY);
-	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "File size = "FORMATINT64, BIGFILE_SIZE);
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "File size = "\
+	         FORMATINT64, BIGFILE_SIZE);
 	AssertEqual(buf, BIGFILE_SIZE, f1.GetSize());
 	f1.Close();
 }
@@ -143,12 +144,16 @@ static void testBigOne(File& f1) {
 			pos += numRead;
 		}
 	} catch (IOException e) {
-		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Reading successful ("FORMATINT64")", pos);
+		SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Reading successful ("\
+		        FORMATINT64\
+		        ")", pos);
 		AssertTrue(buf, false);
 	}
-	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Values consistent up to pos "FORMATINT64, BIGFILE_SIZE);
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Values consistent up to pos "\
+	        FORMATINT64, BIGFILE_SIZE);
 	AssertEqual(buf, pos, BIGFILE_SIZE);
-	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Last value = "FORMATINT64, BIGFILE_LASTVAL);
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Last value = "\
+	        FORMATINT64, BIGFILE_LASTVAL);
 	AssertEqual(buf, lastval, BIGFILE_LASTVAL);
 	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Linear reading: %03.1f MB/s min, %03.1f MB/s max, %03.1f MB/s average\n", minrate, maxrate, f1.GetSize()/1024.0f / ptotal);
 	std::cout << buf;
@@ -358,12 +363,16 @@ void TestMemmappedFile(void) {
 	::generateBigOne(f1);
 	char *buf = new char[static_cast<size_t>(BUF_SIZE)];
 
-	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Testing with views of "FORMATINT64" (machine default)\n", f1.GetViewSize());
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Testing with views of "\
+	        FORMATINT64\
+	        " (machine default)\n", f1.GetViewSize());
 	std::cout << buf;
 	::testBigOne(f1);
 
 	f1.SetViewSize(8 * 1024 * 1024);
-	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Testing with views of "FORMATINT64"\n", f1.GetViewSize());
+	SNPRINTF(buf, static_cast<size_t>(BUF_SIZE - 1), "Testing with views of "\
+	        FORMATINT64\
+	        "\n", f1.GetViewSize());
 	std::cout << buf;
 	::testBigOne(f1);
     ::removeBigOne();
