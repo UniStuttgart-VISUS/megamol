@@ -31,6 +31,8 @@ StaticLibs := datraw/lib$(BITS)/libdatRaw.a
 
 # Additional linker flags
 LinkerFlags := $(LinkerFlags) -shared -Wl,-Bsymbolic
+# add dependency to glload
+#LinkerFlags += -L../gl/include/glload/build/ -lglload
 #	-lc -Wl,-e,mmCoreMain
 
 
