@@ -37,8 +37,12 @@ MultiPDBLoader::MultiPDBLoader(void) : Module(),
     this->MakeSlotAvailable(&this->filenameSlot);
     
     // data out slot for molecular data
-    this->molecularDataOutSlot.SetCallback( MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &MultiPDBLoader::getData);
-    this->molecularDataOutSlot.SetCallback( MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent), &MultiPDBLoader::getExtent);
+    this->molecularDataOutSlot.SetCallback( MolecularDataCall::ClassName(),
+            MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData),
+            &MultiPDBLoader::getData);
+    this->molecularDataOutSlot.SetCallback( MolecularDataCall::ClassName(),
+            MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent),
+            &MultiPDBLoader::getExtent);
     this->MakeSlotAvailable( &this->molecularDataOutSlot);
 
 }
