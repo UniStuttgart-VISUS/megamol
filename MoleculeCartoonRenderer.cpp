@@ -596,6 +596,7 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
+    mol->SetFrameID(static_cast<unsigned int>(cr3d->Time()));
     if (!(*mol)(1)) return false;
 
     float scale;

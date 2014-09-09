@@ -16,7 +16,7 @@
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
-#include <glh/glh_genext.h>
+//#include <glh/glh_genext.h>
 #include "job/AbstractJob.h"
 #include "Module.h"
 #include "CallerSlot.h"
