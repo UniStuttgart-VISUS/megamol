@@ -20,7 +20,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class CallCamParams : public core::Call {
+class MEGAMOLCORE_API CallCamParams : public core::Call {
 
 public:
 
