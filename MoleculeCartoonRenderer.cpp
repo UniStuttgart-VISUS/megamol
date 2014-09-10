@@ -12,6 +12,7 @@
 #include "MoleculeCartoonRenderer.h"
 #include "CoreInstance.h"
 #include "Color.h"
+#include "CallColor.h"
 #include "param/EnumParam.h"
 #include "param/BoolParam.h"
 #include "param/StringParam.h"
@@ -59,6 +60,8 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         stickRadiusParam( "stickRadius", "The radius for stick rendering"),
         offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering"),
         interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
+		compareParam( "comparison::compare", "Enable comparing between two different molecules" ),
+		molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module"),
         currentFrameId( 0), atomCount( 0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -71,6 +74,9 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable (&this->bsDataCallerSlot);
+
+	this->molColorCallerSlot.SetCompatibleCall<CallColorDescription>();
+	this->MakeSlotAvailable(&this->molColorCallerSlot);
 
     // check if geom-shader is supported
     //if( this->cartoonShader.AreExtensionsAvailable())
@@ -156,6 +162,9 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     // Toggle offscreen rendering
     this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable( &this->offscreenRenderingParam);
+
+	this->compareParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable( &this->compareParam);
 
     // --- set the radius for the cartoon rednering mode ---
     this->radiusCartoon = 0.2f;
@@ -595,6 +604,7 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
     if (cr3d == NULL) return false;
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+
     if( mol == NULL ) return false;
     mol->SetFrameID(static_cast<unsigned int>(cr3d->Time()));
     if (!(*mol)(1)) return false;
@@ -717,10 +727,17 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
 
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+
+
     if( mol == NULL) return false;
 
     mol->SetFrameID(static_cast<int>( callTime));
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+
+	// TODO store c-alpha of mol
+	// TODO if mol2 == NULL : callForGetData with callTime + frameOffset of mol ; else : use mol2
+	// TODO store c-alpha of mol2 (or new c-alpha of mol)
+
 
     // interpolate between frames ...
     int cnt;
@@ -788,8 +805,9 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     //this->RecomputeAll();
 
     // parameter refresh
-    this->UpdateParameters( mol, bs);
+	this->UpdateParameters( mol, mol->FrameID(), bs);
     // recompute colors
+
     Color::MakeColorTable(mol,
         this->currentColoringMode0,
         this->currentColoringMode1,
@@ -908,7 +926,8 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
 /*
  * update parameters
  */
-void MoleculeCartoonRenderer::UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall *bs) {
+void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol, 
+											   unsigned int frameID, const BindingSiteCall *bs) {
     // color table param
     if( this->colorTableFileParam.IsDirty() ) {
         Color::ReadColorTableFromFile(
@@ -921,11 +940,23 @@ void MoleculeCartoonRenderer::UpdateParameters( const MolecularDataCall *mol, co
         this->SetRenderMode(static_cast<CartoonRenderMode>(int(this->renderingModeParam.Param<param::EnumParam>()->Value())));
         this->renderingModeParam.ResetDirty();
     }
-    if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty()) {
+
+	// ask the color module if a param is dirty
+	CallColor* col = this->molColorCallerSlot.CallAs<CallColor>();
+	bool colDirty = false;
+	if(col != NULL) {
+		(*col)(1); // GetExtents
+		colDirty = col->IsDirty();
+		col->SetDirty(false);
+	}
+
+	if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty() || this->compareParam.IsDirty() || colDirty) {
         this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
         this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+		this->compare = this->compareParam.Param<param::BoolParam>()->Value();
         RecomputeAll();
 
+		if (!this->compare) {
         Color::MakeColorTable(mol,
             this->currentColoringMode0,
             this->currentColoringMode1,
@@ -936,10 +967,27 @@ void MoleculeCartoonRenderer::UpdateParameters( const MolecularDataCall *mol, co
             this->midGradColorParam.Param<param::StringParam>()->Value(),
             this->maxGradColorParam.Param<param::StringParam>()->Value(),
             true, bs);
+		} else {
+			col->SetColoringTarget(mol);
+			col->SetAtomColorTable(&this->atomColorTable);
+			col->SetColorLookupTable(&this->colorLookupTable);
+			col->SetRainbowColorTable(&this->rainbowColors);
+			col->SetBindingSiteCall(bs);
+			col->SetWeighted(true);
+			col->SetForceRecompute(true);
+			col->SetComparisonEnabled(true); // enable comparison
+			col->SetNumEntries(100);
+			col->SetFrameID(frameID);
         
+			(*col)(0); //getColor
+			this->atomColorTable =  *col->GetAtomColorTable();
+
+		}
+
         this->coloringModeParam0.ResetDirty();
         this->coloringModeParam1.ResetDirty();
         this->cmWeightParam.ResetDirty();
+		this->compareParam.ResetDirty();
     }
     if (this->smoothCartoonColoringParam.IsDirty()) {
         this->smoothCartoonColoringMode = this->smoothCartoonColoringParam.Param<param::BoolParam>()->Value();

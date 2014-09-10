@@ -168,6 +168,37 @@ namespace protein {
             bool forceRecompute = false,
             const BindingSiteCall *bs = 0);
 
+		/**
+         * Make color table for all atoms acoording to compare two different
+		 * proteins
+         * The color table is only computed if it is empty or if the
+         * recomputation is forced by parameter.
+         *
+         * @param mol1                The first data interface. 
+		 *                            This one is rendered
+		 * @param mol2				  The second data interface.
+         * @param currentColoringMode The current coloring mode.
+         * @param atomColorTable      The atom color table.
+         * @param colorLookupTable    The color lookup table.
+         * @param rainbowColors       The rainbow color lookup table.
+         * @param minGradColor        The minimum value for gradient coloring.
+         * @param midGradColor        The middle value for gradient coloring.
+         * @param maxGradColor        The maximum value for gradient coloring.
+         * @param forceRecompute      Force recomputation of the color table.
+         * @param bs                  The binding site data call.
+         */
+		static void MakeComparisonColorTable(const MolecularDataCall *mol1,
+			const MolecularDataCall *mol2,
+			ColoringMode currentColoringMode,
+			vislib::Array<float> &atomColorTable,
+			vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
+			vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
+			vislib::TString minGradColor,
+			vislib::TString midGradColor,
+			vislib::TString maxGradColor,
+			bool forceRecompute = false,
+			const BindingSiteCall *bs = 0);
+
          /**
          * Creates a rainbow color table with 'num' entries.
          *

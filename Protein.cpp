@@ -84,6 +84,7 @@
 // data interfaces (calls)
 #include "SolPathDataCall.h"
 #include "CallVolumeData.h"
+#include "CallColor.h"
 #include "MolecularDataCall.h"
 #include "SphereDataCall.h"
 #include "VolumeSliceCall.h"
@@ -106,6 +107,7 @@
 #include "MoleculeBallifier.h"
 
 // other modules (filter etc)
+#include "ColorModule.h"
 #include "IntSelection.h"
 #include "PotentialCalculator.h"
 #include "ProteinVariantMatch.h"
@@ -162,7 +164,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 51;
+    int moduleCount = 52;
 #ifdef WITH_CUDA
     moduleCount+=14;
 #endif // WITH_CUDA
@@ -256,6 +258,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
+		case CUDA_OFFSET + HAPTICS_OFFSET + 51 : return new ModuleAutoDescription<protein::ColorModule>();
         default: return NULL;
     }
     return NULL;
@@ -266,7 +269,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 19;
+    return 20;
 }
 
 
@@ -294,6 +297,7 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 16: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
         case 17: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
         case 18: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
+		case 19: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
         default: return NULL;
     }
     return NULL;
