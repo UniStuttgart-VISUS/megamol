@@ -388,6 +388,9 @@
     <ClCompile Include="MultiPDBLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ColorModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -796,6 +799,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CudaDevArr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CallColor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

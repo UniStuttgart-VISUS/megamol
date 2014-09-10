@@ -41,6 +41,7 @@ namespace protein {
 
     class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModuleDS {
     public:
+
         /**
          * Answer the name of this module.
          *
@@ -81,6 +82,11 @@ namespace protein {
             CARTOON_GPU    = 3,
             CARTOON_LINE   = 4
         };
+
+		enum RenderSource {
+			RENDER_NORMAL = 0,
+			RENDER_COMPARISON_BASE = 1
+		};
 
 
         /**********************************************************************
@@ -210,11 +216,13 @@ namespace protein {
          void RecomputeAll(void);
 
         /**
-         * Update all parameter slots.
+         *	Update all parameter slots.
          *
-         * @param mol   Pointer to the data call.
+         *	@param mol   Pointer to the data call.
+		 *	@param frameID The current frame id used for the data call.
+		 *	@param bs Pointer to the binding site call.
          */
-        void UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall * bs = 0);
+		 void UpdateParameters( MolecularDataCall *mol, unsigned int frameID, const BindingSiteCall * bs = 0);
 
         /**********************************************************************
          * variables
@@ -228,6 +236,8 @@ namespace protein {
         megamol::core::CallerSlot molRendererORCallerSlot;
         /** BindingSiteCall caller slot */
         megamol::core::CallerSlot bsDataCallerSlot;
+		// caller slot for protein coloring
+		megamol::core::CallerSlot molColorCallerSlot;
         
         /** camera information */
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -241,6 +251,7 @@ namespace protein {
         megamol::core::param::ParamSlot cmWeightParam;
         megamol::core::param::ParamSlot stickColoringModeParam;
         megamol::core::param::ParamSlot smoothCartoonColoringParam;
+		megamol::core::param::ParamSlot compareParam;
         /** parameter slot for color table filename */
         megamol::core::param::ParamSlot colorTableFileParam;
         /** parameter slot for min color of gradient color mode */
@@ -283,6 +294,9 @@ namespace protein {
         Color::ColoringMode currentColoringMode1;
         // smooth coloring of cartoon mode
         bool smoothCartoonColoringMode;
+
+		// is comparison mode enabled?
+		bool compare;
 
         // attribute locations for GLSL-Shader
         GLint attribLocInParams;

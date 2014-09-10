@@ -13,6 +13,7 @@
 #include "vislib/ASCIIFileBuffer.h"
 #include "CoreInstance.h"
 #include <string>
+#include <iostream>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -148,6 +149,22 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
     // reserve memory for all atoms
     atomColorTable.AssertCapacity( mol->AtomCount() * 3 );
 
+	// TODO Remove
+	/*if( atomColorTable.IsEmpty() ) {
+		for( cnt = 0; cnt < mol->AtomCount(); ++cnt) {
+
+			if( cnt < 200 ) {
+				atomColorTable.Add(1.0);
+				atomColorTable.Add(0.0);
+				atomColorTable.Add(1.0);
+			} else {
+				atomColorTable.Add(0.0);
+				atomColorTable.Add(1.0);
+				atomColorTable.Add(0.0);
+			}
+		}
+	}*/
+
     // only compute color table if necessary
     if( atomColorTable.IsEmpty() ) {
         if( currentColoringMode == ELEMENT ) {
@@ -176,19 +193,19 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                     // Special cases for water/toluol/methanol
                     if (mol->ResidueTypeNames()[resTypeIdx].Equals("SOL")) {
                         // Water
-                        atomColorTable.Add(0.3);
-                        atomColorTable.Add(0.3);
-                        atomColorTable.Add(1.0);
+                        atomColorTable.Add(0.3f);
+                        atomColorTable.Add(0.3f);
+                        atomColorTable.Add(1.0f);
                     } else if(mol->ResidueTypeNames()[resTypeIdx].Equals("MeOH")) {
                         // methanol
-                        atomColorTable.Add(1.0);
-                        atomColorTable.Add(0.5);
-                        atomColorTable.Add(0.0);
+                        atomColorTable.Add(1.0f);
+                        atomColorTable.Add(0.5f);
+                        atomColorTable.Add(0.0f);
                     }else if(mol->ResidueTypeNames()[resTypeIdx].Equals("TOL")) {
                         // toluol
-                        atomColorTable.Add(1.0);
-                        atomColorTable.Add(1.0);
-                        atomColorTable.Add(1.0);
+                        atomColorTable.Add(1.0f);
+                        atomColorTable.Add(1.0f);
+                        atomColorTable.Add(1.0f);
                     }
                     else {
                     atomColorTable.Add( colorLookupTable[resTypeIdx%
@@ -600,6 +617,109 @@ void Color::MakeColorTable(const MolecularDataCall *mol,
         }
 
     }
+}
+
+void Color::MakeComparisonColorTable(const MolecularDataCall *mol1,
+	const MolecularDataCall *mol2,
+	ColoringMode currentColoringMode,
+	vislib::Array<float> &atomColorTable,
+	vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
+	vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
+	vislib::TString minGradColor,
+	vislib::TString midGradColor,
+	vislib::TString maxGradColor,
+	bool forceRecompute,
+	const BindingSiteCall *bs) {
+
+	// temporary variables
+    unsigned int cnt, cnt2, idx, idx2, cntAtom, cntRes, cntSecS, atomIdx,
+        atomIdx2, atomCnt, atomCnt2;
+    vislib::math::Vector<float, 3> color;
+    //float r, g, b;
+
+    // if recomputation is forced: clear current color table
+    if( forceRecompute ) {
+        atomColorTable.Clear();
+    }
+
+    // reserve memory for all atoms
+    atomColorTable.AssertCapacity( mol1->AtomCount() * 3 );
+
+	// fill table with the default color
+	for( cntAtom = 0; cntAtom < mol1->AtomCount(); ++cntAtom ) {
+		atomColorTable.Add(0.0);
+		atomColorTable.Add(0.0);
+		atomColorTable.Add(0.0);
+	}
+
+	unsigned int ssc = mol1->SecondaryStructureCount();
+
+	if(ssc > mol2->SecondaryStructureCount())
+		ssc = mol2->SecondaryStructureCount();
+		
+	float max = -2.0f;
+
+	// go through every secondary structure
+	for( cntSecS = 0; cntSecS < ssc; ++cntSecS ) {
+		
+		idx = mol1->SecondaryStructures()[cntSecS].FirstAminoAcidIndex();
+		idx2 = mol2->SecondaryStructures()[cntSecS].FirstAminoAcidIndex();
+		cnt = idx + mol1->SecondaryStructures()[cntSecS].AminoAcidCount();
+		cnt2 = idx + mol2->SecondaryStructures()[cntSecS].AminoAcidCount();
+
+		// go through every single aminoacid
+		for( cntRes = idx; cntRes < cnt; ++cntRes ) {
+
+			atomIdx = mol1->Residues()[cntRes]->FirstAtomIndex();
+			atomIdx2 = mol2->Residues()[cntRes]->FirstAtomIndex();
+			atomCnt = atomIdx + mol1->Residues()[cntRes]->AtomCount();
+			atomCnt2 = atomIdx2 + mol2->Residues()[cntRes]->AtomCount(); 
+
+			MolecularDataCall::AminoAcid * aminoacid1;
+			MolecularDataCall::AminoAcid * aminoacid2;
+
+			const MolecularDataCall::Residue* t1 = mol2->Residues()[cntRes];
+
+			if(t1 == NULL)
+				break;
+
+			if( mol1->Residues()[cntRes]->Identifier() == MolecularDataCall::Residue::AMINOACID
+				&& mol2->Residues()[cntRes]->Identifier() == MolecularDataCall::Residue::AMINOACID) {
+				aminoacid1 = (MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
+				aminoacid2 = (MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
+			} else {// TODO check if this is correct
+				continue;
+			}
+
+			unsigned int cAlphaIdx = aminoacid1->CAlphaIndex();
+			unsigned int cAlphaIdx2 = aminoacid2->CAlphaIndex();
+
+			float xDist = mol1->AtomPositions()[cAlphaIdx*3+0] - mol2->AtomPositions()[cAlphaIdx2*3+0];
+			float yDist = mol1->AtomPositions()[cAlphaIdx*3+1] - mol2->AtomPositions()[cAlphaIdx2*3+1];
+			float zDist = mol1->AtomPositions()[cAlphaIdx*3+2] - mol2->AtomPositions()[cAlphaIdx2*3+2];
+
+			float absoluteDist = sqrt(xDist*xDist + yDist*yDist + zDist*zDist);
+
+			if(absoluteDist > max)
+				max = absoluteDist;
+
+			// set the color for every atom
+			for( cntAtom = atomIdx; cntAtom < atomCnt; ++cntAtom ) {
+				atomColorTable[3*cntAtom+0] = absoluteDist;
+				atomColorTable[3*cntAtom+1] = absoluteDist;
+				atomColorTable[3*cntAtom+2] = absoluteDist;
+			}
+		}
+	}
+
+	// normalize the colors to [0.0..1.0]
+	if( max > 0.0000001f ) {
+		for( cntAtom = 0; cntAtom < mol1->AtomCount(); ++cntAtom ) {
+				atomColorTable[3*cntAtom+0] /= max;
+				atomColorTable[3*cntAtom+1] /= max;
+				atomColorTable[3*cntAtom+2] /= max;
+		}
+	}
 }
 
 

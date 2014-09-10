@@ -540,6 +540,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CenterLineGenerator.cpp" />
     <ClCompile Include="CoarseGrainDataLoader.cpp" />
     <ClCompile Include="Color.cpp" />
+    <ClCompile Include="ColorModule.cpp" />
     <ClCompile Include="ComparativeFieldTopologyRenderer.cpp" />
     <ClCompile Include="ComparativeMolSurfaceRenderer.cpp" />
     <ClCompile Include="CritPoints.cpp" />
@@ -709,12 +710,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="BindingSiteCall.h" />
     <ClInclude Include="Base64.h" />
     <ClInclude Include="BSpline.h" />
+    <ClInclude Include="CallColor.h" />
     <ClInclude Include="CallMouseInput.h" />
     <ClInclude Include="CallProteinVolumeData.h" />
     <ClInclude Include="CCP4VolumeData.h" />
     <ClInclude Include="CenterLineGenerator.h" />
     <ClInclude Include="CoarseGrainDataLoader.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="ColorModule.h" />
     <ClInclude Include="ComparativeFieldTopologyRenderer.h" />
     <ClInclude Include="ComparativeMolSurfaceRenderer.h" />
     <ClInclude Include="CritPoints.h" />
@@ -1083,7 +1086,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets')">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
   </ImportGroup>
-  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 6.5.targets')">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.5.targets" />
+  <ImportGroup Label="ExtensionTargets" Condition="exists('$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.props')">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 5.5.targets" />
   </ImportGroup>
 </Project>
