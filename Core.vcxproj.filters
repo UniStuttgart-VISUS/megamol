@@ -799,6 +799,9 @@
     <ClCompile Include="misc\CalloutImageCall.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="view\Call6DofInteraction.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1457,6 +1460,9 @@
     </ClInclude>
     <ClInclude Include="misc\CalloutImageCall.h">
       <Filter>misc\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="view\Call6DofInteraction.h">
+      <Filter>view\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -429,6 +429,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="view\AbstractView3D.cpp" />
     <ClCompile Include="view\AnimDataModule.cpp" />
     <ClCompile Include="view\BlinnPhongRendererDeferred.cpp" />
+    <ClCompile Include="view\Call6DofInteraction.cpp" />
     <ClCompile Include="view\CallCamParams.cpp" />
     <ClCompile Include="view\CallCamParamSync.cpp" />
     <ClCompile Include="view\CallClipPlane.cpp" />
@@ -667,6 +668,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="view\AbstractView3D.h" />
     <ClInclude Include="view\AnimDataModule.h" />
     <ClInclude Include="view\BlinnPhongRendererDeferred.h" />
+    <ClInclude Include="view\Call6DofInteraction.h" />
     <ClInclude Include="view\CallCamParams.h" />
     <ClInclude Include="view\CallCamParamSync.h" />
     <ClInclude Include="view\CallClipPlane.h" />

@@ -34,6 +34,7 @@
 #include "misc/VolumetricDataCall.h"
 #include "misc/QRCodeDataCall.h"
 #include "misc/CalloutImageCall.h"
+#include "view/Call6DofInteraction.h"
 
 using namespace megamol::core;
 
@@ -89,6 +90,7 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<view::CallCamParamSync>();
 		instance->registerAutoDescription<misc::QRCodeDataCall>();
 		instance->registerAutoDescription<misc::CalloutImageCall>();
+		instance->registerAutoDescription<view::Call6DofInteraction>();
     //}
     //return instance;
 }
