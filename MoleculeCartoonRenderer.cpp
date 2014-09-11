@@ -62,6 +62,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
 		compareParam( "comparison::compare", "Enable comparing between two different molecules" ),
 		molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module"),
+        proteinOnlyParam("proteinOnly", "Render only the protein"),
         currentFrameId( 0), atomCount( 0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -165,6 +166,9 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
 
 	this->compareParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable( &this->compareParam);
+
+    this->proteinOnlyParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable( &this->proteinOnlyParam);
 
     // --- set the radius for the cartoon rednering mode ---
     this->radiusCartoon = 0.2f;
@@ -884,29 +888,31 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     }
 
 
-    // coloring mode for other molecules
-    Color::MakeColorTable(mol,
-        static_cast<Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorParam.Param<param::StringParam>()->Value(),
-        this->midGradColorParam.Param<param::StringParam>()->Value(),
-        this->maxGradColorParam.Param<param::StringParam>()->Value(),
-        true, bs);
-    // render rest as stick
-    this->RenderStick( mol, posInter, bs);
-    // reset coloring mode
-    this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
-    this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
-    Color::MakeColorTable(mol,
-        this->currentColoringMode0,
-        this->currentColoringMode1,
-        cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-        1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorParam.Param<param::StringParam>()->Value(),
-        this->midGradColorParam.Param<param::StringParam>()->Value(),
-        this->maxGradColorParam.Param<param::StringParam>()->Value(),
-        true, bs);
+    if (!this->proteinOnlyParam.Param<param::BoolParam>()->Value()) {
+        // coloring mode for other molecules
+        Color::MakeColorTable(mol,
+            static_cast<Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
+            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+            this->minGradColorParam.Param<param::StringParam>()->Value(),
+            this->midGradColorParam.Param<param::StringParam>()->Value(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value(),
+            true, bs);
+        // render rest as stick
+        this->RenderStick( mol, posInter, bs);
+        // reset coloring mode
+        this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+        this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+        Color::MakeColorTable(mol,
+            this->currentColoringMode0,
+            this->currentColoringMode1,
+            cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+            this->minGradColorParam.Param<param::StringParam>()->Value(),
+            this->midGradColorParam.Param<param::StringParam>()->Value(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value(),
+            true, bs);
+    }
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);

@@ -266,6 +266,8 @@ namespace protein {
         megamol::core::param::ParamSlot offscreenRenderingParam;
         /** parameter slot for positional interpolation */
         megamol::core::param::ParamSlot interpolParam;
+        /** parameter slot for disabling rendering except protein */
+        megamol::core::param::ParamSlot proteinOnlyParam;
 
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
