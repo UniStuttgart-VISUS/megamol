@@ -6297,7 +6297,7 @@ void main(void)
     vec3 dir53 = v5 - v3;
     
     // number of segments
-    const int n = 6;
+    const int n = 12;
     // scale factor for the width of the tube
     float scale = gl_FrontColorIn[1].x;
     float stretch1 = gl_FrontColorIn[1].y;
