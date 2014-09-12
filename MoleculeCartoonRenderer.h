@@ -25,6 +25,8 @@
 #include "vislib/SimpleFont.h"
 #include "vislib/Array.h"
 #include <vector>
+#include "CallerSlot.h"
+#include "CallColor.h"
 
 namespace megamol {
 namespace protein {
@@ -111,15 +113,40 @@ namespace protein {
          **********************************************************************/
 
         /** Set current render mode */
-        void SetRenderMode( CartoonRenderMode rm) { currentRenderMode = rm; RecomputeAll(); };
+        void SetRenderMode( CartoonRenderMode rm) {
+            currentRenderMode = rm; RecomputeAll();
+            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            if(col != NULL) {
+                col->SetDirty(true);
+            }
+        };
         
         /** Set current coloring mode */
-        void SetColoringMode0( Color::ColoringMode cm) { currentColoringMode0 = cm; RecomputeAll(); };
+        void SetColoringMode0( Color::ColoringMode cm) {
+            currentColoringMode0 = cm; RecomputeAll();
+            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            if(col != NULL) {
+                col->SetDirty(true);
+            }
+        };
+
         /** Set current coloring mode */
-        void SetColoringMode1( Color::ColoringMode cm) { currentColoringMode1 = cm; RecomputeAll(); };
+        void SetColoringMode1( Color::ColoringMode cm) {
+            currentColoringMode1 = cm; RecomputeAll();
+            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            if(col != NULL) {
+                col->SetDirty(true);
+            }
+        };
 
         /** Set radius for cartoon rendering mode */
-        inline void SetRadiusCartoon( float rad ) { radiusCartoon = rad; RecomputeAll(); };
+        inline void SetRadiusCartoon( float rad ) {
+            radiusCartoon = rad; RecomputeAll();
+            CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+            if(col != NULL) {
+                col->SetDirty(true);
+            }
+        };
 
         /** Set number of spline segments per amino acid for cartoon rendering mode */
         inline void SetNumberOfSplineSegments( unsigned int numSeg ) { numberOfSplineSeg = numSeg; RecomputeAll(); };

@@ -981,6 +981,10 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
         this->renderingModeParam.ResetDirty();
     }
 
+    if (this->tubeRadiusParam.IsDirty()) {
+        this->prepareCartoonHybrid = true;
+        this->tubeRadiusParam.ResetDirty();
+    }
 	// ask the color module if a param is dirty
 	CallColor* col = this->molColorCallerSlot.CallAs<CallColor>();
 	bool colDirty = false;
@@ -2675,334 +2679,429 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
  * Render protein in geometry shader CARTOON_GPU mode
  */
 void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall *mol, float* atomPos) {
-    // ------------------------------------------------------------
-    // --- CARTOON SPLINE                                       ---
-    // --- GPU Implementation                                   ---
-    // --- use geometry shader for whole computation            ---
-    // ------------------------------------------------------------
-
     // return if geometry shaders are not supported
-    if ( !this->geomShaderSupported )
-        return;
+    if( !this->geomShaderSupported )
+            return;
+    // prepare hybrid cartoon representation, if necessary
+    if( this->prepareCartoonHybrid ) {
+        unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
+        // B-Spline
+        BSpline bSpline;
+        // control points for the first (center) b-spline
+        std::vector<vislib::math::Vector<float, 3> > controlPoints;
+        // control points for the second (direction) b-spline
+        std::vector<vislib::math::Vector<float, 3> > controlPointsDir;
+        // temporary vectors
+        vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld;
+        // temporary color
+        //const float *color;
+        // temporary color vector
+        vislib::math::Vector<float, 3> colorVec;
 
-    unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
+        // coordinates of the first (center) b-spline (result of the spline computation)
+        std::vector<std::vector<vislib::math::Vector<float, 3> > > bSplineCoords;
+        // coordinates of the second (direction) b-spline (result of the spline computation)
+        std::vector<std::vector<vislib::math::Vector<float, 3> > > bSplineCoordsDir;
+        // secondary structure type for b-spline
+        std::vector<std::vector<MolecularDataCall::SecStructure::ElementType> > bSplineSecStruct;
+        // color of secondary structure b-spline
+        std::vector<std::vector<vislib::math::Vector<float, 3> > > cartoonColor;
 
-    float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
-    glMaterialfv ( GL_FRONT_AND_BACK, GL_SPECULAR, spec );
-    glMaterialf ( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f );
-    glEnable ( GL_COLOR_MATERIAL );
+        // set the number of segments to create
+        bSpline.setN( this->numberOfSplineSeg);
 
-    vislib::math::Vector<float, 3> v0, v1, v2, v3, v4, v5;
-    vislib::math::Vector<float, 3> n1, n2, n3, n4;
-    vislib::math::Vector<float, 3> color;
-    float flip = 1.0f;
-    float factor = 0.0f;
+        // resize result vector for coordinates of first b-spline segments
+        bSplineCoords.resize( mol->MoleculeCount());
+        // resize result vector for coordinates of second b-spline segments
+        bSplineCoordsDir.resize( mol->MoleculeCount());
+        // resize vector for secondary structure
+        bSplineSecStruct.resize( mol->MoleculeCount());
+        // resize color vector
+        cartoonColor.resize( mol->MoleculeCount());
 
-    // loop over all molecules
-    MolecularDataCall::Molecule chain;
-    MolecularDataCall::AminoAcid *aminoacid;
-    for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
-        chain = mol->Molecules()[cntChain];
-        // check if the first residue is an amino acid
-        if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
-            continue;
+        // --- compute the b-splines ---
+        // loop over all chains
+        MolecularDataCall::Molecule chain;
+        MolecularDataCall::AminoAcid *aminoacid;
+        for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
+            chain = mol->Molecules()[cntChain];
+            controlPoints.clear();
+            controlPointsDir.clear();
+            // check if the first residue is an amino acid
+            if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
+                continue;
+            }
+            firstSS = chain.FirstSecStructIndex();
+            countSS = firstSS + chain.SecStructCount();
+                        // loop over all secondary structure elements
+            for( cntS = firstSS; cntS < countSS; ++cntS ) {
+                firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
+                countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
+                // loop over all amino acids in the current sec struct
+                for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
+                    // add sec struct type
+                    bSplineSecStruct[cntChain].push_back( mol->SecondaryStructures()[cntS].Type());
+                    // get the index of the C-alpha atom
+                    if( mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID )
+                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                    else
+                        continue;
+                    idx = aminoacid->CAlphaIndex();
+                    // get the coordinates of the C-alpha atom
+                    //vecCA.SetX( mol->AtomPositions()[idx*3+0]);
+                    //vecCA.SetY( mol->AtomPositions()[idx*3+1]);
+                    //vecCA.SetZ( mol->AtomPositions()[idx*3+2]);
+                    vecCA.SetX( atomPos[idx*3+0]);
+                    vecCA.SetY( atomPos[idx*3+1]);
+                    vecCA.SetZ( atomPos[idx*3+2]);
+                    // add the C-alpha coords to the list of control points
+                    controlPoints.push_back( vecCA);
+
+                    // add the color of the C-alpha atom to the color vector
+                    colorVec.SetX( this->atomColorTable[3*idx]);
+                    colorVec.SetY( this->atomColorTable[3*idx+1]);
+                    colorVec.SetZ( this->atomColorTable[3*idx+2]);
+                    cartoonColor[cntChain].push_back( colorVec);
+
+                    // get the index of the C atom
+                    idx = aminoacid->CCarbIndex();
+                    // get the coordinates of the C-alpha atom
+                    //vecC.SetX( mol->AtomPositions()[idx*3+0]);
+                    //vecC.SetY( mol->AtomPositions()[idx*3+1]);
+                    //vecC.SetZ( mol->AtomPositions()[idx*3+2]);
+                    vecC.SetX( atomPos[idx*3+0]);
+                    vecC.SetY( atomPos[idx*3+1]);
+                    vecC.SetZ( atomPos[idx*3+2]);
+
+                    // get the index of the O atom
+                    idx = aminoacid->OIndex();
+                    // get the coordinates of the C-alpha atom
+                    //vecO.SetX( mol->AtomPositions()[idx*3+0]);
+                    //vecO.SetY( mol->AtomPositions()[idx*3+1]);
+                    //vecO.SetZ( mol->AtomPositions()[idx*3+2]);
+                    vecO.SetX( atomPos[idx*3+0]);
+                    vecO.SetY( atomPos[idx*3+1]);
+                    vecO.SetZ( atomPos[idx*3+2]);
+
+                    // compute control point of the second b-spline
+                    vecTmp = vecO - vecC;
+                    vecTmp.Normalise();
+                    // check, if vector should be flipped
+                    if( cntS > 0 && vecTmpOld.Dot( vecTmp) < 0.0f )
+                            vecTmp = vecTmp * -1.0f;
+                    vecTmpOld = vecTmp;
+                    // add control point for the second b-spline to the list of control points
+                    controlPointsDir.push_back( vecTmp + vecCA);
+                }
+            }
+            // set the control points, compute the first spline and fetch the result
+            bSpline.setBackbone( controlPoints);
+            if( bSpline.computeSpline() )
+                    bSpline.getResult( bSplineCoords[cntChain]);
+            else
+                continue; // --> return if spline could not be computed
+
+            // set the control points, compute the second spline and fetch the result
+            bSpline.setBackbone( controlPointsDir);
+            if( bSpline.computeSpline() )
+                    bSpline.getResult( bSplineCoordsDir[cntChain]);
+            else
+                continue; // --> return if spline could not be computed
         }
-        firstSS = chain.FirstSecStructIndex();
-        countSS = firstSS + chain.SecStructCount();
-        // loop over all secondary structure elements
-        for( cntS = firstSS; cntS < countSS; ++cntS ) {
-            firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
-            countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
-            // loop over all amino acids in the current sec struct
-            for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
-                idx = chain.FirstResidueIndex() + chain.ResidueCount();
-                if( cntAA + 3 >= idx )
-                    continue;
-                // do nothing if the current residue is no amino acid
-                if( mol->Residues()[cntAA]->Identifier() != MolecularDataCall::Residue::AMINOACID )
-                    continue;
 
-                idx = cntS;
-                while( idx + 1 < mol->SecondaryStructureCount() && cntAA + 2 >= mol->SecondaryStructures()[idx].FirstAminoAcidIndex() + mol->SecondaryStructures()[idx].AminoAcidCount() ){
-                    idx++;
+        // --- START store the vertices, colors and parameters ---
+        this->totalCountTube = 0;
+        for( unsigned int i = 0; i < bSplineCoords.size(); i++ ) {
+             this->totalCountTube += bSplineCoords[i].size();
+        }
+
+        if( this->vertTube )
+            delete[] this->vertTube;
+        if( this->colorsParamsTube )
+            delete[] this->colorsParamsTube;
+
+        this->vertTube = new float[this->totalCountTube*6*3];
+        this->colorsParamsTube = new float[this->totalCountTube*6*3];
+
+        // auxiliary variables
+        float start, end, f1, f2, type;
+        unsigned int counterTube = 0;
+        vislib::math::Vector<float,3> col1, col2;
+        // compute the inner b-spline (backbone)
+        for( unsigned int i = 0; i < bSplineCoords.size(); i++ ) {
+            if ( bSplineCoords[i].size() == 0 )
+                continue;
+            for( unsigned int j = 2; j < bSplineCoords[i].size()-1; j++ ) {
+                start = end = -1.0f;
+                f1 = f2 = 1.0f;
+//                // set end caps --> if it is the first segment and the last sec struct was different
+//                if( j/this->numberOfSplineSeg > 0 ) {
+//                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg] != bSplineSecStruct[i][j/this->numberOfSplineSeg-1] &&
+//                        j%this->numberOfSplineSeg == 0 )
+//                        end = 1.0f;
+//                }
+//                else if( j == 2 )
+//                        end = 1.0f;
+                // set start caps --> if its the last segment and the next sec struct is different
+//                if( j/this->numberOfSplineSeg < bSplineSecStruct[i].size()-1 ) {
+//                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg] != bSplineSecStruct[i][j/this->numberOfSplineSeg+1] &&
+//                        j%this->numberOfSplineSeg == this->numberOfSplineSeg-1 )
+//                        start = 1.0f;
+//                }
+//                else if( j == bSplineCoords[i].size()-2 )
+//                    start = 1.0f;
+                // set inParams --> set type and stretch factors of arrow head segments for the sheet
+//                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_SHEET ) {
+//                    type = 1.0f;
+//                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg+1] != MolecularDataCall::SecStructure::TYPE_SHEET )
+//                    {
+//                        if(  j%this->numberOfSplineSeg == 0 )
+//                            end = 1.0f;
+//                        f1 = 1.0f - float(j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)+1.0f/float(this->numberOfSplineSeg-1)+0.2f;
+//                        f2 = 1.0f - float(j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)+0.2f;
+//                    }
+//                }
+//                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_HELIX )
+//                        type = 2.0f;
+//                else
+//                        type = 0.0f;
+                // get the colors
+                if( this->smoothCartoonColoringMode && j/this->numberOfSplineSeg > 0 ) {
+                    col1 = cartoonColor[i][j/this->numberOfSplineSeg]*float(j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)
+                        + cartoonColor[i][j/this->numberOfSplineSeg-1]*float((this->numberOfSplineSeg-1)-j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1);
+                    int k = j+1;
+                    if( j%this->numberOfSplineSeg == this->numberOfSplineSeg-1 )
+                        k = this->numberOfSplineSeg-1;
+                    col2 = cartoonColor[i][j/this->numberOfSplineSeg]*float(k%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)
+                        + cartoonColor[i][j/this->numberOfSplineSeg-1]*float((this->numberOfSplineSeg-1)-k%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1);
+                } else {
+                    col1 = cartoonColor[i][j/this->numberOfSplineSeg];
+                    col2 = cartoonColor[i][j/this->numberOfSplineSeg];
                 }
 
-//                if ( mol->SecondaryStructures()[idx].Type() == MolecularDataCall::SecStructure::TYPE_HELIX ) {
-//                    this->helixSplineShader.Enable();
-//                } else if ( mol->SecondaryStructures()[idx].Type() == MolecularDataCall::SecStructure::TYPE_SHEET ) {
-//                    this->arrowSplineShader.Enable();
-//                    if ( ( cntAA + 3 ) == countAA ) {
-//                        factor = 1.0f;
-//                    } else {
-//                        factor = 0.0f;
-//                    }
+                // store information in the apropriate arrays
+//                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_SHEET ) {
+//                    this->colorsParamsArrow[counterArrow*6*3+0] = col1.GetX();
+//                    this->colorsParamsArrow[counterArrow*6*3+1] = col1.GetY();
+//                    this->colorsParamsArrow[counterArrow*6*3+2] = col1.GetZ();
+//                    this->colorsParamsArrow[counterArrow*6*3+3] = this->radiusCartoon;
+//                    this->colorsParamsArrow[counterArrow*6*3+4] = f1;
+//                    this->colorsParamsArrow[counterArrow*6*3+5] = f2;
+//                    this->colorsParamsArrow[counterArrow*6*3+6] = type;
+//                    this->colorsParamsArrow[counterArrow*6*3+7] = start;
+//                    this->colorsParamsArrow[counterArrow*6*3+8] = end;
+//                    this->colorsParamsArrow[counterArrow*6*3+9]  = col2.GetX();
+//                    this->colorsParamsArrow[counterArrow*6*3+10] = col2.GetY();
+//                    this->colorsParamsArrow[counterArrow*6*3+11] = col2.GetZ();
+//                    this->colorsParamsArrow[counterArrow*6*3+12] = 0.0f;
+//                    this->colorsParamsArrow[counterArrow*6*3+13] = 0.0f;
+//                    this->colorsParamsArrow[counterArrow*6*3+14] = 0.0f;
+//                    this->colorsParamsArrow[counterArrow*6*3+15] = 0.0f;
+//                    this->colorsParamsArrow[counterArrow*6*3+16] = 0.0f;
+//                    this->colorsParamsArrow[counterArrow*6*3+17] = 0.0f;
+//                    this->vertArrow[counterArrow*6*3+0] = bSplineCoords[i][j-2].GetX();
+//                    this->vertArrow[counterArrow*6*3+1] = bSplineCoords[i][j-2].GetY();
+//                    this->vertArrow[counterArrow*6*3+2] = bSplineCoords[i][j-2].GetZ();
+//                    this->vertArrow[counterArrow*6*3+3] = bSplineCoordsDir[i][j-1].GetX();
+//                    this->vertArrow[counterArrow*6*3+4] = bSplineCoordsDir[i][j-1].GetY();
+//                    this->vertArrow[counterArrow*6*3+5] = bSplineCoordsDir[i][j-1].GetZ();
+//                    this->vertArrow[counterArrow*6*3+6] = bSplineCoords[i][j-1].GetX();
+//                    this->vertArrow[counterArrow*6*3+7] = bSplineCoords[i][j-1].GetY();
+//                    this->vertArrow[counterArrow*6*3+8] = bSplineCoords[i][j-1].GetZ();
+//                    this->vertArrow[counterArrow*6*3+9] = bSplineCoords[i][j].GetX();
+//                    this->vertArrow[counterArrow*6*3+10] = bSplineCoords[i][j].GetY();
+//                    this->vertArrow[counterArrow*6*3+11] = bSplineCoords[i][j].GetZ();
+//                    this->vertArrow[counterArrow*6*3+12] = bSplineCoordsDir[i][j].GetX();
+//                    this->vertArrow[counterArrow*6*3+13] = bSplineCoordsDir[i][j].GetY();
+//                    this->vertArrow[counterArrow*6*3+14] = bSplineCoordsDir[i][j].GetZ();
+//                    this->vertArrow[counterArrow*6*3+15] = bSplineCoords[i][j+1].GetX();
+//                    this->vertArrow[counterArrow*6*3+16] = bSplineCoords[i][j+1].GetY();
+//                    this->vertArrow[counterArrow*6*3+17] = bSplineCoords[i][j+1].GetZ();
+//                    counterArrow++;
+//                } else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_HELIX ) {
+//                    this->colorsParamsHelix[counterHelix*6*3+0] = col1.GetX();
+//                    this->colorsParamsHelix[counterHelix*6*3+1] = col1.GetY();
+//                    this->colorsParamsHelix[counterHelix*6*3+2] = col1.GetZ();
+//                    this->colorsParamsHelix[counterHelix*6*3+3] = this->radiusCartoon;
+//                    this->colorsParamsHelix[counterHelix*6*3+4] = f1;
+//                    this->colorsParamsHelix[counterHelix*6*3+5] = f2;
+//                    this->colorsParamsHelix[counterHelix*6*3+6] = type;
+//                    this->colorsParamsHelix[counterHelix*6*3+7] = start;
+//                    this->colorsParamsHelix[counterHelix*6*3+8] = end;
+//                    this->colorsParamsHelix[counterHelix*6*3+9]  = col2.GetX();
+//                    this->colorsParamsHelix[counterHelix*6*3+10] = col2.GetY();
+//                    this->colorsParamsHelix[counterHelix*6*3+11] = col2.GetZ();
+//                    this->colorsParamsHelix[counterHelix*6*3+12] = 0.0f;
+//                    this->colorsParamsHelix[counterHelix*6*3+13] = 0.0f;
+//                    this->colorsParamsHelix[counterHelix*6*3+14] = 0.0f;
+//                    this->colorsParamsHelix[counterHelix*6*3+15] = 0.0f;
+//                    this->colorsParamsHelix[counterHelix*6*3+16] = 0.0f;
+//                    this->colorsParamsHelix[counterHelix*6*3+17] = 0.0f;
+//                    this->vertHelix[counterHelix*6*3+0] = bSplineCoords[i][j-2].GetX();
+//                    this->vertHelix[counterHelix*6*3+1] = bSplineCoords[i][j-2].GetY();
+//                    this->vertHelix[counterHelix*6*3+2] = bSplineCoords[i][j-2].GetZ();
+//                    this->vertHelix[counterHelix*6*3+3] = bSplineCoordsDir[i][j-1].GetX();
+//                    this->vertHelix[counterHelix*6*3+4] = bSplineCoordsDir[i][j-1].GetY();
+//                    this->vertHelix[counterHelix*6*3+5] = bSplineCoordsDir[i][j-1].GetZ();
+//                    this->vertHelix[counterHelix*6*3+6] = bSplineCoords[i][j-1].GetX();
+//                    this->vertHelix[counterHelix*6*3+7] = bSplineCoords[i][j-1].GetY();
+//                    this->vertHelix[counterHelix*6*3+8] = bSplineCoords[i][j-1].GetZ();
+//                    this->vertHelix[counterHelix*6*3+9] = bSplineCoords[i][j].GetX();
+//                    this->vertHelix[counterHelix*6*3+10] = bSplineCoords[i][j].GetY();
+//                    this->vertHelix[counterHelix*6*3+11] = bSplineCoords[i][j].GetZ();
+//                    this->vertHelix[counterHelix*6*3+12] = bSplineCoordsDir[i][j].GetX();
+//                    this->vertHelix[counterHelix*6*3+13] = bSplineCoordsDir[i][j].GetY();
+//                    this->vertHelix[counterHelix*6*3+14] = bSplineCoordsDir[i][j].GetZ();
+//                    this->vertHelix[counterHelix*6*3+15] = bSplineCoords[i][j+1].GetX();
+//                    this->vertHelix[counterHelix*6*3+16] = bSplineCoords[i][j+1].GetY();
+//                    this->vertHelix[counterHelix*6*3+17] = bSplineCoords[i][j+1].GetZ();
+//                    counterHelix++;
 //                } else {
-//                    this->tubeSplineShader.Enable();
+                    this->colorsParamsTube[counterTube*6*3+0] = col1.GetX();
+                    this->colorsParamsTube[counterTube*6*3+1] = col1.GetY();
+                    this->colorsParamsTube[counterTube*6*3+2] = col1.GetZ();
+                    this->colorsParamsTube[counterTube*6*3+3] = this->tubeRadiusParam.Param<param::FloatParam>()->Value();
+                    this->colorsParamsTube[counterTube*6*3+4] = f1;
+                    this->colorsParamsTube[counterTube*6*3+5] = f2;
+                    this->colorsParamsTube[counterTube*6*3+6] = type;
+                    this->colorsParamsTube[counterTube*6*3+7] = start;
+                    this->colorsParamsTube[counterTube*6*3+8] = end;
+                    this->colorsParamsTube[counterTube*6*3+9]  = col2.GetX();
+                    this->colorsParamsTube[counterTube*6*3+10] = col2.GetY();
+                    this->colorsParamsTube[counterTube*6*3+11] = col2.GetZ();
+                    this->colorsParamsTube[counterTube*6*3+12] = 0.0f;
+                    this->colorsParamsTube[counterTube*6*3+13] = 0.0f;
+                    this->colorsParamsTube[counterTube*6*3+14] = 0.0f;
+                    this->colorsParamsTube[counterTube*6*3+15] = 0.0f;
+                    this->colorsParamsTube[counterTube*6*3+16] = 0.0f;
+                    this->colorsParamsTube[counterTube*6*3+17] = 0.0f;
+                    this->vertTube[counterTube*6*3+0] = bSplineCoords[i][j-2].GetX();
+                    this->vertTube[counterTube*6*3+1] = bSplineCoords[i][j-2].GetY();
+                    this->vertTube[counterTube*6*3+2] = bSplineCoords[i][j-2].GetZ();
+                    this->vertTube[counterTube*6*3+3] = bSplineCoordsDir[i][j-1].GetX();
+                    this->vertTube[counterTube*6*3+4] = bSplineCoordsDir[i][j-1].GetY();
+                    this->vertTube[counterTube*6*3+5] = bSplineCoordsDir[i][j-1].GetZ();
+                    this->vertTube[counterTube*6*3+6] = bSplineCoords[i][j-1].GetX();
+                    this->vertTube[counterTube*6*3+7] = bSplineCoords[i][j-1].GetY();
+                    this->vertTube[counterTube*6*3+8] = bSplineCoords[i][j-1].GetZ();
+                    this->vertTube[counterTube*6*3+9] = bSplineCoords[i][j].GetX();
+                    this->vertTube[counterTube*6*3+10] = bSplineCoords[i][j].GetY();
+                    this->vertTube[counterTube*6*3+11] = bSplineCoords[i][j].GetZ();
+                    this->vertTube[counterTube*6*3+12] = bSplineCoordsDir[i][j].GetX();
+                    this->vertTube[counterTube*6*3+13] = bSplineCoordsDir[i][j].GetY();
+                    this->vertTube[counterTube*6*3+14] = bSplineCoordsDir[i][j].GetZ();
+                    this->vertTube[counterTube*6*3+15] = bSplineCoords[i][j+1].GetX();
+                    this->vertTube[counterTube*6*3+16] = bSplineCoords[i][j+1].GetY();
+                    this->vertTube[counterTube*6*3+17] = bSplineCoords[i][j+1].GetZ();
+                    counterTube++;
 //                }
-
-                this->tubeSplineShader.Enable();
-
-                glBegin ( GL_LINES_ADJACENCY_EXT );
-
-                // vertex 1
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
-                idx = aminoacid->CAlphaIndex();
-                v1.SetX( atomPos[idx*3+0]);
-                v1.SetY( atomPos[idx*3+1]);
-                v1.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->CCarbIndex();
-                v5.SetX( atomPos[idx*3+0]);
-                v5.SetY( atomPos[idx*3+1]);
-                v5.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->OIndex();
-                n1.SetX( atomPos[idx*3+0]);
-                n1.SetY( atomPos[idx*3+1]);
-                n1.SetZ( atomPos[idx*3+2]);
-                n1 = n1 - v5;
-                n1.Normalise();
-                if ( cntAA > firstAA && n3.Dot( n1 ) < 0.0f )
-                    flip = -1.0;
-                else
-                    flip = 1.0;
-                n1 *= flip;
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+2]);
-                idx = aminoacid->CAlphaIndex();
-                glSecondaryColor3f( this->atomColorTable[3*idx],
-                                    this->atomColorTable[3*idx+1],
-                                    this->atomColorTable[3*idx+2]);
-                glColor3fv( n1.PeekComponents() );
-                glVertex3fv( v1.PeekComponents() );
-
-                // vertex 2
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+1]);
-                idx = aminoacid->CAlphaIndex();
-                v2.SetX( atomPos[idx*3+0]);
-                v2.SetY( atomPos[idx*3+1]);
-                v2.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->CCarbIndex();
-                v5.SetX( atomPos[idx*3+0]);
-                v5.SetY( atomPos[idx*3+1]);
-                v5.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->OIndex();
-                n2.SetX( atomPos[idx*3+0]);
-                n2.SetY( atomPos[idx*3+1]);
-                n2.SetZ( atomPos[idx*3+2]);
-                n2 = n2 - v5;
-                n2.Normalise();
-                if ( n1.Dot( n2 ) < 0.0f )
-                    flip = -1.0;
-                else
-                    flip = 1.0;
-                n2 *= flip;
-                glSecondaryColor3f( 0.2f, 1.0f, factor);
-                glColor3fv ( n2.PeekComponents() );
-                glVertex3fv ( v2.PeekComponents() );
-
-                // vertex 3
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+2]);
-                idx = aminoacid->CAlphaIndex();
-                v3.SetX( atomPos[idx*3+0]);
-                v3.SetY( atomPos[idx*3+1]);
-                v3.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->CCarbIndex();
-                v5.SetX( atomPos[idx*3+0]);
-                v5.SetY( atomPos[idx*3+1]);
-                v5.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->OIndex();
-                n3.SetX( atomPos[idx*3+0]);
-                n3.SetY( atomPos[idx*3+1]);
-                n3.SetZ( atomPos[idx*3+2]);
-                n3 = n3 - v5;
-                n3.Normalise();
-                if ( n2.Dot( n3 ) < 0.0f )
-                    flip = -1.0;
-                else
-                    flip = 1.0;
-                n3 *= flip;
-                glColor3fv( n3.PeekComponents() );
-                glVertex3fv( v3.PeekComponents() );
-
-                // vertex 4
-                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+3]);
-                idx = aminoacid->CAlphaIndex();
-                v4.SetX( atomPos[idx*3+0]);
-                v4.SetY( atomPos[idx*3+1]);
-                v4.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->CCarbIndex();
-                v5.SetX( atomPos[idx*3+0]);
-                v5.SetY( atomPos[idx*3+1]);
-                v5.SetZ( atomPos[idx*3+2]);
-                idx = aminoacid->OIndex();
-                n4.SetX( atomPos[idx*3+0]);
-                n4.SetY( atomPos[idx*3+1]);
-                n4.SetZ( atomPos[idx*3+2]);
-                n4 = n4 - v5;
-                n4.Normalise();
-                if ( n3.Dot( n4 ) < 0.0f )
-                    flip = -1.0;
-                else
-                    flip = 1.0;
-                n4 *= flip;
-                glColor3fv( n4.PeekComponents() );
-                glVertex3fv( v4.PeekComponents() );
-
-                // store last vertex for comparison (flip)
-                n3 = n1;
-
-                glEnd(); // GL_LINES_ADJACENCY_EXT
-
-//                this->helixSplineShader.Disable();
-//                this->arrowSplineShader.Disable();
-                this->tubeSplineShader.Disable();
             }
         }
+
+        // --- END store vertex/color/inparams ---
+
+        // set cartoon as created
+        this->prepareCartoonHybrid = false;
     }
 
-    /*
-    for ( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
-    {
-        // do nothing if the current chain has too few residues
-        if ( prot->ProteinChain ( cntCha ).AminoAcidCount() < 4 )
-            continue;
-        // set first sec struct elem active
-        cntSec = 0;
+    float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
+    glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
+    glDisable( GL_COLOR_MATERIAL);
 
-        for ( cntRes = 0; cntRes < prot->ProteinChain ( cntCha ).AminoAcidCount() - 4; ++cntRes )
-        {
-            factor = 0.0f;
+    // Get current window size
+    float curVP[4];
+    glGetFloatv(GL_VIEWPORT, curVP);
 
-            // search for correct secondary structure element
-            idx1 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].FirstAminoAcidIndex();
-            idx2 = idx1 + prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AminoAcidCount();
-            // just for security, this should never happen!
-            if ( ( cntRes + 3 ) < idx1 )
-            {
-                cntSec = 0;
-                idx2 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AtomCount();
-            }
-            while ( ( cntRes + 3 ) > idx2 )
-            {
-                cntSec++;
-                idx1 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].FirstAminoAcidIndex();
-                idx2 = idx1 + prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AtomCount();
-            }
-
-            if ( prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].Type() ==
-                CallProteinData::SecStructure::TYPE_HELIX )
-                this->helixSplineShader.Enable();
-            else if ( prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].Type() ==
-                  CallProteinData::SecStructure::TYPE_SHEET )
-            {
-                this->arrowSplineShader.Enable();
-                if ( ( cntRes + 3 ) == idx2 )
-                    factor = 1.0f;
-            }
-            else
-                this->tubeSplineShader.Enable();
-
-            glBegin ( GL_LINES_ADJACENCY_EXT );
-
-            // vertex 1
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].CAlphaIndex();
-            v1.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v1.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v1.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].OIndex();
-            n1.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n1.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n1.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n1 = n1 - v1;
-            n1.Normalise();
-            if ( cntRes > 0 && n3.Dot ( n1 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n1 *= flip;
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].CAlphaIndex();
-            glSecondaryColor3ubv ( GetProteinAtomColor ( idx1 ) );
-            glColor3fv ( n1.PeekComponents() );
-            glVertex3fv ( v1.PeekComponents() );
-
-            // vertex 2
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].CAlphaIndex();
-            v2.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v2.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v2.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].OIndex();
-            n2.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n2.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n2.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n2 = n2 - v2;
-            n2.Normalise();
-            if ( n1.Dot ( n2 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n2 *= flip;
-            glSecondaryColor3f ( 0.2f, 1.0f, factor );
-            glColor3fv ( n2.PeekComponents() );
-            glVertex3fv ( v2.PeekComponents() );
-
-            // vertex 3
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].CAlphaIndex();
-            v3.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v3.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v3.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].OIndex();
-            n3.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n3.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n3.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n3 = n3 - v3;
-            n3.Normalise();
-            if ( n2.Dot ( n3 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n3 *= flip;
-            glColor3fv ( n3.PeekComponents() );
-            glVertex3fv ( v3.PeekComponents() );
-
-            // vertex 4
-            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].CAlphaIndex();
-            v4.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
-            v4.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
-            v4.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
-            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].FirstAtomIndex() +
-               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].OIndex();
-            n4.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
-            n4.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
-            n4.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
-            n4 = n4 - v4;
-            n4.Normalise();
-            if ( n3.Dot ( n4 ) < 0.0f )
-                flip = -1.0;
-            else
-                flip = 1.0;
-            n4 *= flip;
-            glColor3fv ( n4.PeekComponents() );
-            glVertex3fv ( v4.PeekComponents() );
-
-            // store last vertex for comparison (flip)
-            n3 = n1;
-
-            glEnd();
-
-            this->helixSplineShader.Disable();
-            this->arrowSplineShader.Disable();
-            this->tubeSplineShader.Disable();
-        }
-        this->tubeSplineShader.Disable();
+    // enable tube shader
+    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+        if( this->currentRenderMode == CARTOON )
+            this->tubeShader.Enable();
+        else
+            this->tubeSimpleShader.Enable();
     }
-    */
-    glDisable ( GL_COLOR_MATERIAL );
+    else {
+        this->tubeORShader.Enable();
+        glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"),
+            cameraInfo->NearClip(), cameraInfo->FarClip());
+        glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"),
+            curVP[2], curVP[3]);
+    }
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glVertexPointer( 3, GL_FLOAT, 0, this->vertTube);
+    glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsTube);
+    glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountTube*6);
+    // disable tube shader
+    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+        if( this->currentRenderMode == CARTOON )
+            this->tubeShader.Disable();
+        else
+            this->tubeSimpleShader.Disable();
+    }
+    else {
+        this->tubeORShader.Disable();
+    }
+
+//    // enable arrow shader
+//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+//        if( this->currentRenderMode == CARTOON )
+//            this->arrowShader.Enable();
+//        else
+//            this->arrowSimpleShader.Enable();
+//    }
+//    else {
+//        this->arrowORShader.Enable();
+//        glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"),
+//            cameraInfo->NearClip(), cameraInfo->FarClip());
+//        glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"),
+//            curVP[2], curVP[3]);
+//    }
+//    glVertexPointer( 3, GL_FLOAT, 0, this->vertArrow);
+//    glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsArrow);
+//    glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountArrow*6);
+//    // disable arrow shader
+//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+//        if( this->currentRenderMode == CARTOON )
+//            this->arrowShader.Disable();
+//        else
+//            this->arrowSimpleShader.Disable();
+//    }
+//    else {
+//        this->arrowORShader.Disable();
+//    }
+
+//    // enable helix shader
+//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+//        if( this->currentRenderMode == CARTOON )
+//            this->helixShader.Enable();
+//        else
+//            this->helixSimpleShader.Enable();
+//    }
+//    else {
+//        this->helixORShader.Enable();
+//        glUniform2fARB(this->helixORShader.ParameterLocation("zValues"),
+//            cameraInfo->NearClip(), cameraInfo->FarClip());
+//        glUniform2fARB(this->helixORShader.ParameterLocation("winSize"),
+//            curVP[2], curVP[3]);
+//    }
+//    glVertexPointer( 3, GL_FLOAT, 0, this->vertHelix);
+//    glColorPointer( 3, GL_FLOAT, 0, this->colorsParamsHelix);
+//    glDrawArrays( GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountHelix*6);
+//    // disable helix shader
+//    if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+//        if( this->currentRenderMode == CARTOON )
+//            this->helixShader.Disable();
+//        else
+//            this->helixSimpleShader.Disable();
+//    }
+//    else {
+//        this->helixORShader.Disable();
+//    }
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisable( GL_COLOR_MATERIAL);
 }
 
 
