@@ -80,7 +80,8 @@ namespace protein {
             CARTOON_SIMPLE = 1,
             CARTOON_CPU    = 2,
             CARTOON_GPU    = 3,
-            CARTOON_LINE   = 4
+            CARTOON_LINE   = 4,
+            CARTOON_TUBE_ONLY  = 5
         };
 
 		enum RenderSource {
@@ -204,6 +205,13 @@ namespace protein {
         void RenderCartoonGPU( const MolecularDataCall *mol, float* atomPos);
 
         /**
+        * Render protein in GPU CARTOON mode using OpenGL primitives.
+        *
+        * @param prot The data interface.
+        */
+       void RenderCartoonGPUTubeOnly( const MolecularDataCall *mol, float* atomPos);
+
+        /**
          * Render the molecular data in stick mode.
          */
         void RenderStick( const MolecularDataCall *mol, const float *atomPos, const BindingSiteCall *bs = NULL);
@@ -268,6 +276,8 @@ namespace protein {
         megamol::core::param::ParamSlot interpolParam;
         /** parameter slot for disabling rendering except protein */
         megamol::core::param::ParamSlot proteinOnlyParam;
+        /** parameter slot for stick radius */
+        megamol::core::param::ParamSlot tubeRadiusParam;
 
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
