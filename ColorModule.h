@@ -360,10 +360,10 @@ private:
 	vislib::Array<vislib::math::Vector<float, 3> > rainbowColors;
 
 	// state variables
-	ColoringMode currentColoringMode0;
-	ColoringMode currentColoringMode1;
-	ComparisonMode currentComparisonMode;
-	ComparisonColoringMode currentComparisonColoringMode;
+	//ColoringMode currentColoringMode0;
+	//ColoringMode currentColoringMode1;
+	//ComparisonMode currentComparisonMode;
+	//ComparisonColoringMode currentComparisonColoringMode;
 
 	float weight0;
 	float weight1;

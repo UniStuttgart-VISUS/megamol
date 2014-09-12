@@ -953,7 +953,7 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
 	if(col != NULL) {
 		(*col)(1); // GetExtents
 		colDirty = col->IsDirty();
-		col->SetDirty(false);
+		//col->SetDirty(false);
 	}
 
 	if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty() || this->compareParam.IsDirty() || colDirty) {
@@ -963,17 +963,17 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
         RecomputeAll();
 
 		if (!this->compare) {
-        Color::MakeColorTable(mol,
-            this->currentColoringMode0,
-            this->currentColoringMode1,
-            cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(),
-            true, bs);
-		} else {
+            Color::MakeColorTable(mol,
+                this->currentColoringMode0,
+                this->currentColoringMode1,
+                cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                true, bs);
+		} else if (col != nullptr) {
 			col->SetColoringTarget(mol);
 			col->SetAtomColorTable(&this->atomColorTable);
 			col->SetColorLookupTable(&this->colorLookupTable);
@@ -987,7 +987,6 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
         
 			(*col)(0); //getColor
 			this->atomColorTable =  *col->GetAtomColorTable();
-
 		}
 
         this->coloringModeParam0.ResetDirty();

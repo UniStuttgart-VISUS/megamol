@@ -68,10 +68,10 @@ ColorModule::ColorModule(void) : core::Module(),
 	this->colorParam.SetParameter(new param::StringParam("#ff0000"));
 	this->MakeSlotAvailable( &this->colorParam);
 
-	this->currentColoringMode0 = ColoringMode::CHAIN;
-	this->currentColoringMode1 = ColoringMode::STRUCTURE;
-	param::EnumParam *cm0 = new param::EnumParam ( int(this->currentColoringMode0));
-	param::EnumParam *cm1 = new param::EnumParam ( int(this->currentColoringMode1));
+	//this->currentColoringMode0 = ColoringMode::CHAIN;
+	//this->currentColoringMode1 = ColoringMode::STRUCTURE;
+	param::EnumParam *cm0 = new param::EnumParam ( int(ColoringMode::CHAIN));
+	param::EnumParam *cm1 = new param::EnumParam ( int(ColoringMode::STRUCTURE));
 	unsigned int cCnt;
 	ColoringMode cMode;
 	for( cCnt = 0; cCnt < getNumOfColoringModes(); ++cCnt) {
@@ -84,8 +84,7 @@ ColorModule::ColorModule(void) : core::Module(),
 	this->MakeSlotAvailable(&this->coloringMode0Param);
 	this->MakeSlotAvailable(&this->coloringMode1Param);
 
-	this->currentComparisonMode = ComparisonMode::ZERO_TO_MAX;
-	param::EnumParam *com = new param::EnumParam ( int(this->currentComparisonMode));
+	param::EnumParam *com = new param::EnumParam ( int(ComparisonMode::ZERO_TO_MAX));
 	ComparisonMode comMode;
 	for( cCnt = 0; cCnt < getNumOfColoringModes(); ++cCnt) {
 		comMode = getComparisonModeByIndex(cCnt);
@@ -93,9 +92,11 @@ ColorModule::ColorModule(void) : core::Module(),
 	}
 	this->comparisonModeParam << com;
 	this->MakeSlotAvailable(&this->comparisonModeParam);
+    // TODO: This is a hotfix
+    this->comparisonModeParam.Param<param::EnumParam>()->setDirty();
 
-	this->currentComparisonColoringMode = ComparisonColoringMode::SINGLE_COLOR;
-	param::EnumParam *ccm = new param::EnumParam ( int(this->currentComparisonColoringMode));
+	//this->currentComparisonColoringMode = ComparisonColoringMode::SINGLE_COLOR;
+	param::EnumParam *ccm = new param::EnumParam ( int(ComparisonColoringMode::SINGLE_COLOR));
 	ComparisonColoringMode ccMode;
 	for( cCnt = 0; cCnt < getNumOfColoringModes(); ++cCnt) {
 		ccMode = getComparisonColoringModeByIndex(cCnt);
@@ -103,6 +104,7 @@ ColorModule::ColorModule(void) : core::Module(),
 	}
 	this->comparisonColorParam << ccm;
 	this->MakeSlotAvailable(&this->comparisonColorParam);
+
 
 	this->weightingParam.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
 	this->MakeSlotAvailable(&this->weightingParam);
@@ -131,33 +133,40 @@ bool ColorModule::updateParams() {
 	}
 
 	if(coloringMode0Param.IsDirty()) {
-		this->currentColoringMode0 = static_cast<ColorModule::ColoringMode>(int(this->coloringMode0Param.Param<param::EnumParam>()->Value()));
+		//this->currentColoringMode0 = static_cast<ColorModule::ColoringMode>(int(this->coloringMode0Param.Param<param::EnumParam>()->Value()));
 		this->coloringMode0Param.ResetDirty();
 		retVal = true;
 	}
 
 	if(coloringMode1Param.IsDirty()) {
-		this->currentColoringMode1 = static_cast<ColorModule::ColoringMode>(int(this->coloringMode1Param.Param<param::EnumParam>()->Value()));
+		//this->currentColoringMode1 = static_cast<ColorModule::ColoringMode>(int(this->coloringMode1Param.Param<param::EnumParam>()->Value()));
 		this->coloringMode1Param.ResetDirty();
 		retVal = true;
 	}
 
 	if(comparisonModeParam.IsDirty()) {
-		this->currentComparisonMode = static_cast<ColorModule::ComparisonMode>(int(this->comparisonModeParam.Param<param::EnumParam>()->Value()));
+		//this->currentComparisonMode = static_cast<ColorModule::ComparisonMode>(int(this->comparisonModeParam.Param<param::EnumParam>()->Value()));
 		this->comparisonModeParam.ResetDirty();
 		retVal = true;
 	}
 
 	if(comparisonColorParam.IsDirty()) {
-		this->currentComparisonColoringMode = static_cast<ColorModule::ComparisonColoringMode>(int(this->comparisonColorParam.Param<param::EnumParam>()->Value()));
+		//this->currentComparisonColoringMode = static_cast<ColorModule::ComparisonColoringMode>(int(this->comparisonColorParam.Param<param::EnumParam>()->Value()));
 		this->comparisonColorParam.ResetDirty();
 		retVal = true;
 	}
 
 	// check other slots
 	if(colorTableFileParam.IsDirty() || minGradColorParam.IsDirty() || midGradColorParam.IsDirty() ||
-		maxGradColorParam.IsDirty() || colorParam.IsDirty() || minDistanceParam.IsDirty() || 
-		maxDistanceParam.IsDirty()) {
+		    maxGradColorParam.IsDirty() || colorParam.IsDirty() || minDistanceParam.IsDirty() || 
+		    maxDistanceParam.IsDirty()) {
+        colorTableFileParam.ResetDirty();
+        minGradColorParam.ResetDirty();
+        midGradColorParam.ResetDirty();
+		maxGradColorParam.ResetDirty();
+        colorParam.ResetDirty();
+        minDistanceParam.ResetDirty();
+		maxDistanceParam.ResetDirty();
 		retVal = true; 
 	}
 
@@ -189,8 +198,6 @@ void ColorModule::release(void) {
  *	ColorModule::getData
  */
 bool ColorModule::getColor(core::Call& call) {
-	updateParams();
-
 	CallColor * col = dynamic_cast<CallColor*>(&call);
 	if(col == NULL) return false;
 
@@ -202,22 +209,23 @@ bool ColorModule::getColor(core::Call& call) {
 		if(!(*mol2)(MolecularDataCall::CallForGetData)) return false; // Get Data
 	}
 
+    updateParams();
+
 	vislib::Array<float>* atomColorTable = col->GetAtomColorTable();
 
+    // TODO are the next four commands executed only once??
 	vislib::Array<vislib::math::Vector<float, 3> >* rainbowColorTable = col->GetRainbowColorTable();
 	vislib::Array<vislib::math::Vector<float, 3> >* cLT = col->GetColorLookupTable();
-
 	ReadColorTableFromFile(this->colorTableFileParam.Param<param::StringParam>()->Value(),
 		*cLT);
-
 	MakeRainbowColorTable(col->GetNumEntries(), 
 		*rainbowColorTable);
 	
 	if(!col->GetComparisonEnabled()) {
 		if(col->GetWeighted()) {
 			MakeColorTable(col->GetColoringTarget(),
-				this->currentColoringMode0,
-				this->currentColoringMode1,
+				static_cast<ColorModule::ColoringMode>(int(this->coloringMode0Param.Param<param::EnumParam>()->Value())),
+				static_cast<ColorModule::ColoringMode>(int(this->coloringMode1Param.Param<param::EnumParam>()->Value())),
 				*atomColorTable,
 				*cLT,
 				*rainbowColorTable,
@@ -227,7 +235,7 @@ bool ColorModule::getColor(core::Call& call) {
 			col->SetAtomColorTable(atomColorTable);
 		} else {
 			MakeColorTable(col->GetColoringTarget(),
-				this->currentColoringMode0,
+				static_cast<ColorModule::ColoringMode>(int(this->coloringMode0Param.Param<param::EnumParam>()->Value())),
 				*atomColorTable,
 				*cLT,
 				*rainbowColorTable,
@@ -236,11 +244,9 @@ bool ColorModule::getColor(core::Call& call) {
 
 			col->SetAtomColorTable(atomColorTable);
 		}
-	}
-
-	if(col->GetComparisonEnabled()) {
+	} else {
 		MakeComparisonColorTable(col->GetColoringTarget(), 
-			this->currentColoringMode0,
+			static_cast<ColorModule::ColoringMode>(int(this->coloringMode0Param.Param<param::EnumParam>()->Value())),
 			*atomColorTable,
 			*cLT,
 			*rainbowColorTable,
@@ -254,6 +260,8 @@ bool ColorModule::getColor(core::Call& call) {
 	col->SetRainbowColorTable(rainbowColorTable);
 	col->SetColorLookupTable(cLT);
 
+    // The correct data have been consumed, so reset dirty state.
+    col->SetDirty(false);
 	return true;
 }
 
@@ -261,15 +269,22 @@ bool ColorModule::getColor(core::Call& call) {
  * ColorModule::getExtent
  */
 bool ColorModule::getExtents(core::Call& call) {
-	bool ret = updateParams();
+	bool isDirty = updateParams();
 
 	CallColor * col = dynamic_cast<CallColor*>(&call);
-	if(col == NULL) return false;
+	if(col == NULL) {
+        // Cannot execute.
+        return false;
 
-	if(ret)
+    } else if (isDirty) {
+        // Mark dirty.
 		col->SetDirty(true);
+        return true;
 
-	return true;
+    } else {
+        // Keep old dirty state.
+        return true;
+    }
 }
 
 /*
@@ -1156,7 +1171,7 @@ void ColorModule::MakeComparisonColorTable(MolecularDataCall *mol1,
 		}
 	}
 
-	switch(this->currentComparisonMode) {
+	switch(static_cast<ColorModule::ComparisonMode>(int(this->comparisonModeParam.Param<param::EnumParam>()->Value()))) {
 		case ZERO_TO_MAX:
 			min = 0.0f; 
 			break;
@@ -1207,7 +1222,7 @@ void ColorModule::MakeComparisonColorTable(MolecularDataCall *mol1,
 
 	if( diff > 0.0000001f ) {
 		for( cntAtom = 0; cntAtom < mol1->AtomCount(); ++cntAtom ) {
-			switch(this->currentComparisonColoringMode) {
+			switch(static_cast<ColorModule::ComparisonColoringMode>(int(this->comparisonColorParam.Param<param::EnumParam>()->Value()))) {
 				case(SINGLE_COLOR):
 					// shift to interval start
 					atomColorTable[3*cntAtom+0] -= min;
