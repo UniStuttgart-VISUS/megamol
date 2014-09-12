@@ -63,6 +63,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
 		compareParam( "comparison::compare", "Enable comparing between two different molecules" ),
 		molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module"),
         proteinOnlyParam("proteinOnly", "Render only the protein"),
+        tubeRadiusParam("tubeScl", "Scale factor for the tubes when rendering in tubes only mode."),
         currentFrameId( 0), atomCount( 0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -133,6 +134,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         rm->SetTypePair(CARTOON, "Cartoon Hybrid");
         rm->SetTypePair(CARTOON_SIMPLE, "Cartoon Hybrid (simple)");
         rm->SetTypePair ( CARTOON_GPU, "Cartoon GPU" );
+        rm->SetTypePair ( CARTOON_TUBE_ONLY, "Tubes only" );
     }
     rm->SetTypePair(CARTOON_CPU, "Cartoon CPU");
     rm->SetTypePair(CARTOON_LINE, "Cartoon Lines");
@@ -202,6 +204,10 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     // en-/disable positional interpolation
     this->interpolParam.SetParameter(new param::BoolParam( true));
     this->MakeSlotAvailable( &this->interpolParam);
+
+    // Tubes scale parameter
+    this->tubeRadiusParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->tubeRadiusParam);
 }
 
 
@@ -581,6 +587,11 @@ bool MoleculeCartoonRenderer::create(void) {
     attribLocColor1 = glGetAttribLocationARB ( this->cylinderShader, "color1" );
     attribLocColor2 = glGetAttribLocationARB ( this->cylinderShader, "color2" );
 
+    if (!this->tubeShader.Link()) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link the streamtube shader");
+        return false;
+    }
+
     return true;
 }
 
@@ -788,39 +799,54 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     }
     // ... interpolate between frames
 
+    CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
+
     // check if the frame has changed
     if( this->currentFrameId != mol->FrameID() ) {
         this->currentFrameId = mol->FrameID();
         this->RecomputeAll();
+
+        if(col != NULL) {
+            col->SetDirty(true);
+        }
     }
     // check if the call time has changed
     if( this->oldCallTime != callTime ) {
         this->oldCallTime = callTime;
         this->RecomputeAll();
+        if(col != NULL) {
+            col->SetDirty(true);
+        }
     }
 
     // check last atom count with current atom count
     if( this->atomCount != mol->AtomCount() ) {
         this->atomCount = mol->AtomCount();
         this->RecomputeAll();
+        if(col != NULL) {
+            col->SetDirty(true);
+        }
     }
 
     // force recomputation
     //this->RecomputeAll();
 
-    // parameter refresh
-	this->UpdateParameters( mol, mol->FrameID(), bs);
     // recompute colors
+    // TODO Why is this done in every frame anyway?
+//    Color::MakeColorTable(mol,
+//            this->currentColoringMode0,
+//            this->currentColoringMode1,
+//            cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+//            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+//            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+//            this->minGradColorParam.Param<param::StringParam>()->Value(),
+//            this->midGradColorParam.Param<param::StringParam>()->Value(),
+//            this->maxGradColorParam.Param<param::StringParam>()->Value(), false, bs);
 
-    Color::MakeColorTable(mol,
-        this->currentColoringMode0,
-        this->currentColoringMode1,
-        cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-        1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorParam.Param<param::StringParam>()->Value(),
-        this->midGradColorParam.Param<param::StringParam>()->Value(),
-        this->maxGradColorParam.Param<param::StringParam>()->Value(), false, bs);
+    // parameter refresh
+    // Note this also recomputes the atom color table using the color call if necessary
+	this->UpdateParameters( mol, mol->FrameID(), bs);
+
 
     // render...
     glEnable(GL_DEPTH_TEST);
@@ -885,6 +911,14 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
         // --- render the protein using only GLSL geometry shaders  ---
         // ------------------------------------------------------------
         this->RenderCartoonGPU( mol, posInter);
+    }
+
+    if( this->currentRenderMode == CARTOON_TUBE_ONLY ) {
+        // ------------------------------------------------------------
+        // --- CARTOON_TUBE_ONLY                                          ---
+        // --- render the protein using only GLSL geometry shaders  ---
+        // ------------------------------------------------------------
+        this->RenderCartoonGPUTubeOnly( mol, posInter);
     }
 
 
@@ -953,11 +987,12 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
 	if(col != NULL) {
 		(*col)(1); // GetExtents
 		colDirty = col->IsDirty();
-		//col->SetDirty(false);
+		col->SetDirty(false);
 	}
 
 	if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty() || this->compareParam.IsDirty() || colDirty) {
-        this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+
+	    this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
         this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
 		this->compare = this->compareParam.Param<param::BoolParam>()->Value();
         RecomputeAll();
@@ -973,6 +1008,8 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
                 this->maxGradColorParam.Param<param::StringParam>()->Value(),
                 true, bs);
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                    "Recomputing atom color table WITHOUT color module!");
 		} else if (col != nullptr) {
 			col->SetColoringTarget(mol);
 			col->SetAtomColorTable(&this->atomColorTable);
@@ -986,7 +1023,9 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
 			col->SetFrameID(frameID);
         
 			(*col)(0); //getColor
-			this->atomColorTable =  *col->GetAtomColorTable();
+			//this->atomColorTable =  *col->GetAtomColorTable();
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                    "Recomputing atom color table using color module!");
 		}
 
         this->coloringModeParam0.ResetDirty();
@@ -2627,6 +2666,341 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
         }
         this->tubeSplineShader.Disable();
     }  
+    */
+    glDisable ( GL_COLOR_MATERIAL );
+}
+
+
+/*
+ * Render protein in geometry shader CARTOON_GPU mode
+ */
+void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall *mol, float* atomPos) {
+    // ------------------------------------------------------------
+    // --- CARTOON SPLINE                                       ---
+    // --- GPU Implementation                                   ---
+    // --- use geometry shader for whole computation            ---
+    // ------------------------------------------------------------
+
+    // return if geometry shaders are not supported
+    if ( !this->geomShaderSupported )
+        return;
+
+    unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
+
+    float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
+    glMaterialfv ( GL_FRONT_AND_BACK, GL_SPECULAR, spec );
+    glMaterialf ( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f );
+    glEnable ( GL_COLOR_MATERIAL );
+
+    vislib::math::Vector<float, 3> v0, v1, v2, v3, v4, v5;
+    vislib::math::Vector<float, 3> n1, n2, n3, n4;
+    vislib::math::Vector<float, 3> color;
+    float flip = 1.0f;
+    float factor = 0.0f;
+
+    // loop over all molecules
+    MolecularDataCall::Molecule chain;
+    MolecularDataCall::AminoAcid *aminoacid;
+    for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
+        chain = mol->Molecules()[cntChain];
+        // check if the first residue is an amino acid
+        if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
+            continue;
+        }
+        firstSS = chain.FirstSecStructIndex();
+        countSS = firstSS + chain.SecStructCount();
+        // loop over all secondary structure elements
+        for( cntS = firstSS; cntS < countSS; ++cntS ) {
+            firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
+            countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
+            // loop over all amino acids in the current sec struct
+            for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
+                idx = chain.FirstResidueIndex() + chain.ResidueCount();
+                if( cntAA + 3 >= idx )
+                    continue;
+                // do nothing if the current residue is no amino acid
+                if( mol->Residues()[cntAA]->Identifier() != MolecularDataCall::Residue::AMINOACID )
+                    continue;
+
+                idx = cntS;
+                while( idx + 1 < mol->SecondaryStructureCount() && cntAA + 2 >= mol->SecondaryStructures()[idx].FirstAminoAcidIndex() + mol->SecondaryStructures()[idx].AminoAcidCount() ){
+                    idx++;
+                }
+
+//                if ( mol->SecondaryStructures()[idx].Type() == MolecularDataCall::SecStructure::TYPE_HELIX ) {
+//                    this->helixSplineShader.Enable();
+//                } else if ( mol->SecondaryStructures()[idx].Type() == MolecularDataCall::SecStructure::TYPE_SHEET ) {
+//                    this->arrowSplineShader.Enable();
+//                    if ( ( cntAA + 3 ) == countAA ) {
+//                        factor = 1.0f;
+//                    } else {
+//                        factor = 0.0f;
+//                    }
+//                } else {
+//                    this->tubeSplineShader.Enable();
+//                }
+
+                this->tubeSplineShader.Enable();
+
+                glBegin ( GL_LINES_ADJACENCY_EXT );
+
+                // vertex 1
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                idx = aminoacid->CAlphaIndex();
+                v1.SetX( atomPos[idx*3+0]);
+                v1.SetY( atomPos[idx*3+1]);
+                v1.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->CCarbIndex();
+                v5.SetX( atomPos[idx*3+0]);
+                v5.SetY( atomPos[idx*3+1]);
+                v5.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->OIndex();
+                n1.SetX( atomPos[idx*3+0]);
+                n1.SetY( atomPos[idx*3+1]);
+                n1.SetZ( atomPos[idx*3+2]);
+                n1 = n1 - v5;
+                n1.Normalise();
+                if ( cntAA > firstAA && n3.Dot( n1 ) < 0.0f )
+                    flip = -1.0;
+                else
+                    flip = 1.0;
+                n1 *= flip;
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+2]);
+                idx = aminoacid->CAlphaIndex();
+                glSecondaryColor3f( this->atomColorTable[3*idx],
+                                    this->atomColorTable[3*idx+1],
+                                    this->atomColorTable[3*idx+2]);
+                glColor3fv( n1.PeekComponents() );
+                glVertex3fv( v1.PeekComponents() );
+
+                // vertex 2
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+1]);
+                idx = aminoacid->CAlphaIndex();
+                v2.SetX( atomPos[idx*3+0]);
+                v2.SetY( atomPos[idx*3+1]);
+                v2.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->CCarbIndex();
+                v5.SetX( atomPos[idx*3+0]);
+                v5.SetY( atomPos[idx*3+1]);
+                v5.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->OIndex();
+                n2.SetX( atomPos[idx*3+0]);
+                n2.SetY( atomPos[idx*3+1]);
+                n2.SetZ( atomPos[idx*3+2]);
+                n2 = n2 - v5;
+                n2.Normalise();
+                if ( n1.Dot( n2 ) < 0.0f )
+                    flip = -1.0;
+                else
+                    flip = 1.0;
+                n2 *= flip;
+                glSecondaryColor3f( 0.2f, 1.0f, factor);
+                glColor3fv ( n2.PeekComponents() );
+                glVertex3fv ( v2.PeekComponents() );
+
+                // vertex 3
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+2]);
+                idx = aminoacid->CAlphaIndex();
+                v3.SetX( atomPos[idx*3+0]);
+                v3.SetY( atomPos[idx*3+1]);
+                v3.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->CCarbIndex();
+                v5.SetX( atomPos[idx*3+0]);
+                v5.SetY( atomPos[idx*3+1]);
+                v5.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->OIndex();
+                n3.SetX( atomPos[idx*3+0]);
+                n3.SetY( atomPos[idx*3+1]);
+                n3.SetZ( atomPos[idx*3+2]);
+                n3 = n3 - v5;
+                n3.Normalise();
+                if ( n2.Dot( n3 ) < 0.0f )
+                    flip = -1.0;
+                else
+                    flip = 1.0;
+                n3 *= flip;
+                glColor3fv( n3.PeekComponents() );
+                glVertex3fv( v3.PeekComponents() );
+
+                // vertex 4
+                aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+3]);
+                idx = aminoacid->CAlphaIndex();
+                v4.SetX( atomPos[idx*3+0]);
+                v4.SetY( atomPos[idx*3+1]);
+                v4.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->CCarbIndex();
+                v5.SetX( atomPos[idx*3+0]);
+                v5.SetY( atomPos[idx*3+1]);
+                v5.SetZ( atomPos[idx*3+2]);
+                idx = aminoacid->OIndex();
+                n4.SetX( atomPos[idx*3+0]);
+                n4.SetY( atomPos[idx*3+1]);
+                n4.SetZ( atomPos[idx*3+2]);
+                n4 = n4 - v5;
+                n4.Normalise();
+                if ( n3.Dot( n4 ) < 0.0f )
+                    flip = -1.0;
+                else
+                    flip = 1.0;
+                n4 *= flip;
+                glColor3fv( n4.PeekComponents() );
+                glVertex3fv( v4.PeekComponents() );
+
+                // store last vertex for comparison (flip)
+                n3 = n1;
+
+                glEnd(); // GL_LINES_ADJACENCY_EXT
+
+//                this->helixSplineShader.Disable();
+//                this->arrowSplineShader.Disable();
+                this->tubeSplineShader.Disable();
+            }
+        }
+    }
+
+    /*
+    for ( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
+    {
+        // do nothing if the current chain has too few residues
+        if ( prot->ProteinChain ( cntCha ).AminoAcidCount() < 4 )
+            continue;
+        // set first sec struct elem active
+        cntSec = 0;
+
+        for ( cntRes = 0; cntRes < prot->ProteinChain ( cntCha ).AminoAcidCount() - 4; ++cntRes )
+        {
+            factor = 0.0f;
+
+            // search for correct secondary structure element
+            idx1 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].FirstAminoAcidIndex();
+            idx2 = idx1 + prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AminoAcidCount();
+            // just for security, this should never happen!
+            if ( ( cntRes + 3 ) < idx1 )
+            {
+                cntSec = 0;
+                idx2 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AtomCount();
+            }
+            while ( ( cntRes + 3 ) > idx2 )
+            {
+                cntSec++;
+                idx1 = prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].FirstAminoAcidIndex();
+                idx2 = idx1 + prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].AtomCount();
+            }
+
+            if ( prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].Type() ==
+                CallProteinData::SecStructure::TYPE_HELIX )
+                this->helixSplineShader.Enable();
+            else if ( prot->ProteinChain ( cntCha ).SecondaryStructure() [cntSec].Type() ==
+                  CallProteinData::SecStructure::TYPE_SHEET )
+            {
+                this->arrowSplineShader.Enable();
+                if ( ( cntRes + 3 ) == idx2 )
+                    factor = 1.0f;
+            }
+            else
+                this->tubeSplineShader.Enable();
+
+            glBegin ( GL_LINES_ADJACENCY_EXT );
+
+            // vertex 1
+            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].CAlphaIndex();
+            v1.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
+            v1.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
+            v1.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
+            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes].OIndex();
+            n1.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
+            n1.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
+            n1.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
+            n1 = n1 - v1;
+            n1.Normalise();
+            if ( cntRes > 0 && n3.Dot ( n1 ) < 0.0f )
+                flip = -1.0;
+            else
+                flip = 1.0;
+            n1 *= flip;
+            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].CAlphaIndex();
+            glSecondaryColor3ubv ( GetProteinAtomColor ( idx1 ) );
+            glColor3fv ( n1.PeekComponents() );
+            glVertex3fv ( v1.PeekComponents() );
+
+            // vertex 2
+            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].CAlphaIndex();
+            v2.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
+            v2.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
+            v2.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
+            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+1].OIndex();
+            n2.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
+            n2.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
+            n2.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
+            n2 = n2 - v2;
+            n2.Normalise();
+            if ( n1.Dot ( n2 ) < 0.0f )
+                flip = -1.0;
+            else
+                flip = 1.0;
+            n2 *= flip;
+            glSecondaryColor3f ( 0.2f, 1.0f, factor );
+            glColor3fv ( n2.PeekComponents() );
+            glVertex3fv ( v2.PeekComponents() );
+
+            // vertex 3
+            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].CAlphaIndex();
+            v3.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
+            v3.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
+            v3.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
+            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+2].OIndex();
+            n3.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
+            n3.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
+            n3.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
+            n3 = n3 - v3;
+            n3.Normalise();
+            if ( n2.Dot ( n3 ) < 0.0f )
+                flip = -1.0;
+            else
+                flip = 1.0;
+            n3 *= flip;
+            glColor3fv ( n3.PeekComponents() );
+            glVertex3fv ( v3.PeekComponents() );
+
+            // vertex 4
+            idx1 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].CAlphaIndex();
+            v4.SetX ( prot->ProteinAtomPositions() [3 * idx1 + 0] );
+            v4.SetY ( prot->ProteinAtomPositions() [3 * idx1 + 1] );
+            v4.SetZ ( prot->ProteinAtomPositions() [3 * idx1 + 2] );
+            idx2 = prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].FirstAtomIndex() +
+               prot->ProteinChain ( cntCha ).AminoAcid() [cntRes+3].OIndex();
+            n4.SetX ( prot->ProteinAtomPositions() [3 * idx2 + 0] );
+            n4.SetY ( prot->ProteinAtomPositions() [3 * idx2 + 1] );
+            n4.SetZ ( prot->ProteinAtomPositions() [3 * idx2 + 2] );
+            n4 = n4 - v4;
+            n4.Normalise();
+            if ( n3.Dot ( n4 ) < 0.0f )
+                flip = -1.0;
+            else
+                flip = 1.0;
+            n4 *= flip;
+            glColor3fv ( n4.PeekComponents() );
+            glVertex3fv ( v4.PeekComponents() );
+
+            // store last vertex for comparison (flip)
+            n3 = n1;
+
+            glEnd();
+
+            this->helixSplineShader.Disable();
+            this->arrowSplineShader.Disable();
+            this->tubeSplineShader.Disable();
+        }
+        this->tubeSplineShader.Disable();
+    }
     */
     glDisable ( GL_COLOR_MATERIAL );
 }
