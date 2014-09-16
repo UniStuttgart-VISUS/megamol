@@ -2824,7 +2824,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
         this->colorsParamsTube = new float[this->totalCountTube*6*3];
 
         // auxiliary variables
-        float start, end, f1, f2, type;
+        float start, end, f1, f2, type = 0.0f;
         unsigned int counterTube = 0;
         vislib::math::Vector<float,3> col1, col2;
         // compute the inner b-spline (backbone)
