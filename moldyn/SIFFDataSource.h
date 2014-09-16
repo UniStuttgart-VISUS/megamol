@@ -146,6 +146,9 @@ namespace moldyn {
         /* The siff data version */
         unsigned int verNum;
 
+        /** Flag whether or not the data also stores color alpha */
+        bool hasAlpha;
+
     };
 
 } /* end namespace moldyn */

@@ -29,7 +29,7 @@ moldyn::SIFFDataSource::SIFFDataSource(void) : Module(),
         radSlot("radius", "The radius used when loading a version 1.1 file"),
         getDataSlot("getdata", "Slot to request data from this data source."),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), data(), datahash(0),
-        verNum(100) {
+        verNum(100), hasAlpha(false) {
 
     this->filenameSlot.SetParameter(new param::FilePathParam(""));
     this->filenameSlot.SetUpdateCallback(&SIFFDataSource::filenameChanged);
@@ -113,6 +113,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
     if (header[4] == 'b') {
         // binary siff
         UINT32 version;
+        this->hasAlpha = false;
 
         SIFFREAD(&version, 4, __LINE__);
         if (version == 100) {
@@ -140,6 +141,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
 
     } else if (header[4] == 'a') {
         // ascii siff
+        this->hasAlpha = false;
         vislib::StringA verstr = vislib::sys::ReadLineFromFileA(file);
         verstr.TrimSpaces();
         vislib::VersionNumber version(verstr);
@@ -176,7 +178,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
         char *buffer = new char[bufferSize];
         vislib::StringA lineOnBreak;
         float x, y, z, rad;
-        int r, g, b;
+        int r, g, b, colA;
         while (!file.IsEOF()) {
             SIZE_T read = static_cast<SIZE_T>(file.Read(buffer, bufferSize));
             SIZE_T sspos = 0;
@@ -198,14 +200,22 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
                     bool valid = true;
 
                     if (this->verNum == 100) {
-                        if (
+                        int srv =
 #ifdef _WIN32
                             sscanf_s
 #else /* _WIN32 */
                             sscanf
 #endif /* _WIN32 */
-                                (line, "%f %f %f %f %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b) == 7) {
-
+                                (line, "%f %f %f %f %d %d %d %d\n", &x, &y, &z, &rad, &r, &g, &b, &colA);
+                        if (srv == 8) {
+                            if (cnt == 0) {
+                                this->hasAlpha = true;
+                                bpp = 20; // because we now store alpha too
+                            }
+                            if (colA < 0) colA = 0; else if (colA > 255) colA = 255;
+                            srv = 7;
+                        } else colA = 255;
+                        if (srv == 7) {
                             if (r < 0) r = 0; else if (r > 255) r = 255;
                             if (g < 0) g = 0; else if (g > 255) g = 255;
                             if (b < 0) b = 0; else if (b > 255) b = 255;
@@ -237,6 +247,9 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
                             *this->data.AsAt<unsigned char>(cnt * bpp + 16) = static_cast<unsigned char>(r);
                             *this->data.AsAt<unsigned char>(cnt * bpp + 17) = static_cast<unsigned char>(g);
                             *this->data.AsAt<unsigned char>(cnt * bpp + 18) = static_cast<unsigned char>(b);
+                            if (this->hasAlpha) {
+                                *this->data.AsAt<unsigned char>(cnt * bpp + 19) = static_cast<unsigned char>(colA);
+                            }
                         }
                         cnt++;
                     }
@@ -244,6 +257,7 @@ bool moldyn::SIFFDataSource::filenameChanged(param::ParamSlot& slot) {
                     lineOnBreak.Clear();
                     sepos++;
                     sspos = sepos;
+
                 } else {
                     // store line part for the next loop cycle
                     lineOnBreak += vislib::StringA(buffer + sspos, static_cast<unsigned int>(sepos - sspos));
@@ -313,17 +327,21 @@ bool moldyn::SIFFDataSource::getDataCallback(Call& caller) {
 
     c2->AccessParticles(0).SetCount(0);
 
-    unsigned int bpp = (this->verNum == 100) ? 19 : 12;
+    unsigned int bpp = (this->verNum == 100)
+        ? (this->hasAlpha ? 20 : 19)
+        : 12;
 
     c2->AccessParticles(0).SetCount(this->data.GetSize() / bpp);
     if (this->data.GetSize() >= bpp) {
         if (this->verNum == 100) {
             c2->AccessParticles(0).SetColourData(
-                moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
-                this->data.At(16), 19);
+                this->hasAlpha
+                ? moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA
+                : moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB,
+                this->data.At(16), bpp);
             c2->AccessParticles(0).SetVertexData(
                 moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
-                this->data, 19);
+                this->data, bpp);
         } else if (this->verNum == 101) {
             c2->AccessParticles(0).SetGlobalColour(192, 192, 192);
             c2->AccessParticles(0).SetColourData(
