@@ -42,7 +42,7 @@ CompilerFlagsDebug := -ggdb
 CompilerFlagsRelease := -O3 -g0
 
 # Additional linker flags
-LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses -ltinfo
+LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses -ltinfo -L../gl/include/glload/build -lglload 
 LinkerFlagsDebug :=
 LinkerFlagsRelease :=
 

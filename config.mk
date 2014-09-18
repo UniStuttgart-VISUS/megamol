@@ -57,8 +57,10 @@ endif
 
 
 # Add clib version to the bits field for binary compatibility
-CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
-BITSEX := $(BITS)_clib$(CLIBVER)
+#  TODO: Does not work that way ...
+#CLIBVER := $(shell /lib/libc.so.6 | sed -n 's/^.*C.*Library.*version[[:space:]]\+\([[:digit:]\.]\+\)[[:space:]].*$ /\1/I p' | sed -n 's/\./_/g p')
+#BITSEX := $(BITS)_clib$(CLIBVER)
+BITSEX := $(BITS)
 
 
 # The default input directory
@@ -106,6 +108,7 @@ ifneq ($VISLIB_ICC, 0)
 	CompilerFlags := $(filter-out -pedantic, $(CompilerFlags))
 endif
 
+
 # Additional compiler flags for special configurations
 DebugCompilerFlags := -DDEBUG -D_DEBUG -ggdb
 ReleaseCompilerFlags := -DNDEBUG -D_NDEBUG -O3 -g0
@@ -118,6 +121,11 @@ ifneq ($(VISLIB_ICC), 0)
 	LinkerFlags += -lstdc++
 endif
 
+
 # Additional linker flags for special configurations
 DebugLinkerFlags := -ltinfo
 ReleaseLinkerFlags := -ltinfo
+
+
+# List of targets of generic project requisites
+ProjectPrerequisites :=

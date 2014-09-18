@@ -20,6 +20,7 @@
 
 # user settings
 TargetName := vislibgl
+ProjectPrerequisites := ./include/glload/build/libglload.so
 
 IncludeDir += ../base/include ../math/include ../sys/include ../graphics/include ../glutInclude
 
@@ -30,17 +31,11 @@ include ../glutInclude/vislibGlutInclude.mk
 endif
 endif
 
-
 # Include common build rules.
 -include ../librules.mk
 
 
-# add dependancy to glload
-$(CPP_DEPS_DEBUG): ./include/glload/build/libglload.so
-
-$(CPP_DEPS_RELEASE): ./include/glload/build/libglload.so
-
-# build target for glh
+# build target for glload
 ./include/glload/build/libglload.so:
 	$(shell include/glload/build.sh)
 
