@@ -188,7 +188,6 @@
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\MemmappedFile.cpp" />
     <ClCompile Include="src\MemoryFile.cpp" />
-    <ClCompile Include="src\MessageBox.cpp" />
     <ClCompile Include="src\Mutex.cpp" />
     <ClCompile Include="src\NamedPipe.cpp" />
     <ClCompile Include="src\PAMException.cpp" />
@@ -268,7 +267,6 @@
     <ClInclude Include="include\vislib\Lockable.h" />
     <ClInclude Include="include\vislib\Log.h" />
     <ClInclude Include="include\vislib\MemmappedFile.h" />
-    <ClInclude Include="include\vislib\MessageBox.h" />
     <ClInclude Include="include\vislib\Mutex.h" />
     <ClInclude Include="include\vislib\NamedPipe.h" />
     <ClInclude Include="include\vislib\PAMException.h" />

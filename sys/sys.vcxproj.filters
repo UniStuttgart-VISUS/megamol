@@ -102,9 +102,6 @@
     <ClCompile Include="src\MemmappedFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MessageBox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Mutex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -300,9 +297,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\MemmappedFile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\MessageBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\Mutex.h">

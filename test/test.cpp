@@ -11,7 +11,6 @@
 #include <cstring>
 #include <iostream>
 #include "vislib/Console.h"
-#include "vislib/MessageBox.h"
 #include "vislib/Trace.h"
 
 /* include test implementations */
