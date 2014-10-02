@@ -22,16 +22,18 @@
 #include "glload/include/glload/glx_load.h"
 #endif
 
-#include <atomic>
+//#include <atomic>
 
 namespace vislib {
 namespace graphics {
 namespace gl {
 
 inline void LoadAllGL() {
-    static std::atomic<bool> alreadyLoaded(false);
-    bool expected = false;
-    if (alreadyLoaded.compare_exchange_strong(expected, true)) {
+    //static std::atomic<bool> alreadyLoaded(false);
+    static bool alreadyLoaded = true;
+    //bool expected = false;
+    //if (alreadyLoaded.compare_exchange_strong(expected, true)) {
+    if (alreadyLoaded == true) {
 #ifdef _WIN32
         wgl_LoadFunctions(wglGetCurrentDC());
 #else
