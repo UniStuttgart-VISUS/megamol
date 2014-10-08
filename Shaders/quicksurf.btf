@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="quicksurf">
+    
+    <shader name="perpixellightVertexClip">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+varying vec4 diffuse,ambient;
+varying vec3 normal,lightDir,halfVector;
+varying vec4 col;
+
+varying vec4 posWS;
+
+void main()
+{    
+    // transformation of the normal into eye space
+    normal = normalize(gl_NormalMatrix * gl_Normal);
+    
+    // normalize the direction of the light
+    lightDir = normalize(vec3(gl_LightSource[0].position));
+
+    // normalize the halfVector to pass it to the fragment shader
+    halfVector = normalize(gl_LightSource[0].halfVector.xyz);
+                
+    // compute the diffuse, ambient and globalAmbient terms
+    /*
+    diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
+    ambient = gl_FrontMaterial.ambient * gl_LightSource[0].ambient;
+    ambient += gl_LightModel.ambient * gl_FrontMaterial.ambient;
+    */
+    diffuse = gl_Color * gl_LightSource[0].diffuse;
+    ambient = gl_Color * gl_LightSource[0].ambient;
+    ambient += gl_LightModel.ambient * gl_Color;
+
+    posWS = gl_Vertex;
+    gl_Position = ftransform();
+    gl_FrontColor = gl_Color;
+    gl_BackColor = gl_Color;
+}
+-->
+      </snippet>
+    </shader>
+
+    <shader name="perpixellightFragmentClip">
+      <snippet type="version">120</snippet>
+      <snippet type="string">
+        <!--
+uniform int twoSidedLight = 0;
+// clipping plane attributes
+uniform vec4 clipDat;
+uniform vec4 clipCol;
+
+varying vec4 diffuse,ambient;
+varying vec3 normal,lightDir,halfVector;
+
+varying vec4 posWS; // For clipping
+
+
+void main() {
+    float tsl = clamp(float(twoSidedLight), 0.0, 1.0);
+    vec3 n,halfV;
+    float NdotL,NdotHV;
+    
+    // Clipping
+    //float od = clipDat.w - 1.0;
+    if (any(notEqual(clipDat.xyz, vec3(0, 0, 0)))) {
+        float od = dot(posWS.xyz, clipDat.xyz) - clipDat.w;
+        if (od >= 0) discard;
+    }
+    
+
+    
+    // store the ambient term
+    vec4 color = ambient;
+    
+    // store the normalized interpolated normal
+    n = normalize(normal);
+
+    // compute the dot product between normal and lightDir
+    NdotL = dot(n,lightDir);
+    if (NdotL > 0.0) {
+        // front side
+        color += diffuse * NdotL;
+        halfV = normalize(halfVector);
+        NdotHV = max(dot(n,halfV),4.88e-04);
+        color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
+    } else {
+        // back side
+        color += diffuse * (-NdotL) * tsl;
+        //halfV = normalize(halfVector);
+        //NdotHV = max(dot(-n,halfV),4.88e-04);
+        //color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess) * tsl;
+    }
+
+    gl_FragColor = color;
+}
+-->
+      </snippet>
+    </shader>
+
+</btf>
