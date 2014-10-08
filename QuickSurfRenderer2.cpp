@@ -66,7 +66,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
 {
     this->molDataCallerSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
-    
+
     this->areaDiagramCalleeSlot.SetCallback(DiagramCall::ClassName(), DiagramCall::FunctionName(DiagramCall::CallForGetData), &QuickSurfRenderer2::GetAreaDiagramData);
     this->MakeSlotAvailable(&this->areaDiagramCalleeSlot);
 
@@ -82,7 +82,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
 
     // make the rainbow color table
     Color::MakeRainbowColorTable( 100, this->rainbowColors);
-    
+
     this->qualityParam.SetParameter( new param::IntParam( 1, 0, 4));
     this->MakeSlotAvailable( &this->qualityParam);
 
@@ -91,7 +91,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
 
     this->gridspacingParam.SetParameter( new param::FloatParam( 1.0f, 0.0f));
     this->MakeSlotAvailable( &this->gridspacingParam);
-    
+
     this->isovalParam.SetParameter( new param::FloatParam( 0.5f, 0.0f));
     this->MakeSlotAvailable( &this->isovalParam);
 
@@ -130,7 +130,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     zaxis[0] = 0.0f;
     zaxis[1] = 0.0f;
     zaxis[2] = 1.0f;
-   
+
     cudaqsurf = 0;
 
     gpuvertexarray=0;
@@ -152,13 +152,13 @@ QuickSurfRenderer2::~QuickSurfRenderer2(void)  {
         delete cqs;
     }
 
-    if (gv) 
+    if (gv)
         free(gv);
-    if (gn) 
+    if (gn)
         free(gn);
-    if (gc) 
+    if (gc)
         free(gc);
-    if (gf) 
+    if (gf)
         free(gf);
 
     if (voltexmap != NULL)
@@ -188,7 +188,7 @@ bool QuickSurfRenderer2::create(void) {
 
     if ( !vislib::graphics::gl::GLSLShader::InitialiseExtensions() )
         return false;
-    
+
     //cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId() );
     //printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
 
@@ -203,7 +203,7 @@ bool QuickSurfRenderer2::create(void) {
 
     ShaderSource vertSrc;
     ShaderSource fragSrc;
-    
+
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
@@ -258,7 +258,7 @@ bool QuickSurfRenderer2::GetExtents(Call& call) {
     cr3d->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
     cr3d->AccessBoundingBoxes().MakeScaledWorld( scale);
     cr3d->SetTimeFramesCount( mol->FrameCount());
-    
+
     return true;
 }
 
@@ -275,7 +275,7 @@ bool QuickSurfRenderer2::Render(Call& call) {
     // cast the call to Render3D
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
-    
+
     if( setCUDAGLDevice ) {
 #ifdef _WIN32
         if( cr3d->IsGpuAffinity() ) {
@@ -308,22 +308,27 @@ bool QuickSurfRenderer2::Render(Call& call) {
     // set frame ID and call data
     c2->SetFrameID(static_cast<int>( callTime));
     if (!(*c2)(0)) return false;
-    
-    
+
+
     // set number of particles
     numParticles = 0;
     for( unsigned int i = 0; i < c2->GetParticleListCount(); i++ ) {
         numParticles += c2->AccessParticles(i).GetCount();
     }
-    
+
+    // Do nothing if no particles are present
+    if (numParticles == 0) {
+        return true;
+    }
+
     // allocate host storage
-    if (m_hPosSize < numParticles*3) {
+    if (m_hPosSize < numParticles*4) {
         if (m_hPos)
             delete[] m_hPos;
-        m_hPos = new float[numParticles*3];
-        this->m_hPosSize = numParticles*3;
+        m_hPos = new float[numParticles*4];
+        this->m_hPosSize = numParticles*4;
     }
-    memset(m_hPos, 0, numParticles*3*sizeof(float));
+    memset(m_hPos, 0, numParticles*4*sizeof(float));
 
     UINT64 particleCnt = 0;
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
@@ -342,9 +347,15 @@ bool QuickSurfRenderer2::Render(Call& call) {
         }
         for (UINT64 j = 0; j < parts.GetCount(); j++,
                 pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride)) {
-            m_hPos[particleCnt*3+0] = pos[0];
-            m_hPos[particleCnt*3+1] = pos[1];
-            m_hPos[particleCnt*3+2] = pos[2];
+            m_hPos[particleCnt*4+0] = pos[0];
+            m_hPos[particleCnt*4+1] = pos[1];
+            m_hPos[particleCnt*4+2] = pos[2];
+            if (useGlobRad) {
+                m_hPos[particleCnt*4+3] = globRad;
+            } else {
+                m_hPos[particleCnt*4+3] = pos[3];
+            }
+
             particleCnt++;
         }
     }
@@ -383,7 +394,7 @@ bool QuickSurfRenderer2::Render(Call& call) {
     glEnable( GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    
+
     float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
     glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf( GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
@@ -408,7 +419,7 @@ bool QuickSurfRenderer2::Render(Call& call) {
     }
     this->lightShader.Enable();
     glUniform1i(this->lightShader.ParameterLocation("twoSidedLight"), this->twoSidedLightParam.Param<param::BoolParam>()->Value());
-    this->calcSurf( c2, m_hPos, 
+    this->calcSurf( c2, m_hPos,
         this->qualityParam.Param<param::IntParam>()->Value(),
         this->radscaleParam.Param<param::FloatParam>()->Value(),
         this->gridspacingParam.Param<param::FloatParam>()->Value(),
@@ -435,20 +446,20 @@ void QuickSurfRenderer2::UpdateParameters( const MultiParticleDataCall *mol) {
 
 bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& slot) {
     this->recomputeAreaDiagram = true;
-    
+
 #ifdef WRITE_DIAGRAM_FILE
     // get pointer to MultiParticleDataCall
     MultiParticleDataCall *parts = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
     if( parts == NULL) return false;
     // call extent
     if (!(*parts)(1)) return false;
-    
+
     // check if the data has to be recomputed
     if (this->recomputeAreaDiagram) {
         FILE *areaFile = fopen( "areas.txt", "w");
         // loop over all frames
         for (unsigned int i = 1; i < parts->FrameCount(); i++) {
-            parts->SetFrameID(i);            
+            parts->SetFrameID(i);
             if (!(*parts)(0)) {
                 fclose( areaFile);
                 return false;
@@ -492,7 +503,7 @@ bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& sl
             if( !cudaqsurf ) {
                 cudaqsurf = new CUDAQuickSurf();
             }
-            this->calcSurf (parts, m_hPos, 
+            this->calcSurf (parts, m_hPos,
                 this->qualityParam.Param<param::IntParam>()->Value(),
                 this->radscaleParam.Param<param::FloatParam>()->Value(),
                 this->gridspacingParam.Param<param::FloatParam>()->Value(),
@@ -512,8 +523,8 @@ bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& sl
 bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
 
     DiagramCall *dc = dynamic_cast<DiagramCall*>(&call);
-    if (dc == NULL) return false;    
-    
+    if (dc == NULL) return false;
+
     // set current call time for sliding guide line
     if (dc->GetGuideCount() == 0) {
         dc->AddGuide(log(callTime), DiagramCall::DIAGRAM_GUIDE_VERTICAL);
@@ -526,11 +537,11 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
     if( parts == NULL) return false;
     // call extent
     if (!(*parts)(1)) return false;
-    
-    
+
+
     // set diagram data series if it was not yet set
     if (dc->GetSeriesCount() == 0) {
-        this->areaDiagramData = new DiagramCall::DiagramSeries( "Surface Area", 
+        this->areaDiagramData = new DiagramCall::DiagramSeries( "Surface Area",
             new MolecularSurfaceFeature(log(static_cast<float>(parts->FrameCount()))));
         dc->AddSeries( this->areaDiagramData);
     }
@@ -540,7 +551,7 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
         // delete old data series and create new one
         dc->DeleteSeries(this->areaDiagramData);
         delete this->areaDiagramData;
-        this->areaDiagramData = new DiagramCall::DiagramSeries( "Surface Area", 
+        this->areaDiagramData = new DiagramCall::DiagramSeries( "Surface Area",
             new MolecularSurfaceFeature(log(static_cast<float>(parts->FrameCount()))));
         float r, g, b;
         utility::ColourParser::FromString( this->surfaceColorParam.Param<param::StringParam>()->Value(), r, g, b);
@@ -548,7 +559,7 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
         dc->AddSeries( this->areaDiagramData);
         // loop over all frames
         for (unsigned int i = 1; i < parts->FrameCount(); i++) {
-            parts->SetFrameID(i);            
+            parts->SetFrameID(i);
             if (!(*parts)(0)) return false;
             // set number of particles
             numParticles = 0;
@@ -603,14 +614,14 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
             if( !cudaqsurf ) {
                 cudaqsurf = new CUDAQuickSurf();
             }
-            this->calcSurf (parts, m_hPos, 
+            this->calcSurf (parts, m_hPos,
                 this->qualityParam.Param<param::IntParam>()->Value(),
                 this->radscaleParam.Param<param::FloatParam>()->Value(),
                 this->gridspacingParam.Param<param::FloatParam>()->Value(),
                 this->isovalParam.Param<param::FloatParam>()->Value(),
                 true);
             // set surface area to diagram
-            static_cast<MolecularSurfaceFeature*>(this->areaDiagramData->GetMappable())->AppendValue( 
+            static_cast<MolecularSurfaceFeature*>(this->areaDiagramData->GetMappable())->AppendValue(
                 log(static_cast<float>(i)), this->currentSurfaceArea);
         }
 
@@ -644,7 +655,26 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     float minrad, maxrad;
     int i;
     float mincoord[3], maxcoord[3];
-    
+
+//#define PADDING
+#define USE_BOUNDING_BOX
+
+    minrad = FLT_MAX;
+    maxrad = FLT_MIN;
+//    // get min and max radius
+//    for (unsigned int i = 0; i < mol->GetParticleListCount(); i++) {
+//        megamol::core::moldyn::MultiParticleDataCall::Particles &parts = mol->AccessParticles(i);
+//        for (unsigned int j = 0; j < parts.)
+//        if( minrad > parts.GetGlobalRadius() ) minrad = parts.GetGlobalRadius();
+//        if( maxrad < parts.GetGlobalRadius() ) maxrad = parts.GetGlobalRadius();
+//    }
+
+    for (unsigned int i = 0; i < numParticles; ++i)
+    {
+        if( minrad > posInter[i*4+3]) minrad = posInter[i*4+3];
+        if( maxrad < posInter[i*4+3]) maxrad = posInter[i*4+3];
+    }
+
     // crude estimate of the grid padding we require to prevent the
     // resulting isosurface from being clipped
 #ifdef PADDING
@@ -658,7 +688,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
 #endif
 
 #if VERBOSE
-    printf("  Padding radius: %.3f  (minrad: %.3f maxrad: %.3f)\n", 
+    printf("  Padding radius: %.3f  (minrad: %.3f maxrad: %.3f)\n",
         gridpadding, minrad, maxrad);
 #endif
 
@@ -670,7 +700,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     maxcoord[0] = mol->AccessBoundingBoxes().ObjectSpaceBBox().Right();
     maxcoord[1] = mol->AccessBoundingBoxes().ObjectSpaceBBox().Top();
     maxcoord[2] = mol->AccessBoundingBoxes().ObjectSpaceBBox().Front();
-    
+
     mincoord[0] -= gridpadding;
     mincoord[1] -= gridpadding;
     mincoord[2] -= gridpadding;
@@ -736,12 +766,12 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     maxcoord[1] = maxy + maxrad * 0.0f;
     maxcoord[2] = maxz + maxrad * 0.0f;
 #endif // USE_BOUNDING_BOX
-    
+
     // update grid spacing
     float bBoxDim[3] = {maxcoord[0] - mincoord[0], maxcoord[1] - mincoord[1], maxcoord[2] - mincoord[2]};
     float gridDim[3] = {
-        ceilf(bBoxDim[0] / gridspacing) + 1, 
-        ceilf(bBoxDim[1] / gridspacing) + 1, 
+        ceilf(bBoxDim[0] / gridspacing) + 1,
+        ceilf(bBoxDim[1] / gridspacing) + 1,
         ceilf(bBoxDim[2] / gridspacing) + 1};
     float3 gridSpacing3D;
     gridSpacing3D.x = bBoxDim[0] / (gridDim[0] - 1.0f);
@@ -757,23 +787,23 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     origin[2] = mincoord[2];
 
     // build compacted lists of bead coordinates, radii, and colors
-    float *xyzr = NULL;
+//    float *xyzr = NULL;
     float *colors = NULL;
 
     int ind = 0;
-    int ind4 = 0; 
-    xyzr = (float *) malloc( numParticles * sizeof(float) * 4);
+    int ind4 = 0;
+//    xyzr = (float *) malloc( numParticles * sizeof(float) * 4);
     if (useCol) {
         colors = (float *) malloc( numParticles * sizeof(float) * 4);
 
         // build compacted lists of atom coordinates, radii, and colors
         for (i = 0; i < numParticles; i++) {
-            const float *fp = posInter + ind;
-            xyzr[ind4    ] = fp[0]-origin[0];
-            xyzr[ind4 + 1] = fp[1]-origin[1];
-            xyzr[ind4 + 2] = fp[2]-origin[2];
-            xyzr[ind4 + 3] = minrad;
- 
+//            const float *fp = posInter + ind;
+//            xyzr[ind4    ] = fp[0]-origin[0];
+//            xyzr[ind4 + 1] = fp[1]-origin[1];
+//            xyzr[ind4 + 2] = fp[2]-origin[2];
+//            xyzr[ind4 + 3] = minrad;
+
             //const float *cp = &cmap[colidx[i] * 3];
             const float *cp = &this->atomColorTable[ind];
             colors[ind4    ] = cp[0];
@@ -784,18 +814,19 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
             ind4 += 4;
             ind += 3;
         }
-    } else {
-        // build compacted lists of atom coordinates and radii only
-        for (i = 0; i < numParticles; i++) {
-            const float *fp = posInter + ind;
-            xyzr[ind4    ] = fp[0]-origin[0];
-            xyzr[ind4 + 1] = fp[1]-origin[1];
-            xyzr[ind4 + 2] = fp[2]-origin[2];
-            xyzr[ind4 + 3] = minrad;
-            ind4 += 4;
-            ind += 3;
-        }
     }
+//    else {
+//        // build compacted lists of atom coordinates and radii only
+//        for (i = 0; i < numParticles; i++) {
+//            const float *fp = posInter + ind;
+//            xyzr[ind4    ] = fp[0]-origin[0];
+//            xyzr[ind4 + 1] = fp[1]-origin[1];
+//            xyzr[ind4 + 2] = fp[2]-origin[2];
+//            xyzr[ind4 + 3] = minrad;
+//            ind4 += 4;
+//            ind += 3;
+//        }
+//    }
 
     // set gaussian window size based on user-specified quality parameter
     float gausslim = 2.0f;
@@ -806,7 +837,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
 
     case 1: gausslim = 2.5f; break; // medium quality
 
-    case 0: 
+    case 0:
     default: gausslim = 2.0f; // low quality
         break;
     }
@@ -814,10 +845,10 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     pretime = wkf_timer_timenow(timer);
 
     CUDAQuickSurf *cqs = (CUDAQuickSurf *) cudaqsurf;
-    cqs->useGaussKernel = false;
+    cqs->useGaussKernel = true;
 
     // compute both density map and floating point color texture map
-    int rc = cqs->calc_surf( numParticles, &xyzr[0],
+    int rc = cqs->calc_surf( numParticles, posInter,
         (useCol) ? &colors[0] : &this->atomColorTable[0],
         useCol, origin, numvoxels, maxrad,
         radscale, gridSpacing3D, isovalue, gausslim,
@@ -827,14 +858,14 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
 
     if (rc == 0) {
         gpuvertexarray = 1;
-        free(xyzr);
+//        free(xyzr);
         if (colors) free(colors);
         voltime = wkf_timer_timenow(timer);
         return 0;
     } else {
         gpuvertexarray = 0;
-        free(xyzr);
-        if (colors) free(colors);  
+//        free(xyzr);
+        if (colors) free(colors);
         voltime = wkf_timer_timenow(timer);
         return 1;
     }
