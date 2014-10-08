@@ -21,6 +21,7 @@
 #include "view/Renderer3DModuleDS.h"
 #include "view/AbstractCallRender3D.h"
 #include "vislib/GLSLShader.h"
+#include "view/CallClipPlane.h"
 
 #include "WKFUtils.h"
 #include "CUDAQuickSurf.h"
@@ -180,6 +181,8 @@ namespace protein {
 
         bool recomputeAreaDiagramCallback(core::param::ParamSlot& slot);
 
+        void getClipData(float *clipDat, float *clipCol);
+
         /**********************************************************************
          * variables
          **********************************************************************/
@@ -277,6 +280,9 @@ namespace protein {
         DiagramCall::DiagramSeries *areaDiagramData;
         
         bool setCUDAGLDevice;
+
+        /** The call for clipping plane */
+        core::CallerSlot getClipPlaneSlot;
     };
 
 

@@ -62,7 +62,8 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     recomputeAreaDiagramParam( "recomputeAreaDiagram", "Recompute the area diagram"),
     m_hPos(0), m_hPosSize(0), numParticles(0), currentSurfaceArea(0.0f), recomputeAreaDiagram(true),
     areaDiagramData(0), callTime(0.0f),
-    setCUDAGLDevice(true)
+    setCUDAGLDevice(true),
+    getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
 {
     this->molDataCallerSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable( &this->molDataCallerSlot);
@@ -140,6 +141,9 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     gf=NULL;
 
     timer = wkf_timer_create();
+
+    this->getClipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable(&this->getClipPlaneSlot);
 }
 
 
@@ -208,11 +212,11 @@ bool QuickSurfRenderer2::create(void) {
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quicksurf::perpixellightVertexClip", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::perpixellightFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("quicksurf::perpixellightFragmentClip", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -413,12 +417,19 @@ bool QuickSurfRenderer2::Render(Call& call) {
     glEnd(); // GL_POINTS
     */
 
+    float clipDat[4];
+    float clipCol[4];
+    this->getClipData(clipDat, clipCol);
+
     // calculate surface
     if( !cudaqsurf ) {
         cudaqsurf = new CUDAQuickSurf();
     }
     this->lightShader.Enable();
     glUniform1i(this->lightShader.ParameterLocation("twoSidedLight"), this->twoSidedLightParam.Param<param::BoolParam>()->Value());
+    glUniform4fv(this->lightShader.ParameterLocation("clipDat"), 1, clipDat);
+    glUniform4fv(this->lightShader.ParameterLocation("clipCol"), 1, clipCol);
+
     this->calcSurf( c2, m_hPos,
         this->qualityParam.Param<param::IntParam>()->Value(),
         this->radscaleParam.Param<param::FloatParam>()->Value(),
@@ -868,6 +879,29 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
         if (colors) free(colors);
         voltime = wkf_timer_timenow(timer);
         return 1;
+    }
+}
+
+/*
+ * QuickSurfRenderer2::getClipData
+ */
+void QuickSurfRenderer2::getClipData(float *clipDat, float *clipCol) {
+    view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
+    if ((ccp != NULL) && (*ccp)()) {
+        clipDat[0] = ccp->GetPlane().Normal().X();
+        clipDat[1] = ccp->GetPlane().Normal().Y();
+        clipDat[2] = ccp->GetPlane().Normal().Z();
+        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
+        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
+        clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
+        clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
+        clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+        clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
+
+    } else {
+        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
+        clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
+        clipCol[3] = 1.0f;
     }
 }
 
