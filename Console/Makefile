@@ -22,7 +22,7 @@ CompilerFlags := $(CompilerFlags)
 LinkerFlags := $(LinkerFlags)
 
 # Libraries
-LIBS := $(LIBS) m pthread pam pam_misc uuid dl ncurses GL rt X11
+LIBS := $(LIBS) m pthread pam pam_misc uuid dl ncurses GL rt X11 glload
 
 
 # Collect Files
@@ -35,7 +35,7 @@ DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)
 ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
-LDFLAGS := $(LinkerFlags) -L$(mmcorepath)/lib -L$(vislibpath)/lib
+LDFLAGS := $(LinkerFlags) -L$(mmcorepath)/lib -L$(vislibpath)/lib -L$(vislibpath)/gl/include/glload/build
 
 
 all: VersionInfo $(TargetName)Debug $(TargetName)Release
