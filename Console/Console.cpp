@@ -1331,6 +1331,9 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         if (useQuadBuffers) {
             conviewhints |= MMV_VIEWHINT_QUADBUFFER;
         }
+        if (hotFixes.Contains("usealphabuffer")) {
+            conviewhints |= MMV_VIEWHINT_ALPHABUFFER;
+        }
         if (!::mmvCreateViewerHandle(hView, conviewhints)) {
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_ERROR,

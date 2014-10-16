@@ -61,6 +61,10 @@ bool megamol::viewer::Viewer::Initialise(unsigned int hints) {
         displayMode |= GLUT_STEREO;
     }
 
+    if ((hints & MMV_VIEWHINT_ALPHABUFFER) == MMV_VIEWHINT_ALPHABUFFER) {
+        displayMode |= GLUT_ALPHA;
+    }
+
     ::glutInitDisplayMode(displayMode);
     ::glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE,
         GLUT_ACTION_CONTINUE_EXECUTION);

@@ -96,6 +96,7 @@ typedef struct mmvMouseMoveParamsStruct {
 /** Flags for view hints */
 #define MMV_VIEWHINT_NONE           0x00000000
 #define MMV_VIEWHINT_QUADBUFFER     0x00000001
+#define MMV_VIEWHINT_ALPHABUFFER    0x00000002
 
 /** Flags for window hints */
 #define MMV_WINHINT_NONE            0x00000000
