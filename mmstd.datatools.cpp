@@ -19,6 +19,7 @@
 #include "ParticleThinner.h"
 #include "OverrideParticleGlobals.h"
 #include "ParticleRelaxationModule.h"
+#include "ParticleListSelector.h"
 
 
 /*
@@ -62,7 +63,7 @@ MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 7;
+    return 8;
 }
 
 
@@ -78,6 +79,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     case 4: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
     case 5: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();
     case 6: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
+    case 7: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListSelector>();
     }
     return nullptr;
 }
