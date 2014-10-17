@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "TransferFunctionQuery.h"
 #include "view/CallGetTransferFunction.h"
-#include "glh/glh_extensions.h"
+#include "vislib/IncludeAllGL.h"
 #include "vislib/assert.h"
 #include "vislib/ShallowPoint.h"
 
