@@ -4,6 +4,7 @@
 		<OutputBin>%outbin%</OutputBin>
 		<MegaMolCorePath>%mmcorePath%</MegaMolCorePath>
 		<VISlibPath>%vislib%</VISlibPath>
+		<ANNPath>%ANNPath%</ANNPath>
 	</PropertyGroup>
 	<PropertyGroup>
 		<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -17,6 +18,9 @@
 		</BuildMacro>
 		<BuildMacro Include="VISlibPath">
 			<Value>$(VISlibPath)</Value>
+		</BuildMacro>
+		<BuildMacro Include="ANNPath">
+			<Value>$(ANNPath)</Value>
 		</BuildMacro>
 	</ItemGroup>
 </Project>

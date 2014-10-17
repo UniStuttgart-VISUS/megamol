@@ -45,7 +45,7 @@ bool datatools::ParticleListSelector::manipulateData(
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
 
-    if ((idx < 0) || (idx >= inData.GetParticleListCount())) {
+    if ((idx < 0) || (idx >= static_cast<int>(inData.GetParticleListCount()))) {
         outData.SetParticleListCount(0);
     } else {
         outData.SetParticleListCount(1);

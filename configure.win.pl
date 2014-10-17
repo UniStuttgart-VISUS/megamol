@@ -50,6 +50,16 @@ $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
+$a = PathParameter->new();
+    $a->id("ANN");
+    $a->description("Path to the ApproximateNearestNeighbor library (custom built names)");
+    $a->placeholder("%ANNPath%");
+    $a->markerFile("include/ANN/ANN.h\$");
+    $a->relativeLocation("../../");
+    $a->autoDetect(1);
+    $a->directorySeparator("\\");
+    $a->enforceTrailingDirectorySeparator(1);
+    push @pps, $a;
 
 $c = ConfigFilePair->new();
     $c->inFile("ExtLibs.props.input");
