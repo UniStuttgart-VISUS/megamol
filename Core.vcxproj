@@ -294,6 +294,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="CalleeSlot.cpp" />
     <ClCompile Include="CallerSlot.cpp" />
     <ClCompile Include="CallVolumeData.cpp" />
+    <ClCompile Include="cluster\mpi\MpiCall.cpp" />
+    <ClCompile Include="cluster\mpi\MpiProvider.cpp" />
     <ClCompile Include="cluster\mpi\View.cpp" />
     <ClCompile Include="cluster\simple\Client.cpp" />
     <ClCompile Include="cluster\simple\ClientViewRegistration.cpp" />
@@ -567,6 +569,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="CalleeSlot.h" />
     <ClInclude Include="CallerSlot.h" />
     <ClInclude Include="CallVolumeData.h" />
+    <ClInclude Include="cluster\mpi\MpiCall.h" />
+    <ClInclude Include="cluster\mpi\MpiProvider.h" />
     <ClInclude Include="cluster\mpi\View.h" />
     <ClInclude Include="cluster\simple\Client.h" />
     <ClInclude Include="cluster\simple\ClientViewRegistration.h" />

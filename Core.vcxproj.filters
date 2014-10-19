@@ -802,6 +802,12 @@
     <ClCompile Include="view\Call6DofInteraction.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cluster\mpi\MpiProvider.cpp">
+      <Filter>cluster\mpi\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster\mpi\MpiCall.cpp">
+      <Filter>cluster\mpi\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractDataWriter.h">
@@ -1463,6 +1469,12 @@
     </ClInclude>
     <ClInclude Include="view\Call6DofInteraction.h">
       <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\mpi\MpiProvider.h">
+      <Filter>cluster\mpi\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cluster\mpi\MpiCall.h">
+      <Filter>cluster\mpi\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
