@@ -132,6 +132,8 @@ vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
     }
 #endif /* _WIN32 */
 
+    vislib::sys::Log::DefaultLog.WriteInfo("Command line used for MPI "
+        "initialisation is \"%s\".", retval.PeekBuffer());
     return retval;
 }
 
