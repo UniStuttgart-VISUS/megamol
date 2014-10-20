@@ -8,6 +8,11 @@
 #include "stdafx.h"
 #include "MpiProvider.h"
 
+#ifndef WIN32
+#include <cstdio>
+#include <cstdlib>
+#endif /* !_WIN32 */
+
 #include "MpiCall.h"
 
 #include "vislib/assert.h"
@@ -107,11 +112,27 @@ void megamol::core::cluster::mpi::MpiProvider::release(void) {
  * megamol::core::cluster::mpi::MpiProvider::getCommandLine
  */
 vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
+    vislib::StringA retval;
+
 #ifdef WIN32
-    return vislib::StringA(::GetCommandLineA());
+    retval = ::GetCommandLineA();
 #else /* _WIN32 */
-    // TODO
+    vislib::StringA retval;
+    char *arg = nullptr;
+    size_t size = 0;
+
+    auto fp = ::fopen("/proc/self/cmdline", "rb");
+    if (fp != nullptr) {
+        while (::getdelim(&arg, &size, 0, fp) != -1) {
+            retval.Append(arg, size);
+            retval.Append(" ");
+        }
+        ::free(arg);
+        ::fclose(fp);
+    }
 #endif /* _WIN32 */
+
+    return retval;
 }
 
 

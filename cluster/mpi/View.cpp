@@ -15,10 +15,8 @@
 
 #include "AbstractNamedObject.h"
 #include "CoreInstance.h"
-#ifdef WITH_MPI
-#include "mpi.h"
-#endif /* WITH_MPI */
 
+#include "cluster/mpi/MpiCall.h"
 #include "cluster/mpi/View.h"
 
 #include "cluster/simple/Client.h"
@@ -104,19 +102,26 @@ bool megamol::core::cluster::mpi::View::IsAvailable(void) {
  */
 megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
         bcastMaster(-1),
+        callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view."),
         isMpiInitialised(false),
         mpiRank(-1),
         mpiSize(-1),
         mustNegotiateMaster(true),
-        paramInitialiseMpi("initialiseMpi", "Enables the view to initialise the MPI library."),
+        paramDisplayNodeColour("displayNodeColour", "Specifies the node colour of the display nodes."),
         paramUseGsync("useGsync", "Try to synchronise buffer swaps if possible."),
         relayOffset(0) {
     VLAUTOSTACKTRACE;
+#ifdef WITH_MPI
+    this->comm = MPI_COMM_NULL;
+#endif /* WITH_MPI */
+
+    this->callRequestMpi.SetCompatibleCall<MpiCallDescription>();
+    this->MakeSlotAvailable(&this->callRequestMpi);
+
     this->hasMasterConnection.store(false);
 
-    this->paramInitialiseMpi << new param::BoolParam(true);
-    this->paramInitialiseMpi.SetUpdateCallback(&View::onInitialiseMpiChanged);
-    this->MakeSlotAvailable(&this->paramInitialiseMpi);
+    this->paramDisplayNodeColour << new param::IntParam(0, 0);
+    this->MakeSlotAvailable(&this->paramDisplayNodeColour);
 
     this->paramUseGsync << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->paramUseGsync);
@@ -203,6 +208,9 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
         }
     } /* end if (this->viewState = ViewState::CREATED) */
 
+    /* Ensure that MPI is initialised. */
+    this->initialiseMpi();
+
     /* Reset the state. */
     ::ZeroMemory(&state, sizeof(state));
     state.Time = context.Time;
@@ -254,7 +262,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
         // cannot occur concurrently while the following code is executed.
 
         ::MPI_Bcast(&state, sizeof(state), MPI_BYTE, this->getBcastMaster(),
-                MPI_COMM_WORLD);
+            this->comm);
 
         if (state.InitSwapGroup) {
             SwapGroupApi::GetInstance().JoinSwapGroup(1);
@@ -277,7 +285,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
                 this->mpiRank, state.RelaySize);
             ::MPI_Bcast(static_cast<void *>(this->filteredRelayBuffer),
                 static_cast<int>(state.RelaySize), MPI_BYTE,
-                this->getBcastMaster(), MPI_COMM_WORLD);
+                this->getBcastMaster(), this->comm);
         }
 #endif /* WITH_MPI */
     } /* if (this->knowsBcastMaster() && (this->mpiSize > 1)) */
@@ -420,7 +428,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
 
 #ifdef WITH_MPI
     _TRACE_BARRIERS("Rank %d is before swap barrier.\n", this->mpiRank);
-    ::MPI_Barrier(MPI_COMM_WORLD);
+    ::MPI_Barrier(this->comm);
     _TRACE_BARRIERS("Rank %d is after swap barrier.\n", this->mpiRank);
         _TRACE_BARRIERS("Rank %d is after swap barrier.\n", this->mpiRank);
 #endif /* WITH_MPI */
@@ -601,11 +609,10 @@ bool megamol::core::cluster::mpi::View::create(void) {
     bool retval = Base1::create();
     this->viewState = ViewState::CREATED;
     this->mustNegotiateMaster = true;
-
-    if (retval) {
-        this->initialiseMpi();
-    }
-
+    // Note: Removed initialisation of MPI from here because we cannot guarantee
+    // that create() is called in the correct moment. The rendering routine is
+    // now doing this.
+    // TODO: Move back initialisation here if this caused a problem.
     return retval;
 }
 
@@ -703,6 +710,9 @@ size_t megamol::core::cluster::mpi::View::filterRelayBuffer(void) {
 void megamol::core::cluster::mpi::View::finaliseMpi(void) {
     VLAUTOSTACKTRACE;
     if (this->isMpiInitialised) {
+        // Finalise MPI, but only if the view has initialised MPI by itself.
+        // This is the legacy case that we keep for backward compatibility with
+        // existing projects.
 #ifdef WITH_MPI
         ::MPI_Finalize();
 #endif /* WITH_MPI */
@@ -733,18 +743,33 @@ bool megamol::core::cluster::mpi::View::hasGsync(void) const {
  */
 bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
     VLAUTOSTACKTRACE;
-    bool isInit = this->paramInitialiseMpi.Param<param::BoolParam>()->Value();
-    bool retval = !isInit;
+    bool retval = false;
 
-    if (isInit) {
-        retval = this->isMpiInitialised;
-        if (!retval) {
 #ifdef WITH_MPI
+    if (this->comm == MPI_COMM_NULL) {
+        auto c = this->callRequestMpi.CallAs<MpiCall>();
+        if (c != nullptr) {
+            /* New method: let MpiProvider do all the stuff. */
+            auto colour = this->paramDisplayNodeColour.Param<param::IntParam>()
+                ->Value();
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("Requesting MPI ")
+                _T("initialisation via registered call using node colour ")
+                _T("%d ..."), colour);
+            c->SetColour(colour);
+
+            if ((*c)(MpiCall::IDX_PROVIDE_MPI)) {
+                _TRACE_MESSAGING("Got MPI communicator.");
+                this->comm = c->GetComm();
+            }
+
+        } else {
+            /* Legacy implementation: do it directly and remember that. */
 #ifdef _WIN32
             vislib::sys::CmdLineProviderA cmdLine(::GetCommandLineA());
             int argc = cmdLine.ArgC();
             char **argv = cmdLine.ArgV();
             ::MPI_Init(&argc, &argv);
+            this->isMpiInitialised = retval;
             vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI was initialised ")
                 _T("by module %hs."), View::ClassName());
 #else /* _WIN32 */
@@ -752,17 +777,19 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
                 _T("initialised lazily on platforms other than Windows. ")
                 _T("Please initialise MPI before using this module.");
 #endif /* _WIN32 */
+        } /* end if (c != nullptr) */
 
-            ::MPI_Comm_rank(MPI_COMM_WORLD, &this->mpiRank);
-            ::MPI_Comm_size(MPI_COMM_WORLD, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
-                _T("of %d."),
-                vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
-                this->mpiRank, this->mpiSize);
+        ::MPI_Comm_rank(this->comm, &this->mpiRank);
+        ::MPI_Comm_size(this->comm, &this->mpiSize);
+        vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+            _T("of %d."),
+            vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
+            this->mpiRank, this->mpiSize);
+    } /* end if (this->comm == MPI_COMM_NULL) */
 
+    /* Determine success of the whole operation. */
+    retval = (this->comm != MPI_COMM_NULL);
 #endif /* WITH_MPI */
-        }
-    }
 
     // TODO: Register data types as necessary
 
@@ -795,6 +822,7 @@ bool megamol::core::cluster::mpi::View::negotiateBcastMaster(void) {
     ASSERT(this->mpiSize > 0);
 
 #if WITH_MPI
+    ASSERT(this->comm != MPI_COMM_NULL);
     std::vector<int> responses(this->mpiSize);
 
     _TRACE_INFO("Negotiating master of %d ranks. Rank %d %s a candidate.\n",
@@ -802,7 +830,7 @@ bool megamol::core::cluster::mpi::View::negotiateBcastMaster(void) {
         (this->hasMasterConnection ? "is" : "is not"));
     int myResponse = static_cast<int>(this->hasMasterConnection);
     ::MPI_Allgather(&myResponse, 1, MPI_INT, responses.data(), 1, MPI_INT,
-        MPI_COMM_WORLD);
+        this->comm);
 
     auto end = responses.end();
     int master = 0;
@@ -819,22 +847,6 @@ bool megamol::core::cluster::mpi::View::negotiateBcastMaster(void) {
 #endif /* WITH_MPI */
 
     return false;
-}
-
-
-/*
- * megamol::core::cluster::mpi::View::onInitialiseMpiChanged
- */
-bool megamol::core::cluster::mpi::View::onInitialiseMpiChanged(
-        param::ParamSlot& slot) {
-    VLAUTOSTACKTRACE;
-    bool isInit = this->paramInitialiseMpi.Param<param::BoolParam>()->Value();
-    if (isInit) {
-        this->initialiseMpi();
-    } else {
-        this->finaliseMpi();
-    }
-    return true;
 }
 
 

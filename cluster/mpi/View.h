@@ -20,6 +20,10 @@
 #include "vislib/IncludeAllGL.h"
 #endif /* _WIN32 */
 
+#ifdef WITH_MPI
+#include <mpi.h>
+#endif /* WITH_MPI */
+
 #include "CallerSlot.h"
 
 #include "cluster/simple/View.h"
@@ -233,8 +237,17 @@ namespace mpi {
         bool hasGsync(void) const;
 
         /**
-         * Initialise MPI if 'paramInitialiseMpi' indicates that the object
-         * should do so and the object has not yet initialised MPI.
+         * Initialise MPI.
+         *
+         * If a call is registered for 'callRequestMpi', we use this call to let
+         * another module initialise MPI. Otherwise, we do it ourselve. This
+         * ensures that existing MPI-based projects can work as they did before
+         * the introduction of MpiProvider. If we initialised MPI ourselve, we
+         * set 'isMpiInitialised' to true and finalise it once the the view is
+         * destroyed.
+         *
+         * Initialisation of MPI is lazy: If 'comm' is not MPI_COMM_NULL, the
+         * method does nothing.
          *
          * @return true if MPI was successfully initialised or if someone else
          *         should have done this; false if the operation was requested,
@@ -281,15 +294,6 @@ namespace mpi {
         bool negotiateBcastMaster(void);
 
         /**
-         * Handles changes of 'paramInitialiseMpi'.
-         *
-         * @param slot
-         *
-         * @return
-         */
-        virtual bool onInitialiseMpiChanged(param::ParamSlot& slot);
-
-        /**
          * Implementation of 'Release'.
          */
         virtual void release(void);
@@ -318,6 +322,14 @@ namespace mpi {
          */
         int bcastMaster;
 
+        /* Call to initialise MPI. */
+        CallerSlot callRequestMpi;
+
+#ifdef WITH_MPI
+        /** The communicator that the view uses. */
+        MPI_Comm comm;
+#endif /* WITH_MPI */
+
         /**
          * The buffer that is acutually transmitted. This buffer contains
          * filtered messages only to prevent superseded data from being
@@ -331,16 +343,16 @@ namespace mpi {
          */
         std::atomic_bool hasMasterConnection;
 
-        /** Remembers whether MPI was initialised. */
+        /** Remembers whether MPI was initialised (by the view!). */
         bool isMpiInitialised;
 
         ///** A memory pool for composing messages etc. */
         //vislib::RawStoragePool memPool;
 
-        /** The rank of this instance in MPI_COMM_WORLD. */
+        /** The rank of this instance in the display communicator. */
         int mpiRank;
 
-        /** The siez of MPI_COMM_WORLD. */
+        /** The size of the display communicator. */
         int mpiSize;
 
         /**
@@ -349,8 +361,8 @@ namespace mpi {
          */
         bool mustNegotiateMaster;
 
-        /** Configures whether this view will initialise MPI. */
-        param::ParamSlot paramInitialiseMpi;
+        /** Configures the node colour of the display nodes. */
+        param::ParamSlot paramDisplayNodeColour;
 
         /** Configures whether the view should try to enable GSync. */
         param::ParamSlot paramUseGsync;
