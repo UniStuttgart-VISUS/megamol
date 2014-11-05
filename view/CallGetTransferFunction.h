@@ -14,6 +14,7 @@
 #include "api/MegaMolCore.h"
 #include "Call.h"
 #include "CallAutoDescription.h"
+#include "vislib/IncludeAllGL.h"
 
 
 namespace megamol {
@@ -26,6 +27,12 @@ namespace view {
      */
     class MEGAMOLCORE_API CallGetTransferFunction : public Call {
     public:
+
+        /** possible texture formats */
+        enum TextureFormat {
+            TEXTURE_FORMAT_RGB = GL_RGB,
+            TEXTURE_FORMAT_RGBA = GL_RGBA
+        };
 
         /**
          * Answer the name of the objects of this description.
@@ -94,14 +101,26 @@ namespace view {
         }
 
         /**
+         * Answer the OpenGL format of the texture
+         *
+         * @return The OpenGL format of the texture
+         */
+        inline TextureFormat OpenGLTextureFormat(void) const {
+            return this->texFormat;
+        }
+
+        /**
          * Sets the 1D texture information
          *
          * @param id The OpenGL texture object id
          * @param size The size of the texture
+         * @param format The texture format
          */
-        inline void SetTexture(unsigned int id, unsigned int size) {
+        inline void SetTexture(unsigned int id, unsigned int size,
+                TextureFormat format = TEXTURE_FORMAT_RGB) {
             this->texID = id;
             this->texSize = size;
+            this->texFormat = format;
             if (this->texSize == 0) {
                 this->texSize = 1;
             }
@@ -114,6 +133,9 @@ namespace view {
 
         /** The size of the texture in texel */
         unsigned int texSize;
+
+        /** The texture format */
+        TextureFormat texFormat;
 
     };
 

@@ -16,7 +16,6 @@
 #include "param/IntParam.h"
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
-#include "view/CallGetTransferFunction.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/Vector.h"
@@ -59,7 +58,8 @@ view::LinearTransferFunction::LinearTransferFunction(void) : Module(),
         minColSlot("mincolour", "The colour for the minimum value"),
         maxColSlot("maxcolour", "The colour for the maximum value"),
         texSizeSlot("texsize", "The size of the texture to generate"),
-        texID(0), texSize(1) {
+        texID(0), texSize(1),
+        texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB) {
 
     view::CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0),
@@ -157,6 +157,7 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
 
         vislib::Array<vislib::math::Vector<float, 5> > cols;
         vislib::math::Vector<float, 5> cx1, cx2;
+        bool validAlpha = false;
         if (utility::ColourParser::FromString(
                 this->minColSlot.Param<param::StringParam>()->Value(),
                 cx1[0], cx1[1], cx1[2], cx1[3])) {
@@ -165,6 +166,7 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
             cx1[0] = cx1[1] = cx1[2] = cx1[3] = 0.0f;
             cx1[4] = 0.0f;
         }
+        if (cx1[3] < 0.99f) validAlpha = true;
         cols.Add(cx1);
         if (utility::ColourParser::FromString(
                 this->maxColSlot.Param<param::StringParam>()->Value(),
@@ -174,6 +176,7 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
             cx1[0] = cx1[1] = cx1[2] = cx1[3] = 0.0f;
             cx1[4] = 1.0f;
         }
+        if (cx1[3] < 0.99f) validAlpha = true;
         cols.Add(cx1);
         for (SIZE_T i = 0; i < INTER_COLOUR_COUNT; i++) {
             if (this->interCols[i].enableSlot->Param<param::BoolParam>()->Value()) {
@@ -186,6 +189,7 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
                     cx1[0] = cx1[1] = cx1[2] = cx1[3] = 0.0f;
                     cx1[4] = val;
                 }
+                if (cx1[3] < 0.99f) validAlpha = true;
                 cols.Add(cx1);
             }
         }
@@ -234,9 +238,13 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
 
         if (!t1de) glDisable(GL_TEXTURE_1D);
 
+        this->texFormat = validAlpha
+            ? CallGetTransferFunction::TEXTURE_FORMAT_RGBA
+            : CallGetTransferFunction::TEXTURE_FORMAT_RGB;
+
     }
 
-    cgtf->SetTexture(this->texID, this->texSize);
+    cgtf->SetTexture(this->texID, this->texSize, this->texFormat);
 
     return true;
 }

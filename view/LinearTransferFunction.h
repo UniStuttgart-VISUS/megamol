@@ -15,6 +15,7 @@
 #include "CalleeSlot.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
+#include "view/CallGetTransferFunction.h"
 
 
 namespace megamol {
@@ -123,6 +124,9 @@ namespace view {
 
         /** The texture size in texel */
         unsigned int texSize;
+
+        /** The texture format */
+        CallGetTransferFunction::TextureFormat texFormat;
 
         /** The array of intermediate colour definitions */
         InterColour interCols[INTER_COLOUR_COUNT];

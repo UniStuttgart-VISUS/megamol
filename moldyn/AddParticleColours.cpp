@@ -10,7 +10,6 @@
 #include "AddParticleColours.h"
 #include "MultiParticleDataCall.h"
 #include "param/ButtonParam.h"
-#include "view/CallGetTransferFunction.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 
@@ -58,7 +57,9 @@ moldyn::AddParticleColours::AddParticleColours(void) : Module(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         rebuildButtonSlot("rebuild", "Forces rebuild of colour data"),
-        lastFrame(0), colData(), updateHash() {
+        lastFrame(0), colData(),
+        colFormat(view::CallGetTransferFunction::TEXTURE_FORMAT_RGB),
+        updateHash() {
 
     this->putDataSlot.SetCallback("MultiParticleDataCall", "GetData",
         &AddParticleColours::getDataCallback);
@@ -134,7 +135,9 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
         }
 
         if (cntCol > 0) {
-            if ((this->lastFrame != outCall->FrameID()) || ((cntCol * 3) != this->colData.GetSize())
+            int colcompcnt = (this->colFormat == view::CallGetTransferFunction::TEXTURE_FORMAT_RGB) ? 3 : 4;
+
+            if ((this->lastFrame != outCall->FrameID()) || ((cntCol * colcompcnt) != this->colData.GetSize())
                     || this->rebuildButtonSlot.IsDirty() || (uhWriter.End() != this->updateHash.GetSize())
                     || (::memcmp(updateHash.As<void>(), this->updateHash.As<void>(), uhWriter.End()) != 0)) {
 
@@ -144,12 +147,14 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
 
                 // build colour data
                 this->lastFrame = outCall->FrameID();
-                this->colData.EnforceSize(cntCol * 3);
 
                 vislib::RawStorage texDat;
 
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                 if ((cgtf != NULL) && ((*cgtf)(0))) {
+                    this->colFormat = cgtf->OpenGLTextureFormat();
+                    colcompcnt = (this->colFormat == view::CallGetTransferFunction::TEXTURE_FORMAT_RGB) ? 3 : 4;
+
                     ::glGetError();
                     ::glEnable(GL_TEXTURE_1D);
                     ::glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
@@ -158,8 +163,8 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
                     ::glGetTexLevelParameteriv(GL_TEXTURE_1D, 0, GL_TEXTURE_WIDTH, &texSize);
 
                     if (::glGetError() == GL_NO_ERROR) {
-                        texDat.EnforceSize(texSize * 12);
-                        ::glGetTexImage(GL_TEXTURE_1D, 0, GL_RGB, GL_FLOAT, texDat.As<void>());
+                        texDat.EnforceSize(texSize * 4 * colcompcnt);
+                        ::glGetTexImage(GL_TEXTURE_1D, 0, this->colFormat, GL_FLOAT, texDat.As<void>());
                         if (::glGetError() != GL_NO_ERROR) {
                             texDat.EnforceSize(0);
                         }
@@ -169,17 +174,23 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
                     ::glDisable(GL_TEXTURE_1D);
                 }
 
+                this->colData.EnforceSize(cntCol * colcompcnt);
+
                 unsigned int texDatSize = 2;
-                if (texDat.GetSize() < 24) {
-                    texDat.EnforceSize(24);
+                if (texDat.GetSize() < 2 * 4 * colcompcnt) {
+                    texDat.EnforceSize(2 * 4 * colcompcnt);
                     *texDat.AsAt<float>(0) = 0.0f;
                     *texDat.AsAt<float>(4) = 0.0f;
                     *texDat.AsAt<float>(8) = 0.0f;
                     *texDat.AsAt<float>(12) = 1.0f;
                     *texDat.AsAt<float>(16) = 1.0f;
                     *texDat.AsAt<float>(20) = 1.0f;
+                    if (colcompcnt == 4) {
+                        *texDat.AsAt<float>(24) = 1.0f;
+                        *texDat.AsAt<float>(28) = 1.0f;
+                    }
                 } else {
-                    texDatSize = static_cast<unsigned int>(texDat.GetSize() / 12);
+                    texDatSize = static_cast<unsigned int>(texDat.GetSize() / (4 * colcompcnt));
                 }
                 texDatSize--;
 
@@ -204,12 +215,17 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
                             w = 0.0;
                         }
 
+                        unsigned int stride = sizeof(float) *colcompcnt;
                         *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(255.0f * (
-                            *texDat.AsAt<float>(idx * 12) * w + *texDat.AsAt<float>(idx * 12 + 12) * v));
+                            *texDat.AsAt<float>(idx * stride) * w + *texDat.AsAt<float>((idx + 1) * stride) * v));
                         *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(255.0f * (
-                            *texDat.AsAt<float>(idx * 12 + 4) * w + *texDat.AsAt<float>(idx * 12 + 16) * v));
+                            *texDat.AsAt<float>(idx * stride + 4) * w + *texDat.AsAt<float>((idx + 1) * stride + 4) * v));
                         *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(255.0f * (
-                            *texDat.AsAt<float>(idx * 12 + 8) * w + *texDat.AsAt<float>(idx * 12 + 20) * v));
+                            *texDat.AsAt<float>(idx * stride + 8) * w + *texDat.AsAt<float>((idx + 1) * stride + 8) * v));
+                        if (colcompcnt == 4) {
+                            *this->colData.AsAt<BYTE>(cntCol++) = static_cast<BYTE>(255.0f * (
+                                *texDat.AsAt<float>(idx * stride + 12) * w + *texDat.AsAt<float>((idx + 1) * stride + 12) * v));
+                        }
                     }
                 }
 
@@ -222,8 +238,12 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
             cntCol = 0;
             for (unsigned int i = 0; i < inCall->GetParticleListCount(); i++) {
                 if (inCall->AccessParticles(i).GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-                    inCall->AccessParticles(i).SetColourData(MultiParticleDataCall::Particles::COLDATA_UINT8_RGB, this->colData.At(cntCol));
-                    cntCol += 3 * static_cast<SIZE_T>(inCall->AccessParticles(i).GetCount());
+                    inCall->AccessParticles(i).SetColourData(
+                        (colcompcnt == 3)
+                        ? MultiParticleDataCall::Particles::COLDATA_UINT8_RGB
+                        : MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA,
+                        this->colData.At(cntCol));
+                    cntCol += colcompcnt * static_cast<SIZE_T>(inCall->AccessParticles(i).GetCount());
                 }
             }
 

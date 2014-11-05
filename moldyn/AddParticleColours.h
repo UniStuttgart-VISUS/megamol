@@ -18,6 +18,7 @@
 #include "param/ParamSlot.h"
 #include "MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
+#include "view/CallGetTransferFunction.h"
 
 
 namespace megamol {
@@ -147,6 +148,9 @@ namespace moldyn {
 
         /** The generated colour data */
         vislib::RawStorage colData;
+
+        /** The colour data format */
+        view::CallGetTransferFunction::TextureFormat colFormat;
 
         /** The update hash */
         vislib::RawStorage updateHash;
