@@ -35,7 +35,7 @@ namespace mpi {
      * use MpiCall/MpiProvider, it must manually call MPI_Comm_split() on
      * MPI_COMM_WORLD.
      */
-    class MpiCall : public Call {
+    class MEGAMOLCORE_API MpiCall : public Call {
 
     public:
 

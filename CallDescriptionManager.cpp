@@ -35,6 +35,7 @@
 #include "misc/QRCodeDataCall.h"
 #include "misc/CalloutImageCall.h"
 #include "view/Call6DofInteraction.h"
+#include "cluster/mpi/MpiCall.h"
 
 using namespace megamol::core;
 
@@ -88,9 +89,10 @@ void CallDescriptionManager::registerObjects(CallDescriptionManager *instance) {
         instance->registerAutoDescription<view::CallUpdateDirect3D>();
         instance->registerAutoDescription<view::CallCamParams>();
         instance->registerAutoDescription<view::CallCamParamSync>();
-		instance->registerAutoDescription<misc::QRCodeDataCall>();
-		instance->registerAutoDescription<misc::CalloutImageCall>();
-		instance->registerAutoDescription<view::Call6DofInteraction>();
+        instance->registerAutoDescription<misc::QRCodeDataCall>();
+        instance->registerAutoDescription<misc::CalloutImageCall>();
+        instance->registerAutoDescription<view::Call6DofInteraction>();
+        instance->registerAutoDescription<cluster::mpi::MpiCall>();
     //}
     //return instance;
 }
