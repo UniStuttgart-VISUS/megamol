@@ -127,10 +127,14 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
                 cntCol += cnt;
                 uhWriter.Write(part.GetMinColourIndexValue());
                 uhWriter.Write(part.GetMaxColourIndexValue());
-                const float *cd = static_cast<const float*>(part.GetColourData());
-                uhWriter.Write(cd[0]);
-                uhWriter.Write(cd[(cnt - 1) / 2]);
-                uhWriter.Write(cd[cnt - 1]);
+
+                const unsigned char *cd = static_cast<const unsigned char*>(part.GetColourData());
+                unsigned int stride = std::max<unsigned int>(part.GetColourDataStride(), sizeof(float));
+                unsigned int i2 = (cnt - 1) / 2;
+                unsigned int i3 = cnt - 1;
+                uhWriter.Write(*reinterpret_cast<const float*>(cd + (0  * stride)));
+                uhWriter.Write(*reinterpret_cast<const float*>(cd + (i2 * stride)));
+                uhWriter.Write(*reinterpret_cast<const float*>(cd + (i3 * stride)));
             }
         }
 
@@ -199,8 +203,12 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
                     MultiParticleDataCall::Particles &parts = outCall->AccessParticles(i);
                     if (parts.GetColourDataType() != MultiParticleDataCall::Particles::COLDATA_FLOAT_I) continue;
                     const float *values = static_cast<const float*>(parts.GetColourData());
+                    unsigned int stride = std::max<unsigned int>(parts.GetColourDataStride(), sizeof(float));
+
+
                     for (UINT64 j = 0; j < parts.GetCount(); j++) {
-                        float v = (values[j] - parts.GetMinColourIndexValue()) / (parts.GetMaxColourIndexValue() - parts.GetMinColourIndexValue());
+                        float v = (*values - parts.GetMinColourIndexValue()) / (parts.GetMaxColourIndexValue() - parts.GetMinColourIndexValue());
+                        values = reinterpret_cast<const float*>(reinterpret_cast<const unsigned char*>(values) + stride);
                         if (v < 0.0f) v = 0.0f;
                         else if (v > 1.0f) v = 1.0f;
 
