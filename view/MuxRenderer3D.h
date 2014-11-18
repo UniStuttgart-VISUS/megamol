@@ -325,10 +325,11 @@ namespace view {
             ty = ocWS.Bottom() * sy - ocOS.Bottom();
             tz = ocWS.Back() * sz - ocOS.Back();
 
+            // We clamp the time to the range of the individual renderers
+            int octfc = oc->TimeFramesCount();
             *oc = *cr3d;
-            oc->SetTime(cr3d->Time()/* This is problematic for modules which return a wrong TFCnt
-                * (float)(oc->TimeFramesCount() - 1)
-                / (float)(vislib::math::Max(1U, this->frameCnt - 1))*/);
+            oc->SetTime(vislib::math::Min<float>(cr3d->Time(), static_cast<float>(octfc - 1)));
+
             camParams->CopyFrom(cr3d->GetCameraParameters());
             oc->SetCameraParameters(camParams);
             vislib::math::Point<float, 3> p = camParams->Position();
