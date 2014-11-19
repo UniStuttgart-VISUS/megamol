@@ -580,7 +580,7 @@ megamol::core::CoreInstance::FindJobDescription(const char *name) {
 void megamol::core::CoreInstance::RequestAllInstantiations() {
     auto itervd = this->projViewDescs.GetIterator();
     while (itervd.HasNext()) {
-        int cnt = this->pendingViewInstRequests.Count();
+        int cnt = static_cast<int>(this->pendingViewInstRequests.Count());
         std::string s = std::to_string(cnt);
         vislib::StringA name = "v";
         name.Append(s.c_str());
@@ -592,7 +592,7 @@ void megamol::core::CoreInstance::RequestAllInstantiations() {
     }
     auto iterjd = this->projJobDescs.GetIterator();
     while (iterjd.HasNext()) {
-        int cnt = this->pendingJobInstRequests.Count();
+        int cnt = static_cast<int>(this->pendingJobInstRequests.Count());
         std::string s = std::to_string(cnt);
         vislib::StringA name = "j";
         name.Append(s.c_str());

@@ -820,50 +820,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CustomBuildStep>
-    <CustomBuild Include="api\gencs.pl">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating MegaMolCore.gen.cs ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating MegaMolCore.gen.cs ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating MegaMolCore.gen.cs ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating MegaMolCore.gen.cs ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)MegaMolCore.h" "%(RootDir)%(Directory)MegaMolCore.gen.cs"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.gen.cs;%(Outputs)</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="api\geninl.pl">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generating MegaMolCore.inl ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating MegaMolCore.inl ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generating MegaMolCore.inl ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating MegaMolCore.inl ...</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl "%(FullPath)" "%(RootDir)%(Directory)\MegaMolCore.h" "%(RootDir)%(Directory)\MegaMolCore.inl"
-</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.h;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)\MegaMolCore.inl;%(Outputs)</Outputs>
-    </CustomBuild>
     <CustomBuildStep Include="VersionInfo.pl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -920,19 +876,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="Shaders\sphereEx\header.glgs" />
     <None Include="Shaders\sphereEx\header.glvs" />
     <None Include="Shaders\sphereEx\params_upload.glvs" />
-    <None Include="api\MegaMolCore.inl" />
-    <CustomBuildStep Include="api\MegaMolCore.cs">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CustomBuildStep>
-    <CustomBuildStep Include="api\MegaMolCore.gen.cs">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CustomBuildStep>
     <None Include="cluster\HelvUC.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

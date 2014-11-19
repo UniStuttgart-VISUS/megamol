@@ -79,7 +79,7 @@ void view::special::AnaglyphStereoView::Resize(unsigned int width, unsigned int 
 void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& context) {
     CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return;
-    crv->SetTime(context.Time);
+    crv->SetTime(static_cast<float>(context.Time));
     crv->SetInstanceTime(context.InstanceTime);
     crv->SetGpuAffinity(context.GpuAffinity);
 

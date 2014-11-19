@@ -86,7 +86,7 @@ vislib::Array<unsigned int> moldyn::ParticleListFilter::getSelectedLists() {
         if (t.IsEmpty()) {
             continue;
         }
-        result.Add(vislib::CharTraitsA::ParseInt64(t));
+        result.Add(static_cast<unsigned int>(vislib::CharTraitsA::ParseInt64(t)));
     }
     return result;
 }

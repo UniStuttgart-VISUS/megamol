@@ -252,7 +252,7 @@ bool moldyn::DynDensityGradientEstimator::createVolumeCPU(
 
 #pragma omp parallel for
     for (j = 0; j < sx * sy * sz; j++ ) {
-        for ( unsigned int i = 1; i < omp_get_max_threads(); i++) {
+        for (int i = 1; i < omp_get_max_threads(); i++) {
             vol[0][j] += vol[i][j];
         }
     }

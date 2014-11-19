@@ -1600,9 +1600,6 @@
     <None Include="Shaders\sphereEx\params_upload.glvs">
       <Filter>Shader Files\sphereEx</Filter>
     </None>
-    <None Include="api\MegaMolCore.inl">
-      <Filter>api\Header Files</Filter>
-    </None>
     <None Include="cluster\HelvUC.inc">
       <Filter>cluster\Source Files</Filter>
     </None>
@@ -1644,19 +1641,5 @@
     <CustomBuildStep Include="Makefile">
       <Filter>Build Files</Filter>
     </CustomBuildStep>
-    <CustomBuildStep Include="api\MegaMolCore.cs">
-      <Filter>api\Source Files</Filter>
-    </CustomBuildStep>
-    <CustomBuildStep Include="api\MegaMolCore.gen.cs">
-      <Filter>api\Source Files</Filter>
-    </CustomBuildStep>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="api\gencs.pl">
-      <Filter>Script Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="api\geninl.pl">
-      <Filter>Script Files</Filter>
-    </CustomBuild>
   </ItemGroup>
 </Project>

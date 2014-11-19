@@ -16,7 +16,6 @@
 #include "CoreInstance.h"
 #include "JobDescription.h"
 #include "JobInstance.h"
-#include "api/MegaMolCore.inl"
 #include "ObjectDescription.h"
 #include "ObjectDescriptionManager.h"
 #include "versioninfo.h"

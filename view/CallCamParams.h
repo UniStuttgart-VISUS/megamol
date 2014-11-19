@@ -132,8 +132,14 @@ protected:
 
 private:
 
+#ifdef _WIN32
+#pragma warning(disable:4251)
+#endif /* _WIN32 */
     /// The camera parameters
     vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
+#ifdef _WIN32
+#pragma warning(default:4251)
+#endif /* _WIN32 */
 
 };
 

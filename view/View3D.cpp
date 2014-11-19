@@ -536,7 +536,7 @@ void view::View3D::ResetView(void) {
     double halfFovX = (static_cast<double>(dim.Width()) * static_cast<double>(this->cam.Parameters()->HalfApertureAngle())) / static_cast<double>(dim.Height());
     double distX = static_cast<double>(this->bboxs.WorldSpaceBBox().Width()) / (2.0 * tan(halfFovX));
     double distY = static_cast<double>(this->bboxs.WorldSpaceBBox().Height()) / (2.0 * tan(static_cast<double>(this->cam.Parameters()->HalfApertureAngle())));
-    dist = (distX > distY) ? distX : distY;
+    dist = static_cast<float>((distX > distY) ? distX : distY);
     dist = dist + (this->bboxs.WorldSpaceBBox().Depth() / 2.0f);
     SceneSpacePoint3D bbc = this->bboxs.WorldSpaceBBox().CalcCenter();
 

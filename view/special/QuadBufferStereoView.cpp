@@ -36,7 +36,7 @@ view::special::QuadBufferStereoView::~QuadBufferStereoView(void) {
 void view::special::QuadBufferStereoView::Render(const mmcRenderViewContext& context) {
     CallRenderView *crv = this->getCallRenderView();
     if (crv == NULL) return;
-    crv->SetTime(context.Time);
+    crv->SetTime(static_cast<float>(context.Time));
     crv->SetInstanceTime(context.InstanceTime);
     crv->SetGpuAffinity(context.GpuAffinity);
 

@@ -244,7 +244,7 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 	if(count != glVAO.Count())
 	{
 		glDeleteBuffersARB(glVB.Count(), glVB.PeekElements());
-		for (int i = 0; i < count; ++i)
+		for (unsigned int i = 0; i < count; ++i)
 		{
 			GLuint buffer;
 			glGenBuffersARB(1, &buffer);
@@ -252,7 +252,7 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 		}
 
 		glDeleteBuffersARB(glCB.Count(), glCB.PeekElements());
-		for (int i = 0; i < count; ++i)
+		for (unsigned int i = 0; i < count; ++i)
 		{
 			GLuint buffer;
 			glGenBuffersARB(1, &buffer);
@@ -260,7 +260,7 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 		}
 
 		glDeleteVertexArrays(glVAO.Count(), glVAO.PeekElements());
-		for(int i = 0; i < count; ++i)
+		for(unsigned int i = 0; i < count; ++i)
 		{
 			GLuint buffer;
 			glGenVertexArrays(1, &buffer);
@@ -284,7 +284,7 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 	float particleRadius = 0.0f;
 	SimpleSphericalParticles::ClusterInfos *clusterInfos;
 	count = (inMpdc->GetParticleListCount() < 1) ? inMpdc->GetParticleListCount() : 1;
-	for(int i = 0; i < count; ++i)
+	for(unsigned int i = 0; i < count; ++i)
 	{
 		MultiParticleDataCall::Particles &partsIn = inMpdc->AccessParticles(i);
 		MultiParticleDataCall::Particles &partsOut = outMpdc->AccessParticles(i);
@@ -348,11 +348,11 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 			partsOut.SetVAOs(glVAO[i], glVB[i], glCB[i]);
 			glBindVertexArray(vao);
 			glBindBufferARB(GL_ARRAY_BUFFER, vb);
-			glBufferDataARB(GL_ARRAY_BUFFER, partsOut.GetVertexDataStride()*partsOut.GetCount(), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
+			glBufferDataARB(GL_ARRAY_BUFFER, static_cast<GLsizeiptrARB>(partsOut.GetVertexDataStride()*partsOut.GetCount()), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
 			glBindBufferARB(GL_ARRAY_BUFFER, cb);
-			glBufferDataARB(GL_ARRAY_BUFFER, partsOut.GetColourDataStride()*partsOut.GetCount(), partsIn.GetColourData(), GL_DYNAMIC_DRAW);
+			glBufferDataARB(GL_ARRAY_BUFFER, static_cast<GLsizeiptrARB>(partsOut.GetColourDataStride()*partsOut.GetCount()), partsIn.GetColourData(), GL_DYNAMIC_DRAW);
 			glEnableClientState(GL_COLOR_ARRAY);
 			glColorPointer(4, GL_FLOAT, partsOut.GetColourDataStride(), partsOut.GetColourData());
 			glBindVertexArray(0);
@@ -384,7 +384,7 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 			partsOut.SetVAOs(glVAO[i], glVB[i], glVB[i]);
 			glBindVertexArray(vao);
 			glBindBufferARB(GL_ARRAY_BUFFER, vb);
-			glBufferDataARB(GL_ARRAY_BUFFER, partsOut.GetVertexDataStride()*partsOut.GetCount(), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
+			glBufferDataARB(GL_ARRAY_BUFFER, static_cast<GLsizeiptrARB>(partsOut.GetVertexDataStride()*partsOut.GetCount()), partsIn.GetVertexData(), GL_DYNAMIC_DRAW);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glVertexPointer(3, GL_FLOAT, partsOut.GetVertexDataStride(), partsOut.GetVertexData());
 //			glEnableClientState(GL_COLOR_ARRAY);
@@ -410,7 +410,7 @@ bool moldyn::ParticleWorker::getDataCallback(Call& call) {
 			glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 		}
 
-		particleCount += partsOut.GetCount();
+		particleCount += static_cast<unsigned int>(partsOut.GetCount());
 		particleStride = partsOut.GetVertexDataStride();
 		particleRadius = partsOut.GetGlobalRadius();
 	}
