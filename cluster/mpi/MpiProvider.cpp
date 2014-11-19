@@ -117,7 +117,6 @@ vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
 #ifdef WIN32
     retval = ::GetCommandLineA();
 #else /* _WIN32 */
-    vislib::StringA retval;
     char *arg = nullptr;
     size_t size = 0;
 
