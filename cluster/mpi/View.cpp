@@ -760,15 +760,25 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
             if ((*c)(MpiCall::IDX_PROVIDE_MPI)) {
                 _TRACE_MESSAGING("Got MPI communicator.");
                 this->comm = c->GetComm();
+            } else {
+                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                    _T("retrieve MPI communicator for the MPI-based view ")
+                    _T("from the registered provider module."));
             }
 
         } else {
             /* Legacy implementation: do it directly and remember that. */
 #ifdef _WIN32
+            vislib::sys::Log::DefaultLog.WriteWarn(_T("Performing legacy MPI ")
+                _T("initialisation in module %hs, because no MpiProvider was ")
+                _T("registered. Please change your project file as this ")
+                _T("legacy behaviour might be removed in future versions."),
+                View::ClassName());
             vislib::sys::CmdLineProviderA cmdLine(::GetCommandLineA());
             int argc = cmdLine.ArgC();
             char **argv = cmdLine.ArgV();
             ::MPI_Init(&argc, &argv);
+            this->comm = MPI_COMM_WORLD;
             this->isMpiInitialised = retval;
             vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI was initialised ")
                 _T("by module %hs."), View::ClassName());
@@ -779,12 +789,16 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
 #endif /* _WIN32 */
         } /* end if (c != nullptr) */
 
-        ::MPI_Comm_rank(this->comm, &this->mpiRank);
-        ::MPI_Comm_size(this->comm, &this->mpiSize);
-        vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
-            _T("of %d."),
-            vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
-            this->mpiRank, this->mpiSize);
+        if (this->comm != MPI_COMM_NULL) {
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+                _T("retrieving communicator properties ..."));
+            ::MPI_Comm_rank(this->comm, &this->mpiRank);
+            ::MPI_Comm_size(this->comm, &this->mpiSize);
+            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+                _T("of %d."),
+                vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(),
+                this->mpiRank, this->mpiSize);
+        } /* end if (this->comm != MPI_COMM_NULL) */
     } /* end if (this->comm == MPI_COMM_NULL) */
 
     /* Determine success of the whole operation. */

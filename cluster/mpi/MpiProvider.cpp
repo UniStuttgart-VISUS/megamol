@@ -41,7 +41,7 @@ megamol::core::cluster::mpi::MpiProvider::MpiProvider(void) : Base(),
     this->comm = MPI_COMM_NULL;
 #endif /* WITH_MPI */
 
-    this->callProvideMpi.SetCallback(MpiProvider::ClassName(),
+    this->callProvideMpi.SetCallback(MpiCall::ClassName(),
         MpiCall::FunctionName(MpiCall::IDX_PROVIDE_MPI),
         &MpiProvider::OnCallProvideMpi);
     this->MakeSlotAvailable(&this->callProvideMpi);
