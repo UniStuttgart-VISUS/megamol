@@ -12,6 +12,7 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
 #include "vislib/memutils.h"
+#include "TransferFunctionQuery.h"
 
 
 namespace megamol {
@@ -59,6 +60,11 @@ namespace datatools {
             core::moldyn::MultiParticleDataCall::Unlocker *inner;
         };
 
+        enum class DensityAlgorithmType : int {
+            ANN = 0,
+            grid = 1
+        };
+
         virtual bool create(void);
         virtual void release(void);
         bool getDataCallback(core::Call& caller);
@@ -68,7 +74,6 @@ namespace datatools {
 
         core::CalleeSlot putDataSlot;
         core::CallerSlot getDataSlot;
-        core::CallerSlot getTFSlot;
         core::param::ParamSlot rebuildButtonSlot;
         core::param::ParamSlot densityRadiusSlot;
         core::param::ParamSlot densityMinCountSlot;
@@ -84,9 +89,10 @@ namespace datatools {
         unsigned int lastFrame;
         size_t lastHash;
         vislib::RawStorage colData;
-
+        core::param::ParamSlot densitAlgorithmSlot;
+        TransferFunctionQuery tfQuery;
+        core::param::ParamSlot densityAutoComputeCountRangeSlot;
     };
-
 
 }
 }
