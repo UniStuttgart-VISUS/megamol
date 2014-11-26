@@ -64,6 +64,9 @@
     <ClCompile Include="ParticleDensityOpacityModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ForceCubicCBoxModule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mmstd.datatools.h">
@@ -106,6 +109,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ParticleDensityOpacityModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ForceCubicCBoxModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

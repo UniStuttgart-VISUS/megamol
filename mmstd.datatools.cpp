@@ -21,6 +21,7 @@
 #include "ParticleRelaxationModule.h"
 #include "ParticleListSelector.h"
 #include "ParticleDensityOpacityModule.h"
+#include "ForceCubicCBoxModule.h"
 
 
 /*
@@ -64,7 +65,7 @@ MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 9;
+    return 10;
 }
 
 
@@ -82,6 +83,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     case 6: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
     case 7: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListSelector>();
     case 8: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleDensityOpacityModule>();
+    case 9: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
     }
     return nullptr;
 }
