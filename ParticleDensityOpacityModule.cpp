@@ -187,6 +187,7 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallbac
                     this->colData.At(cnt * sizeof(float) * 4), sizeof(float) * 4);
                 break;
             case MapMode::Luminance:
+                p.SetColourMapIndexValues(0.0f, 1.0f);
                 p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
                     this->colData.At(cnt * sizeof(float)));
                 break;
