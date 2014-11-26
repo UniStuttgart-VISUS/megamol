@@ -65,6 +65,13 @@ namespace datatools {
             grid = 1
         };
 
+        enum class MapMode : int {
+            AlphaOverwrite = 0,
+            ColorRainbow = 1,
+            ColorRainbowAlpha = 2,
+            Luminance = 3
+        };
+
         virtual bool create(void);
         virtual void release(void);
         bool getDataCallback(core::Call& caller);
@@ -84,8 +91,7 @@ namespace datatools {
         core::param::ParamSlot cyclBoundXSlot;
         core::param::ParamSlot cyclBoundYSlot;
         core::param::ParamSlot cyclBoundZSlot;
-        core::param::ParamSlot mapDensityToAlphaSlot;
-        core::param::ParamSlot mapDensityToColorSlot;
+        core::param::ParamSlot mapModeSlot;
         unsigned int lastFrame;
         size_t lastHash;
         vislib::RawStorage colData;

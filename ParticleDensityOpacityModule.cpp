@@ -26,8 +26,7 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
         cyclBoundXSlot("periodicBoundary::x", "Dis-/Enables periodic boundary conditions in x direction"),
         cyclBoundYSlot("periodicBoundary::y", "Dis-/Enables periodic boundary conditions in y direction"),
         cyclBoundZSlot("periodicBoundary::z", "Dis-/Enables periodic boundary conditions in z direction"),
-        mapDensityToAlphaSlot("opacity::mapAlpha", "Maps the opacity to the color alpha"),
-        mapDensityToColorSlot("opacity::mapColor", "Maps the opacity to the color"),
+        mapModeSlot("opacity::mapMode", "Mode to map the density to the data"),
         lastFrame(0), lastHash(0), colData(),
         densitAlgorithmSlot("density::algorithm", "The density computation algorithm to use"),
         tfQuery(),
@@ -72,11 +71,13 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
     this->cyclBoundZSlot.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->cyclBoundZSlot);
 
-    this->mapDensityToAlphaSlot.SetParameter(new core::param::BoolParam(true));
-    this->MakeSlotAvailable(&this->mapDensityToAlphaSlot);
-
-    this->mapDensityToColorSlot.SetParameter(new core::param::BoolParam(false));
-    this->MakeSlotAvailable(&this->mapDensityToColorSlot);
+    core::param::EnumParam *mapModeParam = new core::param::EnumParam(static_cast<int>(MapMode::Luminance));
+    mapModeParam->SetTypePair(static_cast<int>(MapMode::AlphaOverwrite), "AlphaOverwrite");
+    mapModeParam->SetTypePair(static_cast<int>(MapMode::ColorRainbow), "ColorRainbow");
+    mapModeParam->SetTypePair(static_cast<int>(MapMode::ColorRainbowAlpha), "ColorRainbowAlpha");
+    mapModeParam->SetTypePair(static_cast<int>(MapMode::Luminance), "Luminance");
+    this->mapModeSlot.SetParameter(mapModeParam);
+    this->MakeSlotAvailable(&this->mapModeSlot);
 
     core::param::EnumParam *dAlg = new core::param::EnumParam(static_cast<int>(DensityAlgorithmType::grid));
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::ANN), "ANN");
@@ -156,9 +157,8 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallbac
             this->cyclBoundZSlot.ResetDirty();
             update_data = true;
         }
-        if (this->mapDensityToAlphaSlot.IsDirty() || this->mapDensityToColorSlot.IsDirty()) {
-            this->mapDensityToAlphaSlot.ResetDirty();
-            this->mapDensityToColorSlot.ResetDirty();
+        if (this->mapModeSlot.IsDirty()) {
+            this->mapModeSlot.ResetDirty();
             update_data = true;
         }
 
@@ -176,8 +176,22 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallbac
             core::moldyn::SimpleSphericalParticles &p = inCall->AccessParticles(pli);
             if ((p.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
                 || (p.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
-            p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA,
-                this->colData.At(cnt * sizeof(float) * 4));
+            switch (static_cast<MapMode>(this->mapModeSlot.Param<core::param::EnumParam>()->Value())) {
+            case MapMode::AlphaOverwrite: // fall through
+            case MapMode::ColorRainbowAlpha:
+                p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA,
+                    this->colData.At(cnt * sizeof(float) * 4));
+                break;
+            case MapMode::ColorRainbow:
+                p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB,
+                    this->colData.At(cnt * sizeof(float) * 4), sizeof(float) * 4);
+                break;
+            case MapMode::Luminance:
+                p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
+                    this->colData.At(cnt * sizeof(float)));
+                break;
+            }
+
             cnt += static_cast<size_t>(p.GetCount());
         }
 
@@ -223,73 +237,79 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
         all_cnt += static_cast<size_t>(dat->AccessParticles(pli).GetCount());
     }
 
-    this->colData.EnforceSize(all_cnt * sizeof(float) * 4); // always store COLDATA_FLOAT_RGBA
-    this->tfQuery.Clear();
-    // copy color values
+    MapMode mmode = static_cast<MapMode>(this->mapModeSlot.Param<core::param::EnumParam>()->Value());
+    bool use_rgba = (mmode != MapMode::Luminance);
+    int col_step = (use_rgba ? 4 : 1);
+    int col_off = (use_rgba ? 3 : 0);
+    this->colData.EnforceSize(all_cnt * sizeof(float) * col_step);
+
     size_t ci = 0;
     float *f = this->colData.As<float>();
-    for (unsigned int pli = 0; pli < plc; pli++) {
-        core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
-        if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-            || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
-        size_t col_stride = 0;
-        bool bytes = true;
-        bool alpha = false;
-        const uint8_t *pld = static_cast<const uint8_t*>(pl.GetColourData());
+    if (use_rgba && (mmode != MapMode::ColorRainbowAlpha)) {
+        // copy color values
+        this->tfQuery.Clear();
+        for (unsigned int pli = 0; pli < plc; pli++) {
+            core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
+            if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
+                || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+            size_t col_stride = 0;
+            bool bytes = true;
+            bool alpha = false;
+            const uint8_t *pld = static_cast<const uint8_t*>(pl.GetColourData());
 
-        switch (pl.GetColourDataType()) {
-        case core::moldyn::SimpleSphericalParticles::COLDATA_NONE: { //< use global colour
-            float r = static_cast<float>(pl.GetGlobalColour()[0]) / 255.0f;
-            float g = static_cast<float>(pl.GetGlobalColour()[1]) / 255.0f;
-            float b = static_cast<float>(pl.GetGlobalColour()[2]) / 255.0f;
-            float a = static_cast<float>(pl.GetGlobalColour()[3]) / 255.0f;
-            for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++) {
-                f[ci * 4 + 0] = r;
-                f[ci * 4 + 1] = g;
-                f[ci * 4 + 2] = b;
-                f[ci * 4 + 3] = a;
-            }
-        } continue;
-        case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB: bytes = true; col_stride = 3; break;
-        case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA: bytes = true; alpha = true; col_stride = 4; break;
-        case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB: bytes = false; col_stride = 12; break;
-        case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA: bytes = false; alpha = true; col_stride = 16; break;
-        case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I: { //< single float value to be mapped by a transfer function
-            col_stride = (4 < pl.GetColourDataStride()) ? pl.GetColourDataStride() : 4;
-            float cvmin = pl.GetMinColourIndexValue();
-            float cvrng = pl.GetMaxColourIndexValue() - cvmin;
-            if (cvrng <= 0.0f) cvrng = 0.0f; else cvrng = 1.0f / cvrng;
-            for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++, pld += col_stride) {
-                const float *plf = reinterpret_cast<const float*>(pld);
-                float c = (*plf - cvmin) * cvrng; // color value in [0..1]
-                this->tfQuery.Query(f + (ci * 4), c);
-            }
-        } continue;
-        }
-        if (col_stride < pl.GetColourDataStride()) col_stride = pl.GetColourDataStride();
-        if (bytes) {
-            for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++, pld += col_stride) {
-                const uint8_t *plb = reinterpret_cast<const uint8_t*>(pld);
-                f[ci * 4 + 0] = static_cast<float>(plb[0]) / 255.0f;
-                f[ci * 4 + 1] = static_cast<float>(plb[1]) / 255.0f;
-                f[ci * 4 + 2] = static_cast<float>(plb[2]) / 255.0f;
-                if (alpha) {
-                    f[ci * 4 + 3] = static_cast<float>(plb[3]) / 255.0f;
+            switch (pl.GetColourDataType()) {
+            case core::moldyn::SimpleSphericalParticles::COLDATA_NONE: { //< use global colour
+                float r = static_cast<float>(pl.GetGlobalColour()[0]) / 255.0f;
+                float g = static_cast<float>(pl.GetGlobalColour()[1]) / 255.0f;
+                float b = static_cast<float>(pl.GetGlobalColour()[2]) / 255.0f;
+                float a = static_cast<float>(pl.GetGlobalColour()[3]) / 255.0f;
+                for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++) {
+                    f[ci * 4 + 0] = r;
+                    f[ci * 4 + 1] = g;
+                    f[ci * 4 + 2] = b;
+                    f[ci * 4 + 3] = a;
                 }
+            } continue;
+            case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGB: bytes = true; col_stride = 3; break;
+            case core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA: bytes = true; alpha = true; col_stride = 4; break;
+            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB: bytes = false; col_stride = 12; break;
+            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA: bytes = false; alpha = true; col_stride = 16; break;
+            case core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I: { //< single float value to be mapped by a transfer function
+                col_stride = (4 < pl.GetColourDataStride()) ? pl.GetColourDataStride() : 4;
+                float cvmin = pl.GetMinColourIndexValue();
+                float cvrng = pl.GetMaxColourIndexValue() - cvmin;
+                if (cvrng <= 0.0f) cvrng = 0.0f; else cvrng = 1.0f / cvrng;
+                for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++, pld += col_stride) {
+                    const float *plf = reinterpret_cast<const float*>(pld);
+                    float c = (*plf - cvmin) * cvrng; // color value in [0..1]
+                    this->tfQuery.Query(f + (ci * 4), c);
+                }
+            } continue;
             }
-        } else {
-            for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++, pld += col_stride) {
-                const float *plf = reinterpret_cast<const float*>(pld);
-                f[ci * 4 + 0] = plf[0];
-                f[ci * 4 + 1] = plf[1];
-                f[ci * 4 + 2] = plf[2];
-                if (alpha) {
-                    f[ci * 4 + 3] = plf[3];
+            if (col_stride < pl.GetColourDataStride()) col_stride = pl.GetColourDataStride();
+            if (bytes) {
+                for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++, pld += col_stride) {
+                    const uint8_t *plb = reinterpret_cast<const uint8_t*>(pld);
+                    f[ci * 4 + 0] = static_cast<float>(plb[0]) / 255.0f;
+                    f[ci * 4 + 1] = static_cast<float>(plb[1]) / 255.0f;
+                    f[ci * 4 + 2] = static_cast<float>(plb[2]) / 255.0f;
+                    if (alpha) {
+                        f[ci * 4 + 3] = static_cast<float>(plb[3]) / 255.0f;
+                    }
+                }
+            } else {
+                for (uint64_t pi = 0; pi < pl.GetCount(); pi++, ci++, pld += col_stride) {
+                    const float *plf = reinterpret_cast<const float*>(pld);
+                    f[ci * 4 + 0] = plf[0];
+                    f[ci * 4 + 1] = plf[1];
+                    f[ci * 4 + 2] = plf[2];
+                    if (alpha) {
+                        f[ci * 4 + 3] = plf[3];
+                    }
                 }
             }
         }
     }
-
 
     int minN, maxN;
     if (!autoScale) {
@@ -341,7 +361,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
         f = this->colData.As<float>();
         for (size_t i = 0; i < all_cnt; i++) {
             int n = kdTree->annkFRSearch(dataPts[i], rad_sq, 0);
-            f[i * 4 + 3] = static_cast<float>(n);
+            f[i * col_step + col_off] = static_cast<float>(n);
         }
 
         delete kdTree;
@@ -517,7 +537,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
                     }
                 }
 
-                f[idx * 4 + 3] = static_cast<float>(n_cnt);
+                f[idx * col_step + col_off] = static_cast<float>(n_cnt);
             }
         }
 
@@ -529,7 +549,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
 
     if (autoScale) {
         for (size_t i = 0; i < all_cnt; i++) {
-            int n = static_cast<int>(f[i * 4 + 3]);
+            int n = static_cast<int>(f[i * col_step + col_off]);
             if (i == 0) minN = maxN = n;
             else {
                 if (n < minN) minN = n;
@@ -544,14 +564,14 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
     // printf("\n\tValue Range[%d, %d]\n\n", minN, maxN);
 
     for (size_t i = 0; i < all_cnt; i++) {
-        f[i * 4 + 3] = (f[i * 4 + 3] - static_cast<float>(minN)) / static_cast<float>(maxN - minN);
-        if (f[i * 4 + 3] < 0.0f) f[i * 4 + 3] = 0.0f;
-        if (f[i * 4 + 3] > 1.0f) f[i * 4 + 3] = 1.0f;
+        f[i * col_step + col_off] = (f[i * col_step + col_off] - static_cast<float>(minN)) / static_cast<float>(maxN - minN);
+        if (f[i * col_step + col_off] < 0.0f) f[i * col_step + col_off] = 0.0f;
+        if (f[i * col_step + col_off] > 1.0f) f[i * col_step + col_off] = 1.0f;
     }
 
     // for test purposes, map the opacity to color:
-    const bool map_opacity_to_color = this->mapDensityToColorSlot.Param<core::param::BoolParam>()->Value();
-    const bool remove_opacity = !this->mapDensityToAlphaSlot.Param<core::param::BoolParam>()->Value();
+    const bool map_opacity_to_color = ((mmode == MapMode::ColorRainbow) || (mmode == MapMode::ColorRainbowAlpha));
+    const bool remove_opacity = (mmode == MapMode::ColorRainbow);
     if (map_opacity_to_color) {
         float *f = this->colData.As<float>();
         const vislib::graphics::ColourRGBAu8 c[5] = {
@@ -562,9 +582,9 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
             vislib::graphics::ColourRGBAu8(255, 0, 0, 255) };
         for (size_t i = 0; i < all_cnt; i++) {
 
-            float a = f[i * 4 + 3];
+            float a = f[i * col_step + col_off];
 
-            if (remove_opacity) f[i * 4 + 3] = 1.0;
+            if (remove_opacity) f[i * col_step + col_off] = 1.0;
 
             a *= 4;
             vislib::graphics::ColourRGBAu8 pc;
@@ -580,7 +600,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
         }
     } else if (remove_opacity) {
         for (size_t i = 0; i < all_cnt; i++) {
-            f[i * 4 + 3] = 1.0;
+            f[i * col_step + col_off] = 1.0;
         }
     }
 
