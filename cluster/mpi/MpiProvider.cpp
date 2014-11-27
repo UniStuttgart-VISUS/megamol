@@ -70,7 +70,7 @@ bool megamol::core::cluster::mpi::MpiProvider::create(void) {
 bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
 #ifdef WITH_MPI
     try {
-        auto c = dynamic_cast<MpiCall&>(call);
+        auto& c = dynamic_cast<MpiCall&>(call);
         ASSERT(!c.GetIsInitialising());
 
         if (this->comm == MPI_COMM_NULL) {
@@ -144,7 +144,7 @@ bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
     using vislib::sys::Log;
 
 #ifdef WITH_MPI
-    int isInitialised = false;
+    int isInitialised = 0;
     int rank = 0;
 
     ::MPI_Initialized(&isInitialised);
