@@ -62,14 +62,16 @@ namespace datatools {
 
         enum class DensityAlgorithmType : int {
             ANN = 0,
-            grid = 1
+            grid = 1,
+            listSepGrid = 2
         };
 
         enum class MapMode : int {
             AlphaOverwrite = 0,
             ColorRainbow = 1,
             ColorRainbowAlpha = 2,
-            Luminance = 3
+            Luminance = 3,
+            AlphaInvertOverwrite = 4,
         };
 
         virtual bool create(void);

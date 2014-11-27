@@ -73,6 +73,7 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
 
     core::param::EnumParam *mapModeParam = new core::param::EnumParam(static_cast<int>(MapMode::Luminance));
     mapModeParam->SetTypePair(static_cast<int>(MapMode::AlphaOverwrite), "AlphaOverwrite");
+    mapModeParam->SetTypePair(static_cast<int>(MapMode::AlphaInvertOverwrite), "AlphaInvertOverwrite");
     mapModeParam->SetTypePair(static_cast<int>(MapMode::ColorRainbow), "ColorRainbow");
     mapModeParam->SetTypePair(static_cast<int>(MapMode::ColorRainbowAlpha), "ColorRainbowAlpha");
     mapModeParam->SetTypePair(static_cast<int>(MapMode::Luminance), "Luminance");
@@ -82,6 +83,7 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
     core::param::EnumParam *dAlg = new core::param::EnumParam(static_cast<int>(DensityAlgorithmType::grid));
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::ANN), "ANN");
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::grid), "grid");
+    dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::listSepGrid), "listSepGrid");
     this->densitAlgorithmSlot.SetParameter(dAlg);
     this->MakeSlotAvailable(&this->densitAlgorithmSlot);
 
@@ -178,6 +180,7 @@ bool megamol::stdplugin::datatools::ParticleDensityOpacityModule::getDataCallbac
                 || (p.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
             switch (static_cast<MapMode>(this->mapModeSlot.Param<core::param::EnumParam>()->Value())) {
             case MapMode::AlphaOverwrite: // fall through
+            case MapMode::AlphaInvertOverwrite: // fall through
             case MapMode::ColorRainbowAlpha:
                 p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA,
                     this->colData.At(cnt * sizeof(float) * 4));
@@ -370,7 +373,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
         delete[] dataPts;
         delete[] dataPtsData;
 
-    } else {
+    } else if (dAlg == DensityAlgorithmType::grid) {
         // use simple grid based implementation
         //double rad_sq = static_cast<double>(rad) * static_cast<double>(rad);
         float rad_sq = rad * rad;
@@ -480,7 +483,6 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
             const int pi_cnt = static_cast<int>(pl.GetCount());
             #pragma omp parallel for
             for (int pi = 0; pi < pi_cnt; pi++) {
-//            for (uint64_t pi = 0; pi < pl.GetCount(); pi++, vert += vert_stride) {
                 size_t idx = static_cast<size_t>(pi + ci);
                 const float *v = reinterpret_cast<const float*>(vert + vert_stride * pi);
                 unsigned int x = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[0] - box.Left()) / rad, 0.0f, static_cast<float>(dim_x - 1)));
@@ -527,9 +529,6 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
                                 dy *= dy;
                                 dz *= dz;
                                 float sqd = dx + dy + dz;
-                                //double sqd = (static_cast<double>(pf[0] - v[0]) * static_cast<double>(pf[0] - v[0]))
-                                //           + (static_cast<double>(pf[1] - v[1]) * static_cast<double>(pf[1] - v[1]))
-                                //           + (static_cast<double>(pf[2] - v[2]) * static_cast<double>(pf[2] - v[2]));
                                 if (sqd < rad_sq) {
                                     n_cnt++;
                                 }
@@ -540,10 +539,153 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
 
                 f[idx * col_step + col_off] = static_cast<float>(n_cnt);
             }
+            ci += pl.GetCount();
         }
 
         delete[] coords[0];
         delete[] coords;
+        delete[] cnt_grid;
+
+    } else {
+        // density algorithm separated per particle list
+
+        float rad_sq = rad * rad;
+        // count neighbours within 'rad'
+        const vislib::math::Cuboid<float> &box = dat->AccessBoundingBoxes().ObjectSpaceClipBox();
+        unsigned int dim_x = static_cast<unsigned int>(::std::ceil(box.Width() / rad));
+        unsigned int dim_y = static_cast<unsigned int>(::std::ceil(box.Height() / rad));
+        unsigned int dim_z = static_cast<unsigned int>(::std::ceil(box.Depth() / rad));
+        bool cyclX = this->cyclBoundXSlot.Param<core::param::BoolParam>()->Value();
+        bool cyclY = this->cyclBoundYSlot.Param<core::param::BoolParam>()->Value();
+        bool cyclZ = this->cyclBoundZSlot.Param<core::param::BoolParam>()->Value();
+
+        unsigned int *cnt_grid = new unsigned int[dim_x * dim_y * dim_z];
+
+        size_t pli_off = 0;
+        for (unsigned int pli = 0; pli < plc; pli++) {
+            core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
+            if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
+                || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
+            size_t vert_stride = pl.GetVertexDataStride();
+            const uint8_t *vert;
+            switch (pl.GetVertexDataType()) {
+            case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
+                if (vert_stride < 12) vert_stride = 12;
+                break;
+            case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
+                if (vert_stride < 16) vert_stride = 16;
+                break;
+            default: throw std::exception();
+            }
+
+            ::memset(cnt_grid, 0, sizeof(unsigned int) * dim_x * dim_y * dim_z);
+
+            // Access coords[cell][particle][xyz]
+            // coords[0] point to the whole particles access array
+            float const ***coords = new float const **[dim_x * dim_y * dim_z];
+            coords[0] = new float const *[pl.GetCount()];
+
+            // 1. count all particles for each cell
+            ci = 0;
+            vert = static_cast<const uint8_t*>(pl.GetVertexData());
+            for (uint64_t pi = 0; pi < pl.GetCount(); pi++, vert += vert_stride) {
+                size_t idx = static_cast<size_t>(pi + ci);
+                const float *v = reinterpret_cast<const float*>(vert);
+                unsigned int x = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[0] - box.Left()) / rad, 0.0f, static_cast<float>(dim_x - 1)));
+                unsigned int y = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[1] - box.Bottom()) / rad, 0.0f, static_cast<float>(dim_y - 1)));
+                unsigned int z = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[2] - box.Back()) / rad, 0.0f, static_cast<float>(dim_z - 1)));
+                cnt_grid[x + dim_x * (y + dim_y * z)]++;
+            }
+
+
+            // 2. allocate all coord-reference arrays for each cell
+            ci = cnt_grid[0];
+            for (unsigned int cell_idx = 1; cell_idx < dim_x * dim_y * dim_z; cell_idx++) {
+                coords[cell_idx] = coords[0] + ci;
+                ci += cnt_grid[cell_idx];
+            }
+            assert(ci == pl.GetCount());
+
+            // 3. place all particle coord references in each cell array
+            ::memset(cnt_grid, 0, sizeof(unsigned int) * dim_x * dim_y * dim_z);
+            ci = 0;
+            vert = static_cast<const uint8_t*>(pl.GetVertexData());
+            for (uint64_t pi = 0; pi < pl.GetCount(); pi++, vert += vert_stride) {
+                size_t idx = static_cast<size_t>(pi + ci);
+                const float *v = reinterpret_cast<const float*>(vert);
+                unsigned int x = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[0] - box.Left()) / rad, 0.0f, static_cast<float>(dim_x - 1)));
+                unsigned int y = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[1] - box.Bottom()) / rad, 0.0f, static_cast<float>(dim_y - 1)));
+                unsigned int z = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[2] - box.Back()) / rad, 0.0f, static_cast<float>(dim_z - 1)));
+                unsigned int cell_idx = x + dim_x * (y + dim_y * z);
+                coords[cell_idx][cnt_grid[cell_idx]++] = v;
+            }
+
+            // 4. finally compute distance information
+            vert = static_cast<const uint8_t*>(pl.GetVertexData());
+            const int pi_cnt = static_cast<int>(pl.GetCount());
+            #pragma omp parallel for
+            for (int pi = 0; pi < pi_cnt; pi++) {
+                size_t idx = static_cast<size_t>(pi + pli_off);
+                const float *v = reinterpret_cast<const float*>(vert + vert_stride * pi);
+                unsigned int x = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[0] - box.Left()) / rad, 0.0f, static_cast<float>(dim_x - 1)));
+                unsigned int y = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[1] - box.Bottom()) / rad, 0.0f, static_cast<float>(dim_y - 1)));
+                unsigned int z = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[2] - box.Back()) / rad, 0.0f, static_cast<float>(dim_z - 1)));
+
+                int n_cnt = 0;
+
+                for (int ix = -1; ix <= 1; ix++) {
+                    int cx = static_cast<int>(x) + ix;
+                    if (cx == -1) {
+                        if (cyclX) cx = dim_x - 1;
+                        else continue;
+                    } else if (cx == dim_x) {
+                        if (cyclX) cx = 0;
+                        else continue;
+                    }
+                    for (int iy = -1; iy <= 1; iy++) {
+                        int cy = static_cast<int>(y) + iy;
+                        if (cy == -1) {
+                            if (cyclY) cy = dim_y - 1;
+                            else continue;
+                        } else if (cy == dim_y) {
+                            if (cyclY) cy = 0;
+                            else continue;
+                        }
+                        for (int iz = -1; iz <= 1; iz++) {
+                            int cz = static_cast<int>(z) + iz;
+                            if (cz == -1) {
+                                if (cyclZ) cz = dim_z - 1;
+                                else continue;
+                            } else if (cz == dim_z) {
+                                if (cyclZ) cz = 0;
+                                else continue;
+                            }
+
+                            unsigned int c_idx = static_cast<unsigned int>(cx + dim_x * (cy + dim_y * cz));
+                            for (int cpi = cnt_grid[c_idx] - 1; cpi >= 0; cpi--) {
+                                const float *pf = coords[c_idx][cpi];
+                                float dx = pf[0] - v[0];
+                                float dy = pf[1] - v[1];
+                                float dz = pf[2] - v[2];
+                                dx *= dx;
+                                dy *= dy;
+                                dz *= dz;
+                                float sqd = dx + dy + dz;
+                                if (sqd < rad_sq) {
+                                    n_cnt++;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                f[idx * col_step + col_off] = static_cast<float>(n_cnt);
+            }
+            pli_off += pi_cnt;
+
+            delete[] coords[0];
+            delete[] coords;
+        }
         delete[] cnt_grid;
 
     }
@@ -601,7 +743,12 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
         }
     } else if (remove_opacity) {
         for (size_t i = 0; i < all_cnt; i++) {
-            f[i * col_step + col_off] = 1.0;
+            f[i * col_step + col_off] = 1.0f;
+        }
+    } else if (mmode == MapMode::AlphaInvertOverwrite) {
+        for (size_t i = 0; i < all_cnt; i++) {
+            f[i * col_step + col_off] = 1.0f - f[i * col_step + col_off];
+            if (f[i * col_step + col_off] > 0.99f) f[i * col_step + col_off]= 0.6f;
         }
     }
 
