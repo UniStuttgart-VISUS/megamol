@@ -14,7 +14,7 @@
 #include "Module.h"
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
-#include "moldyn\MultiParticleDataCall.h"
+#include "moldyn/MultiParticleDataCall.h"
 
 
 namespace megamol {

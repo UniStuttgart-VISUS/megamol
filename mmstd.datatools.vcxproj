@@ -245,6 +245,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
+    <ClCompile Include="DumpIColorHistogramModule.cpp" />
     <ClCompile Include="ForceCubicCBoxModule.cpp" />
     <ClCompile Include="mmstd.datatools.cpp" />
     <ClCompile Include="OverrideParticleGlobals.cpp" />
@@ -266,6 +267,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="AbstractParticleManipulator.h" />
     <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataSetTimeRewriteModule.h" />
+    <ClInclude Include="DumpIColorHistogramModule.h" />
     <ClInclude Include="ForceCubicCBoxModule.h" />
     <ClInclude Include="mmstd.datatools.h" />
     <ClInclude Include="OverrideParticleGlobals.h" />
