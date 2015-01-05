@@ -28,7 +28,7 @@ namespace moldyn {
      * template parameter T is the particle class
      */
     template<class T>
-    class MEGAMOLCORE_API AbstractParticleDataCall : public AbstractGetData3DCall {
+    class AbstractParticleDataCall : public AbstractGetData3DCall {
     public:
 
         /**
@@ -134,8 +134,6 @@ namespace moldyn {
     };
 
 
-#ifdef MEGAMOLCORE_EXPORTS
-
     /*
      * AbstractParticleDataCall<T>::AbstractParticleDataCall
      */
@@ -169,8 +167,6 @@ namespace moldyn {
         }
         return *this;
     }
-
-#endif /* MEGAMOLCORE_EXPORTS */
 
 
 } /* end namespace moldyn */

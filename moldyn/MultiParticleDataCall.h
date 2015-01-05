@@ -420,6 +420,9 @@ namespace moldyn {
     };
 
 
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API AbstractParticleDataCall<SimpleSphericalParticles>;
+
+
     /**
      * Call for multi-stream particle data.
      */

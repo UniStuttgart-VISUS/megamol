@@ -137,6 +137,9 @@ namespace moldyn {
     };
 
 
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API AbstractParticleDataCall<DirectionalParticles>;
+
+
     /**
      * Call for multi-stream particle data.
      */

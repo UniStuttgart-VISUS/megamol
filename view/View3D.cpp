@@ -37,6 +37,11 @@
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 #include "vislib/Trace.h"
 #include "vislib/Vector.h"
+//#define ROTATOR_HACK
+#ifdef ROTATOR_HACK
+#include "vislib/Matrix.h"
+#include "vislib/Quaternion.h"
+#endif
 
 using namespace megamol::core;
 
@@ -392,12 +397,20 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
                 this->ResetView();
         }
 
+#ifdef ROTATOR_HACK
+        cr3d->SetTimeFramesCount(360);
+#endif
+
         this->timeCtrl.SetTimeExtend(cr3d->TimeFramesCount(), cr3d->IsInSituTime());
         if (time > static_cast<float>(cr3d->TimeFramesCount())) {
             time = static_cast<float>(cr3d->TimeFramesCount());
         }
 
+#ifndef ROTATOR_HACK
         cr3d->SetTime(this->frozenValues ? this->frozenValues->time : time);
+#else
+        cr3d->SetTime(0.0f);
+#endif
         cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
         cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
     }
@@ -455,6 +468,19 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     ::glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zeros);
 
     // setup matrices
+
+#ifdef ROTATOR_HACK
+    ::vislib::math::Point<float, 3> c_e_p = this->cam.Parameters()->EyePosition();
+    ::vislib::math::Point<float, 3> c_l_p = this->cam.Parameters()->LookAt();
+    ::vislib::math::Vector<float, 3> c_u_v = this->cam.Parameters()->Up();
+
+    ::vislib::math::Vector<float, 3> c_l_v = c_e_p - c_l_p;
+    ::vislib::math::Quaternion<float> c_l_q(time * M_PI / 180.0f, c_u_v);
+    c_l_v = c_l_q * c_l_v;
+    this->cam.Parameters()->SetView(c_l_p + c_l_v, c_l_p, c_u_v);
+    this->cam.Parameters()->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+#endif
+
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
     this->cam.glMultProjectionMatrix();
@@ -480,7 +506,11 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     if (this->overrideCall) {
         (*static_cast<AbstractCallRender*>(cr3d)) = *this->overrideCall;
         cr3d->SetInstanceTime(instTime);
+#ifndef ROTATOR_HACK
         cr3d->SetTime(time);
+#else
+        cr3d->SetTime(0);
+#endif
     }
 
     // call for render
@@ -501,6 +531,10 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     if (this->showSoftCursor()) {
         this->renderSoftCursor();
     }
+
+#ifdef ROTATOR_HACK
+    this->cam.Parameters()->SetView(c_e_p, c_l_p, c_u_v);
+#endif
 
     AbstractRenderingView::endFrame();
 
