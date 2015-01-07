@@ -40,7 +40,9 @@ bool megamol::core::cluster::mpi::MpiProvider::IsAvailable(void) {
 megamol::core::cluster::mpi::MpiProvider::MpiProvider(void) : Base(),
         callProvideMpi("provideMpi", "Provides the MPI communicator etc."),
         paramNodeColour("nodeColour", "Specifies the node colour identifying the MegaMol instances.") {
+#ifdef WITH_MPI        
     ASSERT(MpiProvider::comm.is_lock_free());
+#endif /* WITH_MPI */
 
     this->callProvideMpi.SetCallback(MpiCall::ClassName(),
         MpiCall::FunctionName(MpiCall::IDX_PROVIDE_MPI),
