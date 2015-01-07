@@ -13,6 +13,8 @@
 #include <cstdlib>
 #endif /* !_WIN32 */
 
+#include "param/IntParam.h"
+
 #include "MpiCall.h"
 
 #include "vislib/assert.h"
@@ -36,15 +38,17 @@ bool megamol::core::cluster::mpi::MpiProvider::IsAvailable(void) {
  * megamol::core::cluster::mpi::MpiProvider::MpiProvider
  */
 megamol::core::cluster::mpi::MpiProvider::MpiProvider(void) : Base(),
-        callProvideMpi("provideMpi", "Provides the MPI communicator etc.") {
-#ifdef WITH_MPI
-    this->comm = MPI_COMM_NULL;
-#endif /* WITH_MPI */
+        callProvideMpi("provideMpi", "Provides the MPI communicator etc."),
+        paramNodeColour("nodeColour", "Specifies the node colour identifying the MegaMol instances.") {
+    ASSERT(MpiProvider::comm.is_lock_free());
 
     this->callProvideMpi.SetCallback(MpiCall::ClassName(),
         MpiCall::FunctionName(MpiCall::IDX_PROVIDE_MPI),
         &MpiProvider::OnCallProvideMpi);
     this->MakeSlotAvailable(&this->callProvideMpi);
+
+    this->paramNodeColour << new param::IntParam(0, 0);
+    this->MakeSlotAvailable(&this->paramNodeColour);
 }
 
 
@@ -60,6 +64,7 @@ megamol::core::cluster::mpi::MpiProvider::~MpiProvider(void) {
  * megamol::core::cluster::mpi::MpiProvider::create
  */
 bool megamol::core::cluster::mpi::MpiProvider::create(void) {
+    ++MpiProvider::activeInstances;
     return true;
 }
 
@@ -69,21 +74,21 @@ bool megamol::core::cluster::mpi::MpiProvider::create(void) {
  */
 bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
 #ifdef WITH_MPI
+    auto colour = this->paramNodeColour.Param<param::IntParam>()->Value();
+
     try {
-        auto& c = dynamic_cast<MpiCall&>(call);
-        ASSERT(!c.GetIsInitialising());
+        if (MpiProvider::initialiseMpi(colour)) {
+            /* MPI was initialised now or before. */
+            ASSERT(MpiProvider::comm  != MPI_COMM_NULL);
+            auto& c = dynamic_cast<MpiCall&>(call);
+            c.SetComm(MpiProvider::comm);
+            return true;
 
-        if (this->comm == MPI_COMM_NULL) {
-            if (!this->initialiseMpi(c.GetColour())) {
-                return false;
-            }
-            c.SetIsInitialising(true);
+        } else {
+            /* Initialisation of MPI failed. */
+            return false;
         }
-        ASSERT(this->comm != MPI_COMM_NULL);
 
-        c.SetComm(this->comm);
-
-        return true;
     } catch (...) {
         return false;
     }
@@ -98,13 +103,26 @@ bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
  * megamol::core::cluster::mpi::MpiProvider::release
  */
 void megamol::core::cluster::mpi::MpiProvider::release(void) {
+    using vislib::sys::Log;
+
+    ASSERT(MpiProvider::activeInstances.load() > 0);
+    if (--MpiProvider::activeInstances == 0) {
 #ifdef WITH_MPI
-    if (this->comm != MPI_COMM_NULL) {
-        ::MPI_Comm_free(&this->comm);
-        this->comm = MPI_COMM_NULL;
-        ::MPI_Finalize();
-    }
+        auto comm = MpiProvider::comm.exchange(MPI_COMM_NULL);
+        if (comm != MPI_COMM_NULL) {
+            Log::DefaultLog.WriteInfo("Releasing MPI communicator ...");
+            ::MPI_Comm_free(&comm);
+        }
+
+        if (MpiProvider::isMpiOwner) {
+            Log::DefaultLog.WriteInfo("Finalising MPI ...");
+            ::MPI_Finalize();
+        }
+
+        MpiProvider::activeNodeColour.store(MPI_UNDEFINED);
 #endif /* WITH_MPI */
+    }
+    ASSERT(MpiProvider::activeInstances.load() >= 0);
 }
 
 
@@ -144,36 +162,69 @@ bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
     using vislib::sys::Log;
 
 #ifdef WITH_MPI
-    int isInitialised = 0;
-    int rank = 0;
+    int expectedColour = MPI_UNDEFINED;
 
-    ::MPI_Initialized(&isInitialised);
+    if (MpiProvider::activeNodeColour.compare_exchange_strong(expectedColour,
+            colour)) {
+        /* Initialisation has not yet been performed, so do it now. */
+        ASSERT(MpiProvider::activeNodeColour.load() == colour);
+        ASSERT(MpiProvider::comm.load() == MPI_COMM_NULL);
 
-    if (isInitialised != 0) {
-        Log::DefaultLog.WriteWarn("MPI has already been initialised before "
-            "MpiProvider::initialiseMpi was called. This might indicate an "
-            "application error as some one else is also using MPI, which we "
-            "did not expect.");
+        MPI_Comm comm = MPI_COMM_NULL;
+        int isInitialised = 0;
+        int rank = 0;
+
+        /* Determine whether we "own" MPI, and if so, initialise it. */
+        // TODO: Check status?
+        ::MPI_Initialized(&isInitialised);
+        MpiProvider::isMpiOwner = (isInitialised != 0);
+
+        if (MpiProvider::isMpiOwner) {
+            vislib::sys::CmdLineProviderA cl(MpiProvider::getCommandLine());
+            auto argc = cl.ArgC();
+            auto argv = cl.ArgV();
+
+            Log::DefaultLog.WriteInfo("Initialising MPI ...");
+            auto status =::MPI_Init(&argc, &argv);
+            if (status != MPI_SUCCESS) {
+                Log::DefaultLog.WriteError("MPI_Init failed with error code "
+                    "%d. Future calls might retry the operation.", status);
+                MpiProvider::activeNodeColour.store(MPI_UNDEFINED);
+                return false;
+            }
+        } else {
+            Log::DefaultLog.WriteInfo("MPI has already been initialised before "
+                "MpiProvider::initialiseMpi was called.");
+        } /* if (MpiProvider::isMpiOwner) */
+        ASSERT((isInitialised != 0) || MpiProvider::isMpiOwner);
+
+        /* Now, perform the node colouring and obtain the communicator. */
+        Log::DefaultLog.WriteInfo("Performing node colouring with colour "
+            "%d ...", colour);
+        // TODO: Check status?
+        ::MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        ::MPI_Comm_split(MPI_COMM_WORLD, colour, rank, &comm);
+        MpiProvider::comm.store(comm);
 
     } else {
-        vislib::sys::CmdLineProviderA cmdLine(MpiProvider::getCommandLine());
-        auto argc = cmdLine.ArgC();
-        auto argv = cmdLine.ArgV();
+        /* Initialisation has already been performed, check reconfiguration. */
 
-        Log::DefaultLog.WriteInfo("Initialising MPI ...");
-        auto status =::MPI_Init(&argc, &argv);
-        if (status != MPI_SUCCESS) {
-            Log::DefaultLog.WriteError("MPI_Init failed with error code %d",
-                status);
-            return false;
+        if (expectedColour != colour) {
+            Log::DefaultLog.WriteWarn("MPI has already been initialised before "
+                "and node colouring was done using %d. The current request "
+                "uses the node colour %d, which will be ignored. Please ensure "
+                "that the node colour does not change after MPI has been "
+                "initialised the first time.", expectedColour, colour);
         }
     }
-
-    Log::DefaultLog.WriteInfo("Performing node colouring with colour %d ...",
-        colour);
-    ::MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    ::MPI_Comm_split(MPI_COMM_WORLD, colour, rank, &this->comm);
-    // TODO: Check status?
+    /*
+     * At this point, MPI was already initialised or some one else is currently
+     * initialising it. As settings the communicator indicates that the critical
+     * section is left, wait for this condition before returning.
+     */
+    ASSERT(MpiProvider::activeNodeColour.load() != MPI_UNDEFINED);
+    while (MpiProvider::comm.load() == MPI_COMM_NULL);
+    ASSERT(MpiProvider::comm.load() != MPI_COMM_NULL);
 
     return true;
 
@@ -181,3 +232,35 @@ bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
     return false;
 #endif /* WITH_MPI */
 }
+
+
+/*
+ * megamol::core::cluster::mpi::MpiProvider::activeInstances
+ */
+std::atomic<int> megamol::core::cluster::mpi::MpiProvider::activeInstances(0);
+
+
+#ifdef WITH_MPI
+/*
+ * megamol::core::cluster::mpi::MpiProvider::comm
+ */
+std::atomic<MPI_Comm> megamol::core::cluster::mpi::MpiProvider::comm(
+    MPI_COMM_NULL);
+#endif /* WITH_MPI */
+
+
+/*
+ * megamol::core::cluster::mpi::MpiProvider::activeNodeColour
+ */
+std::atomic<int> megamol::core::cluster::mpi::MpiProvider::activeNodeColour(
+#ifdef WITH_MPI
+    MPI_UNDEFINED);
+#else /* WITH_MPI */
+    -1);
+#endif /* WITH_MPI */
+
+
+/*
+ * megamol::core::cluster::mpi::MpiProvider::isMpiOwner
+ */
+bool megamol::core::cluster::mpi::MpiProvider::isMpiOwner = false;

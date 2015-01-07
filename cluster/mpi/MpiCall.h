@@ -27,13 +27,6 @@ namespace mpi {
     /**
      * This call requests MpiProvider to initialise MPI and to return a
      * communicator that a partition of the comm world can use.
-     *
-     * The caller should specify the colour of the calling process for node
-     * colouring. Otherwise, the default colour (0) is used.
-     *
-     * All processes must peform node colouring, that is if a process does not
-     * use MpiCall/MpiProvider, it must manually call MPI_Comm_split() on
-     * MPI_COMM_WORLD.
      */
     class MEGAMOLCORE_API MpiCall : public Call {
 
@@ -105,31 +98,12 @@ namespace mpi {
 #endif /* WITH_MPI */
 
         /**
-         * Gets the node colour for the calling process.
-         *
-         * @return The colour for the calling process.
-         */
-        inline int GetColour(void) const {
-            return this->colour;
-        }
-
-        /**
          * Get the size of the communicator that has been created during node
          * colouring.
          *
          * @return The size of the communicator.
          */
         int GetCommSize(void) const;
-
-        /**
-         * Answer whether MPI was actually initialised during this call.
-         *
-         * @return true if MPI was initialised during this call, false if it was
-         *         initialised before or initialisation failed.
-         */
-        inline bool GetIsInitialising(void) const {
-            return this->isInitialising;
-        }
 
         /**
          * Get the rank of the calling process in the communicator that has been
@@ -150,30 +124,6 @@ namespace mpi {
         }
 #endif /* WITH_MPI */
 
-        /**
-         * Sets the node colour for the calling process that is used when
-         * performing node colouring.
-         *
-         * If no specific colour is set, the node colour is 0.
-         *
-         * The node colour has no effect if node colouring has already been
-         * performed, ie the colour is only used in the first call.
-         *
-         * @param colour The colour to be used in node colouring.
-         */
-        inline void SetColour(const int colour) {
-            this->colour = colour;
-        }
-
-        /**
-         * Set whether MPI was initialised during this call.
-         *
-         * @param isInitialising
-         */
-        inline void SetIsInitialising(const bool isInitialising) {
-            this->isInitialising = isInitialising;
-        }
-
     private:
 
         /** Super class. */
@@ -187,11 +137,6 @@ namespace mpi {
         MPI_Comm comm;
 #endif /* WITH_MPI */
 
-        /** The node colour that should be used when initialising MPI. */
-        int colour;
-
-        /** Determines whether the initialisation has been performed. */
-        bool isInitialising;
     };
 
     typedef CallAutoDescription<MpiCall> MpiCallDescription;

@@ -26,7 +26,6 @@
 #include "vislib/IncludeAllGL.h"
 
 #include "param/BoolParam.h"
-#include "param/IntParam.h"
 #include "param/StringParam.h"
 
 #include "vislib/assert.h"
@@ -107,7 +106,6 @@ megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
         mpiRank(-1),
         mpiSize(-1),
         mustNegotiateMaster(true),
-        paramDisplayNodeColour("displayNodeColour", "Specifies the node colour of the display nodes."),
         paramUseGsync("useGsync", "Try to synchronise buffer swaps if possible."),
         relayOffset(0) {
     VLAUTOSTACKTRACE;
@@ -119,9 +117,6 @@ megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
     this->MakeSlotAvailable(&this->callRequestMpi);
 
     this->hasMasterConnection.store(false);
-
-    this->paramDisplayNodeColour << new param::IntParam(0, 0);
-    this->MakeSlotAvailable(&this->paramDisplayNodeColour);
 
     this->paramUseGsync << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->paramUseGsync);
@@ -750,13 +745,6 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
         auto c = this->callRequestMpi.CallAs<MpiCall>();
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
-            auto colour = this->paramDisplayNodeColour.Param<param::IntParam>()
-                ->Value();
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("Requesting MPI ")
-                _T("initialisation via registered call using node colour ")
-                _T("%d ..."), colour);
-            c->SetColour(colour);
-
             if ((*c)(MpiCall::IDX_PROVIDE_MPI)) {
                 _TRACE_MESSAGING("Got MPI communicator.");
                 this->comm = c->GetComm();

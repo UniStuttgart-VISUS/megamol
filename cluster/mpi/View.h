@@ -361,9 +361,6 @@ namespace mpi {
          */
         bool mustNegotiateMaster;
 
-        /** Configures the node colour of the display nodes. */
-        param::ParamSlot paramDisplayNodeColour;
-
         /** Configures whether the view should try to enable GSync. */
         param::ParamSlot paramUseGsync;
 

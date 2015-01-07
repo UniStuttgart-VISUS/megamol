@@ -54,8 +54,7 @@ const unsigned int megamol::core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI = 0;
 /*
  * megamol::core::cluster::mpi::MpiCall::MpiCall
  */
-megamol::core::cluster::mpi::MpiCall::MpiCall(void) : Base(), colour(0),
-        isInitialising(false) {
+megamol::core::cluster::mpi::MpiCall::MpiCall(void) : Base() {
 #ifdef WITH_MPI
     this->comm = MPI_COMM_NULL;
 #endif /* WITH_MPI */

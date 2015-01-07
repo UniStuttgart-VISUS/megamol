@@ -15,6 +15,9 @@
 #include <mpi.h>
 #endif /* WITH_MPI */
 
+#include <atomic>
+#include <memory>
+
 #include "CalleeSlot.h"
 #include "Module.h"
 
@@ -118,23 +121,54 @@ namespace mpi {
         /**
          * Initialises MPI and performs node colouring.
          *
-         * This method must only be called once, ie if 'comm' was not
-         * successfully initialised before. If you violate this precondition,
-         * node colouring will be performed anyways.
+         * This method performs all necessary checks for MPI being already
+         * initialised, "ownership" of the MPI initialisation and node
+         * colouring.
          *
          * @param colour The node colour of the calling process.
          *
          * @return true in case of success, false otherwise.
          */
-        bool initialiseMpi(const int colour);
+        static bool initialiseMpi(const int colour);
 
         /** Call for retrieving the communicator and other MPI-related data. */
         CalleeSlot callProvideMpi;
 
+        /** Configures the node colour of the MegaMol nodes. */
+        param::ParamSlot paramNodeColour;
+
+        /**
+         * The number of instances of MpiProvider that are between create() and
+         * release() in their lifecycle. These are the instances that might use
+         * MPI. If it becomes zero, MPI can be released.
+         */
+        static std::atomic<int> activeInstances;
+
+        /**
+         * Remembers the node colour that was used when initialising the nodes.
+         * MPI_UNDEFINED indicates that node colouring has not yet been
+         * performed.
+         *
+         * This atomic also serves as lock that prevents multiple
+         * initialisations (enter of critical section).
+         */
+        static std::atomic<int> activeNodeColour;
+
 #ifdef WITH_MPI
-        /** The communicator that was retrieved during node colouring. */
-        MPI_Comm comm;
+        /**
+         * The communicator that was retrieved during node colouring. If this
+         * is MPI_COMM_NULL, it indicates that node colouring has not yet been
+         * performed.
+         */
+        static std::atomic<MPI_Comm> comm;
 #endif /* WITH_MPI */
+
+        /**
+         * Remembers whether the MpiProvider has initialised MPI. In this case,
+         * it will also finalise it if the last one was destroyed. Otherwise,
+         * someone else is responsible for doing so.
+         */
+        static bool isMpiOwner;
     };
 
 } /* end namespace mpi */
