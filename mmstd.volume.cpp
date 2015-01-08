@@ -13,6 +13,7 @@
 #include "vislib/Log.h"
 #include "vislib/ThreadSafeStackTrace.h"
 #include "DatRawDataSource.h"
+#include "DirectVolumeRenderer.h"
 
 
 /*
@@ -56,7 +57,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 1;
+    return 2;
 }
 
 
@@ -66,6 +67,7 @@ MMSTD_VOLUME_API int mmplgModuleCount(void) {
 MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     switch (idx) {
     case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DatRawDataSource>();
+    case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DirectVolumeRenderer>();
     }
     return NULL;
 }
