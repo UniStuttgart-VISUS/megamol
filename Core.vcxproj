@@ -342,7 +342,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\AddClusterColours.cpp" />
     <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp" />
     <ClCompile Include="moldyn\D3D11SimpleSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\DirectVolumeRenderer.cpp" />
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
     <ClCompile Include="moldyn\DirPartFilter.cpp" />
     <ClCompile Include="moldyn\DirPartVolume.cpp" />
@@ -355,7 +354,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\ParticleWorker.cpp" />
     <ClCompile Include="moldyn\SIFFWriter.cpp" />
     <ClCompile Include="moldyn\SimpleGeoSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\slicing.cpp" />
     <ClCompile Include="moldyn\SphereOutlineRenderer.cpp" />
     <ClCompile Include="moldyn\VolumeDataCall.cpp" />
     <ClCompile Include="moldyn\VTFDataSource.cpp" />
@@ -607,7 +605,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\AddClusterColours.h" />
     <ClInclude Include="moldyn\ClusteredSphereRenderer.h" />
     <ClInclude Include="moldyn\D3D11SimpleSphereRenderer.h" />
-    <ClInclude Include="moldyn\DirectVolumeRenderer.h" />
     <ClInclude Include="moldyn\DirPartColModulate.h" />
     <ClInclude Include="moldyn\DirPartFilter.h" />
     <ClInclude Include="moldyn\DirPartVolume.h" />
@@ -620,7 +617,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\ParticleWorker.h" />
     <ClInclude Include="moldyn\SIFFWriter.h" />
     <ClInclude Include="moldyn\SimpleGeoSphereRenderer.h" />
-    <ClInclude Include="moldyn\slicing.h" />
     <ClInclude Include="moldyn\SphereOutlineRenderer.h" />
     <ClInclude Include="moldyn\VolumeDataCall.h" />
     <ClInclude Include="moldyn\VTFDataSource.h" />
@@ -786,9 +782,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </None>
     <None Include="Shaders\particleWorkerCompute.btf" />
     <None Include="Shaders\simplegeosphere.btf" />
-    <None Include="Shaders\volumerenderer.btf">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="view\special\MegaMolLogoData.inl" />
     <CustomBuildStep Include="config.bat">
       <FileType>Document</FileType>

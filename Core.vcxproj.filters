@@ -706,12 +706,6 @@
     <ClCompile Include="view\SplitView.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="moldyn\DirectVolumeRenderer.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="moldyn\slicing.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="moldyn\VolumeDataCall.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
@@ -1359,12 +1353,6 @@
     <ClInclude Include="view\SplitView.h">
       <Filter>view\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="moldyn\slicing.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="moldyn\DirectVolumeRenderer.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="moldyn\VolumeDataCall.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
@@ -1604,9 +1592,6 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="Shaders\simplegeosphere.btf">
-      <Filter>Shader Files</Filter>
-    </None>
-    <None Include="Shaders\volumerenderer.btf">
       <Filter>Shader Files</Filter>
     </None>
     <None Include="Shaders\particleWorkerCompute.btf">
