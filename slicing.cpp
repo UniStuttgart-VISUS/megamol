@@ -115,7 +115,7 @@ void ViewSlicing::drawSlice(int slice) {
         cubeEdges[9], cubeEdges[10], cubeEdges[11] };
     float d = -0.5f*_d + (slice+0.5f)*_d/_numSlices;
     char actEdge = (char) 0xff;
-    int numIntersect = 0, oldInt;
+    int numIntersect = 0; //, oldInt;
     int idx;
     int tmp[6];
     int valid[6] = { 1, 1, 1, 1, 1, 1 };
@@ -169,7 +169,7 @@ void ViewSlicing::drawSlice(int slice) {
         }
     }
 
-    oldInt = numIntersect;
+    //oldInt = numIntersect;
 
     // eliminate double vertizes
     if (numIntersect > 2) {
@@ -276,8 +276,8 @@ void ViewSlicing::drawSlices(GLenum mode, int frontToBack, int maxSlices) {
 
 void ViewSlicing::setupSingleSlice(double *viewVec, float *ext) {
     float xMax, yMax, zMax;
-    float dv[7];
-    float v[3];
+//    float dv[7];
+//    float v[3];
     double len;
 
     _ext[0] = xMax = 0.5f*ext[0];
@@ -311,17 +311,17 @@ void ViewSlicing::setupSingleSlice(double *viewVec, float *ext) {
     _v[1] = (float) viewVec[1];
     _v[2] = (float) viewVec[2];
 
-    v[0] = fabs(_v[0]);
-    v[1] = fabs(_v[1]);
-    v[2] = fabs(_v[2]);
+    //v[0] = fabs(_v[0]);
+    //v[1] = fabs(_v[1]);
+    //v[2] = fabs(_v[2]);
 
-    dv[0] = v[0]*xMax;
-    dv[1] = v[1]*yMax;
-    dv[2] = v[2]*zMax;
-    dv[3] = v[0]*xMax + v[1]*yMax;
-    dv[4] = v[0]*xMax + v[2]*zMax;
-    dv[5] = v[1]*yMax + v[2]*zMax;
-    dv[6] = v[0]*xMax + v[1]*yMax + v[2]*zMax;
+    //dv[0] = v[0]*xMax;
+    //dv[1] = v[1]*yMax;
+    //dv[2] = v[2]*zMax;
+    //dv[3] = v[0]*xMax + v[1]*yMax;
+    //dv[4] = v[0]*xMax + v[2]*zMax;
+    //dv[5] = v[1]*yMax + v[2]*zMax;
+    //dv[6] = v[0]*xMax + v[1]*yMax + v[2]*zMax;
 }
 
 
@@ -333,7 +333,7 @@ void ViewSlicing::drawSingleSlice(float dist) {
         cubeEdges[6], cubeEdges[7], cubeEdges[8], 
         cubeEdges[9], cubeEdges[10], cubeEdges[11] };
     char actEdge = (char)0xff;
-    int numIntersect = 0, oldInt;
+    int numIntersect = 0; //, oldInt;
     int idx;
     int tmp[6];
     int valid[6] = { 1, 1, 1, 1, 1, 1 };
@@ -389,7 +389,7 @@ void ViewSlicing::drawSingleSlice(float dist) {
         }
     }
 
-    oldInt = numIntersect;
+    //oldInt = numIntersect;
 
     // eliminate double vertizes
     if (numIntersect < 3)
