@@ -74,11 +74,6 @@
 #include "job/JobThread.h"
 //#include "vismol2/Mol20DataSource.h"
 //#include "vismol2/Mol20Renderer.h"
-#include "BuckyBall.h"
-#include "GridBalls.h"
-#include "moldyn/DirPartVolume.h"
-#include "misc/VolumeCache.h"
-#include "RenderVolumeSlice.h"
 #include "moldyn/VolumeDataCall.h"
 #include "moldyn/SIFFWriter.h"
 #include "moldyn/VTFDataSource.h"
@@ -189,11 +184,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
     //instance->registerAutoDescription<vismol2::Mol20DataSource>();
     instance->registerAutoDescription<job::DataWriterJob>();
     instance->registerAutoDescription<job::JobThread>();
-    instance->registerAutoDescription<BuckyBall>();
-    instance->registerAutoDescription<GridBalls>();
-    instance->registerAutoDescription<moldyn::DirPartVolume>();
-    instance->registerAutoDescription<misc::VolumeCache>();
-    instance->registerAutoDescription<RenderVolumeSlice>();
     instance->registerAutoDescription<moldyn::SIFFWriter>();
     instance->registerAutoDescription<moldyn::VTFDataSource>();
     instance->registerAutoDescription<moldyn::VTFResDataSource>();

@@ -286,7 +286,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="AbstractSlot.cpp" />
     <ClCompile Include="ApiHandle.cpp" />
     <ClCompile Include="BoundingBoxes.cpp" />
-    <ClCompile Include="BuckyBall.cpp" />
     <ClCompile Include="Call.cpp" />
     <ClCompile Include="CallAutoDescription.cpp" />
     <ClCompile Include="CallDescription.cpp" />
@@ -306,7 +305,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="cluster\simple\View.cpp" />
     <ClCompile Include="CoreInstance.cpp" />
     <ClCompile Include="DataWriterCtrlCall.cpp" />
-    <ClCompile Include="GridBalls.cpp" />
     <ClCompile Include="InstanceDescription.cpp" />
     <ClCompile Include="InstanceRequest.cpp" />
     <ClCompile Include="JobDescription.cpp" />
@@ -324,7 +322,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="misc\QRCodeDataCall.cpp" />
     <ClCompile Include="misc\CalloutImageCall.cpp" />
     <ClCompile Include="misc\TestSpheresDataSource.cpp" />
-    <ClCompile Include="misc\VolumeCache.cpp" />
     <ClCompile Include="misc\VolumetricDataCall.cpp" />
     <ClCompile Include="Module.cpp" />
     <ClCompile Include="ModuleAutoDescription.cpp">
@@ -344,7 +341,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="moldyn\D3D11SimpleSphereRenderer.cpp" />
     <ClCompile Include="moldyn\DirPartColModulate.cpp" />
     <ClCompile Include="moldyn\DirPartFilter.cpp" />
-    <ClCompile Include="moldyn\DirPartVolume.cpp" />
     <ClCompile Include="moldyn\DynDensityGradientEstimator.cpp" />
     <ClCompile Include="moldyn\MMSPDDataSource.cpp" />
     <ClCompile Include="moldyn\MMSPDFrameData.cpp" />
@@ -363,7 +359,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="ParamValueSetRequest.cpp" />
     <ClCompile Include="profiler\Connection.cpp" />
     <ClCompile Include="profiler\Manager.cpp" />
-    <ClCompile Include="RenderVolumeSlice.cpp" />
     <ClCompile Include="RootModuleNamespace.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -558,7 +553,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="AbstractSlot.h" />
     <ClInclude Include="ApiHandle.h" />
     <ClInclude Include="BoundingBoxes.h" />
-    <ClInclude Include="BuckyBall.h" />
     <ClInclude Include="Call.h" />
     <ClInclude Include="CallAutoDescription.h" />
     <ClInclude Include="CallDescription.h" />
@@ -578,7 +572,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="cluster\simple\View.h" />
     <ClInclude Include="CoreInstance.h" />
     <ClInclude Include="DataWriterCtrlCall.h" />
-    <ClInclude Include="GridBalls.h" />
     <ClInclude Include="InstanceDescription.h" />
     <ClInclude Include="InstanceRequest.h" />
     <ClInclude Include="JobDescription.h" />
@@ -590,7 +583,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="misc\QRCodeDataCall.h" />
     <ClInclude Include="misc\CalloutImageCall.h" />
     <ClInclude Include="misc\TestSpheresDataSource.h" />
-    <ClInclude Include="misc\VolumeCache.h" />
     <ClInclude Include="misc\VolumetricDataCall.h" />
     <ClInclude Include="misc\VolumetricDataCallTypes.h" />
     <ClInclude Include="mmd3d.h" />
@@ -607,7 +599,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="moldyn\D3D11SimpleSphereRenderer.h" />
     <ClInclude Include="moldyn\DirPartColModulate.h" />
     <ClInclude Include="moldyn\DirPartFilter.h" />
-    <ClInclude Include="moldyn\DirPartVolume.h" />
     <ClInclude Include="moldyn\DynDensityGradientEstimator.h" />
     <ClInclude Include="moldyn\MMSPDDataSource.h" />
     <ClInclude Include="moldyn\MMSPDFrameData.h" />
@@ -630,7 +621,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="productversion.template.h" />
     <ClInclude Include="profiler\Connection.h" />
     <ClInclude Include="profiler\Manager.h" />
-    <ClInclude Include="RenderVolumeSlice.h" />
     <ClInclude Include="RootModuleNamespace.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="utility\AbstractD3D11RenderObject.h" />

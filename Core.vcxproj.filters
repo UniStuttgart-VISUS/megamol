@@ -661,23 +661,8 @@
     <ClCompile Include="CallVolumeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BuckyBall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GridBalls.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="moldyn\DirPartVolume.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc\VolumeCache.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="moldyn\DirPartColModulate.cpp">
       <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderVolumeSlice.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="moldyn\DirPartFilter.cpp">
       <Filter>moldyn\Source Files</Filter>
@@ -1308,23 +1293,8 @@
     <ClInclude Include="CallVolumeData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BuckyBall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GridBalls.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="moldyn\DirPartVolume.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc\VolumeCache.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="moldyn\DirPartColModulate.h">
       <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderVolumeSlice.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\DirPartFilter.h">
       <Filter>moldyn\Header Files</Filter>
