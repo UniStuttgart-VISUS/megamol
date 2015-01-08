@@ -715,9 +715,6 @@
     <ClCompile Include="moldyn\VolumeDataCall.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="moldyn\DatRawDataSource.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="moldyn\ParticleListFilter.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
@@ -1369,9 +1366,6 @@
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\VolumeDataCall.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="moldyn\DatRawDataSource.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="moldyn\ParticleListFilter.h">

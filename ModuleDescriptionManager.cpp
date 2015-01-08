@@ -81,7 +81,6 @@
 #include "RenderVolumeSlice.h"
 #include "moldyn/DirectVolumeRenderer.h"
 #include "moldyn/VolumeDataCall.h"
-#include "moldyn/DatRawDataSource.h"
 #include "moldyn/SIFFWriter.h"
 #include "moldyn/VTFDataSource.h"
 #include "moldyn/VTFResDataSource.h"
@@ -197,7 +196,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
     instance->registerAutoDescription<misc::VolumeCache>();
     instance->registerAutoDescription<RenderVolumeSlice>();
     instance->registerAutoDescription<moldyn::DirectVolumeRenderer>();
-    instance->registerAutoDescription<moldyn::DatRawDataSource>();
     instance->registerAutoDescription<moldyn::SIFFWriter>();
     instance->registerAutoDescription<moldyn::VTFDataSource>();
     instance->registerAutoDescription<moldyn::VTFResDataSource>();
