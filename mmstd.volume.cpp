@@ -12,6 +12,7 @@
 #include "vislib/vislibversion.h"
 #include "vislib/Log.h"
 #include "vislib/ThreadSafeStackTrace.h"
+#include "DatRawDataSource.h"
 
 
 /*
@@ -34,7 +35,7 @@ MMSTD_VOLUME_API const char * mmplgPluginName(void) {
  * mmplgPluginDescription
  */
 MMSTD_VOLUME_API const char * mmplgPluginDescription(void) {
-    return "Template for MegaMol Plugins (TODO: CHANGE this description)";
+    return "MegaMol Plugins for volume data modules";
 }
 
 
@@ -55,7 +56,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 0; // TODO: Implement
+    return 1;
 }
 
 
@@ -63,7 +64,10 @@ MMSTD_VOLUME_API int mmplgModuleCount(void) {
  * mmplgModuleDescription
  */
 MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
-    return NULL; // TODO: Implement
+    switch (idx) {
+    case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DatRawDataSource>();
+    }
+    return NULL;
 }
 
 
@@ -71,7 +75,7 @@ MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 MMSTD_VOLUME_API int mmplgCallCount(void) {
-    return 0; // TODO: Implement
+    return 0;
 }
 
 
@@ -79,7 +83,7 @@ MMSTD_VOLUME_API int mmplgCallCount(void) {
  * mmplgCallDescription
  */
 MMSTD_VOLUME_API void* mmplgCallDescription(int idx) {
-    return NULL; // TODO: Implement
+    return NULL;
 }
 
 
