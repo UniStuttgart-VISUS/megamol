@@ -40,6 +40,21 @@
     <ClCompile Include="slicing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BuckyBall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GridBalls.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirPartVolume.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VolumeCache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderVolumeSlice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mmstd.volume.h">
@@ -58,6 +73,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="slicing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BuckyBall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GridBalls.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirPartVolume.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VolumeCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderVolumeSlice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

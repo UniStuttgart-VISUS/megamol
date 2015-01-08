@@ -224,8 +224,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BuckyBall.cpp" />
     <ClCompile Include="DatRawDataSource.cpp" />
     <ClCompile Include="DirectVolumeRenderer.cpp" />
+    <ClCompile Include="DirPartVolume.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
@@ -240,7 +242,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
+    <ClCompile Include="GridBalls.cpp" />
     <ClCompile Include="mmstd.volume.cpp" />
+    <ClCompile Include="RenderVolumeSlice.cpp" />
     <ClCompile Include="slicing.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -248,14 +252,20 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="VolumeCache.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BuckyBall.h" />
     <ClInclude Include="DatRawDataSource.h" />
     <ClInclude Include="DirectVolumeRenderer.h" />
+    <ClInclude Include="DirPartVolume.h" />
+    <ClInclude Include="GridBalls.h" />
     <ClInclude Include="mmstd.volume.h" />
+    <ClInclude Include="RenderVolumeSlice.h" />
     <ClInclude Include="slicing.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="VolumeCache.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk" />

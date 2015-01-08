@@ -14,6 +14,11 @@
 #include "vislib/ThreadSafeStackTrace.h"
 #include "DatRawDataSource.h"
 #include "DirectVolumeRenderer.h"
+#include "BuckyBall.h"
+#include "GridBalls.h"
+#include "DirPartVolume.h"
+#include "VolumeCache.h"
+#include "RenderVolumeSlice.h"
 
 
 /*
@@ -57,7 +62,7 @@ MMSTD_VOLUME_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_VOLUME_API int mmplgModuleCount(void) {
-    return 2;
+    return 7;
 }
 
 
@@ -68,6 +73,11 @@ MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     switch (idx) {
     case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DatRawDataSource>();
     case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DirectVolumeRenderer>();
+    case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::BuckyBall>();
+    case 3: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::GridBalls>();
+    case 4: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DirPartVolume>();
+    case 5: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::VolumeCache>();
+    case 6: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
     }
     return NULL;
 }
