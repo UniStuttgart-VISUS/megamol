@@ -26,7 +26,7 @@ ExcludeFromBuild += vismol2/Mol20DataCall.cpp vismol2/Mol20DataSource.cpp vismol
 
 # Libraries
 LIBS := $(LIBS) m pthread pam pam_misc dl ncurses uuid GL GLU png z
-StaticLibs := datraw/lib$(BITS)/libdatRaw.a
+StaticLibs :=
 
 
 # Additional linker flags
@@ -52,15 +52,7 @@ CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem
 LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
 
 
-all: VersionInfo datraw $(TargetName)d $(TargetName)
-
-datraw/lib32/libdatRaw.a:
-	$(MAKE) -C datraw
-	
-datraw/lib64/libdatRaw.a:
-	$(MAKE) -C datraw
-	
-datraw: datraw/lib$(BITS)/libdatRaw.a
+all: VersionInfo $(TargetName)d $(TargetName)
 	
 
 # Rules for shared objects in $(OutDir):
@@ -100,7 +92,7 @@ VersionInfo:
 
 
 # Rules for intermediate shared objects:
-$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile datraw productversion.gen.h api/MegaMolCore.std.h $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile productversion.gen.h api/MegaMolCore.std.h $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(DebugDir)/lib$(TargetName).so: "
 	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_D_OBJS) $(addprefix -l,$(LIBS)) $(StaticLibs) $(DebugLinkerFlags) \
@@ -109,7 +101,7 @@ $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so: Makefile datraw productversio
 #	gcc -Wall -W -DPIC -fPIC -shared -DUNIX -D_GNU_SOURCE -D_LIN64 DllEntry.c -lc -Wl,-e,mmCoreMain \
 #	-o $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 
-$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile datraw productversion.gen.h api/MegaMolCore.std.h $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
+$(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile productversion.gen.h api/MegaMolCore.std.h $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)"$(IntDir)/$(ReleaseDir)/lib$(TargetName).so: "
 	@$(CLEARTERMCMD)
 	$(Q)$(LINK) $(LDFLAGS) $(CPP_R_OBJS) $(addprefix -l,$(LIBS)) $(StaticLibs) $(ReleaseLinkerFlags) \
@@ -120,14 +112,14 @@ $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so: Makefile datraw productversi
 
 
 # Rules for dependencies:
-$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile datraw productversion.gen.h api/MegaMolCore.std.h
+$(IntDir)/$(DebugDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
 	@echo -n $(dir $@) > $@
 	$(Q)$(CPP) -MM $(CPPFLAGS) -I$(<D) $(DebugCompilerFlags) $< >> $@
 
-$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile datraw productversion.gen.h api/MegaMolCore.std.h
+$(IntDir)/$(ReleaseDir)/%.d: $(InputDir)/%.cpp Makefile productversion.gen.h api/MegaMolCore.std.h
 	@mkdir -p $(dir $@)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
@@ -158,7 +150,6 @@ $(IntDir)/$(ReleaseDir)/%.o:
 
 # Cleanup rules:
 clean: sweep
-	make clean -C datraw
 	rm -f $(OutDir)/lib$(TargetName)$(BITS).so $(OutDir)/lib$(TargetName)$(BITS)d.so \
 	$(outbin)/lib$(TargetName)$(BITS).so $(outbin)/lib$(TargetName)$(BITS)d.so
 
