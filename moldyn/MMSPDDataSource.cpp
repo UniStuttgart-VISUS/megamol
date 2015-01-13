@@ -198,6 +198,7 @@ bool moldyn::MMSPDDataSource::Frame::LoadFrame(
         for (SIZE_T ti = 0; ti < typeCnt; ti++) {
             MMSPDFrameData::Particles& parts = this->Data()[ti];
             SIZE_T ps = header.GetTypes()[ti].GetFields().Count() * sizeof(float);
+            // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
             if (header.HasIDs()) ps += 8;
             ASSERT((parts.GetData().GetSize() % ps) == 0);
             parts.SetCount(parts.GetData().GetSize() / ps);
@@ -257,6 +258,7 @@ void moldyn::MMSPDDataSource::Frame::SetData(MultiParticleDataCall& call,
 
         // now use some because-I-know-magic:
         unsigned int off = 0;
+        // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos)
         if (header.HasIDs()) off += 8;
         if (!hasX || !hasY || !hasZ) {
             // too empty
@@ -392,14 +394,22 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, 
     SIZE_T type = 0;
     for (UINT64 pi = 0; pi < partCnt; pi++) {
 
-        if (header.HasIDs()) pos += 8;
+        // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos) [#128]
+        // old:
+        //if (header.HasIDs()) pos += 8;
+        // new:
+        if (header.HasIDs()) {
+            typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos]));
+            pos += 8;
+        }
 
         if (typeCnt > 1) {
             type = *reinterpret_cast<UINT32*>(&buffer[pos]);
             if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
-            if (header.HasIDs()) {
-                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
-            }
+            // old
+            //if (header.HasIDs()) {
+            //    typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            //}
             pos += 4;
         }
 
@@ -469,20 +479,30 @@ void moldyn::MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size
     SIZE_T type = 0;
     for (UINT64 pi = 0; pi < partCnt; pi++) {
 
-        if (header.HasIDs()) pos += 8;
+        // see loadframe
+        //if (header.HasIDs()) pos += 8;
+        if (header.HasIDs()) {
+            vislib::Swap(buffer[pos + 0], buffer[pos + 7]);
+            vislib::Swap(buffer[pos + 1], buffer[pos + 6]);
+            vislib::Swap(buffer[pos + 2], buffer[pos + 5]);
+            vislib::Swap(buffer[pos + 3], buffer[pos + 4]);
+            typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos]));
+            pos += 8;
+        }
 
         if (typeCnt > 1) {
             vislib::Swap(buffer[pos + 0], buffer[pos + 3]);
             vislib::Swap(buffer[pos + 1], buffer[pos + 2]);
             type = *reinterpret_cast<UINT32*>(&buffer[pos]);
             if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
-            if (header.HasIDs()) {
-                vislib::Swap(buffer[pos - 8 + 0], buffer[pos - 8 + 7]);
-                vislib::Swap(buffer[pos - 8 + 1], buffer[pos - 8 + 6]);
-                vislib::Swap(buffer[pos - 8 + 2], buffer[pos - 8 + 5]);
-                vislib::Swap(buffer[pos - 8 + 3], buffer[pos - 8 + 4]);
-                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
-            }
+            // see loadframe
+            //if (header.HasIDs()) {
+            //    vislib::Swap(buffer[pos - 8 + 0], buffer[pos - 8 + 7]);
+            //    vislib::Swap(buffer[pos - 8 + 1], buffer[pos - 8 + 6]);
+            //    vislib::Swap(buffer[pos - 8 + 2], buffer[pos - 8 + 5]);
+            //    vislib::Swap(buffer[pos - 8 + 3], buffer[pos - 8 + 4]);
+            //    typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            //}
             pos += 4;
         }
 
