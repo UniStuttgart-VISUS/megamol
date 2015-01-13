@@ -95,11 +95,14 @@ namespace moldyn {
 
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 
+        void checkFences();
+
         /** The sphere shader */
         vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
         GLuint theBuffers[2];
+        GLsync fences[2];
         unsigned int currBuf;
         GLuint colIdxAttribLoc;
         GLsizeiptr bufSize;
