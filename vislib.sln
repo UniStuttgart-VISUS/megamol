@@ -59,7 +59,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ibtest", "ibtest\ibtest.vcx
 		{59DEB5CE-352F-43B4-B250-60BD6D19201C} = {59DEB5CE-352F-43B4-B250-60BD6D19201C}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLLoad", "gl\include\glload\Visual Studio 2012\GLLoad.vcxproj", "{DBAAEBFF-BAF8-4EA9-9C36-590756D3E5EE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLLoad", "gl\include\glload\Visual Studio 2013\GLLoad.vcxproj", "{DBAAEBFF-BAF8-4EA9-9C36-590756D3E5EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
