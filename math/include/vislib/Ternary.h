@@ -48,11 +48,16 @@ namespace math {
         static const Ternary TRI_FALSE;
 
         /**
+         * Ctor. (TRI_UNKNOWN)
+         */
+        Ternary(void);
+
+        /**
          * Ctor.
          *
          * @param src The source value to be copied.
          */
-        Ternary(const Ternary& src = Ternary::TRI_UNKNOWN);
+        Ternary(const Ternary& src);
 
         /**
          * Ctor.

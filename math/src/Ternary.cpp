@@ -30,6 +30,14 @@ const vislib::math::Ternary vislib::math::Ternary::TRI_FALSE(-1);
 /*
  * vislib::math::Ternary::Ternary
  */
+vislib::math::Ternary::Ternary(void) : value(TRI_UNKNOWN) {
+    // Intentionally empty
+}
+
+
+/*
+ * vislib::math::Ternary::Ternary
+ */
 vislib::math::Ternary::Ternary(const Ternary& src) : value(src.value) {
     // Intentionally empty
 }
