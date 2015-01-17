@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "ParticleListMergeModule.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::stdplugin;

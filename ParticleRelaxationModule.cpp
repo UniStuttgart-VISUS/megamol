@@ -6,6 +6,7 @@
  */
 #include "stdafx.h"
 #include "ParticleRelaxationModule.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::stdplugin;

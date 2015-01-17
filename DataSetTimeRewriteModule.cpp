@@ -11,6 +11,7 @@
 #include "CallDescriptionManager.h"
 #include "CallDescription.h"
 #include "param/IntParam.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::stdplugin;

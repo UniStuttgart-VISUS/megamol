@@ -5,6 +5,7 @@
 #include "vislib/Log.h"
 #include <vector>
 #include <fstream>
+#include <algorithm>
 
 using namespace megamol;
 

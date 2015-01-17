@@ -12,6 +12,7 @@
 #include "param/StringParam.h"
 #include "vislib/ColourParser.h"
 #include <cstdint>
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
