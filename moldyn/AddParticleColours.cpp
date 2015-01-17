@@ -12,6 +12,7 @@
 #include "param/ButtonParam.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
+#include <algorithm>
 
 using namespace megamol::core;
 

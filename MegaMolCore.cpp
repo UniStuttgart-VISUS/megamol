@@ -106,6 +106,24 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetVersionInfo(
         char *outCommentStr, unsigned int *inOutCommentSize) {
     VLSTACKTRACE("mmvGetVersionInfo", __FILE__, __LINE__);
 
+#if defined(_WIN64) && (_MSC_FULL_VER == 180031101) && defined(NDEBUG)
+    // work around a strange bug in MSVC 2013 x64 (release)
+    printf("", //"mmvGetVersionInfo(%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u)\n",
+        (unsigned int)outMajorVersion,
+        (unsigned int)outMinorVersion,
+        (unsigned int)outMajorRevision,
+        (unsigned int)outMinorRevision,
+        (unsigned int)outSys,
+        (unsigned int)outArch,
+        (unsigned int)outFlags,
+        (unsigned int)outNameStr,
+        (unsigned int)inOutNameSize,
+        (unsigned int)outCopyrightStr,
+        (unsigned int)inOutCopyrightSize,
+        (unsigned int)outCommentStr,
+        (unsigned int)inOutCommentSize);
+#endif
+
     // Set version data
     if (outMajorVersion != NULL) *outMajorVersion = MEGAMOL_CORE_MAJOR_VER;
     if (outMinorVersion != NULL) *outMinorVersion = MEGAMOL_CORE_MINOR_VER;
@@ -376,6 +394,7 @@ MEGAMOLCORE_API mmcErrorCode
 MEGAMOLCORE_CALL mmcSetInitialisationValue(void *hCore, mmcInitValue key, 
         mmcValueType type, const void* value) {
     VLSTACKTRACE("mmcSetInitialisationValue", __FILE__, __LINE__);
+
     megamol::core::CoreInstance *inst
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
