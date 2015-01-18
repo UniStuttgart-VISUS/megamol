@@ -4,25 +4,30 @@
 # Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
 #
 
--include ../config.mk
+include ../../config.mk
 
-TargetName := vislibtest
+TargetName := vislibgluttest
 
-IncludeDir := ./include ../base/include ../sys/include ../math/include ../graphics/include ../net/include
+IncludeDir := . ../../base/include ../../math/include ../../graphics/include ../../gl/include ../../sys/include ../../glutInclude
 InputDir := ./
 
-# VISlib libraries to link (in that order):
-VISlibDir := ../lib
-VISlibs := graphics math net sys base
+
+# Name of the ouput file:
+OutName := vislibgluttest
 
 
 # C++ compiler flags:
-CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -Wall -ansi -pedantic -O0 -ggdb -std=c++11
+CPPFLAGS := -DDEBUG -DUNIX -D_GNU_SOURCE -DGLX_GLXEXT_LEGACY -Wall -ansi -O3 -ggdb -Wno-missing-braces -std=c++11
+# removed: -pedantic 
 
 # Linker flags:
-#LDFLAGS := -L$(VISlibDir) -lX11 -lXext -lm -lpthread -lpam -lpam_misc -ldl -lncurses 
-LDFLAGS := -L$(VISlibDir) -lX11 -lXext -lm -lpthread -ldl -lncurses  -lrt -lcrypt -ltinfo
+LDFLAGS := -ldl -lXext -lXxf86vm -L../../lib -lm -lpthread -lGLU -lGL -lX11 -L../../gl/include/glload/build
 
+ifneq ($(MAKECMDGOALS), clean)
+ifneq ($(MAKECMDGOALS), sweep)
+include ../../glutInclude/vislibGlutInclude.mk
+endif
+endif
 
 ###############################################################################
 
@@ -30,16 +35,13 @@ IntDir := Lin$(BITSEX)
 ifeq ($(PLATFORM), x64)
 	OutDir := ../Lin64
 	CPPFLAGS += -D_LIN64
-#	LDFLAGS += -L/usr/X11R6/lib64
-	VISlibs := $(addsuffix 64d, $(addprefix vislib, $(VISlibs)))
+	LDFLAGS += -lvislibgl64 -lvislibgraphics64 -lvislibmath64 -lvislibsys64 -lvislibbase64 -lglload
 else
 	OutDir := ../Lin32
-#	LDFLAGS += -L/usr/X11R6/lib
-	VISlibs := $(addsuffix 32d, $(addprefix vislib, $(VISlibs)))
+	LDFLAGS += -lvislibgl32 -lvislibgraphics32 -lvislibmath32 -lvislibsys32 -lvislibbase32 -lglload
 endif
 
-# Append the VISlib libraries to the linker flags:
-LDFLAGS += $(addprefix -l, $(VISlibs))
+LDFLAGS += -lX11 -lXxf86vm -lpthread
 
 # Append the include directories to the flags:
 CPPFLAGS += $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
@@ -52,13 +54,13 @@ CPP_OBJS = $(addprefix $(IntDir)/, $(notdir $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 CPP_DEPS = $(patsubst %.o, %.d, $(CPP_OBJS))
 
 
-all: $(OutDir)/$(TargetName)
+all: $(OutDir)/$(OutName)
 
-$(OutDir)/$(TargetName): $(IntDir)/$(TargetName)
+$(OutDir)/$(OutName): $(IntDir)/$(OutName)
 	@mkdir -p $(OutDir)
-	@cp $^ $(OutDir)/
+	@cp $(IntDir)/$(OutName) $(OutDir)/
 	
-$(IntDir)/$(TargetName): $(CPP_OBJS) $(addsuffix .a, $(addprefix $(VISlibDir)/lib, $(VISlibs)))
+$(IntDir)/$(OutName): $(CPP_OBJS) 
 	@echo -e $(COLORACTION)"LNK "$(COLORINFO)" $@: "
 	@$(CLEARTERMCMD)
 	$(Q)$(LINK) -o $@ $^ $(LDFLAGS)
@@ -67,7 +69,7 @@ $(IntDir)/%.d: $(InputDir)/%.cpp
 	@mkdir -p $(IntDir)
 	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
-	$(Q)$(CPP) -MM $(CPPFLAGS) $^ | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
+	$(Q)$(CPP) -MM $(CPPFLAGS) $< | sed -e 's/..*\.o\s*[:]/$(IntDir)\/\0/g' > $@
 
 
 ifneq ($(MAKECMDGOALS), clean)
@@ -75,23 +77,24 @@ ifneq ($(MAKECMDGOALS), sweep)
 -include $(CPP_DEPS)
 endif
 endif
-
+	
 	
 $(IntDir)/%.o:
 	@mkdir -p $(IntDir)
 	@echo -e $(COLORACTION)"CPP "$(COLORINFO)"$@: "
 	@$(CLEARTERMCMD)
 	$(Q)$(CPP) -c $(CPPFLAGS) -o $@ $<
-	
+
+
 #tags:
 #	ctags *.c *.cpp *.h
 
 clean: sweep
-	rm -f $(OutDir)/$(TargetName)
+	rm -f $(OutDir)/$(OutName)
 
 sweep:
 	rm -f $(IntDir)/*
 
 rebuild: clean all
 
-.PHONY: clean sweep rebuild tags $(OutDir)/$(TargetName)
+.PHONY: clean sweep rebuild tags

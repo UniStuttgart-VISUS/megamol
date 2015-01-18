@@ -11,7 +11,7 @@ else
     VISlibBits = 32
 endif
 
-VISlibDir := ..
+VISlibDir := ../..
 
 VISlibIncludeDirs := $(VISlibDir)/base/include $(VISlibDir)/cluster/include $(VISlibDir)/gl/include $(VISlibDir)/graphics/include $(VISlibDir)/math/include $(VISlibDir)/net/include $(VISlibDir)/sys/include
 

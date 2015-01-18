@@ -54,18 +54,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-101                     ICON                    "..\vis.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE 
-BEGIN
-    IDS_TEST                "Das ist ein Test."
-END
-
+IDI_ICON                ICON                    "..\\..\\extra\\icon\\vislib.ico"
 #endif    // German (Germany) resources
 /////////////////////////////////////////////////////////////////////////////
 

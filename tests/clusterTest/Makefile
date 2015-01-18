@@ -6,7 +6,7 @@
 #
 
 # Include global VISlib configuration.
-include ../config.mk
+include ../../config.mk
 
 
 # Include VISlib properties
@@ -17,7 +17,7 @@ include ExtLibs.mk
 TargetName := clusterTest
 
 # Output directory
-OutDir := ../$(VISlibPlatform)
+OutDir := ../../$(VISlibPlatform)
 
 #Intermediate directory
 IntDir := ./Lin$(BITSEX)
@@ -42,7 +42,7 @@ CompilerFlagsDebug := -ggdb
 CompilerFlagsRelease := -O3 -g0
 
 # Additional linker flags
-LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses -ltinfo -L../gl/include/glload/build -lglload 
+LinkerFlags := -lX11 -lXext -lXxf86vm -lm -lpthread -lGLU -lGL -lncurses -ltinfo -L../../gl/include/glload/build -lglload 
 LinkerFlagsDebug :=
 LinkerFlagsRelease :=
 
@@ -60,7 +60,7 @@ IncludeDirs += ../glutInclude
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
 include ../glutInclude/vislibGlutInclude.mk
-# why a different naming convention than in '../config.mk' ?
+# why a different naming convention than in '../../config.mk' ?
 IncludeDirs += $(IncludeDir)
 LinkerFlags += $(LDFLAGS)
 endif
