@@ -13,10 +13,10 @@ endif
 
 VISlibDir := ..
 
-VISlibIncludeDirs := $(VISlibDir)/base/include $(VISlibDir)/cluster/include $(VISlibDir)/clustergl/include $(VISlibDir)/gl/include $(VISlibDir)/graphics/include $(VISlibDir)/math/include $(VISlibDir)/net/include $(VISlibDir)/sys/include
+VISlibIncludeDirs := $(VISlibDir)/base/include $(VISlibDir)/cluster/include $(VISlibDir)/gl/include $(VISlibDir)/graphics/include $(VISlibDir)/math/include $(VISlibDir)/net/include $(VISlibDir)/sys/include
 
 VISlibLibDir := $(VISlibDir)/lib
 
-VISlibsRelease :=  vislibclustergl$(VISlibBits) vislibcluster$(VISlibBits) vislibgl$(VISlibBits) vislibgraphics$(VISlibBits) vislibnet$(VISlibBits) vislibsys$(VISlibBits) vislibmath$(VISlibBits) vislibbase$(VISlibBits)
+VISlibsRelease := vislibcluster$(VISlibBits) vislibgl$(VISlibBits) vislibgraphics$(VISlibBits) vislibnet$(VISlibBits) vislibsys$(VISlibBits) vislibmath$(VISlibBits) vislibbase$(VISlibBits)
 
 VISlibsDebug := $(addsuffix d, $(VISlibsRelease))
