@@ -55,11 +55,11 @@ ExcludeFromBuild :=
 
 
 #glutInclude
-IncludeDirs += ../glutInclude
+IncludeDirs += ../../glutInclude
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
-include ../glutInclude/vislibGlutInclude.mk
+include ../../glutInclude/vislibGlutInclude.mk
 # why a different naming convention than in '../../config.mk' ?
 IncludeDirs += $(IncludeDir)
 LinkerFlags += $(LDFLAGS)

@@ -129,3 +129,7 @@ ReleaseLinkerFlags := -ltinfo
 
 # List of targets of generic project requisites
 ProjectPrerequisites :=
+
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+VISLIBROOT := $(patsubst %/,%,$(dir $(mkfile_path)))
+

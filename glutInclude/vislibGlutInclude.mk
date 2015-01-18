@@ -7,6 +7,6 @@
 
 ifneq ($(MAKECMDGOALS), clean)
 ifneq ($(MAKECMDGOALS), sweep)
-include ../glutInclude/glutInclude.lin.mk
+include $(VISLIBROOT)/glutInclude/glutInclude.lin.mk
 endif
 endif
