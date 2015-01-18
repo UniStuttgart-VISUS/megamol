@@ -168,6 +168,9 @@
     <ClInclude Include="include\vislib\clustermessages.h" />
     <ClInclude Include="include\vislib\DiscoveryListener.h" />
     <ClInclude Include="include\vislib\DiscoveryService.h" />
+    <ClInclude Include="include\vislib\GlutClientNode.h" />
+    <ClInclude Include="include\vislib\GlutClusterNode.h" />
+    <ClInclude Include="include\vislib\GlutServerNode.h" />
     <ClInclude Include="include\vislib\NodeIdentifier.h" />
     <ClInclude Include="src\messagereceiver.h" />
   </ItemGroup>

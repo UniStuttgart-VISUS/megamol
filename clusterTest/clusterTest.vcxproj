@@ -245,14 +245,6 @@
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\clusterd3d\clusterd3d.vcxproj">
-      <Project>{3a4b421c-3070-495c-aa88-d89dbe723808}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\clustergl\clustergl.vcxproj">
-      <Project>{a223daf1-f6af-4288-b17d-1e88ceb7fb2d}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\cluster\cluster.vcxproj">
       <Project>{7e1f2e44-09d4-4ae2-8f80-9bc0ee677d73}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
