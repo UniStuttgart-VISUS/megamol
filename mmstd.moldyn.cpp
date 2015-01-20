@@ -17,7 +17,7 @@
 /*
  * mmplgPluginAPIVersion
  */
-MMSTD.MOLDYN_API int mmplgPluginAPIVersion(void) {
+MMSTD_MOLDYN_API int mmplgPluginAPIVersion(void) {
     return 100;
 }
 
@@ -25,23 +25,23 @@ MMSTD.MOLDYN_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgPluginName
  */
-MMSTD.MOLDYN_API const char * mmplgPluginName(void) {
-    return "mmstd.moldyn";
+MMSTD_MOLDYN_API const char * mmplgPluginName(void) {
+    return "MMSTD_MOLDYN";
 }
 
 
 /*
  * mmplgPluginDescription
  */
-MMSTD.MOLDYN_API const char * mmplgPluginDescription(void) {
-    return "Template for MegaMol Plugins (TODO: CHANGE this description)";
+MMSTD_MOLDYN_API const char * mmplgPluginDescription(void) {
+    return "MegaMol Plugins for Molecular Dynamics Data Visualization";
 }
 
 
 /*
  * mmplgCoreCompatibilityValue
  */
-MMSTD.MOLDYN_API const void * mmplgCoreCompatibilityValue(void) {
+MMSTD_MOLDYN_API const void * mmplgCoreCompatibilityValue(void) {
     static const mmplgCompatibilityValues compRev = {
         sizeof(mmplgCompatibilityValues),
         MEGAMOL_CORE_COMP_REV,
@@ -54,7 +54,7 @@ MMSTD.MOLDYN_API const void * mmplgCoreCompatibilityValue(void) {
 /*
  * mmplgModuleCount
  */
-MMSTD.MOLDYN_API int mmplgModuleCount(void) {
+MMSTD_MOLDYN_API int mmplgModuleCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -62,7 +62,7 @@ MMSTD.MOLDYN_API int mmplgModuleCount(void) {
 /*
  * mmplgModuleDescription
  */
-MMSTD.MOLDYN_API void* mmplgModuleDescription(int idx) {
+MMSTD_MOLDYN_API void* mmplgModuleDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -70,7 +70,7 @@ MMSTD.MOLDYN_API void* mmplgModuleDescription(int idx) {
 /*
  * mmplgCallCount
  */
-MMSTD.MOLDYN_API int mmplgCallCount(void) {
+MMSTD_MOLDYN_API int mmplgCallCount(void) {
     return 0; // TODO: Implement
 }
 
@@ -78,7 +78,7 @@ MMSTD.MOLDYN_API int mmplgCallCount(void) {
 /*
  * mmplgCallDescription
  */
-MMSTD.MOLDYN_API void* mmplgCallDescription(int idx) {
+MMSTD_MOLDYN_API void* mmplgCallDescription(int idx) {
     return NULL; // TODO: Implement
 }
 
@@ -86,7 +86,7 @@ MMSTD.MOLDYN_API void* mmplgCallDescription(int idx) {
 /*
  * mmplgConnectStatics
  */
-MMSTD.MOLDYN_API bool mmplgConnectStatics(int which, void* value) {
+MMSTD_MOLDYN_API bool mmplgConnectStatics(int which, void* value) {
     switch (which) {
 
         case 1: // vislib::log
