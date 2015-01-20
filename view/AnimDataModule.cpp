@@ -240,31 +240,35 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         // Note: We now need to lock, because we must synchronise against 
         // frames changing from 'STATE_AVAILABLE' to 'STATE_INUSE'.
         This->stateLock.Lock();
-        frame = NULL;
-        j = (req + This->cacheSize) % This->frameCnt;
+        // core idea: search for the frame with the largest distance to the requested frame
+        frame = NULL; // the frame to be overwritten
+        j = 0; // the distance to the found frame to be overwritten
         for (i = 0; i < This->cacheSize; i++) {
             if (This->frameCache[i]->state == Frame::STATE_INVALID) {
                 frame = This->frameCache[i];
+                // j = UINT_MAX; // not required, since we instantly leave the loop
 #ifdef _LOADING_REPORTING
                 l = i;
 #endif /* _LOADING_REPORTING */
                 break;
             } else if (This->frameCache[i]->state == Frame::STATE_AVAILABLE) {
-                k = This->frameCache[i]->frame;
-                if (j < req) {
-                    if ((k > j) && (k < req)) {
-                        frame = This->frameCache[i];
-#ifdef _LOADING_REPORTING
-                        l = i;
-#endif /* _LOADING_REPORTING */
+                // distance to the frame[i];
+                long ld = static_cast<long>(This->frameCache[i]->frame) - static_cast<long>(req);
+                if (ld < 0) {
+                    if (ld < (static_cast<long>(This->frameCnt)) / 10) {
+                        ld += static_cast<long>(This->frameCnt);
+                        if (ld < 0) ld = 0; // should never happen
+                    } else {
+                        ld = -10 * ld;
                     }
-                } else {
-                    if ((k < req) || (k > j)) {
-                        frame = This->frameCache[i];
+                }
+
+                if (j < static_cast<unsigned int>(ld)) {
+                    frame = This->frameCache[i];
+                    j = static_cast<unsigned int>(ld);
 #ifdef _LOADING_REPORTING
-                        l = i;
+                    l = i;
 #endif /* _LOADING_REPORTING */
-                    }
                 }
             }
             if (!This->isRunning.load()) break;

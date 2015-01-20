@@ -13,6 +13,7 @@
 #include "vislib/MemmappedFile.h"
 #include "vislib/String.h"
 #include "vislib/Thread.h"
+#include <algorithm>
 
 using namespace megamol::core;
 
@@ -110,6 +111,7 @@ bool moldyn::MMPLDWriter::run(void) {
         if (frameCnt == 0) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Data source counts zero frames. Abort.");
+            mpdc->Unlock();
             return false;
         }
     }
@@ -123,12 +125,14 @@ bool moldyn::MMPLDWriter::run(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to create output file \"%s\". Abort.",
             vislib::StringA(filename).PeekBuffer());
+        mpdc->Unlock();
         return false;
     }
 
 #define ASSERT_WRITEOUT(A, S) if (file.Write((A), (S)) != (S)) { \
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
         file.Close(); \
+        mpdc->Unlock(); \
         return false; \
     }
 
@@ -146,6 +150,7 @@ bool moldyn::MMPLDWriter::run(void) {
         ASSERT_WRITEOUT(&frameOffset, 8);
     }
 
+    mpdc->Unlock();
     for (UINT32 i = 0; i < frameCnt; i++) {
         frameOffset = static_cast<UINT64>(file.Tell());
         file.Seek(seekTable + i * 8);
@@ -154,8 +159,9 @@ bool moldyn::MMPLDWriter::run(void) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Started writing data frame %u\n", i);
 
-        unsigned int missCnt = 0;
+        int missCnt = -9;
         do {
+            mpdc->Unlock();
             mpdc->SetFrameID(i, true);
             if (!(*mpdc)(0)) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot get data frame %u. Abort.\n", i);
@@ -167,8 +173,8 @@ bool moldyn::MMPLDWriter::run(void) {
                     Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
                         "Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
                 }
-                missCnt++;
-                vislib::sys::Thread::Sleep(missCnt * 100);
+                ++missCnt;
+                vislib::sys::Thread::Sleep(static_cast<DWORD>(1 + std::max(missCnt, 0) * 100));
             }
         } while(mpdc->FrameID() != i);
 
@@ -197,6 +203,7 @@ bool moldyn::MMPLDWriter::run(void) {
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Completed writing data\n");
     file.Close();
 
+#undef ASSERT_WRITEOUT
     return true;
 }
 
@@ -214,6 +221,11 @@ bool moldyn::MMPLDWriter::getCapabilities(DataWriterCtrlCall& call) {
  * moldyn::MMPLDWriter::writeFrame
  */
 bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParticleDataCall& data) {
+#define ASSERT_WRITEOUT(A, S) if (file.Write((A), (S)) != (S)) { \
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
+        file.Close(); \
+        return false; \
+    }
     using vislib::sys::Log;
     UINT32 listCnt = data.GetParticleListCount();
     ASSERT_WRITEOUT(&listCnt, 4);
@@ -299,6 +311,5 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
     }
 
     return true;
-}
-
 #undef ASSERT_WRITEOUT
+}
