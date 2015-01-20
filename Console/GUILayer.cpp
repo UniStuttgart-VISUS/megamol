@@ -647,7 +647,7 @@ void GUILayer::GUIClient::EnumParameter::parseEnumDesc(
 GUILayer::GUIClient::FloatParameter::FloatParameter(TwBar *bar,
         vislib::SmartPtr<megamol::console::CoreHandle> hParam,
         const char *name, unsigned char *desc, unsigned int len) 
-        : ValueParameter(bar, hParam, TW_TYPE_FLOAT, name, desc, len, "step='0.01'") {
+        : ValueParameter(bar, hParam, TW_TYPE_FLOAT, name, desc, len, "step='0.001'") {
     if (len == 14) {
         float minVal = *reinterpret_cast<float*>(desc + 6);
         float maxVal = *reinterpret_cast<float*>(desc + 10);
