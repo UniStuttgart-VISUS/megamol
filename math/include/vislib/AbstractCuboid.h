@@ -924,8 +924,8 @@ namespace math {
             cubBack = cuboid.Back();
             cubFront = cuboid.Front();
         } else {
-            cubBack = cuboid.Back();
-            cubFront = cuboid.Front();
+            cubBack = cuboid.Front();
+            cubFront = cuboid.Back();
         }
 
         this->EnforcePositiveSize();
