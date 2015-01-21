@@ -231,8 +231,8 @@ void CALLBACK OnMouse(bool bLeftButtonDown, bool bRightButtonDown,
  * Entry point to the program. Initializes everything and goes into a message 
  * processing loop. Idle time is used to render the scene.
  */
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
-        LPWSTR lpCmdLine, int nCmdShow) {
+int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
+        LPWSTR /*lpCmdLine*/, int /*nCmdShow*/) {
     // Enable run-time memory check for debug builds.
 #if defined(DEBUG) | defined(_DEBUG)
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
@@ -454,8 +454,8 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bo
 #include <tchar.h>
 #include <Windows.h>
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
-        LPWSTR lpCmdLine, int nCmdShow) {
+int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
+        LPWSTR /*lpCmdLine*/, int /*nCmdShow*/) {
     ::MessageBox(NULL, _T("Cannot run Direct3D 9 tests due to missing ")
         _T("Direct3D SDK."), NULL, MB_ICONERROR);
     return 0;
