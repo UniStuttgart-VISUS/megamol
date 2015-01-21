@@ -40,6 +40,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cluster", "cluster\cluster.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clusterTest", "tests\clusterTest\clusterTest.vcxproj", "{5C5D703C-7A18-44CF-BB26-C7D0F615E8B5}"
 	ProjectSection(ProjectDependencies) = postProject
+		{85B5D3B1-1510-40A8-A4D6-42760493E1AE} = {85B5D3B1-1510-40A8-A4D6-42760493E1AE}
 		{7BD7E3DE-DA85-4B12-80A8-586DE5D2C709} = {7BD7E3DE-DA85-4B12-80A8-586DE5D2C709}
 	EndProjectSection
 EndProject
