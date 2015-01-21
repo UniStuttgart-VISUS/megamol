@@ -356,7 +356,7 @@
       <Project>{ac94966a-1e30-47a8-a503-0f9737fd1fe8}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\Vislib.Interop\Vislib.Interop.csproj">
+    <ProjectReference Include="..\..\extra\Vislib.Interop\Vislib.Interop.csproj">
       <Project>{bb192aa8-8a09-4492-aeb8-1a8ae6ac9339}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>

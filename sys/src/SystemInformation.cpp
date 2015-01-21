@@ -20,6 +20,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <Lmcons.h>
+#define VISLIB_USE_VERSION_HELPERS
+#include <VersionHelpers.h>
 #else
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -431,6 +433,16 @@ vislib::sys::SystemInformation::OSType vislib::sys::SystemInformation::SystemTyp
 void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor, 
                                                    DWORD& outMinor) {
 #ifdef _WIN32
+#ifdef VISLIB_USE_VERSION_HELPERS
+    // The new version helper API is crap, but ...
+    WORD v1 = 1, v2 = 0, v3 = 0;
+    while (::IsWindowsVersionOrGreater(v1 + 1, v2, v3)) v1++;
+    while (::IsWindowsVersionOrGreater(v1, v2 + 1, v3)) v2++;
+    //while (::IsWindowsVersionOrGreater(v1, v2, v3 + 1)) v3++;
+    outMajor = v1;
+    outMinor = v2;
+
+#else /* VISLIB_USE_VERSION_HELPERS*/
     OSVERSIONINFO ver;
     ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     
@@ -440,7 +452,7 @@ void vislib::sys::SystemInformation::SystemVersion(DWORD& outMajor,
 
     outMajor = ver.dwMajorVersion;
     outMinor = ver.dwMinorVersion;
-
+#endif /* VISLIB_USE_VERSION_HELPERS */
 #else /* _WIN32 */
     const int BUFFER_SIZE = 512;
     char buffer[BUFFER_SIZE];
