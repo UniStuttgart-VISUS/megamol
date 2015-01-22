@@ -22,21 +22,51 @@ namespace vislib {
 namespace graphics {
 namespace gl {
 
+#ifndef GLUT_API_VERSION
+#error You must include GLUT before you include GlutMouseInteractionAdapter.h
+#endif
+
+    /**
+     * Traits class connecting to standard GLUT
+     */
+    typedef struct _GlutTraits_t {
+        /* int Constant values */
+        enum constants {
+            LEFT_BUTTON = GLUT_LEFT_BUTTON,
+            RIGHT_BUTTON = GLUT_RIGHT_BUTTON,
+            MIDDLE_BUTTON = GLUT_MIDDLE_BUTTON,
+            BUTTON_DOWN = GLUT_DOWN,
+            ACTIVE_SHIFT = GLUT_ACTIVE_SHIFT,
+            ACTIVE_CTRL = GLUT_ACTIVE_CTRL,
+            ACTIVE_ALT = GLUT_ACTIVE_ALT
+        };
+        /* GetModifiers */
+        static inline int GetModifiers(void) {
+            return ::glutGetModifiers();
+        }
+    } GlutTraits;
+
 
     /**
      * This is a convenience class for using a VISlib camera with 2D mouse 
      * interaction in a GLUT application.
+     *
+     * @param T GlutTraits class
      */
+    template<class T>
     class GlutMouseInteractionAdapter {
-
     public:
 
         /** Ctor. */
-        GlutMouseInteractionAdapter(const SmartPtr<CameraParameters>& params, 
-            const unsigned int cntButtons = 3);
+        GlutMouseInteractionAdapter(const SmartPtr<CameraParameters>& params,
+                const unsigned int cntButtons = 3) : mia(params, cntButtons) {
+            // intentionally empty 
+        }
 
         /** Dtor. */
-        ~GlutMouseInteractionAdapter(void);
+        ~GlutMouseInteractionAdapter(void) {
+            // intentionally empty
+        }
 
         /**
          * Configure the behaviour of the rotation controller.
@@ -95,7 +125,9 @@ namespace gl {
          * @param x   The new x-coordinate of the mouse cursor.
          * @param y   The new y-coordinate of the mouse cursor.
          */
-        void OnKeyDown(const unsigned char key, const int x, const int y);
+        inline void OnKeyDown(const unsigned char key, const int x, const int y) {
+            this->mia.SetMousePosition(x, y, true);
+        }
 
         /**
          * This method should be called once a mouse button was pressed or 
@@ -106,8 +138,29 @@ namespace gl {
          * @param x      The new x-coordinate of the mouse cursor.
          * @param y      The new y-coordinate of the mouse cursor.
          */
-        void OnMouseButton(const int button, const int state, const int x,
-            const int y);
+        inline void OnMouseButton(const int button, const int state,
+                const int x, const int y) {
+            MouseInteractionAdapter::Button btn
+                = MouseInteractionAdapter::BUTTON_LEFT;
+
+            switch (button) {
+            case T::LEFT_BUTTON:
+                btn = MouseInteractionAdapter::BUTTON_LEFT;
+                break;
+
+            case T::RIGHT_BUTTON:
+                btn = MouseInteractionAdapter::BUTTON_RIGHT;
+                break;
+
+            case T::MIDDLE_BUTTON:
+                btn = MouseInteractionAdapter::BUTTON_MIDDLE;
+                break;
+            }
+
+            this->mia.SetMousePosition(x, y, true);
+            this->mia.SetMouseButtonState(btn, (state == T::BUTTON_DOWN));
+            this->setModifierState(T::GetModifiers());
+        }
 
         /**
          * This method should be called once the mouse was moved.
@@ -115,7 +168,9 @@ namespace gl {
          * @param x The new x-coordinate of the mouse cursor.
          * @param y The new y-coordinate of the mouse cursor.
          */
-        void OnMouseMove(const int x, const int y);
+        inline void OnMouseMove(const int x, const int y) {
+            this->mia.SetMousePosition(x, y, true);
+        }
 
         /**
          * This method should be called once the mouse was moved outside the
@@ -124,7 +179,9 @@ namespace gl {
          * @param x The new x-coordinate of the mouse cursor.
          * @param y The new y-coordinate of the mouse cursor.
          */
-        void OnMousePassiveMove(const int x, const int y);
+        inline void OnMousePassiveMove(const int x, const int y) {
+            this->mia.SetMousePosition(x, y, true);
+        }
 
         /**
          * This method should be called once the window was resized.
@@ -132,7 +189,14 @@ namespace gl {
          * @param width  The new width of the window.
          * @param height The new height of the window.
          */
-        void OnResize(const int width, const int height);
+        inline void OnResize(const int width, const int height) {
+            SmartPtr<CameraParameters> params = this->mia.GetCamera();
+            if (!params.IsNull()) {
+                params->SetVirtualViewSize(
+                    static_cast<ImageSpaceType>(width),
+                    static_cast<ImageSpaceType>(height));
+            }
+        }
 
         /**
          * This method should be called once a special key was pressed.
@@ -141,7 +205,11 @@ namespace gl {
          * @param x   The new x-coordinate of the mouse cursor.
          * @param y   The new y-coordinate of the mouse cursor.
          */
-        void OnSpecialKeyDown(const int key, const int x, const int y);
+        inline void OnSpecialKeyDown(const int key, const int x,
+                const int y) {
+            this->mia.SetMousePosition(x, y, true);
+            this->setModifierState(T::GetModifiers());
+        }
 
         /**
          * Change the camera parameters to be modfied.
@@ -169,7 +237,14 @@ namespace gl {
          *
          * @param glutModifiers The GLUT modifier mask.
          */
-        void setModifierState(const int glutModifiers);
+        inline void setModifierState(const int glutModifiers) {
+            this->mia.SetModifierState(InputModifiers::MODIFIER_SHIFT,
+                (glutModifiers & T::ACTIVE_SHIFT) == T::ACTIVE_SHIFT);
+            this->mia.SetModifierState(InputModifiers::MODIFIER_CTRL,
+                (glutModifiers & T::ACTIVE_CTRL) == T::ACTIVE_CTRL);
+            this->mia.SetModifierState(InputModifiers::MODIFIER_ALT,
+                (glutModifiers & T::ACTIVE_ALT) == T::ACTIVE_ALT);
+        }
 
         /** The interaction adapter that performs the actual work. */
         MouseInteractionAdapter mia;
