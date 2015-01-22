@@ -1,6 +1,0 @@
-VSWIZARD 7.0
-Wizard=VsWizard.VsWizardEngine.8.0
-
-Param="WIZARD_NAME = Visual C++ 2005 Project with VISlib support"
-Param="RELATIVE_PATH = VCWizards\AppWiz\VISlibVS2005Project"
-Param="FALLBACK_LCID = 1033"
