@@ -212,7 +212,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("MpiProvider"), "::mpi");
     vd->AddModule(ModuleDescriptionManager::Instance()->Find("MpiClusterView"), "mcview");
     vd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "mcview::register", "::mcc::registerView");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("MpiCall"), "mcview::mpiProvider", "::mpi::provideMpi");
+    vd->AddCall(CallDescriptionManager::Instance()->Find("MpiCall"), "mcview::requestMpi", "::mpi::provideMpi");
     vd->SetViewModuleID("mcview");
 
     this->builtinViewDescs.Register(vd);

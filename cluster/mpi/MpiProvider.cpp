@@ -179,7 +179,7 @@ bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
         /* Determine whether we "own" MPI, and if so, initialise it. */
         // TODO: Check status?
         ::MPI_Initialized(&isInitialised);
-        MpiProvider::isMpiOwner = (isInitialised != 0);
+        MpiProvider::isMpiOwner = (isInitialised == 0);
 
         if (MpiProvider::isMpiOwner) {
             vislib::sys::CmdLineProviderA cl(MpiProvider::getCommandLine());
