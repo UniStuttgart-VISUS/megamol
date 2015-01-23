@@ -7,19 +7,19 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "glload/include/glload/visgl_load.h"
+#include "glload/visgl_load.h"
 
-#include "glload/include/glload/gl_all.h"
-#include "glload/include/glload/gl_load.h"
+#include "glload/gl_all.h"
+#include "glload/gl_load.h"
 #ifdef _WIN32
 #include <Windows.h>
-#include "glload/include/glload/wgl_all.h"
-#include "glload/include/glload/wgl_load.h"
+#include "glload/wgl_all.h"
+#include "glload/wgl_load.h"
 #else
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include "glload/include/glload/glx_all.h"
-#include "glload/include/glload/glx_load.h"
+#include "glload/glx_all.h"
+#include "glload/glx_load.h"
 #endif
 
 //#include <atomic>

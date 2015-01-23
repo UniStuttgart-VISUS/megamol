@@ -99,7 +99,7 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <NuGetPackageImportStamp>066e6f52</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>0c169b57</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Linkage-freeglut>
@@ -120,7 +120,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\glload\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;VISLIB_CLUSTER_WITH_OPENGL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -140,11 +140,14 @@
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ProjectReference>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-    </ProjectReference>
+    <ProjectReference />
+    <PreBuildEvent>
+      <Command>if not exist "$(TargetDir)." mkdir "$(TargetDir)."
+xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V /G /K
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -152,7 +155,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\glload\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -172,16 +175,19 @@
       <TargetMachine>MachineX64</TargetMachine>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ProjectReference>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-    </ProjectReference>
+    <ProjectReference />
+    <PreBuildEvent>
+      <Command>if not exist "$(TargetDir)." mkdir "$(TargetDir)."
+xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V /G /K
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\glload\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -201,11 +207,14 @@
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ProjectReference>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-    </ProjectReference>
+    <ProjectReference />
+    <PreBuildEvent>
+      <Command>if not exist "$(TargetDir)." mkdir "$(TargetDir)."
+xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V /G /K
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -213,7 +222,7 @@
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rd\glload\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -233,11 +242,14 @@
       <TargetMachine>MachineX64</TargetMachine>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)3rd\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
-    <ProjectReference>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-    </ProjectReference>
+    <ProjectReference />
+    <PreBuildEvent>
+      <Command>if not exist "$(TargetDir)." mkdir "$(TargetDir)."
+xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V /G /K
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="clusterTest.cpp" />
@@ -280,14 +292,14 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets" Condition="Exists('..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets')" />
-    <Import Project="..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets" Condition="Exists('..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets')" />
+    <Import Project="..\..\packages\nupengl.core.redist.0.0.0.1\build\native\nupengl.core.redist.targets" Condition="Exists('..\..\packages\nupengl.core.redist.0.0.0.1\build\native\nupengl.core.redist.targets')" />
+    <Import Project="..\..\packages\nupengl.core.0.0.0.1\build\native\nupengl.core.targets" Condition="Exists('..\..\packages\nupengl.core.0.0.0.1\build\native\nupengl.core.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets'))" />
-    <Error Condition="!Exists('..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets'))" />
+    <Error Condition="!Exists('..\..\packages\nupengl.core.redist.0.0.0.1\build\native\nupengl.core.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\nupengl.core.redist.0.0.0.1\build\native\nupengl.core.redist.targets'))" />
+    <Error Condition="!Exists('..\..\packages\nupengl.core.0.0.0.1\build\native\nupengl.core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\nupengl.core.0.0.0.1\build\native\nupengl.core.targets'))" />
   </Target>
 </Project>
