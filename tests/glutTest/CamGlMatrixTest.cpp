@@ -1,7 +1,7 @@
 #include "CamGlMatrixTest.h"
 
 #include <iostream>
-#include "vislibGlutInclude.h"
+#include <GL/glut.h>
 
 #include "vislib/assert.h"
 #include "vislib/memutils.h"

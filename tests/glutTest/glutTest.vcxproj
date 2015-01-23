@@ -73,7 +73,7 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</OutDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
@@ -93,6 +93,23 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <NuGetPackageImportStamp>d25dc16c</NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Linkage-freeglut>
+    </Linkage-freeglut>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Linkage-freeglut>
+    </Linkage-freeglut>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Linkage-freeglut>
+    </Linkage-freeglut>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Linkage-freeglut>
+    </Linkage-freeglut>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -102,7 +119,7 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include;$(SolutionDir)\glutInclude</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -115,14 +132,15 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </ClCompile>
     <Link>
       <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>freeglut.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -139,7 +157,7 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include;$(SolutionDir)\glutInclude</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -151,14 +169,15 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </ClCompile>
     <Link>
       <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>freeglut.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -172,7 +191,7 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </PreBuildEvent>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include;$(SolutionDir)\glutInclude</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -182,7 +201,7 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </ClCompile>
     <Link>
       <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -191,7 +210,8 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>freeglut.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -208,7 +228,7 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </Midl>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include;$(SolutionDir)\glutInclude</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\base\include;$(SolutionDir)\math\include;$(SolutionDir)\graphics\include;$(SolutionDir)\sys\include;$(SolutionDir)\gl\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -218,7 +238,7 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
     </ClCompile>
     <Link>
       <AdditionalDependencies>shlwapi.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibsys$(BitsD).lib;opengl32.lib;GLLoad$(BitsD).lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)packages\freeglut.2.8.1.15\build\native\lib\v110\$(Platform)\$(Configuration)\$(Linkage-freeglut);$(SolutionDir)\lib;$(SolutionDir)gl\include\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -227,7 +247,8 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>freeglut.lib</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -278,10 +299,6 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
       <Project>{4f55d730-e9de-4749-99c7-0285da1d263d}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\glutInclude\glutInclude.vcxproj">
-      <Project>{ca67d149-87ff-4c42-abbb-874907ed921e}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\..\gl\gl.vcxproj">
       <Project>{7bd7e3de-da85-4b12-80a8-586de5d2c709}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -302,7 +319,19 @@ xcopy "$(SolutionDir)gl\include\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /
   <ItemGroup>
     <ResourceCompile Include="gluttest.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets" Condition="Exists('..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets')" />
+    <Import Project="..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets" Condition="Exists('..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\freeglut.redist.2.8.1.15\build\native\freeglut.redist.targets'))" />
+    <Error Condition="!Exists('..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\freeglut.2.8.1.15\build\native\freeglut.targets'))" />
+  </Target>
 </Project>

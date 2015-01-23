@@ -6,7 +6,7 @@
 #include "vislib/IncludeAllGL.h"
 #include "SimpleFontTest.h"
 
-#include "vislibGlutInclude.h"
+#include <GL/glut.h>
 #include <cstdio>
 
 #include "vislib/types.h"

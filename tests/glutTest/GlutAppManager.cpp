@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include "vislib/IncludeAllGL.h"
-#include "vislibGlutInclude.h"
+#include <GL/glut.h>
 #include "GlutAppManager.h"
 #include "vislib/FpsCounter.h"
 #include "vislib/VersionNumber.h"

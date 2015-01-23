@@ -25,11 +25,11 @@ ProjectPrerequisites := ./include/glload/build/libglload.so
 IncludeDir += ../base/include ../math/include ../sys/include ../graphics/include ../glutInclude
 
 
-ifneq ($(MAKECMDGOALS), clean)
-ifneq ($(MAKECMDGOALS), sweep)
-include ../glutInclude/vislibGlutInclude.mk
-endif
-endif
+#ifneq ($(MAKECMDGOALS), clean)
+#ifneq ($(MAKECMDGOALS), sweep)
+#include ../glutInclude/vislibGlutInclude.mk
+#endif
+#endif
 
 # Include common build rules.
 -include ../librules.mk

@@ -7,7 +7,7 @@
 #include "GLSLGeomShaderTest.h"
 
 #include "vislib/IncludeAllGL.h"
-#include "vislibGlutInclude.h"
+#include <GL/glut.h>
 #include <GL/glu.h>
 #include <cstdio>
 

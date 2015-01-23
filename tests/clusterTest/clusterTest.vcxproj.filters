@@ -55,4 +55,7 @@
     <CustomBuildStep Include="ExtLibs.mk" />
     <CustomBuildStep Include="Makefile" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>

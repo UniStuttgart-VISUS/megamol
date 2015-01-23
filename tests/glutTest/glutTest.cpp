@@ -23,7 +23,7 @@
 
 #include "vislib/IncludeAllGL.h"
 #include <stdio.h>
-#include "vislibGlutInclude.h"
+#include <GL/glut.h>
 #include <cassert>
 #include <stdlib.h>
 
