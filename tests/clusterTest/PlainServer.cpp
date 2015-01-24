@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "vislib/clustermessages.h"
+#include "vislib/net/cluster/clustermessages.h"
 
 
 /*

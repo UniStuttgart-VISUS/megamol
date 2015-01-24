@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/GlutServerNode.h"
-#include "vislib/OpenGLVISLogo.h"
+#include "vislib/net/cluster/GlutServerNode.h"
+#include "vislib/graphics/gl/OpenGLVISLogo.h"
 
 
 #if defined(VISLIB_CLUSTER_WITH_OPENGL) && (VISLIB_CLUSTER_WITH_OPENGL != 0)

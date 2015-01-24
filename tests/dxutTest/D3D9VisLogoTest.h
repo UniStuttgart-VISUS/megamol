@@ -17,7 +17,7 @@
 
 
 #ifdef HAVE_LEGACY_DIRECTX_SDK
-#include "vislib/D3DVISLogo.h"
+#include "vislib/graphics/d3d/D3DVISLogo.h"
 
 #include "AbstractTest.h"
 

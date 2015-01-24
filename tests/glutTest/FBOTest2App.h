@@ -12,8 +12,8 @@
 
 
 #include "AbstractGlutApp.h"
-#include "vislib/FramebufferObject.h"
-#include "vislib/CameraOpenGL.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
 
 
 /*

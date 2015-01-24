@@ -10,7 +10,7 @@
 #include "D3D9VisLogoTest.h"
 
 #include "vislib/assert.h"
-#include "vislib/d3dverify.h"
+#include "vislib/graphics/d3d/d3dverify.h"
 #include "vislib/memutils.h"
 
 

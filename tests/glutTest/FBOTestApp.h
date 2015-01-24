@@ -12,8 +12,8 @@
 
 
 #include "AbstractGlutApp.h"
-#include "vislib/FramebufferObject.h"
-#include "vislib/OpenGLVISLogo.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/OpenGLVISLogo.h"
 
 
 /*

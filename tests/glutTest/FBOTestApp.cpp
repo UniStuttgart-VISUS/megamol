@@ -9,7 +9,7 @@
 #include <GL/glut.h>
 #include <iostream>
 
-#include "vislib/glverify.h"
+#include "vislib/graphics/gl/glverify.h"
 
 
 /*

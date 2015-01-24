@@ -11,12 +11,12 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractGlutApp.h"
-#include "vislib/AbstractFont.h"
-#include "vislib/CameraOpenGL.h"
-#include "vislib/CameraRotate2DLookAt.h"
-#include "vislib/Cursor2D.h"
-#include "vislib/InputModifiers.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/graphics/AbstractFont.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/CameraRotate2DLookAt.h"
+#include "vislib/graphics/Cursor2D.h"
+#include "vislib/graphics/InputModifiers.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/PtrArray.h"
 #include "vislib/types.h"
 

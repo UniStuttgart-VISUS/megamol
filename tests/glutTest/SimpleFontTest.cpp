@@ -3,20 +3,20 @@
  *
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "SimpleFontTest.h"
 
 #include <GL/glut.h>
 #include <cstdio>
 
 #include "vislib/types.h"
-#include "vislib/graphicstypes.h"
-#include "vislib/Rectangle.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/SimpleFont.h"
+#include "vislib/graphics/graphicstypes.h"
+#include "vislib/math/Rectangle.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/graphics/gl/SimpleFont.h"
 
-#include "vislib/OutlineFont.h"
-#include "vislib/Verdana.inc"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 
 #define _USE_MATH_DEFINES
 #include <math.h>

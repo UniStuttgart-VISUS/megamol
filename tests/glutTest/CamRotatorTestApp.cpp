@@ -6,14 +6,14 @@
  */
 #include "CamRotatorTestApp.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glut.h>
 #include <GL/glu.h>
 #include <cstdio>
 
-#include "vislib/graphicstypes.h"
-#include "vislib/ObservableCameraParams.h"
-#include "vislib/Rectangle.h"
+#include "vislib/graphics/graphicstypes.h"
+#include "vislib/graphics/ObservableCameraParams.h"
+#include "vislib/math/Rectangle.h"
 
 //#define REGISTER_TEST_OBSERVER
 

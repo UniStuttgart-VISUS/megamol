@@ -11,9 +11,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "vislib/CameraOpenGL.h"
-#include "vislib/MouseInteractionAdapter.h"
-#include "vislib/OpenGLVISLogo.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/MouseInteractionAdapter.h"
+#include "vislib/graphics/gl/OpenGLVISLogo.h"
 
 #include "AbstractGlutApp.h"
 

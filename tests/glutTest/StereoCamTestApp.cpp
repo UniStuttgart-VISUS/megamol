@@ -6,11 +6,11 @@
 
 #include "StereoCamTestApp.h"
 
-#include "vislib/CameraParamsEyeOverride.h"
-#include "vislib/CameraParamsTileRectOverride.h"
-#include "vislib/PerformanceCounter.h"
+#include "vislib/graphics/CameraParamsEyeOverride.h"
+#include "vislib/graphics/CameraParamsTileRectOverride.h"
+#include "vislib/sys/PerformanceCounter.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glut.h>
 #include <GL/glu.h>
 #include <cstdio>

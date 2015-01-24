@@ -7,7 +7,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -21,7 +21,7 @@
 #else /* _WIN32 */
 #endif /* _WIN32 */
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <stdio.h>
 #include <GL/glut.h>
 #include <cassert>
@@ -35,7 +35,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(disable: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma warning(default: 4996)
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -51,9 +51,9 @@
 #include "SimpleFontTest.h"
 #include "CamEulerRotatorTestApp.h"
 
-#include "vislib/FpsCounter.h"
-#include "vislib/Thread.h"
-#include "vislib/glfunctions.h"
+#include "vislib/graphics/FpsCounter.h"
+#include "vislib/sys/Thread.h"
+#include "vislib/graphics/gl/glfunctions.h"
 
 /** the startup test selection */
 static int startupTest;

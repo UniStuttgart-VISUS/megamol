@@ -9,10 +9,10 @@
 
 #include <iostream>
 
-#include "vislib/DNS.h"
-#include "vislib/IPEndPoint.h"
-#include "vislib/NetworkInformation.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/net/DNS.h"
+#include "vislib/net/IPEndPoint.h"
+#include "vislib/net/NetworkInformation.h"
+#include "vislib/sys/SystemInformation.h"
 
 using namespace vislib::net;
 using namespace vislib::net::cluster;

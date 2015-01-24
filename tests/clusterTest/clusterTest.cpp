@@ -13,7 +13,7 @@
 
 #include <iostream>
 
-#include "vislib/CmdLineParser.h"
+#include "vislib/sys/CmdLineParser.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 

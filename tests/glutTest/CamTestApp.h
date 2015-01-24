@@ -13,8 +13,8 @@
 
 #include "AbstractGlutApp.h"
 #include "vislib/types.h"
-#include "vislib/CameraOpenGL.h"
-#include "vislib/OpenGLVISLogo.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/gl/OpenGLVISLogo.h"
 
 
 /*

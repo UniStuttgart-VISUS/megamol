@@ -13,7 +13,7 @@
 
 #include <iostream>
 
-#include "vislib/CameraParameterObserver.h"
+#include "vislib/graphics/CameraParameterObserver.h"
 
 
 class CamParamObserver : public vislib::graphics::CameraParameterObserver {

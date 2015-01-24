@@ -12,10 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "vislib/Socket.h"
-#include "vislib/CmdLineProvider.h"
-#include "vislib/DiscoveryListener.h"
-#include "vislib/DiscoveryService.h"
+#include "vislib/net/Socket.h"
+#include "vislib/sys/CmdLineProvider.h"
+#include "vislib/net/cluster/DiscoveryListener.h"
+#include "vislib/net/cluster/DiscoveryService.h"
 
 
 class DiscoveryTestApp : public vislib::net::cluster::DiscoveryListener {

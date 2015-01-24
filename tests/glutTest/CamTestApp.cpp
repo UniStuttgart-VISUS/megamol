@@ -6,15 +6,15 @@
 #define _USE_MATH_DEFINES
 #include "CamTestApp.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glut.h>
 #include <GL/glu.h>
 #include <cstdio>
 
-#include "vislib/CameraParamsTileRectOverride.h"
-#include "vislib/graphicstypes.h"
-#include "vislib/PerformanceCounter.h"
-#include "vislib/Rectangle.h"
+#include "vislib/graphics/CameraParamsTileRectOverride.h"
+#include "vislib/graphics/graphicstypes.h"
+#include "vislib/sys/PerformanceCounter.h"
+#include "vislib/math/Rectangle.h"
 #include <cmath>
 
 /*

@@ -9,12 +9,12 @@
 #endif /* _WIN32 */
 
 #include <stdio.h>
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glut.h>
 #include "GlutAppManager.h"
-#include "vislib/FpsCounter.h"
+#include "vislib/graphics/FpsCounter.h"
 #include "vislib/VersionNumber.h"
-#include "vislib/glfunctions.h"
+#include "vislib/graphics/gl/glfunctions.h"
 
 
 /** not nice! */

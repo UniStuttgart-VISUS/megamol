@@ -6,14 +6,14 @@
 #define _USE_MATH_DEFINES
 #include "GLSLShaderTest.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glut.h>
 #include <GL/glu.h>
 #include <cstdio>
 
-#include "vislib/graphicstypes.h"
-#include "vislib/Rectangle.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/graphics/graphicstypes.h"
+#include "vislib/math/Rectangle.h"
+#include "vislib/sys/sysfunctions.h"
 
 
 /*

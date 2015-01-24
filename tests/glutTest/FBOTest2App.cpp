@@ -5,12 +5,12 @@
  */
 
 #include "FBOTest2App.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glut.h>
 #include <iostream>
 
-#include "vislib/glverify.h"
-#include "vislib/CameraParamsStore.h"
+#include "vislib/graphics/gl/glverify.h"
+#include "vislib/graphics/CameraParamsStore.h"
 
 
 /*

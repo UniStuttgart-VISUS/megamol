@@ -8,7 +8,7 @@
 #include "DXUT.h"
 #include "D3D9TestBoxGeometry.h"
 
-#include "vislib/d3dverify.h"
+#include "vislib/graphics/d3d/d3dverify.h"
 
 
 /*

@@ -12,11 +12,11 @@
 
 #include "AbstractGlutApp.h"
 
-#include "vislib/CameraOpenGL.h"
-#include "vislib/CameraParameters.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
-#include "vislib/OpenGLVISLogo.h"
+#include "vislib/graphics/gl/OpenGLVISLogo.h"
 
 
 #define TILE_RIGHT_EYE 3

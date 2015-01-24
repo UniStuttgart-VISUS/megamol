@@ -13,11 +13,11 @@
 
 #include "AbstractGlutApp.h"
 #include "vislib/types.h"
-#include "vislib/CameraOpenGL.h"
-#include "vislib/CameraRotate2DLookAt.h"
-#include "vislib/Cursor2D.h"
-#include "vislib/GLSLGeometryShader.h"
-#include "vislib/InputModifiers.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/CameraRotate2DLookAt.h"
+#include "vislib/graphics/Cursor2D.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/InputModifiers.h"
 
 
 /*

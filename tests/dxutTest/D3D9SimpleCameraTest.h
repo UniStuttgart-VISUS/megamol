@@ -17,9 +17,9 @@
 
 
 #ifdef HAVE_LEGACY_DIRECTX_SDK
-#include "vislib/D3DCamera.h"
-#include "vislib/D3DVISLogo.h"
-#include "vislib/MouseInteractionAdapter.h"
+#include "vislib/graphics/d3d/D3DCamera.h"
+#include "vislib/graphics/d3d/D3DVISLogo.h"
+#include "vislib/graphics/MouseInteractionAdapter.h"
 
 #include "AbstractTest.h"
 #include "D3D9TestBoxGeometry.h"
