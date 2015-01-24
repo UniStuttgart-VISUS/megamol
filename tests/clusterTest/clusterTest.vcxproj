@@ -119,7 +119,6 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
@@ -155,7 +154,6 @@ xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -186,7 +184,6 @@ xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -222,7 +219,6 @@ xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ProgramDataBaseFileName>$(SolutionDir)\pdb\vislib$(ProjectName)$(BitsD).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>

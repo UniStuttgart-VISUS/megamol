@@ -17,12 +17,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "tests\test\test.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glutTest", "tests\glutTest\glutTest.vcxproj", "{C1127942-04CB-44E6-99AE-8A5108957861}"
 	ProjectSection(ProjectDependencies) = postProject
+		{C8A383A0-B144-43ED-902B-EE34B9700144} = {C8A383A0-B144-43ED-902B-EE34B9700144}
 		{DBAAEBFF-BAF8-4EA9-9C36-590756D3E5EE} = {DBAAEBFF-BAF8-4EA9-9C36-590756D3E5EE}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dxutTest", "tests\dxutTest\dxutTest.vcxproj", "{D52C76FE-E72C-4379-9700-5F6EC864F3A0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8A383A0-B144-43ED-902B-EE34B9700144} = {C8A383A0-B144-43ED-902B-EE34B9700144}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clusterTest", "tests\clusterTest\clusterTest.vcxproj", "{5C5D703C-7A18-44CF-BB26-C7D0F615E8B5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8A383A0-B144-43ED-902B-EE34B9700144} = {C8A383A0-B144-43ED-902B-EE34B9700144}
+		{DBAAEBFF-BAF8-4EA9-9C36-590756D3E5EE} = {DBAAEBFF-BAF8-4EA9-9C36-590756D3E5EE}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2D0C11AC-26BF-4C7B-AE1B-E2299CA57847}"
 EndProject
