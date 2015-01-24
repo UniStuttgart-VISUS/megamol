@@ -9,7 +9,6 @@
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/vislibsymbolimportexport.inl"
 #include <cmath>
 #include <cstdio>
 
@@ -17,8 +16,7 @@
 /*
  * __vl_stacktrace_manager
  */
-VISLIB_STATICSYMBOL vislib::SmartPtr<vislib::StackTrace>
-    __vl_stacktrace_manager;
+static vislib::SmartPtr<vislib::StackTrace> __vl_stacktrace_manager;
 
 
 /*

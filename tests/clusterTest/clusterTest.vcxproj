@@ -282,12 +282,6 @@ xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\cluster\cluster.vcxproj">
-      <Project>{7e1f2e44-09d4-4ae2-8f80-9bc0ee677d73}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

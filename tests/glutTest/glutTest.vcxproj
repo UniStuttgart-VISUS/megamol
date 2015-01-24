@@ -295,28 +295,6 @@ xcopy "$(SolutionDir)3rd\glload\lib\glload$(BitsD).dll" "$(TargetDir)." /Y /F /V
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\base\base.vcxproj">
-      <Project>{4f55d730-e9de-4749-99c7-0285da1d263d}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\gl\gl.vcxproj">
-      <Project>{7bd7e3de-da85-4b12-80a8-586de5d2c709}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\graphics\graphics.vcxproj">
-      <Project>{8b747271-1cb1-4f2a-99a3-d1dc1c30fba1}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\math\math.vcxproj">
-      <Project>{56e9117a-dd6c-42ca-8b65-6a4591b1e987}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\sys\sys.vcxproj">
-      <Project>{ac94966a-1e30-47a8-a503-0f9737fd1fe8}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="gluttest.rc" />
   </ItemGroup>
   <ItemGroup>

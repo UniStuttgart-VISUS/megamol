@@ -15,7 +15,6 @@
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
 #include "vislib/UnsupportedOperationException.h"
-#include "vislib/vislibsymbolimportexport.inl"
 
 
 /*
@@ -226,7 +225,7 @@ const char *vislib::Trace::DEFAULT_PREFIX = "TRACE: ";
 /*
  * __vl_trace_instance
  */
-VISLIB_STATICSYMBOL vislib::Trace __vl_trace_instance;
+static vislib::Trace __vl_trace_instance;
 
 
 /*

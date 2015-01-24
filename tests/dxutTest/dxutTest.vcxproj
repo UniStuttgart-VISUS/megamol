@@ -271,24 +271,6 @@
   <ItemGroup>
     <None Include="..\..\extra\icon\vislib.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\base\base.vcxproj">
-      <Project>{4f55d730-e9de-4749-99c7-0285da1d263d}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\d3d\d3d.vcxproj">
-      <Project>{85b5d3b1-1510-40a8-a4d6-42760493e1ae}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\graphics\graphics.vcxproj">
-      <Project>{8b747271-1cb1-4f2a-99a3-d1dc1c30fba1}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\..\math\math.vcxproj">
-      <Project>{56e9117a-dd6c-42ca-8b65-6a4591b1e987}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
