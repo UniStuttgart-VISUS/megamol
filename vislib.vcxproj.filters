@@ -385,6 +385,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\makevislibversion.pl" />
+    <CustomBuild Include="src\makevislibversion.pl" />
   </ItemGroup>
 </Project>
