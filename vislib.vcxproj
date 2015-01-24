@@ -302,6 +302,18 @@
     <ClInclude Include="include\vislib\net\AsyncSocketSender.h" />
     <ClInclude Include="include\vislib\net\ClusterDiscoveryListener.h" />
     <ClInclude Include="include\vislib\net\ClusterDiscoveryService.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractClientNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractClusterNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractControlledNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractControllerNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractServerNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\clustermessages.h" />
+    <ClInclude Include="include\vislib\net\cluster\DiscoveryListener.h" />
+    <ClInclude Include="include\vislib\net\cluster\DiscoveryService.h" />
+    <ClInclude Include="include\vislib\net\cluster\GlutClientNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\GlutClusterNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\GlutServerNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\NodeIdentifier.h" />
     <ClInclude Include="include\vislib\net\CommServer.h" />
     <ClInclude Include="include\vislib\net\CommServerListener.h" />
     <ClInclude Include="include\vislib\net\DNS.h" />
@@ -425,6 +437,7 @@
     <ClInclude Include="include\vislib\VersionNumber.h" />
     <ClInclude Include="include\vislib\vislibversion.h" />
     <ClInclude Include="include\vislib\xmlUtils.h" />
+    <ClInclude Include="src\net\cluster\messagereceiver.h" />
     <ClInclude Include="src\sys\DynamicFunctionPointer.h" />
     <ClInclude Include="src\vislibversion.template.h" />
   </ItemGroup>
@@ -888,6 +901,16 @@
     <ClCompile Include="src\net\AsyncSocketSender.cpp" />
     <ClCompile Include="src\net\ClusterDiscoveryListener.cpp" />
     <ClCompile Include="src\net\ClusterDiscoveryService.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractClientNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractClusterNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractControlledNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractControllerNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractServerNode.cpp" />
+    <ClCompile Include="src\net\cluster\clustermessages.cpp" />
+    <ClCompile Include="src\net\cluster\DiscoveryListener.cpp" />
+    <ClCompile Include="src\net\cluster\DiscoveryService.cpp" />
+    <ClCompile Include="src\net\cluster\messagereceiver.cpp" />
+    <ClCompile Include="src\net\cluster\NodeIdentifier.cpp" />
     <ClCompile Include="src\net\CommServer.cpp" />
     <ClCompile Include="src\net\CommServerListener.cpp" />
     <ClCompile Include="src\net\DNS.cpp" />

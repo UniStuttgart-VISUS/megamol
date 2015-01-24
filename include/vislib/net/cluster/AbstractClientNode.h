@@ -15,10 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractClusterNode.h"
-#include "vislib/CmdLineParser.h"
-#include "vislib/DNS.h"
-#include "vislib/Thread.h"
+#include "vislib/net/cluster/AbstractClusterNode.h"
+#include "vislib/sys/CmdLineParser.h"
+#include "vislib/net/DNS.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace vislib {

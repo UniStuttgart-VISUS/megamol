@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/clustermessages.h"
+#include "vislib/net/cluster/clustermessages.h"
 
 
 /*

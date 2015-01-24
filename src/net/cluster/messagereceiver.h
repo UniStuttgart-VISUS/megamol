@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "vislib/Socket.h"      // Must be first.
-#include "vislib/AbstractClusterNode.h"
-#include "vislib/Event.h"
+#include "vislib/net/Socket.h"
+#include "vislib/net/cluster/AbstractClusterNode.h"
+#include "vislib/sys/Event.h"
 
 
 namespace vislib {

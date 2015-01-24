@@ -15,13 +15,13 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/IPAgnosticAddress.h"   // Must be included at begin!
+#include "vislib/net/IPAgnosticAddress.h"
 #include "vislib/Array.h"
-#include "vislib/CriticalSection.h"
-#include "vislib/Interlocked.h"
-#include "vislib/RunnableThread.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/Interlocked.h"
+#include "vislib/sys/RunnableThread.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/Socket.h"
+#include "vislib/net/Socket.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
 #include "vislib/types.h"

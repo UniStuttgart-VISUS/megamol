@@ -5,14 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/DiscoveryService.h"
+#include "vislib/net/cluster/DiscoveryService.h"
 
 #include "vislib/assert.h"
-#include "vislib/DiscoveryListener.h"
+#include "vislib/net/cluster/DiscoveryListener.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/NetworkInformation.h"
-#include "vislib/SocketException.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/net/NetworkInformation.h"
+#include "vislib/net/SocketException.h"
 #include "vislib/Trace.h"
 
 #include "vislib/MissingImplementationException.h"

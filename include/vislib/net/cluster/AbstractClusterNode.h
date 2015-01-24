@@ -15,10 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/IPEndPoint.h"          // Must be first.
-#include "vislib/CmdLineProvider.h"
-#include "vislib/Socket.h"
-#include "vislib/SocketException.h"
+#include "vislib/net/IPEndPoint.h"
+#include "vislib/sys/CmdLineProvider.h"
+#include "vislib/net/Socket.h"
+#include "vislib/net/SocketException.h"
 #include "vislib/types.h"
 
 

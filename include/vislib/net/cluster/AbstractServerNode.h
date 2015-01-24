@@ -16,11 +16,11 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractClusterNode.h"
-#include "vislib/CmdLineParser.h"
+#include "vislib/net/cluster/AbstractClusterNode.h"
+#include "vislib/sys/CmdLineParser.h"
 #include "vislib/PtrArray.h"
-#include "vislib/RunnableThread.h"
-#include "vislib/TcpServer.h"
+#include "vislib/sys/RunnableThread.h"
+#include "vislib/net/TcpServer.h"
 
 
 namespace vislib {

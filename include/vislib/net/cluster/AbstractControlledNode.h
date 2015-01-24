@@ -15,10 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/Socket.h"  // Must be first
-#include "vislib/AbstractClusterNode.h"
+#include "vislib/net/Socket.h"
+#include "vislib/net/cluster/AbstractClusterNode.h"
 #include "vislib/assert.h"
-#include "vislib/Camera.h"
+#include "vislib/graphics/Camera.h"
 
 
 namespace vislib {

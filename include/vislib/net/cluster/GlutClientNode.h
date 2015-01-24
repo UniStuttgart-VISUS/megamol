@@ -14,10 +14,10 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/AbstractClientNode.h"
-#include "vislib/AbstractControlledNode.h"
+#include "vislib/net/cluster/AbstractClientNode.h"
+#include "vislib/net/cluster/AbstractControlledNode.h"
 #include "vislib/CameraOpenGL.h"
-#include "vislib/GlutClusterNode.h"
+#include "vislib/net/cluster/GlutClusterNode.h"
 
 
 namespace vislib {

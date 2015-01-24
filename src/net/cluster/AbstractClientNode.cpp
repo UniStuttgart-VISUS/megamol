@@ -5,13 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractClientNode.h"
+#include "vislib/net/cluster/AbstractClientNode.h"
 
 #include "vislib/assert.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/memutils.h"
-#include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
+#include "vislib/net/SocketException.h"
+#include "vislib/sys/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/unreferenced.h"
 

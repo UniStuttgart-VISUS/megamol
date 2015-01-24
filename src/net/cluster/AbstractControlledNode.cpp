@@ -5,14 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractControlledNode.h"
+#include "vislib/net/cluster/AbstractControlledNode.h"
 
-#include "vislib/CameraParamsStore.h"
-#include "vislib/clustermessages.h"
+#include "vislib/graphics/CameraParamsStore.h"
+#include "vislib/net/cluster/clustermessages.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "vislib/ShallowPoint.h"
-#include "vislib/ShallowVector.h"
+#include "vislib/math/ShallowPoint.h"
+#include "vislib/math/ShallowVector.h"
 #include "vislib/Trace.h"
 
 

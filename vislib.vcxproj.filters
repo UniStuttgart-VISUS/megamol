@@ -37,6 +37,12 @@
     <Filter Include="Source Files\graphics">
       <UniqueIdentifier>{b006a82e-4bfc-42ef-b971-d7e9ca97b809}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\net\cluster">
+      <UniqueIdentifier>{5f7b4954-920e-4078-91a0-3711d2d657ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\net\cluster">
+      <UniqueIdentifier>{f56aeeed-c198-4e43-9311-38aded5d9691}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\FormatException.h">
@@ -831,6 +837,45 @@
     <ClInclude Include="include\vislib\graphics\BitmapCodecCollection.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\net\cluster\messagereceiver.h">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\AbstractControllerNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\AbstractServerNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\clustermessages.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\DiscoveryListener.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\DiscoveryService.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\GlutClientNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\GlutClusterNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\GlutServerNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\NodeIdentifier.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\AbstractClientNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\AbstractClusterNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\net\cluster\AbstractControlledNode.h">
+      <Filter>Header Files\net\cluster</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
@@ -1594,6 +1639,36 @@
     </ClCompile>
     <ClCompile Include="src\net\IPAddress6.cpp">
       <Filter>Source Files\net</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\AbstractControlledNode.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\AbstractControllerNode.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\AbstractServerNode.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\clustermessages.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\DiscoveryListener.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\DiscoveryService.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\messagereceiver.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\NodeIdentifier.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\AbstractClientNode.cpp">
+      <Filter>Source Files\net\cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="src\net\cluster\AbstractClusterNode.cpp">
+      <Filter>Source Files\net\cluster</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

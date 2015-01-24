@@ -6,14 +6,14 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractServerNode.h"
+#include "vislib/net/cluster/AbstractServerNode.h"
 
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/NoSuchElementException.h"
-#include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
+#include "vislib/net/SocketException.h"
+#include "vislib/sys/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/unreferenced.h"
 #include "vislib/UnsupportedOperationException.h"

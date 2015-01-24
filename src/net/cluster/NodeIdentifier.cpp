@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/NodeIdentifier.h"
+#include "vislib/net/cluster/NodeIdentifier.h"
 
 #include "vislib/assert.h"
 

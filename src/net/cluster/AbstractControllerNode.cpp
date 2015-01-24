@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractControllerNode.h"
+#include "vislib/net/cluster/AbstractControllerNode.h"
 
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"

@@ -14,14 +14,14 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/AbstractControllerNode.h"
-#include "vislib/AbstractServerNode.h"
+#include "vislib/net/cluster/AbstractControllerNode.h"
+#include "vislib/net/cluster/AbstractServerNode.h"
 #include "vislib/CameraOpenGL.h"
-#include "vislib/CameraRotate2DLookAt.h"
-#include "vislib/CameraZoom2DMove.h"
-#include "vislib/Cursor2D.h"
-#include "vislib/GlutClusterNode.h"
-#include "vislib/InputModifiers.h"
+#include "vislib/graphics/CameraRotate2DLookAt.h"
+#include "vislib/graphics/CameraZoom2DMove.h"
+#include "vislib/graphics/Cursor2D.h"
+#include "vislib/net/cluster/GlutClusterNode.h"
+#include "vislib/graphics/InputModifiers.h"
 
 
 namespace vislib {

@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractClusterNode.h"
+#include "vislib/net/cluster/AbstractClusterNode.h"
 
-#include "vislib/clustermessages.h"
+#include "vislib/net/cluster/clustermessages.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/RawStorage.h"
 #include "vislib/Trace.h"

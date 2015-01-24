@@ -14,11 +14,11 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/Socket.h"  // Must be first
-#include "vislib/AbstractClusterNode.h"
-#include "vislib/CameraParameterObserver.h"
-#include "vislib/clustermessages.h"
-#include "vislib/ObservableCameraParams.h"
+#include "vislib/net/Socket.h"
+#include "vislib/net/cluster/AbstractClusterNode.h"
+#include "vislib/graphics/CameraParameterObserver.h"
+#include "vislib/net/cluster/clustermessages.h"
+#include "vislib/graphics/ObservableCameraParams.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 

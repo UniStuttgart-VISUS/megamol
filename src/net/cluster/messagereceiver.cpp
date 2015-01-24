@@ -8,11 +8,11 @@
 #include "messagereceiver.h"
 
 #include "vislib/assert.h"
-#include "vislib/clustermessages.h"
+#include "vislib/net/cluster/clustermessages.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
 #include "vislib/RawStorage.h"
-#include "vislib/SocketException.h"
+#include "vislib/net/SocketException.h"
 #include "vislib/Trace.h"
 
 

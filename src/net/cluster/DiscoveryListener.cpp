@@ -6,7 +6,7 @@
  */
 
 
-#include "vislib/DiscoveryListener.h"
+#include "vislib/net/cluster/DiscoveryListener.h"
 
 
 /*

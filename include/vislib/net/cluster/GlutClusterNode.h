@@ -16,7 +16,7 @@
 
 #include <GL/glut.h>
 
-#include "vislib/AbstractClusterNode.h"
+#include "vislib/net/cluster/AbstractClusterNode.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/Trace.h"
 
