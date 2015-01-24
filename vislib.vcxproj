@@ -95,6 +95,10 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>echo "Collecting Version Information"
+perl "$(SolutionDir)src\makevislibversion.pl" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -109,6 +113,10 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>echo "Collecting Version Information"
+perl "$(SolutionDir)src\makevislibversion.pl" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -127,6 +135,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>echo "Collecting Version Information"
+perl "$(SolutionDir)src\makevislibversion.pl" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -145,6 +157,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PreBuildEvent>
+      <Command>echo "Collecting Version Information"
+perl "$(SolutionDir)src\makevislibversion.pl" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\AlreadyExistsException.h" />
@@ -413,7 +429,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="src\makevislibversion.pl">
+    <None Include="src\makevislibversion.pl">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Collecting Version Information</Message>
@@ -439,7 +455,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)src\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatOutputAsContent>
-    </CustomBuild>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
