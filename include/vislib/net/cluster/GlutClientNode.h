@@ -16,7 +16,7 @@
 
 #include "vislib/net/cluster/AbstractClientNode.h"
 #include "vislib/net/cluster/AbstractControlledNode.h"
-#include "vislib/CameraOpenGL.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
 #include "vislib/net/cluster/GlutClusterNode.h"
 
 

@@ -16,7 +16,7 @@
 
 #include "vislib/net/cluster/AbstractControllerNode.h"
 #include "vislib/net/cluster/AbstractServerNode.h"
-#include "vislib/CameraOpenGL.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
 #include "vislib/graphics/CameraRotate2DLookAt.h"
 #include "vislib/graphics/CameraZoom2DMove.h"
 #include "vislib/graphics/Cursor2D.h"
