@@ -6,7 +6,7 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3DCamera.h"
+#include "vislib/graphics/d3d/D3DCamera.h"
 
 #include "d3dx9math.h"
 

@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3DPoint3D.h"
+#include "vislib/graphics/d3d/D3DPoint3D.h"
 
 
 /*

@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/Rectangle.h"
+#include "vislib/math/Rectangle.h"
 #include "vislib/StackTrace.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"

@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3D11Window.h"
+#include "vislib/graphics/d3d/D3D11Window.h"
 
-#include "vislib/D3DException.h"
+#include "vislib/graphics/d3d/D3DException.h"
 #include "vislib/Trace.h"
 
 

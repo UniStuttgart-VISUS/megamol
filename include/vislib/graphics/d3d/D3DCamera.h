@@ -16,10 +16,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #ifdef HAVE_LEGACY_DIRECTX_SDK
-#include "vislib/Camera.h"
-#include "vislib/D3DMatrix.h"
-#include "vislib/D3DPoint3D.h"
-#include "vislib/D3DVector3D.h"
+#include "vislib/graphics/Camera.h"
+#include "vislib/graphics/d3d/D3DMatrix.h"
+#include "vislib/graphics/d3d/D3DPoint3D.h"
+#include "vislib/graphics/d3d/D3DVector3D.h"
 
 
 namespace vislib {

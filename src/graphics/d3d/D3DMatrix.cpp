@@ -6,7 +6,7 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3DMatrix.h"
+#include "vislib/graphics/d3d/D3DMatrix.h"
 
 
 

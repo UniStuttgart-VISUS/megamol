@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3DVector3D.h"
+#include "vislib/graphics/d3d/D3DVector3D.h"
 
 
 /*

@@ -19,7 +19,7 @@
 #include <d3d9.h>
 #include <d3dx9math.h>
 
-#include "vislib/AbstractPoint.h"
+#include "vislib/math/AbstractPoint.h"
 
 
 namespace vislib {

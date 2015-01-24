@@ -6,10 +6,10 @@
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3D9AdapterInformation.h"
+#include "vislib/graphics/d3d/D3D9AdapterInformation.h"
 
-#include "vislib/d3dverify.h"
-#include "vislib/SystemException.h"
+#include "vislib/graphics/d3d/d3dverify.h"
+#include "vislib/sys/SystemException.h"
 
 
 /*

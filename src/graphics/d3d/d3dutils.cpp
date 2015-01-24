@@ -6,9 +6,9 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/d3dutils.h"
+#include "vislib/graphics/d3d/d3dutils.h"
 
-#include "vislib/D3DException.h"
+#include "vislib/graphics/d3d/D3DException.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/StackTrace.h"
 

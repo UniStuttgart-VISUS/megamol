@@ -5,11 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractD3D11WindowImpl.h"
+#include "vislib/graphics/d3d/AbstractD3D11WindowImpl.h"
 
-#include "vislib/D3DException.h"
-#include "vislib/d3dutils.h"
-#include "vislib/d3dverify.h"
+#include "vislib/graphics/d3d/D3DException.h"
+#include "vislib/graphics/d3d/d3dutils.h"
+#include "vislib/graphics/d3d/d3dverify.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/Trace.h"
 

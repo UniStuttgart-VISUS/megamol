@@ -6,9 +6,9 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3DVISLogo.h"
+#include "vislib/graphics/d3d/D3DVISLogo.h"
 
-#include "vislib/d3dverify.h"
+#include "vislib/graphics/d3d/d3dverify.h"
 #include "vislib/IllegalStateException.h"
 
 #ifndef D3DCOLOR_XRGB

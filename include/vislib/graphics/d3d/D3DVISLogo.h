@@ -20,8 +20,8 @@
 #endif /* HAVE_LEGACY_DIRECTX_SDK */
 #include <d3d10.h>
 
-#include "vislib/AbstractVISLogo.h"
-#include "vislib/d3dutils.h"
+#include "vislib/graphics/AbstractVISLogo.h"
+#include "vislib/graphics/d3d/d3dutils.h"
 
 
 namespace vislib {

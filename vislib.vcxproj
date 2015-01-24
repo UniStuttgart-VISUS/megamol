@@ -216,6 +216,18 @@
     <ClInclude Include="include\vislib\graphics\ColourRGBAu8.h" />
     <ClInclude Include="include\vislib\graphics\Cursor2D.h" />
     <ClInclude Include="include\vislib\graphics\Cursor2DRectLasso.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\AbstractD3D11WindowImpl.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\AbstractD3DAdapterInformation.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3D11Window.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3D9AdapterInformation.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DCamera.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DException.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DMatrix.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DPoint3D.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\d3dutils.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DVector3D.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\d3dverify.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DVISLogo.h" />
     <ClInclude Include="include\vislib\graphics\FpsCounter.h" />
     <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLShader.h" />
     <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLTexture.h" />
@@ -573,6 +585,48 @@
     <ClCompile Include="src\graphics\ColourRGBAu8.cpp" />
     <ClCompile Include="src\graphics\Cursor2D.cpp" />
     <ClCompile Include="src\graphics\Cursor2DRectLasso.cpp" />
+    <ClCompile Include="src\graphics\d3d\AbstractD3D11WindowImpl.cpp" />
+    <ClCompile Include="src\graphics\d3d\AbstractD3DAdapterInformation.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3D11Window.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3D9AdapterInformation.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DCamera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DException.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3DMatrix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DPoint3D.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\d3dutils.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3DVector3D.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\d3dverify.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DVISLogo.cpp" />
     <ClCompile Include="src\graphics\FpsCounter.cpp" />
     <ClCompile Include="src\graphics\gl\AbstractOpenGLShader.cpp" />
     <ClCompile Include="src\graphics\gl\AbstractOpenGLTexture.cpp" />

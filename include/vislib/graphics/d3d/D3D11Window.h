@@ -19,8 +19,8 @@
 #include <D3D11.h>
 #include <DXGI.h>
 
-#include "vislib/AbstractD3D11WindowImpl.h"
-#include "vislib/AbstractWindow.h"
+#include "vislib/graphics/d3d/AbstractD3D11WindowImpl.h"
+#include "vislib/graphics/AbstractWindow.h"
 #include "vislib/ReferenceCounted.h"
 #include "vislib/SmartRef.h"
 

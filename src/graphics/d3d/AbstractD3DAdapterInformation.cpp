@@ -6,7 +6,7 @@
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractD3DAdapterInformation.h"
+#include "vislib/graphics/d3d/AbstractD3DAdapterInformation.h"
 
 #include "vislib/OutOfRangeException.h"
 

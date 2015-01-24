@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/D3DException.h"
+#include "vislib/graphics/d3d/D3DException.h"
 
 #ifdef HAVE_LEGACY_DIRECTX_SDK
 #include <dxerr.h>

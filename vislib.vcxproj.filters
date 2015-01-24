@@ -49,6 +49,12 @@
     <Filter Include="Source Files\graphics\gl">
       <UniqueIdentifier>{50efd563-40b3-4acb-97e3-ee2a0f49d928}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\graphics\d3d">
+      <UniqueIdentifier>{c9a0f1b6-4212-4b7f-afae-8099c59b2861}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics\d3d">
+      <UniqueIdentifier>{9ee5c4d4-4f3d-4025-b375-f6518db2c078}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\FormatException.h">
@@ -942,6 +948,42 @@
     <ClInclude Include="include\vislib\graphics\gl\GLSLGeometryShader.h">
       <Filter>Header Files\graphics\gl</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3DException.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3DMatrix.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3DPoint3D.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\d3dutils.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3DVector3D.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\d3dverify.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3DVISLogo.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\AbstractD3D11WindowImpl.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\AbstractD3DAdapterInformation.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3D9AdapterInformation.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3D11Window.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\d3d\D3DCamera.h">
+      <Filter>Header Files\graphics\d3d</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
@@ -1792,6 +1834,42 @@
     </ClCompile>
     <ClCompile Include="src\graphics\gl\GLSLTesselationShader.cpp">
       <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DPoint3D.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\d3dutils.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DVector3D.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\d3dverify.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DVISLogo.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\AbstractD3D11WindowImpl.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\AbstractD3DAdapterInformation.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3D9AdapterInformation.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3D11Window.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DCamera.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DException.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DMatrix.cpp">
+      <Filter>Source Files\graphics\d3d</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

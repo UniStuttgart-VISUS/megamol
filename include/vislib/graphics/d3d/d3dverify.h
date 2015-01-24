@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/assert.h"
-#include "vislib/D3DException.h"
+#include "vislib/graphics/d3d/D3DException.h"
 
 
 /** 

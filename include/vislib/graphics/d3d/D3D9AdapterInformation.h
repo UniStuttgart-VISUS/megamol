@@ -18,7 +18,7 @@
 
 #include <d3d9.h>
 
-#include "vislib/AbstractD3DAdapterInformation.h"
+#include "vislib/graphics/d3d/AbstractD3DAdapterInformation.h"
 #include "vislib/PtrArray.h"
 
 

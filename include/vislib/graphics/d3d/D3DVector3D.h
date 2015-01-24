@@ -20,7 +20,7 @@
 #include <d3d9.h>
 #include <d3dx9math.h>
 
-#include "vislib/AbstractVector.h"
+#include "vislib/math/AbstractVector.h"
 
 
 namespace vislib {
