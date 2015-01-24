@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractPlane.h"
+#include "vislib/math/AbstractPlane.h"
 
 
 namespace vislib {

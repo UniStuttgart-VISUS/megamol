@@ -17,7 +17,7 @@
 #include <time.h>
 
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 namespace vislib {
 namespace math {

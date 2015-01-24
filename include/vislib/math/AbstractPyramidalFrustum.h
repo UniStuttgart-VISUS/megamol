@@ -17,8 +17,8 @@
 
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/Point.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Point.h"
 #include "vislib/StackTrace.h"
 #include "vislib/types.h"
 

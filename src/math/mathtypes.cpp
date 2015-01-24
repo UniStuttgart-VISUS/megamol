@@ -4,7 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "vislib/mathtypes.h"
+#include "vislib/math/mathtypes.h"
 
 #define _USE_MATH_DEFINES
 #include <cmath>

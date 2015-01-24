@@ -14,7 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/AbstractPolynomImpl.h"
+#include "vislib/math/AbstractPolynomImpl.h"
 #include "vislib/UnsupportedOperationException.h"
 
 

@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/Ternary.h"
+#include "vislib/math/Ternary.h"
 #include "vislib/assert.h"
 
 

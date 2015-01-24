@@ -17,7 +17,7 @@
 #include <limits>
 
 #include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
 

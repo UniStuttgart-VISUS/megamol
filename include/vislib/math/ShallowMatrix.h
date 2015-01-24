@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractMatrix.h"
+#include "vislib/math/AbstractMatrix.h"
 #include "vislib/assert.h"
 
 

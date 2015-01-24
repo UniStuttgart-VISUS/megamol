@@ -14,9 +14,9 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractMatrixImpl.h"
+#include "vislib/math/AbstractMatrixImpl.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/Quaternion.h"
+#include "vislib/math/Quaternion.h"
 
 
 namespace vislib {

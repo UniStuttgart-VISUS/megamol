@@ -6,7 +6,7 @@
  * Copyright (C) 2008 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/Sphere.h"
+#include "vislib/math/Sphere.h"
 
 
 /*

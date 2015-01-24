@@ -15,11 +15,11 @@
 
 
 #include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/mathtypes.h"
-#include "vislib/Point.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/mathtypes.h"
+#include "vislib/math/Point.h"
 #include "vislib/types.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 
 namespace vislib {

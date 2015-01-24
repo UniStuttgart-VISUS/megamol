@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/ShallowTriangle.h"
+#include "vislib/math/ShallowTriangle.h"
 
 /*
  * This file is intentionally empty.

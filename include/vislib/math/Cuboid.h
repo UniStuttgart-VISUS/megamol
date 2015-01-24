@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractCuboid.h"
+#include "vislib/math/AbstractCuboid.h"
 
 
 namespace vislib {

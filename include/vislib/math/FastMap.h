@@ -17,7 +17,7 @@
 #include <time.h>
 
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 /** Number of iterations for choosing the maximally distant points. The
     original paper suggests 5. */

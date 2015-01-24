@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractDimension.h"
+#include "vislib/math/AbstractDimension.h"
 
 
 namespace vislib {

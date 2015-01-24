@@ -4,7 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "vislib/ShallowVector.h"
+#include "vislib/math/ShallowVector.h"
 
 
 /*

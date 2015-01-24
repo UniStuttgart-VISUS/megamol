@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractSphere.h"
+#include "vislib/math/AbstractSphere.h"
 
 
 namespace vislib {

@@ -18,7 +18,7 @@
 #include <cstdlib>
 #include <limits>
 #include "vislib/assert.h"
-#include "vislib/mathtypes.h"
+#include "vislib/math/mathtypes.h"
 #include "vislib/Pair.h"
 #include "vislib/utils.h"
 

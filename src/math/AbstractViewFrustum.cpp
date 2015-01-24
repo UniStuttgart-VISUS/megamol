@@ -8,7 +8,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractViewFrustum.h"
+#include "vislib/math/AbstractViewFrustum.h"
 
 
 /*

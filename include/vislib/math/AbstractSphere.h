@@ -20,9 +20,9 @@
 #include <cmath>
 
 #include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/Point.h"
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/ShallowPoint.h"
 #include "vislib/types.h"
 
 

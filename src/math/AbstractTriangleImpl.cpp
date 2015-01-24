@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractTriangleImpl.h"
+#include "vislib/math/AbstractTriangleImpl.h"
 
 /*
  * This file is intentionally empty.

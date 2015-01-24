@@ -21,14 +21,14 @@
 #include "vislib/assert.h"
 #include "vislib/Exception.h"
 #include "vislib/forceinline.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/OutOfRangeException.h"
-#include "vislib/Point.h"
-#include "vislib/Polynom.h"
-#include "vislib/ShallowVector.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Polynom.h"
+#include "vislib/math/ShallowVector.h"
 #include "vislib/String.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 
 namespace vislib {

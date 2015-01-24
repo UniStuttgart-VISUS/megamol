@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractPyramidalFrustum.h"
+#include "vislib/math/AbstractPyramidalFrustum.h"
 
 
 /*

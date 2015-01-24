@@ -15,14 +15,14 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractPyramidalFrustum.h"
-#include "vislib/AbstractViewFrustum.h"
+#include "vislib/math/AbstractPyramidalFrustum.h"
+#include "vislib/math/AbstractViewFrustum.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
-#include "vislib/Plane.h"
-#include "vislib/Point.h"
-#include "vislib/ShallowVector.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Plane.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/math/Vector.h"
 
 
 namespace vislib {

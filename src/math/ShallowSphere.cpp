@@ -6,7 +6,7 @@
  * Copyright (C) 2008 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/ShallowSphere.h"
+#include "vislib/math/ShallowSphere.h"
 
 
 /*

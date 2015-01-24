@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractPointImpl.h"
+#include "vislib/math/AbstractPointImpl.h"
 
 
 namespace vislib {

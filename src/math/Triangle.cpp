@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/Triangle.h"
+#include "vislib/math/Triangle.h"
 
 /*
  * This file is intentionally empty.

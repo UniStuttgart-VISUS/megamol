@@ -16,10 +16,10 @@
 
 
 #include "vislib/assert.h"
-#include "vislib/Dimension.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/Dimension.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
-#include "vislib/Point.h"
+#include "vislib/math/Point.h"
 #include "vislib/types.h"
 #include "vislib/utils.h"
 

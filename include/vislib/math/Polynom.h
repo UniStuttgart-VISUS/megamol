@@ -14,7 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/AbstractPolynom.h"
+#include "vislib/math/AbstractPolynom.h"
 
 
 namespace vislib {

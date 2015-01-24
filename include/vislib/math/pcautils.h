@@ -16,11 +16,11 @@
 
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/AbstractVector.h"
-#include "vislib/AbstractMatrix.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/AbstractVector.h"
+#include "vislib/math/AbstractMatrix.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/Pair.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 
 namespace vislib {

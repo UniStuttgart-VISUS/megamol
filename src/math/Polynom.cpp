@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/Polynom.h"
+#include "vislib/math/Polynom.h"
 
 
 /*

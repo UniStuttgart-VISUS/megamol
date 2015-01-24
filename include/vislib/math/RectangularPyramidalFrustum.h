@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractRectangularPyramidalFrustum.h"
+#include "vislib/math/AbstractRectangularPyramidalFrustum.h"
 #include "vislib/IllegalParamException.h"
 
 

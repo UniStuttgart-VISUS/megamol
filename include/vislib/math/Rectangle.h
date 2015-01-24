@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractRectangle.h"
+#include "vislib/math/AbstractRectangle.h"
 
 
 namespace vislib {

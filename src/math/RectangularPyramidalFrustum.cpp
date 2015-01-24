@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/RectangularPyramidalFrustum.h"
+#include "vislib/math/RectangularPyramidalFrustum.h"
 
 
 /*

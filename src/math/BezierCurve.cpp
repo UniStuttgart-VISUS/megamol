@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/BezierCurve.h"
+#include "vislib/math/BezierCurve.h"
 
 
 /*

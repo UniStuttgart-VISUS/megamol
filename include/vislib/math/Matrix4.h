@@ -14,7 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/Matrix.h"
+#include "vislib/math/Matrix.h"
 #include "vislib/deprecated.h"
 
 

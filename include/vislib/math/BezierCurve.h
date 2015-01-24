@@ -16,10 +16,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "vislib/forceinline.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
-#include "vislib/Point.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Vector.h"
 
 
 namespace vislib {

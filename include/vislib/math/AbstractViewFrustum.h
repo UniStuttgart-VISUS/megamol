@@ -20,7 +20,7 @@
 
 #include <memory.h>
 
-#include "vislib/AbstractPyramidalFrustum.h"
+#include "vislib/math/AbstractPyramidalFrustum.h"
 
 
 namespace vislib {

@@ -4,7 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "vislib/Matrix4.h"
+#include "vislib/math/Matrix4.h"
 
 
 /*

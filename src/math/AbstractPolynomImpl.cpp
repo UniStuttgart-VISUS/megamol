@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/AbstractPolynomImpl.h"
+#include "vislib/math/AbstractPolynomImpl.h"
 
 
 /*

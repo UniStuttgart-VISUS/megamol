@@ -5,7 +5,7 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "vislib/ShallowDimension.h"
+#include "vislib/math/ShallowDimension.h"
 
 
 /*

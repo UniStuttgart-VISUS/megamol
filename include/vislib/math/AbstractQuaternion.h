@@ -17,9 +17,9 @@
 
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/types.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846

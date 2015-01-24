@@ -4,7 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "vislib/Float16.h"
+#include "vislib/math/Float16.h"
 
 #include <cfloat>
 

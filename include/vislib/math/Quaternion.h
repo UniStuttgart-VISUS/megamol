@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractQuaternion.h"
+#include "vislib/math/AbstractQuaternion.h"
 
 
 namespace vislib {

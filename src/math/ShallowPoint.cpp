@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/ShallowPoint.h"
 
 
 /*

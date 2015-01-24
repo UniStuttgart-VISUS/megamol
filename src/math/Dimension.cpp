@@ -4,7 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "vislib/Dimension.h"
+#include "vislib/math/Dimension.h"
 
 
 /*

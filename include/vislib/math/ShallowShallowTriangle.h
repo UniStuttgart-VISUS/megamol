@@ -14,8 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "vislib/AbstractTriangle.h"
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/AbstractTriangle.h"
+#include "vislib/math/ShallowPoint.h"
 #include "vislib/memutils.h"
 
 namespace vislib {

@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/AbstractVectorImpl.h"
+#include "vislib/math/AbstractVectorImpl.h"
 
 
 namespace vislib {
