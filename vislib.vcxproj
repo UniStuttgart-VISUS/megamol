@@ -180,6 +180,52 @@
     <ClInclude Include="include\vislib\forceinline.h" />
     <ClInclude Include="include\vislib\FormatException.h" />
     <ClInclude Include="include\vislib\functioncast.h" />
+    <ClInclude Include="include\vislib\graphics\AbsoluteCursor3D.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractBitmapCodec.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCameraController.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursor.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursor2DEvent.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursor3DEvent.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursorEvent.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractFont.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractVISLogo.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractWindow.h" />
+    <ClInclude Include="include\vislib\graphics\BitmapCodecCollection.h" />
+    <ClInclude Include="include\vislib\graphics\BitmapImage.h" />
+    <ClInclude Include="include\vislib\graphics\BitmapPainter.h" />
+    <ClInclude Include="include\vislib\graphics\BmpBitmapCodec.h" />
+    <ClInclude Include="include\vislib\graphics\Camera.h" />
+    <ClInclude Include="include\vislib\graphics\CameraAdjust3D.h" />
+    <ClInclude Include="include\vislib\graphics\CameraLookAtDist.h" />
+    <ClInclude Include="include\vislib\graphics\CameraMove2D.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParameterLimits.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParameterObserver.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParameters.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsEyeOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsProjectionOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsStore.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsTileRectOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsVirtualViewOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraRotate2D.h" />
+    <ClInclude Include="include\vislib\graphics\CameraRotate2DEulerLookAt.h" />
+    <ClInclude Include="include\vislib\graphics\CameraRotate2DLookAt.h" />
+    <ClInclude Include="include\vislib\graphics\CameraZoom2DAngle.h" />
+    <ClInclude Include="include\vislib\graphics\CameraZoom2DMove.h" />
+    <ClInclude Include="include\vislib\graphics\ColourParser.h" />
+    <ClInclude Include="include\vislib\graphics\ColourRGBAu8.h" />
+    <ClInclude Include="include\vislib\graphics\Cursor2D.h" />
+    <ClInclude Include="include\vislib\graphics\Cursor2DRectLasso.h" />
+    <ClInclude Include="include\vislib\graphics\FpsCounter.h" />
+    <ClInclude Include="include\vislib\graphics\graphicsfunctions.h" />
+    <ClInclude Include="include\vislib\graphics\graphicstypes.h" />
+    <ClInclude Include="include\vislib\graphics\InputModifiers.h" />
+    <ClInclude Include="include\vislib\graphics\MouseInteractionAdapter.h" />
+    <ClInclude Include="include\vislib\graphics\NamedColours.h" />
+    <ClInclude Include="include\vislib\graphics\ObservableCameraParams.h" />
+    <ClInclude Include="include\vislib\graphics\PpmBitmapCodec.h" />
+    <ClInclude Include="include\vislib\graphics\RelativeCursor3D.h" />
+    <ClInclude Include="include\vislib\graphics\ZoomToRectangle.h" />
     <ClInclude Include="include\vislib\GUID.h" />
     <ClInclude Include="include\vislib\HashAlgorithm.h" />
     <ClInclude Include="include\vislib\Heap.h" />
@@ -244,6 +290,43 @@
     <ClInclude Include="include\vislib\memutils.h" />
     <ClInclude Include="include\vislib\MissingImplementationException.h" />
     <ClInclude Include="include\vislib\MultiSz.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommChannel.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommClientChannel.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommEndPoint.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommServerChannel.h" />
+    <ClInclude Include="include\vislib\net\AbstractSimpleMessage.h" />
+    <ClInclude Include="include\vislib\net\AbstractSimpleMessageHeader.h" />
+    <ClInclude Include="include\vislib\net\AbstractSyncMsgUser.h" />
+    <ClInclude Include="include\vislib\net\AsyncSocket.h" />
+    <ClInclude Include="include\vislib\net\AsyncSocketContext.h" />
+    <ClInclude Include="include\vislib\net\AsyncSocketSender.h" />
+    <ClInclude Include="include\vislib\net\ClusterDiscoveryListener.h" />
+    <ClInclude Include="include\vislib\net\ClusterDiscoveryService.h" />
+    <ClInclude Include="include\vislib\net\CommServer.h" />
+    <ClInclude Include="include\vislib\net\CommServerListener.h" />
+    <ClInclude Include="include\vislib\net\DNS.h" />
+    <ClInclude Include="include\vislib\net\IPAddress.h" />
+    <ClInclude Include="include\vislib\net\IPAddress6.h" />
+    <ClInclude Include="include\vislib\net\IPAgnosticAddress.h" />
+    <ClInclude Include="include\vislib\net\IPCommEndPoint.h" />
+    <ClInclude Include="include\vislib\net\IPEndPoint.h" />
+    <ClInclude Include="include\vislib\net\IPHostEntry.h" />
+    <ClInclude Include="include\vislib\net\NetworkInformation.h" />
+    <ClInclude Include="include\vislib\net\PeerDisconnectedException.h" />
+    <ClInclude Include="include\vislib\net\ShallowSimpleMessage.h" />
+    <ClInclude Include="include\vislib\net\ShallowSimpleMessageHeader.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessage.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageDispatcher.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageDispatchListener.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageHeader.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageHeaderData.h" />
+    <ClInclude Include="include\vislib\net\Socket.h" />
+    <ClInclude Include="include\vislib\net\SocketAddress.h" />
+    <ClInclude Include="include\vislib\net\SocketException.h" />
+    <ClInclude Include="include\vislib\net\TcpCommChannel.h" />
+    <ClInclude Include="include\vislib\net\TcpServer.h" />
+    <ClInclude Include="include\vislib\net\UdpCommChannel.h" />
+    <ClInclude Include="include\vislib\net\UnexpectedMessageException.h" />
     <ClInclude Include="include\vislib\NoSuchElementException.h" />
     <ClInclude Include="include\vislib\NullAllocator.h" />
     <ClInclude Include="include\vislib\NullLockable.h" />
@@ -411,6 +494,66 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\graphics\AbsoluteCursor3D.cpp" />
+    <ClCompile Include="src\graphics\AbstractBitmapCodec.cpp" />
+    <ClCompile Include="src\graphics\AbstractCameraController.cpp" />
+    <ClCompile Include="src\graphics\AbstractCursor.cpp" />
+    <ClCompile Include="src\graphics\AbstractCursor2DEvent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\AbstractCursor3DEvent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\AbstractCursorEvent.cpp" />
+    <ClCompile Include="src\graphics\AbstractFont.cpp" />
+    <ClCompile Include="src\graphics\AbstractVISLogo.cpp" />
+    <ClCompile Include="src\graphics\AbstractWindow.cpp" />
+    <ClCompile Include="src\graphics\BitmapCodecCollection.cpp" />
+    <ClCompile Include="src\graphics\BitmapImage.cpp" />
+    <ClCompile Include="src\graphics\BitmapPainter.cpp" />
+    <ClCompile Include="src\graphics\BmpBitmapCodec.cpp" />
+    <ClCompile Include="src\graphics\Camera.cpp" />
+    <ClCompile Include="src\graphics\CameraAdjust3D.cpp" />
+    <ClCompile Include="src\graphics\CameraLookAtDist.cpp" />
+    <ClCompile Include="src\graphics\CameraMove2D.cpp" />
+    <ClCompile Include="src\graphics\CameraParameterLimits.cpp" />
+    <ClCompile Include="src\graphics\CameraParameterObserver.cpp" />
+    <ClCompile Include="src\graphics\CameraParameters.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsEyeOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsProjectionOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsStore.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsTileRectOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsVirtualViewOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraRotate2D.cpp" />
+    <ClCompile Include="src\graphics\CameraRotate2DEulerLookAt.cpp" />
+    <ClCompile Include="src\graphics\CameraRotate2DLookAt.cpp" />
+    <ClCompile Include="src\graphics\CameraZoom2DAngle.cpp" />
+    <ClCompile Include="src\graphics\CameraZoom2DMove.cpp" />
+    <ClCompile Include="src\graphics\ColourParser.cpp" />
+    <ClCompile Include="src\graphics\ColourRGBAu8.cpp" />
+    <ClCompile Include="src\graphics\Cursor2D.cpp" />
+    <ClCompile Include="src\graphics\Cursor2DRectLasso.cpp" />
+    <ClCompile Include="src\graphics\FpsCounter.cpp" />
+    <ClCompile Include="src\graphics\graphicsfunctions.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\InputModifiers.cpp" />
+    <ClCompile Include="src\graphics\MouseInteractionAdapter.cpp" />
+    <ClCompile Include="src\graphics\NamedColours.cpp" />
+    <ClCompile Include="src\graphics\ObservableCameraParams.cpp" />
+    <ClCompile Include="src\graphics\PpmBitmapCodec.cpp" />
+    <ClCompile Include="src\graphics\RelativeCursor3D.cpp" />
+    <ClCompile Include="src\graphics\ZoomToRectangle.cpp" />
     <ClCompile Include="src\GUID.cpp" />
     <ClCompile Include="src\HashAlgorithm.cpp" />
     <ClCompile Include="src\Heap.cpp" />
@@ -733,6 +876,48 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\net\AbstractCommChannel.cpp" />
+    <ClCompile Include="src\net\AbstractCommClientChannel.cpp" />
+    <ClCompile Include="src\net\AbstractCommEndPoint.cpp" />
+    <ClCompile Include="src\net\AbstractCommServerChannel.cpp" />
+    <ClCompile Include="src\net\AbstractSimpleMessage.cpp" />
+    <ClCompile Include="src\net\AbstractSimpleMessageHeader.cpp" />
+    <ClCompile Include="src\net\AbstractSyncMsgUser.cpp" />
+    <ClCompile Include="src\net\AsyncSocket.cpp" />
+    <ClCompile Include="src\net\AsyncSocketContext.cpp" />
+    <ClCompile Include="src\net\AsyncSocketSender.cpp" />
+    <ClCompile Include="src\net\ClusterDiscoveryListener.cpp" />
+    <ClCompile Include="src\net\ClusterDiscoveryService.cpp" />
+    <ClCompile Include="src\net\CommServer.cpp" />
+    <ClCompile Include="src\net\CommServerListener.cpp" />
+    <ClCompile Include="src\net\DNS.cpp" />
+    <ClCompile Include="src\net\IPAddress.cpp" />
+    <ClCompile Include="src\net\IPAddress6.cpp" />
+    <ClCompile Include="src\net\IPAgnosticAddress.cpp" />
+    <ClCompile Include="src\net\IPCommEndPoint.cpp" />
+    <ClCompile Include="src\net\IPEndPoint.cpp" />
+    <ClCompile Include="src\net\IPHostEntry.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\net\NetworkInformation.cpp" />
+    <ClCompile Include="src\net\PeerDisconnectedException.cpp" />
+    <ClCompile Include="src\net\ShallowSimpleMessage.cpp" />
+    <ClCompile Include="src\net\ShallowSimpleMessageHeader.cpp" />
+    <ClCompile Include="src\net\SimpleMessage.cpp" />
+    <ClCompile Include="src\net\SimpleMessageDispatcher.cpp" />
+    <ClCompile Include="src\net\SimpleMessageDispatchListener.cpp" />
+    <ClCompile Include="src\net\SimpleMessageHeader.cpp" />
+    <ClCompile Include="src\net\SimpleMessageHeaderData.cpp" />
+    <ClCompile Include="src\net\Socket.cpp" />
+    <ClCompile Include="src\net\SocketAddress.cpp" />
+    <ClCompile Include="src\net\SocketException.cpp" />
+    <ClCompile Include="src\net\TcpCommChannel.cpp" />
+    <ClCompile Include="src\net\TcpServer.cpp" />
+    <ClCompile Include="src\net\UdpCommChannel.cpp" />
+    <ClCompile Include="src\net\UnexpectedMessageException.cpp" />
     <ClCompile Include="src\NoSuchElementException.cpp" />
     <ClCompile Include="src\NullAllocator.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
