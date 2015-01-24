@@ -13,9 +13,9 @@
 #endif /* !_WIN32 */
 
 #include "testhelper.h"
-#include "vislib/ImpersonationContext.h"
-#include "vislib/Process.h"
-#include "vislib/SystemException.h"
+#include "vislib/sys/ImpersonationContext.h"
+#include "vislib/sys/Process.h"
+#include "vislib/sys/SystemException.h"
 
 
 void TestProcess(void) {

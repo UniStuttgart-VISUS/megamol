@@ -8,10 +8,10 @@
 #include "testhelper.h"
 
 #include <stdio.h>
-#include <vislib/Console.h>
+#include "vislib/sys/Console.h"
 
-#include "vislib/CmdLineParser.h"
-#include "vislib/CmdLineProvider.h"
+#include "vislib/sys/CmdLineParser.h"
+#include "vislib/sys/CmdLineProvider.h"
 
 // #define USE_UNICODE_PARSER
 

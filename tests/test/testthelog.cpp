@@ -7,7 +7,7 @@
 #include "testthelog.h"
 #include "testhelper.h"
 
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 void TestTheLogWithPhun(void) {
     vislib::sys::Log &log = vislib::sys::Log::DefaultLog;

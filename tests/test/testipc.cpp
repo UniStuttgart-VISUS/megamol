@@ -8,14 +8,14 @@
 #include "testipc.h"
 #include "testhelper.h"
 
-#include "vislib/Console.h"
-#include "vislib/IPCSemaphore.h"
-#include "vislib/Process.h"
-#include "vislib/Semaphore.h"
-#include "vislib/SharedMemory.h"
-#include "vislib/SystemInformation.h"
-#include "vislib/SystemException.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Console.h"
+#include "vislib/sys/IPCSemaphore.h"
+#include "vislib/sys/Process.h"
+#include "vislib/sys/Semaphore.h"
+#include "vislib/sys/SharedMemory.h"
+#include "vislib/sys/SystemInformation.h"
+#include "vislib/sys/SystemException.h"
+#include "vislib/sys/Thread.h"
 
 
 #define TEST_IPC_SEM_NAME ("Local\\testipcsem")

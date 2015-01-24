@@ -7,11 +7,11 @@
 
 #include "testsockets.h"
 
-#include "vislib/AsyncSocketSender.h"
-#include "vislib/Socket.h"
-#include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
-#include "vislib/Thread.h"
+#include "vislib/net/AsyncSocketSender.h"
+#include "vislib/net/Socket.h"
+#include "vislib/net/SocketException.h"
+#include "vislib/sys/SystemException.h"
+#include "vislib/sys/Thread.h"
 #include "testhelper.h"
 
 

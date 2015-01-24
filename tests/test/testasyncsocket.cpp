@@ -11,9 +11,9 @@
 #include "testasyncsocket.h"
 #include "testhelper.h"
 
-#include "vislib/AsyncSocket.h"
-#include "vislib/AsyncSocketContext.h"
-#include "vislib/RunnableThread.h"
+#include "vislib/net/AsyncSocket.h"
+#include "vislib/net/AsyncSocketContext.h"
+#include "vislib/sys/RunnableThread.h"
 #include "vislib/Trace.h"
 
 using namespace vislib::net;

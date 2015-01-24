@@ -9,7 +9,7 @@
 #include "testhelper.h"
 
 #include "vislib/Serialiser.h"
-#include "vislib/RegistrySerialiser.h"
+#include "vislib/sys/RegistrySerialiser.h"
 
 
 

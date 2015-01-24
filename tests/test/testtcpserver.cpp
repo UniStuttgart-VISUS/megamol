@@ -7,10 +7,10 @@
 
 #include "testtcpserver.h"
 
-#include "vislib/TcpServer.h"
-#include "vislib/SocketException.h"
-#include "vislib/SystemException.h"
-#include "vislib/Thread.h"
+#include "vislib/net/TcpServer.h"
+#include "vislib/net/SocketException.h"
+#include "vislib/sys/SystemException.h"
+#include "vislib/sys/Thread.h"
 #include "testhelper.h"
 
 #include <iostream>

@@ -10,8 +10,8 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include "testhelper.h"
-#include "vislib/Quaternion.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/Vector.h"
 
 
 void TestQuaternion(void) {

@@ -12,7 +12,7 @@
 #include "testhelper.h"
 
 #include "vislib/StringConverter.h"
-#include "vislib/NetworkInformation.h"
+#include "vislib/net/NetworkInformation.h"
 
 
 

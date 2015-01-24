@@ -8,10 +8,10 @@
 #include "testReaderWriterLock.h"
 
 #include "testhelper.h"
-#include "vislib/Event.h"
-#include "vislib/FatReaderWriterLock.h"
+#include "vislib/sys/Event.h"
+#include "vislib/sys/FatReaderWriterLock.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 
 
 /* using classes for shorter names */

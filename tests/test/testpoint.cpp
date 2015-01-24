@@ -8,8 +8,8 @@
 
 #include "testpoint.h"
 
-#include "vislib/Point.h"
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/ShallowPoint.h"
 #include "testhelper.h"
 
 typedef vislib::math::Point<float, 2> Point2f;

@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include "vislib/Console.h"
+#include "vislib/sys/Console.h"
 #include "vislib/Trace.h"
 
 /* include test implementations */

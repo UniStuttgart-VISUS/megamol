@@ -9,8 +9,8 @@
 
 #include <iostream>
 
-#include "vislib/Environment.h"
-#include "vislib/SystemException.h"
+#include "vislib/sys/Environment.h"
+#include "vislib/sys/SystemException.h"
 
 #include "testhelper.h"
 

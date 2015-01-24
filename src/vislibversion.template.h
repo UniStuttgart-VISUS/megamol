@@ -34,6 +34,10 @@
  * Minor version number of the vislib
  *
  * Increment on addition of new functions
+ *
+ * Exception: During the v2.0 redesign we increase the minor revision on
+ *            function porting
+ *            (from old classes to newly added external libraries)
  */
 #define VISLIB_VERSION_MINOR 0
 

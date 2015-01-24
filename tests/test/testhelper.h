@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include "vislib/types.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/String.h"
 
 

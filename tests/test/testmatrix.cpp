@@ -14,12 +14,12 @@
 #include <climits>
 #include <time.h>
 
-#include "vislib/mathfunctions.h"
-#include "vislib/Matrix.h"
-#include "vislib/Matrix4.h"
-#include "vislib/Polynom.h"
-#include "vislib/Quaternion.h"
-#include "vislib/pcautils.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Matrix4.h"
+#include "vislib/math/Polynom.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/pcautils.h"
 
 
 void TestMatrix(void) {

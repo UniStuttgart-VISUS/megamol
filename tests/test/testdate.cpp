@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "vislib/DateTime.h"
+#include "vislib/sys/DateTime.h"
 
 
 static void DateConversionTest(const INT year, const INT month, const INT day,

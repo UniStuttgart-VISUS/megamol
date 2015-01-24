@@ -6,8 +6,8 @@
 #include "testVIPCStrTab.h"
 
 #include "testhelper.h"
-#include "vislib/Thread.h"
-#include "vislib/VolatileIPCStringTable.h"
+#include "vislib/sys/Thread.h"
+#include "vislib/sys/VolatileIPCStringTable.h"
 
 
 const char *TestEntryName = "vislibtesttestentry";

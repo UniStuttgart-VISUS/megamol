@@ -7,9 +7,9 @@
 #include "testdimandrect.h"
 #include "testhelper.h"
 
-#include "vislib/Dimension.h"
-#include "vislib/Rectangle.h"
-#include "vislib/ShallowRectangle.h"
+#include "vislib/math/Dimension.h"
+#include "vislib/math/Rectangle.h"
+#include "vislib/math/ShallowRectangle.h"
 
 
 void TestDimension2D(void) {

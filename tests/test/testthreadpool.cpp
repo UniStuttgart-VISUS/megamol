@@ -6,7 +6,7 @@
 
 #include "testthreadpool.h"
 
-#include "vislib/ThreadPool.h"
+#include "vislib/sys/ThreadPool.h"
 #include "testhelper.h"
 #include <climits>
 

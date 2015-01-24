@@ -6,7 +6,7 @@
  */
 
 #include "testpolynom.h"
-#include "vislib/Polynom.h"
+#include "vislib/math/Polynom.h"
 #include "testhelper.h"
 
 

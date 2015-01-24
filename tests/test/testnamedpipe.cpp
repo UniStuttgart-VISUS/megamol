@@ -7,12 +7,12 @@
 #include "testnamedpipe.h"
 #include "testhelper.h"
 
-#include <vislib/Mutex.h>
-#include <vislib/NamedPipe.h>
-#include <vislib/String.h>
-#include <vislib/Thread.h>
-#include <vislib/Trace.h>
-#include <vislib/SystemException.h>
+#include "vislib/sys/Mutex.h"
+#include "vislib/sys/NamedPipe.h"
+#include "vislib/String.h"
+#include "vislib/sys/Thread.h"
+#include "vislib/Trace.h"
+#include "vislib/sys/SystemException.h"
 
 #define PIPE_NAME "DieHorstPipe"
 #define COM_STR_01 "Hello World through a named pipe"

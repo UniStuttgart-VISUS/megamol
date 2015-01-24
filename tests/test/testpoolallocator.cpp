@@ -7,7 +7,7 @@
 
 #include "testpoolallocator.h"
 #include "testhelper.h"
-#include "vislib/PoolAllocator.h"
+#include "vislib/sys/PoolAllocator.h"
 
 
 /*

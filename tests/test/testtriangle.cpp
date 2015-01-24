@@ -6,12 +6,12 @@
 
 #include "testhelper.h"
 
-#include "vislib/ShallowShallowTriangle.h"
-#include "vislib/ShallowTriangle.h"
-#include "vislib/ShallowPoint.h"
-#include "vislib/Triangle.h"
-#include "vislib/Point.h"
-#include "vislib/Vector.h"
+#include "vislib/math/ShallowShallowTriangle.h"
+#include "vislib/math/ShallowTriangle.h"
+#include "vislib/math/ShallowPoint.h"
+#include "vislib/math/Triangle.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Vector.h"
 
 void TestTriangle(void) {
 	using namespace vislib::math;

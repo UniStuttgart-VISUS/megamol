@@ -6,16 +6,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/TcpCommChannel.h"  // Must be first
+#include "vislib/net/TcpCommChannel.h"
 #include "testcomm.h"
 
 #include "testhelper.h"
-#include "vislib/Event.h"
+#include "vislib/sys/Event.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
-#include "vislib/RunnableThread.h"
+#include "vislib/sys/RunnableThread.h"
 #include "vislib/StringConverter.h"
-#include "vislib/IPCommEndPoint.h"
+#include "vislib/net/IPCommEndPoint.h"
 
 
 static vislib::sys::Event evtServerBound(true);

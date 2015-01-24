@@ -7,13 +7,13 @@
 #include "testthread.h"
 #include "testhelper.h"
 
-#include "vislib/CriticalSection.h"
-#include "vislib/Event.h"
-#include "vislib/Mutex.h"
-#include "vislib/Runnable.h"
-#include "vislib/RunnableThread.h"
-#include "vislib/Semaphore.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/Event.h"
+#include "vislib/sys/Mutex.h"
+#include "vislib/sys/Runnable.h"
+#include "vislib/sys/RunnableThread.h"
+#include "vislib/sys/Semaphore.h"
+#include "vislib/sys/Thread.h"
 
 
 using namespace vislib::sys;

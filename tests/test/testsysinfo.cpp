@@ -4,8 +4,8 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "vislib/SystemException.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/sys/SystemException.h"
+#include "vislib/sys/SystemInformation.h"
 
 #include <iostream>
 

@@ -7,13 +7,13 @@
 
 #include "testipv6.h"
 
-#include "vislib/DNS.h"
+#include "vislib/net/DNS.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/IPEndPoint.h"
-#include "vislib/IPAddress.h"
-#include "vislib/IPAddress6.h"
-#include "vislib/Socket.h"
-#include "vislib/SocketException.h"
+#include "vislib/net/IPEndPoint.h"
+#include "vislib/net/IPAddress.h"
+#include "vislib/net/IPAddress6.h"
+#include "vislib/net/Socket.h"
+#include "vislib/net/SocketException.h"
 #include "testhelper.h"
 
 

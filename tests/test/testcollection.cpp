@@ -15,8 +15,8 @@
 #include "vislib/PtrArray.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
-#include "vislib/SynchronisedArray.h"
-#include "vislib/ConsoleProgressBar.h"
+#include "vislib/sys/SynchronisedArray.h"
+#include "vislib/sys/ConsoleProgressBar.h"
 
 
 /*

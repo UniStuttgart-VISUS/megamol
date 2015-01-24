@@ -9,16 +9,16 @@
 #include <iostream>
 
 #include "testhelper.h"
-#include "vislib/BufferedFile.h"
-#include "vislib/MemmappedFile.h"
-#include "vislib/error.h"
-#include "vislib/File.h"
-#include "vislib/Path.h"
-#include "vislib/IOException.h"
-#include "vislib/SystemMessage.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/SystemInformation.h"
-#include "vislib/PerformanceCounter.h"
+#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/error.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Path.h"
+#include "vislib/sys/IOException.h"
+#include "vislib/sys/SystemMessage.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/SystemInformation.h"
+#include "vislib/sys/PerformanceCounter.h"
 
 #ifdef _WIN32
 #pragma warning ( disable : 4996 )

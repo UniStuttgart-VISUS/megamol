@@ -8,9 +8,9 @@
 #include "testbezier.h"
 
 #include "testhelper.h"
-#include "vislib/BezierCurve.h"
-#include "vislib/Point.h"
-#include "vislib/Vector.h"
+#include "vislib/math/BezierCurve.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Vector.h"
 
 
 void TestBezier(void) {

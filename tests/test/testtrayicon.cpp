@@ -10,9 +10,9 @@
 
 #include "resource.h"
 
-#include "vislib/TrayIcon.h"
-#include "vislib/Thread.h"
-#include "vislib/SystemException.h"
+#include "vislib/sys/TrayIcon.h"
+#include "vislib/sys/Thread.h"
+#include "vislib/sys/SystemException.h"
 
 
 #ifdef _WIN32

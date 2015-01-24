@@ -11,7 +11,7 @@
 #include <cmath>
 #include <limits>
 
-#include "vislib/Float16.h"
+#include "vislib/math/Float16.h"
 
 
 #define DR_HALF UINT16

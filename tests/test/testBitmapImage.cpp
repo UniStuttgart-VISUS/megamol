@@ -9,13 +9,13 @@
 #define _USE_MATH_DEFINES
 #include "testhelper.h"
 
-#include "vislib/BitmapImage.h"
-#include "vislib/PpmBitmapCodec.h"
-#include "vislib/BmpBitmapCodec.h"
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/PpmBitmapCodec.h"
+#include "vislib/graphics/BmpBitmapCodec.h"
 #include "vislib/RawStorage.h"
-#include "vislib/BitmapPainter.h"
-#include "vislib/ColourRGBAu8.h"
-#include "vislib/NamedColours.h"
+#include "vislib/graphics/BitmapPainter.h"
+#include "vislib/graphics/ColourRGBAu8.h"
+#include "vislib/graphics/NamedColours.h"
 #include <cmath>
 
 

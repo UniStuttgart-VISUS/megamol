@@ -1,16 +1,16 @@
 #include "testdirectoryiterator.h"
 
-#include "vislib/error.h"
-#include "vislib/File.h"
-#include "vislib/Path.h"
+#include "vislib/sys/error.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Path.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "vislib/DirectoryIterator.h"
+#include "vislib/sys/DirectoryIterator.h"
 #include "vislib/Array.h"
 #include "vislib/Stack.h"
 #include "testhelper.h"
-#include "vislib/SystemMessage.h"
+#include "vislib/sys/SystemMessage.h"
 
 #include <iostream>
 

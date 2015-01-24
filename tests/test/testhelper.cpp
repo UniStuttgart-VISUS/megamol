@@ -8,7 +8,7 @@
 
 #include <iomanip>
 
-#include <vislib/Console.h>
+#include "vislib/sys/Console.h"
 
 
 static bool _assertTrueShowSuccess = true;

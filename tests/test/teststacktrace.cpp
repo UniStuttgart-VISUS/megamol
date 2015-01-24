@@ -11,8 +11,8 @@
 #include "vislib/Exception.h"
 #include "vislib/StackTrace.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/ThreadSafeStackTrace.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/ThreadSafeStackTrace.h"
+#include "vislib/sys/Thread.h"
 
 
 /*

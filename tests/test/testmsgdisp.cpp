@@ -5,15 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/TcpCommChannel.h"
+#include "vislib/net/TcpCommChannel.h"
 #include "testmsgdisp.h"
 
 #include "testhelper.h"
-#include "vislib/IPCommEndPoint.h"
-#include "vislib/RunnableThread.h"
-#include "vislib/Semaphore.h"
-#include "vislib/SimpleMessageDispatcher.h"
-#include "vislib/SimpleMessageDispatchListener.h"
+#include "vislib/net/IPCommEndPoint.h"
+#include "vislib/sys/RunnableThread.h"
+#include "vislib/sys/Semaphore.h"
+#include "vislib/net/SimpleMessageDispatcher.h"
+#include "vislib/net/SimpleMessageDispatchListener.h"
 
 
 static const long CNT_MSGS = 1;

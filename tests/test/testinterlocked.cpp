@@ -8,7 +8,7 @@
 #include "testinterlocked.h"
 #include "testhelper.h"
 
-#include "vislib/Interlocked.h"
+#include "vislib/sys/Interlocked.h"
 
 
 void TestInterlocked(void) {

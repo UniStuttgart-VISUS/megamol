@@ -5,10 +5,10 @@
  */
 
 #include "testdiscovery.h"
-#include "vislib/ClusterDiscoveryListener.h"
-#include "vislib/ClusterDiscoveryService.h"
-#include "vislib/NetworkInformation.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/net/ClusterDiscoveryListener.h"
+#include "vislib/net/ClusterDiscoveryService.h"
+#include "vislib/net/NetworkInformation.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/Trace.h"
 
 #include <iostream>

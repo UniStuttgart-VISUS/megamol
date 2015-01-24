@@ -8,7 +8,7 @@
 #include "testwinreg.h"
 #ifdef _WIN32
 #include "testhelper.h"
-#include "vislib/RegistryKey.h"
+#include "vislib/sys/RegistryKey.h"
 
 void TestWinReg(void) {
     using vislib::sys::RegistryKey;

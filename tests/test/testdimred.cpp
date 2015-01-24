@@ -6,10 +6,10 @@
 
 #include "testhelper.h"
 
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include "vislib/Array.h"
-#include "vislib/FastMap.h"
-#include "vislib/ForceDirected.h"
+#include "vislib/math/FastMap.h"
+#include "vislib/math/ForceDirected.h"
 
 #define OUTDIMS 1
 

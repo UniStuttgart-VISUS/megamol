@@ -6,8 +6,8 @@
 
 #include "testhelper.h"
 
-#include "vislib/ShallowVector.h"
-#include "vislib/Vector.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/math/Vector.h"
 
 
 void TestVector(void) {
