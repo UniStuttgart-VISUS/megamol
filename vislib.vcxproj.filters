@@ -43,6 +43,12 @@
     <Filter Include="Header Files\net\cluster">
       <UniqueIdentifier>{f56aeeed-c198-4e43-9311-38aded5d9691}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\graphics\gl">
+      <UniqueIdentifier>{49212b6d-7c55-464a-beac-611422a3817e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\graphics\gl">
+      <UniqueIdentifier>{50efd563-40b3-4acb-97e3-ee2a0f49d928}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\FormatException.h">
@@ -876,6 +882,66 @@
     <ClInclude Include="include\vislib\net\cluster\AbstractControlledNode.h">
       <Filter>Header Files\net\cluster</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\GLSLShader.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\GLSLTesselationShader.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\GlutMouseInteractionAdapter.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\glverify.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\IncludeAllGL.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLException.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLTexture2D.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLVISLogo.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\OutlineFont.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\ShaderSource.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\SimpleFont.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLShader.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLTexture.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\ARBShader.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\CameraOpenGL.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\ExtensionsDependent.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\FramebufferObject.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\glfunctions.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\GLSLComputeShader.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\graphics\gl\GLSLGeometryShader.h">
+      <Filter>Header Files\graphics\gl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
@@ -1670,6 +1736,63 @@
     <ClCompile Include="src\net\cluster\AbstractClusterNode.cpp">
       <Filter>Source Files\net\cluster</Filter>
     </ClCompile>
+    <ClCompile Include="src\graphics\gl\GlutMouseInteractionAdapter.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\glverify.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\OpenGLException.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\OpenGLTexture2D.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\OpenGLVISLogo.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\OutlineFont.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\ShaderSource.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\SimpleFont.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\AbstractOpenGLShader.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\AbstractOpenGLTexture.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\ARBShader.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\CameraOpenGL.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\ExtensionsDependent.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\FramebufferObject.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\glfunctions.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\GLSLComputeShader.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\GLSLGeometryShader.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\GLSLShader.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\GLSLTesselationShader.cpp">
+      <Filter>Source Files\graphics\gl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="src\makevislibversion.pl" />
@@ -1680,6 +1803,12 @@
     </None>
     <None Include="include\vislib\sys\DirectoryIterator.inl">
       <Filter>Header Files\sys</Filter>
+    </None>
+    <None Include="include\vislib\graphics\gl\Verdana.inc">
+      <Filter>Header Files\graphics\gl</Filter>
+    </None>
+    <None Include="src\graphics\gl\SimpleFontData.inc">
+      <Filter>Source Files\graphics\gl</Filter>
     </None>
   </ItemGroup>
 </Project>

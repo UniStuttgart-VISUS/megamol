@@ -89,7 +89,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include\;$(SolutionDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,7 +107,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include\;$(SolutionDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,7 +127,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include\;$(SolutionDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,7 +149,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include\;$(SolutionDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -217,6 +217,26 @@
     <ClInclude Include="include\vislib\graphics\Cursor2D.h" />
     <ClInclude Include="include\vislib\graphics\Cursor2DRectLasso.h" />
     <ClInclude Include="include\vislib\graphics\FpsCounter.h" />
+    <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLTexture.h" />
+    <ClInclude Include="include\vislib\graphics\gl\ARBShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\CameraOpenGL.h" />
+    <ClInclude Include="include\vislib\graphics\gl\ExtensionsDependent.h" />
+    <ClInclude Include="include\vislib\graphics\gl\FramebufferObject.h" />
+    <ClInclude Include="include\vislib\graphics\gl\glfunctions.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLComputeShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLGeometryShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLTesselationShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GlutMouseInteractionAdapter.h" />
+    <ClInclude Include="include\vislib\graphics\gl\glverify.h" />
+    <ClInclude Include="include\vislib\graphics\gl\IncludeAllGL.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLException.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLTexture2D.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLVISLogo.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OutlineFont.h" />
+    <ClInclude Include="include\vislib\graphics\gl\ShaderSource.h" />
+    <ClInclude Include="include\vislib\graphics\gl\SimpleFont.h" />
     <ClInclude Include="include\vislib\graphics\graphicsfunctions.h" />
     <ClInclude Include="include\vislib\graphics\graphicstypes.h" />
     <ClInclude Include="include\vislib\graphics\InputModifiers.h" />
@@ -554,6 +574,40 @@
     <ClCompile Include="src\graphics\Cursor2D.cpp" />
     <ClCompile Include="src\graphics\Cursor2DRectLasso.cpp" />
     <ClCompile Include="src\graphics\FpsCounter.cpp" />
+    <ClCompile Include="src\graphics\gl\AbstractOpenGLShader.cpp" />
+    <ClCompile Include="src\graphics\gl\AbstractOpenGLTexture.cpp" />
+    <ClCompile Include="src\graphics\gl\ARBShader.cpp" />
+    <ClCompile Include="src\graphics\gl\CameraOpenGL.cpp" />
+    <ClCompile Include="src\graphics\gl\ExtensionsDependent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\FramebufferObject.cpp" />
+    <ClCompile Include="src\graphics\gl\glfunctions.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLComputeShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLGeometryShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLTesselationShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GlutMouseInteractionAdapter.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\glverify.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\OpenGLException.cpp" />
+    <ClCompile Include="src\graphics\gl\OpenGLTexture2D.cpp" />
+    <ClCompile Include="src\graphics\gl\OpenGLVISLogo.cpp" />
+    <ClCompile Include="src\graphics\gl\OutlineFont.cpp" />
+    <ClCompile Include="src\graphics\gl\ShaderSource.cpp" />
+    <ClCompile Include="src\graphics\gl\SimpleFont.cpp" />
     <ClCompile Include="src\graphics\graphicsfunctions.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -1202,8 +1256,10 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="include\vislib\graphics\gl\Verdana.inc" />
     <None Include="include\vislib\sys\DirectoryIterator.inl" />
     <None Include="include\vislib\sys\WindowsService.inl" />
+    <None Include="src\graphics\gl\SimpleFontData.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
