@@ -8,6 +8,7 @@
 #
 use strict;
 use File::Find;
+use File::Basename;
 require "include_table.inc";
 
 my $vislib_includes = get_vislib_includes();
@@ -15,8 +16,18 @@ my $vislib_includes = get_vislib_includes();
 sub fix_includes_in_file {
 	return unless -f;
 	my $filename = $File::Find::name;
-	print "Working on $filename\n";
 
+	my $name;
+	my $dir;
+	my $ext;
+	($name,$dir,$ext) = fileparse($filename,'\..*');
+	if (($ext ne ".cpp") && ($ext ne ".h")) {
+		print "  Skipping $filename\n";
+		return;
+	}
+
+	print "Working on $filename\n";
+	
 	local $/=undef;
 	open (my $fh, $filename) or die "Couldn't read file '$filename': $!";
 	my $content = <$fh>;
