@@ -434,25 +434,25 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Collecting Version Information</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)include\vislib\vislibversion.h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)src\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)src\vislibversion.template.h;$(SolutionDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</TreatOutputAsContent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl "%(FullPath)" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Collecting Version Information</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)include\vislib\vislibversion.h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)src\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)src\vislibversion.template.h;$(SolutionDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</TreatOutputAsContent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">perl "%(FullPath)" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Collecting Version Information</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)include\vislib\vislibversion.h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)src\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)src\vislibversion.template.h;$(SolutionDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatOutputAsContent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl "%(FullPath)" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Collecting Version Information</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)include\vislib\vislibversion.h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)src\vislibversion.template.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)src\vislibversion.template.h;$(SolutionDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatOutputAsContent>
     </CustomBuild>
