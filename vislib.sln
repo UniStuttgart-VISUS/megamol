@@ -27,6 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extra", "extra", "{84A2E526
 	ProjectSection(SolutionItems) = preProject
 		extra\checkdumpbin.ps1 = extra\checkdumpbin.ps1
 		extra\createclass.ps1 = extra\createclass.ps1
+		extra\implementDelegate.pl = extra\implementDelegate.pl
 		extra\nuget.xml = extra\nuget.xml
 		extra\sign-script.ps1 = extra\sign-script.ps1
 		extra\vis.ico = extra\vis.ico

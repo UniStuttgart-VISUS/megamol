@@ -204,6 +204,12 @@
     <ClInclude Include="include\vislib\forceinline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\vislibversion.template.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\vislibversion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
@@ -377,5 +383,8 @@
     <ClCompile Include="src\Listenable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="src\makevislibversion.pl" />
   </ItemGroup>
 </Project>
