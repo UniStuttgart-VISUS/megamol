@@ -19,6 +19,12 @@
     <Filter Include="Source Files\math">
       <UniqueIdentifier>{93578523-64c4-439d-8550-fb228e3bb0ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sys">
+      <UniqueIdentifier>{40178b75-2945-4fdd-b72c-7931357fe450}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sys">
+      <UniqueIdentifier>{8adfacb1-cb12-4076-a9ff-09c01eb15bfd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\vislib\FormatException.h">
@@ -372,6 +378,198 @@
     <ClInclude Include="include\vislib\math\AbstractViewFrustum.h">
       <Filter>Header Files\math</Filter>
     </ClInclude>
+    <ClInclude Include="src\sys\DynamicFunctionPointer.h">
+      <Filter>Source Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Event.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\FatReaderWriterLock.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\File.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\FileNameSequence.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\ImpersonationContext.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Interlocked.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\IOException.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\IPCSemaphore.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\KeyCode.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\LamportClock.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\LinuxDaemon.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Lockable.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Log.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\MemmappedFile.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\MemoryFile.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Mutex.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\NamedPipe.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\PAMException.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Path.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\PerformanceCounter.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\PoolAllocator.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Process.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\RegistryKey.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\RegistrySerialiser.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Runnable.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\RunnableThread.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\ScopedLock.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Semaphore.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\SharedMemory.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\SlimReaderWriterLock.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\SynchronisedArray.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\SyncObject.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\sysfunctions.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\SystemException.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\SystemInformation.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\SystemMessage.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\TextFileReader.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Thread.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\ThreadPool.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\ThreadPoolListener.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\ThreadSafeStackTrace.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\TrayIcon.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\VolatileIPCStringTable.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\WindowsService.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\AbstractAsyncContext.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\AbstractReaderWriterLock.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\ASCIIFileBuffer.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\AutoHandle.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\AutoLock.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\BufferedFile.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\CmdLineParser.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\CmdLineProvider.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\COMException.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Console.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\ConsoleProgressBar.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\CriticalSection.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\DateTime.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\DateTimeSpan.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\DirectoryEntry.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\DirectoryIterator.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\DynamicLinkLibrary.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\Environment.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="include\vislib\sys\error.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
@@ -698,8 +896,208 @@
     <ClCompile Include="src\math\AbstractQuaternion.cpp">
       <Filter>Source Files\math</Filter>
     </ClCompile>
+    <ClCompile Include="src\sys\ImpersonationContext.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Interlocked.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\IOException.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\IPCSemaphore.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\KeyCode.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\LamportClock.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\LinuxDaemon.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Lockable.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Log.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\MemmappedFile.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\MemoryFile.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Mutex.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\NamedPipe.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\PAMException.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Path.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\PerformanceCounter.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\PoolAllocator.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Process.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\RegistryKey.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\RegistrySerialiser.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Runnable.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\RunnableThread.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\ScopedLock.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Semaphore.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\SharedMemory.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\SlimReaderWriterLock.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\SynchronisedArray.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\SyncObject.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\sysfunctions.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\SystemException.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\SystemInformation.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\SystemMessage.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\TextFileReader.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Thread.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\ThreadPool.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\ThreadPoolListener.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\ThreadSafeStackTrace.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\TrayIcon.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\VolatileIPCStringTable.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\WindowsService.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\AbstractAsyncContext.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\AbstractReaderWriterLock.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\ASCIIFileBuffer.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\AutoHandle.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\AutoLock.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\BufferedFile.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\CmdLineParser.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\CmdLineProvider.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\COMException.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Console.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\ConsoleProgressBar.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\CriticalSection.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\DateTime.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\DateTimeSpan.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\DirectoryEntry.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\DirectoryIterator.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\DynamicFunctionPointer.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\DynamicLinkLibrary.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Environment.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\error.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\Event.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\FatReaderWriterLock.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\File.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sys\FileNameSequence.cpp">
+      <Filter>Source Files\sys</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="src\makevislibversion.pl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\vislib\sys\WindowsService.inl">
+      <Filter>Header Files\sys</Filter>
+    </None>
+    <None Include="include\vislib\sys\DirectoryIterator.inl">
+      <Filter>Header Files\sys</Filter>
+    </None>
   </ItemGroup>
 </Project>
