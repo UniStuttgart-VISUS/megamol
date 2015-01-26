@@ -6,9 +6,9 @@
  */
 #include "stdafx.h"
 #include "NVSwapGroup.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/sysfunctions.h"
 #ifdef _WIN32
 #include "glh/glh_extensions.h"
 #include <windows.h>

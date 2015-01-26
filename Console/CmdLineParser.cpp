@@ -8,7 +8,7 @@
 #include "CmdLineParser.h"
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/StringConverter.h"
 
 

@@ -11,7 +11,7 @@
 #ifndef _WIN32
 #include <string.h> // for memset
 #endif
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
 
 

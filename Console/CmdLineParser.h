@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "vislib/CmdLineParser.h"
+#include "vislib/sys/CmdLineParser.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 #include "vislib/MultiSz.h"

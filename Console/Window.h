@@ -15,7 +15,7 @@
 #include "HotKeyAction.h"
 #include "MegaMolCore.h"
 #include "MegaMolViewer.h"
-#include "vislib/KeyCode.h"
+#include "vislib/sys/KeyCode.h"
 #include "vislib/Map.h"
 #include "vislib/SmartPtr.h"
 #ifdef WITH_TWEAKBAR

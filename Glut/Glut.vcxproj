@@ -114,7 +114,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -127,8 +127,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>visglut$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>visglut$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>freeglut_static.lib; freeglut.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -159,7 +159,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -172,8 +172,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>visglut$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>visglut$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>freeglut_static.lib; freeglut.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -200,7 +200,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -211,8 +211,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>visglut$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>visglut$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>freeglut_static.lib; freeglut.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -244,7 +244,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);$(VISlibPath)\graphics\include;$(VISlibPath)\gl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;$(VisGlutPath)\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -255,8 +255,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/api;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>visglut$(BitsD).lib;vislibbase$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;$(VISlibPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>visglut$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VisGlutPath)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>freeglut_static.lib; freeglut.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>

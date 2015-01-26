@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "JobManager.h"
 #include "MegaMolCore.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/sysfunctions.h"
 
 
 /*

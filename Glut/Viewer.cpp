@@ -9,7 +9,7 @@
 #include "Viewer.h"
 #include "visglut.h"
 #include "Window.h"
-#include "vislib/CmdLineProvider.h"
+#include "vislib/sys/CmdLineProvider.h"
 
 
 /*

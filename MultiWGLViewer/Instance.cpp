@@ -11,7 +11,7 @@
 #include "Instance.h"
 #include "dwmapi.h"
 #include "Window.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 
 using namespace megamol::wgl;
 

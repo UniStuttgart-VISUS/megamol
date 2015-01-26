@@ -10,7 +10,7 @@
 #include "versioninfo.h"
 #include "MegaMolViewer.h"
 #include "versioninfo.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
 #include "vislib/UnsupportedOperationException.h"
 

@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "Window.h"
 #include "visglut.h"
-#include "vislib/glfunctions.h"
-#include "vislib/KeyCode.h"
-#include "vislib/Log.h"
+#include "vislib/graphics/gl/glfunctions.h"
+#include "vislib/sys/KeyCode.h"
+#include "vislib/sys/Log.h"
 #include "MegaMolCore.h"
 
 

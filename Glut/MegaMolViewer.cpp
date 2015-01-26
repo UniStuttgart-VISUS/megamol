@@ -14,7 +14,7 @@
 #include "Window.h"
 #include "vislib/memutils.h"
 #include "vislib/String.h"
-#include "vislib/ThreadSafeStackTrace.h"
+#include "vislib/sys/ThreadSafeStackTrace.h"
 
 
 #ifdef _WIN32

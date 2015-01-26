@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "ApiHandle.h"
-#include "vislib/Event.h"
+#include "vislib/sys/Event.h"
 
 
 namespace megamol {

@@ -6,14 +6,14 @@
  */
 #include "stdafx.h"
 #ifdef WITH_TWEAKBAR
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "GUILayer.h"
 #include "MegaMolCore.h"
 #include "vislib/assert.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/memutils.h"
 #include "vislib/Trace.h"
-#include "vislib/KeyCode.h"
+#include "vislib/sys/KeyCode.h"
 
 
 using namespace megamol::console;

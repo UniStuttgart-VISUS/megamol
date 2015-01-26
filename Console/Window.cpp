@@ -10,7 +10,7 @@
 #include "HotKeyButtonParam.h"
 #include "MegaMolCore.h"
 #include "vislib/assert.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 #include "WindowManager.h"

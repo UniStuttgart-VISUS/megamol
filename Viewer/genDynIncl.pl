@@ -116,7 +116,7 @@ namespace viewer {
 
 #ifdef MEGAMOLVIEWER_SINGLEFILE
 
-#include "vislib/DynamicLinkLibrary.h"
+#include "vislib/sys/DynamicLinkLibrary.h"
 #include "vislib/functioncast.h"
 
 namespace megamol {

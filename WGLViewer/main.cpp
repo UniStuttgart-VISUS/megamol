@@ -11,11 +11,11 @@
 #include "Instance.h"
 #include "versioninfo.h"
 #include "Window.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/memutils.h"
 #include "vislib/String.h"
-#include "vislib/ThreadSafeStackTrace.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/sys/ThreadSafeStackTrace.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 
 #ifdef _WIN32

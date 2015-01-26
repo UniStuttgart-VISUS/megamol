@@ -14,7 +14,7 @@
 #include "ApiHandle.h"
 #include "CallbackSlot.h"
 #include "Instance.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {

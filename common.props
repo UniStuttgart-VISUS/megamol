@@ -5,7 +5,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(VISlibPath)/base/include;$(VISlibPath)/math/include;$(VISlibPath)/sys/include;$(VISlibPath)/graphics/include;$(VISlibPath)/gl/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VISlibPath)include/;$(VISlibPath)3rd/glload/include/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GL_LOAD_DLL</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(VISlibPath)3rd\glload\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislib.lib;glload$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
 </Project>

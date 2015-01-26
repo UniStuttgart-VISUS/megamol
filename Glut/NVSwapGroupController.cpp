@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "NVSwapGroupController.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
 #ifdef _WIN32
 #include <windows.h>
