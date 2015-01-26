@@ -53,29 +53,29 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetRelease32.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\common.props" />
     <Import Project="..\ExtLibTw.props" />
+    <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetDebug32.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\common.props" />
     <Import Project="..\ExtLibTw.props" />
+    <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetRelease64.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\common.props" />
     <Import Project="..\ExtLibTw.props" />
+    <Import Project="..\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetDebug64.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\common.props" />
     <Import Project="..\ExtLibTw.props" />
+    <Import Project="..\vislib.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
