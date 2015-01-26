@@ -13,7 +13,7 @@
 
 #include "api/MegaMolCore.std.h"
 #include "AbstractParam.h"
-#include "vislib/Ternary.h"
+#include "vislib/math/Ternary.h"
 
 
 namespace megamol {

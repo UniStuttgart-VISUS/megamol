@@ -14,10 +14,10 @@
 #include "api/MegaMolCore.std.h"
 #include "vislib/String.h"
 #include "param/AbstractParam.h"
-#include "vislib/AbstractReaderWriterLock.h"
+#include "vislib/sys/AbstractReaderWriterLock.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/SyncObject.h"
+#include "vislib/sys/SyncObject.h"
 
 
 namespace megamol {

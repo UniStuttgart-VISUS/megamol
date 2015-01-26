@@ -12,11 +12,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Call.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "view/AbstractRenderOutput.h"
 #include "vislib/Array.h"
-#include "vislib/FramebufferObject.h"
-#include "vislib/Rectangle.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/math/Rectangle.h"
 #include "vislib/StackTrace.h"
 #include "vislib/types.h"
 

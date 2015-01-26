@@ -13,7 +13,7 @@
 
 #include "cluster/AbstractClusterView.h"
 #include "param/ParamSlot.h"
-#include "vislib/FramebufferObject.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 
 namespace megamol {

@@ -6,14 +6,14 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "SimpleGeoSphereRenderer.h"
 #include "view/CallRender3D.h"
-#include "vislib/ShaderSource.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "CoreInstance.h"
 #include "view/CallGetTransferFunction.h"
-#include "vislib/Matrix.h"
-#include "vislib/ShallowMatrix.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/ShallowMatrix.h"
 
 using namespace megamol::core;
 

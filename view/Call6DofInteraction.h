@@ -19,9 +19,9 @@
 
 #include "api/MegaMolCore.std.h"
 
-#include "vislib/graphicstypes.h"
-#include "vislib/Point.h"
-#include "vislib/Quaternion.h"
+#include "vislib/graphics/graphicstypes.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Quaternion.h"
 
 
 namespace megamol {

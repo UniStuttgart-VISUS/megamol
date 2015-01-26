@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "view/CallRenderView.h"
-#include "vislib/CameraParameters.h"
-#include "vislib/CameraParamsOverride.h"
+#include "vislib/graphics/CameraParameters.h"
+#include "vislib/graphics/CameraParamsOverride.h"
 #include "vislib/SmartPtr.h"
 
 

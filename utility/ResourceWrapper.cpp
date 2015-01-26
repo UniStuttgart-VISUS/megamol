@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "ResourceWrapper.h"
-#include "vislib/Path.h"
-#include "vislib/BufferedFile.h"
+#include "vislib/sys/Path.h"
+#include "vislib/sys/BufferedFile.h"
 
 using namespace megamol::core;
 using namespace megamol::core::utility;

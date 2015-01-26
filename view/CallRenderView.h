@@ -15,8 +15,8 @@
 #include "CallAutoDescription.h"
 #include "view/AbstractCallRender.h"
 #include "view/RenderOutput.h"
-#include "vislib/CameraParameters.h"
-#include "vislib/graphicstypes.h"
+#include "vislib/graphics/CameraParameters.h"
+#include "vislib/graphics/graphicstypes.h"
 
 
 namespace megamol {

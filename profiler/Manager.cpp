@@ -6,13 +6,13 @@
  */
 #include "stdafx.h"
 #include "profiler/Manager.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/Stack.h"
 #include "AbstractNamedObjectContainer.h"
 #include "CallerSlot.h"
 #include "AbstractNamedObject.h"
 #include "Call.h"
-#include "vislib/PerformanceCounter.h"
+#include "vislib/sys/PerformanceCounter.h"
 
 using namespace megamol;
 using namespace megamol::core;

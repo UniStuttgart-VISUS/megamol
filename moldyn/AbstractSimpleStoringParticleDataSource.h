@@ -14,8 +14,8 @@
 #include "api/MegaMolCore.std.h"
 #include "moldyn/AbstractSimpleParticleDataSource.h"
 #include "MultiParticleDataCall.h"
-#include "vislib/Cuboid.h"
-#include "vislib/ColourRGBAu8.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/graphics/ColourRGBAu8.h"
 
 
 namespace megamol {

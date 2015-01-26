@@ -120,7 +120,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\d3d\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(GLLoadPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(VislibPath)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -133,8 +133,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislib.lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)3rd\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -163,7 +163,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\d3d\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(GLLoadPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(VislibPath)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -176,8 +176,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislib.lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)3rd\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -202,7 +202,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\d3d\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(GLLoadPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(VislibPath)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -213,8 +213,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislib.lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib32Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)3rd\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -244,7 +244,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)\base\include;$(VISlibPath)\cluster\include;$(VISlibPath)\gl\include;$(VISlibPath)\d3d\include;$(VISlibPath)\graphics\include;$(VISlibPath)\math\include;$(VISlibPath)\net\include;$(VISlibPath)\sys\include;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(GLLoadPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(VISlibPath)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);$(VislibPath)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -255,8 +255,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibnet$(BitsD).lib;vislibcluster$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(VISlibPath)\lib;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)\gl\include\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glload$(BitsD).lib;glu32.lib;opengl32.lib;vislib.lib;expatw$(BitsD).lib;libpng$(BitsD).lib;zlib$(BitsD).lib;$(MpiLib64Path);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(ZlibPath)\lib;$(PngPath)\lib;$(ExpatPath)\lib;$(MpiPath)Lib;$(VISlibPath)3rd\glload\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>

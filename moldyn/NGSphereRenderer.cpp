@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "NGSphereRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
@@ -14,7 +14,7 @@
 #include "view/CallGetTransferFunction.h"
 #include "view/CallRender3D.h"
 #include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;
 //#define MAP_BUFFER_LOCALLY

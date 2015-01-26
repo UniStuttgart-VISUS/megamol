@@ -14,7 +14,7 @@
 #include "api/MegaMolCore.std.h"
 #include "utility/Configuration.h"
 #include "vislib/Array.h"
-#include "vislib/ShaderSource.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/String.h"
 
 

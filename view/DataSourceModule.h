@@ -13,7 +13,7 @@
 
 
 #include "Module.h"
-#include "vislib/graphicstypes.h"
+#include "vislib/graphics/graphicstypes.h"
 
 
 namespace megamol {

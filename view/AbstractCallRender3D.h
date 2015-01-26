@@ -16,7 +16,7 @@
 #include "CallAutoDescription.h"
 #include "view/AbstractCallRender.h"
 #include "vislib/assert.h"
-#include "vislib/CameraParameters.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 

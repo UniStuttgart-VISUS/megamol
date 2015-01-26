@@ -14,9 +14,9 @@
 #include "view/AbstractView.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
-#include "vislib/ColourRGBAu8.h"
+#include "vislib/graphics/ColourRGBAu8.h"
 #include "view/CallRenderView.h"
-#include "vislib/FramebufferObject.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 
 namespace megamol {

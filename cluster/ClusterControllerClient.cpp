@@ -9,9 +9,9 @@
 #include "cluster/ClusterControllerClient.h"
 #include "cluster/CallRegisterAtController.h"
 #include "param/StringParam.h"
-#include "vislib/Log.h"
-#include "vislib/IPEndPoint.h"
-#include "vislib/NetworkInformation.h"
+#include "vislib/sys/Log.h"
+#include "vislib/net/IPEndPoint.h"
+#include "vislib/net/NetworkInformation.h"
 
 using namespace megamol::core;
 

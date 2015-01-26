@@ -9,7 +9,7 @@
 #include "utility/xml/ConfigurationParser.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
-#include "vislib/Path.h"
+#include "vislib/sys/Path.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/VersionNumber.h"

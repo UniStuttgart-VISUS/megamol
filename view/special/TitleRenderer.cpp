@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #define _USE_MATH_DEFINES
 #include "TitleRenderer.h"
 #include <cmath>
@@ -14,11 +14,11 @@
 #include "MegaMolLogo.h"
 #include "CoreInstance.h"
 #include "vislib/assert.h"
-#include "vislib/graphicstypes.h"
-#include "vislib/Matrix.h"
-#include "vislib/OpenGLVISLogo.h"
-#include "vislib/ShaderSource.h"
-#include "vislib/Vector.h"
+#include "vislib/graphics/graphicstypes.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/graphics/gl/OpenGLVISLogo.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/math/Vector.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */

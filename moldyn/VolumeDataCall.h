@@ -15,7 +15,7 @@
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 
 #ifdef _WIN32
 #define DEPRECATED __declspec(deprecated)

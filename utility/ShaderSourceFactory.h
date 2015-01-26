@@ -15,7 +15,7 @@
 #include "utility/Configuration.h"
 #include "utility/BTFParser.h"
 #include "vislib/Array.h"
-#include "vislib/ShaderSource.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/String.h"
 
 

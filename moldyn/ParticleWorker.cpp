@@ -14,8 +14,8 @@
 #include <cfloat>
 #include "vislib/StringTokeniser.h"
 
-#include "vislib/Log.h"
-#include "vislib/ShaderSource.h"
+#include "vislib/sys/Log.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "CoreInstance.h"
 
 using namespace megamol::core;

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "AbstractRenderingView.h"
 #include "AbstractNamedObject.h"
 #include "vislib/String.h"
@@ -14,9 +14,9 @@
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
 #include "view/special/TitleRenderer.h"
-#include "vislib/AutoLock.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/Thread.h"
 
 using namespace megamol::core;
 

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "Mol20Renderer.h"
 #include "view/CallRender3D.h"
 #include "vismol2/Mol20DataCall.h"

@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "ModuleAutoDescription.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 
 namespace megamol {

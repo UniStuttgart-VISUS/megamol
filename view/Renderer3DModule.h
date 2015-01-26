@@ -14,7 +14,7 @@
 #include "api/MegaMolCore.std.h"
 #include "Module.h"
 #include "CalleeSlot.h"
-#include "vislib/graphicstypes.h"
+#include "vislib/graphics/graphicstypes.h"
 
 
 namespace megamol {

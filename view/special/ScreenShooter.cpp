@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "ScreenShooter.h"
 #include "AbstractNamedObject.h"
 #include "AbstractNamedObjectContainer.h"
@@ -21,13 +21,13 @@
 #include "png.h"
 #include "view/CallRenderView.h"
 #include "vislib/assert.h"
-#include "vislib/CriticalSection.h"
-#include "vislib/File.h"
-#include "vislib/FramebufferObject.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/MemmappedFile.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/File.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
 #include <climits>
 

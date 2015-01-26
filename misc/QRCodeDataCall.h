@@ -16,7 +16,7 @@
 #include "CallAutoDescription.h"
 #include "BoundingBoxes.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include <vector>
 
 

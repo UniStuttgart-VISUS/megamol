@@ -13,14 +13,14 @@
 
 #include "api/MegaMolCore.std.h"
 #include "cluster/CommChannel.h"
-#include "vislib/AbstractSimpleMessage.h"
-#include "vislib/CommServer.h"
-#include "vislib/CommServerListener.h"
-#include "vislib/CriticalSection.h"
+#include "vislib/net/AbstractSimpleMessage.h"
+#include "vislib/net/CommServer.h"
+#include "vislib/net/CommServerListener.h"
+#include "vislib/sys/CriticalSection.h"
 #include "vislib/Listenable.h"
-#include "vislib/RunnableThread.h"
+#include "vislib/sys/RunnableThread.h"
 #include "vislib/SmartRef.h"
-#include "vislib/TcpCommChannel.h"
+#include "vislib/net/TcpCommChannel.h"
 
 
 namespace megamol {

@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "view/special/ChronoGraph.h"
 #include "CoreInstance.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include <cmath>
 
 using namespace megamol::core;

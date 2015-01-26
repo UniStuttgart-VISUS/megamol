@@ -14,8 +14,8 @@
 #include <atomic>
 
 #include "Module.h"
-#include "vislib/CriticalSection.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "OracleSphereRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
@@ -15,9 +15,9 @@
 #include "view/CallRender3D.h"
 #include <GL/glu.h>
 #include "vislib/assert.h"
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/ShallowPoint.h"
 #include "vislib/Trace.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 using namespace megamol::core;
 

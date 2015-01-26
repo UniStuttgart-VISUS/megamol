@@ -10,8 +10,8 @@
 #include "utility/BTFParser.h"
 #include "utility/xml/XmlReader.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/Log.h"
-#include "vislib/Path.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/Path.h"
 
 using namespace megamol::core;
 

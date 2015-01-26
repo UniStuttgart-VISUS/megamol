@@ -17,7 +17,7 @@
 #ifdef _WIN32
 #include <WinSock2.h>
 #include <windows.h>
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #endif /* _WIN32 */
 
 #ifdef WITH_MPI
@@ -31,12 +31,12 @@
 #include "param/ParamSlot.h"
 #include "param/ParamUpdateListener.h"
 
-#include "vislib/AbstractSimpleMessage.h"
-#include "vislib/CriticalSection.h"
+#include "vislib/net/AbstractSimpleMessage.h"
+#include "vislib/sys/CriticalSection.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStoragePool.h"
 #include "vislib/Serialiser.h"
-#include "vislib/SimpleMessageDispatchListener.h"
+#include "vislib/net/SimpleMessageDispatchListener.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StackTrace.h"
 #include "vislib/String.h"

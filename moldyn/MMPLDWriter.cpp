@@ -9,10 +9,10 @@
 #include "MMPLDWriter.h"
 #include "BoundingBoxes.h"
 #include "param/FilePathParam.h"
-#include "vislib/Log.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 #include <algorithm>
 
 using namespace megamol::core;

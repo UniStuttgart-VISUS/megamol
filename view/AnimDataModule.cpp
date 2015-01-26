@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "AnimDataModule.h"
 #include "vislib/assert.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol::core;
 

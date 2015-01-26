@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Call.h"
-#include "vislib/CameraParameters.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "CallAutoDescription.h"
 #include "vislib/SmartPtr.h"
 

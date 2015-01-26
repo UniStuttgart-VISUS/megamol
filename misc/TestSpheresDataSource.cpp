@@ -9,9 +9,9 @@
 #define _USE_MATH_DEFINES
 #include "TestSpheresDataSource.h"
 #include "moldyn/MultiParticleDataCall.h"
-#include "vislib/Vector.h"
-#include "vislib/ShallowVector.h"
-#include "vislib/Quaternion.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/math/Quaternion.h"
 #include "cmath"
 
 using namespace megamol::core;

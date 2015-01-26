@@ -14,8 +14,8 @@
 #include "api/MegaMolCore.std.h"
 #include "Call.h"
 #include "CallAutoDescription.h"
-#include "vislib/Plane.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Plane.h"
+#include "vislib/math/Vector.h"
 
 
 namespace megamol {

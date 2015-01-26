@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "JobThread.h"
 #include "CoreInstance.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol::core;
 

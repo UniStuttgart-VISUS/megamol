@@ -7,8 +7,8 @@
 #include "stdafx.h"
 #include "AbstractNamedObject.h"
 #include "vislib/assert.h"
-#include "vislib/AutoLock.h"
-#include "vislib/Log.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/sys/Log.h"
 #include "vislib/StackTrace.h"
 #include "vislib/UnsupportedOperationException.h"
 

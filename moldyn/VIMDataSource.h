@@ -15,10 +15,10 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "moldyn/MultiParticleDataCall.h"
-#include "vislib/File.h"
+#include "vislib/sys/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/MemmappedFile.h"
 
 
 namespace megamol {

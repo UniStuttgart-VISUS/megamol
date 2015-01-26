@@ -11,8 +11,8 @@
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
-#include "vislib/ColourParser.h"
-#include "vislib/Log.h"
+#include "vislib/graphics/ColourParser.h"
+#include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 
 

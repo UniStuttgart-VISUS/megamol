@@ -15,11 +15,11 @@
 #include "cluster/ClusterControllerClient.h"
 #include "cluster/CommChannel.h"
 #include "cluster/InfoIconRenderer.h"
-#include "vislib/AbstractCommEndPoint.h"
-#include "vislib/CriticalSection.h"
+#include "vislib/net/AbstractCommEndPoint.h"
+#include "vislib/sys/CriticalSection.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {

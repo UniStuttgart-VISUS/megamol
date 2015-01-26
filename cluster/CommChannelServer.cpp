@@ -9,12 +9,12 @@
 #include "cluster/CommChannelServer.h"
 #include "cluster/NetMessages.h"
 #include "vislib/assert.h"
-#include "vislib/AutoLock.h"
-#include "vislib/IPCommEndPoint.h"
-#include "vislib/Log.h"
-#include "vislib/SocketException.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/net/IPCommEndPoint.h"
+#include "vislib/sys/Log.h"
+#include "vislib/net/SocketException.h"
 #include "vislib/String.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::core;
 

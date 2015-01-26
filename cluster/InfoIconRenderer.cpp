@@ -7,14 +7,14 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "cluster/InfoIconRenderer.h"
 #include "view/graphicsresources.h"
 #include <cmath>
-#include "vislib/mathfunctions.h"
-#include "vislib/OutlineFont.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "HelvUC.inc"
 

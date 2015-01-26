@@ -17,12 +17,12 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "moldyn/MMSPDFrameData.h"
 #include "moldyn/MMSPDHeader.h"
-#include "vislib/CriticalSection.h"
-#include "vislib/Cuboid.h"
-#include "vislib/Event.h"
-#include "vislib/File.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/sys/Event.h"
+#include "vislib/sys/File.h"
 #include "vislib/RawStorage.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 #include "vislib/types.h"
 
 

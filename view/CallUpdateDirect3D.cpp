@@ -9,7 +9,7 @@
 #include "CallUpdateDirect3D.h"
 
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
-#include "vislib/d3dutils.h"
+#include "vislib/graphics/d3d/d3dutils.h"
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 
 /*

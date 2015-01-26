@@ -16,7 +16,7 @@
 #include "CalleeSlot.h"
 #include "vislib/Array.h"
 #include "vislib/PtrArray.h"
-#include "vislib/File.h"
+#include "vislib/sys/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/String.h"

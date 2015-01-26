@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #define USE_MATH_DEFINES
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "SphereOutlineRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
@@ -18,12 +18,12 @@
 #include "view/CallRender3D.h"
 #include <GL/glu.h>
 #include "vislib/assert.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/Vector.h"
-#include "vislib/Quaternion.h"
-#include "vislib/ShallowPoint.h"
-#include "vislib/ShallowVector.h"
-#include "vislib/ColourParser.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/ShallowPoint.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/graphics/ColourParser.h"
 #include <cmath>
 
 using namespace megamol::core;

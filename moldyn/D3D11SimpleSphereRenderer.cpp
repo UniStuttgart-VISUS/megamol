@@ -14,14 +14,14 @@
 #include "view/CallRender3D.h"
 #include "view/CallUpdateDirect3D.h"
 
-#include "vislib/Camera.h"
-#include "vislib/COMException.h"
+#include "vislib/graphics/Camera.h"
+#include "vislib/sys/COMException.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
-#include "vislib/d3dutils.h"
+#include "vislib/graphics/d3d/d3dutils.h"
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
-#include "vislib/CameraOpenGL.h"
-#include "vislib/Matrix.h"
-#include "vislib/ShallowMatrix.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/ShallowMatrix.h"
 #include "vislib/Trace.h"
 
 

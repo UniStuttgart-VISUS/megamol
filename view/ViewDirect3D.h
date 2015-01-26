@@ -17,7 +17,7 @@
 #include "view/View3D.h"
 
 #include "vislib/assert.h"
-#include "vislib/CriticalSection.h"
+#include "vislib/sys/CriticalSection.h"
 #include "vislib/StackTrace.h"
 
 

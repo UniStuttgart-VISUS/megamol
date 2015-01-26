@@ -15,7 +15,7 @@
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/assert.h"
-#include "vislib/ColourRGBAu8.h"
+#include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/forceinline.h"
 
 

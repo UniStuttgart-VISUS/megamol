@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES 1
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "ColStereoDisplay.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -15,7 +15,7 @@
 #include "param/BoolParam.h"
 #include "special/ClusterSignRenderer.h"
 #include "view/CallRenderView.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #if defined(DEBUG) || defined(_DEBUG)
 #include "vislib/Trace.h"
 #endif

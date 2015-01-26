@@ -13,15 +13,15 @@
 
 #include "view/Renderer3DModule.h"
 #include "param/ParamSlot.h"
-#include "vislib/OpenGLTexture2D.h"
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/Pair.h"
-#include "vislib/Rectangle.h"
+#include "vislib/math/Rectangle.h"
 #include "vislib/SmartPtr.h"
 
 /*
  * Copyright (C) 2010 by Sebastian Grottel.
  */
-#include "vislib/AbstractBitmapCodec.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
 #include "misc/PngBitmapCodec.h"
 

@@ -14,7 +14,7 @@
 #include "CallerSlot.h"
 #include "view/AbstractView.h"
 #include "view/CallRenderView.h"
-#include "vislib/CameraParameters.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "vislib/forceinline.h"
 
 

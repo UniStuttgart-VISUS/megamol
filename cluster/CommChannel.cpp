@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "cluster/CommChannel.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;

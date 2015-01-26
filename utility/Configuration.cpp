@@ -18,14 +18,14 @@
 #include "vislib/StringConverter.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/Trace.h"
-#include "vislib/File.h"
-#include "vislib/Path.h"
-#include "vislib/Log.h"
-#include "vislib/Console.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Path.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/Console.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/NoSuchElementException.h"
-#include "vislib/DirectoryIterator.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/DirectoryIterator.h"
+#include "vislib/sys/sysfunctions.h"
 
 #ifndef _WIN32
 #include <sys/types.h>

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "cluster/simple/View.h"
 #include "cluster/simple/ClientViewRegistration.h"
 #include "cluster/simple/Client.h"
@@ -17,12 +17,12 @@
 #include "AbstractNamedObject.h"
 #include "CoreInstance.h"
 #include "vislib/assert.h"
-#include "vislib/AutoLock.h"
-#include "vislib/DNS.h"
-#include "vislib/IPHostEntry.h"
-#include "vislib/NetworkInformation.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/net/DNS.h"
+#include "vislib/net/IPHostEntry.h"
+#include "vislib/net/NetworkInformation.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 #include <climits>
 
 

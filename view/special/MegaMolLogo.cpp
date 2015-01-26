@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "MegaMolLogo.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -14,9 +14,9 @@
 #include "MegaMolLogoData.inl"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/Pair.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 
 /*

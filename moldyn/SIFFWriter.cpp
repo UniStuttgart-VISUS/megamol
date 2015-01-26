@@ -11,11 +11,11 @@
 #include "param/FilePathParam.h"
 #include "param/BoolParam.h"
 #include "param/EnumParam.h"
-#include "vislib/Log.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"
-#include "vislib/Thread.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/Thread.h"
+#include "vislib/sys/sysfunctions.h"
 
 using namespace megamol::core;
 using namespace megamol::core::moldyn;

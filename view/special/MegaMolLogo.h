@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "vislib/AbstractVISLogo.h"
+#include "vislib/graphics/AbstractVISLogo.h"
 
 
 namespace megamol {

@@ -13,7 +13,7 @@
 
 #include "api/MegaMolCore.std.h"
 #include "AbstractParam.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 
 namespace megamol {

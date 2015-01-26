@@ -10,10 +10,10 @@
 #include "CoreInstance.h"
 #include <typeinfo>
 #include "vislib/assert.h"
-#include "vislib/AutoLock.h"
+#include "vislib/sys/AutoLock.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol::core;
 

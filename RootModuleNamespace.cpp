@@ -20,13 +20,13 @@
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #if defined(DEBUG) || defined(_DEBUG)
-#include "vislib/AutoLock.h"
+#include "vislib/sys/AutoLock.h"
 #endif
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/Stack.h"
 #include "vislib/StackTrace.h"
 #include "vislib/String.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 

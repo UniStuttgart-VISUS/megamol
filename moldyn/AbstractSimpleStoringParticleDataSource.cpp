@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "AbstractSimpleStoringParticleDataSource.h"
 #include "param/FilePathParam.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol::core;
 using namespace megamol::core::moldyn;

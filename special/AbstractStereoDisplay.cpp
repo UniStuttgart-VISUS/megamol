@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "AbstractStereoDisplay.h"
 #include "view/CallCursorInput.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;
 

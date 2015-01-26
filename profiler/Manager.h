@@ -13,7 +13,7 @@
 #include "CoreInstance.h"
 #include "vislib/Array.h"
 #include "profiler/Connection.h"
-#include "vislib/CriticalSection.h"
+#include "vislib/sys/CriticalSection.h"
 #include "vislib/types.h"
 
 

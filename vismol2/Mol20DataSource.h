@@ -15,9 +15,9 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "vismol2/Mol2Data.h"
-#include "vislib/File.h"
+#include "vislib/sys/File.h"
 #include "vislib/types.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {

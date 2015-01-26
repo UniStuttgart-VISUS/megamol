@@ -15,8 +15,8 @@
 #include "cluster/simple/HeartbeatClient.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
-#include "vislib/AbstractSimpleMessage.h"
-#include "vislib/CriticalSection.h"
+#include "vislib/net/AbstractSimpleMessage.h"
+#include "vislib/sys/CriticalSection.h"
 #include "vislib/Serialiser.h"
 #include "vislib/String.h"
 

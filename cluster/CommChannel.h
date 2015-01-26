@@ -12,12 +12,12 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "api/MegaMolCore.std.h"
-#include "vislib/AbstractCommChannel.h"
-#include "vislib/AbstractSimpleMessage.h"
+#include "vislib/net/AbstractCommChannel.h"
+#include "vislib/net/AbstractSimpleMessage.h"
 #include "vislib/Listenable.h"
-#include "vislib/RunnableThread.h"
-#include "vislib/SimpleMessageDispatcher.h"
-#include "vislib/SimpleMessageDispatchListener.h"
+#include "vislib/sys/RunnableThread.h"
+#include "vislib/net/SimpleMessageDispatcher.h"
+#include "vislib/net/SimpleMessageDispatchListener.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
 

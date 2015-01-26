@@ -8,7 +8,7 @@
 #pragma once
 
 #include "moldyn/AbstractSimpleSphereRenderer.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/Map.h"
 
 

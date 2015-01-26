@@ -15,9 +15,9 @@
 #include "CalleeSlot.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
-#include "vislib/CriticalSection.h"
-#include "vislib/DiscoveryListener.h"
-#include "vislib/DiscoveryService.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/net/cluster/DiscoveryListener.h"
+#include "vislib/net/cluster/DiscoveryService.h"
 
 
 namespace megamol {

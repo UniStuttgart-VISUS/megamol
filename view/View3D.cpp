@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "View3D.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -23,24 +23,24 @@
 #include "CallRender3D.h"
 #include "CoreInstance.h"
 #include "utility/ColourParser.h"
-#include "vislib/CameraParamsStore.h"
+#include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/Exception.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/Point.h"
-#include "vislib/Quaternion.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib/String.h"
 #include "vislib/StringSerialiser.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/sysfunctions.h"
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
-#include "vislib/KeyCode.h"
+#include "vislib/sys/KeyCode.h"
 #endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
 #include "vislib/Trace.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 //#define ROTATOR_HACK
 #ifdef ROTATOR_HACK
-#include "vislib/Matrix.h"
-#include "vislib/Quaternion.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Quaternion.h"
 #endif
 
 using namespace megamol::core;

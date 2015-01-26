@@ -11,7 +11,7 @@
 #include "api/MegaMolCore.std.h"
 #include "Renderer2DModule.h"
 #include "CallerSlot.h"
-#include "vislib/SimpleFont.h"
+#include "vislib/graphics/gl/SimpleFont.h"
 
 namespace megamol {
 namespace core {

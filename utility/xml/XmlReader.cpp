@@ -37,7 +37,7 @@ namespace xml {
 #include <new>
 #include "vislib/Exception.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 
 /*

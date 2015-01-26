@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "LinearTransferFunction.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -18,7 +18,7 @@
 #include "utility/ColourParser.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 
 namespace megamol {

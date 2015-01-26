@@ -16,7 +16,7 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 #include "vislib/forceinline.h"
 
 

@@ -15,8 +15,8 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "moldyn/MultiParticleDataCall.h"
-#include "vislib/Cuboid.h"
-#include "vislib/File.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/sys/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 

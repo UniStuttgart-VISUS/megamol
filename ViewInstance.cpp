@@ -8,8 +8,8 @@
 #include "ViewInstance.h"
 #include "Module.h"
 #include "ModuleNamespace.h"
-#include "vislib/AutoLock.h"
-#include "vislib/Log.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/sys/Log.h"
 #include "vislib/StackTrace.h"
 
 using namespace megamol::core;

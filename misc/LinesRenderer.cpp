@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 //#define _USE_MATH_DEFINES
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "LinesRenderer.h"
 #include "LinesDataCall.h"
 #include "view/CallRender3D.h"

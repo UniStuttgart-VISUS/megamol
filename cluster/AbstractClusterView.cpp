@@ -6,22 +6,22 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "cluster/AbstractClusterView.h"
 #include "cluster/InfoIconRenderer.h"
 #include "cluster/NetMessages.h"
 #include "CoreInstance.h"
 #include "param/StringParam.h"
 #include "view/AbstractView.h"
-#include "vislib/AutoLock.h"
-#include "vislib/IPCommEndPoint.h"
-#include "vislib/IPEndPoint.h"
-#include "vislib/Log.h"
-#include "vislib/NetworkInformation.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/net/IPCommEndPoint.h"
+#include "vislib/net/IPEndPoint.h"
+#include "vislib/sys/Log.h"
+#include "vislib/net/NetworkInformation.h"
 #include "vislib/RawStorageSerialiser.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/SystemInformation.h"
-#include "vislib/TcpCommChannel.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/SystemInformation.h"
+#include "vislib/net/TcpCommChannel.h"
 
 
 using namespace megamol::core;

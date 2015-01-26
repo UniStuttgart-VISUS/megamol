@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "ArrowRenderer.h"
 #include "DirectionalParticleDataCall.h"
 #include "CoreInstance.h"

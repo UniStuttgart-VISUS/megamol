@@ -15,7 +15,7 @@
 #include "ParamValueSetRequest.h"
 #include "api/MegaMolCore.h"
 #include "utility/xml/ConditionalParser.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/Map.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"

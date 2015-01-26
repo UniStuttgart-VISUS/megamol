@@ -9,7 +9,7 @@
 #include "DirPartColModulate.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
-#include "vislib/ColourParser.h"
+#include "vislib/graphics/ColourParser.h"
 #include <climits>
 
 using namespace megamol::core;

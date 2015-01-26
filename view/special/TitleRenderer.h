@@ -12,10 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "view/AbstractRenderingView.h"
-#include "vislib/IncludeAllGL.h"
-#include "vislib/AbstractVISLogo.h"
-#include "vislib/CameraOpenGL.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/graphics/AbstractVISLogo.h"
+#include "vislib/graphics/gl/CameraOpenGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include <GL/glu.h>
 
 //#define ICON_DEBUGGING

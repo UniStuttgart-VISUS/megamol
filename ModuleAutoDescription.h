@@ -13,7 +13,7 @@
 
 #include <typeinfo>
 #include "ModuleDescription.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include <typeinfo>
 
 

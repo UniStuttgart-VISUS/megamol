@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "utility/APIValueUtil.h"
 #include "vislib/CharTraits.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/StringConverter.h"
 
 

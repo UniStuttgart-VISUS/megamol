@@ -14,7 +14,7 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 
-#include "vislib/SimpleMessageDispatchListener.h"
+#include "vislib/net/SimpleMessageDispatchListener.h"
 
 
 namespace megamol {

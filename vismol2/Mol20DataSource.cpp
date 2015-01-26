@@ -9,10 +9,10 @@
 #include "Mol20DataSource.h"
 #include "vismol2/Mol20DataCall.h"
 #include "param/StringParam.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/MemmappedFile.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::core;
 using namespace vislib::sys;

@@ -7,9 +7,9 @@
 
 #include <stdafx.h>
 #include "LinkedView3D.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "CallCamParams.h"
-#include "vislib/CameraParamsStore.h"
+#include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/vislibversion.h"
 
 using namespace megamol;

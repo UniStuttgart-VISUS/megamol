@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CalleeSlot.h"
-#include "vislib/CameraParamsStore.h"
+#include "vislib/graphics/CameraParamsStore.h"
 #include "Module.h"
 
 namespace megamol {

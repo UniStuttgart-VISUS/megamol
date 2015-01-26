@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "SimpleSphereRenderer.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"

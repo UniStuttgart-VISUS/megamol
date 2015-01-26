@@ -13,7 +13,7 @@
 
 #include "api/MegaMolCore.std.h"
 #include "CallAutoDescription.h"
-#include "vislib/Rectangle.h"
+#include "vislib/math/Rectangle.h"
 #include "vislib/types.h"
 #include "view/AbstractCallRender.h"
 #include "view/MouseFlags.h"

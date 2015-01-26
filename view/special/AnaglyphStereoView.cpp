@@ -11,9 +11,9 @@
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
 #include "view/CallRenderView.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol::core;
 

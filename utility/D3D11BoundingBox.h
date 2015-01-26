@@ -16,9 +16,9 @@
 #include "utility/AbstractD3D11RenderObject.h"
 #include "utility/ShaderSourceFactory.h"
 
-#include "vislib/Cuboid.h"
-#include "vislib/ColourRGBAu8.h"
-#include "vislib/graphicstypes.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/graphics/ColourRGBAu8.h"
+#include "vislib/graphics/graphicstypes.h"
 
 
 namespace megamol {

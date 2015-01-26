@@ -13,10 +13,10 @@
 #include "param/Vector3fParam.h"
 #include "utility/ColourParser.h"
 #include "view/CallClipPlane.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/ShallowPoint.h"
-#include "vislib/Vector.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/ShallowPoint.h"
+#include "vislib/math/Vector.h"
 
 using namespace megamol::core;
 

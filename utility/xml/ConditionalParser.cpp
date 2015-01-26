@@ -9,9 +9,9 @@
 #include "utility/xml/ConditionalParser.h"
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 

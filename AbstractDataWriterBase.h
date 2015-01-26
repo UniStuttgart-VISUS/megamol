@@ -16,9 +16,9 @@
 #include "CallAutoDescription.h"
 #include "param/FilePathParam.h"
 #include "param/ParamSlot.h"
-#include "vislib/Log.h"
-#include "vislib/File.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Thread.h"
 #include <climits>
 
 

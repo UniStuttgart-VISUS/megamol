@@ -15,9 +15,9 @@
 #include "ModuleNamespace.h"
 #include "vislib/Array.h"
 #include "vislib/RawStorage.h"
-#include "vislib/FatReaderWriterLock.h"
+#include "vislib/sys/FatReaderWriterLock.h"
 #if defined(DEBUG) || defined(_DEBUG)
-#include "vislib/CriticalSection.h"
+#include "vislib/sys/CriticalSection.h"
 #include "vislib/SingleLinkedList.h"
 #endif
 

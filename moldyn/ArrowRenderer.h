@@ -15,7 +15,7 @@
 #include "Call.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {

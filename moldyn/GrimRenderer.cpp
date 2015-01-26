@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "GrimRenderer.h"
 #include "ParticleGridDataCall.h"
 #include "CoreInstance.h"
@@ -18,15 +18,15 @@
 #include <climits>
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/Camera.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/mathtypes.h"
+#include "vislib/graphics/Camera.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/mathtypes.h"
 #include "vislib/Pair.h"
-#include "vislib/Plane.h"
-#include "vislib/Point.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/math/Plane.h"
+#include "vislib/math/Point.h"
+#include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 // #define SPEAK_CELL_USAGE 1
 //#define SPEAK_VRAM_CACHE_USAGE 1

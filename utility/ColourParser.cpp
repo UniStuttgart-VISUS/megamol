@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "ColourParser.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/types.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"

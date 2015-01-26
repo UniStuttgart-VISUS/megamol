@@ -12,10 +12,10 @@
 #include "param/IntParam.h"
 #include "CoreInstance.h"
 #include "vislib/assert.h"
-#include "vislib/AutoLock.h"
-#include "vislib/Log.h"
-#include "vislib/IPCommEndPoint.h"
-#include "vislib/TcpCommChannel.h"
+#include "vislib/sys/AutoLock.h"
+#include "vislib/sys/Log.h"
+#include "vislib/net/IPCommEndPoint.h"
+#include "vislib/net/TcpCommChannel.h"
 #include "vislib/Trace.h"
 #include <climits>
 

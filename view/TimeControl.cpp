@@ -11,7 +11,7 @@
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
 #include "param/FloatParam.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "view/CallTimeControl.h"
 
 using namespace megamol::core;

@@ -17,12 +17,12 @@
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "param/ParamUpdateListener.h"
-#include "vislib/AbstractCommEndPoint.h"
-#include "vislib/CommServer.h"
-#include "vislib/CommServerListener.h"
-#include "vislib/RunnableThread.h"
+#include "vislib/net/AbstractCommEndPoint.h"
+#include "vislib/net/CommServer.h"
+#include "vislib/net/CommServerListener.h"
+#include "vislib/sys/RunnableThread.h"
 #include "vislib/SmartRef.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {

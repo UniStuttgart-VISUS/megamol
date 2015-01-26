@@ -8,17 +8,17 @@
 #include "stdafx.h"
 #include <climits>
 #include "VisIttDataSource.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "param/EnumParam.h"
 #include "param/FilePathParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
 #include "MultiParticleDataCall.h"
 #include "CoreInstance.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::core;
 

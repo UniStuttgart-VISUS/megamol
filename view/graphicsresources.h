@@ -13,7 +13,7 @@
 
 #include "api/MegaMolCore.std.h"
 #include "vislib/types.h"
-#include "vislib/AbstractFont.h"
+#include "vislib/graphics/AbstractFont.h"
 
 
 namespace megamol {

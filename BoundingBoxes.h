@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "api/MegaMolCore.std.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {

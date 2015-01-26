@@ -14,8 +14,8 @@
 #include "vislib/RawStorage.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
-#include "vislib/TcpCommChannel.h"
-#include "vislib/Thread.h"
+#include "vislib/net/TcpCommChannel.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {

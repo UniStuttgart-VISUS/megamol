@@ -16,7 +16,7 @@
 #include "Module.h"
 #include "AbstractSlot.h"
 #include "param/ParamSlot.h"
-#include "vislib/DiscoveryService.h"
+#include "vislib/net/cluster/DiscoveryService.h"
 #include "vislib/Listenable.h"
 
 

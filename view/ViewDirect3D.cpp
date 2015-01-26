@@ -12,11 +12,11 @@
 #include "view/CallUpdateDirect3D.h"
 #include "view/CameraParamOverride.h"
 
-#include "vislib/COMException.h"
+#include "vislib/sys/COMException.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
-#include "vislib/d3dutils.h"
+#include "vislib/graphics/d3d/d3dutils.h"
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
-#include "vislib/ScopedLock.h"
+#include "vislib/sys/ScopedLock.h"
 #include "vislib/Trace.h"
 
 

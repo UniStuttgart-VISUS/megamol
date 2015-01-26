@@ -14,8 +14,8 @@
 #include "api/MegaMolCore.std.h"
 #include "param/ParamSlot.h"
 #include "view/AbstractView.h"
-#include "vislib/CriticalSection.h"
-#include "vislib/FpsCounter.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/graphics/FpsCounter.h"
 
 
 namespace megamol {

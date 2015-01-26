@@ -15,8 +15,8 @@
 #include "Call.h"
 #include "CallerSlot.h"
 
-#include "vislib/CameraParameterObserver.h"
-#include "vislib/ObservableCameraParams.h"
+#include "vislib/graphics/CameraParameterObserver.h"
+#include "vislib/graphics/ObservableCameraParams.h"
 
 namespace megamol {
 namespace core {

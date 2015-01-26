@@ -8,7 +8,7 @@
 #include "AbstractNamedObjectContainer.h"
 #include <cstring>
 #include "vislib/assert.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
 
 using namespace megamol::core;

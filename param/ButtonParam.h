@@ -14,7 +14,7 @@
 #include "api/MegaMolCore.std.h"
 #include "AbstractParam.h"
 #include "vislib/types.h"
-#include "vislib/KeyCode.h"
+#include "vislib/sys/KeyCode.h"
 
 
 namespace megamol {

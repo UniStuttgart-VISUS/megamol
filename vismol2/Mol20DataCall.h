@@ -14,7 +14,7 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vismol2/Mol20DataSource.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {

@@ -13,7 +13,7 @@
 
 #include "param/ParamSlot.h"
 #include "view/AbstractOverrideView.h"
-#include "vislib/CameraParameters.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "vislib/forceinline.h"
 
 

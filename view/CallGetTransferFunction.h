@@ -14,7 +14,7 @@
 #include "api/MegaMolCore.h"
 #include "Call.h"
 #include "CallAutoDescription.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 
 namespace megamol {

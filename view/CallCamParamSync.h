@@ -16,7 +16,7 @@
 
 #include "api/MegaMolCore.std.h"
 
-#include "vislib/CameraParameters.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "vislib/StackTrace.h"
 
 

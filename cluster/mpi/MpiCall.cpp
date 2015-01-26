@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #include "MpiCall.h"
 
-#include "vislib/CmdLineProvider.h"
-#include "vislib/Log.h"
+#include "vislib/sys/CmdLineProvider.h"
+#include "vislib/sys/Log.h"
 
 
 /*

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "AddParticleColours.h"
 #include "MultiParticleDataCall.h"
 #include "param/ButtonParam.h"

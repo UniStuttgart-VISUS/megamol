@@ -18,8 +18,8 @@
 #include "MpiCall.h"
 
 #include "vislib/assert.h"
-#include "vislib/CmdLineProvider.h"
-#include "vislib/Log.h"
+#include "vislib/sys/CmdLineProvider.h"
+#include "vislib/sys/Log.h"
 
 
 /*

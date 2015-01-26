@@ -15,7 +15,7 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include <vector>
 
 namespace megamol {

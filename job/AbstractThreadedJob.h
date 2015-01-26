@@ -14,7 +14,7 @@
 #include "api/MegaMolCore.std.h"
 #include "job/AbstractJob.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {

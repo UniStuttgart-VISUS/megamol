@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "moldyn/AbstractSimpleSphereRenderer.h"
-#include "vislib/GLSLShader.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace core {

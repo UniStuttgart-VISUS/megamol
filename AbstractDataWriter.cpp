@@ -9,7 +9,7 @@
 #include "AbstractDataWriter.h"
 #include "DataWriterCtrlCall.h"
 #include "param/ButtonParam.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol::core;
 

@@ -10,10 +10,10 @@
 #include "BoundingBoxes.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "param/FilePathParam.h"
-#include "vislib/Log.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"
-#include "vislib/Thread.h"
+#include "vislib/sys/Thread.h"
 
 using namespace megamol::core;
 

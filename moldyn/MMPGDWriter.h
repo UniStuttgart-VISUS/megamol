@@ -15,7 +15,7 @@
 #include "CallerSlot.h"
 #include "moldyn/ParticleGridDataCall.h"
 #include "param/ParamSlot.h"
-#include "vislib/File.h"
+#include "vislib/sys/File.h"
 
 
 namespace megamol {

@@ -11,11 +11,11 @@
 #include "moldyn/MultiParticleDataCall.h"
 #include "param/BoolParam.h"
 #include "param/EnumParam.h"
-#include "vislib/BezierCurve.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/Point.h"
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/BezierCurve.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/ShallowPoint.h"
 #include <climits>
 
 using namespace megamol::core;

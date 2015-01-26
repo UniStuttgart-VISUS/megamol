@@ -17,8 +17,8 @@
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "vislib/Array.h"
-#include "vislib/BezierCurve.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/BezierCurve.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {

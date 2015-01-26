@@ -11,10 +11,10 @@
 #include "MultiParticleDataCall.h"
 #include "ParticleGridDataCall.h"
 #include "CoreInstance.h"
-#include "vislib/Log.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"
-#include "vislib/SystemInformation.h"
+#include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::core;
 

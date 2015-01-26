@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "view/graphicsresources.h"
-#include "vislib/OutlineFont.h"
-#include "vislib/Verdana.inc"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 
 namespace megamol {
 namespace core {

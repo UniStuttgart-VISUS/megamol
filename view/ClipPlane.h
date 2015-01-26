@@ -15,7 +15,7 @@
 #include "CalleeSlot.h"
 #include "Module.h"
 #include "param/ParamSlot.h"
-#include "vislib/Plane.h"
+#include "vislib/math/Plane.h"
 
 
 namespace megamol {

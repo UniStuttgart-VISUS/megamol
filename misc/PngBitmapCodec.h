@@ -16,7 +16,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #include "api/MegaMolCore.std.h"
-#include "vislib/AbstractBitmapCodec.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
 
 
