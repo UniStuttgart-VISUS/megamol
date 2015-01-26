@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "RenderVolumeSlice.h"
 #include "CallVolumeData.h"
 #include "param/StringParam.h"

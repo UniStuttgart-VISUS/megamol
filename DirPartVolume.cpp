@@ -14,12 +14,12 @@
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 #include "vislib/assert.h"
-#include "vislib/Vector.h"
-#include "vislib/ShallowVector.h"
-#include "vislib/Log.h"
-#include "vislib/ConsoleProgressBar.h"
-#include "vislib/Matrix.h"
-#include "vislib/pcautils.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/ConsoleProgressBar.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/pcautils.h"
 #include <cmath>
 
 using namespace megamol;

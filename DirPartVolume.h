@@ -15,7 +15,7 @@
 #include "CallerSlot.h"
 #include "CalleeSlot.h"
 #include "param/ParamSlot.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {

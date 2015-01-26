@@ -108,7 +108,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include\;$(VISlibPath)\math\include\;$(VISlibPath)\sys\include\;$(SolutionDir)datraw\;$(VISlibPath)\graphics\include\;$(VISlibPath)\gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)include\;$(VISlibPath)3rd\glload\include\;$(SolutionDir)datraw\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MMSTD_VOLUME_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -119,8 +119,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;vislibgl$(BitsD).lib;vislibgraphics$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislib.lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(VISlibPath)3rd\glload\lib\;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -138,7 +138,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include\;$(VISlibPath)\math\include\;$(VISlibPath)\sys\include\;$(SolutionDir)datraw\;$(VISlibPath)\graphics\include\;$(VISlibPath)\gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)include\;$(VISlibPath)3rd\glload\include\;$(SolutionDir)datraw\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MMSTD_VOLUME_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -149,8 +149,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;vislibgl$(BitsD).lib;vislibgraphics$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislib.lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(VISlibPath)3rd\glload\lib\;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -166,7 +166,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include\;$(VISlibPath)\math\include\;$(VISlibPath)\sys\include\;$(SolutionDir)datraw\;$(VISlibPath)\graphics\include\;$(VISlibPath)\gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)include\;$(VISlibPath)3rd\glload\include\;$(SolutionDir)datraw\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MMSTD_VOLUME_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -176,8 +176,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;vislibgl$(BitsD).lib;vislibgraphics$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislib.lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(VISlibPath)3rd\glload\lib\;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -198,7 +198,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)\base\include\;$(VISlibPath)\math\include\;$(VISlibPath)\sys\include\;$(SolutionDir)datraw\;$(VISlibPath)\graphics\include\;$(VISlibPath)\gl\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)include\;$(VISlibPath)3rd\glload\include\;$(SolutionDir)datraw\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MMSTD_VOLUME_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -208,8 +208,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;vislibgl$(BitsD).lib;vislibgraphics$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)\lib;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vislib.lib;MegaMolCore$(BitsD).lib;datraw$(BitsD).lib;glload$(BitsD).lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib;$(VISlibPath)lib\$(Platform)\$(Configuration)\;$(VISlibPath)3rd\glload\lib\;$(SolutionDir)datraw\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>

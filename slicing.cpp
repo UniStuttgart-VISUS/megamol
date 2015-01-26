@@ -16,7 +16,7 @@
 
 #include "stdafx.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32
 #  include <windows.h>
 #endif
@@ -26,7 +26,7 @@
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
-#include <vislib/Vector.h>
+#include "vislib/math/Vector.h"
 #include "slicing.h"
 
 namespace megamol {

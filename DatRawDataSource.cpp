@@ -10,10 +10,10 @@
 #include "param/FilePathParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
-#include "vislib/Log.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/sysfunctions.h"
 #include "vislib/VersionNumber.h"
 #include "vislib/StringConverter.h"
 

@@ -14,7 +14,7 @@
 #include "Module.h"
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 #include "vislib/RawStorage.h"
 #include "moldyn/VolumeDataCall.h"
 #include "datRaw.h"

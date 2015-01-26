@@ -12,9 +12,9 @@
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
 #include "moldyn/DataFileSequence.h"
-#include "vislib/File.h"
+#include "vislib/sys/File.h"
 #include "vislib/assert.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
