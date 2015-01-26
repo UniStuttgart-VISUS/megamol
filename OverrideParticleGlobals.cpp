@@ -10,7 +10,7 @@
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
-#include "vislib/ColourParser.h"
+#include "vislib/graphics/ColourParser.h"
 #include <cstdint>
 #include <algorithm>
 

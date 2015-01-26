@@ -17,7 +17,7 @@
 #include "CallerSlot.h"
 #include "moldyn/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 
 
 namespace megamol {

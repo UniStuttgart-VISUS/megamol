@@ -11,8 +11,8 @@
 #include "param/FilePathParam.h"
 #include "param/StringParam.h"
 #include "view/CallRenderView.h"
-#include "vislib/File.h"
-#include "vislib/Log.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Log.h"
 
 
 /*

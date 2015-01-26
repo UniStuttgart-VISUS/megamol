@@ -7,9 +7,9 @@
 #include "stdafx.h"
 #include "TransferFunctionQuery.h"
 #include "view/CallGetTransferFunction.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/assert.h"
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/ShallowPoint.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;

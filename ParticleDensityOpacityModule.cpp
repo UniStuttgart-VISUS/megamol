@@ -5,10 +5,10 @@
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 #include "param/BoolParam.h"
-#include "vislib/ColourRGBAu8.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/ColourRGBAu8.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cstdint>
-#include "vislib/ShallowPoint.h"
+#include "vislib/math/ShallowPoint.h"
 #include "ANN/ANN.h"
 #include "param/EnumParam.h"
 

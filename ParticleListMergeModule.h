@@ -13,7 +13,7 @@
 
 #include "Module.h"
 #include "AbstractParticleManipulator.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 #include "TransferFunctionQuery.h"
 
 
