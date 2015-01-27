@@ -17,9 +17,9 @@
 #include "param/ParamSlot.h"
 #include "CallerSlot.h"
 #include "view/Renderer2DModule.h"
-#include "vislib/GLSLShader.h"
-#include "vislib/OutlineFont.h"
-#include "vislib/Verdana.inc"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 
 
 namespace megamol {

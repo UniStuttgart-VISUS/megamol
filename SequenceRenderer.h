@@ -20,14 +20,14 @@
 #include "view/Renderer2DModule.h"
 #include "MolecularDataCall.h"
 #include "BindingSiteCall.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #ifdef USE_SIMPLE_FONT
-#include "vislib/SimpleFont.h"
+#include "vislib/graphics/gl/SimpleFont.h"
 #else //  USE_SIMPLE_FONT
-#include "vislib/OutlineFont.h"
-#include "vislib/Verdana.inc"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
-#include <vislib/OpenGLTexture2D.h>
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "ResidueSelectionCall.h"
 
 namespace megamol {

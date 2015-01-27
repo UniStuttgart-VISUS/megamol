@@ -16,13 +16,13 @@
 #include "Renderer3DModuleMouse.h"
 #include "Call.h"
 #include "view/MouseFlags.h"
-#include "vislib/GLSLShader.h"
-#include "vislib/GLSLGeometryShader.h"
-#include "vislib/CameraParameters.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/CameraParameters.h"
 #include "MolecularDataCall.h"
 #include "CallerSlot.h"
 #include "param/ParamSlot.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 namespace megamol {
 namespace protein {

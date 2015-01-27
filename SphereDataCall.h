@@ -15,7 +15,7 @@
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include <vector>

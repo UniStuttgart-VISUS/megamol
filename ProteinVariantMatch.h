@@ -24,8 +24,8 @@
 #include "DiagramCall.h"
 #include "MolecularDataCall.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
-#include "vislib/Matrix.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Matrix.h"
 typedef vislib::math::Cuboid<float> Cubef;
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Vector<float, 3> Vec3f;

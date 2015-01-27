@@ -35,13 +35,14 @@
 #include "utility/ColourParser.h"
 #include "view/CallRender3D.h"
 
-#include "vislib/FramebufferObject.h"
-#include "vislib/Matrix.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/math/Matrix.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include <cmath>
+#include <algorithm>
 
 
 using namespace megamol;

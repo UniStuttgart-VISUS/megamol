@@ -17,14 +17,14 @@
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
-#include "vislib/SimpleFont.h"
-#include <vislib/GLSLShader.h>
-#include <vislib/Quaternion.h>
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/math/Quaternion.h"
 #include <vector>
 #include <set>
 #include <algorithm>
 #include <list>
-#include "vislib/FpsCounter.h"
+#include "vislib/graphics/FpsCounter.h"
 
 #include "particles_kernel.cuh"
 #include "vector_functions.h"

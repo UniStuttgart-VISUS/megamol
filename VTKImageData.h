@@ -15,14 +15,14 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#include "vislib_vector_typedefs.h"
-#include "vislib/Vector.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Cuboid.h"
 typedef vislib::math::Cuboid<unsigned int> Cubeu;
 typedef vislib::math::Vector<float, 3> Vec3f;
 
 #include "vislib/Array.h"
-#include "vislib/Cuboid.h"
-#include "vislib/Log.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/sys/Log.h"
 
 typedef unsigned int uint;
 

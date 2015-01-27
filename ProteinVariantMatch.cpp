@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "ProteinVariantMatch.h"
+#include <algorithm>
 
 #ifdef WITH_CUDA
 
@@ -36,7 +37,7 @@
 #include "param/IntParam.h"
 #include "param/ButtonParam.h"
 #include "RMS.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include <ctime>
 
 

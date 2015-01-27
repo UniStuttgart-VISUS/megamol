@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/Matrix4.h"
+#include "vislib/math/Matrix4.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include <vector>
 
 namespace megamol {

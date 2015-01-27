@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include <param/EnumParam.h>
@@ -15,10 +15,11 @@
 #include <param/FloatParam.h>
 #include <view/CallRender3D.h>
 #include <CoreInstance.h>
+#include <algorithm>
 
-#include <vislib/ShaderSource.h>
-#include <vislib/Log.h>
-#include <vislib/Vector.h>
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/Vector.h"
 
 #include "DofRendererDeferred.h"
 

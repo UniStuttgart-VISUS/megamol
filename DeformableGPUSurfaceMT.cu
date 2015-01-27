@@ -9,7 +9,7 @@
 //
 #include "stdafx.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "DeformableGPUSurfaceMT.h"
 #ifdef WITH_CUDA
 
@@ -24,6 +24,7 @@
 #include "CUDAGrid.cuh"
 #include "cuda_helper.h"
 
+#include <algorithm>
 #include <cuda_runtime.h>
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
@@ -32,7 +33,7 @@
 #include <thrust/device_ptr.h>
 
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 
 //#define USE_TIMER
 

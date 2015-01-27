@@ -14,9 +14,9 @@
 
 #include <stdio.h>
 
-#include "vislib/Matrix.h"
-#include "vislib/Vector.h"
-#include "vislib/Log.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
+#include "vislib/sys/Log.h"
 
 /*
  * PhantomDeviceWrapper::PhantomDeviceWrapper

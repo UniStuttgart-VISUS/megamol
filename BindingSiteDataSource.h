@@ -18,7 +18,7 @@
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 		
 
 namespace megamol {

@@ -18,20 +18,21 @@
 // define the maximum dimension for the visibility fbo
 #define VISIBILITY_FBO_DIM 512
 
-#include "vislib/ShaderSource.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "CoreInstance.h"
 #include "param/BoolParam.h"
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <iostream>
+#include <algorithm>
 
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
 
 #include "cuda_helper.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 #include "cuda_error_check.h"
 

@@ -16,8 +16,8 @@
 #include "param/FilePathParam.h"
 #include "param/IntParam.h"
 #include "param/EnumParam.h"
-#include "vislib/File.h"
-#include "vislib/Log.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
 #include "vislib/Exception.h"
 #include <string>
@@ -26,6 +26,7 @@
 #include "Base64.h"
 #include <ctype.h>
 #include <cmath>
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::core;

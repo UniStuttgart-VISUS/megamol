@@ -8,10 +8,10 @@
 #include "param/BoolParam.h"
 #include "param/ButtonParam.h"
 #include "utility/ColourParser.h"
-#include "vislib/Rectangle.h"
-#include "vislib/BufferedFile.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/math/Rectangle.h"
+#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 #include "misc/ImageViewer.h"

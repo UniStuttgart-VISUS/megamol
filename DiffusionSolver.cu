@@ -17,7 +17,7 @@
 #include "cuda_helper.h"
 #include "CUDAGrid.cuh"
 
-#include <vislib/Log.h>
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein;

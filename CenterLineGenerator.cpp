@@ -3,7 +3,7 @@
 #include <float.h>
 #include "vislib/Array.h"
 #include <time.h>
-#include "vislib/PerformanceCounter.h"
+#include "vislib/sys/PerformanceCounter.h"
 
 CenterLineGenerator::CenterLineGenerator(void) {
 }

@@ -19,8 +19,8 @@
 #include "view/Renderer3DModuleDS.h"
 #include "view/AbstractCallRender3D.h"
 
-#include "vislib/GLSLShader.h"
-#include "vislib/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
 
 
 namespace megamol {

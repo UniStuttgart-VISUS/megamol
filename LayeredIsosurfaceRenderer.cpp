@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -23,13 +23,13 @@
 #include "view/AbstractCallRender.h"
 #include "view/CallClipPlane.h"
 #include "vislib/assert.h"
-#include "vislib/glverify.h"
-#include "vislib/Point.h"
-#include "vislib/Quaternion.h"
+#include "vislib/graphics/gl/glverify.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
-#include "vislib/ShaderSource.h"
-#include "vislib/AbstractOpenGLShader.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/graphics/gl/AbstractOpenGLShader.h"
 #include <GL/glu.h>
 #include <math.h>
 #include <time.h>

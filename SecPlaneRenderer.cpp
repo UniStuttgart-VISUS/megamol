@@ -21,7 +21,7 @@
 #include "param/EnumParam.h"
 #include "CoreInstance.h"
 
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;

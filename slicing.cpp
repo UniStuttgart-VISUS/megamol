@@ -22,12 +22,12 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
-#include <vislib/Vector.h>
+#include "vislib/math/Vector.h"
 #include "slicing.h"
 
 

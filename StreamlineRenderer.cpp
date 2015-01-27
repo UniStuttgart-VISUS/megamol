@@ -20,10 +20,10 @@
 #include "CUDAFieldTopology.cuh"
 #include "Interpol.h"
 
-#include "vislib/GLSLShader.h"
-#include "vislib/Cuboid.h"
-#include "vislib/Vector.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/mathfunctions.h"
 
 #include "CoreInstance.h"
 #include "view/CallClipPlane.h"
@@ -31,7 +31,7 @@
 #include "param/IntParam.h"
 #include "param/EnumParam.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 #include <cstdlib>

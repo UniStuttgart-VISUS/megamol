@@ -17,11 +17,11 @@
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
-#include "vislib/GLSLShader.h"
-#include "vislib/GLSLGeometryShader.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
-#include "vislib/FramebufferObject.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 #include "particles_kernel.cuh"
 #include "vector_functions.h"

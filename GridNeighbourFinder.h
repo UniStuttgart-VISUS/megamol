@@ -14,12 +14,12 @@
 
 #include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
-#include "vislib/ShallowPoint.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/ShallowPoint.h"
+#include "vislib/math/Cuboid.h"
 #include <ctime>
 
 using namespace megamol;

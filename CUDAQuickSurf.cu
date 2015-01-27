@@ -26,12 +26,13 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <cuda.h>
+#include <algorithm>
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 

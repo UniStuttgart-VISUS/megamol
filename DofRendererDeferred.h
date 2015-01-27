@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <view/Renderer3DModuleDS.h>
-#include <vislib/FramebufferObject.h>
-#include <vislib/GLSLShader.h>
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include <CallerSlot.h>
 
 

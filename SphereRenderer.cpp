@@ -16,12 +16,12 @@
 #include "param/FloatParam.h"
 #include "vislib/assert.h"
 #include "vislib/String.h"
-#include "vislib/Quaternion.h"
+#include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
-#include "vislib/ShaderSource.h"
-#include "vislib/AbstractOpenGLShader.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/graphics/gl/AbstractOpenGLShader.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 using namespace megamol;

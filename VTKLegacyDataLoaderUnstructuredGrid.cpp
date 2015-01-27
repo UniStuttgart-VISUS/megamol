@@ -18,9 +18,10 @@
 #include "param/StringParam.h"
 #include <cmath>
 #include <ctype.h>
-#include "vislib/Log.h"
-#include "vislib/File.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/File.h"
 #include <sstream>
+#include <algorithm>
 
 
 using namespace megamol;

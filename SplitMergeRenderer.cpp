@@ -8,16 +8,16 @@
 #include "param/BoolParam.h"
 #include "param/FloatParam.h"
 #include "utility/ColourParser.h"
-#include "vislib/SimpleFont.h"
-#include "vislib/Rectangle.h"
-#include "vislib/BufferedFile.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/math/Rectangle.h"
+#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/sysfunctions.h"
 #include <math.h>
 #include "misc/ImageViewer.h"
 #include "utility/ResourceWrapper.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <float.h>
-#include "vislib/FastMap.h"
+#include "vislib/math/FastMap.h"
 
 using namespace megamol;
 using namespace megamol::core;

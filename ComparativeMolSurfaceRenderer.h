@@ -26,9 +26,9 @@
 #include "view/CallRender3D.h"
 
 //#include "vislib_vector_typedefs.h"
-#include "vislib/Vector.h"
-#include "vislib/Matrix.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Cuboid.h"
 typedef vislib::math::Cuboid<float> Cubef;
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
@@ -40,7 +40,7 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 #include "gridParams.h"
 #include "VTIDataCall.h"
 #include "DeformableGPUSurfaceMT.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "HostArr.h"
 
 namespace megamol {

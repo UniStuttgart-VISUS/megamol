@@ -18,8 +18,8 @@
 
 #include <HL/hl.h>
 #include <HLU/hlu.h>
-#include "vislib/Vector.h"
-#include "vislib/AbsoluteCursor3D.h"
+#include "vislib/math/Vector.h"
+#include "vislib/graphics/AbsoluteCursor3D.h"
 #include "vislib/Delegate.h"
 
 

@@ -16,7 +16,7 @@
 
 #include "Call.h"
 #include "CallAutoDescription.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 #include "view/CallRender3D.h"
 #include <GL/gl.h>
 #include "AbstractGPUSurfaceCall.h"

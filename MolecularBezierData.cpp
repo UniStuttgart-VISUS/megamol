@@ -6,13 +6,13 @@
  */
 #include "stdafx.h"
 #include "MolecularBezierData.h"
-#include "vislib/BezierCurve.h"
+#include "vislib/math/BezierCurve.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
-#include "vislib/Point.h"
+#include "vislib/math/Point.h"
 #include <vector>
 #include "Color.h"
-#include "vislib/NamedColours.h"
+#include "vislib/graphics/NamedColours.h"
 #include "param/EnumParam.h"
 #include "param/FloatParam.h"
 #include "param/StringParam.h"

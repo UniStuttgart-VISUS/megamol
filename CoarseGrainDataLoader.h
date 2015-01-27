@@ -15,8 +15,8 @@
 #include "param/ParamSlot.h"
 #include "CalleeSlot.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Cuboid.h"
 #include "MolecularDataCall.h"
 #include "SphereDataCall.h"
 

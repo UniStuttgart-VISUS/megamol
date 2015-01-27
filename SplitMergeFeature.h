@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "SplitMergeCall.h"
-#include <vislib/Array.h>
-#include <vislib/Pair.h>
-#include <vislib/Vector.h>
+#include "vislib/Array.h"
+#include "vislib/Pair.h"
+#include "vislib/math/Vector.h"
 
 namespace megamol {
 namespace protein {

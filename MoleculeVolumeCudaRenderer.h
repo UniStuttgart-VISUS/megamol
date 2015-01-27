@@ -20,9 +20,9 @@
 #include "CallerSlot.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
-#include "vislib/GLSLShader.h"
-#include "vislib/SimpleFont.h"
-#include "vislib/FramebufferObject.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 

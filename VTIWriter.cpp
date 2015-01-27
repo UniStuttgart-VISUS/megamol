@@ -16,8 +16,8 @@
 #include "param/IntParam.h"
 #include "param/StringParam.h"
 #include "param/EnumParam.h"
-#include "vislib/Log.h"
-#include "vislib/File.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/File.h"
 #include "vislib/StringConverter.h"
 #include <cmath>
 #include <string>

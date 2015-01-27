@@ -10,7 +10,7 @@
 #ifndef MMPROTEINPLUGIN_LIC_H
 #define MMPROTEINPLUGIN_LIC_H
 
-#include <vislib/Vector.h>
+#include "vislib/math/Vector.h"
 
 #include "UniGrid3D.h"
 

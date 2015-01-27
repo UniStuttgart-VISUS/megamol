@@ -15,7 +15,7 @@
 #include "param/FloatParam.h"
 #include "param/StringParam.h"
 #include "utility/ColourParser.h"
-#include "vislib/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include <iostream>

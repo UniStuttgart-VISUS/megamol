@@ -17,7 +17,7 @@
 #include "AbstractGetData3DCall.h"
 #include "CallAutoDescription.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include "Interpol.h"
 #include "VTKImageData.h"
 typedef vislib::math::Vector<int, 3> Vec3i;

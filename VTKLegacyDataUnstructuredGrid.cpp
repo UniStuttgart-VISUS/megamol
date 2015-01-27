@@ -11,7 +11,7 @@
 #include "stdafx.h"
 
 #include "VTKLegacyDataUnstructuredGrid.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein;

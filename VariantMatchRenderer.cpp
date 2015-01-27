@@ -16,10 +16,11 @@
 #include <param/FloatParam.h>
 #include <param/IntParam.h>
 #include <CoreInstance.h>
-#include <vislib/SimpleFont.h>
-#include <vislib/OutlineFont.h>
-#include <vislib/ShaderSource.h>
-#include <vislib/Log.h>
+#include <algorithm>
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein;

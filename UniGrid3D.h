@@ -10,8 +10,8 @@
 #ifndef MMPROTEINPLUGIN_UNIGRID3D_H
 #define MMPROTEINPLUGIN_UNIGRID3D_H
 
-#include <vislib/Vector.h>
-#include <vislib/OutOfRangeException.h>
+#include "vislib/math/Vector.h"
+#include "vislib/OutOfRangeException.h"
 
 #ifdef WITH_CUDA
 #include "cuda_helper.h"

@@ -32,13 +32,14 @@
 #include "param/IntParam.h"
 #include "param/BoolParam.h"
 
+#include <algorithm>
 // For profiling
 #include <cuda_profiler_api.h>
 
 #include <cmath>
 #include <sstream>
 
-#include "vislib/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::protein;

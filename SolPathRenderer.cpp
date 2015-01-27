@@ -12,9 +12,9 @@
 #include "SolPathDataCall.h"
 #include "utility/ShaderSourceFactory.h"
 #include "view/CallRender3D.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/ShaderSource.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
 using namespace megamol::protein;

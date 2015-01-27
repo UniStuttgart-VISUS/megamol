@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "param/ParamSlot.h"
-#include "vislib/CriticalSection.h"
-#include "vislib/Socket.h"
-#include "vislib/Runnable.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/net/Socket.h"
+#include "vislib/sys/Runnable.h"
 #include "vislib/RawStorage.h"
 #include "vislib/Array.h"
 

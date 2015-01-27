@@ -4,11 +4,11 @@
 #include "BindingSiteCall.h"
 #include "CoreInstance.h"
 #include "param/IntParam.h"
-#include "vislib/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "param/FilePathParam.h"
-#include "vislib/BufferedFile.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include <math.h>
 #include "Color.h"
 

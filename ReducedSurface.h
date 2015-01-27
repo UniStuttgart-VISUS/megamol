@@ -11,7 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include "MolecularDataCall.h"
-#include <vislib/Quaternion.h>
+#include "vislib/math/Quaternion.h"
 #include <vector>
 #include <set>
 #include <algorithm>

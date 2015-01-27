@@ -11,9 +11,9 @@
 #ifndef MMPROTEINPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED
 #define MMPROTEINPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED
 
-#include <vislib/Vector.h>
-#include <vislib/Matrix.h>
-#include <vislib/Cuboid.h>
+#include "vislib/math/Vector.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Cuboid.h"
 
 // TODO rename to vislib_math_typedefs
 

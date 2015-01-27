@@ -19,7 +19,7 @@
 #include "CallerSlot.h"
 #include "CrystalStructureDataCall.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include <fstream>
 
 namespace megamol {

@@ -19,14 +19,14 @@
 #include "CallerSlot.h"
 #include "view/Renderer3DModuleDS.h"
 #include "view/AbstractCallRender3D.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 #include "WKFUtils.h"
 #include "CUDAQuickSurf.h"
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 

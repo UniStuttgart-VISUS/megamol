@@ -17,8 +17,8 @@
 #include <ctype.h>
 #include <cstdio>
 #include <stdarg.h>
-#include <vislib/String.h>
-#include <vislib/Vector.h>
+#include "vislib/String.h"
+#include "vislib/math/Vector.h"
 #include "MolecularDataCall.h"
 
 namespace megamol {

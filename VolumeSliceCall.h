@@ -16,10 +16,10 @@
 #include "Call.h"
 #include "CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/Cuboid.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
 #include <vector>
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein {

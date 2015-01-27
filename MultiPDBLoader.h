@@ -15,7 +15,7 @@
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
 #include "vislib/Array.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 #include "MolecularDataCall.h"
 #include "view/AnimDataModule.h"
 

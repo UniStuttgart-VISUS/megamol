@@ -2,7 +2,7 @@
 #include "MoleculeSequenceRenderer.h"
 #include "MolecularDataCall.h"
 #include "CallerSlot.h"
-#include "vislib/SimpleFont.h"
+#include "vislib/graphics/gl/SimpleFont.h"
 
 //#include "vislib/
 
