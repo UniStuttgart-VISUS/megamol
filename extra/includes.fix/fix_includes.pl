@@ -32,6 +32,9 @@ sub fix_includes_in_file {
 	# do not descend into '.svn' subdirectories
 	return unless ($dir !~ /\/.svn\//);
 
+	# do not descend into '.git' subdirectories
+	return unless ($dir !~ /\/.git\//);
+
 	# only work on specific file types (could be optimized, but I don't care)
 	if (($ext ne ".cpp") && ($ext ne ".h")) {
 		print "  Skipping $filename\n";
