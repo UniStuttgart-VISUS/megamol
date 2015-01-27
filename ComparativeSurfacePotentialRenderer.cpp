@@ -36,11 +36,11 @@
 #include "utility/ColourParser.h"
 #include "view/CallRender3D.h"
 
-#include "vislib/FramebufferObject.h"
-#include "vislib/Matrix.h"
-#include "vislib/Cuboid.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Cuboid.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include "cuda_helper.h"
 #include <cuda_gl_interop.h>

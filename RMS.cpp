@@ -46,7 +46,7 @@
 #include "stdafx.h"
 #include "RMS.h"
 #include <cmath>
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 

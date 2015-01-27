@@ -13,8 +13,8 @@
 #include "CrystalStructureDataCall.h"
 #include "UniGrid3D.h"
 
-#include <vislib/Vector.h>
-#include <vislib/Array.h>
+#include "vislib/math/Vector.h"
+#include "vislib/Array.h"
 
 namespace megamol {
 namespace protein {

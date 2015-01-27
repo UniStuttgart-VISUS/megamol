@@ -19,8 +19,9 @@
 #include "CUDAGrid.cuh"
 #include "cuda_helper.h"
 
+#include <algorithm>
 #include <cuda_runtime.h>
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 

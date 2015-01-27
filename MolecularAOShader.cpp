@@ -10,6 +10,7 @@
 #include "MolecularAOShader.h"
 #include "MolecularDataCall.h"
 #include <omp.h>
+#include <algorithm>
 
 #undef max
 

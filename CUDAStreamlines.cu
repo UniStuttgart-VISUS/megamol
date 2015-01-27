@@ -7,13 +7,13 @@
 
 #include "CUDAStreamlines.h"
 #include "stdafx.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
 #include "CUDAGrid.cuh"
 #include "cuda_helper.h"
 #include "HostArr.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 #include <cuda_runtime.h>
 #define WGL_NV_gpu_affinity

@@ -20,9 +20,9 @@
 #include "view/Renderer3DModuleDS.h"
 #include "view/CallRender3D.h"
 #include "view/CallRenderDeferred3D.h"
-#include "vislib/GLSLShader.h"
-#include "vislib/GLSLGeometryShader.h"
-#include "vislib/SimpleFont.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/Array.h"
 #include <vector>
 #include "CallerSlot.h"

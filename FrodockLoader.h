@@ -19,12 +19,12 @@
 #include "CalleeSlot.h"
 #include "CallerSlot.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
-#include "vislib/Matrix.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Cuboid.h"
 #include "MolecularDataCall.h"
 #include "Stride.h"
-#include "vislib/Socket.h"
+#include "vislib/net/Socket.h"
 #include "vislib/RawStorage.h"
 
 namespace megamol {

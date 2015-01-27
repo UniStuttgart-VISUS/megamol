@@ -16,14 +16,14 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "CallerSlot.h"
 #include "VTIDataCall.h"
 #include "param/ParamSlot.h"
 #include "view/Renderer3DModule.h"
-#include "vislib/GLSLShader.h"
-#include "vislib/CameraParameters.h"
-#include "vislib/Matrix.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/CameraParameters.h"
+#include "vislib/math/Matrix.h"
 #include "VecField3f.h"
 #include "Streamline.h"
 

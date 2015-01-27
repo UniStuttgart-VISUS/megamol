@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vislib/Point.h"
+#include "vislib/math/Point.h"
 #include <unordered_set>
 #include <vector>
 #include <functional>   // std::equal_to

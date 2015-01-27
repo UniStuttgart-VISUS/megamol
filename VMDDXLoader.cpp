@@ -15,8 +15,8 @@
 #include "param/FilePathParam.h"
 #include "param/IntParam.h"
 #include "param/EnumParam.h"
-#include "vislib/ASCIIFileBuffer.h"
-#include "vislib/Log.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/Log.h"
 #include "vislib/String.h"
 #include "vislib/Exception.h"
 #include <string>
@@ -26,7 +26,7 @@
 #include <ctype.h>
 #include <cmath>
 //#include "vislib_vector_typedefs.h"
-#include "vislib/Cuboid.h"
+#include "vislib/math/Cuboid.h"
 typedef vislib::math::Cuboid<float> Cubef;
 
 using namespace megamol;

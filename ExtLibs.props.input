@@ -11,12 +11,12 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath);$(VISlibPath)base\include;$(VISlibPath)math\include;$(VISlibPath)sys\include;$(VISlibPath)graphics\include;$(VISlibPath)gl\include;$(VISlibPath)net\include;%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath);%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%withCUDA%!WITH_CUDA;!!%withHAPTICS%!WITH_OPENHAPTICS;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vislibbase$(BitsD).lib;vislibmath$(BitsD).lib;vislibsys$(BitsD).lib;vislibgraphics$(BitsD).lib;vislibgl$(BitsD).lib;vislibnet$(BitsD).lib;MegaMolCore$(BitsD).lib;%withCUDA%!cudart.lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib;%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore$(BitsD).lib;%withCUDA%!cudart.lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <Include>$(VISlibPath)gl\include</Include>

@@ -17,8 +17,8 @@
 #include "param/FloatParam.h"
 #include "param/EnumParam.h"
 #include <moldyn/DirectionalParticleDataCall.h>
-#include "vislib/Log.h"
-#include "vislib/Vector.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/Vector.h"
 
 using namespace megamol;
 

@@ -23,7 +23,7 @@
 #include "HostArr.h"
 #include "CudaDevArr.h"
 //#include "vislib_vector_typedefs.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 typedef vislib::math::Vector<float, 3> Vec3f;
 
 typedef unsigned int uint;

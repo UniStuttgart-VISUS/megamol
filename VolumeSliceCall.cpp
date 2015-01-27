@@ -10,7 +10,7 @@
 #include "VolumeSliceCall.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
 
 using namespace megamol;

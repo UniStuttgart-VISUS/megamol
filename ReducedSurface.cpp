@@ -9,7 +9,7 @@
 #include "ReducedSurface.h"
 #include <math.h>
 #include "vislib/assert.h"
-#include "vislib/File.h"
+#include "vislib/sys/File.h"
 #include "vislib/String.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"

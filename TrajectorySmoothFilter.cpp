@@ -21,7 +21,7 @@
 #include "param/IntParam.h"
 #include "MolecularDataCall.h"
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "TrajectorySmoothFilter.h"

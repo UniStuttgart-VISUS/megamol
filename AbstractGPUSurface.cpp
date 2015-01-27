@@ -9,7 +9,7 @@
 //
 
 #include <stdafx.h>
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "AbstractGPUSurface.h"
 #include "ogl_error_check.h"
 

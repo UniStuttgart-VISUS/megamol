@@ -17,7 +17,7 @@
 #include "misc/BezierCurvesListDataCall.h"
 #include "MolecularDataCall.h"
 #include "vislib/Array.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include "param/ParamSlot.h"
 
 

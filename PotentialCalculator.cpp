@@ -19,7 +19,7 @@
 #include "param/IntParam.h"
 #include "param/FloatParam.h"
 #include "param/EnumParam.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 #include "CUDAQuickSurf.h"

@@ -17,8 +17,8 @@
 #include "CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/Pair.h"
-#include "vislib/Cuboid.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include <vector>

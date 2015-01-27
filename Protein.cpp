@@ -117,9 +117,9 @@
 #include "ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
-#include "vislib/ThreadSafeStackTrace.h"
+#include "vislib/sys/ThreadSafeStackTrace.h"
 
 
 

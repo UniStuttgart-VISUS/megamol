@@ -13,8 +13,8 @@
 #include "param/BoolParam.h"
 #include "param/IntParam.h"
 #include "param/StringParam.h"
-#include "vislib/Log.h"
-#include "vislib/File.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/File.h"
 #include <cmath>
 #include <string>
 #include <sstream>

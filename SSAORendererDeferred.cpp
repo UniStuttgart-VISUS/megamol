@@ -15,8 +15,8 @@
 #include <view/CallRenderDeferred3D.h>
 #include <CoreInstance.h>
 
-#include <vislib/ShaderSource.h>
-#include <vislib/Log.h>
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/sys/Log.h"
 
 #include "SSAORendererDeferred.h"
 

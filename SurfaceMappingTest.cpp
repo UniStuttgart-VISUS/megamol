@@ -29,7 +29,7 @@
 #include "param/BoolParam.h"
 #include "param/IntParam.h"
 #include "RMS.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include <ctime>
 #include <algorithm>
 //#include <cmath>
@@ -43,7 +43,7 @@
 #include <thrust/reduce.h>
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/device_ptr.h>
-#include "vislib/mathtypes.h"
+#include "vislib/math/mathtypes.h"
 
 using namespace megamol;
 using namespace megamol::protein;

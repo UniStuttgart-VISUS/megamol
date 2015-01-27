@@ -10,13 +10,13 @@
 #include "stdafx.h"
 #include "CCP4VolumeData.h"
 #include "param/FilePathParam.h"
-#include "vislib/MemmappedFile.h"
-#include "vislib/Log.h"
+#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/Log.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 #include "vislib/OutOfRangeException.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/sysfunctions.h"
 #include "vislib/StringTokeniser.h"
 #include <string>
 #include <iostream>

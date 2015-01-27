@@ -10,10 +10,10 @@
 #include "Raw3DRelativeMouseInput.h"
 
 #include "vislib/assert.h"
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include "vislib/StringConverter.h"
-#include "vislib/sysfunctions.h"
-#include "vislib/SystemException.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/SystemException.h"
 #include "vislib/Trace.h"
 
 #define INPUT_DEBUG 0 // If nonzero, console will print out data values received.

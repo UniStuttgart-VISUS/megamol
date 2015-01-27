@@ -11,7 +11,7 @@
 #ifndef MMPROTEINPLUGIN_INTERPOL_H_INCLUDED
 #define MMPROTEINPLUGIN_INTERPOL_H_INCLUDED
 
-#include "vislib/Matrix.h"
+#include "vislib/math/Matrix.h"
 
 namespace megamol {
 namespace protein {

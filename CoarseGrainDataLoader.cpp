@@ -10,15 +10,15 @@
 #include "CoarseGrainDataLoader.h"
 #include "param/FilePathParam.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
-#include "vislib/MemmappedFile.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
-#include "vislib/sysfunctions.h"
+#include "vislib/sys/sysfunctions.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include <ctime>
 #include <iostream>
 

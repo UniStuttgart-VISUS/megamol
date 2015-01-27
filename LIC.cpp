@@ -11,8 +11,8 @@
 #include "LIC.h"
 #include "UniGrid3D.h"
 
-#include <vislib/Log.h>
-#include <vislib/Array.h>
+#include "vislib/sys/Log.h"
+#include "vislib/Array.h"
 
 using namespace megamol;
 

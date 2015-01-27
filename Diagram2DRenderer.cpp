@@ -15,8 +15,8 @@
 #include "param/StringParam.h"
 #include "param/ButtonParam.h"
 #include "utility/ColourParser.h"
-#include "vislib/SimpleFont.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
 

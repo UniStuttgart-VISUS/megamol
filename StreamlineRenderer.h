@@ -24,8 +24,8 @@
 #include "VBODataCall.h"
 #include "param/ParamSlot.h"
 #include "CUDAStreamlines.h"
-#include "vislib/GLSLGeometryShader.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 typedef vislib::math::Vector<int, 3> Vec3i;
 typedef unsigned int uint;

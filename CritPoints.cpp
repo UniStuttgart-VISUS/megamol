@@ -15,9 +15,9 @@
 #include <math.h>
 
 #include "CritPoints.h"
-#include <vislib/Log.h>
-#include <vislib/Vector.h>
-#include <vislib/Cuboid.h>
+#include "vislib/sys/Log.h"
+#include "vislib/math/Vector.h"
+#include "vislib/math/Cuboid.h"
 
 using namespace megamol;
 using namespace vislib;

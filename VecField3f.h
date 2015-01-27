@@ -17,12 +17,12 @@
 #include <vector_types.h>
 
 #include "cuda_helper.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 #endif
 //#include "vislib_vector_typedefs.h"
-#include "vislib/Matrix.h"
-#include "vislib/Vector.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Vector<float, 3> Vec3f;
 typedef vislib::math::Vector<unsigned int, 3> Vec3u;

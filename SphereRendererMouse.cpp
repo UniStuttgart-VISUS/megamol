@@ -12,7 +12,7 @@
 
 #include <math.h>
 
-#include "vislib/IncludeAllGL.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include <CoreInstance.h>
@@ -24,8 +24,8 @@
 #include <utility/ColourParser.h>
 #include <view/AbstractCallRender3D.h>
 
-#include <vislib/Matrix.h>
-#include <vislib/Vector.h>
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
 
 using namespace megamol;
 

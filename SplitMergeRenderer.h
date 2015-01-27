@@ -17,9 +17,9 @@
 #include "view/Renderer2DModule.h"
 #include "SplitMergeCall.h"
 #include "IntSelectionCall.h"
-#include "vislib/GLSLShader.h"
-#include <vislib/OpenGLTexture2D.h>
-#include "vislib/Rectangle.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
+#include "vislib/math/Rectangle.h"
 
 namespace megamol {
 namespace protein {

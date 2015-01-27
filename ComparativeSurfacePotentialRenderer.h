@@ -26,10 +26,10 @@
 #include "CUDAQuickSurf.h"
 #include "gridParams.h"
 #include <GL/glu.h>
-#include "vislib/GLSLShader.h"
-#include "vislib/GLSLGeometryShader.h"
-#include "vislib/Log.h"
-#include "vislib/Cuboid.h"
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/Cuboid.h"
 
 //#include "vislib_vector_typedefs.h"
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;

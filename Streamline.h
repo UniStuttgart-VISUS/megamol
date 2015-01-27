@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/Vector.h"
+#include "vislib/math/Vector.h"
 #include "vislib/Array.h"
 #include "VecField3f.h"
 //#include "vislib_vector_typedefs.h"

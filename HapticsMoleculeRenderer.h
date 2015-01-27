@@ -20,9 +20,9 @@
 #include "CalleeSlot.h"
 #include "view/Renderer3DModule.h"
 #include "view/CallRender3D.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "PhantomDeviceWrapper.h"
-#include "vislib/FramebufferObject.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
 namespace protein {

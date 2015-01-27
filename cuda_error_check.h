@@ -13,7 +13,7 @@
 #ifndef MMPROTEINPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 #define MMPROTEINPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 
-#include "vislib/Log.h"
+#include "vislib/sys/Log.h"
 #include <cuda_runtime.h>
 
 #define CUDA_ERROR_CHECK // Toggle CUDA error checking

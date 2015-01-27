@@ -37,12 +37,12 @@
 #include <CoreInstance.h>
 #include <utility/ColourParser.h>
 
-#include <vislib/Log.h>
-#include <vislib/ShaderSource.h>
-#include <vislib/Quaternion.h>
-#include <vislib/Matrix.h>
-#include "vislib/FramebufferObject.h"
-#include "vislib/IncludeAllGL.h"
+#include "vislib/sys/Log.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include <thrust/version.h>
 #include "cuda_helper.h"

@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "view/View3D.h"
-#include "vislib/RelativeCursor3D.h"
-#include "vislib/CameraAdjust3D.h"
+#include "vislib/graphics/RelativeCursor3D.h"
+#include "vislib/graphics/CameraAdjust3D.h"
 #include "Raw3DRelativeMouseInput.h"
 
 namespace megamol {

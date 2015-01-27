@@ -12,8 +12,8 @@
 
 #include "view/Renderer3DModule.h"
 #include "param/ParamSlot.h"
-#include "vislib/IncludeAllGL.h"
-#include "vislib/GLSLShader.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 #include "Call.h"
 #include "CallerSlot.h"
 

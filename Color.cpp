@@ -10,7 +10,7 @@
 #include "Color.h"
 #include <omp.h>
 #include "utility/ColourParser.h"
-#include "vislib/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "CoreInstance.h"
 #include <string>
 #include <iostream>

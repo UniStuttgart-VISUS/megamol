@@ -16,9 +16,9 @@
 #include "CallerSlot.h"
 #include "view/Renderer2DModule.h"
 #include "DiagramCall.h"
-#include "vislib/GLSLShader.h"
-#include <vislib/OutlineFont.h>
-#include <vislib/OpenGLTexture2D.h>
+#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "IntSelectionCall.h"
 
 namespace megamol {

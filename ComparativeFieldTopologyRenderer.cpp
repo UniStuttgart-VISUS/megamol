@@ -23,9 +23,9 @@
 #include <param/EnumParam.h>
 #include <param/BoolParam.h>
 
-#include "vislib/Matrix.h"
-#include "vislib/Log.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
 
 
 #include "VTIDataCall.h"

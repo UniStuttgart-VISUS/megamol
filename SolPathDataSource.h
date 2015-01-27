@@ -15,8 +15,8 @@
 #include "CalleeSlot.h"
 #include "SolPathDataCall.h"
 #include "vislib/Array.h"
-#include "vislib/Cuboid.h"
-#include "vislib/File.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/sys/File.h"
 
 
 namespace megamol {

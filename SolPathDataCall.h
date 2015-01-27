@@ -11,7 +11,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractGetData3DCall.h"
-#include "vislib/mathfunctions.h"
+#include "vislib/math/mathfunctions.h"
 
 
 namespace megamol {

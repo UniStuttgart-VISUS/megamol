@@ -20,16 +20,16 @@
 #include "BindingSiteCall.h"
 #include "Color.h"
 #include "param/ParamSlot.h"
-#include "vislib/GLSLGeometryShader.h"
-#include "vislib/Cuboid.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/math/Cuboid.h"
 #include "MolecularAOShader.h"
 #include "CallerSlot.h"
 #include "WKFUtils.h"
 #include "CUDAQuickSurf.h"
 #include <cuda_runtime.h>
 #include "CenterLineGenerator.h"
-#include "vislib/CameraParameters.h"
-#include "vislib/FramebufferObject.h"
+#include "vislib/graphics/CameraParameters.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 #include "ResidueSelectionCall.h"
 
 namespace megamol {
