@@ -36,7 +36,7 @@ sub fix_includes_in_file {
 	return unless ($dir !~ /\/.git\//);
 
 	# only work on specific file types (could be optimized, but I don't care)
-	if (($ext ne ".cpp") && ($ext ne ".h")) {
+	if (($ext ne ".cpp") && ($ext ne ".h") && ($ext ne ".cu") && ($ext ne ".cuh")) {
 		print "  Skipping $filename\n";
 		return;
 	}
