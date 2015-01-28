@@ -16,7 +16,6 @@ OutDir := lib
 InputRootDir := $(InputDir)
 InputDirs := . api cluster cluster/simple job misc moldyn param utility utility/xml view view/special vismol2 profiler cluster/mpi
 IncludeDir := $(IncludeDir)
-VISlibs := cluster net gl graphics sys math base
 
 
 # Additional compiler flags
@@ -44,12 +43,12 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.d, $(CPP_SRC
 CPP_D_OBJS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 CPP_R_OBJS := $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 
-IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
-DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
-ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
+IncludeDir := $(IncludeDir) $(vislibpath)/include/ $(vislibpath)/3rd/glload/include/
+DebugLinkerFlags := $(DebugLinkerFlags) $(vislibpath)/lib/linux.release/libvislib.a
+ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(vislibpath)/lib/linux.debug/libvislib.a
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
-LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(expatpath)/lib
+LDFLAGS := $(LinkerFlags) -L$(expatpath)/lib
 
 
 all: VersionInfo $(TargetName)d $(TargetName)
@@ -61,12 +60,14 @@ $(TargetName)d: $(IntDir)/$(DebugDir)/lib$(TargetName)$(BITS)d.so
 	@mkdir -p $(outbin)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS)d.so
 	cp $< $(outbin)/lib$(TargetName)$(BITS)d.so
+	cp $(vislibpath)/3rd/glload/build/libglload.so $(outbin)
 
 $(TargetName): $(IntDir)/$(ReleaseDir)/lib$(TargetName)$(BITS).so
 	@mkdir -p $(OutDir)
 	@mkdir -p $(outbin)
 	cp $< $(OutDir)/lib$(TargetName)$(BITS).so
 	cp $< $(outbin)/lib$(TargetName)$(BITS).so
+	cp $(vislibpath)/3rd/glload/build/libglload.so $(outbin)
 
 
 # Rules for special intermediate files
