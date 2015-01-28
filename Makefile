@@ -18,7 +18,7 @@ ProjectDirs = Viewer Glut Console
 
 all:
 	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done
-	cp $(vislibpath)/gl/include/glload/build/libglload.so $(outbin)
+	cp $(vislibpath)/3rd/glload/build/libglload.so $(outbin)
 
 sweep:
 	@for dir in $(ProjectDirs); do $(MAKE) -C $$dir $@ || exit 1; done

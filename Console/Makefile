@@ -11,8 +11,7 @@ include ../ExtLibs.mk
 
 # Target name
 TargetName := MegaMolCon
-IncludeDir := $(IncludeDir) ../Viewer/include $(visglutpath)/include $(mmcorepath)/api
-VISlibs := gl graphics sys math base
+IncludeDir := $(IncludeDir) ../Viewer/include $(visglutpath)/include $(mmcorepath)/api $(vislibpath)/include $(vislibpath)/3rd/glload/include
 
 
 # Additional compiler flags
@@ -30,12 +29,11 @@ CPP_SRCS := $(filter-out $(ExcludeFromBuild), $(wildcard $(InputDir)/*.cpp))
 CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS)))) \
 	$(addprefix $(IntDir)/$(ReleaseDir)/, $(notdir $(patsubst %.cpp, %.d, $(CPP_SRCS))))
 
-IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
-DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
-ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
+DebugLinkerFlags := $(DebugLinkerFlags) $(vislibpath)/lib/linux.debug/libvislib.a
+ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(vislibpath)/lib/linux.release/libvislib.a
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
-LDFLAGS := $(LinkerFlags) -L$(mmcorepath)/lib -L$(vislibpath)/lib -L$(vislibpath)/gl/include/glload/build
+LDFLAGS := $(LinkerFlags) -L$(mmcorepath)/lib -L$(vislibpath)/3rd/glload/build
 
 
 all: VersionInfo $(TargetName)Debug $(TargetName)Release

@@ -30,5 +30,3 @@ else
 	LIBS := $(LIBS) expat
 endif
 
-# add dependency to glload
-LinkerFlags += -L$(vislibpath)/gl/include/glload/build/ -lglload

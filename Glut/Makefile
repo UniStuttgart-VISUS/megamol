@@ -16,8 +16,7 @@ OutDir := lib
 InputRootDir := $(InputDir)
 InputDir := .
 IncludeDir := . .. ../Viewer/include $(mmcorepath)/api
-IncludeDir := $(IncludeDir) $(visglutpath)/include $(visglutpath)/freeglut/include
-VISlibs := gl graphics sys math base
+IncludeDir := $(IncludeDir) $(visglutpath)/include $(visglutpath)/freeglut/include $(vislibpath)/include $(vislibpath)/3rd/glload/include
 
 
 # Additional compiler flags
@@ -42,12 +41,11 @@ CPP_DEPS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.d, $(CPP_SRC
 CPP_D_OBJS := $(addprefix $(IntDir)/$(DebugDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 CPP_R_OBJS := $(addprefix $(IntDir)/$(ReleaseDir)/, $(patsubst %.cpp, %.o, $(CPP_SRCS)))
 
-IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
-DebugLinkerFlags := $(DebugLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS)d,$(VISlibs)))
-ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(addprefix -lvislib,$(addsuffix $(BITS),$(VISlibs)))
+DebugLinkerFlags := $(DebugLinkerFlags) $(vislibpath)/lib/linux.debug/libvislib.a
+ReleaseLinkerFlags := $(ReleaseLinkerFlags) $(vislibpath)/lib/linux.release/libvislib.a
 
 CPPFLAGS := $(CompilerFlags) $(addprefix -I, $(IncludeDir)) $(addprefix -isystem, $(SystemIncludeDir))
-LDFLAGS := $(LinkerFlags) -L$(vislibpath)/lib -L$(visglutpath)/lib
+LDFLAGS := $(LinkerFlags) -L$(visglutpath)/lib
 
 
 all: VersionInfo $(TargetName)d $(TargetName)
