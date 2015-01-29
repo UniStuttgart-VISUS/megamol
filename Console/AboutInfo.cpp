@@ -6,8 +6,8 @@
  */
 #include "stdafx.h"
 #include "AboutInfo.h"
-#include "MegaMolCore.h"
-#include "versioninfo.h"
+#include "mmcore/api/MegaMolCore.h"
+#include "mmcore/versioninfo.h"
 #include "MegaMolViewer.h"
 #include "versioninfo.h"
 #include "vislib/sys/Log.h"

@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "HotKeyButtonParam.h"
-#include "MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 
 
 /*

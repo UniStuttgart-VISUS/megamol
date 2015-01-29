@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "ApiHandle.h"
+#include "mmcore/ApiHandle.h"
 #include "CallbackSlot.h"
 #include "vislib/SingleLinkedList.h"
 

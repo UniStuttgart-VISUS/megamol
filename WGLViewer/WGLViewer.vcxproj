@@ -108,7 +108,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;_DEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -133,6 +133,9 @@ xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
 </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -140,7 +143,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;_DEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -165,6 +168,9 @@ xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
 </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -174,7 +180,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;NDEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -201,6 +207,9 @@ xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
 </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -210,7 +219,7 @@ if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC;NDEBUG;_WINDOWS;_USRDLL;WGLVIEWER_EXPORTS;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\api;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);$(SolutionDir)\Viewer\include;$(MegaMolCorePath)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -237,6 +246,9 @@ xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
 if exist "$(ProjectDir)PostBuild.bat" cmd /Q /C "$(ProjectDir)PostBuild.bat"
 </Command>
     </PostBuildEvent>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;$(SolutionDir);$(SolutionDir)\Viewer\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ApiHandle.cpp" />

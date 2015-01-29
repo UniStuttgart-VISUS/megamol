@@ -15,7 +15,7 @@
 
 #include "MegaMolViewer.version.gen.h"  // megamol console viewer version
 #include "version.gen.h"                // megamol console glut version
-#include "../productversion.h"          // megamol core version
+#include "mmcore/productversion.h"          // megamol core version
 
 // from megamol core version
 #define MEGAMOL_WGL_MAJOR_VER MEGAMOL_PRODUCT_MAJOR_VER

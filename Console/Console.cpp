@@ -11,7 +11,7 @@
 #include <ctime>
 #include <signal.h>
 
-#include "MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 #define MEGAMOLVIEWER_SINGLEFILE
 #include "MegaMolViewer.h"
 

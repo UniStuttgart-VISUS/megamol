@@ -8,7 +8,7 @@
 #ifdef WITH_TWEAKBAR
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "GUILayer.h"
-#include "MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 #include "vislib/assert.h"
 #include "vislib/sys/Log.h"
 #include "vislib/memutils.h"

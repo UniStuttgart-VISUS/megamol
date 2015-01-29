@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "CoreHandle.h"
-#include "MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 #include "MegaMolViewer.h"
 #ifndef _WIN32
 #include <string.h> // for memset

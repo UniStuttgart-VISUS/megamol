@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "Window.h"
-#include "MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 #include <tchar.h>
 #include <cstdio>
 //#include "NVSwapGroup.h"

@@ -13,7 +13,7 @@
 
 
 #include "MegaMolViewer.h"
-#include "ApiHandle.h"
+#include "mmcore/ApiHandle.h"
 #include "CallbackSlot.h"
 #include "Viewer.h"
 #include "vislib/String.h"

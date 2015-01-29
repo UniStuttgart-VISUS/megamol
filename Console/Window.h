@@ -13,7 +13,7 @@
 
 #include "CoreHandle.h"
 #include "HotKeyAction.h"
-#include "MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 #include "MegaMolViewer.h"
 #include "vislib/sys/KeyCode.h"
 #include "vislib/Map.h"

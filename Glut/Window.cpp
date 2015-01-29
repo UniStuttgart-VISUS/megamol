@@ -12,7 +12,7 @@
 #include "vislib/graphics/gl/glfunctions.h"
 #include "vislib/sys/KeyCode.h"
 #include "vislib/sys/Log.h"
-#include "MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 
 
 /*
