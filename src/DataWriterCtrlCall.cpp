@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "DataWriterCtrlCall.h"
+#include "mmcore/DataWriterCtrlCall.h"
 
 using namespace megamol::core;
 

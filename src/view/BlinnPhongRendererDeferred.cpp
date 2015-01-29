@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 
-#include <param/EnumParam.h>
-#include <view/CallRender3D.h>
-#include <view/CallRenderDeferred3D.h>
-#include <CoreInstance.h>
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRenderDeferred3D.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/sys/Log.h"
 #include "mmcore/view/BlinnPhongRendererDeferred.h"

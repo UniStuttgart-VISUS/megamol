@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "CallerSlot.h"
-#include "Call.h"
-#include "CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
 
 using namespace megamol::core;
 

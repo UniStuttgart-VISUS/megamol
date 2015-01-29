@@ -24,7 +24,7 @@
 #include <mpi.h>
 #endif /* WITH_MPI */
 
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 
 #include "mmcore/cluster/simple/View.h"
 

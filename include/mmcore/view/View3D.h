@@ -13,13 +13,13 @@
 
 #define ENABLE_KEYBOARD_VIEW_CONTROL 1
 
-#include "BoundingBoxes.h"
-#include "api/MegaMolCore.std.h"
+#include "mmcore/BoundingBoxes.h"
+#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractView3D.h"
 #include "mmcore/view/TimeControl.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "AbstractCamParamSync.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/CameraLookAtDist.h"

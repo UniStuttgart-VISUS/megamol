@@ -13,7 +13,7 @@
 
 #include "mmcore/moldyn/AbstractParticleDataCall.h"
 #include "MultiParticleDataCall.h"
-#include "CallAutoDescription.h"
+#include "mmcore/CallAutoDescription.h"
 #include "vislib/assert.h"
 
 

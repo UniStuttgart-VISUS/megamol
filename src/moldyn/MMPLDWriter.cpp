@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
-#include "BoundingBoxes.h"
+#include "mmcore/BoundingBoxes.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"

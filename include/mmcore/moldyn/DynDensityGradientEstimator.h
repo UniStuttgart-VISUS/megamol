@@ -8,9 +8,9 @@
 #ifndef DYNDENSITYGRADIENTESTIMATOR_H_
 #define DYNDENSITYGRADIENTESTIMATOR_H_
 
-#include "CallerSlot.h"
-#include "CalleeSlot.h"
-#include "Module.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
 #include "MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 

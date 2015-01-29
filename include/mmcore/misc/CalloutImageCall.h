@@ -12,8 +12,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Call.h"
-#include "CallAutoDescription.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include <vector>

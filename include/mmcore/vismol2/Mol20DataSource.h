@@ -13,7 +13,7 @@
 
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/param/ParamSlot.h"
-#include "CalleeSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/vismol2/Mol2Data.h"
 #include "vislib/sys/File.h"
 #include "vislib/types.h"

@@ -8,10 +8,10 @@
 #include "mmcore/profiler/Manager.h"
 #include "vislib/sys/Log.h"
 #include "vislib/Stack.h"
-#include "AbstractNamedObjectContainer.h"
-#include "CallerSlot.h"
-#include "AbstractNamedObject.h"
-#include "Call.h"
+#include "mmcore/AbstractNamedObjectContainer.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/AbstractNamedObject.h"
+#include "mmcore/Call.h"
 #include "vislib/sys/PerformanceCounter.h"
 
 using namespace megamol;

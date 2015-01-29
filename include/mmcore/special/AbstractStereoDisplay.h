@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CallerSlot.h"
-#include "Module.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/special/ClusterDisplayPlane.h"
 #include "mmcore/special/ClusterDisplayTile.h"
 #include "mmcore/view/AbstractView.h"

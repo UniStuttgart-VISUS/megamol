@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/job/AbstractJob.h"
-#include "AbstractNamedObject.h"
+#include "mmcore/AbstractNamedObject.h"
 #include "vislib/sys/Log.h"
 
 

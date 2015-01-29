@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ObjectDescriptionManager.h"
-#include "CallDescription.h"
+#include "mmcore/ObjectDescriptionManager.h"
+#include "mmcore/CallDescription.h"
 #include "vislib/SmartPtr.h"
 
 

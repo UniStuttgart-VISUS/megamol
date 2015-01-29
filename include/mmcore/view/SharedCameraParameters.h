@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CalleeSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "vislib/graphics/CameraParamsStore.h"
-#include "Module.h"
+#include "mmcore/Module.h"
 
 namespace megamol {
 namespace core {

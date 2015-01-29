@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "api/MegaMolCore.std.h"
-#include "BoundingBoxes.h"
-#include "Call.h"
-#include "CallAutoDescription.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/BoundingBoxes.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
 
 
 namespace megamol {

@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "mmcore/job/DataWriterJob.h"
-#include "CallAutoDescription.h"
-#include "DataWriterCtrlCall.h"
+#include "mmcore/CallAutoDescription.h"
+#include "mmcore/DataWriterCtrlCall.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::core;

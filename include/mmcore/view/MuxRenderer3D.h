@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "BoundingBoxes.h"
-#include "CallerSlot.h"
+#include "mmcore/BoundingBoxes.h"
+#include "mmcore/CallerSlot.h"
 #include "CallRender3D.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"

@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "api/MegaMolCore.std.h"
-#include "ObjectDescription.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/ObjectDescription.h"
 
 
 namespace megamol {

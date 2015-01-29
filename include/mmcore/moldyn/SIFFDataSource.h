@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Module.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "CalleeSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/RawStorage.h"

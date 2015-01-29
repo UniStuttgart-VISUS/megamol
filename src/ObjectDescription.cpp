@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "ObjectDescription.h"
+#include "mmcore/ObjectDescription.h"
 
 
 /*

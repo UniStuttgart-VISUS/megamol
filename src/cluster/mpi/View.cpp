@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "AbstractNamedObject.h"
+#include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 
 #include "mmcore/cluster/mpi/MpiCall.h"

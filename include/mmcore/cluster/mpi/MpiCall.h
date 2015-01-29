@@ -15,8 +15,8 @@
 #include <mpi.h>
 #endif /* WITH_MPI */
 
-#include "Call.h"
-#include "CallAutoDescription.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
 
 
 namespace megamol {

@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "api/MegaMolCore.std.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
-#include "mmd3d.h"
+#include "mmcore/mmd3d.h"
 #include "mmcore/view/View3D.h"
 
 #include "vislib/assert.h"

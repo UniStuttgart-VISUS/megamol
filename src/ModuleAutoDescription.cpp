@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "ModuleAutoDescription.h"
+#include "mmcore/ModuleAutoDescription.h"
 
 
 /*

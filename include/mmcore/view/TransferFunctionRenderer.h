@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "api/MegaMolCore.std.h"
+#include "mmcore/api/MegaMolCore.std.h"
 #include "Renderer2DModule.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 
 namespace megamol {

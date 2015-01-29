@@ -31,7 +31,7 @@
 
 #define NO_STEREO_D3D9
 #define NO_STEREO_D3D10
-#include "nvstereo.h"
+#include "mmcore/nvstereo.h"
 
 #else /* MEGAMOLCORE_WITH_DIRECT3D11 */
 

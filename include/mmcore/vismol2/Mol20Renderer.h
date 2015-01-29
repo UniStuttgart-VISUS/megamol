@@ -13,8 +13,8 @@
 
 #include "mmcore/vismol2/Mol2Data.h"
 #include "mmcore/view/Renderer3DModule.h"
-#include "Call.h"
-#include "CallerSlot.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
 

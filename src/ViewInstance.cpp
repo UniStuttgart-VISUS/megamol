@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "ViewInstance.h"
-#include "Module.h"
-#include "ModuleNamespace.h"
+#include "mmcore/ViewInstance.h"
+#include "mmcore/Module.h"
+#include "mmcore/ModuleNamespace.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Log.h"
 #include "vislib/StackTrace.h"

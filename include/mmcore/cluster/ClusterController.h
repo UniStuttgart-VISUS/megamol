@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/job/AbstractThreadedJob.h"
-#include "CalleeSlot.h"
-#include "Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/net/cluster/DiscoveryListener.h"

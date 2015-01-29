@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/view/View3D.h"
-#include "Call.h"
-#include "CallerSlot.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallerSlot.h"
 
 #include "vislib/graphics/CameraParameterObserver.h"
 #include "vislib/graphics/ObservableCameraParams.h"

@@ -16,7 +16,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/memutils.h"
 #include "vislib/types.h"
-#include "api/MegaMolCore.std.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
 
 namespace megamol {

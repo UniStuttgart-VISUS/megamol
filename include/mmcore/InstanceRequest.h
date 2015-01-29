@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ParamValueSetRequest.h"
+#include "mmcore/ParamValueSetRequest.h"
 #include "vislib/String.h"
 
 

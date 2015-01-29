@@ -14,10 +14,10 @@
 #include <array>
 #include <cstdint>
 
-#include "Call.h"
-#include "CallAutoDescription.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
 
-#include "api/MegaMolCore.std.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
 #include "vislib/graphics/graphicstypes.h"
 #include "vislib/math/Point.h"

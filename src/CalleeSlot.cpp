@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "CalleeSlot.h"
-#include "AbstractNamedObject.h"
-#include "AbstractNamedObjectContainer.h"
-#include "CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/AbstractNamedObject.h"
+#include "mmcore/AbstractNamedObjectContainer.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/profiler/Manager.h"
 
 using namespace megamol::core;

@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "ModuleDescriptionManager.h"
-#include "LoaderADModuleAutoDescription.h"
-#include "ModuleAutoDescription.h"
-#include "ModuleDescription.h"
+#include "mmcore/ModuleDescriptionManager.h"
+#include "mmcore/LoaderADModuleAutoDescription.h"
+#include "mmcore/ModuleAutoDescription.h"
+#include "mmcore/ModuleDescription.h"
 #include "vislib/assert.h"
 
 #include "mmcore/cluster/ClusterController.h"

@@ -18,8 +18,8 @@
 #include <atomic>
 #include <memory>
 
-#include "CalleeSlot.h"
-#include "Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
 
 #include "mmcore/param/ParamSlot.h"
 

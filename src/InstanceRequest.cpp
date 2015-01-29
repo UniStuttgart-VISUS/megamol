@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "InstanceRequest.h"
+#include "mmcore/InstanceRequest.h"
 
 
 /*

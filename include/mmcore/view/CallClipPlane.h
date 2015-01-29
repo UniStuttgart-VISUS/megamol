@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "api/MegaMolCore.std.h"
-#include "Call.h"
-#include "CallAutoDescription.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
 

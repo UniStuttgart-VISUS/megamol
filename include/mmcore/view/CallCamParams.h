@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Call.h"
+#include "mmcore/Call.h"
 #include "vislib/graphics/CameraParameters.h"
-#include "CallAutoDescription.h"
+#include "mmcore/CallAutoDescription.h"
 #include "vislib/SmartPtr.h"
 
 namespace megamol {

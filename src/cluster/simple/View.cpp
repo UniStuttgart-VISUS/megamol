@@ -14,7 +14,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "AbstractNamedObject.h"
+#include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"

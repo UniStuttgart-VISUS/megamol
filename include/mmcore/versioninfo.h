@@ -13,7 +13,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "productversion.h"
+#include "mmcore/productversion.h"
 
 
 #define MEGAMOL_CORE_MAJOR_VER MEGAMOL_PRODUCT_MAJOR_VER

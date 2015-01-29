@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/moldyn/SIFFWriter.h"
-#include "BoundingBoxes.h"
+#include "mmcore/BoundingBoxes.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"

@@ -13,7 +13,7 @@
 
 
 #include "Renderer3DModule.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 
 
 namespace megamol {

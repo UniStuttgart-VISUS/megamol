@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/AbstractRenderingView.h"
-#include "AbstractNamedObject.h"
+#include "mmcore/AbstractNamedObject.h"
 #include "vislib/String.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"

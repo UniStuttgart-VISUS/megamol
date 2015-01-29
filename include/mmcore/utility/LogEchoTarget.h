@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "api/MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 #include "vislib/sys/Log.h"
 
 

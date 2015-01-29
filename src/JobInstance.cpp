@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "JobInstance.h"
-#include "Module.h"
-#include "ModuleNamespace.h"
+#include "mmcore/JobInstance.h"
+#include "mmcore/Module.h"
+#include "mmcore/ModuleNamespace.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Log.h"
 

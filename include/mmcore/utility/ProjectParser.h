@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CoreInstance.h"
-#include "JobDescription.h"
-#include "ViewDescription.h"
+#include "mmcore/JobDescription.h"
+#include "mmcore/ViewDescription.h"
 #include "mmcore/utility/xml/ConditionalParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/Exception.h"

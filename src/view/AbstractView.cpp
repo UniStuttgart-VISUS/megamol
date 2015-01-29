@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/view/AbstractView.h"
 #include <climits>
-#include "AbstractNamedObject.h"
+#include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"

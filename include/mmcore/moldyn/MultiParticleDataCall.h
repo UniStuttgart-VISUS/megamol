@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/moldyn/AbstractParticleDataCall.h"
-#include "CallAutoDescription.h"
+#include "mmcore/CallAutoDescription.h"
 #include "vislib/assert.h"
 #include "vislib/Map.h"
 #include "vislib/Array.h"

@@ -13,7 +13,7 @@
 
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/param/ParamSlot.h"
-#include "CalleeSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"

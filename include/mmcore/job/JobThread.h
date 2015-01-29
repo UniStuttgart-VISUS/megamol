@@ -13,7 +13,7 @@
 
 
 #include "mmcore/job/AbstractThreadedJob.h"
-#include "Module.h"
+#include "mmcore/Module.h"
 
 
 namespace megamol {

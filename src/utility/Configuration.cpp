@@ -10,7 +10,7 @@
 #include "mmcore/utility/xml/ConfigurationParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 
-#include "api/MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 
 #include <cstdlib>
 #include <new>

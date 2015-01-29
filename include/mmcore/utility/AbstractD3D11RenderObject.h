@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmd3d.h"
+#include "mmcore/mmd3d.h"
 
 #include "mmcore/utility/ShaderSourceFactory.h"
 

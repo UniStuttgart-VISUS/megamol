@@ -11,11 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "api/MegaMolCore.std.h"
-#include "ObjectDescription.h"
-#include "ModuleDescription.h"
-#include "CallDescription.h"
-#include "ParamValueSetRequest.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/ObjectDescription.h"
+#include "mmcore/ModuleDescription.h"
+#include "mmcore/CallDescription.h"
+#include "mmcore/ParamValueSetRequest.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"

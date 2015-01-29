@@ -13,7 +13,7 @@
 
 #include <atomic>
 
-#include "Module.h"
+#include "mmcore/Module.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Thread.h"
 

@@ -6,30 +6,30 @@
  */
 
 #include "stdafx.h"
-#include "api/MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 
 #define _LOG_CORE_HASH_INFO 1
 #define _SEND_CORE_HASH_INFO 1
 
-#include "mmd3d.h"
-#include "ApiHandle.h"
+#include "mmcore/mmd3d.h"
+#include "mmcore/ApiHandle.h"
 #include "mmcore/CoreInstance.h"
-#include "JobDescription.h"
-#include "JobInstance.h"
-#include "ObjectDescription.h"
-#include "ObjectDescriptionManager.h"
-#include "versioninfo.h"
+#include "mmcore/JobDescription.h"
+#include "mmcore/JobInstance.h"
+#include "mmcore/ObjectDescription.h"
+#include "mmcore/ObjectDescriptionManager.h"
+#include "mmcore/versioninfo.h"
 #include "mmcore/param/ParamHandle.h"
 #include "mmcore/utility/Configuration.h"
-#include "ViewDescription.h"
-#include "ViewInstance.h"
+#include "mmcore/ViewDescription.h"
+#include "mmcore/ViewInstance.h"
 #include "mmcore/view/AbstractTileView.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/ViewDirect3D.h"
 #include "mmcore/job/AbstractJob.h"
-#include "ModuleDescriptionManager.h"
-#include "CallDescriptionManager.h"
-#include "CallerSlot.h"
+#include "mmcore/ModuleDescriptionManager.h"
+#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/CallerSlot.h"
 
 #include "vislib/assert.h"
 #include "vislib/sys/CriticalSection.h"

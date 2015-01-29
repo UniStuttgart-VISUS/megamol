@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <view/AbstractRendererDeferred3D.h>
+#include "mmcore/view/AbstractRendererDeferred3D.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 

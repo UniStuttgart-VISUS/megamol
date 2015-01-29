@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Module.h"
-#include "CallDescriptionManager.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 

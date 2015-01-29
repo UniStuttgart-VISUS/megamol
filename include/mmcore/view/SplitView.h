@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/view/AbstractView.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "mmcore/view/CallRenderView.h"

@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Call.h"
-#include "CallAutoDescription.h"
-#include "mmd3d.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
+#include "mmcore/mmd3d.h"
 
 #include "vislib/StackTrace.h"
 

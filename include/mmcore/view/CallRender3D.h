@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "api/MegaMolCore.std.h"
-#include "CallAutoDescription.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/RenderOutput.h"
 

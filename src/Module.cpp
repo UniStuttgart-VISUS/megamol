@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "Module.h"
-#include "AbstractSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/AbstractSlot.h"
 #include "mmcore/CoreInstance.h"
 #include <typeinfo>
 #include "vislib/assert.h"

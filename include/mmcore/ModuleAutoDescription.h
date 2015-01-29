@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <typeinfo>
-#include "ModuleDescription.h"
+#include "mmcore/ModuleDescription.h"
 #include "vislib/sys/Log.h"
 #include <typeinfo>
 

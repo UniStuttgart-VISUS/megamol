@@ -12,11 +12,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CallCamParamSync.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 
-#include "api/MegaMolCore.std.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
 #include "mmcore/param/ParamSlot.h"
 

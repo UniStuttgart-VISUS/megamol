@@ -65,8 +65,6 @@ sub fix_includes_in_file {
 	open (my $fh, '>', $filename) or die "Couldn't write file '$filename': $!";
 	print $fh $content;
 	close $fh;
-	
-	exit;
 }
 
 # Go through all files/subdirectories specified by the first command line argument

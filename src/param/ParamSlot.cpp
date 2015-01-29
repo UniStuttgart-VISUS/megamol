@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "Module.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"

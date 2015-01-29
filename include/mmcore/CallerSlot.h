@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "api/MegaMolCore.std.h"
-#include "AbstractSlot.h"
-#include "Call.h"
-#include "CallDescription.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallDescription.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 

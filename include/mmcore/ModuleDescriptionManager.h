@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "ObjectDescriptionManager.h"
-#include "ModuleDescription.h"
+#include "mmcore/ObjectDescriptionManager.h"
+#include "mmcore/ModuleDescription.h"
 #include "vislib/SmartPtr.h"
 
 

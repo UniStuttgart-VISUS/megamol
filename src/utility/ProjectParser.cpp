@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "mmcore/utility/ProjectParser.h"
-#include "ModuleDescriptionManager.h"
-#include "CallDescriptionManager.h"
+#include "mmcore/ModuleDescriptionManager.h"
+#include "mmcore/CallDescriptionManager.h"
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
 #include "vislib/VersionNumber.h"

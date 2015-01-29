@@ -13,7 +13,7 @@
 
 #include "mmcore/view/AbstractTileView.h"
 #include "mmcore/cluster/simple/HeartbeatClient.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/net/AbstractSimpleMessage.h"
 #include "vislib/sys/CriticalSection.h"

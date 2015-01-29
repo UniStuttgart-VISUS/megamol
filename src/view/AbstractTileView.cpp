@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/view/AbstractTileView.h"
 #include "mmcore/CoreInstance.h"
-#include "api/MegaMolCore.h"
+#include "mmcore/api/MegaMolCore.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/Vector2fParam.h"

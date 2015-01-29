@@ -11,12 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/moldyn/DirectionalParticleDataCall.h"
-#include "CallVolumeData.h"
+#include "mmcore/CallVolumeData.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 

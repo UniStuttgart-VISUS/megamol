@@ -7,9 +7,9 @@
 
 #include "stdafx.h"
 #include "mmcore/moldyn/DataFileSequence.h"
-#include "AbstractGetData3DCall.h"
-#include "CallDescriptionManager.h"
-#include "CallDescription.h"
+#include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/CallDescription.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"

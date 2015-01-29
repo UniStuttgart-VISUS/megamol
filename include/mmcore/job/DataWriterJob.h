@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/job/AbstractThreadedJob.h"
-#include "Module.h"
-#include "CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/CallerSlot.h"
 
 
 namespace megamol {

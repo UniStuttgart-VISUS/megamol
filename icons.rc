@@ -6,7 +6,7 @@
 // Alle Rechte vorbehalten.
 //
 
-#include "include/versioninfo.h"
+#include "mmcore/versioninfo.h"
 #include "WinVer.h"
 
 // icons

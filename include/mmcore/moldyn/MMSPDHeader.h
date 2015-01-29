@@ -15,7 +15,7 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
-#include "api/MegaMolCore.std.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
 
 namespace megamol {

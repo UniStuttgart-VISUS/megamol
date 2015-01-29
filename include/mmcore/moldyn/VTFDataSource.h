@@ -9,7 +9,7 @@
 
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/param/ParamSlot.h"
-#include "CalleeSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/RawStorage.h"
