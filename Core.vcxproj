@@ -124,8 +124,8 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -167,8 +167,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -206,8 +206,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -248,8 +248,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -282,488 +282,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractDataWriter.cpp" />
-    <ClCompile Include="AbstractGetData3DCall.cpp" />
-    <ClCompile Include="AbstractGetDataCall.cpp" />
-    <ClCompile Include="AbstractNamedObject.cpp" />
-    <ClCompile Include="AbstractNamedObjectContainer.cpp" />
-    <ClCompile Include="AbstractSlot.cpp" />
-    <ClCompile Include="ApiHandle.cpp" />
-    <ClCompile Include="BoundingBoxes.cpp" />
-    <ClCompile Include="Call.cpp" />
-    <ClCompile Include="CallAutoDescription.cpp" />
-    <ClCompile Include="CallDescription.cpp" />
-    <ClCompile Include="CallDescriptionManager.cpp" />
-    <ClCompile Include="CalleeSlot.cpp" />
-    <ClCompile Include="CallerSlot.cpp" />
-    <ClCompile Include="CallVolumeData.cpp" />
-    <ClCompile Include="cluster\mpi\MpiCall.cpp" />
-    <ClCompile Include="cluster\mpi\MpiProvider.cpp" />
-    <ClCompile Include="cluster\mpi\View.cpp" />
-    <ClCompile Include="cluster\simple\Client.cpp" />
-    <ClCompile Include="cluster\simple\ClientViewRegistration.cpp" />
-    <ClCompile Include="cluster\simple\CommUtil.cpp" />
-    <ClCompile Include="cluster\simple\Heartbeat.cpp" />
-    <ClCompile Include="cluster\simple\HeartbeatClient.cpp" />
-    <ClCompile Include="cluster\simple\Server.cpp" />
-    <ClCompile Include="cluster\simple\View.cpp" />
-    <ClCompile Include="CoreInstance.cpp" />
-    <ClCompile Include="DataWriterCtrlCall.cpp" />
-    <ClCompile Include="InstanceDescription.cpp" />
-    <ClCompile Include="InstanceRequest.cpp" />
-    <ClCompile Include="JobDescription.cpp" />
-    <ClCompile Include="JobInstance.cpp" />
-    <ClCompile Include="JobInstanceRequest.cpp" />
-    <ClCompile Include="LoaderADModuleAutoDescription.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="MegaMolCore.cpp" />
-    <ClCompile Include="misc\BezierCurvesListDataCall.cpp" />
-    <ClCompile Include="misc\PngBitmapCodec.cpp" />
-    <ClCompile Include="misc\QRCodeDataCall.cpp" />
-    <ClCompile Include="misc\CalloutImageCall.cpp" />
-    <ClCompile Include="misc\TestSpheresDataSource.cpp" />
-    <ClCompile Include="misc\VolumetricDataCall.cpp" />
-    <ClCompile Include="Module.cpp" />
-    <ClCompile Include="ModuleAutoDescription.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="ModuleDescription.cpp" />
-    <ClCompile Include="ModuleDescriptionManager.cpp" />
-    <ClCompile Include="ModuleNamespace.cpp" />
-    <ClCompile Include="moldyn\AbstractSimpleParticleDataSource.cpp" />
-    <ClCompile Include="moldyn\AbstractSimpleSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
-    <ClCompile Include="moldyn\AddClusterColours.cpp" />
-    <ClCompile Include="moldyn\ClusteredSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\D3D11SimpleSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\DirPartColModulate.cpp" />
-    <ClCompile Include="moldyn\DirPartFilter.cpp" />
-    <ClCompile Include="moldyn\DynDensityGradientEstimator.cpp" />
-    <ClCompile Include="moldyn\MMSPDDataSource.cpp" />
-    <ClCompile Include="moldyn\MMSPDFrameData.cpp" />
-    <ClCompile Include="moldyn\MMSPDHeader.cpp" />
-    <ClCompile Include="moldyn\NGSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\ParticleListFilter.cpp" />
-    <ClCompile Include="moldyn\ParticleWorker.cpp" />
-    <ClCompile Include="moldyn\SIFFWriter.cpp" />
-    <ClCompile Include="moldyn\SimpleGeoSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\SphereOutlineRenderer.cpp" />
-    <ClCompile Include="moldyn\VolumeDataCall.cpp" />
-    <ClCompile Include="moldyn\VTFDataSource.cpp" />
-    <ClCompile Include="moldyn\VTFResDataSource.cpp" />
-    <ClCompile Include="ObjectDescription.cpp" />
-    <ClCompile Include="ObjectDescriptionManager.cpp" />
-    <ClCompile Include="ParamValueSetRequest.cpp" />
-    <ClCompile Include="profiler\Connection.cpp" />
-    <ClCompile Include="profiler\Manager.cpp" />
-    <ClCompile Include="RootModuleNamespace.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="utility\AbstractD3D11RenderObject.cpp" />
-    <ClCompile Include="utility\D3D11BoundingBox.cpp" />
-    <ClCompile Include="utility\ResourceWrapper.cpp" />
-    <ClCompile Include="ViewDescription.cpp" />
-    <ClCompile Include="ViewInstance.cpp" />
-    <ClCompile Include="ViewInstanceRequest.cpp" />
-    <ClCompile Include="utility\APIValueUtil.cpp" />
-    <ClCompile Include="utility\BTFParser.cpp" />
-    <ClCompile Include="utility\ColourParser.cpp" />
-    <ClCompile Include="Utility\Configuration.cpp" />
-    <ClCompile Include="utility\LogEchoTarget.cpp" />
-    <ClCompile Include="utility\ProjectParser.cpp" />
-    <ClCompile Include="utility\ShaderSourceFactory.cpp" />
-    <ClCompile Include="utility\xml\ConditionalParser.cpp" />
-    <ClCompile Include="utility\xml\ConfigurationParser.cpp" />
-    <ClCompile Include="utility\xml\XmlParser.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
-    </ClCompile>
-    <ClCompile Include="utility\xml\XmlReader.cpp" />
-    <ClCompile Include="special\AbstractStereoDisplay.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="special\AnaglyphStereoDisplay.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="special\ColStereoDisplay.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="view\AbstractCallRender.cpp" />
-    <ClCompile Include="view\AbstractCallRender3D.cpp" />
-    <ClCompile Include="view\AbstractCamParamSync.cpp" />
-    <ClCompile Include="view\AbstractOverrideView.cpp" />
-    <ClCompile Include="view\AbstractRendererDeferred3D.cpp" />
-    <ClCompile Include="view\AbstractRenderingView.cpp" />
-    <ClCompile Include="view\AbstractRenderOutput.cpp" />
-    <ClCompile Include="view\AbstractTileView.cpp" />
-    <ClCompile Include="view\AbstractView.cpp" />
-    <ClCompile Include="view\AbstractView3D.cpp" />
-    <ClCompile Include="view\AnimDataModule.cpp" />
-    <ClCompile Include="view\BlinnPhongRendererDeferred.cpp" />
-    <ClCompile Include="view\Call6DofInteraction.cpp" />
-    <ClCompile Include="view\CallCamParams.cpp" />
-    <ClCompile Include="view\CallCamParamSync.cpp" />
-    <ClCompile Include="view\CallClipPlane.cpp" />
-    <ClCompile Include="view\CallGetTransferFunction.cpp" />
-    <ClCompile Include="view\CallRender2D.cpp" />
-    <ClCompile Include="view\CallRender3D.cpp" />
-    <ClCompile Include="view\CallRenderDeferred3D.cpp" />
-    <ClCompile Include="view\CallRenderView.cpp" />
-    <ClCompile Include="view\CallTimeControl.cpp" />
-    <ClCompile Include="view\CallUpdateDirect3D.cpp" />
-    <ClCompile Include="view\CameraParamOverride.cpp" />
-    <ClCompile Include="view\ClipPlane.cpp" />
-    <ClCompile Include="view\DataSourceModule.cpp" />
-    <ClCompile Include="view\graphicsresources.cpp" />
-    <ClCompile Include="view\LinearTransferFunction.cpp" />
-    <ClCompile Include="view\LinkedView3D.cpp" />
-    <ClCompile Include="view\MouseFlags.cpp" />
-    <ClCompile Include="view\MuxRenderer3D.cpp" />
-    <ClCompile Include="view\RenderDeferredOutput.cpp" />
-    <ClCompile Include="view\Renderer2DModule.cpp" />
-    <ClCompile Include="view\Renderer3DModule.cpp" />
-    <ClCompile Include="view\Renderer3DModuleDS.cpp" />
-    <ClCompile Include="view\RenderOutput.cpp" />
-    <ClCompile Include="view\SharedCameraParameters.cpp" />
-    <ClCompile Include="view\SplitView.cpp" />
-    <ClCompile Include="view\SwitchRenderer3D.cpp" />
-    <ClCompile Include="view\TileView.cpp" />
-    <ClCompile Include="view\TimeControl.cpp" />
-    <ClCompile Include="view\TransferFunctionRenderer.cpp" />
-    <ClCompile Include="view\View2D.cpp" />
-    <ClCompile Include="view\View3D.cpp" />
-    <ClCompile Include="view\special\AbstractStereoView.cpp" />
-    <ClCompile Include="view\special\AnaglyphStereoView.cpp" />
-    <ClCompile Include="view\special\ChronoGraph.cpp" />
-    <ClCompile Include="view\special\DemoRenderer2D.cpp" />
-    <ClCompile Include="view\special\MegaMolLogo.cpp" />
-    <ClCompile Include="view\special\QuadBufferStereoView.cpp" />
-    <ClCompile Include="view\special\ScreenShooter.cpp" />
-    <ClCompile Include="view\special\TitleRenderer.cpp" />
-    <ClCompile Include="job\AbstractJob.cpp" />
-    <ClCompile Include="job\AbstractThreadedJob.cpp" />
-    <ClCompile Include="job\DataWriterJob.cpp" />
-    <ClCompile Include="job\JobThread.cpp" />
-    <ClCompile Include="misc\ImageViewer.cpp" />
-    <ClCompile Include="misc\LinesDataCall.cpp" />
-    <ClCompile Include="misc\LinesRenderer.cpp" />
-    <ClCompile Include="misc\SiffCSplineFitter.cpp" />
-    <ClCompile Include="view\ViewDirect3D.cpp" />
-    <ClCompile Include="vismol2\Mol20DataCall.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="vismol2\Mol20DataSource.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="vismol2\Mol20Renderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="vismol2\Mol2Data.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="moldyn\AbstractParticleDataCall.cpp" />
-    <ClCompile Include="moldyn\AddParticleColours.cpp" />
-    <ClCompile Include="moldyn\ArrowRenderer.cpp" />
-    <ClCompile Include="moldyn\DataFileSequence.cpp" />
-    <ClCompile Include="moldyn\DataGridder.cpp" />
-    <ClCompile Include="moldyn\DirectionalParticleDataCall.cpp" />
-    <ClCompile Include="moldyn\GrimRenderer.cpp" />
-    <ClCompile Include="moldyn\IMDAtomDataSource.cpp" />
-    <ClCompile Include="moldyn\MipDepthSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\MMPGDDataSource.cpp" />
-    <ClCompile Include="moldyn\MMPGDWriter.cpp" />
-    <ClCompile Include="moldyn\MMPLDDataSource.cpp" />
-    <ClCompile Include="moldyn\MMPLDWriter.cpp" />
-    <ClCompile Include="moldyn\MultiParticleDataCall.cpp" />
-    <ClCompile Include="moldyn\OracleSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\ParticleGridDataCall.cpp" />
-    <ClCompile Include="moldyn\SIFFDataSource.cpp" />
-    <ClCompile Include="moldyn\SimpleSphereRenderer.cpp" />
-    <ClCompile Include="moldyn\VIMDataSource.cpp" />
-    <ClCompile Include="moldyn\VisIttDataSource.cpp" />
-    <ClCompile Include="param\AbstractParam.cpp" />
-    <ClCompile Include="param\AbstractParamSlot.cpp" />
-    <ClCompile Include="param\BoolParam.cpp" />
-    <ClCompile Include="param\ButtonParam.cpp" />
-    <ClCompile Include="param\EnumParam.cpp" />
-    <ClCompile Include="param\FilePathParam.cpp" />
-    <ClCompile Include="param\FloatParam.cpp" />
-    <ClCompile Include="param\IntParam.cpp" />
-    <ClCompile Include="param\ParamHandle.cpp" />
-    <ClCompile Include="param\ParamSlot.cpp" />
-    <ClCompile Include="param\ParamUpdateListener.cpp" />
-    <ClCompile Include="param\StringParam.cpp" />
-    <ClCompile Include="param\TernaryParam.cpp" />
-    <ClCompile Include="param\Vector2fParam.cpp" />
-    <ClCompile Include="param\Vector3fParam.cpp" />
-    <ClCompile Include="param\Vector4fParam.cpp" />
-    <ClCompile Include="cluster\AbstractClusterView.cpp" />
-    <ClCompile Include="cluster\CallRegisterAtController.cpp" />
-    <ClCompile Include="cluster\ClusterController.cpp" />
-    <ClCompile Include="cluster\ClusterControllerClient.cpp" />
-    <ClCompile Include="cluster\ClusterViewMaster.cpp" />
-    <ClCompile Include="cluster\CommChannel.cpp" />
-    <ClCompile Include="cluster\CommChannelServer.cpp" />
-    <ClCompile Include="cluster\InfoIconRenderer.cpp" />
-    <ClCompile Include="cluster\NetMessages.cpp" />
-    <ClCompile Include="cluster\PowerwallView.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AbstractDataWriter.h" />
-    <ClInclude Include="AbstractDataWriterBase.h" />
-    <ClInclude Include="AbstractGetData3DCall.h" />
-    <ClInclude Include="AbstractGetDataCall.h" />
-    <ClInclude Include="AbstractNamedObject.h" />
-    <ClInclude Include="AbstractNamedObjectContainer.h" />
-    <ClInclude Include="AbstractSlot.h" />
-    <ClInclude Include="ApiHandle.h" />
-    <ClInclude Include="BoundingBoxes.h" />
-    <ClInclude Include="Call.h" />
-    <ClInclude Include="CallAutoDescription.h" />
-    <ClInclude Include="CallDescription.h" />
-    <ClInclude Include="CallDescriptionManager.h" />
-    <ClInclude Include="CalleeSlot.h" />
-    <ClInclude Include="CallerSlot.h" />
-    <ClInclude Include="CallVolumeData.h" />
-    <ClInclude Include="cluster\mpi\MpiCall.h" />
-    <ClInclude Include="cluster\mpi\MpiProvider.h" />
-    <ClInclude Include="cluster\mpi\View.h" />
-    <ClInclude Include="cluster\simple\Client.h" />
-    <ClInclude Include="cluster\simple\ClientViewRegistration.h" />
-    <ClInclude Include="cluster\simple\CommUtil.h" />
-    <ClInclude Include="cluster\simple\Heartbeat.h" />
-    <ClInclude Include="cluster\simple\HeartbeatClient.h" />
-    <ClInclude Include="cluster\simple\Server.h" />
-    <ClInclude Include="cluster\simple\View.h" />
-    <ClInclude Include="CoreInstance.h" />
-    <ClInclude Include="DataWriterCtrlCall.h" />
-    <ClInclude Include="InstanceDescription.h" />
-    <ClInclude Include="InstanceRequest.h" />
-    <ClInclude Include="JobDescription.h" />
-    <ClInclude Include="JobInstance.h" />
-    <ClInclude Include="JobInstanceRequest.h" />
-    <ClInclude Include="LoaderADModuleAutoDescription.h" />
-    <ClInclude Include="misc\BezierCurvesListDataCall.h" />
-    <ClInclude Include="misc\PngBitmapCodec.h" />
-    <ClInclude Include="misc\QRCodeDataCall.h" />
-    <ClInclude Include="misc\CalloutImageCall.h" />
-    <ClInclude Include="misc\TestSpheresDataSource.h" />
-    <ClInclude Include="misc\VolumetricDataCall.h" />
-    <ClInclude Include="misc\VolumetricDataCallTypes.h" />
-    <ClInclude Include="mmd3d.h" />
-    <ClInclude Include="Module.h" />
-    <ClInclude Include="ModuleAutoDescription.h" />
-    <ClInclude Include="ModuleDescription.h" />
-    <ClInclude Include="ModuleDescriptionManager.h" />
-    <ClInclude Include="ModuleNamespace.h" />
-    <ClInclude Include="moldyn\AbstractSimpleParticleDataSource.h" />
-    <ClInclude Include="moldyn\AbstractSimpleSphereRenderer.h" />
-    <ClInclude Include="moldyn\AbstractSimpleStoringParticleDataSource.h" />
-    <ClInclude Include="moldyn\AddClusterColours.h" />
-    <ClInclude Include="moldyn\ClusteredSphereRenderer.h" />
-    <ClInclude Include="moldyn\D3D11SimpleSphereRenderer.h" />
-    <ClInclude Include="moldyn\DirPartColModulate.h" />
-    <ClInclude Include="moldyn\DirPartFilter.h" />
-    <ClInclude Include="moldyn\DynDensityGradientEstimator.h" />
-    <ClInclude Include="moldyn\MMSPDDataSource.h" />
-    <ClInclude Include="moldyn\MMSPDFrameData.h" />
-    <ClInclude Include="moldyn\MMSPDHeader.h" />
-    <ClInclude Include="moldyn\NGSphereRenderer.h" />
-    <ClInclude Include="moldyn\ParticleListFilter.h" />
-    <ClInclude Include="moldyn\ParticleWorker.h" />
-    <ClInclude Include="moldyn\SIFFWriter.h" />
-    <ClInclude Include="moldyn\SimpleGeoSphereRenderer.h" />
-    <ClInclude Include="moldyn\SphereOutlineRenderer.h" />
-    <ClInclude Include="moldyn\VolumeDataCall.h" />
-    <ClInclude Include="moldyn\VTFDataSource.h" />
-    <ClInclude Include="moldyn\VTFResDataSource.h" />
-    <ClInclude Include="nvstereo.h" />
-    <ClInclude Include="ObjectDescription.h" />
-    <ClInclude Include="ObjectDescriptionManager.h" />
-    <ClInclude Include="ParamValueSetRequest.h" />
-    <ClInclude Include="productversion.gen.h" />
-    <ClInclude Include="productversion.h" />
-    <ClInclude Include="productversion.template.h" />
-    <ClInclude Include="profiler\Connection.h" />
-    <ClInclude Include="profiler\Manager.h" />
-    <ClInclude Include="RootModuleNamespace.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="utility\AbstractD3D11RenderObject.h" />
-    <ClInclude Include="utility\D3D11BoundingBox.h" />
-    <ClInclude Include="utility\ResourceWrapper.h" />
-    <ClInclude Include="versioninfo.h" />
-    <ClInclude Include="ViewDescription.h" />
-    <ClInclude Include="ViewInstance.h" />
-    <ClInclude Include="ViewInstanceRequest.h" />
-    <ClInclude Include="utility\APIValueUtil.h" />
-    <ClInclude Include="utility\BTFParser.h" />
-    <ClInclude Include="utility\ColourParser.h" />
-    <ClInclude Include="Utility\Configuration.h" />
-    <ClInclude Include="utility\LogEchoTarget.h" />
-    <ClInclude Include="utility\ProjectParser.h" />
-    <ClInclude Include="utility\ShaderSourceFactory.h" />
-    <ClInclude Include="utility\xml\ConditionalParser.h" />
-    <ClInclude Include="utility\xml\ConfigurationParser.h" />
-    <ClInclude Include="utility\xml\XmlParser.h" />
-    <ClInclude Include="utility\xml\XmlReader.h" />
-    <ClInclude Include="special\AbstractStereoDisplay.h" />
-    <ClInclude Include="special\AnaglyphStereoDisplay.h" />
-    <ClInclude Include="special\ColStereoDisplay.h" />
-    <ClInclude Include="view\AbstractCallRender.h" />
-    <ClInclude Include="view\AbstractCallRender3D.h" />
-    <ClInclude Include="view\AbstractCamParamSync.h" />
-    <ClInclude Include="view\AbstractOverrideView.h" />
-    <ClInclude Include="view\AbstractRendererDeferred3D.h" />
-    <ClInclude Include="view\AbstractRenderingView.h" />
-    <ClInclude Include="view\AbstractRenderOutput.h" />
-    <ClInclude Include="view\AbstractTileView.h" />
-    <ClInclude Include="view\AbstractView.h" />
-    <ClInclude Include="view\AbstractView3D.h" />
-    <ClInclude Include="view\AnimDataModule.h" />
-    <ClInclude Include="view\BlinnPhongRendererDeferred.h" />
-    <ClInclude Include="view\Call6DofInteraction.h" />
-    <ClInclude Include="view\CallCamParams.h" />
-    <ClInclude Include="view\CallCamParamSync.h" />
-    <ClInclude Include="view\CallClipPlane.h" />
-    <ClInclude Include="view\CallGetTransferFunction.h" />
-    <ClInclude Include="view\CallRender2D.h" />
-    <ClInclude Include="view\CallRender3D.h" />
-    <ClInclude Include="view\CallRenderDeferred3D.h" />
-    <ClInclude Include="view\CallRenderView.h" />
-    <ClInclude Include="view\CallTimeControl.h" />
-    <ClInclude Include="view\CallUpdateDirect3D.h" />
-    <ClInclude Include="view\CameraParamOverride.h" />
-    <ClInclude Include="view\ClipPlane.h" />
-    <ClInclude Include="view\DataSourceModule.h" />
-    <ClInclude Include="view\graphicsresources.h" />
-    <ClInclude Include="view\LinearTransferFunction.h" />
-    <ClInclude Include="view\LinkedView3D.h" />
-    <ClInclude Include="view\MouseFlags.h" />
-    <ClInclude Include="view\MuxRenderer3D.h" />
-    <ClInclude Include="view\RenderDeferredOutput.h" />
-    <ClInclude Include="view\Renderer2DModule.h" />
-    <ClInclude Include="view\Renderer3DModule.h" />
-    <ClInclude Include="view\Renderer3DModuleDS.h" />
-    <ClInclude Include="view\RenderOutput.h" />
-    <ClInclude Include="view\SharedCameraParameters.h" />
-    <ClInclude Include="view\SplitView.h" />
-    <ClInclude Include="view\SwitchRenderer3D.h" />
-    <ClInclude Include="view\TileView.h" />
-    <ClInclude Include="view\TimeControl.h" />
-    <ClInclude Include="view\TransferFunctionRenderer.h" />
-    <ClInclude Include="view\View2D.h" />
-    <ClInclude Include="view\View3D.h" />
-    <ClInclude Include="view\special\AbstractStereoView.h" />
-    <ClInclude Include="view\special\AnaglyphStereoView.h" />
-    <ClInclude Include="view\special\ChronoGraph.h" />
-    <ClInclude Include="view\special\DemoRenderer2D.h" />
-    <ClInclude Include="view\special\MegaMolLogo.h" />
-    <ClInclude Include="view\special\QuadBufferStereoView.h" />
-    <ClInclude Include="view\special\ScreenShooter.h" />
-    <ClInclude Include="view\special\TitleRenderer.h" />
-    <ClInclude Include="job\AbstractJob.h" />
-    <ClInclude Include="job\AbstractThreadedJob.h" />
-    <ClInclude Include="job\DataWriterJob.h" />
-    <ClInclude Include="job\JobThread.h" />
-    <ClInclude Include="misc\ImageViewer.h" />
-    <ClInclude Include="misc\LinesDataCall.h" />
-    <ClInclude Include="misc\LinesRenderer.h" />
-    <ClInclude Include="misc\SiffCSplineFitter.h" />
-    <ClInclude Include="view\ViewDirect3D.h" />
-    <ClInclude Include="vismol2\Mol20DataCall.h" />
-    <ClInclude Include="vismol2\Mol20DataSource.h" />
-    <ClInclude Include="vismol2\Mol20Renderer.h" />
-    <ClInclude Include="vismol2\Mol2Data.h" />
-    <ClInclude Include="moldyn\AbstractParticleDataCall.h" />
-    <ClInclude Include="moldyn\AddParticleColours.h" />
-    <ClInclude Include="moldyn\ArrowRenderer.h" />
-    <ClInclude Include="moldyn\DataFileSequence.h" />
-    <ClInclude Include="moldyn\DataGridder.h" />
-    <ClInclude Include="moldyn\DirectionalParticleDataCall.h" />
-    <ClInclude Include="moldyn\GrimRenderer.h" />
-    <ClInclude Include="moldyn\IMDAtomDataSource.h" />
-    <ClInclude Include="moldyn\MipDepthSphereRenderer.h" />
-    <ClInclude Include="moldyn\MMPGDDataSource.h" />
-    <ClInclude Include="moldyn\MMPGDWriter.h" />
-    <ClInclude Include="moldyn\MMPLDDataSource.h" />
-    <ClInclude Include="moldyn\MMPLDWriter.h" />
-    <ClInclude Include="moldyn\MultiParticleDataCall.h" />
-    <ClInclude Include="moldyn\OracleSphereRenderer.h" />
-    <ClInclude Include="moldyn\ParticleGridDataCall.h" />
-    <ClInclude Include="moldyn\SIFFDataSource.h" />
-    <ClInclude Include="moldyn\SimpleSphereRenderer.h" />
-    <ClInclude Include="moldyn\VIMDataSource.h" />
-    <ClInclude Include="moldyn\VisIttDataSource.h" />
-    <ClInclude Include="param\AbstractParam.h" />
-    <ClInclude Include="param\AbstractParamSlot.h" />
-    <ClInclude Include="param\BoolParam.h" />
-    <ClInclude Include="param\ButtonParam.h" />
-    <ClInclude Include="param\EnumParam.h" />
-    <ClInclude Include="param\FilePathParam.h" />
-    <ClInclude Include="param\FloatParam.h" />
-    <ClInclude Include="param\IntParam.h" />
-    <ClInclude Include="param\ParamHandle.h" />
-    <ClInclude Include="param\ParamSlot.h" />
-    <ClInclude Include="param\ParamUpdateListener.h" />
-    <ClInclude Include="param\StringParam.h" />
-    <ClInclude Include="param\TernaryParam.h" />
-    <ClInclude Include="param\Vector2fParam.h" />
-    <ClInclude Include="param\Vector3fParam.h" />
-    <ClInclude Include="param\Vector4fParam.h" />
-    <ClInclude Include="api\MegaMolCore.h" />
-    <ClInclude Include="api\MegaMolCore.std.h" />
-    <ClInclude Include="api\MegaMolCore.std.template.h" />
-    <ClInclude Include="cluster\AbstractClusterView.h" />
-    <ClInclude Include="cluster\CallRegisterAtController.h" />
-    <ClInclude Include="cluster\ClusterController.h" />
-    <ClInclude Include="cluster\ClusterControllerClient.h" />
-    <ClInclude Include="cluster\ClusterViewMaster.h" />
-    <ClInclude Include="cluster\CommChannel.h" />
-    <ClInclude Include="cluster\CommChannelServer.h" />
-    <ClInclude Include="cluster\InfoIconRenderer.h" />
-    <ClInclude Include="cluster\NetMessages.h" />
-    <ClInclude Include="cluster\PowerwallView.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="icons.rc" />
   </ItemGroup>
   <ItemGroup>
@@ -776,7 +294,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </None>
     <None Include="Shaders\particleWorkerCompute.btf" />
     <None Include="Shaders\simplegeosphere.btf" />
-    <None Include="view\special\MegaMolLogoData.inl" />
     <CustomBuildStep Include="config.bat">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -861,7 +378,483 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="Shaders\sphereEx\header.glgs" />
     <None Include="Shaders\sphereEx\header.glvs" />
     <None Include="Shaders\sphereEx\params_upload.glvs" />
-    <None Include="cluster\HelvUC.inc" />
+    <None Include="src\cluster\HelvUC.inc" />
+    <None Include="src\view\special\MegaMolLogoData.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\AbstractDataWriter.h" />
+    <ClInclude Include="include\AbstractDataWriterBase.h" />
+    <ClInclude Include="include\AbstractGetData3DCall.h" />
+    <ClInclude Include="include\AbstractGetDataCall.h" />
+    <ClInclude Include="include\AbstractNamedObject.h" />
+    <ClInclude Include="include\AbstractNamedObjectContainer.h" />
+    <ClInclude Include="include\AbstractSlot.h" />
+    <ClInclude Include="include\ApiHandle.h" />
+    <ClInclude Include="include\api\MegaMolCore.h" />
+    <ClInclude Include="include\api\MegaMolCore.std.h" />
+    <ClInclude Include="include\api\MegaMolCore.std.template.h" />
+    <ClInclude Include="include\BoundingBoxes.h" />
+    <ClInclude Include="include\Call.h" />
+    <ClInclude Include="include\CallAutoDescription.h" />
+    <ClInclude Include="include\CallDescription.h" />
+    <ClInclude Include="include\CallDescriptionManager.h" />
+    <ClInclude Include="include\CalleeSlot.h" />
+    <ClInclude Include="include\CallerSlot.h" />
+    <ClInclude Include="include\CallVolumeData.h" />
+    <ClInclude Include="include\cluster\AbstractClusterView.h" />
+    <ClInclude Include="include\cluster\CallRegisterAtController.h" />
+    <ClInclude Include="include\cluster\ClusterController.h" />
+    <ClInclude Include="include\cluster\ClusterControllerClient.h" />
+    <ClInclude Include="include\cluster\ClusterViewMaster.h" />
+    <ClInclude Include="include\cluster\CommChannel.h" />
+    <ClInclude Include="include\cluster\CommChannelServer.h" />
+    <ClInclude Include="include\cluster\InfoIconRenderer.h" />
+    <ClInclude Include="include\cluster\mpi\MpiCall.h" />
+    <ClInclude Include="include\cluster\mpi\MpiProvider.h" />
+    <ClInclude Include="include\cluster\mpi\View.h" />
+    <ClInclude Include="include\cluster\NetMessages.h" />
+    <ClInclude Include="include\cluster\PowerwallView.h" />
+    <ClInclude Include="include\cluster\simple\Client.h" />
+    <ClInclude Include="include\cluster\simple\ClientViewRegistration.h" />
+    <ClInclude Include="include\cluster\simple\CommUtil.h" />
+    <ClInclude Include="include\cluster\simple\Heartbeat.h" />
+    <ClInclude Include="include\cluster\simple\HeartbeatClient.h" />
+    <ClInclude Include="include\cluster\simple\Server.h" />
+    <ClInclude Include="include\cluster\simple\View.h" />
+    <ClInclude Include="include\CoreInstance.h" />
+    <ClInclude Include="include\DataWriterCtrlCall.h" />
+    <ClInclude Include="include\InstanceDescription.h" />
+    <ClInclude Include="include\InstanceRequest.h" />
+    <ClInclude Include="include\JobDescription.h" />
+    <ClInclude Include="include\JobInstance.h" />
+    <ClInclude Include="include\JobInstanceRequest.h" />
+    <ClInclude Include="include\job\AbstractJob.h" />
+    <ClInclude Include="include\job\AbstractThreadedJob.h" />
+    <ClInclude Include="include\job\DataWriterJob.h" />
+    <ClInclude Include="include\job\JobThread.h" />
+    <ClInclude Include="include\LoaderADModuleAutoDescription.h" />
+    <ClInclude Include="include\misc\BezierCurvesListDataCall.h" />
+    <ClInclude Include="include\misc\CalloutImageCall.h" />
+    <ClInclude Include="include\misc\ImageViewer.h" />
+    <ClInclude Include="include\misc\LinesDataCall.h" />
+    <ClInclude Include="include\misc\LinesRenderer.h" />
+    <ClInclude Include="include\misc\PngBitmapCodec.h" />
+    <ClInclude Include="include\misc\QRCodeDataCall.h" />
+    <ClInclude Include="include\misc\SiffCSplineFitter.h" />
+    <ClInclude Include="include\misc\TestSpheresDataSource.h" />
+    <ClInclude Include="include\misc\VolumetricDataCall.h" />
+    <ClInclude Include="include\misc\VolumetricDataCallTypes.h" />
+    <ClInclude Include="include\mmd3d.h" />
+    <ClInclude Include="include\Module.h" />
+    <ClInclude Include="include\ModuleAutoDescription.h" />
+    <ClInclude Include="include\ModuleDescription.h" />
+    <ClInclude Include="include\ModuleDescriptionManager.h" />
+    <ClInclude Include="include\ModuleNamespace.h" />
+    <ClInclude Include="include\moldyn\AbstractParticleDataCall.h" />
+    <ClInclude Include="include\moldyn\AbstractSimpleParticleDataSource.h" />
+    <ClInclude Include="include\moldyn\AbstractSimpleSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\AbstractSimpleStoringParticleDataSource.h" />
+    <ClInclude Include="include\moldyn\AddClusterColours.h" />
+    <ClInclude Include="include\moldyn\AddParticleColours.h" />
+    <ClInclude Include="include\moldyn\ArrowRenderer.h" />
+    <ClInclude Include="include\moldyn\ClusteredSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\D3D11SimpleSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\DataFileSequence.h" />
+    <ClInclude Include="include\moldyn\DataGridder.h" />
+    <ClInclude Include="include\moldyn\DirectionalParticleDataCall.h" />
+    <ClInclude Include="include\moldyn\DirPartColModulate.h" />
+    <ClInclude Include="include\moldyn\DirPartFilter.h" />
+    <ClInclude Include="include\moldyn\DynDensityGradientEstimator.h" />
+    <ClInclude Include="include\moldyn\GrimRenderer.h" />
+    <ClInclude Include="include\moldyn\IMDAtomDataSource.h" />
+    <ClInclude Include="include\moldyn\MipDepthSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\MMPGDDataSource.h" />
+    <ClInclude Include="include\moldyn\MMPGDWriter.h" />
+    <ClInclude Include="include\moldyn\MMPLDDataSource.h" />
+    <ClInclude Include="include\moldyn\MMPLDWriter.h" />
+    <ClInclude Include="include\moldyn\MMSPDDataSource.h" />
+    <ClInclude Include="include\moldyn\MMSPDFrameData.h" />
+    <ClInclude Include="include\moldyn\MMSPDHeader.h" />
+    <ClInclude Include="include\moldyn\MultiParticleDataCall.h" />
+    <ClInclude Include="include\moldyn\NGSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\OracleSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\ParticleGridDataCall.h" />
+    <ClInclude Include="include\moldyn\ParticleListFilter.h" />
+    <ClInclude Include="include\moldyn\ParticleWorker.h" />
+    <ClInclude Include="include\moldyn\SIFFDataSource.h" />
+    <ClInclude Include="include\moldyn\SIFFWriter.h" />
+    <ClInclude Include="include\moldyn\SimpleGeoSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\SimpleSphereRenderer.h" />
+    <ClInclude Include="include\moldyn\SphereOutlineRenderer.h" />
+    <ClInclude Include="include\moldyn\VIMDataSource.h" />
+    <ClInclude Include="include\moldyn\VisIttDataSource.h" />
+    <ClInclude Include="include\moldyn\VolumeDataCall.h" />
+    <ClInclude Include="include\moldyn\VTFDataSource.h" />
+    <ClInclude Include="include\moldyn\VTFResDataSource.h" />
+    <ClInclude Include="include\nvstereo.h" />
+    <ClInclude Include="include\ObjectDescription.h" />
+    <ClInclude Include="include\ObjectDescriptionManager.h" />
+    <ClInclude Include="include\ParamValueSetRequest.h" />
+    <ClInclude Include="include\param\AbstractParam.h" />
+    <ClInclude Include="include\param\AbstractParamSlot.h" />
+    <ClInclude Include="include\param\BoolParam.h" />
+    <ClInclude Include="include\param\ButtonParam.h" />
+    <ClInclude Include="include\param\EnumParam.h" />
+    <ClInclude Include="include\param\FilePathParam.h" />
+    <ClInclude Include="include\param\FloatParam.h" />
+    <ClInclude Include="include\param\IntParam.h" />
+    <ClInclude Include="include\param\ParamHandle.h" />
+    <ClInclude Include="include\param\ParamSlot.h" />
+    <ClInclude Include="include\param\ParamUpdateListener.h" />
+    <ClInclude Include="include\param\StringParam.h" />
+    <ClInclude Include="include\param\TernaryParam.h" />
+    <ClInclude Include="include\param\Vector2fParam.h" />
+    <ClInclude Include="include\param\Vector3fParam.h" />
+    <ClInclude Include="include\param\Vector4fParam.h" />
+    <ClInclude Include="include\productversion.gen.h" />
+    <ClInclude Include="include\productversion.h" />
+    <ClInclude Include="include\productversion.template.h" />
+    <ClInclude Include="include\profiler\Connection.h" />
+    <ClInclude Include="include\profiler\Manager.h" />
+    <ClInclude Include="include\RootModuleNamespace.h" />
+    <ClInclude Include="include\special\AbstractStereoDisplay.h" />
+    <ClInclude Include="include\special\ColStereoDisplay.h" />
+    <ClInclude Include="include\stdafx.h" />
+    <ClInclude Include="include\utility\AbstractD3D11RenderObject.h" />
+    <ClInclude Include="include\utility\APIValueUtil.h" />
+    <ClInclude Include="include\utility\BTFParser.h" />
+    <ClInclude Include="include\utility\ColourParser.h" />
+    <ClInclude Include="include\utility\Configuration.h" />
+    <ClInclude Include="include\utility\D3D11BoundingBox.h" />
+    <ClInclude Include="include\utility\LogEchoTarget.h" />
+    <ClInclude Include="include\utility\ProjectParser.h" />
+    <ClInclude Include="include\utility\ResourceWrapper.h" />
+    <ClInclude Include="include\utility\ShaderSourceFactory.h" />
+    <ClInclude Include="include\utility\xml\ConditionalParser.h" />
+    <ClInclude Include="include\utility\xml\ConfigurationParser.h" />
+    <ClInclude Include="include\utility\xml\XmlParser.h" />
+    <ClInclude Include="include\utility\xml\XmlReader.h" />
+    <ClInclude Include="include\versioninfo.h" />
+    <ClInclude Include="include\ViewDescription.h" />
+    <ClInclude Include="include\ViewInstance.h" />
+    <ClInclude Include="include\ViewInstanceRequest.h" />
+    <ClInclude Include="include\view\AbstractCallRender.h" />
+    <ClInclude Include="include\view\AbstractCallRender3D.h" />
+    <ClInclude Include="include\view\AbstractCamParamSync.h" />
+    <ClInclude Include="include\view\AbstractOverrideView.h" />
+    <ClInclude Include="include\view\AbstractRendererDeferred3D.h" />
+    <ClInclude Include="include\view\AbstractRenderingView.h" />
+    <ClInclude Include="include\view\AbstractRenderOutput.h" />
+    <ClInclude Include="include\view\AbstractTileView.h" />
+    <ClInclude Include="include\view\AbstractView.h" />
+    <ClInclude Include="include\view\AbstractView3D.h" />
+    <ClInclude Include="include\view\AnimDataModule.h" />
+    <ClInclude Include="include\view\BlinnPhongRendererDeferred.h" />
+    <ClInclude Include="include\view\Call6DofInteraction.h" />
+    <ClInclude Include="include\view\CallCamParams.h" />
+    <ClInclude Include="include\view\CallCamParamSync.h" />
+    <ClInclude Include="include\view\CallClipPlane.h" />
+    <ClInclude Include="include\view\CallGetTransferFunction.h" />
+    <ClInclude Include="include\view\CallRender2D.h" />
+    <ClInclude Include="include\view\CallRender3D.h" />
+    <ClInclude Include="include\view\CallRenderDeferred3D.h" />
+    <ClInclude Include="include\view\CallRenderView.h" />
+    <ClInclude Include="include\view\CallTimeControl.h" />
+    <ClInclude Include="include\view\CallUpdateDirect3D.h" />
+    <ClInclude Include="include\view\CameraParamOverride.h" />
+    <ClInclude Include="include\view\ClipPlane.h" />
+    <ClInclude Include="include\view\DataSourceModule.h" />
+    <ClInclude Include="include\view\graphicsresources.h" />
+    <ClInclude Include="include\view\LinearTransferFunction.h" />
+    <ClInclude Include="include\view\LinkedView3D.h" />
+    <ClInclude Include="include\view\MouseFlags.h" />
+    <ClInclude Include="include\view\MuxRenderer3D.h" />
+    <ClInclude Include="include\view\RenderDeferredOutput.h" />
+    <ClInclude Include="include\view\Renderer2DModule.h" />
+    <ClInclude Include="include\view\Renderer3DModule.h" />
+    <ClInclude Include="include\view\Renderer3DModuleDS.h" />
+    <ClInclude Include="include\view\RenderOutput.h" />
+    <ClInclude Include="include\view\SharedCameraParameters.h" />
+    <ClInclude Include="include\view\special\AbstractStereoView.h" />
+    <ClInclude Include="include\view\special\AnaglyphStereoView.h" />
+    <ClInclude Include="include\view\special\ChronoGraph.h" />
+    <ClInclude Include="include\view\special\DemoRenderer2D.h" />
+    <ClInclude Include="include\view\special\MegaMolLogo.h" />
+    <ClInclude Include="include\view\special\QuadBufferStereoView.h" />
+    <ClInclude Include="include\view\special\ScreenShooter.h" />
+    <ClInclude Include="include\view\special\TitleRenderer.h" />
+    <ClInclude Include="include\view\SplitView.h" />
+    <ClInclude Include="include\view\SwitchRenderer3D.h" />
+    <ClInclude Include="include\view\TileView.h" />
+    <ClInclude Include="include\view\TimeControl.h" />
+    <ClInclude Include="include\view\TransferFunctionRenderer.h" />
+    <ClInclude Include="include\view\View2D.h" />
+    <ClInclude Include="include\view\View3D.h" />
+    <ClInclude Include="include\view\ViewDirect3D.h" />
+    <ClInclude Include="include\vismol2\Mol20DataCall.h" />
+    <ClInclude Include="include\vismol2\Mol20DataSource.h" />
+    <ClInclude Include="include\vismol2\Mol20Renderer.h" />
+    <ClInclude Include="include\vismol2\Mol2Data.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AbstractDataWriter.cpp" />
+    <ClCompile Include="src\AbstractGetData3DCall.cpp" />
+    <ClCompile Include="src\AbstractGetDataCall.cpp" />
+    <ClCompile Include="src\AbstractNamedObject.cpp" />
+    <ClCompile Include="src\AbstractNamedObjectContainer.cpp" />
+    <ClCompile Include="src\AbstractSlot.cpp" />
+    <ClCompile Include="src\ApiHandle.cpp" />
+    <ClCompile Include="src\BoundingBoxes.cpp" />
+    <ClCompile Include="src\Call.cpp" />
+    <ClCompile Include="src\CallAutoDescription.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\CallDescription.cpp" />
+    <ClCompile Include="src\CallDescriptionManager.cpp" />
+    <ClCompile Include="src\CalleeSlot.cpp" />
+    <ClCompile Include="src\CallerSlot.cpp" />
+    <ClCompile Include="src\CallVolumeData.cpp" />
+    <ClCompile Include="src\cluster\AbstractClusterView.cpp" />
+    <ClCompile Include="src\cluster\CallRegisterAtController.cpp" />
+    <ClCompile Include="src\cluster\ClusterController.cpp" />
+    <ClCompile Include="src\cluster\ClusterControllerClient.cpp" />
+    <ClCompile Include="src\cluster\ClusterViewMaster.cpp" />
+    <ClCompile Include="src\cluster\CommChannel.cpp" />
+    <ClCompile Include="src\cluster\CommChannelServer.cpp" />
+    <ClCompile Include="src\cluster\InfoIconRenderer.cpp" />
+    <ClCompile Include="src\cluster\mpi\MpiCall.cpp" />
+    <ClCompile Include="src\cluster\mpi\MpiProvider.cpp" />
+    <ClCompile Include="src\cluster\mpi\View.cpp" />
+    <ClCompile Include="src\cluster\NetMessages.cpp" />
+    <ClCompile Include="src\cluster\PowerwallView.cpp" />
+    <ClCompile Include="src\cluster\simple\Client.cpp" />
+    <ClCompile Include="src\cluster\simple\ClientViewRegistration.cpp" />
+    <ClCompile Include="src\cluster\simple\CommUtil.cpp" />
+    <ClCompile Include="src\cluster\simple\Heartbeat.cpp" />
+    <ClCompile Include="src\cluster\simple\HeartbeatClient.cpp" />
+    <ClCompile Include="src\cluster\simple\Server.cpp" />
+    <ClCompile Include="src\cluster\simple\View.cpp" />
+    <ClCompile Include="src\CoreInstance.cpp" />
+    <ClCompile Include="src\DataWriterCtrlCall.cpp" />
+    <ClCompile Include="src\InstanceDescription.cpp" />
+    <ClCompile Include="src\InstanceRequest.cpp" />
+    <ClCompile Include="src\JobDescription.cpp" />
+    <ClCompile Include="src\JobInstance.cpp" />
+    <ClCompile Include="src\JobInstanceRequest.cpp" />
+    <ClCompile Include="src\job\AbstractJob.cpp" />
+    <ClCompile Include="src\job\AbstractThreadedJob.cpp" />
+    <ClCompile Include="src\job\DataWriterJob.cpp" />
+    <ClCompile Include="src\job\JobThread.cpp" />
+    <ClCompile Include="src\LoaderADModuleAutoDescription.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\MegaMolCore.cpp" />
+    <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
+    <ClCompile Include="src\misc\CalloutImageCall.cpp" />
+    <ClCompile Include="src\misc\ImageViewer.cpp" />
+    <ClCompile Include="src\misc\LinesDataCall.cpp" />
+    <ClCompile Include="src\misc\LinesRenderer.cpp" />
+    <ClCompile Include="src\misc\PngBitmapCodec.cpp" />
+    <ClCompile Include="src\misc\QRCodeDataCall.cpp" />
+    <ClCompile Include="src\misc\SiffCSplineFitter.cpp" />
+    <ClCompile Include="src\misc\TestSpheresDataSource.cpp" />
+    <ClCompile Include="src\misc\VolumetricDataCall.cpp" />
+    <ClCompile Include="src\Module.cpp" />
+    <ClCompile Include="src\ModuleAutoDescription.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\ModuleDescription.cpp" />
+    <ClCompile Include="src\ModuleDescriptionManager.cpp" />
+    <ClCompile Include="src\ModuleNamespace.cpp" />
+    <ClCompile Include="src\moldyn\AbstractParticleDataCall.cpp" />
+    <ClCompile Include="src\moldyn\AbstractSimpleParticleDataSource.cpp" />
+    <ClCompile Include="src\moldyn\AbstractSimpleSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\AbstractSimpleStoringParticleDataSource.cpp" />
+    <ClCompile Include="src\moldyn\AddClusterColours.cpp" />
+    <ClCompile Include="src\moldyn\AddParticleColours.cpp" />
+    <ClCompile Include="src\moldyn\ArrowRenderer.cpp" />
+    <ClCompile Include="src\moldyn\ClusteredSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\D3D11SimpleSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\DataFileSequence.cpp" />
+    <ClCompile Include="src\moldyn\DataGridder.cpp" />
+    <ClCompile Include="src\moldyn\DirectionalParticleDataCall.cpp" />
+    <ClCompile Include="src\moldyn\DirPartColModulate.cpp" />
+    <ClCompile Include="src\moldyn\DirPartFilter.cpp" />
+    <ClCompile Include="src\moldyn\DynDensityGradientEstimator.cpp" />
+    <ClCompile Include="src\moldyn\GrimRenderer.cpp" />
+    <ClCompile Include="src\moldyn\IMDAtomDataSource.cpp" />
+    <ClCompile Include="src\moldyn\MipDepthSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\MMPGDDataSource.cpp" />
+    <ClCompile Include="src\moldyn\MMPGDWriter.cpp" />
+    <ClCompile Include="src\moldyn\MMPLDDataSource.cpp" />
+    <ClCompile Include="src\moldyn\MMPLDWriter.cpp" />
+    <ClCompile Include="src\moldyn\MMSPDDataSource.cpp" />
+    <ClCompile Include="src\moldyn\MMSPDFrameData.cpp" />
+    <ClCompile Include="src\moldyn\MMSPDHeader.cpp" />
+    <ClCompile Include="src\moldyn\MultiParticleDataCall.cpp" />
+    <ClCompile Include="src\moldyn\NGSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\OracleSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\ParticleGridDataCall.cpp" />
+    <ClCompile Include="src\moldyn\ParticleListFilter.cpp" />
+    <ClCompile Include="src\moldyn\ParticleWorker.cpp" />
+    <ClCompile Include="src\moldyn\SIFFDataSource.cpp" />
+    <ClCompile Include="src\moldyn\SIFFWriter.cpp" />
+    <ClCompile Include="src\moldyn\SimpleGeoSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\SimpleSphereRenderer.cpp" />
+    <ClCompile Include="src\moldyn\SphereOutlineRenderer.cpp" />
+    <ClCompile Include="src\moldyn\VIMDataSource.cpp" />
+    <ClCompile Include="src\moldyn\VisIttDataSource.cpp" />
+    <ClCompile Include="src\moldyn\VolumeDataCall.cpp" />
+    <ClCompile Include="src\moldyn\VTFDataSource.cpp" />
+    <ClCompile Include="src\moldyn\VTFResDataSource.cpp" />
+    <ClCompile Include="src\ObjectDescription.cpp" />
+    <ClCompile Include="src\ObjectDescriptionManager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\ParamValueSetRequest.cpp" />
+    <ClCompile Include="src\param\AbstractParam.cpp" />
+    <ClCompile Include="src\param\AbstractParamSlot.cpp" />
+    <ClCompile Include="src\param\BoolParam.cpp" />
+    <ClCompile Include="src\param\ButtonParam.cpp" />
+    <ClCompile Include="src\param\EnumParam.cpp" />
+    <ClCompile Include="src\param\FilePathParam.cpp" />
+    <ClCompile Include="src\param\FloatParam.cpp" />
+    <ClCompile Include="src\param\IntParam.cpp" />
+    <ClCompile Include="src\param\ParamHandle.cpp" />
+    <ClCompile Include="src\param\ParamSlot.cpp" />
+    <ClCompile Include="src\param\ParamUpdateListener.cpp" />
+    <ClCompile Include="src\param\StringParam.cpp" />
+    <ClCompile Include="src\param\TernaryParam.cpp" />
+    <ClCompile Include="src\param\Vector2fParam.cpp" />
+    <ClCompile Include="src\param\Vector3fParam.cpp" />
+    <ClCompile Include="src\param\Vector4fParam.cpp" />
+    <ClCompile Include="src\profiler\Connection.cpp" />
+    <ClCompile Include="src\profiler\Manager.cpp" />
+    <ClCompile Include="src\RootModuleNamespace.cpp" />
+    <ClCompile Include="src\special\AbstractStereoDisplay.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\special\ColStereoDisplay.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\utility\AbstractD3D11RenderObject.cpp" />
+    <ClCompile Include="src\utility\APIValueUtil.cpp" />
+    <ClCompile Include="src\utility\BTFParser.cpp" />
+    <ClCompile Include="src\utility\ColourParser.cpp" />
+    <ClCompile Include="src\utility\Configuration.cpp" />
+    <ClCompile Include="src\utility\D3D11BoundingBox.cpp" />
+    <ClCompile Include="src\utility\LogEchoTarget.cpp" />
+    <ClCompile Include="src\utility\ProjectParser.cpp" />
+    <ClCompile Include="src\utility\ResourceWrapper.cpp" />
+    <ClCompile Include="src\utility\ShaderSourceFactory.cpp" />
+    <ClCompile Include="src\utility\xml\ConditionalParser.cpp" />
+    <ClCompile Include="src\utility\xml\ConfigurationParser.cpp" />
+    <ClCompile Include="src\utility\xml\XmlParser.cpp" />
+    <ClCompile Include="src\utility\xml\XmlReader.cpp" />
+    <ClCompile Include="src\ViewDescription.cpp" />
+    <ClCompile Include="src\ViewInstance.cpp" />
+    <ClCompile Include="src\ViewInstanceRequest.cpp" />
+    <ClCompile Include="src\view\AbstractCallRender.cpp" />
+    <ClCompile Include="src\view\AbstractCallRender3D.cpp" />
+    <ClCompile Include="src\view\AbstractCamParamSync.cpp" />
+    <ClCompile Include="src\view\AbstractOverrideView.cpp" />
+    <ClCompile Include="src\view\AbstractRendererDeferred3D.cpp" />
+    <ClCompile Include="src\view\AbstractRenderingView.cpp" />
+    <ClCompile Include="src\view\AbstractRenderOutput.cpp" />
+    <ClCompile Include="src\view\AbstractTileView.cpp" />
+    <ClCompile Include="src\view\AbstractView.cpp" />
+    <ClCompile Include="src\view\AbstractView3D.cpp" />
+    <ClCompile Include="src\view\AnimDataModule.cpp" />
+    <ClCompile Include="src\view\BlinnPhongRendererDeferred.cpp" />
+    <ClCompile Include="src\view\Call6DofInteraction.cpp" />
+    <ClCompile Include="src\view\CallCamParams.cpp" />
+    <ClCompile Include="src\view\CallCamParamSync.cpp" />
+    <ClCompile Include="src\view\CallClipPlane.cpp" />
+    <ClCompile Include="src\view\CallGetTransferFunction.cpp" />
+    <ClCompile Include="src\view\CallRender2D.cpp" />
+    <ClCompile Include="src\view\CallRender3D.cpp" />
+    <ClCompile Include="src\view\CallRenderDeferred3D.cpp" />
+    <ClCompile Include="src\view\CallRenderView.cpp" />
+    <ClCompile Include="src\view\CallTimeControl.cpp" />
+    <ClCompile Include="src\view\CallUpdateDirect3D.cpp" />
+    <ClCompile Include="src\view\CameraParamOverride.cpp" />
+    <ClCompile Include="src\view\ClipPlane.cpp" />
+    <ClCompile Include="src\view\DataSourceModule.cpp" />
+    <ClCompile Include="src\view\graphicsresources.cpp" />
+    <ClCompile Include="src\view\LinearTransferFunction.cpp" />
+    <ClCompile Include="src\view\LinkedView3D.cpp" />
+    <ClCompile Include="src\view\MouseFlags.cpp" />
+    <ClCompile Include="src\view\MuxRenderer3D.cpp" />
+    <ClCompile Include="src\view\RenderDeferredOutput.cpp" />
+    <ClCompile Include="src\view\Renderer2DModule.cpp" />
+    <ClCompile Include="src\view\Renderer3DModule.cpp" />
+    <ClCompile Include="src\view\Renderer3DModuleDS.cpp" />
+    <ClCompile Include="src\view\RenderOutput.cpp" />
+    <ClCompile Include="src\view\SharedCameraParameters.cpp" />
+    <ClCompile Include="src\view\special\AbstractStereoView.cpp" />
+    <ClCompile Include="src\view\special\AnaglyphStereoView.cpp" />
+    <ClCompile Include="src\view\special\ChronoGraph.cpp" />
+    <ClCompile Include="src\view\special\DemoRenderer2D.cpp" />
+    <ClCompile Include="src\view\special\MegaMolLogo.cpp" />
+    <ClCompile Include="src\view\special\QuadBufferStereoView.cpp" />
+    <ClCompile Include="src\view\special\ScreenShooter.cpp" />
+    <ClCompile Include="src\view\special\TitleRenderer.cpp" />
+    <ClCompile Include="src\view\SplitView.cpp" />
+    <ClCompile Include="src\view\SwitchRenderer3D.cpp" />
+    <ClCompile Include="src\view\TileView.cpp" />
+    <ClCompile Include="src\view\TimeControl.cpp" />
+    <ClCompile Include="src\view\TransferFunctionRenderer.cpp" />
+    <ClCompile Include="src\view\View2D.cpp" />
+    <ClCompile Include="src\view\View3D.cpp" />
+    <ClCompile Include="src\view\ViewDirect3D.cpp" />
+    <ClCompile Include="src\vismol2\Mol20DataCall.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\vismol2\Mol20DataSource.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\vismol2\Mol20Renderer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\vismol2\Mol2Data.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
