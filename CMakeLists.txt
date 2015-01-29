@@ -28,28 +28,19 @@ endif()
 
 # compiler options
 add_definitions(-Wall -pedantic -ansi -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS})
-execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                OUTPUT_VARIABLE GCC_VERSION)
-if (GCC_VERSION VERSION_LESS 4.7)
-        message(STATUS "Version < 4.7")
+if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
+    message(STATUS "Version < 4.7")
 	add_definitions(-std=c++0x)
 else()
 	add_definitions(-std=c++11)
 endif()
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(OUT_SUBDIR "linux.debug")
-	add_definitions(-DDEBUG)
-else()
-	set(OUT_SUBDIR "linux.release")
-endif()
 
-# build glload
-add_custom_target(glload ALL
-	./build.sh
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/3rd/glload
-	)
-set(GLLOAD_LIBRARIES ${CMAKE_SOURCE_DIR}/3rd/glload/build/libglload.so)
-#set(LIBS ${LIBS} ${GLLOAD_LIBRARIES})
+# Set CXX flags for debug mode
+set(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
+
+# Build 3rd party libraries
+add_subdirectory(3rd)
+include_directories(${GLLOAD_INCLUDE_DIRS})
 
 # collect version information
 add_custom_target(versioninfo ALL
@@ -58,7 +49,7 @@ add_custom_target(versioninfo ALL
 	VERBATIM
 	)
 
-# build vislib
+# Build vislib
 file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
 file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 list(REMOVE_ITEM source_files
@@ -79,12 +70,22 @@ list(REMOVE_ITEM source_files
 	"src/graphics/d3d/D3DVISLogo.cpp"
 	"src/graphics/gl/GlutMouseInteractionAdapter.cpp"
 	)
-include_directories("include" "src" "3rd/glload/include")
+include_directories("include" "src")
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/${OUT_SUBDIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/linux)
 
-# target definition
+# Target definition
 add_library(vislib STATIC ${header_files} ${source_files})
+# Set target naming conventions for different build types
+set_target_properties(vislib PROPERTIES DEBUG_POSTFIX "d")
+
 target_link_libraries(vislib ${LIBS})
-# build tests
-add_subdirectory(tests)
+
+# build tests if variable VISLIB_BUILD_TESTS is defined
+if (DEFINED VISLIB_BUILD_TESTS)
+	add_subdirectory(tests)
+endif()
+
+# Define installation rules
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+install(TARGETS vislib DESTINATION "lib")
