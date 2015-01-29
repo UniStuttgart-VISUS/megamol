@@ -86,6 +86,31 @@ if (DEFINED VISLIB_BUILD_TESTS)
 	add_subdirectory(tests)
 endif()
 
-# Define installation rules
+
+# Installation rules for generated files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-install(TARGETS vislib DESTINATION "lib")
+install(TARGETS vislib DESTINATION "lib/vislib" EXPORT vislib-target)
+# Export the target to be used in the configuration file for find_package
+install(EXPORT vislib-target DESTINATION share/vislib)
+# Generate configuration file for the installation
+# We leave all placeholders blank, so the vislibConfig.cmake will fill them
+configure_file(vislibConfig.cmake.in 
+			   ${CMAKE_BINARY_DIR}/vislibConfInst.cmake
+			   @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/vislibConfInst.cmake 
+		DESTINATION share/vislib
+		RENAME vislibConfig.cmake)
+
+
+# Export the build tree of this package. This makes it possible to include
+# this package without installing.
+# Set our known paths
+set(cfg_glload_LIBRARIES ${GLLOAD_LIBRARIES})
+set(cfg_vislib_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include ${GLLOAD_INCLUDE_DIRS})
+# Again configure a file
+configure_file(vislibConfig.cmake.in
+			${CMAKE_BINARY_DIR}/vislibConfig.cmake
+			@ONLY)
+export(TARGETS vislib FILE ${CMAKE_BINARY_DIR}/vislib-target.cmake)
+export(PACKAGE vislib)
+
