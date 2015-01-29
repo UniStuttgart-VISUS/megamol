@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "cluster/NetMessages.h"
+#include "mmcore/cluster/NetMessages.h"
 
 
 using namespace megamol::core;

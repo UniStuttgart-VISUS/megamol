@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/MuxRenderer3D.h"
+#include "mmcore/view/MuxRenderer3D.h"
 
 
 /*

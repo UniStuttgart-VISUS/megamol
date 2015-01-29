@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MMSPDDataSource.h"
-#include "param/FilePathParam.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "CoreInstance.h"
+#include "mmcore/moldyn/MMSPDDataSource.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/AutoLock.h"

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/IntParam.h"
+#include "mmcore/param/IntParam.h"
 #include <climits>
 
 using namespace megamol::core::param;

@@ -7,15 +7,15 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "view/LinearTransferFunction.h"
+#include "mmcore/view/LinearTransferFunction.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "param/BoolParam.h"
-#include "param/FloatParam.h"
-#include "param/IntParam.h"
-#include "param/StringParam.h"
-#include "utility/ColourParser.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ColourParser.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/math/Vector.h"

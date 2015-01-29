@@ -15,8 +15,8 @@
 #include "Module.h"
 #include "ModuleDescription.h"
 #include "ModuleDescriptionManager.h"
-#include "param/ButtonParam.h"
-#include "param/ParamSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #if defined(DEBUG) || defined(_DEBUG)

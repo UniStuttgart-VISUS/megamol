@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/DataSourceModule.h"
+#include "mmcore/view/DataSourceModule.h"
 
 
 using namespace megamol::core;

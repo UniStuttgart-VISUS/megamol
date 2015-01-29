@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/FilePathParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "vislib/StringConverter.h"
 
 using namespace megamol::core::param;

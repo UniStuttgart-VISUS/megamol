@@ -10,7 +10,7 @@
 #include "AbstractNamedObject.h"
 #include "AbstractNamedObjectContainer.h"
 #include "CallerSlot.h"
-#include "profiler/Manager.h"
+#include "mmcore/profiler/Manager.h"
 
 using namespace megamol::core;
 

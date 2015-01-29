@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "view/special/AnaglyphStereoView.h"
-#include "param/EnumParam.h"
-#include "param/StringParam.h"
-#include "utility/ColourParser.h"
-#include "view/CallRenderView.h"
+#include "mmcore/view/special/AnaglyphStereoView.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ColourParser.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"

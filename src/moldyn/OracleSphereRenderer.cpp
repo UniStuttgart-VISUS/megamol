@@ -7,12 +7,12 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "moldyn/OracleSphereRenderer.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "CoreInstance.h"
-#include "view/CallClipPlane.h"
-#include "view/CallGetTransferFunction.h"
-#include "view/CallRender3D.h"
+#include "mmcore/moldyn/OracleSphereRenderer.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D.h"
 #include <GL/glu.h>
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"

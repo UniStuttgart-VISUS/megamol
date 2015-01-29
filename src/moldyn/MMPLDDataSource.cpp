@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MMPLDDataSource.h"
-#include "param/FilePathParam.h"
-#include "param/BoolParam.h"
-#include "param/IntParam.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "CoreInstance.h"
+#include "mmcore/moldyn/MMPLDDataSource.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"

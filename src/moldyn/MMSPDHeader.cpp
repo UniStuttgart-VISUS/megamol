@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MMSPDHeader.h"
+#include "mmcore/moldyn/MMSPDHeader.h"
 
 using namespace megamol::core;
 

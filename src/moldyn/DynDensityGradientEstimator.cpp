@@ -8,11 +8,11 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include "moldyn/DynDensityGradientEstimator.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/moldyn/DynDensityGradientEstimator.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include <omp.h>
-#include "param/IntParam.h"
+#include "mmcore/param/IntParam.h"
 
 using namespace megamol;
 using namespace megamol::core;

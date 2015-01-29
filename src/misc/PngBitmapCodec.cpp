@@ -6,7 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "misc/PngBitmapCodec.h"
+#include "mmcore/misc/PngBitmapCodec.h"
 #include "png.h"
 #include "zlib.h"
 #include "vislib/SmartPtr.h"

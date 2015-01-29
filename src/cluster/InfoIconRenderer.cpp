@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "cluster/InfoIconRenderer.h"
-#include "view/graphicsresources.h"
+#include "mmcore/cluster/InfoIconRenderer.h"
+#include "mmcore/view/graphicsresources.h"
 #include <cmath>
 #include "vislib/math/mathfunctions.h"
 #include "vislib/graphics/gl/OutlineFont.h"

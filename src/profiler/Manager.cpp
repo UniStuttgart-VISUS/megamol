@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "profiler/Manager.h"
+#include "mmcore/profiler/Manager.h"
 #include "vislib/sys/Log.h"
 #include "vislib/Stack.h"
 #include "AbstractNamedObjectContainer.h"

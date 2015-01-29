@@ -6,13 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "view/AbstractView.h"
+#include "mmcore/view/AbstractView.h"
 #include <climits>
 #include "AbstractNamedObject.h"
-#include "CoreInstance.h"
-#include "param/AbstractParam.h"
-#include "param/ParamSlot.h"
-#include "view/CallRenderView.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/UnsupportedOperationException.h"

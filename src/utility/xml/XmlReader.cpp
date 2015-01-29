@@ -25,8 +25,8 @@ namespace xml {
 } /* end namespace megamol */
 #endif /* UNIX */
 
-#include "utility/xml/XmlReader.h"
-#include "utility/xml/XmlParser.h"
+#include "mmcore/utility/xml/XmlReader.h"
+#include "mmcore/utility/xml/XmlParser.h"
 
 #ifndef UNIX
 #define XML_UNICODE_WCHAR_T

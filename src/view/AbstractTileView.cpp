@@ -6,13 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "view/AbstractTileView.h"
-#include "CoreInstance.h"
+#include "mmcore/view/AbstractTileView.h"
+#include "mmcore/CoreInstance.h"
 #include "api/MegaMolCore.h"
-#include "utility/Configuration.h"
-#include "param/EnumParam.h"
-#include "param/Vector2fParam.h"
-#include "param/Vector4fParam.h"
+#include "mmcore/utility/Configuration.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector4fParam.h"
 
 using namespace megamol::core;
 using vislib::graphics::CameraParameters;

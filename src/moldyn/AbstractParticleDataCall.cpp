@@ -6,4 +6,4 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/AbstractParticleDataCall.h"
+#include "mmcore/moldyn/AbstractParticleDataCall.h"

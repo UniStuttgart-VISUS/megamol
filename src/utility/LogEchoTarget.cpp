@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/LogEchoTarget.h"
+#include "mmcore/utility/LogEchoTarget.h"
 
 
 /*

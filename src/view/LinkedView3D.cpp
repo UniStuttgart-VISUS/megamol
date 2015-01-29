@@ -6,9 +6,9 @@
 //
 
 #include <stdafx.h>
-#include "view/LinkedView3D.h"
+#include "mmcore/view/LinkedView3D.h"
 #include "vislib/math/mathfunctions.h"
-#include "view/CallCamParams.h"
+#include "mmcore/view/CallCamParams.h"
 #include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/vislibversion.h"
 

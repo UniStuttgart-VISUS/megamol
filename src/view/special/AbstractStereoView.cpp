@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "view/special/AbstractStereoView.h"
-#include "param/BoolParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/view/special/AbstractStereoView.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 
 using namespace megamol::core;
 

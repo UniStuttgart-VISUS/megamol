@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/VolumeDataCall.h"
+#include "mmcore/moldyn/VolumeDataCall.h"
 
 using namespace megamol::core;
 

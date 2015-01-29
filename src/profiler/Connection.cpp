@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "profiler/Connection.h"
-#include "profiler/Manager.h"
+#include "mmcore/profiler/Connection.h"
+#include "mmcore/profiler/Manager.h"
 #include "vislib/memutils.h"
 
 using namespace megamol;

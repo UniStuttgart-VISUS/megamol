@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "AbstractDataWriter.h"
-#include "DataWriterCtrlCall.h"
-#include "param/ButtonParam.h"
+#include "mmcore/AbstractDataWriter.h"
+#include "mmcore/DataWriterCtrlCall.h"
+#include "mmcore/param/ButtonParam.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::core;

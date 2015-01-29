@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/D3D11BoundingBox.h"
+#include "mmcore/utility/D3D11BoundingBox.h"
 
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "vislib/assert.h"

@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/SIFFDataSource.h"
-#include "param/FilePathParam.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
-#include "moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/SIFFDataSource.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/SingleLinkedList.h"

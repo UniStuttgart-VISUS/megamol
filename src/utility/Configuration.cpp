@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "utility/Configuration.h"
-#include "utility/xml/ConfigurationParser.h"
-#include "utility/xml/XmlReader.h"
+#include "mmcore/utility/Configuration.h"
+#include "mmcore/utility/xml/ConfigurationParser.h"
+#include "mmcore/utility/xml/XmlReader.h"
 
 #include "api/MegaMolCore.h"
 

@@ -6,13 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/D3D11SimpleSphereRenderer.h"
+#include "mmcore/moldyn/D3D11SimpleSphereRenderer.h"
 
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 
-#include "utility/ShaderSourceFactory.h"
-#include "view/CallRender3D.h"
-#include "view/CallUpdateDirect3D.h"
+#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallUpdateDirect3D.h"
 
 #include "vislib/graphics/Camera.h"
 #include "vislib/sys/COMException.h"

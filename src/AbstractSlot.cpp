@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "AbstractSlot.h"
+#include "mmcore/AbstractSlot.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/UnsupportedOperationException.h"
 

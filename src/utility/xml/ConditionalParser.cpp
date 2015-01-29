@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/xml/ConditionalParser.h"
+#include "mmcore/utility/xml/ConditionalParser.h"
 #include "vislib/assert.h"
 #include "vislib/CharTraits.h"
 #include "vislib/sys/Log.h"

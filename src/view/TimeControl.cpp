@@ -6,13 +6,13 @@
  */
 
 #include "stdafx.h"
-#include "view/TimeControl.h"
+#include "mmcore/view/TimeControl.h"
 #include "vislib/assert.h"
-#include "param/BoolParam.h"
-#include "param/ButtonParam.h"
-#include "param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "vislib/math/mathfunctions.h"
-#include "view/CallTimeControl.h"
+#include "mmcore/view/CallTimeControl.h"
 
 using namespace megamol::core;
 

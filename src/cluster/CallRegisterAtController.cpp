@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "cluster/CallRegisterAtController.h"
+#include "mmcore/cluster/CallRegisterAtController.h"
 
 using namespace megamol::core;
 

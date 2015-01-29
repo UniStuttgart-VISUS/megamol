@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "misc/QRCodeDataCall.h"
+#include "mmcore/misc/QRCodeDataCall.h"
 
 using namespace megamol::core;
 

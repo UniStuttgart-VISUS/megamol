@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/DataGridder.h"
+#include "mmcore/moldyn/DataGridder.h"
 #include <climits>
-#include "moldyn/MultiParticleDataCall.h"
-#include "moldyn/ParticleGridDataCall.h"
-#include "param/BoolParam.h"
-#include "param/IntParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/ParticleGridDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/Log.h"

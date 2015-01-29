@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/AbstractCallRender3D.h"
+#include "mmcore/view/AbstractCallRender3D.h"
 
 using namespace megamol::core;
 

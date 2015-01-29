@@ -7,11 +7,11 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "moldyn/AbstractSimpleSphereRenderer.h"
-#include "CoreInstance.h"
-#include "view/CallClipPlane.h"
-#include "view/CallGetTransferFunction.h"
-#include "view/CallRender3D.h"
+#include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;

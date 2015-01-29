@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "job/DataWriterJob.h"
+#include "mmcore/job/DataWriterJob.h"
 #include "CallAutoDescription.h"
 #include "DataWriterCtrlCall.h"
 #include "vislib/sys/Log.h"

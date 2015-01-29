@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "view/TransferFunctionRenderer.h"
-#include "view/CallGetTransferFunction.h"
+#include "mmcore/view/TransferFunctionRenderer.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 using namespace megamol::core;
 

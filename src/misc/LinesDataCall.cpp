@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "misc/LinesDataCall.h"
+#include "mmcore/misc/LinesDataCall.h"
 
 using namespace megamol::core;
 

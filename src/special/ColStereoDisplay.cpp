@@ -12,9 +12,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */
-#include "param/BoolParam.h"
-#include "special/ClusterSignRenderer.h"
-#include "view/CallRenderView.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/special/ClusterSignRenderer.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/sys/Log.h"
 #if defined(DEBUG) || defined(_DEBUG)
 #include "vislib/Trace.h"

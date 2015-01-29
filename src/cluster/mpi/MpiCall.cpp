@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "cluster/mpi/MpiCall.h"
+#include "mmcore/cluster/mpi/MpiCall.h"
 
 #include "vislib/sys/CmdLineProvider.h"
 #include "vislib/sys/Log.h"

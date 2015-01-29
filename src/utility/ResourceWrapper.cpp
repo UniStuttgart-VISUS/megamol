@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/ResourceWrapper.h"
+#include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/BufferedFile.h"
 

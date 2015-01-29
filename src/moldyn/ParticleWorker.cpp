@@ -6,17 +6,17 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/ParticleWorker.h"
-#include "param/ButtonParam.h"
-#include "param/StringParam.h"
-#include "param/BoolParam.h"
+#include "mmcore/moldyn/ParticleWorker.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
 #include <climits>
 #include <cfloat>
 #include "vislib/StringTokeniser.h"
 
 #include "vislib/sys/Log.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 
 using namespace megamol::core;
 

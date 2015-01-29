@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/DirPartFilter.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "mmcore/moldyn/DirPartFilter.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 //#include "vislib/ColourParser.h"
 #include <climits>
 

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "misc/BezierCurvesListDataCall.h"
+#include "mmcore/misc/BezierCurvesListDataCall.h"
 
 using namespace megamol::core;
 

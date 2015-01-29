@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/xml/ConfigurationParser.h"
+#include "mmcore/utility/xml/ConfigurationParser.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/sys/Path.h"

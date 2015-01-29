@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "Mol20Renderer.h"
-#include "view/CallRender3D.h"
-#include "vismol2/Mol20DataCall.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/vismol2/Mol20DataCall.h"
 
 using namespace megamol::core;
 

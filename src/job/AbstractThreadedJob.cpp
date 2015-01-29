@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "job/AbstractThreadedJob.h"
+#include "mmcore/job/AbstractThreadedJob.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::core;

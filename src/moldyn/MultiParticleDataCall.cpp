@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 //#include "vislib/memutils.h"
 
 using namespace megamol::core;

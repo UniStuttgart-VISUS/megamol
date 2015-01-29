@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/ProjectParser.h"
+#include "mmcore/utility/ProjectParser.h"
 #include "ModuleDescriptionManager.h"
 #include "CallDescriptionManager.h"
 #include "vislib/assert.h"

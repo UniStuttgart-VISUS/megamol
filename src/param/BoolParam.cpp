@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/BoolParam.h"
+#include "mmcore/param/BoolParam.h"
 
 using namespace megamol::core::param;
 

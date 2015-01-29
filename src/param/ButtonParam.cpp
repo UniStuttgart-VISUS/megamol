@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/ButtonParam.h"
+#include "mmcore/param/ButtonParam.h"
 
 using namespace megamol::core::param;
 

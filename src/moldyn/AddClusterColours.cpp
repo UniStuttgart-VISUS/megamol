@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "moldyn/AddClusterColours.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "param/ButtonParam.h"
-#include "view/CallGetTransferFunction.h"
+#include "mmcore/moldyn/AddClusterColours.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 

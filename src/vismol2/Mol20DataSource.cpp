@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "Mol20DataSource.h"
-#include "vismol2/Mol20DataCall.h"
-#include "param/StringParam.h"
+#include "mmcore/vismol2/Mol20DataCall.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/MemmappedFile.h"

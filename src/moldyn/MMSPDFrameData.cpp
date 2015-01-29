@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MMSPDFrameData.h"
+#include "mmcore/moldyn/MMSPDFrameData.h"
 
 using namespace megamol::core;
 

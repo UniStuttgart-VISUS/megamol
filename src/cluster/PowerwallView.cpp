@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "cluster/PowerwallView.h"
-#include "CoreInstance.h"
-#include "cluster/CallRegisterAtController.h"
-#include "cluster/NetMessages.h"
-#include "param/BoolParam.h"
+#include "mmcore/cluster/PowerwallView.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/cluster/CallRegisterAtController.h"
+#include "mmcore/cluster/NetMessages.h"
+#include "mmcore/param/BoolParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/RawStorageSerialiser.h"

@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "view/special/DemoRenderer2D.h"
+#include "mmcore/view/special/DemoRenderer2D.h"
 #include <cmath>
 
 using namespace megamol::core;

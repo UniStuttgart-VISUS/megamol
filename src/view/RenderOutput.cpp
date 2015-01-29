@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/RenderOutput.h"
+#include "mmcore/view/RenderOutput.h"
 #include "vislib/assert.h"
 #include "vislib/Trace.h"
 

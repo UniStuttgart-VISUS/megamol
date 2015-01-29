@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "Module.h"
 #include "AbstractSlot.h"
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 #include <typeinfo>
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"

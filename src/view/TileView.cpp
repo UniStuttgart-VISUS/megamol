@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/TileView.h"
+#include "mmcore/view/TileView.h"
 #include "vislib/memutils.h"
 
 using namespace megamol::core;

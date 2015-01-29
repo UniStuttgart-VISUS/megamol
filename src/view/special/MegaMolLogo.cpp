@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "view/special/MegaMolLogo.h"
+#include "mmcore/view/special/MegaMolLogo.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif /* _WIN32 */

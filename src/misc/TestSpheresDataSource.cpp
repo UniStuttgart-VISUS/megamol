@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "misc/TestSpheresDataSource.h"
-#include "moldyn/MultiParticleDataCall.h"
+#include "mmcore/misc/TestSpheresDataSource.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Quaternion.h"

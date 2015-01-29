@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/EnumParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/UTF8Encoder.h"

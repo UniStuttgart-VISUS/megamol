@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/ParticleGridDataCall.h"
+#include "mmcore/moldyn/ParticleGridDataCall.h"
 //#include "vislib/memutils.h"
 
 using namespace megamol::core;

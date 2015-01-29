@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/StringParam.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/StringConverter.h"
 
 using namespace megamol::core::param;

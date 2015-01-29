@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/ColourParser.h"
+#include "mmcore/utility/ColourParser.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/types.h"
 #include "vislib/String.h"

@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "cluster/CommChannelServer.h"
-#include "cluster/NetMessages.h"
+#include "mmcore/cluster/CommChannelServer.h"
+#include "mmcore/cluster/NetMessages.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/net/IPCommEndPoint.h"

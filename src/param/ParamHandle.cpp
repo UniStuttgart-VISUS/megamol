@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/ParamHandle.h"
+#include "mmcore/param/ParamHandle.h"
 
 
 /*

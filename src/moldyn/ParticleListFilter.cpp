@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/ParticleListFilter.h"
-#include "param/ButtonParam.h"
-#include "param/StringParam.h"
-#include "param/BoolParam.h"
+#include "mmcore/moldyn/ParticleListFilter.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
 #include <climits>
 #include <cfloat>
 #include "vislib/StringTokeniser.h"

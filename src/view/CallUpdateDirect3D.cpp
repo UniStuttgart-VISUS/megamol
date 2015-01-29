@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/CallUpdateDirect3D.h"
+#include "mmcore/view/CallUpdateDirect3D.h"
 
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "vislib/graphics/d3d/d3dutils.h"

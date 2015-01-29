@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MMPGDDataSource.h"
-#include "param/FilePathParam.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "moldyn/ParticleGridDataCall.h"
-#include "CoreInstance.h"
+#include "mmcore/moldyn/MMPGDDataSource.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/ParticleGridDataCall.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"

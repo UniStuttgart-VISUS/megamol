@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "misc/SiffCSplineFitter.h"
-#include "misc/BezierCurvesListDataCall.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "param/BoolParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/misc/SiffCSplineFitter.h"
+#include "mmcore/misc/BezierCurvesListDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"

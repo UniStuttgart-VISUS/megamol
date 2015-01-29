@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "AbstractNamedObject.h"
+#include "mmcore/AbstractNamedObject.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Log.h"

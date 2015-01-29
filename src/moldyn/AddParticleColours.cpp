@@ -7,9 +7,9 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "moldyn/AddParticleColours.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "param/ButtonParam.h"
+#include "mmcore/moldyn/AddParticleColours.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/ButtonParam.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include <algorithm>

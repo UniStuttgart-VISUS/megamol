@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/Vector4fParam.h"
+#include "mmcore/param/Vector4fParam.h"
 #include <cfloat>
 #include "vislib/assert.h"
 #include "vislib/StringTokeniser.h"

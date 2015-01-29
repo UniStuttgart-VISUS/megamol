@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/Vector3fParam.h"
+#include "mmcore/param/Vector3fParam.h"
 #include <cfloat>
 #include "vislib/assert.h"
 #include "vislib/StringTokeniser.h"

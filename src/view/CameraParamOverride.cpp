@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/CameraParamOverride.h"
+#include "mmcore/view/CameraParamOverride.h"
 
 using namespace megamol::core;
 

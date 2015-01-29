@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "cluster/simple/ClientViewRegistration.h"
+#include "mmcore/cluster/simple/ClientViewRegistration.h"
 
-#include "cluster/simple/View.h"
+#include "mmcore/cluster/simple/View.h"
 
 #include "vislib/StackTrace.h"
 

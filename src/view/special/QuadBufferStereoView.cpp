@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "view/special/QuadBufferStereoView.h"
-#include "view/CallRenderView.h"
+#include "mmcore/view/special/QuadBufferStereoView.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::core;

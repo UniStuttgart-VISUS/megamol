@@ -8,10 +8,10 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 //#define _USE_MATH_DEFINES
-#include "misc/ImageViewer.h"
-#include "param/FilePathParam.h"
-#include "param/StringParam.h"
-#include "view/CallRender3D.h"
+#include "mmcore/misc/ImageViewer.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/sys/Log.h"
 //#include <cmath>
 

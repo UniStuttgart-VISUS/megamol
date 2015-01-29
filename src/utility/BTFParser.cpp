@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "utility/BTFParser.h"
-#include "utility/ShaderSourceFactory.h"
+#include "mmcore/utility/BTFParser.h"
+#include "mmcore/utility/ShaderSourceFactory.h"
 #include "vislib/CharTraits.h"
 #include "vislib/assert.h"
 //#include "vislib/memutils.h"

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/xml/XmlParser.h"
+#include "mmcore/utility/xml/XmlParser.h"
 
 
 /*

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/AbstractOverrideView.h"
+#include "mmcore/view/AbstractOverrideView.h"
 
 using namespace megamol::core;
 

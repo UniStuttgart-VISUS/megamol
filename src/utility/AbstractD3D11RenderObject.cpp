@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/AbstractD3D11RenderObject.h"
+#include "mmcore/utility/AbstractD3D11RenderObject.h"
 
 #include "vislib/assert.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11

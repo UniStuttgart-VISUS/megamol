@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "AbstractGetData3DCall.h"
+#include "mmcore/AbstractGetData3DCall.h"
 
 using namespace megamol::core;
 

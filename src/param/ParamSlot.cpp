@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "param/ParamSlot.h"
-#include "CoreInstance.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CoreInstance.h"
 #include "Module.h"
-#include "param/AbstractParam.h"
+#include "mmcore/param/AbstractParam.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 

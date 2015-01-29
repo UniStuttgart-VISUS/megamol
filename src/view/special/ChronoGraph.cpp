@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "view/special/ChronoGraph.h"
-#include "CoreInstance.h"
+#include "mmcore/view/special/ChronoGraph.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/math/mathfunctions.h"
 #include <cmath>
 

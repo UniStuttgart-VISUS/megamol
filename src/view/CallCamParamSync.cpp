@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "view/CallCamParamSync.h"
+#include "mmcore/view/CallCamParamSync.h"
 
 
 /*

@@ -14,19 +14,19 @@
 #include <vector>
 
 #include "AbstractNamedObject.h"
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 
-#include "cluster/mpi/MpiCall.h"
-#include "cluster/mpi/View.h"
+#include "mmcore/cluster/mpi/MpiCall.h"
+#include "mmcore/cluster/mpi/View.h"
 
-#include "cluster/simple/Client.h"
-#include "cluster/simple/ClientViewRegistration.h"
-#include "cluster/simple/CommUtil.h"
+#include "mmcore/cluster/simple/Client.h"
+#include "mmcore/cluster/simple/ClientViewRegistration.h"
+#include "mmcore/cluster/simple/CommUtil.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
-#include "param/BoolParam.h"
-#include "param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/StringParam.h"
 
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"

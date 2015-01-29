@@ -6,16 +6,16 @@
  */
 
 #include "stdafx.h"
-#include "cluster/mpi/MpiProvider.h"
+#include "mmcore/cluster/mpi/MpiProvider.h"
 
 #ifndef WIN32
 #include <cstdio>
 #include <cstdlib>
 #endif /* !_WIN32 */
 
-#include "param/IntParam.h"
+#include "mmcore/param/IntParam.h"
 
-#include "cluster/mpi/MpiCall.h"
+#include "mmcore/cluster/mpi/MpiCall.h"
 
 #include "vislib/assert.h"
 #include "vislib/sys/CmdLineProvider.h"

@@ -7,13 +7,13 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "moldyn/ArrowRenderer.h"
-#include "moldyn/DirectionalParticleDataCall.h"
-#include "CoreInstance.h"
-#include "param/FloatParam.h"
-#include "view/CallClipPlane.h"
-#include "view/CallGetTransferFunction.h"
-#include "view/CallRender3D.h"
+#include "mmcore/moldyn/ArrowRenderer.h"
+#include "mmcore/moldyn/DirectionalParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;

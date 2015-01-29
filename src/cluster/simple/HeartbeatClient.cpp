@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "cluster/simple/HeartbeatClient.h"
+#include "mmcore/cluster/simple/HeartbeatClient.h"
 #include "vislib/assert.h"
 #include "vislib/net/IPCommEndPoint.h"
 #include "vislib/sys/Log.h"

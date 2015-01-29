@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "view/SwitchRenderer3D.h"
-#include "view/CallRender3D.h"
-#include "param/EnumParam.h"
-#include "param/ButtonParam.h"
+#include "mmcore/view/SwitchRenderer3D.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "vislib/sys/Log.h"
 
 

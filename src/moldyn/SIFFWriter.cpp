@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/SIFFWriter.h"
+#include "mmcore/moldyn/SIFFWriter.h"
 #include "BoundingBoxes.h"
-#include "param/FilePathParam.h"
-#include "param/BoolParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"

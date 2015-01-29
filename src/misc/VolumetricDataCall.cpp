@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "misc/VolumetricDataCall.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 
 #include <utility>
 

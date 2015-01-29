@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "view/ViewDirect3D.h"
+#include "mmcore/view/ViewDirect3D.h"
 
-#include "view/CallRender3D.h"
-#include "view/CallUpdateDirect3D.h"
-#include "view/CameraParamOverride.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallUpdateDirect3D.h"
+#include "mmcore/view/CameraParamOverride.h"
 
 #include "vislib/sys/COMException.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11

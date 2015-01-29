@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "view/Renderer3DModule.h"
-#include "view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/CallRender3D.h"
 
 
 using namespace megamol::core;

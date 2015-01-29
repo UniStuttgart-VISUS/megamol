@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MMPLDWriter.h"
+#include "mmcore/moldyn/MMPLDWriter.h"
 #include "BoundingBoxes.h"
-#include "param/FilePathParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"

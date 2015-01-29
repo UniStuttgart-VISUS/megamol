@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/AbstractSimpleParticleDataSource.h"
-#include "param/FilePathParam.h"
+#include "mmcore/moldyn/AbstractSimpleParticleDataSource.h"
+#include "mmcore/param/FilePathParam.h"
 
 using namespace megamol::core;
 using namespace megamol::core::moldyn;

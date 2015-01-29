@@ -7,11 +7,11 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "moldyn/SimpleGeoSphereRenderer.h"
-#include "view/CallRender3D.h"
+#include "mmcore/moldyn/SimpleGeoSphereRenderer.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "CoreInstance.h"
-#include "view/CallGetTransferFunction.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 

@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/CallGetTransferFunction.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 using namespace megamol::core;
 

@@ -8,9 +8,9 @@
 #include "stdafx.h"
 //#define _USE_MATH_DEFINES
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "misc/LinesRenderer.h"
-#include "misc/LinesDataCall.h"
-#include "view/CallRender3D.h"
+#include "mmcore/misc/LinesRenderer.h"
+#include "mmcore/misc/LinesDataCall.h"
+#include "mmcore/view/CallRender3D.h"
 //#include <cmath>
 
 using namespace megamol::core;

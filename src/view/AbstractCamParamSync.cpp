@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/AbstractCamParamSync.h"
+#include "mmcore/view/AbstractCamParamSync.h"
 
 #include "vislib/StackTrace.h"
 

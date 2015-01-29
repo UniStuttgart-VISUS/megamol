@@ -7,12 +7,12 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "moldyn/MipDepthSphereRenderer.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "CoreInstance.h"
-#include "view/CallClipPlane.h"
-#include "view/CallGetTransferFunction.h"
-#include "view/CallRender3D.h"
+#include "mmcore/moldyn/MipDepthSphereRenderer.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
 #include "vislib/Trace.h"
 

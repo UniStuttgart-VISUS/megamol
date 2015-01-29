@@ -8,11 +8,11 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #define _USE_MATH_DEFINES
-#include "view/special/TitleRenderer.h"
+#include "mmcore/view/special/TitleRenderer.h"
 #include <cmath>
 //#include <ctime>
-#include "view/special/MegaMolLogo.h"
-#include "CoreInstance.h"
+#include "mmcore/view/special/MegaMolLogo.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/graphicstypes.h"
 #include "vislib/math/Matrix.h"

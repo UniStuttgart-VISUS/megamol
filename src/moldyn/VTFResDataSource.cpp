@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/VTFResDataSource.h"
-#include "param/FilePathParam.h"
-#include "param/StringParam.h"
-#include "param/BoolParam.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "CoreInstance.h"
+#include "mmcore/moldyn/VTFResDataSource.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/sys/error.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"

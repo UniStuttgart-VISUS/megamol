@@ -6,7 +6,7 @@
 //
 
 #include <stdafx.h>
-#include "view/CallCamParams.h"
+#include "mmcore/view/CallCamParams.h"
 
 using namespace megamol;
 using namespace megamol::core;

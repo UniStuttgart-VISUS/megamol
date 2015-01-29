@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "cluster/simple/Heartbeat.h"
-#include "cluster/simple/ClientViewRegistration.h"
-#include "cluster/simple/Client.h"
-#include "param/IntParam.h"
-#include "CoreInstance.h"
+#include "mmcore/cluster/simple/Heartbeat.h"
+#include "mmcore/cluster/simple/ClientViewRegistration.h"
+#include "mmcore/cluster/simple/Client.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Log.h"

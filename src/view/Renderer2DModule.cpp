@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModule.h"
 #include "vislib/assert.h"
 
 

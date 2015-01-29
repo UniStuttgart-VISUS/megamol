@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/DirPartColModulate.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "mmcore/moldyn/DirPartColModulate.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/graphics/ColourParser.h"
 #include <climits>
 

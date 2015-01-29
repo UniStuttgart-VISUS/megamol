@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/RenderDeferredOutput.h"
+#include "mmcore/view/RenderDeferredOutput.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;

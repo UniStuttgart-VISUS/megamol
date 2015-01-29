@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/MMPGDWriter.h"
+#include "mmcore/moldyn/MMPGDWriter.h"
 #include "BoundingBoxes.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "param/FilePathParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"

@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "cluster/ClusterControllerClient.h"
-#include "cluster/CallRegisterAtController.h"
-#include "param/StringParam.h"
+#include "mmcore/cluster/ClusterControllerClient.h"
+#include "mmcore/cluster/CallRegisterAtController.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/NetworkInformation.h"

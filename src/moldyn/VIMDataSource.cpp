@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "moldyn/VIMDataSource.h"
-#include "param/FilePathParam.h"
-#include "param/StringParam.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "CoreInstance.h"
+#include "mmcore/moldyn/VIMDataSource.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/sys/error.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"

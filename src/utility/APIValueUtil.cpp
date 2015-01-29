@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/APIValueUtil.h"
+#include "mmcore/utility/APIValueUtil.h"
 #include "vislib/CharTraits.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/StringConverter.h"

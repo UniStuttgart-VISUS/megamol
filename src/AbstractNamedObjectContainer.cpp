@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "AbstractNamedObjectContainer.h"
+#include "mmcore/AbstractNamedObjectContainer.h"
 #include <cstring>
 #include "vislib/assert.h"
 #include "vislib/sys/Log.h"

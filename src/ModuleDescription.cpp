@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "ModuleDescription.h"
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 
 
 using namespace megamol::core;

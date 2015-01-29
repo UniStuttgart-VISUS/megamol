@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "cluster/simple/CommUtil.h"
+#include "mmcore/cluster/simple/CommUtil.h"
 #include "vislib/CharTraits.h"
 
 using namespace megamol::core;

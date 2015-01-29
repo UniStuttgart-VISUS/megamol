@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "utility/ShaderSourceFactory.h"
-#include "utility/BTFParser.h"
-#include "utility/xml/XmlReader.h"
+#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore/utility/BTFParser.h"
+#include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/Path.h"

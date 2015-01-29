@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "param/FloatParam.h"
+#include "mmcore/param/FloatParam.h"
 #include <cfloat>
 
 using namespace megamol::core::param;

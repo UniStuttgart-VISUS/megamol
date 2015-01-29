@@ -6,8 +6,8 @@
  */
 
 #include "stdafx.h"
-#include "CallDescription.h"
-#include "Call.h"
+#include "mmcore/CallDescription.h"
+#include "mmcore/Call.h"
 
 using namespace megamol::core;
 

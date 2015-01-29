@@ -6,11 +6,11 @@
  */
 
 #include "stdafx.h"
-#include "view/SplitView.h"
-#include "view/CallRenderView.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "mmcore/view/SplitView.h"
+#include "mmcore/view/CallRenderView.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/graphics/ColourParser.h"
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"

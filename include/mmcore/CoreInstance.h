@@ -1,0 +1,819 @@
+/*
+ * CoreInstance.h
+ *
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Alle Rechte vorbehalten.
+ */
+
+#ifndef MEGAMOLCORE_COREINSTANCE_H_INCLUDED
+#define MEGAMOLCORE_COREINSTANCE_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
+#pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include "ApiHandle.h"
+#include "api/MegaMolCore.h"
+#include "api/MegaMolCore.std.h"
+#include "mmcore/utility/Configuration.h"
+#include "mmcore/utility/LogEchoTarget.h"
+#include "vislib/Array.h"
+#include "vislib/sys/CriticalSection.h"
+#include "vislib/sys/DynamicLinkLibrary.h"
+#include "vislib/IllegalStateException.h"
+#include "vislib/sys/Log.h"
+#include "vislib/Map.h"
+#include "vislib/Pair.h"
+#include "vislib/PtrArray.h"
+#include "vislib/SingleLinkedList.h"
+#include "vislib/SmartPtr.h"
+#include "vislib/String.h"
+#include "ObjectDescription.h"
+#include "ObjectDescriptionManager.h"
+#include "JobDescription.h"
+#include "JobInstance.h"
+#include "JobInstanceRequest.h"
+#include "RootModuleNamespace.h"
+#include "ViewDescription.h"
+#include "ViewInstance.h"
+#include "ViewInstanceRequest.h"
+#include "AbstractSlot.h"
+#include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/ParamUpdateListener.h"
+#include "mmcore/utility/ShaderSourceFactory.h"
+#include "ParamValueSetRequest.h"
+#include "ModuleDescription.h"
+#include "CallDescription.h"
+
+
+namespace megamol {
+namespace core {
+
+    /**
+     * class of core instances.
+     */
+    class MEGAMOLCORE_API CoreInstance : public ApiHandle {
+    public:
+
+        /**
+         * Deallocator for view handles.
+         *
+         * @param data Must point to the CoreInstance which created this object.
+         * @param obj A view object.
+         */
+        static void ViewJobHandleDalloc(void *data, ApiHandle *obj);
+
+        /** ctor */
+        CoreInstance(void);
+
+        /** dtor */
+        virtual ~CoreInstance(void);
+
+        /**
+         * Answers the log object of the instance.
+         *
+         * @return The log object of the instance.
+         */
+        inline vislib::sys::Log& Log(void) {
+            return this->log;
+        }
+
+        /**
+         * Answer whether this instance is initialised or not.
+         *
+         * @return 'true' if this instance already is initialised, 'false'
+         *         otherwise.
+         */
+        inline bool IsInitialised(void) const {
+            return (this->preInit == NULL);
+        }
+
+        /**
+         * Initialises the instance. This method must only be called once!
+         *
+         * @throws vislib::IllegalStateException if the instance already is
+         *         initialised.
+         */
+        void Initialise(void);
+
+        /**
+         * Sets an initialisation value.
+         *
+         * @param key Specifies which value to set.
+         * @param type Specifies the value type of 'value'.
+         * @param value The value to set the initialisation value to. The type
+         *              of the variable specified depends on 'type'.
+         *
+         * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if 
+         *         the function fails.
+         *
+         * @throw vislib::IllegalStateException if the instance already is
+         *        initialised.
+         */
+        mmcErrorCode SetInitValue(mmcInitValue key, mmcValueType type, 
+            const void* value);
+
+        /**
+         * Returns the configuration object of this instance.
+         *
+         * @return The configuration object of this instance.
+         */
+        inline const megamol::core::utility::Configuration&
+        Configuration(void) const {
+            return this->config;
+        }
+
+        /**
+         * Returns the ShaderSourceFactory object of this inatcne.
+         *
+         * @return The ShaderSourceFactory object of this inatcne.
+         */
+        inline utility::ShaderSourceFactory& ShaderSourceFactory(void) {
+            return this->shaderSourceFactory;
+        }
+
+        /**
+         * Searches for an view description object with the given name.
+         *
+         * @param name The name to search for.
+         *
+         * @return The found view description object or NULL if the name is
+         *         not found.
+         */
+        ViewDescription* FindViewDescription(const char *name);
+
+		/**
+         * Enumerates all view descriptions. The callback function is called for each
+         * view description.
+         *
+         * @param func The callback function.
+         * @param data The user specified pointer to be passed to the callback
+         *             function.
+		 * @param getBuiltinToo true to also retreive the builtin view descriptions
+		 *					    else false
+         */
+        void EnumViewDescriptions(mmcEnumStringAFunction func, void *data, bool getBuiltinToo = false);
+
+        /**
+         * Searches for an view description object with the given name.
+         *
+         * @param name The name to search for.
+         *
+         * @return The found view description object or NULL if the name is
+         *         not found.
+         */
+        JobDescription* FindJobDescription(const char *name);
+
+        /**
+         * Requests all available instantiations.
+         */
+        void RequestAllInstantiations();
+
+        /**
+         * Requests the instantiation of the view defined by the given
+         * description.
+         *
+         * @param desc The description of the view to be instantiated.
+         * @param id The identifier to be used for the new instance.
+         * @param param The parameters to be set
+         */
+        void RequestViewInstantiation(ViewDescription *desc,
+            const vislib::StringA& id,
+            const ParamValueSetRequest *param = NULL);
+
+        /**
+         * Requests the instantiation of the job defined by the given
+         * description.
+         *
+         * @param desc The description of the job to be instantiated.
+         * @param id The identifier to be used for the new instance.
+         * @param param The parameters to be set
+         */
+        void RequestJobInstantiation(JobDescription *desc,
+            const vislib::StringA& id,
+            const ParamValueSetRequest *param = NULL);
+
+        /**
+         * Answer whether the core has pending requests of instantiations of
+         * views.
+         *
+         * @return 'true' if there are pending view instantiation requests,
+         *         'false' otherwise.
+         */
+        inline bool HasPendingViewInstantiationRequests(void) const {
+            return !this->pendingViewInstRequests.IsEmpty();
+        }
+
+        /**
+         * Answer whether the core has pending requests of instantiations of
+         * jobs.
+         *
+         * @return 'true' if there are pending job instantiation requests,
+         *         'false' otherwise.
+         */
+        inline bool HasPendingJobInstantiationRequests(void) const {
+            return !this->pendingJobInstRequests.IsEmpty();
+        }
+
+        /**
+         * Instantiates the next pending view, if there is one.
+         *
+         * @return The newly created view object or 'NULL' in case of an error.
+         */
+        ViewInstance * InstantiatePendingView(void);
+
+        /**
+         * Instantiates a view description filled with full names! This method
+         * is for internal use by the framework. Do not call it directly
+         *
+         * @return The instantiated view module
+         */
+        view::AbstractView * instantiateSubView(ViewDescription *vd);
+
+        /**
+         * Instantiates the next pending job, if there is one.
+         *
+         * @return The newly created job object or 'NULL' in case of an error.
+         */
+        JobInstance * InstantiatePendingJob(void);
+
+        /**
+         * Returns a pointer to the parameter with the given name.
+         *
+         * @param name The name of the parameter to find.
+         * @param quiet Flag controlling the error output if the parameter is
+         *              not found.
+		 * @param create create a StringParam if name is not found
+         *
+         * @return The found parameter or NULL if no parameter with this name
+         *         exists.
+         */
+        vislib::SmartPtr<param::AbstractParam> FindParameter(
+            const vislib::StringA& name, bool quiet = false, bool create = false);
+
+		/**
+		* Returns a pointer to the parameter with the given name.
+		* If the parameter value is the name of a valid parameter, it follows the path..
+		*
+		* @param name The name of the parameter to find.
+		* @param quiet Flag controlling the error output if the parameter is
+		*              not found.
+		*
+		* @return The found parameter or NULL if no parameter with this name
+		*         exists.
+		*/
+		vislib::SmartPtr<param::AbstractParam> FindParameterIndirect(
+			const vislib::StringA& name, bool quiet = false);
+
+        /**
+         * Returns a pointer to the parameter with the given name.
+         *
+         * @param name The name of the parameter to find.
+         * @param quiet Flag controlling the error output if the parameter is
+         *              not found.
+		 * @param create create a StringParam if name is not found
+         *
+         * @return The found parameter or NULL if no parameter with this name
+         *         exists.
+         */
+        inline vislib::SmartPtr<param::AbstractParam> FindParameter(
+                const vislib::StringW& name, bool quiet = false, bool create = false) {
+            // absolutly sufficient, since module namespaces use ANSI strings
+            return this->FindParameter(vislib::StringA(name), quiet, create);
+        }
+
+        /**
+         * Loads a project into the core.
+         *
+         * @param filename The path to the project file to load.
+         */
+        void LoadProject(const vislib::StringA& filename);
+
+        /**
+         * Loads a project into the core.
+         *
+         * @param filename The path to the project file to load.
+         */
+        void LoadProject(const vislib::StringW& filename);
+
+        /**
+         * Enumerates all parameters. The callback function is called for each
+         * parameter name.
+         *
+         * @param func The callback function.
+         * @param data The user specified pointer to be passed to the callback
+         *             function.
+         */
+        inline void EnumParameters(mmcEnumStringAFunction func, void *data)
+                const {
+            this->enumParameters(&this->namespaceRoot, func, data);
+        }
+
+        /**
+         * Answer the full name of the paramter 'param' if it is bound to a
+         * parameter slot of an active module.
+         *
+         * @param param The parameter to search for.
+         *
+         * @return The full name of the parameter, or an empty string if the
+         *         parameter is not found
+         */
+        inline vislib::StringA FindParameterName(
+                const vislib::SmartPtr<param::AbstractParam>& param) const {
+            return this->findParameterName(&this->namespaceRoot, param);
+        }
+
+        /**
+         * Answer the time of this instance in seconds.
+         *
+         * DO NOT USE THIS FUNCTION in Renderer Modules.
+         * Use 'instTime' parameter in method 'Render' instead.
+         *
+         * @return The time of this instance.
+         */
+        double GetCoreInstanceTime(void) const;
+
+        /**
+         * Adds an offset to the instance time.
+         *
+         * @param offset The offset to be added
+         */
+        void OffsetInstanceTime(double offset);
+
+        /**
+         * Removes all obsolete modules from the module graph
+         */
+        void CleanupModuleGraph(void);
+
+        /**
+         * Closes a view or job handle (the corresponding instance object will
+         * be deleted by the caller.
+         *
+         * @param obj The object to be removed from the module namespace.
+         */
+        inline void CloseViewJob(ModuleNamespace *obj) {
+            this->closeViewJob(obj);
+        }
+
+        /**
+         * Shuts down the application by terminating all jobs and closing all views
+         */
+        void Shutdown(void);
+
+        /**
+         * Sets up the module graph based on the serialized graph description
+         * from the head node of the network rendering cluster.
+         *
+         * @param data The serialized graph description (Pointer to an
+         *             vislib::net::AbstractSimpleMessage)
+         */
+        void SetupGraphFromNetwork(const void *data);
+
+        /**
+         * Instantiates a call.
+         *
+         * @param fromPath The full namespace path of the caller slot
+         * @param toPath The full namespace path of the callee slot
+         * @param desc The call description
+         *
+         * @return The new call or 'NULL' in case of an error
+         */
+        Call* InstantiateCall(const vislib::StringA fromPath,
+            const vislib::StringA toPath, CallDescription* desc);
+
+        /**
+         * Fired whenever a parameter updates it's value
+         *
+         * @param slot The parameter slot
+         */
+        void ParameterValueUpdate(param::ParamSlot& slot);
+
+        /**
+         * Adds a ParamUpdateListener to the list of registered listeners
+         *
+         * @param pul The ParamUpdateListener to add
+         */
+        inline void RegisterParamUpdateListener(param::ParamUpdateListener *pul) {
+            if (!this->paramUpdateListeners.Contains(pul)) {
+                this->paramUpdateListeners.Add(pul);
+            }
+        }
+
+        /**
+         * Removes a ParamUpdateListener from the list of registered listeners
+         *
+         * @param pul The ParamUpdateListener to remove
+         */
+        inline void UnregisterParamUpdateListener(param::ParamUpdateListener *pul) {
+            this->paramUpdateListeners.RemoveAll(pul);
+        }
+
+        /**
+         * Tries to perform a quickstart with the given data file
+         *
+         * @param filename The file to quickstart
+         */
+        void Quickstart(const vislib::TString& filename);
+
+        /**
+         * Registers a file type for quickstart if supported by the OS
+         *
+         * @param frontend Path to the front end to be called
+         * @param feparams The parameter string to be used when calling the frontend.
+         *                 use '$(FILENAME)' to specify the position of the data file name.
+         * @param filetype Semicolor separated list of file type extensions to register
+         *                 or "*" if all known file type extensions should be used
+         * @param unreg If true, the file types will be removed from the quickstart registry instead of added
+         * @param overwrite If true, any previous registration will be overwritten.
+         *                  If false, previous registrations will be placed as alternative start commands.
+         *                  When unregistering and true, all registrations will be removed,
+         *                  if false only registrations to this binary will be removed.
+         */
+        void QuickstartRegistry(const vislib::TString& frontend, const vislib::TString& feparams,
+            const vislib::TString& filetype, bool unreg, bool overwrite);
+
+        /**
+         * Answer the root object of the module graph.
+         * Used for internal computations only
+         *
+         * @return The root object of the module graph
+         */
+        inline const RootModuleNamespace * ModuleGraphRoot(void) const {
+            return &this->namespaceRoot;
+        }
+
+        /**
+         * Writes the current state of the call graph to an xml file.
+         *
+         * @param outFilename The output file name.
+         * @return 'True' on success, 'false' otherwise.
+         */
+        bool WriteStateToXML(const char *outFilename);
+
+    private:
+
+        /**
+         * Nested class with pre initialisation values.
+         */
+        class PreInit {
+        public:
+
+            /** Default Ctor */
+            PreInit(void);
+
+            /**
+             * Answer the config file to load.
+             *
+             * @return The config file to load.
+             */
+            inline const vislib::StringW& GetConfigFile(void) const {
+                return this->cfgFile;
+            }
+
+            /**
+             * Answer the log file to use.
+             *
+             * @return The log file to use.
+             */
+            inline const vislib::StringW& GetLogFile(void) const {
+                return this->logFile;
+            }
+
+            /**
+             * Answer the log level to use.
+             *
+             * @return The log level to use.
+             */
+            inline const unsigned int GetLogLevel(void) const {
+                return this->logLevel;
+            }
+
+            /**
+             * Answer the log echo level to use.
+             *
+             * @return The log echo level to use.
+             */
+            inline const unsigned int GetLogEchoLevel(void) const {
+                return this->logEchoLevel;
+            }
+
+            /**
+             * Answer whether the config file has been set.
+             *
+             * @return 'true' if the config file has been set.
+             */
+            inline bool IsConfigFileSet(void) const {
+                return this->cfgFileSet;
+            }
+
+            /**
+             * Answer whether the log file has been set.
+             *
+             * @return 'true' if the log file has been set.
+             */
+            inline bool IsLogFileSet(void) const { 
+                return this->logFileSet;
+            }
+
+            /**
+             * Answer whether the log level has been set.
+             *
+             * @return 'true' if the log level has been set.
+             */
+            inline bool IsLogLevelSet(void) const {
+                return this->logLevelSet;
+            }
+
+            /**
+             * Answer whether the log echo level has been set.
+             *
+             * @return 'true' if the log echo level has been set.
+             */
+            inline bool IsLogEchoLevelSet(void) const {
+                return this->logEchoLevelSet;
+            }
+
+            /**
+             * Sets the config file to load.
+             *
+             * @param cfgFile The config file to load.
+             */
+            inline void SetConfigFile(const vislib::StringW& cfgFile) {
+                this->cfgFile = cfgFile;
+                this->cfgFileSet = true;
+            }
+
+            /**
+             * Sets the log file to use.
+             *
+             * @param logFile The log file to use.
+             */
+            inline void SetLogFile(const vislib::StringW& logFile) {
+                this->logFile = logFile;
+                this->logFileSet = true;
+            }
+
+            /**
+             * Sets the log level to use.
+             *
+             * @param level The log level to use.
+             */
+            inline void SetLogLevel(unsigned int level) {
+                this->logLevel = level;
+                this->logLevelSet = true;
+            }
+
+            /**
+             * Sets the log echo level to use.
+             *
+             * @param level The log echo level to use.
+             */
+            inline void SetLogEchoLevel(unsigned int level) {
+                this->logEchoLevel = level;
+                this->logEchoLevelSet = true;
+            }
+
+        private:
+
+            /** Flag whether the config file has been set. */
+            bool cfgFileSet : 1;
+
+            /** Flag whether the log file has been set. */
+            bool logFileSet : 1;
+
+            /** Flag whether the log level has been set. */
+            bool logLevelSet : 1;
+
+            /** Flag whether the log echo level has been set. */
+            bool logEchoLevelSet : 1;
+
+            /** The config file name. */
+            vislib::StringW cfgFile;
+
+            /** The log file name. */
+            vislib::StringW logFile;
+
+            /** The log level. */
+            unsigned int logLevel;
+
+            /** The log echo level. */
+            unsigned int logEchoLevel;
+
+        };
+
+        /**
+         * Utility struct for quickstart configuration
+         */
+        typedef struct _quickstepinfo_t {
+
+            /** The name of the slot of the previous mod */
+            vislib::StringA prevSlot;
+
+            /** The name of the slot of the next mod */
+            vislib::StringA nextSlot;
+
+            /** module one step upward */
+            ModuleDescription * nextMod;
+
+            /** call connecting 'nextMod' to previous mod */
+            CallDescription * call;
+
+            /**
+             * Assignment operator
+             *
+             *
+             * @return A reference to this
+             */
+            struct _quickstepinfo_t& operator=(const struct _quickstepinfo_t& rhs) {
+                this->prevSlot = rhs.prevSlot;
+                this->nextSlot = rhs.nextSlot;
+                this->nextMod = rhs.nextMod;
+                this->call = rhs.call;
+                return *this;
+            }
+
+            /**
+             * Test for equality
+             *
+             * @param rhs The right hand side operand
+             *
+             * @return True if this and rhs are equal
+             */
+            bool operator==(const struct _quickstepinfo_t& rhs) {
+                return (this->prevSlot == rhs.prevSlot)
+                    && (this->nextSlot == rhs.nextSlot)
+                    && (this->nextMod == rhs.nextMod)
+                    && (this->call == rhs.call);
+            }
+
+        } quickStepInfo;
+
+        /**
+         * Adds a project to the instance.
+         *
+         * @param reader The xml reader to load the project from.
+         */
+        void addProject(megamol::core::utility::xml::XmlReader& reader);
+
+        /**
+         * Instantiates a module
+         *
+         * @param path The full namespace path
+         * @param desc The module description
+         *
+         * @return The new module or 'NULL' in case of an error
+         */
+        Module* instantiateModule(const vislib::StringA path,
+            ModuleDescription* desc);
+
+        /**
+         * Enumerates all parameters. The callback function is called for each
+         * parameter name.
+         *
+         * @param path The current module namespace
+         * @param func The callback function.
+         * @param data The user specified pointer to be passed to the callback
+         *             function.
+         */
+        void enumParameters(const ModuleNamespace* path,
+            mmcEnumStringAFunction func, void *data) const;
+
+        /**
+         * Answer the full name of the paramter 'param' if it is bound to a
+         * parameter slot of an active module.
+         *
+         * @param path The current module namespace
+         * @param param The parameter to search for.
+         *
+         * @return The full name of the parameter, or an empty string if the
+         *         parameter is not found
+         */
+        vislib::StringA findParameterName(const ModuleNamespace* path,
+            const vislib::SmartPtr<param::AbstractParam>& param) const;
+
+        /**
+         * Closes a view or job handle (the corresponding instance object will
+         * be deleted by the caller.
+         *
+         * @param obj The object to be removed from the module namespace.
+         */
+        void closeViewJob(ModuleNamespace *obj);
+
+        /**
+         * Apply parameters from configuration file
+         *
+         * @param root The root namespace
+         * @param id The instance description
+         */
+        void applyConfigParams(const vislib::StringA& root,
+            const InstanceDescription *id,
+            const ParamValueSetRequest *params);
+
+        /**
+         * Loads the plugin 'filename'
+         *
+         * @param filename The plugin to load
+         */
+        void loadPlugin(const vislib::TString& filename);
+
+        /**
+         * Auto-connects a view module graph from 'from' to 'to' upwards
+         *
+         * @param view The view description object to receive the graph
+         * @param from The name of the module to connect from (upwards)
+         * @param to The optional module to connect to (upwards)
+         *
+         * @return True on success
+         */
+        bool quickConnectUp(ViewDescription& view, const char *from, const char *to);
+
+        /**
+         * Collects information on possible upwards connections for the module
+         * 'from'
+         *
+         * @param from The module to connect from (upwards)
+         * @param step List of possible upward connections
+         */
+        void quickConnectUpStepInfo(ModuleDescription *from, vislib::Array<quickStepInfo>& step);
+
+        /**
+         * Registers a single file type for quickstarting
+         *
+         * @param frontend The full path to the frontend to call
+         * @param feparams The frontend command line parameter string
+         * @param fnext The data file name extension
+         * @param fnname The data file type name
+         * @param keepothers If true, other open options will not be overwritten.
+         */
+        void registerQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
+                const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
+
+        /**
+         * Removes the registration for a single file type for quickstarting
+         *
+         * @param frontend The full path to the frontend to call
+         * @param feparams The frontend command line parameter string
+         * @param fnext The data file name extension
+         * @param fnname The data file type name
+         * @param keepothers If true, other open options will not be deleted.
+         */
+        void unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
+                const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
+
+#ifdef _WIN32
+#pragma warning (disable: 4251)
+#endif /* _WIN32 */
+        /** the pre initialisation values. */
+        PreInit *preInit;
+
+        /** the cores configuration */
+        megamol::core::utility::Configuration config;
+
+        /** The shader source factory */
+        utility::ShaderSourceFactory shaderSourceFactory;
+
+        /** The log object */
+        vislib::sys::Log log;
+
+        /** The manager of the builtin view descriptions */
+        megamol::core::ObjectDescriptionManager<
+            megamol::core::ViewDescription> builtinViewDescs;
+
+        /** The manager of the view descriptions load from projects */
+        megamol::core::ObjectDescriptionManager<
+            megamol::core::ViewDescription> projViewDescs;
+
+        /** The manager of the builtin job descriptions */
+        megamol::core::ObjectDescriptionManager<megamol::core::JobDescription>
+            builtinJobDescs;
+
+        /** The manager of the builtin job descriptions */
+        megamol::core::ObjectDescriptionManager<megamol::core::JobDescription>
+            projJobDescs;
+
+        /** The list of pending views to be instantiated */
+        vislib::SingleLinkedList<ViewInstanceRequest> pendingViewInstRequests;
+
+        /** The list of pending jobs to be instantiated */
+        vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
+
+        /** The module namespace root */
+        RootModuleNamespace namespaceRoot;
+
+        /** the time offset */
+        double timeOffset;
+
+        /** The loaded plugins */
+        vislib::PtrArray<vislib::sys::DynamicLinkLibrary> plugins;
+
+        /** List of registered param update listeners */
+        vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;
+#ifdef _WIN32
+#pragma warning (default: 4251)
+#endif /* _WIN32 */
+
+    };
+
+} /* end namespace core */
+} /* end namespace megamol */
+
+#endif /* MEGAMOLCORE_COREINSTANCE_H_INCLUDED */

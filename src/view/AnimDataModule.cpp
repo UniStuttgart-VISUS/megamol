@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "view/AnimDataModule.h"
+#include "mmcore/view/AnimDataModule.h"
 #include "vislib/assert.h"
 #include "vislib/sys/Log.h"
 
