@@ -41,7 +41,7 @@
     <Import Project="vislib.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
-    <NuGetPackageImportStamp>b2e5f9c9</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>407171e2</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
