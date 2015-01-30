@@ -92,24 +92,27 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
 install(TARGETS vislib DESTINATION "lib/vislib" EXPORT vislib-target)
 # Export the target to be used in the configuration file for find_package
 install(EXPORT vislib-target DESTINATION share/vislib)
-# Generate configuration file for the installation
-# We leave all placeholders blank, so the vislibConfig.cmake will fill them
-configure_file(vislibConfig.cmake.in 
-			   ${CMAKE_BINARY_DIR}/vislibConfInst.cmake
-			   @ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/vislibConfInst.cmake 
-		DESTINATION share/vislib
-		RENAME vislibConfig.cmake)
-
+# Install configure script
+install(FILES vislibConfig.cmake DESTINATION share/vislib)
+# TODO: Add entry to the package registry
 
 # Export the build tree of this package. This makes it possible to include
-# this package without installing.
+# this package without installing. Also place a version config file for cmake
+# to decide whether to take release or debug accordingly.
 # Set our known paths
 set(cfg_glload_LIBRARIES ${GLLOAD_LIBRARIES})
 set(cfg_vislib_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include ${GLLOAD_INCLUDE_DIRS})
-# Again configure a file
-configure_file(vislibConfig.cmake.in
+set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
+	set(cfg_CMAKE_BUILD_TYPE Release)
+endif()
+# Configure our local config script
+configure_file(vislibConfigLocal.cmake.in
 			${CMAKE_BINARY_DIR}/vislibConfig.cmake
+			@ONLY)
+# Configure our local version script
+configure_file(vislibConfigVersion.cmake.in
+			${CMAKE_BINARY_DIR}/vislibConfigVersion.cmake
 			@ONLY)
 export(TARGETS vislib FILE ${CMAKE_BINARY_DIR}/vislib-target.cmake)
 export(PACKAGE vislib)
