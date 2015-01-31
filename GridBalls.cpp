@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 #include "GridBalls.h"
-#include "CallVolumeData.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "param/StringParam.h"
-#include "param/FloatParam.h"
+#include "mmcore/CallVolumeData.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/FloatParam.h"
 #include <climits>
 #include <cfloat>
 #include <cmath>

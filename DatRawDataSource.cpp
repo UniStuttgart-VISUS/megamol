@@ -7,9 +7,9 @@
 
 #include "stdafx.h"
 #include "DatRawDataSource.h"
-#include "param/FilePathParam.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/String.h"

@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "mmstd.volume.h"
-#include "api/MegaMolCore.std.h"
-#include "ModuleAutoDescription.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/ThreadSafeStackTrace.h"

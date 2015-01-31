@@ -8,16 +8,16 @@
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "RenderVolumeSlice.h"
-#include "CallVolumeData.h"
-#include "param/StringParam.h"
-#include "param/FloatParam.h"
+#include "mmcore/CallVolumeData.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/FloatParam.h"
 #include <climits>
 #include <cfloat>
 #include <cmath>
-#include "CoreInstance.h"
-#include "view/CallClipPlane.h"
-#include "view/CallGetTransferFunction.h"
-#include "view/CallRender3D.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
 
 using namespace megamol;

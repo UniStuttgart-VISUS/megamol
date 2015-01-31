@@ -5,10 +5,10 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mmstd.volume", "mmstd.volume.vcxproj", "{1FD20699-4410-41E0-A4F3-96751D8949DE}"
 	ProjectSection(ProjectDependencies) = postProject
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF} = {289C3BE7-DC60-49E3-84AE-D22407EB3BBF}
+		{DA547C33-06E6-453E-9018-BE5AF9154724} = {DA547C33-06E6-453E-9018-BE5AF9154724}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "datRaw", "datraw\datRaw-VS2013.vcxproj", "{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "datRaw-VS2013", "datraw\datRaw-VS2013.vcxproj", "{DA547C33-06E6-453E-9018-BE5AF9154724}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,14 +26,14 @@ Global
 		{1FD20699-4410-41E0-A4F3-96751D8949DE}.Release|Win32.Build.0 = Release|Win32
 		{1FD20699-4410-41E0-A4F3-96751D8949DE}.Release|x64.ActiveCfg = Release|x64
 		{1FD20699-4410-41E0-A4F3-96751D8949DE}.Release|x64.Build.0 = Release|x64
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Debug|Win32.ActiveCfg = Debug|Win32
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Debug|Win32.Build.0 = Debug|Win32
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Debug|x64.ActiveCfg = Debug|x64
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Debug|x64.Build.0 = Debug|x64
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Release|Win32.ActiveCfg = Release|Win32
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Release|Win32.Build.0 = Release|Win32
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Release|x64.ActiveCfg = Release|x64
-		{289C3BE7-DC60-49E3-84AE-D22407EB3BBF}.Release|x64.Build.0 = Release|x64
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Debug|Win32.Build.0 = Debug|Win32
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Debug|x64.ActiveCfg = Debug|x64
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Debug|x64.Build.0 = Debug|x64
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Release|Win32.ActiveCfg = Release|Win32
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Release|Win32.Build.0 = Release|Win32
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Release|x64.ActiveCfg = Release|x64
+		{DA547C33-06E6-453E-9018-BE5AF9154724}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

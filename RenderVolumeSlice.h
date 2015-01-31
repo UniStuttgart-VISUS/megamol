@@ -12,14 +12,14 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule.h"
 //#include "Call.h"
-#include "CallerSlot.h"
-#include "param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 //#include "vislib/GLSLShader.h"
 //#include "Module.h"
 //#include "CalleeSlot.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 //#include "param/ParamSlot.h"
 //#include "vislib/Cuboid.h"
 

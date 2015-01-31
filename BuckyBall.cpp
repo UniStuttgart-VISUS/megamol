@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "BuckyBall.h"
-#include "CallVolumeData.h"
+#include "mmcore/CallVolumeData.h"
 #include <climits>
 #include <cfloat>
 #include <cmath>
