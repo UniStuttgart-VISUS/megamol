@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 #include "DataFileSequencer.h"
-#include "param/ButtonParam.h"
-#include "param/FilePathParam.h"
-#include "param/StringParam.h"
-#include "view/CallRenderView.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/view/CallRenderView.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/Log.h"
 

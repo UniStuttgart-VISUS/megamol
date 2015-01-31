@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "vislib/RawStorage.h"
 
 

@@ -1,16 +1,16 @@
 #include "stdafx.h"
 #include "ParticleDensityOpacityModule.h"
-#include "view/CallGetTransferFunction.h"
-#include "param/ButtonParam.h"
-#include "param/IntParam.h"
-#include "param/FloatParam.h"
-#include "param/BoolParam.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cstdint>
 #include "vislib/math/ShallowPoint.h"
 #include "ANN/ANN.h"
-#include "param/EnumParam.h"
+#include "mmcore/param/EnumParam.h"
 
 
 megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpacityModule(void) : Module(),

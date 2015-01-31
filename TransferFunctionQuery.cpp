@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "TransferFunctionQuery.h"
-#include "view/CallGetTransferFunction.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"

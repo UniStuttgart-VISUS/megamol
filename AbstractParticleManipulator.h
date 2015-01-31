@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Module.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "moldyn/MultiParticleDataCall.h"
+#include "mmcore/Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 
 
 namespace megamol {

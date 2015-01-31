@@ -6,10 +6,10 @@
  */
 #include "stdafx.h"
 #include "OverrideParticleGlobals.h"
-#include "param/IntParam.h"
-#include "param/BoolParam.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/graphics/ColourParser.h"
 #include <cstdint>
 #include <algorithm>

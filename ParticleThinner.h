@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParticleManipulator.h"
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {

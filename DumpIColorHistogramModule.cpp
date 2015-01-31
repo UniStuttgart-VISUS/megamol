@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "DumpIColorHistogramModule.h"
-#include "param/ButtonParam.h"
-#include "param/FloatParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "vislib/sys/Log.h"
 #include <vector>
 #include <fstream>

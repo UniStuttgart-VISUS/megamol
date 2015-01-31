@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "SphereDataUnifier.h"
-#include "moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/RawStorage.h"
 
 using namespace megamol;

@@ -7,10 +7,10 @@
 
 #include "stdafx.h"
 #include "DataSetTimeRewriteModule.h"
-#include "AbstractGetData3DCall.h"
-#include "CallDescriptionManager.h"
-#include "CallDescription.h"
-#include "param/IntParam.h"
+#include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/CallDescription.h"
+#include "mmcore/param/IntParam.h"
 #include <algorithm>
 
 using namespace megamol;

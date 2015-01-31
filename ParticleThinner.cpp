@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "ParticleThinner.h"
-#include "param/IntParam.h"
+#include "mmcore/param/IntParam.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
