@@ -28,7 +28,9 @@ sub fix_includes_in_file {
 	my $name;
 	my $dir;
 	my $ext;
-	($name,$dir,$ext) = fileparse($filename,'\..*');
+	($name,$dir,$ext) = fileparse($filename,'\.[^\.]*');
+	
+	print "What the ext: $ext\n";
 
 	# do not descend into '.svn' subdirectories
 	return unless ($dir !~ /\/.svn\//);
@@ -43,6 +45,8 @@ sub fix_includes_in_file {
 	}
 
 	print "Working on $filename\n";
+	
+	return;
 	
 	# Read whole file into string '$content'
 	local $/=undef;
