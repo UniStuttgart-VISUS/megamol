@@ -25,8 +25,8 @@
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "dxerr.lib")
-#pragma comment(lib, "d3dx11.lib")
+//#pragma comment(lib, "dxerr.lib")
+//#pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 
 #define NO_STEREO_D3D9
