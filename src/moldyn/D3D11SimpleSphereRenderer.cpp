@@ -102,16 +102,16 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
     D3D11_BUFFER_DESC bufferDesc;               // VB description.
     size_t cntVertices = 0;                     // Total # of vertices to emit.
     UINT cntViewports = 1;                      // Number of viewports to read.
-    XMVECTOR determinant;                       // Temporary result.
-    XMVECTOR eyePosition;                       // Position of the camera.
-    XMVECTOR focusPosition;                     // Look-at point of the camera.
+    DirectX::XMVECTOR determinant;              // Temporary result.
+    DirectX::XMVECTOR eyePosition;              // Position of the camera.
+    DirectX::XMVECTOR focusPosition;            // Look-at point of the camera.
     vislib::graphics::SceneSpaceViewFrustum frustum;    // The view frustum.
     HRESULT hr = S_OK;                          // D3D API results.
     D3D11_MAPPED_SUBRESOURCE mappedData;        // Mapped buffer data.
     Constants *constants = NULL;                // Pointer to mapped constants.
     size_t reqBytes = 0;                        // Required VB size for frame.
-    XMVECTOR upDirection;                       // Camera up vector.
-    XMFLOAT4 vector;                            // Temporary result.
+    DirectX::XMVECTOR upDirection;              // Camera up vector.
+    DirectX::XMFLOAT4 vector;                   // Temporary result.
     D3D11_VIEWPORT viewport;                    // Currently active viewport.
 
     UINT strides = D3D11SimpleSphereRenderer::VERTEX_SIZE;
@@ -196,7 +196,7 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
 
         //cam.ProjectionMatrix(&constants->ProjMatrix._11);
         cam.CalcViewFrustum(frustum);
-        constants->ProjMatrix = ::XMMatrixPerspectiveOffCenterRH(
+        constants->ProjMatrix = DirectX::XMMatrixPerspectiveOffCenterRH(
             frustum.GetLeftDistance(),
             frustum.GetRightDistance(),
             frustum.GetBottomDistance(),
@@ -214,13 +214,13 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
         constants->CamPos.y = cr->GetCameraParameters()->EyePosition().Y();
         constants->CamPos.z = cr->GetCameraParameters()->EyePosition().Z();
         constants->CamPos.w = 1.0f;
-        eyePosition = ::XMLoadFloat4(&constants->CamPos);
+        eyePosition = DirectX::XMLoadFloat4(&constants->CamPos);
 
         vector.x = cr->GetCameraParameters()->LookAt().X();
         vector.y = cr->GetCameraParameters()->LookAt().Y();
         vector.z = cr->GetCameraParameters()->LookAt().Z();
         vector.w = 0.0f;
-        focusPosition = ::XMLoadFloat4(&vector);
+        focusPosition = DirectX::XMLoadFloat4(&vector);
 
         constants->CamDir.x = cr->GetCameraParameters()->EyeDirection().X();
         constants->CamDir.y = cr->GetCameraParameters()->EyeDirection().Y();
@@ -231,9 +231,9 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
         constants->CamUp.y = cr->GetCameraParameters()->EyeUpVector().Y();
         constants->CamUp.z = cr->GetCameraParameters()->EyeUpVector().Z();
         constants->CamUp.w = 0.0f;
-        upDirection = ::XMLoadFloat4(&constants->CamUp);
+        upDirection = DirectX::XMLoadFloat4(&constants->CamUp);
 
-        constants->ViewMatrix = ::XMMatrixLookAtRH(
+        constants->ViewMatrix = DirectX::XMMatrixLookAtRH(
             eyePosition, focusPosition, upDirection);
 
         // Now we have everything to transform the bounding box. Do so before
@@ -243,7 +243,7 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
             bbox,
             vislib::graphics::ColourRGBAu8(128, 128, 128, 255));
 
-        constants->ViewMatrix = ::XMMatrixScaling(scaling, scaling, 
+        constants->ViewMatrix = DirectX::XMMatrixScaling(scaling, scaling,
             scaling) * constants->ViewMatrix;
 
         constants->ViewProjMatrix = constants->ViewMatrix
@@ -258,8 +258,8 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
         //    v(2, 0), v(2, 1), v(2, 2), v(2, 3), 
         //    v(3, 0), v(3, 1), v(3, 2), v(3, 3));
 
-        determinant = ::XMMatrixDeterminant(constants->ViewMatrix);
-        constants->ViewInvMatrix = ::XMMatrixInverse(&determinant,
+        determinant = DirectX::XMMatrixDeterminant(constants->ViewMatrix);
+        constants->ViewInvMatrix = DirectX::XMMatrixInverse(&determinant,
             constants->ViewMatrix);
 
         //constants->WorldViewInvMatrix = constants->WorldViewMatrix;
@@ -273,8 +273,8 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
         //    vi(3, 0), vi(3, 1), vi(3, 2), vi(3, 3));
 
         constants->ViewProjInvMatrix = constants->ViewProjMatrix;
-        determinant = ::XMMatrixDeterminant(constants->ViewProjInvMatrix);
-        constants->ViewProjInvMatrix = ::XMMatrixInverse(&determinant,
+        determinant = DirectX::XMMatrixDeterminant(constants->ViewProjInvMatrix);
+        constants->ViewProjInvMatrix = DirectX::XMMatrixInverse(&determinant,
             constants->ViewProjInvMatrix);
 
         //vislib::math::ShallowMatrix<float, 4, vislib::math::COLUMN_MAJOR> vpi(
@@ -289,15 +289,15 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
         //vpi.Invert();
 
         // http://social.msdn.microsoft.com/Forums/de-LU/wingameswithdirectx/thread/73696d3c-debe-4840-a062-925449f0a366
-        constants->ProjMatrix = ::XMMatrixTranspose(
+        constants->ProjMatrix = DirectX::XMMatrixTranspose(
             constants->ProjMatrix);
-        constants->ViewMatrix = ::XMMatrixTranspose(
+        constants->ViewMatrix = DirectX::XMMatrixTranspose(
             constants->ViewMatrix);
-        constants->ViewInvMatrix = ::XMMatrixTranspose(
+        constants->ViewInvMatrix = DirectX::XMMatrixTranspose(
             constants->ViewInvMatrix);
-        constants->ViewProjMatrix = ::XMMatrixTranspose(
+        constants->ViewProjMatrix = DirectX::XMMatrixTranspose(
             constants->ViewProjMatrix);
-        constants->ViewProjInvMatrix = ::XMMatrixTranspose(
+        constants->ViewProjInvMatrix = DirectX::XMMatrixTranspose(
             constants->ViewProjInvMatrix);
 
         this->immediateContext->Unmap(this->cb, 0);
@@ -419,7 +419,7 @@ const char *megamol::core::moldyn::D3D11SimpleSphereRenderer::BTF_FILE_NAME
  * megamol::core::moldyn::D3D11SimpleSphereRenderer::VERTEX_SIZE
  */
 const size_t megamol::core::moldyn::D3D11SimpleSphereRenderer::VERTEX_SIZE
-    = sizeof(XMFLOAT4) + sizeof(XMFLOAT4);
+    = sizeof(DirectX::XMFLOAT4) + sizeof(DirectX::XMFLOAT4);
 
 
 /*
@@ -488,7 +488,7 @@ size_t megamol::core::moldyn::D3D11SimpleSphereRenderer::coalesceParticles(
 
     switch (particles.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE: {
-            b = buffer + sizeof(XMFLOAT4);
+            b = buffer + sizeof(DirectX::XMFLOAT4);
             float colour[4];
             colour[0] = particles.GetGlobalColour()[0] / 255.0f;
             colour[1] = particles.GetGlobalColour()[1] / 255.0f;
@@ -509,7 +509,7 @@ size_t megamol::core::moldyn::D3D11SimpleSphereRenderer::coalesceParticles(
         //    glColorPointer(4, GL_UNSIGNED_BYTE, parts.GetColourDataStride(), parts.GetColourData());
         //    break;
         case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-            b = buffer + sizeof(XMFLOAT4);
+            b = buffer + sizeof(DirectX::XMFLOAT4);
             p = static_cast<const BYTE *>(particles.GetColourData());
             particleStride = particles.GetColourDataStride();
             particleSize = 3 * sizeof(float);
@@ -545,7 +545,7 @@ size_t megamol::core::moldyn::D3D11SimpleSphereRenderer::coalesceParticles(
         //    glColor3ub(127, 127, 127);
         //} break;
         default:
-            b = buffer + sizeof(XMFLOAT4);
+            b = buffer + sizeof(DirectX::XMFLOAT4);
             for (size_t i = 0; i < cntParticles; ++i) {
                 ::memcpy(b, &grey, sizeof(grey));
                 b += D3D11SimpleSphereRenderer::VERTEX_SIZE;

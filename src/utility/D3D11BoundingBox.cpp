@@ -45,7 +45,7 @@ HRESULT megamol::core::utility::D3D11BoundingBox::Draw(const bool frontSides) {
 
     HRESULT hr = S_OK;
     UINT offsets = 0;
-    UINT strides = sizeof(XMVECTOR);
+    UINT strides = sizeof(DirectX::XMVECTOR);
 
     this->immediateContext->IASetInputLayout(this->inputLayout);
     this->immediateContext->IASetPrimitiveTopology(
@@ -121,7 +121,7 @@ HRESULT megamol::core::utility::D3D11BoundingBox::Initialise(
         //    { -x, -y,  z, w },
         //    {  x, -y,  z, w }
         //};
-        XMVECTORF32 vertices[] = {
+        DirectX::XMVECTORF32 vertices[] = {
             { 0.0f, 1.0f, 0.0f, 1.0f },
             { 1.0f, 1.0f, 0.0f, 1.0f },
             { 0.0f, 0.0f, 0.0f, 1.0f },
@@ -196,8 +196,8 @@ HRESULT megamol::core::utility::D3D11BoundingBox::Initialise(
  * megamol::core::utility::D3D11BoundingBox::Update
  */
 HRESULT megamol::core::utility::D3D11BoundingBox::Update(
-        const XMMATRIX& viewMatrix,
-        const XMMATRIX& projMatrix,
+        const DirectX::XMMATRIX& viewMatrix,
+        const DirectX::XMMATRIX& projMatrix,
         const vislib::graphics::SceneSpaceCuboid& bbox,
         const vislib::graphics::ColourRGBAu8& colour) {
     VLAUTOSTACKTRACE;
@@ -226,20 +226,20 @@ HRESULT megamol::core::utility::D3D11BoundingBox::Update(
         constants->Colour.w = colour.A() / 255.0f;
 
         // http://social.msdn.microsoft.com/Forums/de-LU/wingameswithdirectx/thread/73696d3c-debe-4840-a062-925449f0a366
-        constants->ProjMatrix = ::XMMatrixTranspose(projMatrix);
+        constants->ProjMatrix = DirectX::XMMatrixTranspose(projMatrix);
 
         // Note: The following transformations are not the same as the
         // ones we do for the data set. They are used to scale and translate
         // a unity bounding box in the origin to its correct size and
         // location.
-        constants->ViewMatrix = ::XMMatrixScaling(size.Width(),
+        constants->ViewMatrix = DirectX::XMMatrixScaling(size.Width(),
             size.Height(), size.Depth());
-        constants->ViewMatrix *= ::XMMatrixTranslation(origin.X(),
+        constants->ViewMatrix *= DirectX::XMMatrixTranslation(origin.X(),
             origin.Y(), origin.Z());
         constants->ViewMatrix *= viewMatrix;
 
         // http://social.msdn.microsoft.com/Forums/de-LU/wingameswithdirectx/thread/73696d3c-debe-4840-a062-925449f0a366
-        constants->ViewMatrix = ::XMMatrixTranspose(constants->ViewMatrix);
+        constants->ViewMatrix = DirectX::XMMatrixTranspose(constants->ViewMatrix);
         
         this->immediateContext->Unmap(this->cbConstants, 0);
     }

@@ -99,15 +99,15 @@ namespace moldyn {
         /** Constant buffer for data changing every frame. */
 #pragma pack(push, 16)
         typedef struct Constants_t {
-            XMMATRIX ProjMatrix;
-            XMMATRIX ViewMatrix;
-            XMMATRIX ViewInvMatrix;
-            XMMATRIX ViewProjMatrix;
-            XMMATRIX ViewProjInvMatrix;
-            XMFLOAT4 Viewport;
-            XMFLOAT4 CamPos;
-            XMFLOAT4 CamDir;
-            XMFLOAT4 CamUp;
+            DirectX::XMMATRIX ProjMatrix;
+            DirectX::XMMATRIX ViewMatrix;
+            DirectX::XMMATRIX ViewInvMatrix;
+            DirectX::XMMATRIX ViewProjMatrix;
+            DirectX::XMMATRIX ViewProjInvMatrix;
+            DirectX::XMFLOAT4 Viewport;
+            DirectX::XMFLOAT4 CamPos;
+            DirectX::XMFLOAT4 CamDir;
+            DirectX::XMFLOAT4 CamUp;
         } Constants;
 #pragma pack(pop)
 

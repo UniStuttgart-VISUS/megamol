@@ -46,8 +46,8 @@ namespace utility {
             utility::ShaderSourceFactory& factory);
 
         // http://msdn.microsoft.com/en-us/library/windows/desktop/ee418728(v=vs.85).aspx#Call_Conventions
-        virtual HRESULT Update(const XMMATRIX& viewMatrix,
-            const XMMATRIX& projMatrix,
+        virtual HRESULT Update(const DirectX::XMMATRIX& viewMatrix,
+            const DirectX::XMMATRIX& projMatrix,
             const vislib::graphics::SceneSpaceCuboid& bbox,
             const vislib::graphics::ColourRGBAu8& colour);
 
@@ -58,9 +58,9 @@ namespace utility {
         /** cbuffer structure from the shader. */
 #pragma pack(push, 16)
         typedef struct Constants_t {
-            XMMATRIX ViewMatrix;
-            XMMATRIX ProjMatrix;
-            XMFLOAT4 Colour;
+            DirectX::XMMATRIX ViewMatrix;
+            DirectX::XMMATRIX ProjMatrix;
+            DirectX::XMFLOAT4 Colour;
         } Constants;
 #pragma pack(pop)
 
