@@ -5,7 +5,14 @@ my $path = shift;
 my $inFile = shift;
 my $outFile = shift;
 
-my $vislib = getRevisionInfo($path);
+my %filter = (
+    default => "ignore",
+    consider => [ '^[^/]+$', '^include/.*$', '^src/.*$' ],
+    #consider => [ '^src/.*$', '^[^/]+$', '^include/.*$' ],
+    ignore => [ ]
+);
+my $vislib = getRevisionInfo($path, \%filter);
+#my $vislib = getRevisionInfo($path);
 
 my %hash;
 
