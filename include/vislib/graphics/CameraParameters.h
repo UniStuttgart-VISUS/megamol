@@ -315,7 +315,8 @@ namespace graphics {
         /**
          * Sets the aperture angle along the y-axis.
          *
-         * @param The aperture angle in radians.
+         * @param apertureAngle The aperture angle in degrees. The method will 
+         *                      convert it to radians.
          */
         virtual void SetApertureAngle(math::AngleDeg apertureAngle) = 0;
 
