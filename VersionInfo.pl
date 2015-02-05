@@ -12,7 +12,7 @@ my $basepath = shift;
 my %hash;
 
 my $core = getRevisionInfo($basepath . '/.');
-my $coreapi = getRevisionInfo($basepath . '/mmcore/include/api');
+my $coreapi = getRevisionInfo($basepath . '/include/mmcore/api');
 
 $hash{'$CORE_REV$'} = $core->rev;
 $hash{'$CORE_YEAR$'} = substr($core->date, 0, 4);
