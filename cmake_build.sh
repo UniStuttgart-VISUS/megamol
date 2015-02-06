@@ -5,13 +5,15 @@
 
 prefix=${1:-"/usr/"}
 
-./prep_cmake.sh $prefix
+./cmake_prep.sh $prefix
 if [ $? -ne 0 ] ; then exit 1; fi
 cd build.release
 make
+# make install
 if [ $? -ne 0 ] ; then exit 1; fi
 cd ..
 cd build.debug
 make
+# make install
 if [ $? -ne 0 ] ; then exit 1; fi
 cd ..
