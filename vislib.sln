@@ -62,6 +62,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rev2ver", "rev2ver", "{7A05FE75-E6B1-4701-A7CF-C2C25A1028AA}"
 	ProjectSection(SolutionItems) = preProject
 		3rd\rev2ver\rev2ver.inc = 3rd\rev2ver\rev2ver.inc
+		3rd\rev2ver\SvnWrapper.pm = 3rd\rev2ver\SvnWrapper.pm
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "includes.fix", "includes.fix", "{B1F6D926-EBF9-40A8-9850-4E84CCD8E6C3}"
