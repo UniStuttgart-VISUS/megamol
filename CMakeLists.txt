@@ -44,7 +44,7 @@ include_directories(${GLLOAD_INCLUDE_DIRS})
 
 # collect version information
 add_custom_target(versioninfo ALL
-	perl src/makevislibversion.pl . src/vislibversion.template.h include/vislib/vislibversion.h
+	perl makevislibversion.pl . src/vislibversion.template.h include/vislib/vislibversion.h
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 	VERBATIM
 	)
