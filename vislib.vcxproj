@@ -1281,7 +1281,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="src\makevislibversion.pl">
+    <CustomBuild Include="makevislibversion.pl">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "$(SolutionDir)\." "$(SolutionDir)src\vislibversion.template.h" "$(SolutionDir)include\vislib\vislibversion.h"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Collecting Version Information</Message>
