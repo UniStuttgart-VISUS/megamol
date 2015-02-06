@@ -76,17 +76,17 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)$(PlatformName)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Win$(Bits)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)$(PlatformName)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Win$(Bits)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)$(PlatformName)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Win$(Bits)\$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)bin\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)$(PlatformName)\$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
@@ -100,10 +100,10 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MegaMolGlut$(BitsD)</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MegaMolGlut$(BitsD)</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MegaMolGlut$(BitsD)</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MegaMolGlut$(BitsD)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MegaMolGlut</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MegaMolGlut</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MegaMolGlut</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MegaMolGlut</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -138,11 +138,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
-xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -183,11 +180,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
-xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -224,11 +218,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
-xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -268,11 +259,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\." mkdir "$(OutputBin)\."
-xcopy "$(TargetDir)\$(TargetName).dll" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetDir)\$(TargetName).lib" "$(ProjectDir)\lib" /Y /F /V /G /K
-xcopy "$(TargetPath)" "$(OutputBin)\." /Y /F /V /G /K
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
