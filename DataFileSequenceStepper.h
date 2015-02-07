@@ -1,12 +1,12 @@
 /*
- * DataFileSequencer.h
+ * DataFileSequenceStepper.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_DATAFILESEQUENCER_H_INCLUDED
-#define MEGAMOLCORE_DATAFILESEQUENCER_H_INCLUDED
+#ifndef MEGAMOLCORE_DataFileSequenceStepper_H_INCLUDED
+#define MEGAMOLCORE_DataFileSequenceStepper_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -22,8 +22,11 @@ namespace datatools {
 
     /**
      * Class for manually stepping through a series of data files
+     *
+     * TODO: This should be replaces as soon as the parameter slots are
+     *       replaced and support connections.
      */
-    class DataFileSequencer : public core::Module {
+    class DataFileSequenceStepper : public core::Module {
     public:
 
         /**
@@ -32,7 +35,7 @@ namespace datatools {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "DataFileSequencer";
+            return "DataFileSequenceStepper";
         }
 
         /**
@@ -41,7 +44,7 @@ namespace datatools {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Controller for a sequence for data files";
+            return "Small utility module adding user controls to step though a sequence of data files.";
         }
 
         /**
@@ -63,14 +66,14 @@ namespace datatools {
         }
 
         /*
-         * DataFileSequencer
+         * DataFileSequenceStepper
          */
-        DataFileSequencer(void);
+        DataFileSequenceStepper(void);
 
         /*
-         * ~DataFileSequencer
+         * ~DataFileSequenceStepper
          */
-        virtual ~DataFileSequencer(void);
+        virtual ~DataFileSequenceStepper(void);
 
     private:
 
@@ -162,4 +165,4 @@ namespace datatools {
 } /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_DATAFILESEQUENCER_H_INCLUDED */
+#endif /* MEGAMOLCORE_DataFileSequenceStepper_H_INCLUDED */

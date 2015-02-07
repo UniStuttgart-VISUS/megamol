@@ -14,7 +14,7 @@
 #include "vislib/sys/ThreadSafeStackTrace.h"
 #include "DataSetTimeRewriteModule.h"
 #include "ParticleListMergeModule.h"
-#include "DataFileSequencer.h"
+#include "DataFileSequenceStepper.h"
 #include "SphereDataUnifier.h"
 #include "ParticleThinner.h"
 #include "OverrideParticleGlobals.h"
@@ -78,7 +78,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     switch(idx) {
     case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
     case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
-    case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequencer>();
+    case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequenceStepper>();
     case 3: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
     case 4: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
     case 5: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();

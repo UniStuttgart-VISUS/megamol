@@ -8,19 +8,15 @@
 #include "stdafx.h"
 #include "DataFileSequence.h"
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallDescriptionManager.h"
-#include "mmcore/CallDescription.h"
+#include "mmcore/factories/CallDescriptionManager.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/Log.h"
-//#include "vislib/MemmappedFile.h"
-//#include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
-//#include "vislib/sysfunctions.h"
-//#include "vislib/VersionNumber.h"
 
 using namespace megamol;
 
@@ -61,16 +57,15 @@ stdplugin::datatools::DataFileSequence::DataFileSequence(void) : core::Module(),
     this->useClipBoxAsBBox << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->useClipBoxAsBBox);
 
-    core::CallDescriptionManager::DescriptionIterator iter(core::CallDescriptionManager::Instance()->GetIterator());
-    const core::CallDescription *cd = NULL;
-    while ((cd = this->moveToNextCompatibleCall(iter)) != NULL) {
-        this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataFileSequence::getDataCallback);
-        this->outDataSlot.SetCallback(cd->ClassName(), "GetExtent", &DataFileSequence::getExtentCallback);
-        this->inDataSlot.SetCompatibleCall(*cd);
-    }
-
-    this->MakeSlotAvailable(&this->outDataSlot);
-    this->MakeSlotAvailable(&this->inDataSlot);
+    //core::CallDescriptionManager::DescriptionIterator iter(core::CallDescriptionManager::Instance()->GetIterator());
+    //const core::CallDescription *cd = NULL;
+    //while ((cd = this->moveToNextCompatibleCall(iter)) != NULL) {
+    //    this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataFileSequence::getDataCallback);
+    //    this->outDataSlot.SetCallback(cd->ClassName(), "GetExtent", &DataFileSequence::getExtentCallback);
+    //    this->inDataSlot.SetCompatibleCall(*cd);
+    //}
+    //this->MakeSlotAvailable(&this->outDataSlot);
+    //this->MakeSlotAvailable(&this->inDataSlot);
 }
 
 
@@ -86,6 +81,15 @@ stdplugin::datatools::DataFileSequence::~DataFileSequence(void) {
  * moldyn::DataFileSequence::create
  */
 bool stdplugin::datatools::DataFileSequence::create(void) {
+    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+        if (IsCallDescriptionCompatible(cd)) {
+            this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataFileSequence::getDataCallback);
+            this->outDataSlot.SetCallback(cd->ClassName(), "GetExtent", &DataFileSequence::getExtentCallback);
+            this->inDataSlot.SetCompatibleCall(cd);
+        }
+    }
+    this->MakeSlotAvailable(&this->outDataSlot);
+    this->MakeSlotAvailable(&this->inDataSlot);
     return true;
 }
 
@@ -98,19 +102,12 @@ void stdplugin::datatools::DataFileSequence::release(void) {
 
 
 /*
- * moldyn::DataFileSequence::moveToNextCompatibleCall
+ * stdplugin::datatools::DataFileSequence::IsCallDescriptionCompatible
  */
-const core::CallDescription* stdplugin::datatools::DataFileSequence::moveToNextCompatibleCall(
-        core::CallDescriptionManager::DescriptionIterator &iterator) const {
-    while (iterator.HasNext()) {
-        const core::CallDescription *d = iterator.Next();
-        if ((d->FunctionCount() == 2)
-                && vislib::StringA("GetData").Equals(d->FunctionName(0), false)
-                && vislib::StringA("GetExtent").Equals(d->FunctionName(1), false)) {
-            return d;
-        }
-    }
-    return NULL;
+bool stdplugin::datatools::DataFileSequence::IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc) {
+    return (desc->FunctionCount() == 2)
+        && vislib::StringA("GetData").Equals(desc->FunctionName(0), false)
+        && vislib::StringA("GetExtent").Equals(desc->FunctionName(1), false);
 }
 
 
@@ -154,7 +151,7 @@ bool stdplugin::datatools::DataFileSequence::getDataCallback(core::Call& caller)
         if (!(*ggdc)(0)) {
             return false; // unable to get data
         }
-        core::CallDescriptionManager::Instance()->AssignmentCrowbar(pgdc, ggdc);
+        this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
 
         pgdc->SetFrameID(frameID);
         pgdc->SetDataHash(this->datahash);
@@ -231,11 +228,10 @@ bool stdplugin::datatools::DataFileSequence::checkConnections(core::Call *outCal
     if (this->outDataSlot.GetStatus() != core::AbstractSlot::STATUS_CONNECTED) return false;
     core::Call *inCall = this->inDataSlot.CallAs<core::Call>();
     if ((inCall == NULL) || (outCall == NULL)) return false;
-    core::CallDescriptionManager::DescriptionIterator iter(core::CallDescriptionManager::Instance()->GetIterator());
-    const core::CallDescription *cd = NULL;
-    while ((cd = this->moveToNextCompatibleCall(iter)) != NULL) {
-        if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall)) return true;
-        // both slot connected with similar calls
+    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+        if (IsCallDescriptionCompatible(cd)) {
+            if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall)) return true;
+        }
     }
     return false;
 }

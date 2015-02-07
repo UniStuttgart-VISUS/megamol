@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Module.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/CallDescription.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -47,7 +47,7 @@ namespace datatools {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Data file sequence module for writing series";
+            return "This modules is pluged between a data loader and consumer modules. It will change the name of the data file loaded depending on the requested time. This module only supports time independent data sets.";
         }
 
         /**
@@ -88,19 +88,16 @@ namespace datatools {
          */
         virtual void release(void);
 
-        /**
-         * Moves the iterator directly behind the next description of the
-         * next call compatible with this module
-         *
-         * @param iterator The iterator to iterate
-         *
-         * @return The call description iterated to, or NULL if there are no
-         *         more compatible calls
-         */
-        const core::CallDescription* moveToNextCompatibleCall(
-            core::CallDescriptionManager::DescriptionIterator &iterator) const;
-
     private:
+
+        /**
+         * Tests if th description of a call seems compatible
+         *
+         * @param desc The description to test
+         *
+         * @return True if description seems compatible
+         */
+        static bool IsCallDescriptionCompatible(core::factories::CallDescription::ptr desc);
 
         /**
          * Gets the data from the source.

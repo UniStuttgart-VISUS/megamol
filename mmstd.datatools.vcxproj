@@ -242,7 +242,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemGroup>
     <ClCompile Include="AbstractParticleManipulator.cpp" />
     <ClCompile Include="DataFileSequence.cpp" />
-    <ClCompile Include="DataFileSequencer.cpp" />
+    <ClCompile Include="DataFileSequenceStepper.cpp" />
     <ClCompile Include="DataSetTimeRewriteModule.cpp" />
     <ClCompile Include="dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -279,7 +279,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemGroup>
     <ClInclude Include="AbstractParticleManipulator.h" />
     <ClInclude Include="DataFileSequence.h" />
-    <ClInclude Include="DataFileSequencer.h" />
+    <ClInclude Include="DataFileSequenceStepper.h" />
     <ClInclude Include="DataSetTimeRewriteModule.h" />
     <ClInclude Include="DumpIColorHistogramModule.h" />
     <ClInclude Include="ForceCubicCBoxModule.h" />
