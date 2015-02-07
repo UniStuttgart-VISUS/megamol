@@ -16,7 +16,7 @@
 #endif /* WITH_MPI */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 
 namespace megamol {
@@ -139,7 +139,7 @@ namespace mpi {
 
     };
 
-    typedef CallAutoDescription<MpiCall> MpiCallDescription;
+    typedef factories::CallAutoDescription<MpiCall> MpiCallDescription;
 
 } /* end namespace mpi */
 } /* end namespace cluster */

@@ -14,7 +14,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 
 namespace megamol {

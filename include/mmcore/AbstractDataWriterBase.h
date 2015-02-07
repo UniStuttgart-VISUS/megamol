@@ -13,7 +13,7 @@
 
 #include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/Log.h"

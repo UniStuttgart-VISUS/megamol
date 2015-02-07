@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 
 namespace megamol {
@@ -178,7 +178,7 @@ namespace cluster {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallRegisterAtController>
+    typedef factories::CallAutoDescription<CallRegisterAtController>
         CallRegisterAtControllerDescription;
 
 

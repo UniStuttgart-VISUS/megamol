@@ -380,7 +380,7 @@ namespace core {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallVolumeData>
+    typedef factories::CallAutoDescription<CallVolumeData>
         CallVolumeDataDescription;
 
 } /* end namespace core */

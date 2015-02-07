@@ -19,7 +19,7 @@
 #include "vislib/Exception.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/types.h"
-
+#include <memory>
 
 namespace megamol {
 namespace core {
@@ -37,7 +37,7 @@ namespace utility {
          *
          * @param core The core instance to add the project elements to
          */
-        ProjectParser(void);
+        ProjectParser(CoreInstance *coreInst);
 
         /** Dtor. */
         virtual ~ProjectParser(void);
@@ -47,9 +47,9 @@ namespace utility {
          *
          * @return The list of view descriptions parsed from the project
          */
-        inline ViewDescription* PopViewDescription(void) {
+        inline std::shared_ptr<ViewDescription> PopViewDescription(void) {
             if (this->viewDescs.IsEmpty()) return NULL;
-            ViewDescription* rv = this->viewDescs.First();
+            std::shared_ptr<ViewDescription> rv = this->viewDescs.First();
             this->viewDescs.RemoveFirst();
             return rv;
         }
@@ -59,9 +59,9 @@ namespace utility {
          *
          * @return The list of job descriptions parsed from the project
          */
-        inline JobDescription* PopJobDescription(void) {
+        inline std::shared_ptr<JobDescription> PopJobDescription(void) {
             if (this->jobDescs.IsEmpty()) return NULL;
-            JobDescription* rv = this->jobDescs.First();
+            std::shared_ptr<JobDescription> rv = this->jobDescs.First();
             this->jobDescs.RemoveFirst();
             return rv;
         }
@@ -133,20 +133,22 @@ namespace utility {
 
     private:
 
-        /** The view description which is currently created by the parser */
-        ViewDescription *vd;
+        CoreInstance *core;
 
         /** The view description which is currently created by the parser */
-        JobDescription *jd;
+        std::shared_ptr<ViewDescription> vd;
+
+        /** The view description which is currently created by the parser */
+        std::shared_ptr<JobDescription> jd;
 
         /** The name of the currently created module */
         vislib::StringA modName;
 
         /** The view descriptions parsed from the project file */
-        vislib::SingleLinkedList<ViewDescription*> viewDescs;
+        vislib::SingleLinkedList<std::shared_ptr<ViewDescription> > viewDescs;
 
         /** The job descriptions parsed from the project file */
-        vislib::SingleLinkedList<JobDescription*> jobDescs;
+        vislib::SingleLinkedList<std::shared_ptr<JobDescription> > jobDescs;
 
     };
 

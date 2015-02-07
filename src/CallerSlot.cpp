@@ -28,10 +28,7 @@ CallerSlot::CallerSlot(const vislib::StringA& name,
  */
 CallerSlot::~CallerSlot(void) {
     SAFE_DELETE(this->call);
-    for (unsigned int i = 0; i < this->compDesc.Count(); i++) {
-        delete this->compDesc[i];
-    }
-    this->compDesc.Clear();
+    this->compDesc.clear();
 }
 
 

@@ -395,7 +395,7 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
             break;
 
         case cluster::netmessages::MSG_SET_CLUSTERVIEW: {
-            CallDescription *desc = CallDescriptionManager::Instance()->Find("CallRenderView");
+            factories::CallDescription::ptr desc = this->GetCoreInstance()->GetCallDescriptionManager().Find("CallRenderView");
             if (desc != NULL) {
                 Call *c = this->GetCoreInstance()->InstantiateCall(
                     this->FullName() + "::renderView",

@@ -13,7 +13,7 @@
 
 #include "mmcore/moldyn/AbstractParticleDataCall.h"
 #include "MultiParticleDataCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
 
 
@@ -180,7 +180,7 @@ namespace moldyn {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<DirectionalParticleDataCall>
+    typedef factories::CallAutoDescription<DirectionalParticleDataCall>
         DirectionalParticleDataCallDescription;
 
 

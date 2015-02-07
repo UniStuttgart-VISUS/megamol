@@ -6,15 +6,16 @@
  */
 #include "stdafx.h"
 #include "mmcore/RootModuleNamespace.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
-#include "mmcore/CallDescription.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/CallDescription.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/ModuleDescription.h"
-#include "mmcore/ModuleDescriptionManager.h"
+#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/assert.h"
@@ -168,10 +169,11 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
         }
 
         if (mod != NULL) {
-            ModuleDescription *d = NULL;
-            ModuleDescriptionManager::DescriptionIterator i = ModuleDescriptionManager::Instance()->GetIterator();
-            while (i.HasNext()) {
-                ModuleDescription *id = i.Next();
+            factories::ModuleDescription::ptr d;
+            //ModuleDescriptionManager::DescriptionIterator i = ModuleDescriptionManager::Instance()->GetIterator();
+            //while (i.HasNext()) {
+            //    ModuleDescription *id = i.Next();
+            for (auto id : this->core_inst->GetModuleDescriptionManager()) {
                 if (id->IsDescribing(mod)) {
                     d = id;
                     break;
@@ -186,10 +188,11 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
         if (caller != NULL) {
             Call *c = caller->CallAs<Call>();
             if (c == NULL) continue;
-            CallDescription *d = NULL;
-            CallDescriptionManager::DescriptionIterator i = CallDescriptionManager::Instance()->GetIterator();
-            while (i.HasNext()) {
-                CallDescription *id = i.Next();
+            factories::CallDescription::ptr d;
+            //CallDescriptionManager::DescriptionIterator i = CallDescriptionManager::Instance()->GetIterator();
+            //while (i.HasNext()) {
+            //    CallDescription *id = i.Next();
+            for (auto id : this->core_inst->GetCallDescriptionManager()) {
                 if (id->IsDescribing(c)) {
                     d = id;
                     break;

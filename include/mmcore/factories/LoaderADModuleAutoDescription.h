@@ -1,23 +1,22 @@
 /*
  * LoaderADModuleAutoDescription.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 - 2015 by MegaMol Consortium
+ * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_LOADERADMODULEAUTODESCRIPTION_H_INCLUDED
-#define MEGAMOLCORE_LOADERADMODULEAUTODESCRIPTION_H_INCLUDED
+#ifndef MEGAMOLCORE_FACTORIES_LOADERADMODULEAUTODESCRIPTION_H_INCLUDED
+#define MEGAMOLCORE_FACTORIES_LOADERADMODULEAUTODESCRIPTION_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/ModuleAutoDescription.h"
+#include "mmcore/factories/ModuleAutoDescription.h"
 #include "vislib/sys/Log.h"
 
 
 namespace megamol {
 namespace core {
-
+namespace factories {
 
     /**
      * Class of rendering graph module descriptions generated using static
@@ -123,7 +122,7 @@ namespace core {
 
     };
 
-
+} /* end namespace factories */
 } /* end namespace core */
 } /* end namespace megamol */
 

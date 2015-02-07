@@ -13,7 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 
@@ -141,7 +141,7 @@ namespace view {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallGetTransferFunction> CallGetTransferFunctionDescription;
+    typedef factories::CallAutoDescription<CallGetTransferFunction> CallGetTransferFunctionDescription;
 
 
 } /* end namespace view */

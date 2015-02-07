@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/job/DataWriterJob.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/DataWriterCtrlCall.h"
 #include "vislib/sys/Log.h"
 
@@ -19,7 +19,7 @@ using namespace megamol::core;
  */
 job::DataWriterJob::DataWriterJob() : AbstractThreadedJob(), Module(),
         writerSlot("writer", "Slot to the controlled writer module"), abortable(false) {
-    this->writerSlot.SetCompatibleCall<CallAutoDescription<DataWriterCtrlCall> >();
+    this->writerSlot.SetCompatibleCall<factories::CallAutoDescription<DataWriterCtrlCall> >();
     this->MakeSlotAvailable(&this->writerSlot);
 }
 

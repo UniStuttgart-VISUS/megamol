@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
@@ -702,7 +702,7 @@ namespace moldyn {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<ParticleGridDataCall>
+    typedef factories::CallAutoDescription<ParticleGridDataCall>
         ParticleGridDataCallDescription;
 
 

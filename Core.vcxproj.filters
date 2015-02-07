@@ -114,6 +114,12 @@
     <Filter Include="Source Files\vismol2">
       <UniqueIdentifier>{2df01365-f486-4089-aa34-85c0194b6eeb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\factories">
+      <UniqueIdentifier>{35833ddb-da37-44de-ba42-d4048ef6a5fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\factories">
+      <UniqueIdentifier>{76a37291-baaf-44c2-b856-1de604883ce2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">
@@ -278,12 +284,6 @@
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\CallDescription.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CallDescriptionManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\CalleeSlot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -314,31 +314,13 @@
     <ClCompile Include="src\JobInstanceRequest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\LoaderADModuleAutoDescription.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\MegaMolCore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ModuleAutoDescription.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ModuleDescription.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ModuleDescriptionManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\ModuleNamespace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ObjectDescription.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ObjectDescriptionManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ParamValueSetRequest.cpp">
@@ -381,9 +363,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Call.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CallAutoDescription.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\CallRegisterAtController.cpp">
@@ -884,21 +863,33 @@
     <ClCompile Include="src\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\factories\ModuleDescription.cpp">
+      <Filter>Source Files\factories</Filter>
+    </ClCompile>
+    <ClCompile Include="src\factories\ModuleDescriptionManager.cpp">
+      <Filter>Source Files\factories</Filter>
+    </ClCompile>
+    <ClCompile Include="src\factories\ObjectDescription.cpp">
+      <Filter>Source Files\factories</Filter>
+    </ClCompile>
+    <ClCompile Include="src\factories\CallDescription.cpp">
+      <Filter>Source Files\factories</Filter>
+    </ClCompile>
+    <ClCompile Include="src\factories\CallDescriptionManager.cpp">
+      <Filter>Source Files\factories</Filter>
+    </ClCompile>
+    <ClCompile Include="src\factories\ModuleClassRegistry.cpp">
+      <Filter>Source Files\factories</Filter>
+    </ClCompile>
+    <ClCompile Include="src\factories\CallClassRegistry.cpp">
+      <Filter>Source Files\factories</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\Call.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\CallAutoDescription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\CallDescription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\CallDescriptionManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\CalleeSlot.h">
@@ -931,34 +922,16 @@
     <ClInclude Include="include\mmcore\JobInstanceRequest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\mmcore\LoaderADModuleAutoDescription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\mmcore\mmd3d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\Module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\mmcore\ModuleAutoDescription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\ModuleDescription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\ModuleDescriptionManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\mmcore\ModuleNamespace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\nvstereo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\ObjectDescription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\ObjectDescriptionManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ParamValueSetRequest.h">
@@ -1520,6 +1493,45 @@
       <Filter>Header Files\vismol2</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\CallDescriptionManager.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\ModuleAutoDescription.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\ModuleDescription.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\ModuleDescriptionManager.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\ObjectDescription.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\ObjectDescriptionManager.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\CallAutoDescription.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\CallDescription.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\LoaderADModuleAutoDescription.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\ModuleClassRegistry.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\factories\CallClassRegistry.h">
+      <Filter>Header Files\factories</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\CallAutoDescription.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\ModuleAutoDescription.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

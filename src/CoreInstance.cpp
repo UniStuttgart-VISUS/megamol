@@ -17,19 +17,19 @@
 #include <string>
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/ObjectDescriptionManager.h"
+#include "mmcore/factories/ObjectDescriptionManager.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallDescription.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/CallDescription.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/ClusterViewMaster.h"
 #include "mmcore/cluster/simple/Server.h"
 #include "mmcore/Module.h"
-#include "mmcore/ModuleDescription.h"
-#include "mmcore/ModuleDescriptionManager.h"
+#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -116,14 +116,15 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         shaderSourceFactory(config), log(),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
-        timeOffset(0.0), plugins(), paramUpdateListeners() {
+        timeOffset(0.0), plugins(), paramUpdateListeners(),
+        core_module_classes(), core_call_classes() {
     //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
 
     profiler::Manager::Instance().SetCoreInstance(this);
-
+    this->namespaceRoot.SetCoreInstance(*this);
     this->config.instanceLog = &this->log;
 
     // Normalize timer with time offset to something less crappy shitty hateworthy
@@ -157,129 +158,129 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     //////////////////////////////////////////////////////////////////////
     // view descriptions
     //////////////////////////////////////////////////////////////////////
-    ViewDescription *vd;
+    std::shared_ptr<ViewDescription> vd;
 
     // empty view; name for compatibility reasons
-    vd = new ViewDescription("emptyview");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
+    vd = std::make_shared<ViewDescription>("emptyview");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
     // 'View3D' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
     // empty View3D
-    vd = new ViewDescription("emptyview3d");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
+    vd = std::make_shared<ViewDescription>("emptyview3d");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
     // 'View3D' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
     // empty View2D
-    vd = new ViewDescription("emptyview2d");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View2D"), "view");
+    vd = std::make_shared<ViewDescription>("emptyview2d");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View2D"), "view");
     // 'View2D' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
     // empty view (show the title); name for compatibility reasons
-    vd = new ViewDescription("titleview");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
+    vd = std::make_shared<ViewDescription>("titleview");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
     // 'View3D' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
     // view for powerwall
-    vd = new ViewDescription("powerwallview");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("PowerwallView"), "pwview");
-    //vd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl"); // TODO: Dependant instance!
-    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "pwview::register", "::cctrl::register");
+    vd = std::make_shared<ViewDescription>("powerwallview");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("PowerwallView"), "pwview");
+    //vd->AddModule(this->GetModuleDescriptionManager().Find("ClusterController"), "::cctrl"); // TODO: Dependant instance!
+    vd->AddCall(this->GetCallDescriptionManager().Find("CallRegisterAtController"), "pwview::register", "::cctrl::register");
     vd->SetViewModuleID("pwview");
     this->builtinViewDescs.Register(vd);
 
     // view for fusionex-hack (client side)
-    vd = new ViewDescription("simpleclusterview");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterClient"), "::scc");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterView"), "scview");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "scview::register", "::scc::registerView");
+    vd = std::make_shared<ViewDescription>("simpleclusterview");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterClient"), "::scc");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterView"), "scview");
+    vd->AddCall(this->GetCallDescriptionManager().Find("SimpleClusterClientViewRegistration"), "scview::register", "::scc::registerView");
     vd->SetViewModuleID("scview");
 
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "::logo");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRenderView"), "scview::renderView", "::logo::render");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "::logo");
+    vd->AddCall(this->GetCallDescriptionManager().Find("CallRenderView"), "scview::renderView", "::logo::render");
 
     this->builtinViewDescs.Register(vd);
 
-    vd = new ViewDescription("mpiclusterview");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterClient"), "::mcc");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("MpiProvider"), "::mpi");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("MpiClusterView"), "mcview");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "mcview::register", "::mcc::registerView");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("MpiCall"), "mcview::requestMpi", "::mpi::provideMpi");
+    vd = std::make_shared<ViewDescription>("mpiclusterview");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterClient"), "::mcc");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("MpiProvider"), "::mpi");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("MpiClusterView"), "mcview");
+    vd->AddCall(this->GetCallDescriptionManager().Find("SimpleClusterClientViewRegistration"), "mcview::register", "::mcc::registerView");
+    vd->AddCall(this->GetCallDescriptionManager().Find("MpiCall"), "mcview::requestMpi", "::mpi::provideMpi");
     vd->SetViewModuleID("mcview");
 
     this->builtinViewDescs.Register(vd);
 
     // test view for sphere rendering
-    vd = new ViewDescription("testspheres");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleSphereRenderer"), "rnd");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("TestSpheresDataSource"), "dat");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRender3D"), "view::rendering", "rnd::rendering");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
+    vd = std::make_shared<ViewDescription>("testspheres");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleSphereRenderer"), "rnd");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("TestSpheresDataSource"), "dat");
+    vd->AddCall(this->GetCallDescriptionManager().Find("CallRender3D"), "view::rendering", "rnd::rendering");
+    vd->AddCall(this->GetCallDescriptionManager().Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
     // test view for sphere rendering
-    vd = new ViewDescription("testgeospheres");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("View3D"), "view");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleGeoSphereRenderer"), "rnd");
-    vd->AddModule(ModuleDescriptionManager::Instance()->Find("TestSpheresDataSource"), "dat");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("CallRender3D"), "view::rendering", "rnd::rendering");
-    vd->AddCall(CallDescriptionManager::Instance()->Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
+    vd = std::make_shared<ViewDescription>("testgeospheres");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleGeoSphereRenderer"), "rnd");
+    vd->AddModule(this->GetModuleDescriptionManager().Find("TestSpheresDataSource"), "dat");
+    vd->AddCall(this->GetCallDescriptionManager().Find("CallRender3D"), "view::rendering", "rnd::rendering");
+    vd->AddCall(this->GetCallDescriptionManager().Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
     //////////////////////////////////////////////////////////////////////
     // job descriptions
     //////////////////////////////////////////////////////////////////////
-    JobDescription *jd;
+    std::shared_ptr<JobDescription> jd;
 
     // job for the cluster controller modules
-    jd = new JobDescription("clustercontroller");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl");
+    jd = std::make_shared<JobDescription>("clustercontroller");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("ClusterController"), "::cctrl");
     jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
     // job for the cluster controller head-node modules
-    jd = new JobDescription("clusterheadcontroller");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterController"), "::cctrl");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ClusterViewMaster"), "::cmaster");
-    jd->AddCall(CallDescriptionManager::Instance()->Find("CallRegisterAtController"), "::cmaster::register", "::cctrl::register");
+    jd = std::make_shared<JobDescription>("clusterheadcontroller");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("ClusterController"), "::cctrl");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("ClusterViewMaster"), "::cmaster");
+    jd->AddCall(this->GetCallDescriptionManager().Find("CallRegisterAtController"), "::cmaster::register", "::cctrl::register");
     jd->SetJobModuleID("::cctrl");
     this->builtinJobDescs.Register(jd);
 
     // job for the cluster display client heartbeat server
-    jd = new JobDescription("heartbeat");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterClient"), "::scc");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterHeartbeat"), "scheartbeat");
-    jd->AddCall(CallDescriptionManager::Instance()->Find("SimpleClusterClientViewRegistration"), "scheartbeat::register", "::scc::registerView");
+    jd = std::make_shared<JobDescription>("heartbeat");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterClient"), "::scc");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterHeartbeat"), "scheartbeat");
+    jd->AddCall(this->GetCallDescriptionManager().Find("SimpleClusterClientViewRegistration"), "scheartbeat::register", "::scc::registerView");
     jd->SetJobModuleID("scheartbeatthread");
     this->builtinJobDescs.Register(jd);
 
     // view for fusionex-hack (server side)
-    jd = new JobDescription("simpleclusterserver");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("SimpleClusterServer"), "::scs");
+    jd = std::make_shared<JobDescription>("simpleclusterserver");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterServer"), "::scs");
     jd->SetJobModuleID("::scs");
     this->builtinJobDescs.Register(jd);
 
     // // TODO: Replace (is deprecated)
     // job to produce images
-    jd = new JobDescription("imagemaker");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("ScreenShooter"), "imgmaker");
+    jd = std::make_shared<JobDescription>("imagemaker");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("ScreenShooter"), "imgmaker");
     jd->SetJobModuleID("imgmaker");
     this->builtinJobDescs.Register(jd);
 
     // TODO: Debug
-    jd = new JobDescription("DEBUGjob");
-    jd->AddModule(ModuleDescriptionManager::Instance()->Find("JobThread"), "ctrl");
+    jd = std::make_shared<JobDescription>("DEBUGjob");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("JobThread"), "ctrl");
     jd->SetJobModuleID("ctrl");
     this->builtinJobDescs.Register(jd);
 
@@ -317,9 +318,6 @@ megamol::core::CoreInstance::~CoreInstance(void) {
         this->closeViewJob(child);
     }
     this->namespaceRoot.ModuleGraphLock().UnlockExclusive();
-
-    ModuleDescriptionManager::ShutdownInstance();
-    CallDescriptionManager::ShutdownInstance();
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Cleanup();
@@ -416,16 +414,14 @@ void megamol::core::CoreInstance::Initialise(void) {
         utility::Configuration::InstanceRequest r
             = this->config.GetNextInstantiationRequest();
 
-        megamol::core::ViewDescription *vd = this->FindViewDescription(
-            vislib::StringA(r.Description()));
-        if (vd != NULL) {
-            this->RequestViewInstantiation(vd, r.Identifier(), &r);
+        std::shared_ptr<const megamol::core::ViewDescription> vd = this->FindViewDescription(vislib::StringA(r.Description()));
+        if (vd) {
+            this->RequestViewInstantiation(vd.get(), r.Identifier(), &r);
             continue;
         }
-        megamol::core::JobDescription *jd = this->FindJobDescription(
-            vislib::StringA(r.Description()));
-        if (jd != NULL) {
-            this->RequestJobInstantiation(jd, r.Identifier(), &r);
+        std::shared_ptr<const megamol::core::JobDescription> jd = this->FindJobDescription(vislib::StringA(r.Description()));
+        if (jd) {
+            this->RequestJobInstantiation(jd.get(), r.Identifier(), &r);
             continue;
         }
 
@@ -525,9 +521,9 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key,
 /*
  * megamol::core::CoreInstance::FindViewDescription
  */
-megamol::core::ViewDescription*
+std::shared_ptr<const megamol::core::ViewDescription>
 megamol::core::CoreInstance::FindViewDescription(const char *name) {
-    ViewDescription *d = NULL;
+    std::shared_ptr<const ViewDescription> d = NULL;
     if (d == NULL) {
         d = this->projViewDescs.Find(name);
     }
@@ -537,41 +533,31 @@ megamol::core::CoreInstance::FindViewDescription(const char *name) {
     return d;
 }
 
+
 /*
  * megamol::core::CoreInstance::EnumViewDescriptions
  */
-void megamol::core::CoreInstance::EnumViewDescriptions(mmcEnumStringAFunction func, void *data, bool getBuiltinToo)
-{
-	assert(func);
-
-	auto it = this->projViewDescs.GetIterator();
-	while( it.HasNext() ){
-		auto vd = it.Next();
-		func(vd->ClassName(), data);
-	}
-
-	if( getBuiltinToo ) {
-		it = this->builtinViewDescs.GetIterator();
-		while( it.HasNext() ){
-			auto vd = it.Next();
-			func(vd->ClassName(), data);
-		}
-	}
-
+void megamol::core::CoreInstance::EnumViewDescriptions(mmcEnumStringAFunction func, void *data, bool getBuiltinToo) {
+    assert(func);
+    for (auto vd : this->projViewDescs) {
+        func(vd->ClassName(), data);
+    }
+    if (getBuiltinToo) {
+        for (auto vd : this->builtinViewDescs) {
+            func(vd->ClassName(), data);
+        }
+    }
 }
+
 
 /*
  * megamol::core::CoreInstance::FindJobDescription
  */
-megamol::core::JobDescription*
+std::shared_ptr<const megamol::core::JobDescription>
 megamol::core::CoreInstance::FindJobDescription(const char *name) {
-    JobDescription *d = NULL;
-    if (d == NULL) {
-        d = this->projJobDescs.Find(name);
-    }
-    if (d == NULL) {
-        d = this->builtinJobDescs.Find(name);
-    }
+    std::shared_ptr<const JobDescription> d;
+    if (!d) d = this->projJobDescs.Find(name);
+    if (!d) d = this->builtinJobDescs.Find(name);
     return d;
 }
 
@@ -580,28 +566,24 @@ megamol::core::CoreInstance::FindJobDescription(const char *name) {
  * megamol::core::CoreInstance::RequestAllInstantiations
  */
 void megamol::core::CoreInstance::RequestAllInstantiations() {
-    auto itervd = this->projViewDescs.GetIterator();
-    while (itervd.HasNext()) {
+    for (auto vd : this->projViewDescs) {
         int cnt = static_cast<int>(this->pendingViewInstRequests.Count());
         std::string s = std::to_string(cnt);
         vislib::StringA name = "v";
         name.Append(s.c_str());
-        ViewDescription *vd = itervd.Next();
         ViewInstanceRequest req;
         req.SetName(name);
-        req.SetDescription(vd);
+        req.SetDescription(vd.get());
         this->pendingViewInstRequests.Add(req);
     }
-    auto iterjd = this->projJobDescs.GetIterator();
-    while (iterjd.HasNext()) {
+    for (auto jd : this->projJobDescs) {
         int cnt = static_cast<int>(this->pendingJobInstRequests.Count());
         std::string s = std::to_string(cnt);
         vislib::StringA name = "j";
         name.Append(s.c_str());
-        JobDescription *jd = iterjd.Next();
         JobInstanceRequest req;
         req.SetName(name);
-        req.SetDescription(jd);
+        req.SetDescription(jd.get());
         this->pendingJobInstRequests.Add(req);
     }
 }
@@ -611,7 +593,7 @@ void megamol::core::CoreInstance::RequestAllInstantiations() {
  * megamol::core::CoreInstance::RequestViewInstantiation
  */
 void megamol::core::CoreInstance::RequestViewInstantiation(
-        megamol::core::ViewDescription *desc, const vislib::StringA& id,
+        const megamol::core::ViewDescription *desc, const vislib::StringA& id,
         const ParamValueSetRequest *param) {
     if (id.Find(':') != vislib::StringA::INVALID_POS) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -620,7 +602,7 @@ void megamol::core::CoreInstance::RequestViewInstantiation(
     }
     // could check here if the description is instantiable, but I do not want
     // to.
-    ASSERT(desc != NULL);
+    ASSERT(desc);
     ViewInstanceRequest req;
     req.SetName(id);
     req.SetDescription(desc);
@@ -635,7 +617,7 @@ void megamol::core::CoreInstance::RequestViewInstantiation(
  * megamol::core::CoreInstance::RequestJobInstantiation
  */
 void megamol::core::CoreInstance::RequestJobInstantiation(
-        megamol::core::JobDescription *desc, const vislib::StringA& id,
+        const megamol::core::JobDescription *desc, const vislib::StringA& id,
         const ParamValueSetRequest *param) {
     if (id.Find(':') != vislib::StringA::INVALID_POS) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -644,7 +626,7 @@ void megamol::core::CoreInstance::RequestJobInstantiation(
     }
     // could check here if the description is instantiable, but I do not want
     // to.
-    ASSERT(desc != NULL);
+    ASSERT(desc);
     JobInstanceRequest req;
     req.SetName(id);
     req.SetDescription(desc);
@@ -711,11 +693,11 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
     // instantiate modules
     for (unsigned int idx = 0; idx < request.Description()->ModuleCount(); idx++) {
         const ViewDescription::ModuleInstanceRequest &mir = request.Description()->Module(idx);
-        ModuleDescription *desc = mir.Second();
+        factories::ModuleDescription::ptr desc = mir.Second();
 
         vislib::StringA fullName = this->namespaceRoot.FullNamespace(request.Name(), mir.First());
 
-        if (desc == NULL) {
+        if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate module \"%s\": request data corrupted "
                 "due invalid module class name.\n", fullName.PeekBuffer());
@@ -757,12 +739,12 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
     // instantiate calls
     for (unsigned int idx = 0; idx < request.Description()->CallCount(); idx++) {
         const ViewDescription::CallInstanceRequest &cir = request.Description()->Call(idx);
-        CallDescription *desc = cir.Description();
+        factories::CallDescription::ptr desc = cir.Description();
 
         vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.From());
         vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.To());
 
-        if (desc == NULL) {
+        if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate call \"%s\"=>\"%s\": request data corrupted "
                 "due invalid call class name.\n",
@@ -825,10 +807,10 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
     // instantiate modules
     for (unsigned int idx = 0; idx < vd->ModuleCount(); idx++) {
         const ViewDescription::ModuleInstanceRequest &mir = vd->Module(idx);
-        ModuleDescription *desc = mir.Second();
+        factories::ModuleDescription::ptr desc = mir.Second();
         const vislib::StringA& fullName = mir.First();
 
-        if (desc == NULL) {
+        if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate module \"%s\": request data corrupted "
                 "due invalid module class name.\n", fullName.PeekBuffer());
@@ -868,11 +850,11 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
     // instantiate calls
     for (unsigned int idx = 0; idx < vd->CallCount(); idx++) {
         const ViewDescription::CallInstanceRequest &cir = vd->Call(idx);
-        CallDescription *desc = cir.Description();
+        factories::CallDescription::ptr desc = cir.Description();
         const vislib::StringA& fromFullName = cir.From();
         const vislib::StringA& toFullName = cir.To();
 
-        if (desc == NULL) {
+        if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate call \"%s\"=>\"%s\": request data corrupted "
                 "due invalid call class name.\n",
@@ -945,11 +927,11 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
     // instantiate modules
     for (unsigned int idx = 0; idx < request.Description()->ModuleCount(); idx++) {
         const JobDescription::ModuleInstanceRequest &mir = request.Description()->Module(idx);
-        ModuleDescription *desc = mir.Second();
+        factories::ModuleDescription::ptr desc = mir.Second();
 
         vislib::StringA fullName = this->namespaceRoot.FullNamespace(request.Name(), mir.First());
 
-        if (desc == NULL) {
+        if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate module \"%s\": request data corrupted "
                 "due invalid module class name.\n", fullName.PeekBuffer());
@@ -991,12 +973,12 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
     // instantiate calls
     for (unsigned int idx = 0; idx < request.Description()->CallCount(); idx++) {
         const JobDescription::CallInstanceRequest &cir = request.Description()->Call(idx);
-        CallDescription *desc = cir.Description();
+        factories::CallDescription::ptr desc = cir.Description();
 
         vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.From());
         vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.To());
 
-        if (desc == NULL) {
+        if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate call \"%s\"=>\"%s\": request data corrupted "
                 "due invalid call class name.\n",
@@ -1048,15 +1030,15 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
 vislib::SmartPtr<megamol::core::param::AbstractParam>
 megamol::core::CoreInstance::FindParameterIndirect(const vislib::StringA& name, bool quiet)
 {
-	vislib::StringA paramName(name);
-	vislib::SmartPtr<core::param::AbstractParam> param;
-	vislib::SmartPtr<core::param::AbstractParam> lastParam;
-	while ((param = this->FindParameter(paramName, quiet)) != nullptr)
-	{
-		lastParam = param;
-		paramName = param->ValueString();
-	}
-	return lastParam;
+    vislib::StringA paramName(name);
+    vislib::SmartPtr<core::param::AbstractParam> param;
+    vislib::SmartPtr<core::param::AbstractParam> lastParam;
+    while ((param = this->FindParameter(paramName, quiet)) != nullptr)
+    {
+        lastParam = param;
+        paramName = param->ValueString();
+    }
+    return lastParam;
 }
 
 /*
@@ -1070,18 +1052,18 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
     vislib::sys::AutoLock lock(locker);
 
     vislib::Array<vislib::StringA> path = vislib::StringTokeniserA::Split(name, "::", true);
-	vislib::StringA slotName("");
-	if (path.Count() > 0)
-	{
-		slotName = path.Last();
-		path.RemoveLast();
-	}
-	vislib::StringA modName("");
-	if (path.Count() > 0)
-	{
-		modName = path.Last();
-		path.RemoveLast();
-	}
+    vislib::StringA slotName("");
+    if (path.Count() > 0)
+    {
+        slotName = path.Last();
+        path.RemoveLast();
+    }
+    vislib::StringA modName("");
+    if (path.Count() > 0)
+    {
+        modName = path.Last();
+        path.RemoveLast();
+    }
 
     ModuleNamespace *mn = NULL;
     // parameter slots may have namespace operators in their names!
@@ -1093,95 +1075,95 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
                 modName = path.Last();
                 path.RemoveLast();
             } else {
-			/*	if(create)
-				{
-					param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
-					*slotNew << new param::StringParam("");
-					slotNew->MakeAvailable();
-					this->namespaceRoot.AddChild(slotNew);
-				}
-				else*/
-				{
-					if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-						"Cannot find parameter \"%s\": namespace not found",
-						name.PeekBuffer());
-					return NULL;
-				}
+            /*	if(create)
+                {
+                    param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
+                    *slotNew << new param::StringParam("");
+                    slotNew->MakeAvailable();
+                    this->namespaceRoot.AddChild(slotNew);
+                }
+                else*/
+                {
+                    if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        "Cannot find parameter \"%s\": namespace not found",
+                        name.PeekBuffer());
+                    return NULL;
+                }
             }
         }
     }
 
     Module *mod = dynamic_cast<Module *>(mn->FindChild(modName));
     if (mod == NULL) {
-	/*	if(create)
-		{
-			param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
-			*slot << new param::StringParam("");
-			slot->MakeAvailable();
-			this->namespaceRoot.AddChild(slot);
-			//mod = dynamic_cast<Module *>(this->namespaceRoot.FindChild(modName));
-			return FindParameter(name, quiet, false);
-		}
-		else*/
-		{
-			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-				"Cannot find parameter \"%s\": module not found",
-				name.PeekBuffer());
-	        return NULL;
-		}
+    /*	if(create)
+        {
+            param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
+            *slot << new param::StringParam("");
+            slot->MakeAvailable();
+            this->namespaceRoot.AddChild(slot);
+            //mod = dynamic_cast<Module *>(this->namespaceRoot.FindChild(modName));
+            return FindParameter(name, quiet, false);
+        }
+        else*/
+        {
+            if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Cannot find parameter \"%s\": module not found",
+                name.PeekBuffer());
+            return NULL;
+        }
     }
 
     param::ParamSlot *slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName));
     if (slot == NULL) {
-	/*	if(create)
-		{
-			param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
-			*slotNew << new param::StringParam("");
-			slotNew->MakeAvailable();
-			this->namespaceRoot.AddChild(slotNew);
-			slot = slotNew;
-		}
-		else*/
-		{
-			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-				"Cannot find parameter \"%s\": slot not found",
-				name.PeekBuffer());
-			return NULL;
-		}
+    /*	if(create)
+        {
+            param::ParamSlot *slotNew = new param::ParamSlot(name, "newly inserted");
+            *slotNew << new param::StringParam("");
+            slotNew->MakeAvailable();
+            this->namespaceRoot.AddChild(slotNew);
+            slot = slotNew;
+        }
+        else*/
+        {
+            if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Cannot find parameter \"%s\": slot not found",
+                name.PeekBuffer());
+            return NULL;
+        }
     }
     if (slot->GetStatus() == AbstractSlot::STATUS_UNAVAILABLE) {
     /*    if(create)
-		{
-			param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
-			*slotNew << new param::StringParam("");
-			slotNew->MakeAvailable();
-			this->namespaceRoot.AddChild(slotNew);
-			slot = slotNew;
-		}
-		else*/
-		{
-			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-				"Cannot find parameter \"%s\": slot is not available",
-				name.PeekBuffer());
-			return NULL;
-		}
+        {
+            param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
+            *slotNew << new param::StringParam("");
+            slotNew->MakeAvailable();
+            this->namespaceRoot.AddChild(slotNew);
+            slot = slotNew;
+        }
+        else*/
+        {
+            if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Cannot find parameter \"%s\": slot is not available",
+                name.PeekBuffer());
+            return NULL;
+        }
     }
     if (slot->Parameter().IsNull()) {
     /*    if(create)
-		{
-			param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
-			*slotNew << new param::StringParam("");
-			slotNew->MakeAvailable();
-			this->namespaceRoot.AddChild(slotNew);
-			slot = slotNew;
-		}
-		else*/
-		{
-			if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-				"Cannot find parameter \"%s\": slot has no parameter",
-				name.PeekBuffer());
-			return NULL;
-		}
+        {
+            param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");
+            *slotNew << new param::StringParam("");
+            slotNew->MakeAvailable();
+            this->namespaceRoot.AddChild(slotNew);
+            slot = slotNew;
+        }
+        else*/
+        {
+            if (!quiet) Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Cannot find parameter \"%s\": slot has no parameter",
+                name.PeekBuffer());
+            return NULL;
+        }
     }
 
 
@@ -1332,7 +1314,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
                 continue;
             }
 
-            ModuleDescription *d = ModuleDescriptionManager::Instance()->Find(modClass);
+            factories::ModuleDescription::ptr d = this->GetModuleDescriptionManager().Find(modClass);
             if (d == NULL) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "Unable to instantiate module %s(%s): class description not found\n",
@@ -1373,7 +1355,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
                 continue;
             }
 
-            CallDescription *d = CallDescriptionManager::Instance()->Find(callClass);
+            factories::CallDescription::ptr d = this->GetCallDescriptionManager().Find(callClass);
             if (d == NULL) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "Unable to instantiate call %s=>%s(%s): class description not found\n",
@@ -1470,12 +1452,13 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
     }
 
     // auto-detect data source module
-    ModuleDescription *dataSrcClass = NULL;
-    ModuleDescriptionManager::DescriptionIterator di = ModuleDescriptionManager::Instance()->GetIterator();
+    factories::ModuleDescription::ptr dataSrcClass = NULL;
+//    factories::ModuleDescriptionManager::description_const_iterator_type di = ModuleDescriptionManager::Instance()->GetIterator();
 
     // first try auto-detect with loaders with matching file name extension
-    while (di.HasNext()) {
-        ModuleDescription *md = di.Next();
+//    while (di.HasNext()) {
+//        ModuleDescription *md = di.Next();
+    for (auto md : this->GetModuleDescriptionManager()) {
         if (!md->IsLoaderWithAutoDetection()) continue;
         const char *extsStr = md->LoaderAutoDetectionFilenameExtensions();
         if (extsStr == NULL) continue;
@@ -1499,9 +1482,10 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
 
     if (dataSrcClass == NULL) {
         // brute force auto-detection
-        di = ModuleDescriptionManager::Instance()->GetIterator();
-        while (di.HasNext()) {
-            ModuleDescription *md = di.Next();
+        //di = ModuleDescriptionManager::Instance()->GetIterator();
+        //while (di.HasNext()) {
+        //    ModuleDescription *md = di.Next();
+        for (auto md : this->GetModuleDescriptionManager()) {
             if (!md->IsLoaderWithAutoDetection()) continue;
             float adcv = md->LoaderAutoDetection(buffer, bufferSize);
             Log::DefaultLog.WriteInfo(100, "Module %s auto-detect confidence %f\n", md->ClassName(), adcv);
@@ -1538,9 +1522,10 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
 
         // use this renderer
         bool found = false;
-        di = ModuleDescriptionManager::Instance()->GetIterator();
-        while (di.HasNext()) {
-            ModuleDescription *md = di.Next();
+        //di = ModuleDescriptionManager::Instance()->GetIterator();
+        //while (di.HasNext()) {
+        //    ModuleDescription *md = di.Next();
+        for (auto md : this->GetModuleDescriptionManager()) {
             if (!rndName.Equals(md->ClassName())) continue;
             view.AddModule(md, "renderer");
             found = true;
@@ -1589,7 +1574,7 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
         ASSERT(!view.ViewModuleID().IsEmpty());
     }
 
-    ViewDescription *newview = new ViewDescription(view.ClassName());
+    std::shared_ptr<ViewDescription> newview(new ViewDescription(view.ClassName()));
     Log::DefaultLog.WriteInfo(10, "Quickstart module graph with %u modules and %u calls defined:",
             view.ModuleCount(), view.CallCount());
     for (unsigned int i = 0; i < view.ModuleCount(); i++) {
@@ -1611,7 +1596,7 @@ void megamol::core::CoreInstance::Quickstart(const vislib::TString& filename) {
     this->builtinViewDescs.Register(newview);
 
     viewName.Format("q%d", quickstartCounter);
-    this->RequestViewInstantiation(newview, viewName);
+    this->RequestViewInstantiation(newview.get(), viewName);
     quickstartCounter++;
     Log::DefaultLog.WriteInfo("Quickstart view instantiation request posted");
 
@@ -1632,10 +1617,11 @@ void megamol::core::CoreInstance::QuickstartRegistry(const vislib::TString& fron
     }
     if (filetype.Equals(_T("*"))) {
         // all file types
-        ModuleDescriptionManager::DescriptionIterator di
-            = ModuleDescriptionManager::Instance()->GetIterator();
-        while (di.HasNext()) {
-            const ModuleDescription *md = di.Next();
+        //ModuleDescriptionManager::DescriptionIterator di
+        //    = ModuleDescriptionManager::Instance()->GetIterator();
+        //while (di.HasNext()) {
+        //    const ModuleDescription *md = di.Next();
+        for (auto md : this->GetModuleDescriptionManager()) {
             if (!md->IsVisibleForQuickstart()) continue;
             const char *fnextsstr = md->LoaderAutoDetectionFilenameExtensions();
             const char *fnnamestr = md->LoaderFileTypeName();
@@ -1659,10 +1645,11 @@ void megamol::core::CoreInstance::QuickstartRegistry(const vislib::TString& fron
 
     vislib::TString fnext(filetype);
     if (fnext[0] != _T('.')) fnext.Prepend(_T("."));
-    ModuleDescriptionManager::DescriptionIterator di
-        = ModuleDescriptionManager::Instance()->GetIterator();
-    while (di.HasNext()) {
-        const ModuleDescription *md = di.Next();
+    //ModuleDescriptionManager::DescriptionIterator di
+    //    = ModuleDescriptionManager::Instance()->GetIterator();
+    //while (di.HasNext()) {
+    //    const ModuleDescription *md = di.Next();
+    for (auto md : this->GetModuleDescriptionManager()) {
         if (!md->IsVisibleForQuickstart()) continue;
         const char *fnextsstr = md->LoaderAutoDetectionFilenameExtensions();
         if (fnextsstr == NULL) continue;
@@ -1698,17 +1685,17 @@ void megamol::core::CoreInstance::QuickstartRegistry(const vislib::TString& fron
  * megamol::core::CoreInstance::addProject::WriteStateToXML
  */
 bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
-    using namespace vislib::sys;
+    //using namespace vislib::sys;
 
-    BufferedFile outfile;
-    if (!outfile.Open(outFilename, File::WRITE_ONLY, File::SHARE_READ,
-            File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to create state file file.");
+    vislib::sys::BufferedFile outfile;
+    if (!outfile.Open(outFilename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
+            vislib::sys::File::CREATE_OVERWRITE)) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to create state file file.");
         return false;
     } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "State has been written to '%s'",
-                outFilename);
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "State has been written to '%s'", outFilename);
     }
 
     // Write root tag and 'header'
@@ -1722,8 +1709,8 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
     // collect data
     vislib::Stack<AbstractNamedObject *> stack;
     stack.Push(&this->namespaceRoot);
-    auto itervd = this->projViewDescs.GetIterator();
-    auto iterjd = this->projJobDescs.GetIterator();
+    //auto itervd = this->projViewDescs.GetIterator();
+    //auto iterjd = this->projJobDescs.GetIterator();
 
     int nViews = 1;
     int nJobs = 1;
@@ -1820,11 +1807,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
             WriteLineToFile(outfile, closeModuleTags.PeekBuffer());
             closeModuleTags.Clear();
 
-            ModuleDescription *d = NULL;
-            ModuleDescriptionManager::DescriptionIterator i =
-                    ModuleDescriptionManager::Instance()->GetIterator();
-            while (i.HasNext()) {
-                ModuleDescription *id = i.Next();
+            factories::ModuleDescription::ptr d;
+            //ModuleDescriptionManager::DescriptionIterator i =
+            //        ModuleDescriptionManager::Instance()->GetIterator();
+            //while (i.HasNext()) {
+            //    ModuleDescription *id = i.Next();
+            for (auto id : this->GetModuleDescriptionManager()) {
                 if (id->IsDescribing(mod)) {
                     d = id;
                     break;
@@ -1857,11 +1845,12 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
             Call *c = caller->CallAs<Call>();
             if (c == NULL)
                 continue;
-            CallDescription *d = NULL;
-            CallDescriptionManager::DescriptionIterator i =
-                    CallDescriptionManager::Instance()->GetIterator();
-            while (i.HasNext()) {
-                CallDescription *id = i.Next();
+            factories::CallDescription::ptr d;
+            //CallDescriptionManager::DescriptionIterator i =
+            //        CallDescriptionManager::Instance()->GetIterator();
+            //while (i.HasNext()) {
+            //    CallDescription *id = i.Next();
+            for (auto id : this->GetCallDescriptionManager()) {
                 if (id->IsDescribing(c)) {
                     d = id;
                     break;
@@ -1901,13 +1890,13 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                WriteLineToFile<char>(outfile,
+                vislib::sys::WriteLineToFile<char>(outfile,
                         W2A(param->Parameter()->ValueString().PeekBuffer()));
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
 #endif
                 WriteLineToFile(outfile, "\" />-->\n");
             } else {
@@ -1915,13 +1904,13 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
-                WriteLineToFile<char>(outfile,
+                vislib::sys::WriteLineToFile<char>(outfile,
                         W2A(param->Parameter()->ValueString().PeekBuffer()));
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
                 // however, that does not compile under linux
-                WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
+                vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().PeekBuffer());
 #endif
                 WriteLineToFile(outfile, "\" />\n");
             }
@@ -1951,18 +1940,18 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
 void megamol::core::CoreInstance::addProject(
         megamol::core::utility::xml::XmlReader& reader) {
     using vislib::sys::Log;
-    utility::ProjectParser parser;
+    utility::ProjectParser parser(this);
     parser.SetConfigSetProvider(&this->config);
     if (parser.Parse(reader)) {
         // success, add project elements
-        ViewDescription *vd = NULL;
+        std::shared_ptr<ViewDescription> vd;
         while (true) {
             vd = parser.PopViewDescription();
             if (vd != NULL) {
                 this->projViewDescs.Register(vd);
             } else break;
         }
-        JobDescription *jd = NULL;
+        std::shared_ptr<JobDescription> jd;
         while (true) {
             jd = parser.PopJobDescription();
             if (jd != NULL) {
@@ -2018,7 +2007,7 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer *c) {
  * megamol::core::CoreInstance::instantiateModule
  */
 megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
-        const vislib::StringA path, ModuleDescription* desc) {
+        const vislib::StringA path, factories::ModuleDescription::ptr desc) {
     using vislib::sys::Log;
     VLSTACKTRACE("instantiateModule", __FILE__, __LINE__);
 
@@ -2031,7 +2020,7 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
     unsigned int crlc = 0;
     mmcCallerSlotDescription *crl = NULL;
 
-    ::mmcGetModuleSlotDescriptions(static_cast<void*>(desc),
+    ::mmcGetModuleSlotDescriptions(const_cast<void*>(static_cast<const void*>(desc.get())),
         &plc, &pl, &celc, &cel, &crlc, &crl);
 
     ::mmcReleaseModuleSlotDescriptions(
@@ -2074,27 +2063,35 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
         return NULL;
     }
 
-    Module *mod = desc->CreateModule(modName, this);
+    Module *mod = desc->CreateModule(modName);
     if (mod == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to construct module \"%s\" (%s)",
             desc->ClassName(), path.PeekBuffer());
 
-    } else if (!mod->Create()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Unable to create module \"%s\" (%s)",
-            desc->ClassName(), path.PeekBuffer());
-        SAFE_DELETE(mod);
+    } else{
+        RootModuleNamespace tmpRoot;
+        tmpRoot.SetCoreInstance(*this);
+        tmpRoot.AddChild(mod);
 
-    } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
-            "Created module \"%s\" (%s)",
-            desc->ClassName(), path.PeekBuffer());
-        cns->AddChild(mod);
+        if (!mod->Create()) {
+            tmpRoot.RemoveChild(mod);
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Unable to create module \"%s\" (%s)",
+                desc->ClassName(), path.PeekBuffer());
+            SAFE_DELETE(mod);
+
+        } else {
+            tmpRoot.RemoveChild(mod);
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
+                "Created module \"%s\" (%s)",
+                desc->ClassName(), path.PeekBuffer());
+            cns->AddChild(mod);
 #if defined(DEBUG) || defined(_DEBUG)
-        debugDumpSlots(mod);
+            debugDumpSlots(mod);
 #endif /* DEBUG || _DEBUG */
 
+        }
     }
 
     return mod;
@@ -2106,7 +2103,7 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
  */
 megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
         const vislib::StringA fromPath, const vislib::StringA toPath,
-        megamol::core::CallDescription* desc) {
+        megamol::core::factories::CallDescription::ptr desc) {
     using vislib::sys::Log;
     VLSTACKTRACE("InstantiateCall", __FILE__, __LINE__);
 
@@ -2566,8 +2563,9 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     for (int i = 0; i < modCnt; i++) {
         void * modPtr = mmplgModuleDescription(i);
         if (modPtr == NULL) continue;
-        ModuleDescriptionManager::Instance()->Register(
-            reinterpret_cast<ModuleDescription *>(modPtr));
+        factories::ModuleDescription::ptr mdp(static_cast<factories::ModuleDescription*>(modPtr));
+        // TODO: Change me!
+        this->core_module_classes.Register(mdp);
         modCntVal++;
     }
 
@@ -2576,8 +2574,9 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     for (int i = 0; i < callCnt; i++) {
         void * callPtr = mmplgCallDescription(i);
         if (callPtr == NULL) continue;
-        CallDescriptionManager::Instance()->Register(
-            reinterpret_cast<CallDescription *>(callPtr));
+        factories::CallDescription::ptr cdp(static_cast<factories::CallDescription*>(callPtr));
+        // TODO: Change me!
+        this->core_call_classes.Register(cdp);
         callCntVal++;
     }
 
@@ -2712,18 +2711,18 @@ bool megamol::core::CoreInstance::quickConnectUp(megamol::core::ViewDescription&
 /*
  * megamol::core::CoreInstance::quickConnectUpStepInfo
  */
-void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDescription *from,
+void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factories::ModuleDescription::ptr from,
         vislib::Array<megamol::core::CoreInstance::quickStepInfo>& step) {
     using vislib::sys::Log;
     ASSERT(from != NULL);
     step.Clear();
 
-    Module *m = from->CreateModule("quickstarttest", this);
+    Module *m = from->CreateModule("quickstarttest");
     if (m == NULL) {
         Log::DefaultLog.WriteError("Unable to test-instantiate module %s", from->ClassName());
         return;
     }
-    vislib::SingleLinkedList<vislib::Pair<CallDescription*, vislib::StringA> > inCalls;
+    vislib::SingleLinkedList<vislib::Pair<factories::CallDescription::ptr, vislib::StringA> > inCalls;
     vislib::Stack<AbstractNamedObjectContainer *> stack(m);
     while (!stack.IsEmpty()) {
         AbstractNamedObjectContainer *anoc = stack.Pop();
@@ -2736,10 +2735,11 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDe
             if (dynamic_cast<CalleeSlot*>(ano) != NULL) {
                 CalleeSlot *callee = dynamic_cast<CalleeSlot*>(ano);
 
-                CallDescriptionManager::DescriptionIterator cdi = CallDescriptionManager::Instance()->GetIterator();
-                while (cdi.HasNext()) {
-                    CallDescription *cd = cdi.Next();
-                    vislib::Pair<CallDescription*, vislib::StringA> cse(cd, callee->Name());
+                //factoirCallDescriptionManager::DescriptionIterator cdi = CallDescriptionManager::Instance()->GetIterator();
+                //while (cdi.HasNext()) {
+                //    CallDescription *cd = cdi.Next();
+                for (auto cd : this->GetCallDescriptionManager()) {
+                    vislib::Pair<factories::CallDescription::ptr, vislib::StringA> cse(cd, callee->Name());
                     if (inCalls.Contains(cse)) continue;
                     if (callee->IsCallCompatible(cd)) {
                         inCalls.Add(cse);
@@ -2753,12 +2753,13 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDe
     delete m;
     // now 'inCalls' holds all calls which can connect to 'from' (some slot)
 
-    ModuleDescriptionManager::DescriptionIterator mdi = ModuleDescriptionManager::Instance()->GetIterator();
-    while (mdi.HasNext()) {
-        ModuleDescription *md = mdi.Next();
+    //ModuleDescriptionManager::DescriptionIterator mdi = ModuleDescriptionManager::Instance()->GetIterator();
+    //while (mdi.HasNext()) {
+    //    ModuleDescription *md = mdi.Next();
+    for (auto md : this->GetModuleDescriptionManager()) {
         if (md == from) continue;
         if (!md->IsVisibleForQuickstart()) continue;
-        m = md->CreateModule("quickstarttest", this);
+        m = md->CreateModule("quickstarttest");
         if (m == NULL) continue;
 
         bool connectable = false;
@@ -2777,10 +2778,10 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::ModuleDe
                     CallerSlot *caller = dynamic_cast<CallerSlot*>(ano);
                     ASSERT(caller != NULL);
 
-                    vislib::SingleLinkedList<vislib::Pair<CallDescription*, vislib::StringA> >::Iterator cdi = inCalls.GetIterator();
+                    vislib::SingleLinkedList<vislib::Pair<factories::CallDescription::ptr, vislib::StringA> >::Iterator cdi = inCalls.GetIterator();
                     while (cdi.HasNext() && !connectable) {
-                        const vislib::Pair<CallDescription*, vislib::StringA> &cde = cdi.Next();
-                        CallDescription *cd = cde.First();
+                        const vislib::Pair<factories::CallDescription::ptr, vislib::StringA> &cde = cdi.Next();
+                        factories::CallDescription::ptr cd = cde.First();
                         ASSERT(cd != NULL);
                         if (caller->IsCallCompatible(cd)) {
                             connectable = true;

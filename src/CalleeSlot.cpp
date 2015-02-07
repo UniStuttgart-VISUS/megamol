@@ -11,6 +11,7 @@
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/profiler/Manager.h"
+#include "mmcore/CoreInstance.h"
 
 using namespace megamol::core;
 
@@ -64,6 +65,50 @@ CalleeSlot::~CalleeSlot(void) {
         delete this->callbacks[i];
     }
     this->callbacks.Clear();
+}
+
+
+/*
+ * CalleeSlot::ConnectCall
+ */
+bool CalleeSlot::ConnectCall(megamol::core::Call *call) {
+    vislib::sys::AbstractReaderWriterLock& lock = this->Parent()->ModuleGraphLock();
+    lock.LockExclusive();
+    if (call == NULL) {
+        this->SetStatusDisconnected(); // TODO: This is wrong! Reference counting!
+        lock.UnlockExclusive();
+        return true;
+    }
+    core::CoreInstance& coreInst = *this->GetCoreInstance();
+
+    factories::CallDescriptionManager::description_ptr_type desc;
+    for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
+        if ((desc = coreInst.GetCallDescriptionManager().Find(
+                this->callbacks[i]->CallName()))->IsDescribing(call))
+            break;
+        desc.reset();
+    }
+    if (desc) {
+        lock.UnlockExclusive();
+        return false;
+    }
+
+    vislib::StringA cn(desc->ClassName());
+    for (unsigned int i = 0; i < desc->FunctionCount(); i++) {
+        vislib::StringA fn(desc->FunctionName(i));
+        for (unsigned int j = 0; j < this->callbacks.Count(); j++) {
+            if (cn.Equals(this->callbacks[j]->CallName(), false)
+                    && fn.Equals(this->callbacks[j]->FuncName(),
+                    false)) {
+                call->funcMap[i] = j;
+                break;
+            }
+        }
+    }
+    call->callee = this;
+    this->SetStatusConnected();
+    lock.UnlockExclusive();
+    return true;
 }
 
 
@@ -152,9 +197,9 @@ bool CalleeSlot::IsCallProfiling(const Call* c) const {
     ASSERT(c->PeekCalleeSlot() == this);
 
     // find call description to know how many functions are required
-    CallDescription* desc = nullptr;
+    factories::CallDescription::ptr desc = nullptr;
     for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-        if ((desc = CallDescriptionManager::Instance()->Find(this->callbacks[i]->CallName()))->IsDescribing(c)) break;
+        if ((desc = this->GetCoreInstance()->GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))->IsDescribing(c)) break;
         desc = nullptr;
     }
     ASSERT(desc != nullptr);
@@ -187,9 +232,9 @@ void CalleeSlot::AddCallProfiling(const Call* c) {
     ASSERT(c->PeekCalleeSlot() == this);
 
     // find call description to know how many functions are required
-    CallDescription* desc = nullptr;
+    factories::CallDescription::ptr desc = nullptr;
     for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-        if ((desc = CallDescriptionManager::Instance()->Find(this->callbacks[i]->CallName()))->IsDescribing(c)) break;
+        if ((desc = this->GetCoreInstance()->GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))->IsDescribing(c)) break;
         desc = nullptr;
     }
     ASSERT(desc != nullptr);
@@ -221,9 +266,9 @@ void CalleeSlot::RemoveCallProfiling(const Call* c) {
     ASSERT(c->PeekCalleeSlot() == this);
 
     // find call description to know how many functions are required
-    CallDescription* desc = nullptr;
+    factories::CallDescription::ptr desc = nullptr;
     for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-        if ((desc = CallDescriptionManager::Instance()->Find(this->callbacks[i]->CallName()))->IsDescribing(c)) break;
+        if ((desc = this->GetCoreInstance()->GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))->IsDescribing(c)) break;
         desc = nullptr;
     }
     ASSERT(desc != nullptr);

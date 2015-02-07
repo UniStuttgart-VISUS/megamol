@@ -13,7 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/forceinline.h"
@@ -647,7 +647,7 @@ namespace misc {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<LinesDataCall> LinesDataCallDescription;
+    typedef factories::CallAutoDescription<LinesDataCall> LinesDataCallDescription;
 
 
 } /* end namespace misc */

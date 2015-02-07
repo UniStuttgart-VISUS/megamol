@@ -16,8 +16,8 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
-#include "mmcore/ObjectDescription.h"
-#include "mmcore/ObjectDescriptionManager.h"
+#include "mmcore/factories/ObjectDescription.h"
+#include "mmcore/factories/ObjectDescriptionManager.h"
 #include "mmcore/versioninfo.h"
 #include "mmcore/param/ParamHandle.h"
 #include "mmcore/utility/Configuration.h"
@@ -27,8 +27,8 @@
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/ViewDirect3D.h"
 #include "mmcore/job/AbstractJob.h"
-#include "mmcore/ModuleDescriptionManager.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/CallerSlot.h"
 
 #include "vislib/assert.h"
@@ -500,14 +500,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
         megamol::core::CoreInstance>(hCore);
     if (core == NULL) return;
 
-    megamol::core::ViewDescription *vd = core->FindViewDescription(name);
+    std::shared_ptr<const megamol::core::ViewDescription> vd = core->FindViewDescription(name);
     if (vd != NULL) {
-        core->RequestViewInstantiation(vd, vislib::StringA(id));
+        core->RequestViewInstantiation(vd.get(), vislib::StringA(id));
         return;
     }
-    megamol::core::JobDescription *jd = core->FindJobDescription(name);
+    std::shared_ptr<const megamol::core::JobDescription> jd = core->FindJobDescription(name);
     if (jd != NULL) {
-        core->RequestJobInstantiation(jd, vislib::StringA(id));
+        core->RequestJobInstantiation(jd.get(), vislib::StringA(id));
         return;
     }
 
@@ -1235,18 +1235,50 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
 }
 
 
+// these functions are evil, but only used by the configurator
+
+#include <memory>
+#include "mmcore/factories/ModuleDescriptionManager.h"
+#include "mmcore/factories/ModuleClassRegistry.h"
+#include "mmcore/factories/CallDescriptionManager.h"
+#include "mmcore/factories/CallClassRegistry.h"
+
+namespace {
+    static megamol::core::factories::ModuleDescriptionManager& backdoor_modules(void) {
+        static std::shared_ptr<megamol::core::factories::ModuleDescriptionManager> i;
+        if (!i) {
+            i = std::make_shared<megamol::core::factories::ModuleDescriptionManager>();
+            megamol::core::factories::register_module_classes(*i);
+        }
+        return *i;
+    }
+    static megamol::core::factories::CallDescriptionManager& backdoor_calls(void) {
+        static std::shared_ptr<megamol::core::factories::CallDescriptionManager> i;
+        if (!i) {
+            i = std::make_shared<megamol::core::factories::CallDescriptionManager>();
+            megamol::core::factories::register_call_classes(*i);
+        }
+        return *i;
+    }
+}
+
+
 /*
  * mmcModuleCount
  */
 MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcModuleCount(void) {
-    int cnt = 0;
-    megamol::core::ModuleDescriptionManager::DescriptionIterator it
-        = megamol::core::ModuleDescriptionManager::Instance()->GetIterator();
-    while (it.HasNext()) {
-        it.Next();
-        cnt++;
-    }
-    return cnt;
+    //int cnt = 0;
+    //megamol::core::ModuleDescriptionManager::DescriptionIterator it
+    //    = megamol::core::ModuleDescriptionManager::Instance()->GetIterator();
+    //while (it.HasNext()) {
+    //    it.Next();
+    //    cnt++;
+    //}
+    //return cnt;
+    system("Pause");
+    return static_cast<int>(::std::distance(
+        backdoor_modules().begin(),
+        backdoor_modules().end()));
 }
 
 
@@ -1255,11 +1287,12 @@ MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcModuleCount(void) {
  */
 MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcModuleDescription(int idx) {
     if (idx < 0) return nullptr;
-    megamol::core::ModuleDescriptionManager::DescriptionIterator it
-        = megamol::core::ModuleDescriptionManager::Instance()->GetIterator();
-    while (it.HasNext()) {
-        megamol::core::ModuleDescription *d = it.Next();
-        if (idx == 0) return d;
+    //megamol::core::ModuleDescriptionManager::DescriptionIterator it
+    //    = megamol::core::ModuleDescriptionManager::Instance()->GetIterator();
+    //while (it.HasNext()) {
+    //    megamol::core::ModuleDescription *d = it.Next();
+    for (auto d : backdoor_modules()) {
+        if (idx == 0) return const_cast<void*>(static_cast<const void *>(d.get()));
         idx--;
     }
     return nullptr;
@@ -1270,14 +1303,17 @@ MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcModuleDescription(int idx) {
  * mmcCallCount
  */
 MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcCallCount(void) {
-    int cnt = 0;
-    megamol::core::CallDescriptionManager::DescriptionIterator it
-        = megamol::core::CallDescriptionManager::Instance()->GetIterator();
-    while (it.HasNext()) {
-        it.Next();
-        cnt++;
-    }
-    return cnt;
+    //int cnt = 0;
+    //megamol::core::CallDescriptionManager::DescriptionIterator it
+    //    = megamol::core::CallDescriptionManager::Instance()->GetIterator();
+    //while (it.HasNext()) {
+    //    it.Next();
+    //    cnt++;
+    //}
+    //return cnt;
+    return static_cast<int>(::std::distance(
+        backdoor_calls().begin(),
+        backdoor_calls().end()));
 }
 
 
@@ -1286,11 +1322,12 @@ MEGAMOLCORE_API int MEGAMOLCORE_CALL mmcCallCount(void) {
  */
 MEGAMOLCORE_API void* MEGAMOLCORE_CALL mmcCallDescription(int idx) {
     if (idx < 0) return nullptr;
-    megamol::core::CallDescriptionManager::DescriptionIterator it
-        = megamol::core::CallDescriptionManager::Instance()->GetIterator();
-    while (it.HasNext()) {
-        megamol::core::CallDescription *d = it.Next();
-        if (idx == 0) return d;
+    //megamol::core::CallDescriptionManager::DescriptionIterator it
+    //    = megamol::core::CallDescriptionManager::Instance()->GetIterator();
+    //while (it.HasNext()) {
+    //    megamol::core::CallDescription *d = it.Next();
+    for (auto d : backdoor_calls()) {
+        if (idx == 0) return const_cast<void*>(static_cast<const void *>(d.get()));
         idx--;
     }
     return nullptr;
@@ -1337,10 +1374,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
     ASSERT(outCallerSlots != NULL);
 
     megamol::core::RootModuleNamespace rms;
-    megamol::core::ModuleDescription *md = static_cast<megamol::core::ModuleDescription*>(desc);
+    megamol::core::factories::ModuleDescription *md = static_cast<megamol::core::factories::ModuleDescription*>(desc);
     ASSERT(md != NULL);
 
-    megamol::core::Module *m = md->CreateModule(NULL, NULL);
+    megamol::core::Module *m = md->CreateModule(NULL);
     if (m == NULL) {
         *outCntParamSlots = 0;
         *outParamSlots = NULL;
@@ -1518,7 +1555,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcReleaseModuleSlotDescriptions(
  * mmcGetModuleDescriptionInfo
  */
 MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcGetModuleDescriptionInfo)(void * desc) {
-    megamol::core::ModuleDescription *md = static_cast<megamol::core::ModuleDescription*>(desc);
+    megamol::core::factories::ModuleDescription *md = static_cast<megamol::core::factories::ModuleDescription*>(desc);
     ASSERT(md != NULL);
     mmcModuleDescriptionInfo *d = new mmcModuleDescriptionInfo();
 
@@ -1548,7 +1585,7 @@ MEGAMOLCORE_EXT_APICALL(void, mmcReleaseModuleDescriptionInfo)(mmcModuleDescript
  * mmcGetCallDescriptionInfo
  */
 MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcGetCallDescriptionInfo)(void * desc) {
-    megamol::core::CallDescription *cd = static_cast<megamol::core::CallDescription*>(desc);
+    megamol::core::factories::CallDescription *cd = static_cast<megamol::core::factories::CallDescription*>(desc);
     ASSERT(cd != NULL);
     mmcCallDescriptionInfo *d = new mmcCallDescriptionInfo();
 

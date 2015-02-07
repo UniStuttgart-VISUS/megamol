@@ -13,7 +13,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/math/Cuboid.h"
 
@@ -286,7 +286,7 @@ namespace moldyn {
     };
 
     /** Description class typedef */
-    typedef megamol::core::CallAutoDescription<VolumeDataCall> VolumeDataCallDescription;
+    typedef megamol::core::factories::CallAutoDescription<VolumeDataCall> VolumeDataCallDescription;
 
 
 } /* end namespace moldyn */

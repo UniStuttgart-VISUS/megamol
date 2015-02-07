@@ -21,7 +21,7 @@
 #include "vislib/sys/RunnableThread.h"
 #include "vislib/SmartRef.h"
 #include "vislib/net/TcpCommChannel.h"
-
+#include "vislib/macro_utils.h"
 
 namespace megamol {
 namespace core {
@@ -30,8 +30,8 @@ namespace cluster {
     /**
      * class for control communication channel end points
      */
-    class MEGAMOLCORE_API CommChannelServer : public vislib::Listenable<CommChannelServer>,
-        protected vislib::net::CommServerListener, protected CommChannel::Listener {
+    VISLIB_MSVC_SUPPRESS_WARNING(4251 4275)
+    class MEGAMOLCORE_API CommChannelServer : public vislib::Listenable<CommChannelServer>, protected vislib::net::CommServerListener, protected CommChannel::Listener {
     public:
 
         /**
@@ -137,10 +137,10 @@ namespace cluster {
          */
         void SingleSendMessage(const vislib::net::AbstractSimpleMessage& msg, unsigned int node);
 
-		/**
-		 * Answers the number of clients currently connected.
-		 */
-		unsigned int ClientsCount();
+        /**
+         * Answers the number of clients currently connected.
+         */
+        unsigned int ClientsCount();
 
     protected:
 
@@ -233,15 +233,19 @@ namespace cluster {
     private:
 
         /** The lock object to access the clients list */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::sys::CriticalSection clientsLock;
 
         /** The list of active control channels */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::SingleLinkedList<CommChannel> clients;
 
         /** The comm channel to use */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::SmartRef<vislib::net::TcpCommChannel> commChannel;
 
         /** The server accepting incoming connections */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::sys::RunnableThread<vislib::net::CommServer> server;
 
     };

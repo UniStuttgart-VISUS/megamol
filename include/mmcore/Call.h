@@ -18,9 +18,11 @@ namespace megamol {
 namespace core {
 
     /** Forward declaration of description and slots */
-    class CallDescription;
     class CalleeSlot;
     class CallerSlot;
+    namespace factories {
+        class CallDescription;
+    }
 
 
     /**
@@ -30,7 +32,7 @@ namespace core {
     public:
 
         /** The description generates the function map */
-        friend class CallDescription;
+        friend class ::megamol::core::factories::CallDescription;
 
         /** Callee slot is allowed to map functions */
         friend class CalleeSlot;

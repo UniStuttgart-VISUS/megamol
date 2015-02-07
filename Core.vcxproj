@@ -156,9 +156,9 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
+xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -200,9 +200,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
+xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -240,9 +240,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
+xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -283,9 +283,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>if not exist "$(ProjectDir)\lib" mkdir "$(ProjectDir)\lib"
-if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
+xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -403,14 +403,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\ApiHandle.cpp" />
     <ClCompile Include="src\BoundingBoxes.cpp" />
     <ClCompile Include="src\Call.cpp" />
-    <ClCompile Include="src\CallAutoDescription.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\CallDescription.cpp" />
-    <ClCompile Include="src\CallDescriptionManager.cpp" />
     <ClCompile Include="src\CalleeSlot.cpp" />
     <ClCompile Include="src\CallerSlot.cpp" />
     <ClCompile Include="src\CallVolumeData.cpp" />
@@ -436,6 +428,13 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\cluster\simple\View.cpp" />
     <ClCompile Include="src\CoreInstance.cpp" />
     <ClCompile Include="src\DataWriterCtrlCall.cpp" />
+    <ClCompile Include="src\factories\CallClassRegistry.cpp" />
+    <ClCompile Include="src\factories\CallDescription.cpp" />
+    <ClCompile Include="src\factories\CallDescriptionManager.cpp" />
+    <ClCompile Include="src\factories\ModuleClassRegistry.cpp" />
+    <ClCompile Include="src\factories\ModuleDescription.cpp" />
+    <ClCompile Include="src\factories\ModuleDescriptionManager.cpp" />
+    <ClCompile Include="src\factories\ObjectDescription.cpp" />
     <ClCompile Include="src\InstanceDescription.cpp" />
     <ClCompile Include="src\InstanceRequest.cpp" />
     <ClCompile Include="src\JobDescription.cpp" />
@@ -445,12 +444,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\job\AbstractThreadedJob.cpp" />
     <ClCompile Include="src\job\DataWriterJob.cpp" />
     <ClCompile Include="src\job\JobThread.cpp" />
-    <ClCompile Include="src\LoaderADModuleAutoDescription.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="src\MegaMolCore.cpp" />
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="src\misc\CalloutImageCall.cpp" />
@@ -463,14 +456,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\misc\TestSpheresDataSource.cpp" />
     <ClCompile Include="src\misc\VolumetricDataCall.cpp" />
     <ClCompile Include="src\Module.cpp" />
-    <ClCompile Include="src\ModuleAutoDescription.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\ModuleDescription.cpp" />
-    <ClCompile Include="src\ModuleDescriptionManager.cpp" />
     <ClCompile Include="src\ModuleNamespace.cpp" />
     <ClCompile Include="src\moldyn\AbstractParticleDataCall.cpp" />
     <ClCompile Include="src\moldyn\AbstractSimpleParticleDataSource.cpp" />
@@ -512,13 +497,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\moldyn\VolumeDataCall.cpp" />
     <ClCompile Include="src\moldyn\VTFDataSource.cpp" />
     <ClCompile Include="src\moldyn\VTFResDataSource.cpp" />
-    <ClCompile Include="src\ObjectDescription.cpp" />
-    <ClCompile Include="src\ObjectDescriptionManager.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="src\ParamValueSetRequest.cpp" />
     <ClCompile Include="src\param\AbstractParam.cpp" />
     <ClCompile Include="src\param\AbstractParamSlot.cpp" />
@@ -667,8 +645,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\BoundingBoxes.h" />
     <ClInclude Include="include\mmcore\Call.h" />
     <ClInclude Include="include\mmcore\CallAutoDescription.h" />
-    <ClInclude Include="include\mmcore\CallDescription.h" />
-    <ClInclude Include="include\mmcore\CallDescriptionManager.h" />
     <ClInclude Include="include\mmcore\CalleeSlot.h" />
     <ClInclude Include="include\mmcore\CallerSlot.h" />
     <ClInclude Include="include\mmcore\CallVolumeData.h" />
@@ -694,6 +670,17 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\cluster\simple\View.h" />
     <ClInclude Include="include\mmcore\CoreInstance.h" />
     <ClInclude Include="include\mmcore\DataWriterCtrlCall.h" />
+    <ClInclude Include="include\mmcore\factories\CallAutoDescription.h" />
+    <ClInclude Include="include\mmcore\factories\CallClassRegistry.h" />
+    <ClInclude Include="include\mmcore\factories\CallDescription.h" />
+    <ClInclude Include="include\mmcore\factories\CallDescriptionManager.h" />
+    <ClInclude Include="include\mmcore\factories\LoaderADModuleAutoDescription.h" />
+    <ClInclude Include="include\mmcore\factories\ModuleAutoDescription.h" />
+    <ClInclude Include="include\mmcore\factories\ModuleClassRegistry.h" />
+    <ClInclude Include="include\mmcore\factories\ModuleDescription.h" />
+    <ClInclude Include="include\mmcore\factories\ModuleDescriptionManager.h" />
+    <ClInclude Include="include\mmcore\factories\ObjectDescription.h" />
+    <ClInclude Include="include\mmcore\factories\ObjectDescriptionManager.h" />
     <ClInclude Include="include\mmcore\InstanceDescription.h" />
     <ClInclude Include="include\mmcore\InstanceRequest.h" />
     <ClInclude Include="include\mmcore\JobDescription.h" />
@@ -703,7 +690,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\job\AbstractThreadedJob.h" />
     <ClInclude Include="include\mmcore\job\DataWriterJob.h" />
     <ClInclude Include="include\mmcore\job\JobThread.h" />
-    <ClInclude Include="include\mmcore\LoaderADModuleAutoDescription.h" />
     <ClInclude Include="include\mmcore\misc\BezierCurvesListDataCall.h" />
     <ClInclude Include="include\mmcore\misc\CalloutImageCall.h" />
     <ClInclude Include="include\mmcore\misc\ImageViewer.h" />
@@ -718,8 +704,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\mmd3d.h" />
     <ClInclude Include="include\mmcore\Module.h" />
     <ClInclude Include="include\mmcore\ModuleAutoDescription.h" />
-    <ClInclude Include="include\mmcore\ModuleDescription.h" />
-    <ClInclude Include="include\mmcore\ModuleDescriptionManager.h" />
     <ClInclude Include="include\mmcore\ModuleNamespace.h" />
     <ClInclude Include="include\mmcore\moldyn\AbstractParticleDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\AbstractSimpleParticleDataSource.h" />
@@ -762,8 +746,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\moldyn\VTFDataSource.h" />
     <ClInclude Include="include\mmcore\moldyn\VTFResDataSource.h" />
     <ClInclude Include="include\mmcore\nvstereo.h" />
-    <ClInclude Include="include\mmcore\ObjectDescription.h" />
-    <ClInclude Include="include\mmcore\ObjectDescriptionManager.h" />
     <ClInclude Include="include\mmcore\ParamValueSetRequest.h" />
     <ClInclude Include="include\mmcore\param\AbstractParam.h" />
     <ClInclude Include="include\mmcore\param\AbstractParamSlot.h" />

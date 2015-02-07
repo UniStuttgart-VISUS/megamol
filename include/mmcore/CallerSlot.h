@@ -14,9 +14,11 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallDescription.h"
-#include "vislib/Array.h"
+#include "mmcore/factories/CallDescription.h"
 #include "vislib/String.h"
+#include <memory>
+#include <vector>
+#include "vislib/macro_utils.h"
 
 
 namespace megamol {
@@ -90,7 +92,7 @@ namespace core {
                 return true;
             }
 
-            for (unsigned int i = 0; i < this->compDesc.Count(); i++) {
+            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
                 if (this->compDesc[i]->IsDescribing(call)) {
                     if (this->call != NULL) this->call->caller = NULL;
                     delete this->call;
@@ -113,11 +115,11 @@ namespace core {
          *
          * @return 'true' if the call is compatible, 'false' otherwise.
          */
-        inline bool IsCallCompatible(CallDescription* desc) const {
+        inline bool IsCallCompatible(factories::CallDescription::ptr desc) const {
             vislib::StringA dcn;
-            if (desc == NULL) return false;
+            if (!desc) return false;
             dcn = desc->ClassName();
-            for (unsigned int i = 0; i < this->compDesc.Count(); i++) {
+            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
                 if (dcn.Equals(this->compDesc[i]->ClassName())) {
                     return true;
                 }
@@ -131,15 +133,13 @@ namespace core {
          * this class can then be connected to this slot.
          */
         template<class T> inline void SetCompatibleCall(void) {
-            T *d = new T();
-            for (unsigned int i = 0; i < this->compDesc.Count(); i++) {
-                if (vislib::StringA(this->compDesc[i]->ClassName())
-                        .Equals(d->ClassName())) {
-                    delete d;
+            factories::CallDescription::ptr d = std::make_shared<T>();
+            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
+                if (vislib::StringA(this->compDesc[i]->ClassName()).Equals(d->ClassName())) {
                     return;
                 }
             }
-            this->compDesc.Append(d);
+            this->compDesc.push_back(d);
         }
 
         /**
@@ -148,14 +148,15 @@ namespace core {
          *
          * @param desc The description object to be added.
          */
-        inline void SetCompatibleCall(const CallDescription& desc) {
-            for (unsigned int i = 0; i < this->compDesc.Count(); i++) {
+        inline void SetCompatibleCall(factories::CallDescription::ptr desc) {
+            assert(desc);
+            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
                 if (vislib::StringA(this->compDesc[i]->ClassName())
-                        .Equals(desc.ClassName())) {
+                        .Equals(desc->ClassName())) {
                     return;
                 }
             }
-            this->compDesc.Append(desc.Clone());
+            this->compDesc.push_back(desc);
         }
 
         /**
@@ -202,7 +203,7 @@ namespace core {
          * TODO: Document me
          */
         inline SIZE_T GetCompCallCount(void) const {
-            return this->compDesc.Count();
+            return this->compDesc.size();
         }
 
         /**
@@ -217,14 +218,9 @@ namespace core {
         /** The connecting call object */
         megamol::core::Call *call;
 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
         /** Array of descriptions of compatible calls. */
-        vislib::Array<CallDescription *> compDesc;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
+        ::std::vector<factories::CallDescription::ptr> compDesc;
 
     };
 

@@ -13,7 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
 
@@ -160,7 +160,7 @@ namespace view {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallClipPlane> CallClipPlaneDescription;
+    typedef factories::CallAutoDescription<CallClipPlane> CallClipPlaneDescription;
 
 
 } /* end namespace view */

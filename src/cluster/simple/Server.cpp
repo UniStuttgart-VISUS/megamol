@@ -10,7 +10,7 @@
 //#include "mmcore/cluster/simple/ClientViewRegistration.h"
 #include "mmcore/cluster/simple/CommUtil.h"
 //#include "mmcore/cluster/simple/View.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -529,7 +529,7 @@ bool cluster::simple::Server::onViewNameUpdated(param::ParamSlot& slot) {
     this->ModuleGraphLock().UnlockExclusive();
     if (av != NULL) {
         if (this->instance()->InstantiateCall(this->viewSlot.FullName(), av->FullName() + "::render", 
-                CallDescriptionManager::Instance()->Find(view::CallRenderView::ClassName())) != NULL) {
+                this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderView::ClassName())) != NULL) {
             this->newViewConnected();
         } else {
             av = NULL; // DO NOT DELETE

@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 #include "vislib/net/SimpleMessageDispatchListener.h"
 
@@ -197,7 +197,7 @@ namespace simple {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<ClientViewRegistration>
+    typedef factories::CallAutoDescription<ClientViewRegistration>
         ClientViewRegistrationDescription;
 
 

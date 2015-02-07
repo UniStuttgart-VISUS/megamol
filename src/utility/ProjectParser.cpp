@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "mmcore/utility/ProjectParser.h"
-#include "mmcore/ModuleDescriptionManager.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
 #include "vislib/VersionNumber.h"
@@ -21,8 +21,8 @@ using namespace megamol::core::utility::xml;
 /*
  * utility::ProjectParser::ProjectParser
  */
-utility::ProjectParser::ProjectParser(void)
-    : xml::ConditionalParser(), vd(NULL), jd(), viewDescs(), jobDescs() {
+utility::ProjectParser::ProjectParser(CoreInstance *coreInst)
+    : xml::ConditionalParser(), core(coreInst), vd(), jd(), viewDescs(), jobDescs() {
     // intentionally empty
 }
 
@@ -31,23 +31,10 @@ utility::ProjectParser::ProjectParser(void)
  * utility::ProjectParser::~ProjectParser
  */
 utility::ProjectParser::~ProjectParser(void) {
-    if (vd != NULL) {
-        SAFE_DELETE(vd);
-    }
-    if (jd != NULL) {
-        SAFE_DELETE(jd);
-    }
-    vislib::SingleLinkedList<ViewDescription*>::Iterator
-        iter = this->viewDescs.GetIterator();
-    while (iter.HasNext()) {
-        delete iter.Next();
-    }
+    this->core = nullptr; // do not delete
+    this->vd.reset();
+    this->jd.reset();
     this->viewDescs.Clear();
-    vislib::SingleLinkedList<JobDescription*>::Iterator
-        jter = this->jobDescs.GetIterator();
-    while (jter.HasNext()) {
-        delete jter.Next();
-    }
     this->jobDescs.Clear();
 }
 
@@ -153,7 +140,7 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             return true;
         }
 
-        this->vd = new ViewDescription(vislib::StringA(vdname));
+        this->vd = std::make_shared<ViewDescription>(vislib::StringA(vdname));
 
         if (viewmodname == NULL) {
             this->Warning("\"view\" tag without \"viewmod\" might result in unexpected behaviour");
@@ -190,7 +177,7 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             return true;
         }
 
-        this->jd = new JobDescription(vislib::StringA(jdname));
+        this->jd = std::make_shared<JobDescription>(vislib::StringA(jdname));
 
         if (jobmodname == NULL) {
             this->Warning("\"job\" tag without \"jobmod\" might result in unexpected behaviour");
@@ -226,8 +213,7 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"module\" tag without a class ignored");
             return true;
         }
-        ModuleDescription *md = ModuleDescriptionManager::Instance()
-            ->Find(vislib::StringA(className));
+        factories::ModuleDescription::ptr md = this->core->GetModuleDescriptionManager().Find(vislib::StringA(className));
         if (md == NULL) {
             vislib::StringA msg;
             msg.Format("\"module\" class \"%s\" not found",
@@ -282,8 +268,7 @@ bool utility::ProjectParser::StartTag(unsigned int num, unsigned int level,
             this->Error("\"call\" tag without a to attribute ignored");
             return true;
         }
-        CallDescription *cd = CallDescriptionManager::Instance()
-            ->Find(vislib::StringA(className));
+        factories::CallDescription::ptr cd = this->core->GetCallDescriptionManager().Find(vislib::StringA(className));
         if (cd == NULL) {
             this->Error("\"call\" class not found");
             return true;

@@ -20,6 +20,7 @@
 #include "vislib/net/SimpleMessageDispatchListener.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
+#include "vislib/macro_utils.h"
 
 
 namespace megamol {
@@ -29,8 +30,8 @@ namespace cluster {
     /**
      * class for communication channel end points
      */
-    class MEGAMOLCORE_API CommChannel : public vislib::Listenable<CommChannel>,
-        protected vislib::net::SimpleMessageDispatchListener {
+    VISLIB_MSVC_SUPPRESS_WARNING(4251 4275)
+    class MEGAMOLCORE_API CommChannel : public vislib::Listenable<CommChannel>, protected vislib::net::SimpleMessageDispatchListener {
     public:
 
         /**
@@ -232,12 +233,15 @@ namespace cluster {
     private:
 
         /** The communication channel */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::SmartRef<vislib::net::AbstractCommClientChannel> channel;
 
         /** The receiver thread */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::sys::RunnableThread<vislib::net::SimpleMessageDispatcher> receiver;
 
         /** The name of the connection counterpart */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::StringA counterpartName;
 
     };

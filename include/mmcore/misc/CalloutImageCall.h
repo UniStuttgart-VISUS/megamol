@@ -13,7 +13,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include <vector>
@@ -192,7 +192,7 @@ namespace misc {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<CalloutImageCall> CalloutImageCallDescription;
+    typedef factories::CallAutoDescription<CalloutImageCall> CalloutImageCallDescription;
 
 } /* end namespace misc */
 } /* end namespace core */

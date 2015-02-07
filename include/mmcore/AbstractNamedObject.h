@@ -18,10 +18,13 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/sys/SyncObject.h"
+//#include "mmcore/CoreInstance.h"
 
 
 namespace megamol {
 namespace core {
+
+    class CoreInstance;
 
 
     /**
@@ -215,6 +218,15 @@ namespace core {
          * @return The reader-writer lock to lock the module graph
          */
         virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
+
+        /**
+         * Answer the core instance of this named object
+         *
+         * @return The core instance of this named object
+         */
+        virtual CoreInstance* GetCoreInstance(void) const {
+            return (this->parent != nullptr) ? this->parent->GetCoreInstance() : nullptr;
+        }
 
     protected:
 

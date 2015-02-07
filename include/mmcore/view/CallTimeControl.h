@@ -13,7 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/TimeControl.h"
 
 
@@ -102,7 +102,7 @@ namespace view {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallTimeControl> CallTimeControlDescription;
+    typedef factories::CallAutoDescription<CallTimeControl> CallTimeControlDescription;
 
 
 } /* end namespace view */

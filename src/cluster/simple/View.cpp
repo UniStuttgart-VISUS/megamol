@@ -72,7 +72,7 @@ cluster::simple::View::~View(void) {
  */
 void cluster::simple::View::Render(const mmcRenderViewContext& context) {
     double instTime = context.InstanceTime;
-    float time = context.Time;
+    float time = static_cast<float>(context.Time);
 
     if (this->firstFrame) {
         this->firstFrame = false;
@@ -279,7 +279,7 @@ void cluster::simple::View::SetCamIniMessage(void) {
  */
 void cluster::simple::View::ConnectView(const vislib::StringA& toName) {
     this->GetCoreInstance()->InstantiateCall(this->FullName() + "::renderView", toName,
-        CallDescriptionManager::Instance()->Find("CallRenderView"));
+        this->GetCoreInstance()->GetCallDescriptionManager().Find("CallRenderView"));
 }
 
 

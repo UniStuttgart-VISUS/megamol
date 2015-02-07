@@ -1,19 +1,18 @@
 /*
  * CallDescription.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 - 2015 by MegaMol Consortium
+ * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLDESCRIPTION_H_INCLUDED
-#define MEGAMOLCORE_CALLDESCRIPTION_H_INCLUDED
+#ifndef MEGAMOLCORE_FACTORIES_CALLDESCRIPTION_H_INCLUDED
+#define MEGAMOLCORE_FACTORIES_CALLDESCRIPTION_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/ObjectDescription.h"
-
+#include "mmcore/factories/ObjectDescription.h"
+#include <memory>
 
 namespace megamol {
 namespace core {
@@ -21,12 +20,16 @@ namespace core {
     /** forward declaration of Call */
     class Call;
 
+namespace factories {
+
 
     /**
      * Description class for calls
      */
     class MEGAMOLCORE_API CallDescription : public ObjectDescription {
     public:
+
+        typedef ::std::shared_ptr<const CallDescription> ptr;
 
         /** Ctor. */
         CallDescription(void);
@@ -40,13 +43,6 @@ namespace core {
          * @return The class name of the module described.
          */
         virtual const char *ClassName(void) const = 0;
-
-        /**
-         * Clones this object
-         *
-         * @return The new clone
-         */
-        virtual CallDescription *Clone(void) const = 0;
 
         /**
          * Creates a new call object.
@@ -111,8 +107,8 @@ namespace core {
 
     };
 
-
+} /* end namespace factories */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CALLDESCRIPTION_H_INCLUDED */
+#endif /* MEGAMOLCORE_FACTORIES_CALLDESCRIPTION_H_INCLUDED */

@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/RenderOutput.h"
 
@@ -105,7 +105,7 @@ namespace view {
 
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallRender3D> CallRender3DDescription;
+    typedef factories::CallAutoDescription<CallRender3D> CallRender3DDescription;
 
 
 } /* end namespace view */

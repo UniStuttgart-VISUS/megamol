@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/mmd3d.h"
 
 #include "vislib/StackTrace.h"
@@ -113,7 +113,7 @@ namespace view {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<CallUpdateDirect3D> CallUpdateDirect3DDescription;
+    typedef factories::CallAutoDescription<CallUpdateDirect3D> CallUpdateDirect3DDescription;
 
 } /* end namespace moldyn */
 } /* end namespace core */

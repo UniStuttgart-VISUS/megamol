@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/ObjectDescription.h"
-#include "mmcore/ModuleDescription.h"
-#include "mmcore/CallDescription.h"
+#include "mmcore/factories/ObjectDescription.h"
+#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/CallDescription.h"
 #include "mmcore/ParamValueSetRequest.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
@@ -27,12 +27,12 @@ namespace core {
     /**
      * Abstract base class of job and view descriptions.
      */
-    class MEGAMOLCORE_API InstanceDescription : public ObjectDescription,
+    class MEGAMOLCORE_API InstanceDescription : public factories::ObjectDescription,
         public ParamValueSetRequest {
     public:
 
         /** Type of module instantiation requests */
-        typedef vislib::Pair<vislib::StringA, ModuleDescription*>
+        typedef vislib::Pair<vislib::StringA, factories::ModuleDescription::ptr>
             ModuleInstanceRequest;
 
         /** Type of call instantiation requests */
@@ -40,7 +40,7 @@ namespace core {
         public:
 
             /** Ctor */
-            CallInstanceRequest(void) : from(), to(), desc(NULL), doProfiling(false) {
+            CallInstanceRequest(void) : from(), to(), desc(), doProfiling(false) {
                 // intentionally empty
             }
 
@@ -63,7 +63,7 @@ namespace core {
              * @param doProfiling Flag if this call should be added to profiling
              *            if the profiling set is to 'SELECTED'
              */
-            CallInstanceRequest(const vislib::StringA& caller, const vislib::StringA& callee, CallDescription *desc, bool doProfiling)
+            CallInstanceRequest(const vislib::StringA& caller, const vislib::StringA& callee, factories::CallDescription::ptr desc, bool doProfiling)
                 :from(caller), to(callee), desc(desc), doProfiling(doProfiling) {
                 // intentionally empty
             }
@@ -91,7 +91,7 @@ namespace core {
              *
              * @return The description of the call to be instantiated.
              */
-            inline CallDescription* Description(void) const {
+            inline factories::CallDescription::ptr Description(void) const {
                 return this->desc;
             }
 
@@ -142,7 +142,7 @@ namespace core {
             vislib::StringA to;
 
             /** The description of the call to be instantiated. */
-            CallDescription *desc;
+            factories::CallDescription::ptr desc;
 
             /** Flag if this call should be added to profiling */
             bool doProfiling;
@@ -159,7 +159,7 @@ namespace core {
          * @param doProfiling Flag if this call should be added to profiling
          *            if the profiling set is to 'SELECTED'
          */
-        inline void AddCall(CallDescription *desc,
+        inline void AddCall(factories::CallDescription::ptr desc,
                 const vislib::StringA& caller, const vislib::StringA& callee,
                 bool doProfiling = false) {
             this->calls.Add(CallInstanceRequest(caller, callee, desc, doProfiling));
@@ -172,7 +172,7 @@ namespace core {
          * @param desc The description of the module to be instantiated.
          * @param id The id for the module instance
          */
-        inline void AddModule(ModuleDescription *desc,
+        inline void AddModule(factories::ModuleDescription::ptr desc,
                 const vislib::StringA& id) {
             this->modules.Add(ModuleInstanceRequest(id, desc));
         }

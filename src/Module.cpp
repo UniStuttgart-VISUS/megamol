@@ -21,8 +21,7 @@ using namespace megamol::core;
 /*
  * Module::Module
  */
-Module::Module(void) : AbstractNamedObjectContainer(), coreInst(NULL),
-        created(false) {
+Module::Module(void) : AbstractNamedObjectContainer(), created(false) {
     // intentionally empty ATM
 }
 
@@ -31,7 +30,6 @@ Module::Module(void) : AbstractNamedObjectContainer(), coreInst(NULL),
  * Module::~Module
  */
 Module::~Module(void) {
-    this->coreInst = NULL; // DO NOT DELETE
     if (this->created == true) {
         throw vislib::IllegalStateException(
             "You must release all resources in the proper derived dtor.",

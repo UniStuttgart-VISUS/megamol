@@ -42,7 +42,7 @@ void view::TileView::Render(const mmcRenderViewContext& context) {
     this->checkParameters();
 
     crv->ResetAll();
-    crv->SetTime(context.Time);
+    crv->SetTime(static_cast<float>(context.Time));
     crv->SetInstanceTime(context.InstanceTime);
     crv->SetProjection(this->getProjType(), this->getEye());
     crv->SetGpuAffinity(context.GpuAffinity);

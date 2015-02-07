@@ -87,6 +87,24 @@ namespace core {
          */
         void SerializeGraph(vislib::RawStorage& outmem);
 
+        /**
+         * Answer the core instance of this named object
+         *
+         * @return The core instance of this named object
+         */
+        virtual CoreInstance *GetCoreInstance(void) const {
+            return this->core_inst;
+        }
+
+        /**
+         * Answer the core instance of this named object
+         *
+         * @return The core instance of this named object
+         */
+        void SetCoreInstance(CoreInstance& coreInst) {
+            this->core_inst = &coreInst;
+        }
+
     protected:
 
     private:
@@ -97,6 +115,8 @@ namespace core {
 
         /** The graph access synchronization object */
         mutable vislib::sys::FatReaderWriterLock lock;
+
+        CoreInstance *core_inst;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)

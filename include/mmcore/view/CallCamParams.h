@@ -13,7 +13,7 @@
 
 #include "mmcore/Call.h"
 #include "vislib/graphics/CameraParameters.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/SmartPtr.h"
 
 namespace megamol {
@@ -144,7 +144,7 @@ private:
 };
 
 /// Description class typedef
-typedef core::CallAutoDescription<CallCamParams> CallCamParamsDescription;
+typedef core::factories::CallAutoDescription<CallCamParams> CallCamParamsDescription;
 
 
 } // end namespace view

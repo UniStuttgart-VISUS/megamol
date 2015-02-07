@@ -14,8 +14,8 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallDescription.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/CallDescription.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -54,44 +54,7 @@ namespace core {
          *
          * @return 'true' on success, 'false' on failure
          */
-        bool ConnectCall(megamol::core::Call *call) {
-            vislib::sys::AbstractReaderWriterLock& lock = this->Parent()->ModuleGraphLock();
-            lock.LockExclusive();
-            if (call == NULL) {
-                this->SetStatusDisconnected(); // TODO: This is wrong! Reference counting!
-                lock.UnlockExclusive();
-                return true;
-            }
-
-            CallDescription* desc = NULL;
-            for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-                if ((desc = CallDescriptionManager::Instance()->Find(
-                        this->callbacks[i]->CallName()))->IsDescribing(call))
-                    break;
-                desc = NULL;
-            }
-            if (desc == NULL) {
-                lock.UnlockExclusive();
-                return false;
-            }
-
-            vislib::StringA cn(desc->ClassName());
-            for (unsigned int i = 0; i < desc->FunctionCount(); i++) {
-                vislib::StringA fn(desc->FunctionName(i));
-                for (unsigned int j = 0; j < this->callbacks.Count(); j++) {
-                    if (cn.Equals(this->callbacks[j]->CallName(), false)
-                            && fn.Equals(this->callbacks[j]->FuncName(),
-                            false)) {
-                        call->funcMap[i] = j;
-                        break;
-                    }
-                }
-            }
-            call->callee = this;
-            this->SetStatusConnected();
-            lock.UnlockExclusive();
-            return true;
-        }
+        bool ConnectCall(megamol::core::Call *call);
 
         /**
          * Do not call this method directly!
@@ -115,7 +78,7 @@ namespace core {
          *
          * @return 'true' if the call is compatible, 'false' otherwise.
          */
-        inline bool IsCallCompatible(CallDescription* desc) const {
+        inline bool IsCallCompatible(factories::CallDescription::ptr desc) const {
             if (desc == NULL) return false;
             vislib::StringA cn(desc->ClassName());
 

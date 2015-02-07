@@ -41,8 +41,8 @@ cluster::PowerwallView::~PowerwallView(void) {
  * cluster::PowerwallView::Render
  */
 void cluster::PowerwallView::Render(const mmcRenderViewContext& context) {
-    float time = context.Time;
-    float instTime = context.InstanceTime;
+    float time = static_cast<float>(context.Time);
+    float instTime = static_cast<float>(context.InstanceTime);
     view::CallRenderView *crv = this->getCallRenderView();
 
     this->commPing();

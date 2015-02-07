@@ -1,33 +1,36 @@
 /*
  * ModuleDescription.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
- * Alle Rechte vorbehalten.
+ * Copyright (C) 2008 - 2015 by MegaMol Consortium
+ * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MODULEDESCRIPTION_H_INCLUDED
-#define MEGAMOLCORE_MODULEDESCRIPTION_H_INCLUDED
+#ifndef MEGAMOLCORE_FACTORIES_MODULEDESCRIPTION_H_INCLUDED
+#define MEGAMOLCORE_FACTORIES_MODULEDESCRIPTION_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/ObjectDescription.h"
-#include "mmcore/Module.h"
-
+#include "mmcore/factories/ObjectDescription.h"
+#include "vislib/String.h"
+#include <memory>
 
 namespace megamol {
 namespace core {
 
     /** forward declaration */
     class CoreInstance;
+    class Module;
 
+namespace factories {
 
     /**
      * Abstract base class of rendering graph module descriptions
      */
     class MEGAMOLCORE_API ModuleDescription : public ObjectDescription {
     public:
+
+        typedef ::std::shared_ptr<const ModuleDescription> ptr;
 
         /** Ctor. */
         ModuleDescription(void);
@@ -51,8 +54,7 @@ namespace core {
          * @return The newly created module object or 'NULL' in case of an
          *         error.
          */
-        Module *CreateModule(const vislib::StringA& name,
-            class ::megamol::core::CoreInstance *instance) const;
+        Module *CreateModule(const vislib::StringA& name) const;
 
         /**
          * Gets a human readable description of the module.
@@ -161,8 +163,8 @@ namespace core {
 
     };
 
-
+} /* end namespace factories */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_MODULEDESCRIPTION_H_INCLUDED */
+#endif /* MEGAMOLCORE_FACTORIES_MODULEDESCRIPTION_H_INCLUDED */

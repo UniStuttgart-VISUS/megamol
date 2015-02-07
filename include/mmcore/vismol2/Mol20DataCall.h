@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/vismol2/Mol20DataSource.h"
 #include "vislib/math/Cuboid.h"
 
@@ -150,7 +150,7 @@ namespace vismol2 {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<Mol20DataCall> Mol20DataCallDescription;
+    typedef factories::CallAutoDescription<Mol20DataCall> Mol20DataCallDescription;
 
 
 } /* end namespace vismol2 */

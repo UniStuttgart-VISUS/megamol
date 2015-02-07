@@ -27,8 +27,8 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
-#include "mmcore/ObjectDescription.h"
-#include "mmcore/ObjectDescriptionManager.h"
+#include "mmcore/factories/ObjectDescription.h"
+#include "mmcore/factories/ObjectDescriptionManager.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/JobInstanceRequest.h"
@@ -41,8 +41,11 @@
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/ParamValueSetRequest.h"
-#include "mmcore/ModuleDescription.h"
-#include "mmcore/CallDescription.h"
+#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/factories/ModuleDescriptionManager.h"
+#include "mmcore/factories/CallDescription.h"
+#include "mmcore/factories/CallDescriptionManager.h"
+#include <memory>
 
 
 namespace megamol {
@@ -139,17 +142,17 @@ namespace core {
          * @return The found view description object or NULL if the name is
          *         not found.
          */
-        ViewDescription* FindViewDescription(const char *name);
+        std::shared_ptr<const ViewDescription> FindViewDescription(const char *name);
 
-		/**
+        /**
          * Enumerates all view descriptions. The callback function is called for each
          * view description.
          *
          * @param func The callback function.
          * @param data The user specified pointer to be passed to the callback
          *             function.
-		 * @param getBuiltinToo true to also retreive the builtin view descriptions
-		 *					    else false
+         * @param getBuiltinToo true to also retreive the builtin view descriptions
+         *					    else false
          */
         void EnumViewDescriptions(mmcEnumStringAFunction func, void *data, bool getBuiltinToo = false);
 
@@ -161,7 +164,7 @@ namespace core {
          * @return The found view description object or NULL if the name is
          *         not found.
          */
-        JobDescription* FindJobDescription(const char *name);
+        std::shared_ptr<const JobDescription> FindJobDescription(const char *name);
 
         /**
          * Requests all available instantiations.
@@ -176,7 +179,7 @@ namespace core {
          * @param id The identifier to be used for the new instance.
          * @param param The parameters to be set
          */
-        void RequestViewInstantiation(ViewDescription *desc,
+        void RequestViewInstantiation(const ViewDescription *desc,
             const vislib::StringA& id,
             const ParamValueSetRequest *param = NULL);
 
@@ -188,7 +191,7 @@ namespace core {
          * @param id The identifier to be used for the new instance.
          * @param param The parameters to be set
          */
-        void RequestJobInstantiation(JobDescription *desc,
+        void RequestJobInstantiation(const JobDescription *desc,
             const vislib::StringA& id,
             const ParamValueSetRequest *param = NULL);
 
@@ -242,7 +245,7 @@ namespace core {
          * @param name The name of the parameter to find.
          * @param quiet Flag controlling the error output if the parameter is
          *              not found.
-		 * @param create create a StringParam if name is not found
+         * @param create create a StringParam if name is not found
          *
          * @return The found parameter or NULL if no parameter with this name
          *         exists.
@@ -250,19 +253,19 @@ namespace core {
         vislib::SmartPtr<param::AbstractParam> FindParameter(
             const vislib::StringA& name, bool quiet = false, bool create = false);
 
-		/**
-		* Returns a pointer to the parameter with the given name.
-		* If the parameter value is the name of a valid parameter, it follows the path..
-		*
-		* @param name The name of the parameter to find.
-		* @param quiet Flag controlling the error output if the parameter is
-		*              not found.
-		*
-		* @return The found parameter or NULL if no parameter with this name
-		*         exists.
-		*/
-		vislib::SmartPtr<param::AbstractParam> FindParameterIndirect(
-			const vislib::StringA& name, bool quiet = false);
+        /**
+        * Returns a pointer to the parameter with the given name.
+        * If the parameter value is the name of a valid parameter, it follows the path..
+        *
+        * @param name The name of the parameter to find.
+        * @param quiet Flag controlling the error output if the parameter is
+        *              not found.
+        *
+        * @return The found parameter or NULL if no parameter with this name
+        *         exists.
+        */
+        vislib::SmartPtr<param::AbstractParam> FindParameterIndirect(
+            const vislib::StringA& name, bool quiet = false);
 
         /**
          * Returns a pointer to the parameter with the given name.
@@ -270,7 +273,7 @@ namespace core {
          * @param name The name of the parameter to find.
          * @param quiet Flag controlling the error output if the parameter is
          *              not found.
-		 * @param create create a StringParam if name is not found
+         * @param create create a StringParam if name is not found
          *
          * @return The found parameter or NULL if no parameter with this name
          *         exists.
@@ -378,7 +381,7 @@ namespace core {
          * @return The new call or 'NULL' in case of an error
          */
         Call* InstantiateCall(const vislib::StringA fromPath,
-            const vislib::StringA toPath, CallDescription* desc);
+            const vislib::StringA toPath, factories::CallDescription::ptr desc);
 
         /**
          * Fired whenever a parameter updates it's value
@@ -448,6 +451,24 @@ namespace core {
          * @return 'True' on success, 'false' otherwise.
          */
         bool WriteStateToXML(const char *outFilename);
+
+        /**
+         * Gets the manager of all module classes provided by the core 
+         *
+         * @return The manager of all module classes
+         */
+        inline const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const {
+            return this->core_module_classes;
+        };
+
+        /**
+         * Gets the manager of all module classes provided by the core 
+         *
+         * @return The manager of all module classes
+         */
+        inline const factories::CallDescriptionManager& GetCallDescriptionManager(void) const {
+            return this->core_call_classes;
+        }
 
     private:
 
@@ -612,10 +633,10 @@ namespace core {
             vislib::StringA nextSlot;
 
             /** module one step upward */
-            ModuleDescription * nextMod;
+            factories::ModuleDescription::ptr nextMod;
 
             /** call connecting 'nextMod' to previous mod */
-            CallDescription * call;
+            factories::CallDescription::ptr call;
 
             /**
              * Assignment operator
@@ -663,7 +684,7 @@ namespace core {
          * @return The new module or 'NULL' in case of an error
          */
         Module* instantiateModule(const vislib::StringA path,
-            ModuleDescription* desc);
+            factories::ModuleDescription::ptr desc);
 
         /**
          * Enumerates all parameters. The callback function is called for each
@@ -705,7 +726,7 @@ namespace core {
          * @param id The instance description
          */
         void applyConfigParams(const vislib::StringA& root,
-            const InstanceDescription *id,
+            const InstanceDescription* id,
             const ParamValueSetRequest *params);
 
         /**
@@ -733,7 +754,7 @@ namespace core {
          * @param from The module to connect from (upwards)
          * @param step List of possible upward connections
          */
-        void quickConnectUpStepInfo(ModuleDescription *from, vislib::Array<quickStepInfo>& step);
+        void quickConnectUpStepInfo(factories::ModuleDescription::ptr from, vislib::Array<quickStepInfo>& step);
 
         /**
          * Registers a single file type for quickstarting
@@ -775,20 +796,16 @@ namespace core {
         vislib::sys::Log log;
 
         /** The manager of the builtin view descriptions */
-        megamol::core::ObjectDescriptionManager<
-            megamol::core::ViewDescription> builtinViewDescs;
+        megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> builtinViewDescs;
 
         /** The manager of the view descriptions load from projects */
-        megamol::core::ObjectDescriptionManager<
-            megamol::core::ViewDescription> projViewDescs;
+        megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> projViewDescs;
 
         /** The manager of the builtin job descriptions */
-        megamol::core::ObjectDescriptionManager<megamol::core::JobDescription>
-            builtinJobDescs;
+        megamol::core::factories::ObjectDescriptionManager<megamol::core::JobDescription> builtinJobDescs;
 
         /** The manager of the builtin job descriptions */
-        megamol::core::ObjectDescriptionManager<megamol::core::JobDescription>
-            projJobDescs;
+        megamol::core::factories::ObjectDescriptionManager<megamol::core::JobDescription> projJobDescs;
 
         /** The list of pending views to be instantiated */
         vislib::SingleLinkedList<ViewInstanceRequest> pendingViewInstRequests;
@@ -810,6 +827,12 @@ namespace core {
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
+
+        /** Manager of all module classes provided by the core */
+        factories::ModuleDescriptionManager core_module_classes;
+
+        /** Manager of all call classes provided by the core */
+        factories::CallDescriptionManager core_call_classes;
 
     };
 

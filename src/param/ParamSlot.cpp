@@ -72,7 +72,7 @@ void param::ParamSlot::update(void) {
     AbstractParamSlot::update();
 
     Module *m = dynamic_cast<Module*>(this->Parent());
-    if ((m != NULL) && m->IsCoreInstanceAvailable()) {
+    if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
         m->GetCoreInstance()->ParameterValueUpdate(*this);
     }
 

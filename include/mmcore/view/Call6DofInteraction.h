@@ -15,7 +15,7 @@
 #include <cstdint>
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 
@@ -199,16 +199,17 @@ namespace view {
 
         /** Holds the current position of the device. */
         PointType position;
+
+        /** The name of the rigid body to retrieve the state of. */
+        std::string rigidBody;
 #ifdef _MSC_VER
 #pragma warning(default: 4251)
 #endif /* _MSC_VER */
 
-        /** The name of the rigid body to retrieve the state of. */
-        std::string rigidBody;
     };
 
     /** Description class typedef. */
-    typedef CallAutoDescription<Call6DofInteraction> Call6DofInteractionDescription;
+    typedef factories::CallAutoDescription<Call6DofInteraction> Call6DofInteractionDescription;
 
 } /* end namespace view */
 } /* end namespace core */

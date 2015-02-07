@@ -15,7 +15,7 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "vislib/assert.h"
 #include "vislib/StackTrace.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 
 namespace megamol {
@@ -559,7 +559,7 @@ namespace misc {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<BezierCurvesListDataCall> BezierCurvesListDataCallDescription;
+    typedef factories::CallAutoDescription<BezierCurvesListDataCall> BezierCurvesListDataCallDescription;
 
 
 } /* end namespace misc */

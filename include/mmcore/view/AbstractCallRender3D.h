@@ -13,7 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/BoundingBoxes.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/CameraParameters.h"

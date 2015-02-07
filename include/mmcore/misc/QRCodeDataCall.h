@@ -13,7 +13,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/BoundingBoxes.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
@@ -136,7 +136,7 @@ namespace misc {
     };
 
     /** Description class typedef */
-    typedef CallAutoDescription<QRCodeDataCall> QRCodeDataCallDescription;
+    typedef factories::CallAutoDescription<QRCodeDataCall> QRCodeDataCallDescription;
 
 } /* end namespace misc */
 } /* end namespace core */

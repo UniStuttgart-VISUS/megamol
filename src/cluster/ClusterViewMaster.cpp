@@ -9,7 +9,7 @@
 #include "mmcore/cluster/ClusterViewMaster.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
-#include "mmcore/CallDescriptionManager.h"
+#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/cluster/NetMessages.h"
@@ -199,8 +199,7 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
         return true; // this is just for diryt flag reset
     }
 
-    CallDescription *cd = CallDescriptionManager::Instance()
-        ->Find(view::CallRenderView::ClassName());
+    factories::CallDescription::ptr cd = this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderView::ClassName());
     if (cd == NULL) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Cannot find description for call \"%s\"\n",
