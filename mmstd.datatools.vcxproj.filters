@@ -70,6 +70,9 @@
     <ClCompile Include="DumpIColorHistogramModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DataFileSequence.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mmstd.datatools.h">
@@ -118,6 +121,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DumpIColorHistogramModule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DataFileSequence.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

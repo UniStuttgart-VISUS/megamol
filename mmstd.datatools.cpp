@@ -23,6 +23,7 @@
 #include "ParticleDensityOpacityModule.h"
 #include "ForceCubicCBoxModule.h"
 #include "DumpIColorHistogramModule.h"
+#include "DataFileSequence.h"
 
 
 /*
@@ -66,7 +67,7 @@ MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 11;
+    return 12;
 }
 
 
@@ -86,6 +87,7 @@ MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     case 8: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleDensityOpacityModule>();
     case 9: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
     case 10: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
+    case 11: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
     }
     return nullptr;
 }

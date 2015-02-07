@@ -241,6 +241,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AbstractParticleManipulator.cpp" />
+    <ClCompile Include="DataFileSequence.cpp" />
     <ClCompile Include="DataFileSequencer.cpp" />
     <ClCompile Include="DataSetTimeRewriteModule.cpp" />
     <ClCompile Include="dllmain.cpp">
@@ -277,6 +278,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractParticleManipulator.h" />
+    <ClInclude Include="DataFileSequence.h" />
     <ClInclude Include="DataFileSequencer.h" />
     <ClInclude Include="DataSetTimeRewriteModule.h" />
     <ClInclude Include="DumpIColorHistogramModule.h" />
