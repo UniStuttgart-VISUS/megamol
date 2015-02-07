@@ -265,6 +265,7 @@
     <ClInclude Include="include\vislib\IllegalStateException.h" />
     <ClInclude Include="include\vislib\Iterator.h" />
     <ClInclude Include="include\vislib\Listenable.h" />
+    <ClInclude Include="include\vislib\macro_utils.h" />
     <ClInclude Include="include\vislib\Map.h" />
     <ClInclude Include="include\vislib\math\AbstractCuboid.h" />
     <ClInclude Include="include\vislib\math\AbstractDimension.h" />

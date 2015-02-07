@@ -984,6 +984,9 @@
     <ClInclude Include="include\vislib\graphics\d3d\D3DCamera.h">
       <Filter>Header Files\graphics\d3d</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\macro_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
@@ -1873,7 +1876,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="src\makevislibversion.pl" />
+    <CustomBuild Include="makevislibversion.pl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\vislib\sys\WindowsService.inl">
