@@ -27,7 +27,6 @@
 #include "mmcore/misc/TestSpheresDataSource.h"
 #include "mmcore/moldyn/AddParticleColours.h"
 #include "mmcore/moldyn/ArrowRenderer.h"
-#include "mmcore/moldyn/DataFileSequence.h"
 #include "mmcore/moldyn/DataGridder.h"
 #include "mmcore/moldyn/GrimRenderer.h"
 #include "mmcore/moldyn/IMDAtomDataSource.h"
@@ -134,7 +133,6 @@ void ModuleDescriptionManager::registerObjects(ModuleDescriptionManager *instanc
     instance->registerAutoDescription<misc::TestSpheresDataSource>();
     instance->registerAutoDescription<moldyn::AddParticleColours>();
     instance->registerAutoDescription<moldyn::ArrowRenderer>();
-    instance->registerAutoDescription<moldyn::DataFileSequence>();
     instance->registerAutoDescription<moldyn::DataGridder>();
     instance->registerAutoDescription<moldyn::GrimRenderer>();
     instance->registerDescription<LoaderADModuleAutoDescription<moldyn::IMDAtomDataSource> >();

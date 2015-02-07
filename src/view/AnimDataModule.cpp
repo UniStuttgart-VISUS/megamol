@@ -189,7 +189,7 @@ void view::AnimDataModule::setFrameCount(unsigned int cnt) {
 DWORD view::AnimDataModule::loaderFunction(void *userData) {
     AnimDataModule *This = static_cast<AnimDataModule*>(userData);
     ASSERT(This != NULL);
-    unsigned int index, i, j, k, req;
+    unsigned int index, i, j, req;
 #ifdef _LOADING_REPORTING
     unsigned int l;
 #endif /* _LOADING_REPORTING */

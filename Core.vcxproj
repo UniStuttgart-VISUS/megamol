@@ -481,7 +481,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\moldyn\ArrowRenderer.cpp" />
     <ClCompile Include="src\moldyn\ClusteredSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\D3D11SimpleSphereRenderer.cpp" />
-    <ClCompile Include="src\moldyn\DataFileSequence.cpp" />
     <ClCompile Include="src\moldyn\DataGridder.cpp" />
     <ClCompile Include="src\moldyn\DirectionalParticleDataCall.cpp" />
     <ClCompile Include="src\moldyn\DirPartColModulate.cpp" />
@@ -731,7 +730,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\moldyn\ArrowRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\ClusteredSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\D3D11SimpleSphereRenderer.h" />
-    <ClInclude Include="include\mmcore\moldyn\DataFileSequence.h" />
     <ClInclude Include="include\mmcore\moldyn\DataGridder.h" />
     <ClInclude Include="include\mmcore\moldyn\DirectionalParticleDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\DirPartColModulate.h" />

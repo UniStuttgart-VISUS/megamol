@@ -587,9 +587,6 @@
     <ClCompile Include="src\moldyn\D3D11SimpleSphereRenderer.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
-    <ClCompile Include="src\moldyn\DataFileSequence.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
     <ClCompile Include="src\moldyn\DataGridder.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
@@ -1217,9 +1214,6 @@
       <Filter>Header Files\moldyn</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\D3D11SimpleSphereRenderer.h">
-      <Filter>Header Files\moldyn</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\DataFileSequence.h">
       <Filter>Header Files\moldyn</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\DataGridder.h">
