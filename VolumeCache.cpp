@@ -11,7 +11,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/moldyn/DataFileSequence.h"
+//#include "mmcore/moldyn/DataFileSequence.h"
 #include "vislib/sys/File.h"
 #include "vislib/assert.h"
 #include "vislib/sys/Log.h"
@@ -100,13 +100,16 @@ bool volume::VolumeCache::outDataCallback(core::Call& caller) {
         if ((this->dataHash == 0) || (this->frameIdx != o->FrameID()) || this->forceAndSaveSlot.IsDirty()) {
             // no data
             bool load = vislib::sys::File::Exists(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
-            // TODO: PORRRQUEEEEEEEE
-            const core::moldyn::DataFileSequence* test = dynamic_cast<const core::moldyn::DataFileSequence*>(o->PeekCallerSlot()->Parent());
-            if (test == NULL) {
-                if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
-                    load = false; // most likely we want to rebuild the cache
-                }
-            }
+            //// TODO: PORRRQUEEEEEEEE
+            //
+            // TODO: This hack needs to be removed!
+            //
+            //const core::moldyn::DataFileSequence* test = dynamic_cast<const core::moldyn::DataFileSequence*>(o->PeekCallerSlot()->Parent());
+            //if (test == NULL) {
+            //    if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
+            //        load = false; // most likely we want to rebuild the cache
+            //    }
+            //}
             if (load && this->forceAndSaveSlot.IsDirty() && (i != NULL)) {
                 load = false; // no, we want to build and save instead
             }
@@ -172,13 +175,16 @@ bool volume::VolumeCache::outExtentCallback(core::Call& caller) {
         if ((this->dataHash == 0) || (this->frameIdx != o->FrameID()) || this->forceAndSaveSlot.IsDirty()) {
             // no data
             bool load = vislib::sys::File::Exists(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
-            // TODO: PORRRQUEEEEEEEE
-            const core::moldyn::DataFileSequence* test = dynamic_cast<const core::moldyn::DataFileSequence*>(o->PeekCallerSlot()->Parent());
-            if (test == NULL) {
-                if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
-                    load = false; // most likely we want to rebuild the cache
-                }
-            }
+            //// TODO: PORRRQUEEEEEEEE
+            //
+            // TODO: This hack needs to be removed!
+            //
+            //const core::moldyn::DataFileSequence* test = dynamic_cast<const core::moldyn::DataFileSequence*>(o->PeekCallerSlot()->Parent());
+            //if (test == NULL) {
+            //    if (load && (this->dataHash != 0) && (this->frameIdx != o->FrameID())) {
+            //        load = false; // most likely we want to rebuild the cache
+            //    }
+            //}
             if (load && this->forceAndSaveSlot.IsDirty() && (i != NULL)) {
                 load = false; // no, we want to build and save instead
             }
