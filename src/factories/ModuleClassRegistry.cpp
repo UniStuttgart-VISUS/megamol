@@ -5,7 +5,7 @@
  */
 
 #include "stdafx.h"
-#include "mmcore/factories/ModuleClassRegistry.h"
+#include "factories/ModuleClassRegistry.h"
 
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/LoaderADModuleAutoDescription.h"

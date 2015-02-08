@@ -428,6 +428,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\cluster\simple\View.cpp" />
     <ClCompile Include="src\CoreInstance.cpp" />
     <ClCompile Include="src\DataWriterCtrlCall.cpp" />
+    <ClCompile Include="src\factories\AbstractAssemblyInstance.cpp" />
     <ClCompile Include="src\factories\CallClassRegistry.cpp" />
     <ClCompile Include="src\factories\CallDescription.cpp" />
     <ClCompile Include="src\factories\CallDescriptionManager.cpp" />
@@ -445,6 +446,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\job\DataWriterJob.cpp" />
     <ClCompile Include="src\job\JobThread.cpp" />
     <ClCompile Include="src\MegaMolCore.cpp" />
+    <ClCompile Include="src\MegaMolCoreConfiguratorBackdoor.cpp" />
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="src\misc\CalloutImageCall.cpp" />
     <ClCompile Include="src\misc\ImageViewer.cpp" />
@@ -542,6 +544,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\utility\Configuration.cpp" />
     <ClCompile Include="src\utility\D3D11BoundingBox.cpp" />
     <ClCompile Include="src\utility\LogEchoTarget.cpp" />
+    <ClCompile Include="src\utility\plugins\AbstractPluginInstance.cpp" />
+    <ClCompile Include="src\utility\plugins\LegacyPlugin100Instance.cpp" />
+    <ClCompile Include="src\utility\plugins\PluginManager.cpp" />
     <ClCompile Include="src\utility\ProjectParser.cpp" />
     <ClCompile Include="src\utility\ResourceWrapper.cpp" />
     <ClCompile Include="src\utility\ShaderSourceFactory.cpp" />
@@ -670,13 +675,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\cluster\simple\View.h" />
     <ClInclude Include="include\mmcore\CoreInstance.h" />
     <ClInclude Include="include\mmcore\DataWriterCtrlCall.h" />
+    <ClInclude Include="include\mmcore\factories\AbstractAssemblyInstance.h" />
     <ClInclude Include="include\mmcore\factories\CallAutoDescription.h" />
-    <ClInclude Include="include\mmcore\factories\CallClassRegistry.h" />
     <ClInclude Include="include\mmcore\factories\CallDescription.h" />
     <ClInclude Include="include\mmcore\factories\CallDescriptionManager.h" />
     <ClInclude Include="include\mmcore\factories\LoaderADModuleAutoDescription.h" />
     <ClInclude Include="include\mmcore\factories\ModuleAutoDescription.h" />
-    <ClInclude Include="include\mmcore\factories\ModuleClassRegistry.h" />
     <ClInclude Include="include\mmcore\factories\ModuleDescription.h" />
     <ClInclude Include="include\mmcore\factories\ModuleDescriptionManager.h" />
     <ClInclude Include="include\mmcore\factories\ObjectDescription.h" />
@@ -778,6 +782,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\utility\Configuration.h" />
     <ClInclude Include="include\mmcore\utility\D3D11BoundingBox.h" />
     <ClInclude Include="include\mmcore\utility\LogEchoTarget.h" />
+    <ClInclude Include="include\mmcore\utility\plugins\AbstractPluginInstance.h" />
     <ClInclude Include="include\mmcore\utility\ProjectParser.h" />
     <ClInclude Include="include\mmcore\utility\ResourceWrapper.h" />
     <ClInclude Include="include\mmcore\utility\ShaderSourceFactory.h" />
@@ -846,7 +851,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\vismol2\Mol20DataSource.h" />
     <ClInclude Include="include\mmcore\vismol2\Mol20Renderer.h" />
     <ClInclude Include="include\mmcore\vismol2\Mol2Data.h" />
+    <ClInclude Include="src\factories\CallClassRegistry.h" />
+    <ClInclude Include="src\factories\ModuleClassRegistry.h" />
     <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\utility\plugins\LegacyPlugin100Instance.h" />
+    <ClInclude Include="src\utility\plugins\PluginManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

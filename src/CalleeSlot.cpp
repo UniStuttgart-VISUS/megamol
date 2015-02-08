@@ -88,7 +88,7 @@ bool CalleeSlot::ConnectCall(megamol::core::Call *call) {
             break;
         desc.reset();
     }
-    if (desc) {
+    if (!desc) {
         lock.UnlockExclusive();
         return false;
     }

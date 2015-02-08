@@ -27,8 +27,6 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
-#include "mmcore/factories/ObjectDescription.h"
-#include "mmcore/factories/ObjectDescriptionManager.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/JobInstanceRequest.h"
@@ -41,10 +39,16 @@
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/ParamValueSetRequest.h"
+#include "mmcore/factories/ObjectDescription.h"
+#include "mmcore/factories/ObjectDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
+#include "mmcore/factories/AbstractAssemblyInstance.h"
+
+#include "utility/plugins/PluginManager.h"
+
 #include <memory>
 
 
@@ -54,7 +58,8 @@ namespace core {
     /**
      * class of core instances.
      */
-    class MEGAMOLCORE_API CoreInstance : public ApiHandle {
+    class MEGAMOLCORE_API CoreInstance : public ApiHandle,
+        public factories::AbstractAssemblyInstance {
     public:
 
         /**
@@ -70,6 +75,28 @@ namespace core {
 
         /** dtor */
         virtual ~CoreInstance(void);
+
+        /**
+         * Answer the (machine-readable) name of the assembly. This usually is
+         * The name of the plugin dll/so without prefix and extension.
+         *
+         * @return The (machine-readable) name of the assembly
+         */
+        virtual const std::string& GetAssemblyName(void) const;
+
+        /**
+         * Answer the call description manager of the assembly.
+         *
+         * @return The call description manager of the assembly.
+         */
+        virtual const factories::CallDescriptionManager& GetCallDescriptionManager(void) const;
+
+        /**
+         * Answer the module description manager of the assembly.
+         *
+         * @return The module description manager of the assembly.
+         */
+        virtual const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
 
         /**
          * Answers the log object of the instance.
@@ -452,24 +479,6 @@ namespace core {
          */
         bool WriteStateToXML(const char *outFilename);
 
-        /**
-         * Gets the manager of all module classes provided by the core 
-         *
-         * @return The manager of all module classes
-         */
-        inline const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const {
-            return this->core_module_classes;
-        };
-
-        /**
-         * Gets the manager of all module classes provided by the core 
-         *
-         * @return The manager of all module classes
-         */
-        inline const factories::CallDescriptionManager& GetCallDescriptionManager(void) const {
-            return this->core_call_classes;
-        }
-
     private:
 
         /**
@@ -819,20 +828,26 @@ namespace core {
         /** the time offset */
         double timeOffset;
 
-        /** The loaded plugins */
-        vislib::PtrArray<vislib::sys::DynamicLinkLibrary> plugins;
-
         /** List of registered param update listeners */
         vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;
+
+        /** The manager of loaded plugins */
+        utility::plugins::PluginManager plugins;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
-        /** Manager of all module classes provided by the core */
-        factories::ModuleDescriptionManager core_module_classes;
+        /**
+         * Factory referencing all call descriptions from core and all loaded
+         * plugins.
+         */
+        factories::CallDescriptionManager all_call_descriptions;
 
-        /** Manager of all call classes provided by the core */
-        factories::CallDescriptionManager core_call_classes;
+        /**
+         * Factory referencing all module descriptions from core and all loaded
+         * plugins.
+         */
+        factories::ModuleDescriptionManager all_module_descriptions;
 
     };
 

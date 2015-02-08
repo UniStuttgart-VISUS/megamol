@@ -11,11 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/ConstIterator.h"
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include "vislib/String.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/macro_utils.h"
 
@@ -32,7 +30,7 @@ namespace factories {
     public:
 
         typedef T description_type;
-        typedef ::std::shared_ptr<const typename T> description_ptr_type;
+        typedef ::std::shared_ptr<const T> description_ptr_type;
         typedef ::std::vector<description_ptr_type> description_list_type;
         typedef typename description_list_type::iterator description_iterator_type;
         typedef typename description_list_type::const_iterator description_const_iterator_type;
@@ -58,14 +56,14 @@ namespace factories {
          *
          * @return The iterator object
          */
-        virtual description_iterator_type begin(void);
+        description_iterator_type begin(void);
 
         /**
          * Gets an iterator over the registered descriptions.
          *
          * @return The iterator object
          */
-        virtual description_iterator_type end(void);
+        description_iterator_type end(void);
 
 
         /**
@@ -73,14 +71,14 @@ namespace factories {
          *
          * @return The iterator object
          */
-        virtual description_const_iterator_type begin(void) const;
+        description_const_iterator_type begin(void) const;
 
         /**
          * Gets an iterator over the registered descriptions.
          *
          * @return The iterator object
          */
-        virtual description_const_iterator_type end(void) const;
+        description_const_iterator_type end(void) const;
 
         /**
          * Registers an object description.
@@ -102,6 +100,19 @@ namespace factories {
          * @param classname The name of the object to unregister.
          */
         void Unregister(const char *classname);
+
+        /**
+         * Answers the number of descriptions stored.
+         *
+         * @return The number of descriptions stored
+         */
+        unsigned int Count(void) const;
+
+        /**
+         * Removes all descriptions from the manager in preparation of the
+         * shutdown.
+         */
+        void Shutdown(void);
 
     private:
 
@@ -220,6 +231,25 @@ namespace factories {
             }),
             this->descriptions.end());
     }
+
+
+    /*
+     * ObjectDescriptionManager<T>::Count
+     */
+    template<class T>
+    unsigned int ObjectDescriptionManager<T>::Count(void) const {
+        return static_cast<unsigned int>(this->descriptions.size());
+    }
+
+
+    /*
+     * ObjectDescriptionManager<T>::Shutdown
+     */
+    template<class T>
+    void ObjectDescriptionManager<T>::Shutdown(void) {
+        this->descriptions.clear();
+    }
+
 
 } /* end namespace factories */
 } /* end namespace core */

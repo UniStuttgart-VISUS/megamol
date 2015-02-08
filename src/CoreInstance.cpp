@@ -17,19 +17,14 @@
 #include <string>
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/factories/ObjectDescriptionManager.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Call.h"
-#include "mmcore/factories/CallDescription.h"
-#include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/ClusterViewMaster.h"
 #include "mmcore/cluster/simple/Server.h"
 #include "mmcore/Module.h"
-#include "mmcore/factories/ModuleDescription.h"
-#include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -57,6 +52,8 @@
 #include "mmcore/productversion.h"
 #include "mmcore/versioninfo.h"
 #include "mmcore/profiler/Manager.h"
+#include "factories/CallClassRegistry.h"
+#include "factories/ModuleClassRegistry.h"
 
 #include "vislib/Array.h"
 #include "vislib/sys/BufferedFile.h"
@@ -112,12 +109,13 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void *data,
  * megamol::core::CoreInstance::CoreInstance
  */
 megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
+        factories::AbstractAssemblyInstance(),
         preInit(new PreInit), config(),
         shaderSourceFactory(config), log(),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
-        timeOffset(0.0), plugins(), paramUpdateListeners(),
-        core_module_classes(), core_call_classes() {
+        timeOffset(0.0), paramUpdateListeners(), plugins(),
+        all_call_descriptions(), all_module_descriptions() {
     //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -126,6 +124,10 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot.SetCoreInstance(*this);
     this->config.instanceLog = &this->log;
+    factories::register_module_classes(this->module_descriptions);
+    for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
+    factories::register_call_classes(this->call_descriptions);
+    for (auto cd : this->call_descriptions) this->all_call_descriptions.Register(cd);
 
     // Normalize timer with time offset to something less crappy shitty hateworthy
     this->timeOffset = -this->GetCoreInstanceTime();
@@ -152,6 +154,171 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
     this->log.SetEchoLevel(vislib::sys::Log::LEVEL_NONE);
     this->log.SetOfflineMessageBufferSize(25);
+
+    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
+}
+
+
+/*
+ * megamol::core::CoreInstance::~CoreInstance
+ */
+megamol::core::CoreInstance::~CoreInstance(void) {
+    this->config.instanceLog = NULL;
+    SAFE_DELETE(this->preInit);
+    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        "Core Instance destroyed");
+
+    // Shutdown all views and jobs, which might still run
+    this->namespaceRoot.ModuleGraphLock().LockExclusive();
+    AbstractNamedObjectContainer::ChildList remoov;
+    AbstractNamedObjectContainer::ChildList::Iterator iter
+        = this->namespaceRoot.GetChildIterator();
+    while (iter.HasNext()) {
+        AbstractNamedObject *child = iter.Next();
+        if ((dynamic_cast<ViewInstance*>(child) != NULL)
+                || (dynamic_cast<JobInstance*>(child) != NULL)) {
+            remoov.Add(child);
+        }
+    }
+
+    iter = remoov.GetIterator();
+    while (iter.HasNext()) {
+        ModuleNamespace *child = dynamic_cast<ModuleNamespace*>(iter.Next());
+        this->closeViewJob(child);
+    }
+    this->namespaceRoot.ModuleGraphLock().UnlockExclusive();
+
+    // we need to manually clean up all data structures in the right order!
+    // first view- and job-descriptions
+    this->builtinViewDescs.Shutdown();
+    this->builtinJobDescs.Shutdown();
+    this->projViewDescs.Shutdown();
+    this->projJobDescs.Shutdown();
+    // then factories
+    this->all_module_descriptions.Shutdown();
+    this->all_call_descriptions.Shutdown();
+    this->module_descriptions.Shutdown();
+    this->call_descriptions.Shutdown();
+    // finally plugins, will be automatically removed when dtor is left.
+
+#ifdef ULTRA_SOCKET_STARTUP
+    vislib::net::Socket::Cleanup();
+#endif /* ULTRA_SOCKET_STARTUP */
+}
+
+
+/*
+ * megamol::core::CoreInstance::GetAssemblyName
+ */
+const std::string& megamol::core::CoreInstance::GetAssemblyName(void) const {
+    static std::string noname("");
+    return noname;
+}
+
+
+/*
+ * megamol::core::CoreInstance::GetCallDescriptionManager
+ */
+const megamol::core::factories::CallDescriptionManager&
+megamol::core::CoreInstance::GetCallDescriptionManager(void) const {
+    return this->all_call_descriptions;
+}
+
+
+/*
+ * megamol::core::CoreInstance::GetModuleDescriptionManager
+ */
+const megamol::core::factories::ModuleDescriptionManager&
+megamol::core::CoreInstance::GetModuleDescriptionManager(void) const {
+    return this->all_module_descriptions;
+}
+
+
+/*
+ * megamol::core::CoreInstance::Initialise
+ */
+void megamol::core::CoreInstance::Initialise(void) {
+    if (this->preInit == NULL) {
+        throw vislib::IllegalStateException(
+            "Cannot initialise a core instance twice.", __FILE__, __LINE__);
+    }
+
+    // logging mechanism
+    if (this->preInit->IsLogEchoLevelSet()) {
+        this->log.SetEchoLevel(this->preInit->GetLogEchoLevel());
+        this->config.logEchoLevelLocked = true;
+        if (this->preInit->GetLogEchoLevel() != 0) {
+            this->log.EchoOfflineMessages(true);
+        }
+    }
+    if (this->preInit->IsLogLevelSet()) {
+        this->log.SetLevel(this->preInit->GetLogLevel());
+        this->config.logLevelLocked = true;
+        if (this->preInit->GetLogLevel() == 0) {
+            this->log.SetLogFileName(static_cast<char*>(NULL), false);
+            this->config.logFilenameLocked = true;
+        } else {
+            if (this->preInit->IsLogFileSet()) {
+                this->log.SetLogFileName(this->preInit->GetLogFile(), false);
+                this->config.logFilenameLocked = true;
+            } else {
+                this->log.SetLogFileName(static_cast<char*>(NULL), false);
+            }
+        }
+    }
+    vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
+
+    // configuration file
+    if (this->preInit->IsConfigFileSet()) {
+        this->config.LoadConfig(this->preInit->GetConfigFile());
+    } else {
+        this->config.LoadConfig();
+    }
+
+    // loading plugins
+    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
+    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
+    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
+    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
+    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
+    vislib::SingleLinkedList<vislib::TString> plugins_paths;
+    this->config.ListPluginsToLoad(plugins_paths);
+    vislib::SingleLinkedList<vislib::TString>::Iterator iter = plugins_paths.GetIterator();
+    while (iter.HasNext()) {
+        this->loadPlugin(iter.Next());
+    }
+    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
+    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
+    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
+    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
+    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
+
+    // set up profiling manager
+    if (this->config.IsConfigValueSet("profiling")) {
+        vislib::StringA prof(this->config.ConfigValue("profiling"));
+        if (prof.Equals("all", false)) {
+            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_ALL);
+        } else if (prof.Equals("selected", false)) {
+            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
+        } else if (prof.Equals("none", false)) {
+            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
+        } else {
+            try {
+                bool b = vislib::CharTraitsA::ParseBool(prof);
+                if (b) {
+                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
+                } else {
+                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
+                }
+            } catch(...) {
+                profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
+            }
+        }
+    } else {
+        // Do not profile on default
+        profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
+    }
+
 
     //////////////////////////////////////////////////////////////////////
     // register builtin descriptions
@@ -286,129 +453,6 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
 
     //////////////////////////////////////////////////////////////////////
 
-    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
-}
-
-
-/*
- * megamol::core::CoreInstance::~CoreInstance
- */
-megamol::core::CoreInstance::~CoreInstance(void) {
-    this->config.instanceLog = NULL;
-    SAFE_DELETE(this->preInit);
-    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        "Core Instance destroyed");
-
-    // Shutdown all views and jobs, which might still run
-    this->namespaceRoot.ModuleGraphLock().LockExclusive();
-    AbstractNamedObjectContainer::ChildList remoov;
-    AbstractNamedObjectContainer::ChildList::Iterator iter
-        = this->namespaceRoot.GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *child = iter.Next();
-        if ((dynamic_cast<ViewInstance*>(child) != NULL)
-                || (dynamic_cast<JobInstance*>(child) != NULL)) {
-            remoov.Add(child);
-        }
-    }
-
-    iter = remoov.GetIterator();
-    while (iter.HasNext()) {
-        ModuleNamespace *child = dynamic_cast<ModuleNamespace*>(iter.Next());
-        this->closeViewJob(child);
-    }
-    this->namespaceRoot.ModuleGraphLock().UnlockExclusive();
-
-#ifdef ULTRA_SOCKET_STARTUP
-    vislib::net::Socket::Cleanup();
-#endif /* ULTRA_SOCKET_STARTUP */
-}
-
-
-/*
- * megamol::core::CoreInstance::Initialise
- */
-void megamol::core::CoreInstance::Initialise(void) {
-    if (this->preInit == NULL) {
-        throw vislib::IllegalStateException(
-            "Cannot initialise a core instance twice.", __FILE__, __LINE__);
-    }
-
-    // logging mechanism
-    if (this->preInit->IsLogEchoLevelSet()) {
-        this->log.SetEchoLevel(this->preInit->GetLogEchoLevel());
-        this->config.logEchoLevelLocked = true;
-        if (this->preInit->GetLogEchoLevel() != 0) {
-            this->log.EchoOfflineMessages(true);
-        }
-    }
-    if (this->preInit->IsLogLevelSet()) {
-        this->log.SetLevel(this->preInit->GetLogLevel());
-        this->config.logLevelLocked = true;
-        if (this->preInit->GetLogLevel() == 0) {
-            this->log.SetLogFileName(static_cast<char*>(NULL), false);
-            this->config.logFilenameLocked = true;
-        } else {
-            if (this->preInit->IsLogFileSet()) {
-                this->log.SetLogFileName(this->preInit->GetLogFile(), false);
-                this->config.logFilenameLocked = true;
-            } else {
-                this->log.SetLogFileName(static_cast<char*>(NULL), false);
-            }
-        }
-    }
-    vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-
-    // configuration file
-    if (this->preInit->IsConfigFileSet()) {
-        this->config.LoadConfig(this->preInit->GetConfigFile());
-    } else {
-        this->config.LoadConfig();
-    }
-
-    // loading plugins
-    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
-    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
-    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
-    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
-    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
-    vislib::SingleLinkedList<vislib::TString> plugins;
-    this->config.ListPluginsToLoad(plugins);
-    vislib::SingleLinkedList<vislib::TString>::Iterator iter = plugins.GetIterator();
-    while (iter.HasNext()) {
-        this->loadPlugin(iter.Next());
-    }
-    // printf("Log: %d:\n", (long)(&vislib::sys::Log::DefaultLog));
-    // printf("\tAutoflush: %s\n", vislib::sys::Log::DefaultLog.IsAutoFlushEnabled() ? "enabled" : "disabled");
-    // printf("\tLevel: %u\n", vislib::sys::Log::DefaultLog.GetLevel());
-    // printf("\tEcho-Level: %u\n", vislib::sys::Log::DefaultLog.GetEchoLevel());
-    // printf("\tEcho-Target: %d\n", (long)(vislib::sys::Log::DefaultLog.GetEchoOutTarget()));
-
-    // set up profiling manager
-    if (this->config.IsConfigValueSet("profiling")) {
-        vislib::StringA prof(this->config.ConfigValue("profiling"));
-        if (prof.Equals("all", false)) {
-            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_ALL);
-        } else if (prof.Equals("selected", false)) {
-            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
-        } else if (prof.Equals("none", false)) {
-            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-        } else {
-            try {
-                bool b = vislib::CharTraitsA::ParseBool(prof);
-                if (b) {
-                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
-                } else {
-                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-                }
-            } catch(...) {
-                profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-            }
-        }
-    } else {
-        // Do not profile on default
-        profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-    }
 
     while (this->config.HasInstantiationRequests()) {
         utility::Configuration::InstanceRequest r
@@ -2432,7 +2476,8 @@ void megamol::core::CoreInstance::applyConfigParams(
  * megamol::core::CoreInstance::loadPlugin
  */
 void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
-    vislib::sys::DynamicLinkLibrary *plugin = new vislib::sys::DynamicLinkLibrary();
+
+    // select log level for plugin loading errors
     unsigned int loadFailedLevel = vislib::sys::Log::LEVEL_ERROR;
     if (this->config.IsConfigValueSet("PluginLoadFailMsg")) {
         try {
@@ -2453,138 +2498,33 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
         }
     }
 
-    // load module
-    if (!plugin->Load(filename)) {
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": Cannot load plugin \"%s\"\n",
+    try {
+
+        utility::plugins::PluginManager::collection_type new_plugins
+            = this->plugins.LoadPlugin(filename.PeekBuffer(), *this);
+
+        for(auto new_plugin : new_plugins) {
+            this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                "Plugin \"%s\" (%s) loaded: %d Modules, %d Calls registered\n",
+                new_plugin->GetAssemblyName().c_str(),
+                vislib::StringA(filename).PeekBuffer(),
+                new_plugin->GetModuleDescriptionManager().Count(),
+                new_plugin->GetCallDescriptionManager().Count());
+
+            for (auto md : new_plugin->GetModuleDescriptionManager()) this->all_module_descriptions.Register(md);
+            for (auto cd : new_plugin->GetCallDescriptionManager()) this->all_call_descriptions.Register(cd);
+
+        }
+
+    } catch(const vislib::Exception& vex) {
+        this->log.WriteMsg(loadFailedLevel, "Unable to load Plugin \"%s\": %s (%s, &d)",
             vislib::StringA(filename).PeekBuffer(),
-            plugin->LastLoadErrorMessage().PeekBuffer());
-        delete plugin;
-        return;
-    }
-
-    // test api version
-    int (*mmplgPluginAPIVersion)(void) = function_cast<int (*)()>(plugin->GetProcAddress("mmplgPluginAPIVersion"));
-    if ((mmplgPluginAPIVersion == NULL)) {
-        plugin->Free();
-        delete plugin;
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": API entry not found\n",
+            vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+    } catch(...) {
+        this->log.WriteMsg(loadFailedLevel, "Unable to load Plugin \"%s\": unknown exception",
             vislib::StringA(filename).PeekBuffer());
-        return;
-    }
-    int plgApiVer = mmplgPluginAPIVersion();
-    if (plgApiVer != 100) {
-        plugin->Free();
-        delete plugin;
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": incompatible API version\n",
-            vislib::StringA(filename).PeekBuffer());
-        return;
     }
 
-    // test core compatibility
-    const void* (*mmplgCoreCompatibilityValue)(void) = function_cast<const void* (*)()>(plugin->GetProcAddress("mmplgCoreCompatibilityValue"));
-    if ((mmplgCoreCompatibilityValue == NULL)) {
-        plugin->Free();
-        delete plugin;
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": API function \"mmplgCoreCompatibilityValue\" not found\n",
-            vislib::StringA(filename).PeekBuffer());
-        return;
-    }
-    const mmplgCompatibilityValues *compVal = static_cast<const mmplgCompatibilityValues*>(mmplgCoreCompatibilityValue());
-    if ((compVal->size != sizeof(mmplgCompatibilityValues)) 
-            || (compVal->mmcoreRev != MEGAMOL_CORE_COMP_REV)) {
-        SIZE_T rev = compVal->mmcoreRev;
-        plugin->Free();
-        delete plugin;
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": core version mismatch (%d from Core; %d from Plugin)\n",
-            vislib::StringA(filename).PeekBuffer(),
-            static_cast<int>(MEGAMOL_CORE_COMP_REV),
-            static_cast<int>(rev));
-        return;
-    }
-    if ((compVal->size != sizeof(mmplgCompatibilityValues)) 
-            || ((compVal->vislibRev != 0) && (compVal->vislibRev != VISLIB_VERSION_REVISION))) {
-        SIZE_T rev = compVal->vislibRev;
-        plugin->Free();
-        delete plugin;
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": vislib version mismatch (%d from Core; %d from Plugin)\n",
-            vislib::StringA(filename).PeekBuffer(),
-            static_cast<int>(VISLIB_VERSION_REVISION),
-            static_cast<int>(rev));
-        return;
-    }
-
-    // connect static objects
-    bool (*mmplgConnectStatics)(int, void*) = function_cast<bool (*)(int, void*)>(plugin->GetProcAddress("mmplgConnectStatics"));
-    if (mmplgConnectStatics != NULL) {
-        bool rv;
-        rv = mmplgConnectStatics(1, static_cast<void*>(&vislib::sys::Log::DefaultLog));
-        VLTRACE(VISLIB_TRCELVL_INFO, "Plug-in connect log: %s\n", rv ? "true" : "false");
-        vislib::SmartPtr<vislib::StackTrace> stackManager(vislib::StackTrace::Manager());
-        rv = mmplgConnectStatics(2, static_cast<void*>(&stackManager));
-        VLTRACE(VISLIB_TRCELVL_INFO, "Plug-in connect stacktrace: %s\n", rv ? "true" : "false");
-    }
-
-    // load description
-    const char * (*mmplgPluginName)(void) = function_cast<const char * (*)()>(plugin->GetProcAddress("mmplgPluginName"));
-//    const char * (*mmplgPluginDescription)(void) = function_cast<const char * (*)()>(plugin->GetProcAddress("mmplgPluginDescription"));
-    if ((mmplgPluginName == NULL)/* || (mmplgPluginDescription == NULL)*/) {
-        plugin->Free();
-        delete plugin;
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": API name/description functions not found\n",
-            vislib::StringA(filename).PeekBuffer());
-        return;
-    }
-    vislib::StringA plgName(mmplgPluginName());
-    if (plgName.IsEmpty()) {
-        plugin->Free();
-        delete plugin;
-        this->log.WriteMsg(loadFailedLevel,
-            "Unable to load Plugin \"%s\": Plugin does not export a name\n",
-            vislib::StringA(filename).PeekBuffer());
-        return;
-    }
-
-    // object export information
-    int (*mmplgModuleCount)(void) = function_cast<int (*)()>(plugin->GetProcAddress("mmplgModuleCount"));
-    void* (*mmplgModuleDescription)(int) = function_cast<void* (*)(int)>(plugin->GetProcAddress("mmplgModuleDescription"));
-
-    int (*mmplgCallCount)(void) = function_cast<int (*)()>(plugin->GetProcAddress("mmplgCallCount"));
-    void* (*mmplgCallDescription)(int) = function_cast<void* (*)(int)>(plugin->GetProcAddress("mmplgCallDescription"));
-
-    int modCnt = ((mmplgModuleCount == NULL) || (mmplgModuleDescription == NULL)) ? 0 : mmplgModuleCount();
-    int modCntVal = 0;
-    for (int i = 0; i < modCnt; i++) {
-        void * modPtr = mmplgModuleDescription(i);
-        if (modPtr == NULL) continue;
-        factories::ModuleDescription::ptr mdp(static_cast<factories::ModuleDescription*>(modPtr));
-        // TODO: Change me!
-        this->core_module_classes.Register(mdp);
-        modCntVal++;
-    }
-
-    int callCnt = ((mmplgCallCount == NULL) || (mmplgCallDescription == NULL)) ? 0 : mmplgCallCount();
-    int callCntVal = 0;
-    for (int i = 0; i < callCnt; i++) {
-        void * callPtr = mmplgCallDescription(i);
-        if (callPtr == NULL) continue;
-        factories::CallDescription::ptr cdp(static_cast<factories::CallDescription*>(callPtr));
-        // TODO: Change me!
-        this->core_call_classes.Register(cdp);
-        callCntVal++;
-    }
-
-    this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
-        "Plugin \"%s\" loaded: %d Modules, %d Calls registered\n",
-        vislib::StringA(filename).PeekBuffer(), modCntVal, callCntVal);
-
-    this->plugins.Add(plugin);
 }
 
 
