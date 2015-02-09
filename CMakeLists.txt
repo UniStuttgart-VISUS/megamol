@@ -16,7 +16,7 @@ find_package(X11 REQUIRED)
 find_package(Curses REQUIRED)
 find_package(UUID REQUIRED)
 find_package(OpenGL REQUIRED)
-set(LIBS ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CURSES_LIBRARIES} -lrt -lcrypt ${OPENGL_LIBRARIES})
+set(LIBS ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CURSES_LIBRARIES} -lrt -lcrypt ${UUID_LIBRARIES} ${OPENGL_LIBRARIES})
 include_directories(${OPENGL_INCLUDE_DIR})
 
 # processor word size detection
