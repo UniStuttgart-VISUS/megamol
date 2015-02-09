@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(simple_test)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 find_package(MegaMolCore REQUIRED)
 set(LIBS ${MegaMolCore_LIBRARIES})
 include_directories(${MegaMolCore_INCLUDE_DIRS})
