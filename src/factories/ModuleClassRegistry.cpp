@@ -49,7 +49,9 @@
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
 #include "mmcore/moldyn/ParticleWorker.h"
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "mmcore/moldyn/D3D11SimpleSphereRenderer.h"
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 //#include "mmcore/special/ColStereoDisplay.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/LinearTransferFunction.h"
@@ -64,7 +66,9 @@
 #include "mmcore/view/TileView.h"
 #include "mmcore/view/View2D.h"
 #include "mmcore/view/View3D.h"
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "mmcore/view/ViewDirect3D.h"
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "mmcore/view/BlinnPhongRendererDeferred.h"
 #include "mmcore/view/SplitView.h"
 #include "mmcore/view/SharedCameraParameters.h"
@@ -148,7 +152,9 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
     instance.RegisterAutoDescription<view::View3D>();
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
     instance.RegisterAutoDescription<view::ViewDirect3D>();
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::SharedCameraParameters>();
@@ -160,7 +166,9 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::SIFFWriter>();
     instance.RegisterAutoDescription<moldyn::VTFDataSource>();
     instance.RegisterAutoDescription<moldyn::VTFResDataSource>();
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
     instance.RegisterAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();
     instance.RegisterAutoDescription<moldyn::DynDensityGradientEstimator>();
 
