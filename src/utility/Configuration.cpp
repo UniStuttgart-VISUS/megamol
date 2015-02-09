@@ -572,7 +572,8 @@ void megamol::core::utility::Configuration::loadConfigFromFile(
             ::RedirectedConfigurationException rde) {
         // log info
         redirect = vislib::sys::Path::Resolve(
-            rde.GetRedirectedConfiguration());
+            rde.GetRedirectedConfiguration(),
+            vislib::sys::Path::GetDirectoryName(file));
         vislib::sys::Log::DefaultLog.WriteMsg(
             vislib::sys::Log::LEVEL_INFO + 10, 
             "Configuration redirected to \"%s\"", W2A(redirect));
