@@ -9,7 +9,7 @@
 use strict;
 use File::Find;
 
-my $inc_path = "../include/mmcore";
+my $inc_path = "../../include/mmcore";
 my $outFile = "include_table.inc";
 
 open (my $out, ">$outFile") || die "Cannot write output file \"$outFile\"\n";
