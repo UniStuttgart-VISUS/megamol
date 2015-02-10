@@ -10,6 +10,7 @@
 #include <GL/glut.h>
 #include <GL/glu.h>
 #include <cstdio>
+#include <iostream>
 
 #include "vislib/graphics/graphicstypes.h"
 #include "vislib/math/Rectangle.h"
@@ -85,20 +86,41 @@ int GLSLShaderTest::GLInit(void) {
 
     glEnable(GL_COLOR_MATERIAL);
 
-    if (!this->schade.Create(
-            vislib::graphics::gl::GLSLShader::FTRANSFORM_VERTEX_SHADER_SRC,
-"\n"
-"uniform vec2 v;\n"
-"\n"
-"void main(void) {\n"
-"  float alpha = v.x * v.x;\n"
-"  float beta = 1.0 - alpha;\n"
-"  float scale = (1.0 - gl_FragCoord.z) * 40.0;\n"
-"  alpha *= scale;\n"
-"  beta *= scale;\n"
-"  gl_FragColor = alpha * vec4(0.25, 0.5, 1.0, 1.0) + beta * vec4(0.5, 1.0, 0.25, 1.0);\n"
-"}\n")) {
-        return -13;
+    try {
+        if (!this->schade.Compile(
+                vislib::graphics::gl::GLSLShader::FTRANSFORM_VERTEX_SHADER_SRC,
+                "\n"
+                "uniform vec2 v;\n"
+                "\n"
+                "void main(void) {\n"
+                "  float alpha = v.x * v.x;\n"
+                "  float beta = 1.0 - alpha;\n"
+                "  float scale = (1.0 - gl_FragCoord.z) * 40.0;\n"
+                "  alpha *= scale;\n"
+                "  beta *= scale;\n"
+                "  gl_FragColor = alpha * vec4(0.25, 0.5, 1.0, 1.0) + beta * vec4(0.5, 1.0, 0.25, 1.0);\n"
+                "}\n")) {
+            return -13;
+        }
+    } catch (const vislib::graphics::gl::AbstractOpenGLShader::CompileException & ex) {
+        std::cout << "Compile failed: " << ex.GetMsgA() << std::endl;
+        return -1;
+    } catch (const vislib::Exception & ex) {
+        std::cout << "Compile failed: " << ex.GetMsgA() << std::endl;
+        return -1;
+    } catch (...) {
+        std::cout << "Compile failed: unknown exception" << std::endl;
+        return -1;
+    }
+
+    try {
+        if (!this->schade.Link()) {
+            return -14;
+        }
+    } catch (const vislib::Exception & ex) {
+        std::cout << "Link failed: " << ex.GetMsgA() << std::endl;
+    } catch (...) {
+        std::cout << "Link failed: unknown exception" << std::endl;
     }
 
     this->camera.Parameters()->SetView(

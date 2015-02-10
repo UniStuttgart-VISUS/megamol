@@ -896,17 +896,33 @@ namespace gl {
          */
         static StringA getProgramInfoLog(GLhandleARB hProg);
 
+        /**
+         * Answer the shader error string for the specified shader object.
+         *
+         * @param hShader A handle to a shader object.
+         *
+         * @return A string holding the compiler error string.
+         *
+         * @throws OpenGLException If the compile errors could not be
+         *                         retrieved, i.e. because 'hShader' is not a
+         *                         valid shader object.
+         */
+        static StringA getShaderInfoLog(GLhandleARB hShader);
+
         /** 
-         * Answer the compile status of the program designated by 'hProg'.
+         * Answer the compile status of all shader objects attached to the
+         * program designated by 'hProg'.
          *
          * @param hProg A handle to a program object.
          *
-         * @return true, if the program was successfully compiled, false 
-         *         otherwise.
+         * @return true, if all shader objects attached to the program were
+         *         successfully compiled, false otherwise. If no shader
+         *         objects are attached, true is returned, since no compile
+         *         operations have failed.
          *
-         * @throws OpenGLException If the compile status could not be retrieved, 
-         *                         i. e. because 'hProg' is not a valid shader
-         *                         handle.
+         * @throws OpenGLException If the compile status could not be
+         *                         retrieved, i.e. because 'hProg' is not a
+         *                         valid shader handle.
          */
         static bool isCompiled(GLhandleARB hProg);
 

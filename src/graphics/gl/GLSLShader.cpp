@@ -653,9 +653,11 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
     GL_VERIFY_THROW(::glShaderSource(shader, cnt, src, NULL));
     GL_VERIFY_THROW(::glCompileShader(shader));
 
-    if (!isCompiled(shader)) {
-        throw CompileException(getProgramInfoLog(shader), 
-            CompileException::CompilationFailedAction(type), 
+    GLint status;
+    GL_VERIFY_THROW(glGetShaderiv(shader, GL_COMPILE_STATUS, &status));
+    if (status != GL_TRUE) {
+        throw CompileException(getShaderInfoLog(shader),
+            CompileException::CompilationFailedAction(type),
             __FILE__, __LINE__);
     }
 
@@ -667,19 +669,41 @@ GLhandleARB vislib::graphics::gl::GLSLShader::compileNewShader(GLenum type,
  * vislib::graphics::gl::GLSLShader::getProgramInfoLog
  */
 vislib::StringA vislib::graphics::gl::GLSLShader::getProgramInfoLog(
-        GLhandleARB hProg) {
+    GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint len = 0;
     GLint written = 0;
     StringA retval;
     char *log = NULL;
 
-    GL_VERIFY_THROW(::glGetProgramiv(hProg, 
+    GL_VERIFY_THROW(::glGetProgramiv(hProg,
         GL_INFO_LOG_LENGTH, &len));
 
     if (len > 0) {
         log = retval.AllocateBuffer(len);
         GL_VERIFY_THROW(::glGetProgramInfoLog(hProg, len, &written, log));
+    }
+
+    return retval;
+}
+
+
+/*
+ * vislib::graphics::gl::GLSLShader::getShaderInfoLog
+ */
+vislib::StringA vislib::graphics::gl::GLSLShader::getShaderInfoLog(
+        GLhandleARB hShader) {
+    USES_GL_VERIFY;
+    GLint len = 0;
+    GLint written = 0;
+    StringA retval;
+    char *log = NULL;
+
+    GL_VERIFY_THROW(::glGetShaderiv(hShader, GL_INFO_LOG_LENGTH, &len));
+
+    if (len > 0) {
+        log = retval.AllocateBuffer(len);
+        GL_VERIFY_THROW(::glGetShaderInfoLog(hShader, len, &written, log));
     }
 
     return retval;
@@ -694,22 +718,18 @@ bool vislib::graphics::gl::GLSLShader::isCompiled(GLhandleARB hProg) {
     GLint s, objCnt;
     bool status = true;
 
-    // NOPE
-    //GL_VERIFY_THROW(::glGetProgramiv(hProg, 
-    //    GL_OBJECT_COMPILE_STATUS_ARB, &status));
-    if (GL_SUCCEEDED(::glGetProgramiv(hProg,
-        GL_ATTACHED_SHADERS, &objCnt))) {
-        GLhandleARB *objs = new GLhandleARB[objCnt];
+    GL_VERIFY_THROW(::glGetProgramiv(hProg, GL_ATTACHED_SHADERS, &objCnt));
 
-        if (GL_SUCCEEDED(::glGetAttachedShaders(hProg, 
-                objCnt, &objCnt, objs))) {
-            for (GLint i = 0; i < objCnt; i++) {
-                glGetShaderiv(objs[i], GL_COMPILE_STATUS, &s);
-                status = status && (s == GL_TRUE);
-            }
+    GLhandleARB *objs = new GLhandleARB[objCnt];
+
+    if (GL_SUCCEEDED(::glGetAttachedShaders(hProg, objCnt, &objCnt, objs))) {
+        for (GLint i = 0; i < objCnt; i++) {
+            glGetShaderiv(objs[i], GL_COMPILE_STATUS, &s);
+            status = status && (s == GL_TRUE);
         }
-        delete[] objs;
     }
+
+    delete[] objs;
 
     return status;
 }
