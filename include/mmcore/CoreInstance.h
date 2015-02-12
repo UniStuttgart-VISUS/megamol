@@ -47,13 +47,20 @@
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/AbstractAssemblyInstance.h"
 
-#include "utility/plugins/PluginManager.h"
-
 #include <memory>
 
 
 namespace megamol {
 namespace core {
+
+namespace utility {
+namespace plugins {
+
+    /* forward declaration */
+    class PluginManager;
+
+} /* end namespace plugins */
+} /* end namespace utility */
 
     /**
      * class of core instances.
@@ -832,7 +839,7 @@ namespace core {
         vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;
 
         /** The manager of loaded plugins */
-        utility::plugins::PluginManager plugins;
+        utility::plugins::PluginManager* plugins;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */

@@ -52,8 +52,10 @@
 #include "mmcore/productversion.h"
 #include "mmcore/versioninfo.h"
 #include "mmcore/profiler/Manager.h"
+
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
+#include "utility/plugins/PluginManager.h"
 
 #include "vislib/Array.h"
 #include "vislib/sys/BufferedFile.h"
@@ -114,12 +116,13 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         shaderSourceFactory(config), log(),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
-        timeOffset(0.0), paramUpdateListeners(), plugins(),
+        timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions() {
     //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
+    this->plugins = new utility::plugins::PluginManager();
 
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot.SetCoreInstance(*this);
@@ -199,7 +202,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     this->all_call_descriptions.Shutdown();
     this->module_descriptions.Shutdown();
     this->call_descriptions.Shutdown();
-    // finally plugins, will be automatically removed when dtor is left.
+    // finally plugins
+    delete this->plugins;
+    this->plugins = nullptr;
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Cleanup();
@@ -2501,7 +2506,7 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
     try {
 
         utility::plugins::PluginManager::collection_type new_plugins
-            = this->plugins.LoadPlugin(filename.PeekBuffer(), *this);
+            = this->plugins->LoadPlugin(filename.PeekBuffer(), *this);
 
         for(auto new_plugin : new_plugins) {
             this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO,
