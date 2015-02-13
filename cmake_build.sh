@@ -57,7 +57,7 @@ while getopts "hp:dDcmiv:" opt; do
     echo
     echo "  creates the build tree subdirectory for the debug version, not for the release version, and invokes 'cmake', but does not invoke 'make' or 'make install'-"
     echo
-    echo "$0 -dcmi -p ~/my_inst -i ~/vislib_inst"
+    echo "$0 -dcmi -p ~/my_inst -v ~/vislib_inst"
     echo
     echo "  creates the build tree subdirectors for release and debug, and invokes 'cmake', 'make' and 'make install' in both build trees. Additionally the installation prefix is set to '~/my_inst' and as search hint for the vislib package '~/vislib_inst' is passed to cmake."
     echo
