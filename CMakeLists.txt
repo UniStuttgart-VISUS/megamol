@@ -14,13 +14,19 @@ find_package(Threads REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(PNG REQUIRED)
 find_package(OpenMP)
+find_package(MPI REQUIRED)
 
 set(LIBS ${vislib_LIBRARIES} ${EXPAT_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 include_directories(${vislib_INCLUDE_DIRS} ${EXPAT_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
 if (OPENMP_FOUND)
 	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
 endif()
-
+if (MPI_CXX_FOUND)
+	set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS})
+	include_directories(${MPI_CXX_INCLUDE_PATH})
+	set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS})
+	set(LIBS ${LIBS} ${MPI_CXX_LIBRARIES})
+endif()
 
 # processor word size detection
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
