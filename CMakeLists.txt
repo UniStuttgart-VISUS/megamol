@@ -31,6 +31,7 @@ if (MPI_CXX_FOUND)
 	include_directories(${MPI_CXX_INCLUDE_PATH})
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
 	set(LIBS ${LIBS} ${MPI_CXX_LIBRARIES})
+	add_definitions(-DWITH_MPI)
 endif()
 
 # processor word size detection
@@ -43,7 +44,7 @@ endif()
 # compiler options
 add_definitions(-Wall -pedantic -ansi -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -DMEGAMOLCORE_EXPORTS)
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
-    message(STATUS "Version < 4.7")
+	message(STATUS "Version < 4.7")
 	add_definitions(-std=c++0x)
 else()
 	add_definitions(-std=c++11)
