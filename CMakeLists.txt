@@ -22,16 +22,16 @@ if (OPENMP_FOUND)
 	#message(STATUS "comp ${OpenMP_CXX_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-if (MPI_CXX_FOUND)
-	#message(STATUS "comp ${MPI_CXX_COMPILE_FLAGS}")
-	#message(STATUS "incl ${MPI_CXX_INCLUDE_PATH}")
-	#message(STATUS "link ${MPI_CXX_LINK_FLAGS}")
-	#message(STATUS "libs ${MPI_CXX_LIBRARIES}")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS}")
-	include_directories(${MPI_CXX_INCLUDE_PATH})
-	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
-	set(LIBS ${LIBS} ${MPI_CXX_LIBRARIES})
-	add_definitions(-DWITH_MPI)
+if (MPI_C_FOUND)
+	#message(STATUS "comp ${MPI_C_COMPILE_FLAGS}")
+	#message(STATUS "incl ${MPI_C_INCLUDE_PATH}")
+	#message(STATUS "link ${MPI_C_LINK_FLAGS}")
+	#message(STATUS "libs ${MPI_C_LIBRARIES}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
+	include_directories(${MPI_C_INCLUDE_PATH})
+	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
+	set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
+	add_definitions(-DWITH_MPI -DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX)
 endif()
 
 # processor word size detection
@@ -122,12 +122,12 @@ if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 endif()
 # Configure our local config script
 configure_file(MegaMolCoreConfigLocal.cmake.in
-			${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake
-			@ONLY)
+	${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake
+	@ONLY)
 # Configure our local version script
 configure_file(MegaMolCoreConfigVersion.cmake.in
-			${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake
-			@ONLY)
+	${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake
+	@ONLY)
 export(TARGETS MegaMolCore FILE ${CMAKE_BINARY_DIR}/MegaMolCore-target.cmake)
 export(PACKAGE MegaMolCore)
 
