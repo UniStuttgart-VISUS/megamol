@@ -773,7 +773,7 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
 #else /* _WIN32 */
             vislib::sys::Log::DefaultLog.WriteError(_T("MPI cannot be ")
                 _T("initialised lazily on platforms other than Windows. ")
-                _T("Please initialise MPI before using this module.");
+                _T("Please initialise MPI before using this module."));
 #endif /* _WIN32 */
         } /* end if (c != nullptr) */
 
