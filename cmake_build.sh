@@ -20,6 +20,8 @@ invoke_cmake=1
 invoke_make=1
 invoke_make_install=0
 invoke_default=1
+cmake_extra_cmd=
+build_tests=0
 
 # be proud of yourself
 echo
@@ -30,7 +32,7 @@ echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcmi" opt; do
+while getopts "hp:dDcmitC:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -39,8 +41,10 @@ while getopts "hp:dDcmi" opt; do
     echo "  -d    (debug) also builds debug version in separate build tree subdirectory"
     echo "  -D    (Debug only) builds only the debug version, not the release version"
     echo "  -c    (cmake) invokes 'cmake'. This also deletes all files and subdirectories which might be present in the build tree subdirectory"
+    echo "  -C    (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
     echo "  -i    (install) invokes 'make install'"
+    echo "  -t    (tests) also builds the vislib test applications"
     echo
     echo "Default behavior (when no arguments are given):"
     echo "  - creates build tree subdirector 'build.release'"
@@ -76,6 +80,9 @@ while getopts "hp:dDcmi" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_cmake=1
     ;;
+  C)
+    cmake_extra_cmd="$cmake_extra_cmd $OPTARG"
+    ;;
   m)
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make=1
@@ -83,6 +90,9 @@ while getopts "hp:dDcmi" opt; do
   i)
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
+    ;;
+  t)
+    build_tests=1
     ;;
   \?)
     echo "Invalid option: -$OPTARG" >&2
@@ -97,7 +107,9 @@ done
 
 # prepare command line for cmake
 cmake_cmd=""
+if [ $build_tests -eq 1 ] ; then cmake_cmd="$cmake_cmd -DVISLIB_BUILD_TESTS=1"; fi
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
+cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 
 # debug output of settings
 #echo "Specified settings:"
@@ -117,7 +129,7 @@ if [ $build_release -eq 1 ] ; then
     echo "create build tree subdirectory"
     rm -rf $build_dir
     mkdir $build_dir
-    echo "invoke 'cmake'"
+    echo "invoke 'cmake' ($cmake_cmd)"
     cd $build_dir
     cmake .. $cmake_cmd
     cd ..
@@ -143,7 +155,7 @@ if [ $build_debug -eq 1 ] ; then
     echo "create build tree subdirectory"
     rm -rf $build_dir
     mkdir $build_dir
-    echo "invoke 'cmake'"
+    echo "invoke 'cmake' (-DCMAKE_BUILD_TYPE=Debug $cmake_cmd)"
     cd $build_dir
     cmake .. -DCMAKE_BUILD_TYPE=Debug $cmake_cmd
     cd ..
