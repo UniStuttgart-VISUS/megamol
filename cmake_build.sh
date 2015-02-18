@@ -20,6 +20,7 @@ invoke_cmake=1
 invoke_make=1
 invoke_make_install=0
 invoke_default=1
+cmake_extra_cmd=
 vislib_DIR=
 
 # be proud of yourself
@@ -31,7 +32,7 @@ echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcmiv:" opt; do
+while getopts "hp:dDcmiv:C:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -40,6 +41,7 @@ while getopts "hp:dDcmiv:" opt; do
     echo "  -d    (debug) also builds debug version in separate build tree subdirectory"
     echo "  -D    (Debug only) builds only the debug version, not the release version"
     echo "  -c    (cmake) invokes 'cmake'. This also deletes all files and subdirectories which might be present in the build tree subdirectory"
+    echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
     echo "  -i    (install) invokes 'make install'"
     echo "  -v XX (vislib) specifies an optional hint in which directory the vislib is located"
@@ -78,6 +80,9 @@ while getopts "hp:dDcmiv:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_cmake=1
     ;;
+  C)
+    cmake_extra_cmd="$cmake_extra_cmd $OPTARG"
+    ;;
   m)
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make=1
@@ -104,6 +109,7 @@ done
 cmake_cmd=""
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
 if [ $vislib_DIR ] ; then cmake_cmd="$cmake_cmd -Dvislib_DIR=$vislib_DIR"; fi
+cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 
 # debug output of settings
 #echo "Specified settings:"
@@ -124,7 +130,7 @@ if [ $build_release -eq 1 ] ; then
     echo "create build tree subdirectory"
     rm -rf $build_dir
     mkdir $build_dir
-    echo "invoke 'cmake'"
+    echo "invoke 'cmake' ($cmake_cmd)"
     cd $build_dir
     cmake .. $cmake_cmd
     cd ..
@@ -150,7 +156,7 @@ if [ $build_debug -eq 1 ] ; then
     echo "create build tree subdirectory"
     rm -rf $build_dir
     mkdir $build_dir
-    echo "invoke 'cmake'"
+    echo "invoke 'cmake' (-DCMAKE_BUILD_TYPE=Debug $cmake_cmd)"
     cd $build_dir
     cmake .. -DCMAKE_BUILD_TYPE=Debug $cmake_cmd
     cd ..
