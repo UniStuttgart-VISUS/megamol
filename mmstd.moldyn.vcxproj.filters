@@ -20,49 +20,37 @@
     <Filter Include="Config and Make Files">
       <UniqueIdentifier>{5362f4ef-8251-4de5-874a-3480840b30c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Public Header Files">
+      <UniqueIdentifier>{80045de9-6cd7-4e95-a81b-8e3353b8171f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="src/dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mmstd.moldyn.cpp">
+    <ClCompile Include="src/mmstd.moldyn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="src/stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mmstd.moldyn.h">
+    <ClInclude Include="src/stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="src/targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\mmstd.moldyn\mmstd.moldyn.h">
+      <Filter>Public Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="common.mk">
-      <Filter>Config and Make Files</Filter>
-    </None>
     <None Include="config.bat">
       <Filter>Config and Make Files</Filter>
     </None>
-    <None Include="config.sh">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="configure.lin.pl">
-      <Filter>Config and Make Files</Filter>
-    </None>
     <None Include="configure.win.pl">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="ExtLibs.mk.input">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="Makefile">
       <Filter>Config and Make Files</Filter>
     </None>
     <None Include="ExtLibs.props.input">

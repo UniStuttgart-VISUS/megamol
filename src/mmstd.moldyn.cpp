@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mmstd.moldyn.h"
+#include "mmstd.moldyn/mmstd.moldyn.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
