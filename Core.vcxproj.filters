@@ -145,12 +145,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="common.mk">
-      <Filter>Build Files</Filter>
-    </None>
-    <None Include="ExtLibs.mk.input">
-      <Filter>Build Files</Filter>
-    </None>
     <None Include="Shaders\arrow.btf">
       <Filter>Shader Files</Filter>
     </None>
@@ -296,9 +290,6 @@
     </CustomBuildStep>
     <CustomBuildStep Include="VersionInfo.pl">
       <Filter>Script Files</Filter>
-    </CustomBuildStep>
-    <CustomBuildStep Include="Makefile">
-      <Filter>Build Files</Filter>
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
