@@ -10,3 +10,7 @@ set(vislib_INCLUDE_DIRS "${ROOT_DIR}/include")
 set(vislib_NEED_TO_COPY ${glload_LIBRARIES})
 
 set(vislib_FOUND 1)
+
+get_property(self_target_location TARGET vislib PROPERTY LOCATION_${CMAKE_BUILD_TYPE})
+message(STATUS "Found vislib: ${self_target_location}")
+
