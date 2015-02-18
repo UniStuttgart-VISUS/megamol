@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmstd.moldyn/mmstd.moldyn.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/ModuleAutoDescription.h"
+#include "mmcore/factories/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/ThreadSafeStackTrace.h"
@@ -26,7 +26,7 @@ MMSTD_MOLDYN_API int mmplgPluginAPIVersion(void) {
  * mmplgPluginName
  */
 MMSTD_MOLDYN_API const char * mmplgPluginName(void) {
-    return "MMSTD_MOLDYN";
+    return "mmstd.moldyn";
 }
 
 
