@@ -8,3 +8,6 @@ set(MegaMolCore_INCLUDE_DIRS "${ROOT_DIR}/include")
 
 set(MegaMolCore_FOUND 1)
 
+get_property(self_target_location TARGET MegaMolCore PROPERTY LOCATION_${CMAKE_BUILD_TYPE})
+message(STATUS "Found MegaMolCore: ${self_target_location}")
+
