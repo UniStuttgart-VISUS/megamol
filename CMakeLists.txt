@@ -59,6 +59,7 @@ set(source_files "mmstd.moldyn.cpp" "stdafx.cpp" "dllmain.cpp")
 add_library(mmstd.moldyn SHARED ${header_files} ${source_files})
 # Set target naming conventions for different build types
 set_target_properties(mmstd.moldyn PROPERTIES DEBUG_POSTFIX "d")
+set_target_properties(mmstd.moldyn PROPERTIES SUFFIX ".mmplg")
 # Dependent projects only need to link against the core.so itself.
 target_link_libraries(mmstd.moldyn PRIVATE ${LIBS})
 
