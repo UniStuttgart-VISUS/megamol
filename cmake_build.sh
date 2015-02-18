@@ -41,7 +41,7 @@ while getopts "hp:dDcmitC:" opt; do
     echo "  -d    (debug) also builds debug version in separate build tree subdirectory"
     echo "  -D    (Debug only) builds only the debug version, not the release version"
     echo "  -c    (cmake) invokes 'cmake'. This also deletes all files and subdirectories which might be present in the build tree subdirectory"
-    echo "  -C xx (cmake option) additional command to be passed to 'cmake'"
+    echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
     echo "  -i    (install) invokes 'make install'"
     echo "  -t    (tests) also builds the vislib test applications"
