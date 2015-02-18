@@ -120,6 +120,7 @@ set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(cfg_CMAKE_BUILD_TYPE Release)
 endif()
+set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
 # Configure our local config script
 configure_file(MegaMolCoreConfigLocal.cmake.in
 	${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake

@@ -5,5 +5,7 @@ include(${SELF_DIR}/MegaMolCore-target.cmake)
 set(MegaMolCore_LIBRARIES MegaMolCore)
 set(MegaMolCore_INCLUDE_DIRS "@cfg_MegaMolCore_INCLUDE_DIRS@")
 
+set(MegaMolCore_vislib_DIR "@cfg_MegaMolCore_vislib_DIR@")
+
 set(MegaMolCore_FOUND 1)
 

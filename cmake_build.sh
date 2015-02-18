@@ -1,5 +1,6 @@
 #!/bin/bash
 #
+# MegaMol Core
 # building utilty script
 # Copyright 2015 by MegaMol Consortium
 # All rights reserved
