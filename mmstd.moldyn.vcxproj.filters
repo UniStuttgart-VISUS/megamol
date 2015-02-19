@@ -23,6 +23,15 @@
     <Filter Include="Public Header Files">
       <UniqueIdentifier>{80045de9-6cd7-4e95-a81b-8e3353b8171f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="io">
+      <UniqueIdentifier>{6175d44b-c8d7-4780-b2de-71403b6f5a2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io\Header Files">
+      <UniqueIdentifier>{42700ca0-31c5-4a36-833a-37e36fdc235f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io\Source Files">
+      <UniqueIdentifier>{72551f30-6716-4b3c-89e2-c9a5eae19eb6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/dllmain.cpp">
@@ -34,6 +43,30 @@
     <ClCompile Include="src/stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\io\IMDAtomDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\MMSPDDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\MMSPDFrameData.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\MMSPDHeader.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\SIFFDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\SIFFWriter.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VIMDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VisIttDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -44,6 +77,30 @@
     </ClInclude>
     <ClInclude Include="include\mmstd.moldyn\mmstd.moldyn.h">
       <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\SIFFDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\SIFFWriter.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\VIMDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\VisIttDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\IMDAtomDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMSPDDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMSPDFrameData.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMSPDHeader.h">
+      <Filter>io\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

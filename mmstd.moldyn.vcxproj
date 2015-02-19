@@ -241,11 +241,27 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\io\IMDAtomDataSource.cpp" />
+    <ClCompile Include="src\io\MMSPDDataSource.cpp" />
+    <ClCompile Include="src\io\MMSPDFrameData.cpp" />
+    <ClCompile Include="src\io\MMSPDHeader.cpp" />
+    <ClCompile Include="src\io\SIFFDataSource.cpp" />
+    <ClCompile Include="src\io\SIFFWriter.cpp" />
+    <ClCompile Include="src\io\VIMDataSource.cpp" />
+    <ClCompile Include="src\io\VisIttDataSource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmstd.moldyn\mmstd.moldyn.h" />
     <ClInclude Include="src/stdafx.h" />
     <ClInclude Include="src/targetver.h" />
+    <ClInclude Include="src\io\IMDAtomDataSource.h" />
+    <ClInclude Include="src\io\MMSPDDataSource.h" />
+    <ClInclude Include="src\io\MMSPDFrameData.h" />
+    <ClInclude Include="src\io\MMSPDHeader.h" />
+    <ClInclude Include="src\io\SIFFDataSource.h" />
+    <ClInclude Include="src\io\SIFFWriter.h" />
+    <ClInclude Include="src\io\VIMDataSource.h" />
+    <ClInclude Include="src\io\VisIttDataSource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat" />

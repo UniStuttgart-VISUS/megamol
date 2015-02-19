@@ -9,9 +9,16 @@
 #include "mmstd.moldyn/mmstd.moldyn.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
+#include "mmcore/factories/LoaderADModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/ThreadSafeStackTrace.h"
+#include "io/IMDAtomDataSource.h"
+#include "io/MMSPDDataSource.h"
+#include "io/SIFFDataSource.h"
+#include "io/SIFFWriter.h"
+#include "io/VIMDataSource.h"
+#include "io/VisIttDataSource.h"
 
 
 /*
@@ -55,7 +62,7 @@ MMSTD_MOLDYN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_MOLDYN_API int mmplgModuleCount(void) {
-    return 0; // TODO: Implement
+    return 6;
 }
 
 
@@ -63,7 +70,15 @@ MMSTD_MOLDYN_API int mmplgModuleCount(void) {
  * mmplgModuleDescription
  */
 MMSTD_MOLDYN_API void* mmplgModuleDescription(int idx) {
-    return NULL; // TODO: Implement
+    switch (idx) {
+    case 0: return new ::megamol::core::factories::LoaderADModuleAutoDescription<::megamol::stdplugin::moldyn::io::IMDAtomDataSource>();
+    case 1: return new ::megamol::core::factories::LoaderADModuleAutoDescription<::megamol::stdplugin::moldyn::io::MMSPDDataSource>();
+    case 2: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::SIFFDataSource>();
+    case 3: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::SIFFWriter>();
+    case 4: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VIMDataSource>();
+    case 5: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VisIttDataSource>();
+    }
+    return NULL;
 }
 
 
@@ -71,7 +86,7 @@ MMSTD_MOLDYN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 MMSTD_MOLDYN_API int mmplgCallCount(void) {
-    return 0; // TODO: Implement
+    return 0;
 }
 
 
@@ -79,7 +94,7 @@ MMSTD_MOLDYN_API int mmplgCallCount(void) {
  * mmplgCallDescription
  */
 MMSTD_MOLDYN_API void* mmplgCallDescription(int idx) {
-    return NULL; // TODO: Implement
+    return NULL;
 }
 
 
