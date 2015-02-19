@@ -5,9 +5,7 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A9B41824-1F1C-42BC-AC16-CCCA32859BA5}"
 	ProjectSection(SolutionItems) = preProject
-		config.mk = config.mk
 		LICENCE.TXT = LICENCE.TXT
-		Makefile = Makefile
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "tests\test\test.vcxproj", "{6CC64435-55B7-4AA2-A66C-61CDA2255733}"
