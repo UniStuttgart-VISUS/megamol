@@ -129,6 +129,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamo
 # to decide whether to take release or debug accordingly.
 # Set our known paths
 set(cfg_MegaMolCore_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+set(cfg_MegaMolCore_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
 set(cfg_MegaMolCore_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
