@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.8)
 project(mmstd_moldyn)
 
 # search for 3rd party libs
-find_package(MegaMolCore REQUIRED)
+find_package(MegaMolCore REQUIRED HINTS ${MegaMolCore_DIR})
 message(STATUS "MegaMolCore suggests vislib at: ${MegaMolCore_vislib_DIR}")
 message(STATUS "MegaMolCore suggests install prefix: ${MegaMolCore_INSTALL_PREFIX}")
 if (USE_MEGAMOLCORE_INSTALL_PREFIX)
@@ -80,26 +80,27 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamo
 # TODO: Add entry to the package registry
 # TODO: Add or update megamol.cfg file (?)
 
-
-# Export the build tree of this package. This makes it possible to include
-# this package without installing. Also place a version config file for cmake
-# to decide whether to take release or debug accordingly.
-# Set our known paths
-set(cfg_mmstd_moldyn_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
-set(cfg_mmstd_moldyn_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
-set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
-set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
-if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
-	set(cfg_CMAKE_BUILD_TYPE Release)
+if (${register_build_trees})
+	# Export the build tree of this package. This makes it possible to include
+	# this package without installing. Also place a version config file for cmake
+	# to decide whether to take release or debug accordingly.
+	# Set our known paths
+	set(cfg_mmstd_moldyn_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+	set(cfg_mmstd_moldyn_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
+	set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
+	set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+	if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
+		set(cfg_CMAKE_BUILD_TYPE Release)
+	endif()
+	# Configure our local config script
+	configure_file(mmstd_moldynConfigLocal.cmake.in
+		${CMAKE_BINARY_DIR}/mmstd_moldynConfig.cmake
+		@ONLY)
+	# Configure our local version script
+	configure_file(mmstd_moldynConfigVersion.cmake.in
+		${CMAKE_BINARY_DIR}/mmstd_moldynConfigVersion.cmake
+		@ONLY)
+	export(TARGETS mmstd_moldyn FILE ${CMAKE_BINARY_DIR}/mmstd_moldyn-target.cmake)
+	export(PACKAGE mmstd_moldyn)
 endif()
-# Configure our local config script
-configure_file(mmstd_moldynConfigLocal.cmake.in
-	${CMAKE_BINARY_DIR}/mmstd_moldynConfig.cmake
-	@ONLY)
-# Configure our local version script
-configure_file(mmstd_moldynConfigVersion.cmake.in
-	${CMAKE_BINARY_DIR}/mmstd_moldynConfigVersion.cmake
-	@ONLY)
-export(TARGETS mmstd_moldyn FILE ${CMAKE_BINARY_DIR}/mmstd_moldyn-target.cmake)
-export(PACKAGE mmstd_moldyn)
 

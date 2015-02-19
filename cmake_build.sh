@@ -23,6 +23,7 @@ invoke_default=1
 cmake_extra_cmd=
 MegaMolCore_DIR=
 use_mmcore_install_prefix=1
+register_build_trees=0
 
 
 # be proud of yourself
@@ -34,7 +35,7 @@ echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcC:mif:" opt; do
+while getopts "hp:dDcC:mirf:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -46,6 +47,7 @@ while getopts "hp:dDcC:mif:" opt; do
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
     echo "  -i    (install) invokes 'make install'"
+    echo "  -r    (register) registers the cmake build tree results in the user package repository, making them available for find_package commands"
     echo "  -f XX (find hint) specifies the find hint path where the MegaMolCore is located"
     echo
     echo "Default behavior (when no arguments are given):"
@@ -94,6 +96,9 @@ while getopts "hp:dDcC:mif:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
     ;;
+  r)
+    register_build_trees=1
+    ;;
   f)
     MegaMolCore_DIR=$OPTARG
     ;;
@@ -113,6 +118,7 @@ cmake_cmd=""
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
 if [ $MegaMolCore_DIR ] ; then cmake_cmd="$cmake_cmd -DMegaMolCore_DIR=$MegaMolCore_DIR"; fi
 if [ $use_mmcore_install_prefix ] ; then cmake_cmd="$cmake_cmd -DUSE_MEGAMOLCORE_INSTALL_PREFIX=1"; fi
+if [ $register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dregister_build_trees=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 
 # debug output of settings
