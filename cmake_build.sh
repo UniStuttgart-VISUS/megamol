@@ -2,7 +2,7 @@
 #
 # MegaMol mmstd_moldyn
 # building utilty script
-# Copyright 2015 by MegaMol TEAM
+# Copyright 2015 by MegaMol Team
 # All rights reserved
 #
 #  use '-h' for help
@@ -27,14 +27,14 @@ use_mmcore_install_prefix=1
 
 # be proud of yourself
 echo
-echo "  MegaMol(TM) Core"
+echo "  MegaMol(TM) mmstd_moldyn"
 echo "  cmake_build.sh utilty script"
-echo "  Copyright 2015, by MegaMol Consortium"
+echo "  Copyright 2015, by MegaMol Team"
 echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcC:mi" opt; do
+while getopts "hp:dDcC:mif:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -46,7 +46,7 @@ while getopts "hp:dDcC:mi" opt; do
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
     echo "  -i    (install) invokes 'make install'"
-#    echo "  -v XX (vislib) specifies an optional hint in which directory the vislib is located"
+    echo "  -f XX (find hint) specifies the find hint path where the MegaMolCore is located"
     echo
     echo "Default behavior (when no arguments are given):"
     echo "  - creates build tree subdirector 'build.release'"
@@ -94,9 +94,9 @@ while getopts "hp:dDcC:mi" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
     ;;
- # v)
- #   vislib_DIR=$OPTARG
- #   ;;
+  f)
+    MegaMolCore_DIR=$OPTARG
+    ;;
   \?)
     echo "Invalid option: -$OPTARG" >&2
     exit 1
@@ -111,7 +111,7 @@ done
 # prepare command line for cmake
 cmake_cmd=""
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
-if [ $vislib_DIR ] ; then cmake_cmd="$cmake_cmd -Dvislib_DIR=$vislib_DIR"; fi
+if [ $MegaMolCore_DIR ] ; then cmake_cmd="$cmake_cmd -DMegaMolCore_DIR=$MegaMolCore_DIR"; fi
 if [ $use_mmcore_install_prefix ] ; then cmake_cmd="$cmake_cmd -DUSE_MEGAMOLCORE_INSTALL_PREFIX=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 

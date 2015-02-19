@@ -62,14 +62,24 @@ target_link_libraries(mmstd_moldyn PRIVATE ${LIBS})
 
 
 # Installation rules for generated files
-# TODO: fix the install rules::
-#install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-#install(TARGETS MegaMolCore DESTINATION "lib/mmcore" EXPORT MegaMolCore-target)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+install(TARGETS mmstd_moldyn DESTINATION "lib/megamol" EXPORT mmstd_moldyn-target)
 # Export the target to be used in the configuration file for find_package
-#install(EXPORT MegaMolCore-target DESTINATION share/mmcore)
+install(EXPORT mmstd_moldyn-target DESTINATION share/mmstd_moldyn)
 # Install configure script
-#install(FILES MegaMolCoreConfig.cmake DESTINATION share/mmcore)
+set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
+	set(cfg_CMAKE_BUILD_TYPE Release)
+endif()
+set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
+configure_file(mmstd_moldynConfigInstall.cmake.in
+	${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake
+	@ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake DESTINATION share/mmstd_moldyn RENAME mmstd_moldynConfig.cmake)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamol/mmstd_moldyn/Shaders")
 # TODO: Add entry to the package registry
+# TODO: Add or update megamol.cfg file (?)
+
 
 # Export the build tree of this package. This makes it possible to include
 # this package without installing. Also place a version config file for cmake
@@ -77,8 +87,7 @@ target_link_libraries(mmstd_moldyn PRIVATE ${LIBS})
 # Set our known paths
 set(cfg_mmstd_moldyn_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 set(cfg_mmstd_moldyn_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
-set(cfg_mmstd_moldyn_vislib_DIR ${vislib_DIR})
-set(cfg_mmstd_moldyn_mmcore_DIR ${MegaMolCore_DIR})
+set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
 set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(cfg_CMAKE_BUILD_TYPE Release)
