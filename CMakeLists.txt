@@ -83,6 +83,7 @@ target_link_libraries(vislib ${LIBS})
 
 # build tests if variable VISLIB_BUILD_TESTS is defined
 if (DEFINED VISLIB_BUILD_TESTS)
+	set(VISLIB_BUILD_TESTS ${VISLIB_BUILD_TESTS})
 	add_subdirectory(tests)
 endif()
 
