@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.8)
 project(MegaMolCore)
 
 # search for 3rd party libs
-find_package(vislib REQUIRED)
+find_package(vislib REQUIRED HINTS ${vislib_DIR})
 set(CMAKE_THREAD_PREFER_PTHREAD)
 find_package(Threads REQUIRED)
 find_package(EXPAT REQUIRED)
@@ -124,26 +124,27 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamo
 # TODO: Add entry to the package registry
 # TODO: Add or update megamol.cfg file (?)
 
-# Export the build tree of this package. This makes it possible to include
-# this package without installing. Also place a version config file for cmake
-# to decide whether to take release or debug accordingly.
-# Set our known paths
-set(cfg_MegaMolCore_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
-set(cfg_MegaMolCore_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
-set(cfg_MegaMolCore_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
-if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
-	set(cfg_CMAKE_BUILD_TYPE Release)
+if (${register_build_trees})
+	# Export the build tree of this package. This makes it possible to include
+	# this package without installing. Also place a version config file for cmake
+	# to decide whether to take release or debug accordingly.
+	# Set our known paths
+	set(cfg_MegaMolCore_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+	set(cfg_MegaMolCore_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
+	set(cfg_MegaMolCore_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+	set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+	if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
+		set(cfg_CMAKE_BUILD_TYPE Release)
+	endif()
+	set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
+	# Configure our local config script
+	configure_file(MegaMolCoreConfigLocal.cmake.in
+		${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake
+		@ONLY)
+	# Configure our local version script
+	configure_file(MegaMolCoreConfigVersion.cmake.in
+		${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake
+		@ONLY)
+	export(TARGETS MegaMolCore FILE ${CMAKE_BINARY_DIR}/MegaMolCore-target.cmake)
+	export(PACKAGE MegaMolCore)
 endif()
-set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
-# Configure our local config script
-configure_file(MegaMolCoreConfigLocal.cmake.in
-	${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake
-	@ONLY)
-# Configure our local version script
-configure_file(MegaMolCoreConfigVersion.cmake.in
-	${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake
-	@ONLY)
-export(TARGETS MegaMolCore FILE ${CMAKE_BINARY_DIR}/MegaMolCore-target.cmake)
-export(PACKAGE MegaMolCore)
-

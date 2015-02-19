@@ -22,6 +22,7 @@ invoke_make_install=0
 invoke_default=1
 cmake_extra_cmd=
 vislib_DIR=
+register_build_trees=0
 
 # be proud of yourself
 echo
@@ -32,7 +33,7 @@ echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcmiv:C:" opt; do
+while getopts "hp:dDcC:mirv:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -44,6 +45,7 @@ while getopts "hp:dDcmiv:C:" opt; do
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
     echo "  -i    (install) invokes 'make install'"
+    echo "  -r    (register) registers the cmake build tree results in the user package repository, making them available for find_package commands"
     echo "  -v XX (vislib) specifies an optional hint in which directory the vislib is located"
     echo
     echo "Default behavior (when no arguments are given):"
@@ -91,6 +93,9 @@ while getopts "hp:dDcmiv:C:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
     ;;
+  r)
+    register_build_trees=1
+    ;;
   v)
     vislib_DIR=$OPTARG
     ;;
@@ -109,6 +114,7 @@ done
 cmake_cmd=""
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
 if [ $vislib_DIR ] ; then cmake_cmd="$cmake_cmd -Dvislib_DIR=$vislib_DIR"; fi
+if [ $register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dregister_build_trees=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 
 # debug output of settings
