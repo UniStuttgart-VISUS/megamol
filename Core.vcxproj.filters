@@ -491,15 +491,6 @@
     <ClCompile Include="src\moldyn\MMPLDWriter.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
-    <ClCompile Include="src\moldyn\MMSPDDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\MMSPDFrameData.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\MMSPDHeader.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
     <ClCompile Include="src\moldyn\MultiParticleDataCall.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
@@ -518,12 +509,6 @@
     <ClCompile Include="src\moldyn\ParticleWorker.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
-    <ClCompile Include="src\moldyn\SIFFDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\SIFFWriter.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
     <ClCompile Include="src\moldyn\SimpleGeoSphereRenderer.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
@@ -531,12 +516,6 @@
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\SphereOutlineRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\VIMDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\VisIttDataSource.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\VolumeDataCall.cpp">
@@ -591,9 +570,6 @@
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\GrimRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\IMDAtomDataSource.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
     <ClCompile Include="src\param\IntParam.cpp">
@@ -1129,15 +1105,6 @@
     <ClInclude Include="include\mmcore\moldyn\MMPLDWriter.h">
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\MMSPDDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\MMSPDFrameData.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\MMSPDHeader.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MultiParticleDataCall.h">
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
@@ -1156,12 +1123,6 @@
     <ClInclude Include="include\mmcore\moldyn\ParticleWorker.h">
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\SIFFDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\SIFFWriter.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\SimpleGeoSphereRenderer.h">
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
@@ -1169,12 +1130,6 @@
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\SphereOutlineRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\VIMDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\VisIttDataSource.h">
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\VolumeDataCall.h">
@@ -1229,9 +1184,6 @@
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\GrimRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\IMDAtomDataSource.h">
       <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MipDepthSphereRenderer.h">

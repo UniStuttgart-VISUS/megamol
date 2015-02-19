@@ -29,22 +29,17 @@
 #include "mmcore/moldyn/ArrowRenderer.h"
 #include "mmcore/moldyn/DataGridder.h"
 #include "mmcore/moldyn/GrimRenderer.h"
-#include "mmcore/moldyn/IMDAtomDataSource.h"
 #include "mmcore/moldyn/MipDepthSphereRenderer.h"
 #include "mmcore/moldyn/MMPGDDataSource.h"
 #include "mmcore/moldyn/MMPGDWriter.h"
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
-#include "mmcore/moldyn/MMSPDDataSource.h"
 #include "mmcore/moldyn/OracleSphereRenderer.h"
-#include "mmcore/moldyn/SIFFDataSource.h"
 #include "mmcore/moldyn/SimpleGeoSphereRenderer.h"
 #include "mmcore/moldyn/SimpleSphereRenderer.h"
 #include "mmcore/moldyn/NGSphereRenderer.h"
 #include "mmcore/moldyn/ClusteredSphereRenderer.h"
 #include "mmcore/moldyn/SphereOutlineRenderer.h"
-#include "mmcore/moldyn/VIMDataSource.h"
-#include "mmcore/moldyn/VisIttDataSource.h"
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
@@ -78,7 +73,6 @@
 //#include "mmcore/vismol2/Mol20DataSource.h"
 //#include "mmcore/vismol2/Mol20Renderer.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
-#include "mmcore/moldyn/SIFFWriter.h"
 #include "mmcore/moldyn/VTFDataSource.h"
 #include "mmcore/moldyn/VTFResDataSource.h"
 #include "mmcore/moldyn/AddClusterColours.h"
@@ -114,22 +108,17 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::ArrowRenderer>();
     instance.RegisterAutoDescription<moldyn::DataGridder>();
     instance.RegisterAutoDescription<moldyn::GrimRenderer>();
-    instance.RegisterDescription<LoaderADModuleAutoDescription<moldyn::IMDAtomDataSource> >();
     instance.RegisterAutoDescription<moldyn::MipDepthSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::MMPGDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPGDWriter>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
-    instance.RegisterDescription<LoaderADModuleAutoDescription<moldyn::MMSPDDataSource> >();
-    instance.RegisterAutoDescription<moldyn::SIFFDataSource>();
     instance.RegisterAutoDescription<moldyn::SimpleGeoSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::SimpleSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::NGSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::ClusteredSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::SphereOutlineRenderer>();
     instance.RegisterAutoDescription<moldyn::OracleSphereRenderer>();
-    instance.RegisterAutoDescription<moldyn::VIMDataSource>();
-    instance.RegisterAutoDescription<moldyn::VisIttDataSource>();
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
     instance.RegisterAutoDescription<moldyn::ParticleWorker>();
@@ -163,7 +152,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     //instance.RegisterAutoDescription<vismol2::Mol20DataSource>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
-    instance.RegisterAutoDescription<moldyn::SIFFWriter>();
     instance.RegisterAutoDescription<moldyn::VTFDataSource>();
     instance.RegisterAutoDescription<moldyn::VTFResDataSource>();
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
