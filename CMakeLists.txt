@@ -1,6 +1,6 @@
 #
 # MegaMol™ mmstd.moldyn Plugin
-# Copyright 2015, by MegaMol Consortium
+# Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
 cmake_minimum_required(VERSION 2.8)
@@ -35,25 +35,13 @@ set(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
 
 # Build MegaMol Plugin
 # public header files for installation
-#file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-set(header_files "mmstd.moldyn.h" "stdafx.h" "targetver.h")
-set(source_files "mmstd.moldyn.cpp" "stdafx.cpp" "dllmain.cpp")
+file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "src/*.h")
 # source files for compilation
-#file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
-#list(REMOVE_ITEM source_files
-#	"src/moldyn/D3D11SimpleSphereRenderer.cpp"
-#	"src/special/AbstractStereoDisplay.cpp"
-#	"src/special/ColStereoDisplay.cpp"
-#	"src/utility/AbstractD3D11RenderObject.cpp"
-#	"src/utility/D3D11BoundingBox.cpp"
-#	"src/view/CallUpdateDirect3D.cpp"
-#	"src/view/ViewDirect3D.cpp"
-#	"src/vismol2/Mol20DataCall.cpp"
-#	"src/vismol2/Mol20DataSource.cpp"
-#	"src/vismol2/Mol20Renderer.cpp"
-#	"src/vismol2/Mol2Data.cpp"
-#	)
-#include_directories("include" "src")
+file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+list(REMOVE_ITEM source_files
+	"src/dllmain.cpp"
+	)
+include_directories("include" "src")
 
 # Target definition
 add_library(mmstd.moldyn SHARED ${header_files} ${source_files})
