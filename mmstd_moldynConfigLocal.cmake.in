@@ -1,0 +1,16 @@
+get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+include(${SELF_DIR}/mmstd_moldyn-target.cmake)
+
+set(mmstd_moldyn_LIBRARIES mmstd_moldyn)
+set(mmstd_moldyn_INCLUDE_DIRS "@cfg_mmstd_moldyn_INCLUDE_DIRS@")
+set(mmstd_moldyn_SHADERS_DIRS "@cfg_mmstd_moldyn_SHADERS_DIRS@")
+
+set(mmstd_moldyn_vislib_DIR "@cfg_mmstd_moldyn_vislib_DIR@")
+set(mmstd_moldyn_mmcore_DIR "@cfg_mmstd_moldyn_mmcore_DIR@")
+
+set(mmstd_moldyn_FOUND 1)
+
+get_property(self_target_location TARGET mmstd_moldyn PROPERTY LOCATION_${CMAKE_BUILD_TYPE})
+message(STATUS "Found mmstd_moldyn: ${self_target_location}")
+
