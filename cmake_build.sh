@@ -22,6 +22,7 @@ invoke_make_install=0
 invoke_default=1
 cmake_extra_cmd=
 build_tests=0
+register_build_trees=0
 
 # be proud of yourself
 echo
@@ -32,7 +33,7 @@ echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcmitC:" opt; do
+while getopts "hp:dDcmirtC:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -44,6 +45,7 @@ while getopts "hp:dDcmitC:" opt; do
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
     echo "  -i    (install) invokes 'make install'"
+    echo "  -r    (register) registers the cmake build tree results in the user package repository, making them available for find_package commands"
     echo "  -t    (tests) also builds the vislib test applications"
     echo
     echo "Default behavior (when no arguments are given):"
@@ -91,6 +93,9 @@ while getopts "hp:dDcmitC:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
     ;;
+  r)
+    register_build_trees=1
+    ;;
   t)
     build_tests=1
     ;;
@@ -109,6 +114,7 @@ done
 cmake_cmd=""
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
 if [ $build_tests -eq 1 ] ; then cmake_cmd="$cmake_cmd -DVISLIB_BUILD_TESTS=1"; fi
+if [ $register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dregister_build_trees=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 
 # debug output of settings
