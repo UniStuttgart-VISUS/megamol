@@ -38,7 +38,7 @@ using namespace megamol::stdplugin::moldyn::io;
  * VisIttDataSource::Frame::Frame
  */
 VisIttDataSource::Frame::Frame(core::view::AnimDataModule& owner)
-        : core::view::AnimDataModule::Frame(owner), dat(), size(0) {
+        : core::view::AnimDataModule::Frame(owner), size(0), dat() {
     // intentionally empty
 }
 
