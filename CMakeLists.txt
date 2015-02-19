@@ -81,6 +81,9 @@ list(REMOVE_ITEM source_files
 	"src/vismol2/Mol20Renderer.cpp"
 	"src/vismol2/Mol2Data.cpp"
 	)
+# shader files for installation
+file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+
 include_directories("include" "src")
 
 # Note: COMMAND is empty on purpose.
@@ -116,6 +119,7 @@ target_link_libraries(MegaMolCore PRIVATE ${LIBS})
 # to decide whether to take release or debug accordingly.
 # Set our known paths
 set(cfg_MegaMolCore_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+set(cfg_MegaMolCore_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(cfg_CMAKE_BUILD_TYPE Release)
