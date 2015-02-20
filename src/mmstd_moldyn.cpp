@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "mmstd.moldyn/mmstd.moldyn.h"
+#include "mmstd_moldyn/mmstd_moldyn.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/factories/LoaderADModuleAutoDescription.h"

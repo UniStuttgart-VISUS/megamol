@@ -37,7 +37,7 @@
     <ClCompile Include="src/dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src/mmstd.moldyn.cpp">
+    <ClCompile Include="src/mmstd_moldyn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src/stdafx.cpp">
@@ -75,7 +75,7 @@
     <ClInclude Include="src/targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\mmstd.moldyn\mmstd.moldyn.h">
+    <ClInclude Include="include\mmstd_moldyn\mmstd_moldyn.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\io\SIFFDataSource.h">
