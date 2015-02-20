@@ -17,10 +17,10 @@
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
 //#include <glh/glh_genext.h>
-#include "job/AbstractJob.h"
-#include "Module.h"
-#include "CallerSlot.h"
-#include "param/ParamSlot.h"
+#include "mmcore/job/AbstractJob.h"
+#include "mmcore/Module.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "CudaDevArr.h"
 #include "HostArr.h"
 #include "MolecularDataCall.h"

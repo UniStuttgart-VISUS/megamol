@@ -12,9 +12,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "MolecularDataCall.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 
 namespace megamol { 
 	namespace protein {

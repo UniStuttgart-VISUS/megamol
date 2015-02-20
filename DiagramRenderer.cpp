@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "DiagramRenderer.h"
-#include "CoreInstance.h"
-#include "param/IntParam.h"
-#include "param/StringParam.h"
-#include "param/EnumParam.h"
-#include "param/ButtonParam.h"
-#include "param/BoolParam.h"
-#include "param/FloatParam.h"
-#include "utility/ColourParser.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/utility/ColourParser.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
@@ -16,8 +16,8 @@
 #include <GL/glu.h>
 #include <math.h>
 #include "vislib/graphics/gl/Verdana.inc"
-#include "misc/ImageViewer.h"
-#include "utility/ResourceWrapper.h"
+#include "mmcore/misc/ImageViewer.h"
+#include "mmcore/utility/ResourceWrapper.h"
 #include <float.h>
 
 using namespace megamol;

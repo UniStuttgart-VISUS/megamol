@@ -8,13 +8,13 @@
 #include "stdafx.h"
 #include <omp.h>
 
-#include "CoreInstance.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
-#include "param/BoolParam.h"
-#include "param/IntParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
 #include "MolecularDataCall.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"

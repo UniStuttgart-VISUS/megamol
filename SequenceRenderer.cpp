@@ -2,20 +2,20 @@
 #include "SequenceRenderer.h"
 
 #include "SequenceRenderer.h"
-#include "CoreInstance.h"
-#include "param/IntParam.h"
-#include "param/FilePathParam.h"
-#include "param/BoolParam.h"
-#include "param/ButtonParam.h"
-#include "utility/ColourParser.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/utility/ColourParser.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
-#include "misc/ImageViewer.h"
-#include "utility/ResourceWrapper.h"
+#include "mmcore/misc/ImageViewer.h"
+#include "mmcore/utility/ResourceWrapper.h"
 #include "Color.h"
 
 

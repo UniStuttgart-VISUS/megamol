@@ -19,11 +19,11 @@
 // Toggle the use of procedural volume fields for debugging purposes
 //#define USE_PROCEDURAL_DATA
 
-#include "view/Renderer3DModuleDS.h"
-#include "CallerSlot.h"
-#include "CalleeSlot.h"
-#include "param/ParamSlot.h"
-#include "view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallRender3D.h"
 
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Vector.h"

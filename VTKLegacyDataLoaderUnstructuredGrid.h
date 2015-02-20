@@ -16,11 +16,11 @@
 
 #include "VTKLegacyDataUnstructuredGrid.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
-#include "view/AnimDataModule.h"
-#include "AbstractGetData3DCall.h"
-#include "Call.h"
-#include "CalleeSlot.h"
-#include "param/ParamSlot.h"
+#include "mmcore/view/AnimDataModule.h"
+#include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 typedef vislib::math::Cuboid<float> Cubef;
 

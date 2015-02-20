@@ -24,13 +24,13 @@
 #include "cuda_error_check.h"
 #include "DiffusionSolver.h"
 
-#include "CoreInstance.h"
-#include "view/AbstractCallRender3D.h"
-#include "view/CallRender3D.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
-#include "param/IntParam.h"
-#include "param/BoolParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
 
 #include <algorithm>
 // For profiling

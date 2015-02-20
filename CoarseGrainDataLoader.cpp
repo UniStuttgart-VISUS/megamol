@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "CoarseGrainDataLoader.h"
-#include "param/FilePathParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"

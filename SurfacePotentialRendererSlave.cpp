@@ -13,8 +13,8 @@
 #include "SurfacePotentialRendererSlave.h"
 #include "VBODataCall.h"
 #include "ogl_error_check.h"
-#include "CoreInstance.h"
-#include "param/FloatParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/FloatParam.h"
 
 using namespace megamol;
 using namespace megamol::protein;

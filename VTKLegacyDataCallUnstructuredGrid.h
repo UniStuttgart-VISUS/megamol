@@ -14,8 +14,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "AbstractGetData3DCall.h"
-#include "CallAutoDescription.h"
+#include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/CallAutoDescription.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "Interpol.h"

@@ -16,9 +16,9 @@
 #include "VTIDataCall.h"
 #include "VTKImageData.h"
 //#include "vislib_vector_typedefs.h"
-#include "param/IntParam.h"
-#include "param/FloatParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))

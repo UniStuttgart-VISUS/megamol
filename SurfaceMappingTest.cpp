@@ -13,10 +13,10 @@
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
 #include "SurfaceMappingTest.h"
-#include "param/BoolParam.h"
-#include "param/IntParam.h"
-#include "param/StringParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/EnumParam.h"
 
 #include "VTIDataCall.h"
 #include "MolecularDataCall.h"
@@ -24,10 +24,10 @@
 #include "VariantMatchDataCall.h"
 #include "MolecularSurfaceFeature.h"
 //#include "vislib_vector_typedefs.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
-#include "param/BoolParam.h"
-#include "param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
 #include "RMS.h"
 #include "vislib/sys/Log.h"
 #include <ctime>

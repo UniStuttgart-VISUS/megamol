@@ -14,10 +14,10 @@
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
-#include "job/AbstractJob.h"
-#include "Module.h"
-#include "CallerSlot.h"
-#include "param/ParamSlot.h"
+#include "mmcore/job/AbstractJob.h"
+#include "mmcore/Module.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "VTIDataCall.h"
 #include "HostArr.h"
 

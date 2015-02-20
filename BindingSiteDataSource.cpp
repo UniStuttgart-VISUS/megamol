@@ -2,10 +2,10 @@
 #include "BindingSiteDataSource.h"
 
 #include "BindingSiteCall.h"
-#include "CoreInstance.h"
-#include "param/IntParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/IntParam.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
-#include "param/FilePathParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/math/mathfunctions.h"

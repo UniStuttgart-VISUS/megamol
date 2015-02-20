@@ -12,11 +12,11 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "param/ParamSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "MolecularDataCall.h"
-#include "view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 

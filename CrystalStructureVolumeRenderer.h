@@ -17,15 +17,15 @@
 #include "UniGrid3D.h"
 #include "CUDAMarchingCubes.h"
 
-#include "param/ParamSlot.h"
-#include "CallerSlot.h"
-#include "view/Renderer3DModuleDS.h"
-#include "view/CallRender3D.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/view/CallRender3D.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "BoundingBoxes.h"
+#include "mmcore/BoundingBoxes.h"
 
 namespace megamol {
 namespace protein {

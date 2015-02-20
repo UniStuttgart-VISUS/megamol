@@ -8,8 +8,8 @@
 
 #include "stdafx.h"
 #include "MultiParticleDataFilter.h"
-#include "AbstractGetData3DCall.h"
-#include "param/FloatParam.h"
+#include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/param/FloatParam.h"
 
 
 using namespace megamol;

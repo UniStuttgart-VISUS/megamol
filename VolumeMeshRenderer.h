@@ -14,16 +14,16 @@
 #ifdef WITH_CUDA
 
 #include "VolumeMeshRenderer.cuh"
-#include "view/Renderer3DModuleDS.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
 #include "DiagramCall.h"
 #include "SplitMergeCall.h"
 #include "BindingSiteCall.h"
 #include "Color.h"
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/math/Cuboid.h"
 #include "MolecularAOShader.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "WKFUtils.h"
 #include "CUDAQuickSurf.h"
 #include <cuda_runtime.h>

@@ -8,12 +8,12 @@
 #include "stdafx.h"
 #include "AggregatedDensity.h"
 #include "VolumeMeshRenderer.h"
-#include "AbstractGetData3DCall.h"
+#include "mmcore/AbstractGetData3DCall.h"
 #include <climits>
 #include <cfloat>
 #include <cmath>
 #include <math.h>
-#include "CallVolumeData.h"
+#include "mmcore/CallVolumeData.h"
 #include <omp.h>
 #include <iostream>
 #include <float.h>

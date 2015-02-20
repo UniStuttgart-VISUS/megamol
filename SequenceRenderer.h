@@ -15,9 +15,9 @@
 //#define USE_SIMPLE_FONT
 
 
-#include "param/ParamSlot.h"
-#include "CallerSlot.h"
-#include "view/Renderer2DModule.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer2DModule.h"
 #include "MolecularDataCall.h"
 #include "BindingSiteCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"

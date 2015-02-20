@@ -9,9 +9,9 @@
 
 #include "Color.h"
 #include <omp.h>
-#include "utility/ColourParser.h"
+#include "mmcore/utility/ColourParser.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 #include <string>
 #include <iostream>
 

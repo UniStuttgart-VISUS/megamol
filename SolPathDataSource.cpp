@@ -7,9 +7,9 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES 1
 #include "SolPathDataSource.h"
-#include "param/BoolParam.h"
-#include "param/FloatParam.h"
-#include "param/FilePathParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"

@@ -13,11 +13,11 @@
 #define SFB_DEMO
 
 #include "vislib/assert.h"
-#include "CoreInstance.h"
-#include "param/EnumParam.h"
-#include "param/BoolParam.h"
-#include "param/FloatParam.h"
-#include "param/IntParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/sysfunctions.h"

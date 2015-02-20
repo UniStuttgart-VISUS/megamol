@@ -15,10 +15,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "view/Renderer3DModule.h"
-#include "CallerSlot.h"
-#include "view/CallRender3D.h"
-#include "param/ParamSlot.h"
+#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {

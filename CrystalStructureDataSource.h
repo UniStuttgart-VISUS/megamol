@@ -13,10 +13,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "param/ParamSlot.h"
-#include "view/AnimDataModule.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/AnimDataModule.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "CrystalStructureDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"

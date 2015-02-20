@@ -2,7 +2,7 @@
 #define MMPROTEINPLUGIN_GLWIDGETLIBRARY_H_INCLUDED
 
 #include "vislib/Array.h"
-#include "view/MouseFlags.h"
+#include "mmcore/view/MouseFlags.h"
 
 class GlWidget;
 class GlButton;

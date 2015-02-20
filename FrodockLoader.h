@@ -14,10 +14,10 @@
 // define the name size in number of characters
 #define NAMESIZE 200
 
-#include "Module.h"
-#include "param/ParamSlot.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"

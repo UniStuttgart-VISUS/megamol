@@ -13,9 +13,9 @@
 #include <vector>
 #include "Color.h"
 #include "vislib/graphics/NamedColours.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 
 using namespace megamol;
 using namespace megamol::protein;

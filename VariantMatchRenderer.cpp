@@ -13,9 +13,9 @@
 #include "VariantMatchDataCall.h"
 #include "ogl_error_check.h"
 
-#include <param/FloatParam.h>
-#include <param/IntParam.h>
-#include <CoreInstance.h>
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/CoreInstance.h"
 #include <algorithm>
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/gl/OutlineFont.h"

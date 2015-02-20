@@ -17,10 +17,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "VTIDataCall.h"
-#include "param/ParamSlot.h"
-#include "view/Renderer3DModule.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/Renderer3DModule.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/Matrix.h"

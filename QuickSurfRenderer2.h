@@ -13,15 +13,15 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "DiagramCall.h"
 #include "Color.h"
-#include "param/ParamSlot.h"
-#include "CallerSlot.h"
-#include "view/Renderer3DModuleDS.h"
-#include "view/AbstractCallRender3D.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/view/AbstractCallRender3D.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "view/CallClipPlane.h"
+#include "mmcore/view/CallClipPlane.h"
 
 #include "WKFUtils.h"
 #include "CUDAQuickSurf.h"

@@ -10,7 +10,7 @@
 #define _USE_MATH_DEFINES 1
 
 #include "VolumeSliceRenderer.h"
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>

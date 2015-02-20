@@ -13,19 +13,19 @@
 
 #include "MolecularDataCall.h"
 #include "BindingSiteCall.h"
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "BSpline.h"
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "Color.h"
-#include "view/Renderer3DModuleDS.h"
-#include "view/CallRender3D.h"
-#include "view/CallRenderDeferred3D.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRenderDeferred3D.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/Array.h"
 #include <vector>
-#include "CallerSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "CallColor.h"
 
 namespace megamol {

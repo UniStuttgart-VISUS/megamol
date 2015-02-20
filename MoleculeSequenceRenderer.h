@@ -1,9 +1,9 @@
 #ifndef MOLECULESEQUENCERENDERER_H
 #define MOLECULESEQUENCERENDERER_H
 
-#include "view/Renderer2DModule.h"
-#include "view/CallRender2D.h"
-#include "view/MouseFlags.h"
+#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/MouseFlags.h"
 
 #include "GlWidgetLibrary.h"
 #include "GlButton.h"

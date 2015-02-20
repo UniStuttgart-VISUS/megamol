@@ -25,11 +25,11 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 
-#include "CoreInstance.h"
-#include "view/CallClipPlane.h"
-#include "param/FloatParam.h"
-#include "param/IntParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
