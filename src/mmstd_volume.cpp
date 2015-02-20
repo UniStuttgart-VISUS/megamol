@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "mmstd.volume.h"
+#include "mmstd_volume/mmstd_volume.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/ModuleAutoDescription.h"
+#include "mmcore/factories/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/ThreadSafeStackTrace.h"
@@ -71,13 +71,13 @@ MMSTD_VOLUME_API int mmplgModuleCount(void) {
  */
 MMSTD_VOLUME_API void* mmplgModuleDescription(int idx) {
     switch (idx) {
-    case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DatRawDataSource>();
-    case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DirectVolumeRenderer>();
-    case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::BuckyBall>();
-    case 3: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::GridBalls>();
-    case 4: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::DirPartVolume>();
-    case 5: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::VolumeCache>();
-    case 6: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
+    case 0: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DatRawDataSource>();
+    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DirectVolumeRenderer>();
+    case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::BuckyBall>();
+    case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::GridBalls>();
+    case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::DirPartVolume>();
+    case 5: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::VolumeCache>();
+    case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::volume::RenderVolumeSlice>();
     }
     return NULL;
 }

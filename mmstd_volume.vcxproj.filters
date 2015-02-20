@@ -22,72 +22,72 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="src/dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mmstd.volume.cpp">
+    <ClCompile Include="src/mmstd_volume.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="src/stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DatRawDataSource.cpp">
+    <ClCompile Include="src/DatRawDataSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirectVolumeRenderer.cpp">
+    <ClCompile Include="src/DirectVolumeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="slicing.cpp">
+    <ClCompile Include="src/slicing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BuckyBall.cpp">
+    <ClCompile Include="src/BuckyBall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GridBalls.cpp">
+    <ClCompile Include="src/GridBalls.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirPartVolume.cpp">
+    <ClCompile Include="src/DirPartVolume.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VolumeCache.cpp">
+    <ClCompile Include="src/VolumeCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RenderVolumeSlice.cpp">
+    <ClCompile Include="src/RenderVolumeSlice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mmstd.volume.h">
+    <ClInclude Include="include/mmstd_volume/mmstd_volume.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="src/stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="src/targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DatRawDataSource.h">
+    <ClInclude Include="src/DatRawDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DirectVolumeRenderer.h">
+    <ClInclude Include="src/DirectVolumeRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="slicing.h">
+    <ClInclude Include="src/slicing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BuckyBall.h">
+    <ClInclude Include="src/BuckyBall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GridBalls.h">
+    <ClInclude Include="src/GridBalls.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DirPartVolume.h">
+    <ClInclude Include="src/DirPartVolume.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VolumeCache.h">
+    <ClInclude Include="src/VolumeCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RenderVolumeSlice.h">
+    <ClInclude Include="src/RenderVolumeSlice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
