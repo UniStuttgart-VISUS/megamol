@@ -68,12 +68,13 @@ void writeSVG(const std::vector<int>& buckets, float rangeMin, float rangeMax) {
     float distance = 0.8f/static_cast<float>(buckets.size());
     // find maximum
     int m = -1000;
-    for (int i=0; i<buckets.size(); ++i)
-        m = std::max(m, buckets[i]);
+    for (int i = 0; i < static_cast<int>(buckets.size()); ++i) {
+        m = std::max<int>(m, buckets[i]);
+    }
 
-    float scale = 0.8/static_cast<float>(m);
-    float x = 0.1+20.0/(float)width;
-    for (int i=0; i<buckets.size(); ++i) {
+    float scale = 0.8f / static_cast<float>(m);
+    float x = 0.1f + 20.0f / (float)width;
+    for (int i = 0; i < static_cast<int>(buckets.size()); ++i) {
         svg<<"<path class=\"bar\" d=\"M"<<x*width<<" "<<0.9*height<<" L"<<x*width<<" "<<(0.8-(buckets[i]*scale)+0.1)*height<<"\"/>"<<std::endl;
         float val = rangeMin + i/(float)(buckets.size()-1)*(rangeMax - rangeMin);
         svg<<"<text x=\""<<(x*width)<<"\" y=\""<<0.9*height+15<<"\" fill=\"black\" text-anchor=\"middle\">"<<val<<"</text>"<<std::endl;

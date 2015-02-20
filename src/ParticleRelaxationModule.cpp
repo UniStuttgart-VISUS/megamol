@@ -75,7 +75,7 @@ bool datatools::ParticleRelaxationModule::manipulateData(
             if (inData.AccessParticles(li).GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_NONE) continue;
             cnt += inData.AccessParticles(li).GetCount();
         }
-        this->data.EnforceSize(cnt * 4 * sizeof(float)); // new particle position data (including radii)
+        this->data.EnforceSize(static_cast<SIZE_T>(cnt * 4 * sizeof(float))); // new particle position data (including radii)
         float *vert = this->data.As<float>();
         for (unsigned int li = 0; li < inData.GetParticleListCount(); li++) {
             MultiParticleDataCall::Particles& p = inData.AccessParticles(li);
@@ -145,7 +145,7 @@ bool datatools::ParticleRelaxationModule::manipulateData(
         if (p.GetVertexDataType() == MultiParticleDataCall::Particles::VERTDATA_NONE) continue;
         p.SetVertexData(
             MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR,
-            this->data.At(cnt * sizeof(float) * 4));
+            this->data.At(static_cast<SIZE_T>(cnt * sizeof(float) * 4)));
         cnt += p.GetCount();
     }
 

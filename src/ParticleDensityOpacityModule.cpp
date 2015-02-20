@@ -539,7 +539,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
 
                 f[idx * col_step + col_off] = static_cast<float>(n_cnt);
             }
-            ci += pl.GetCount();
+            ci += static_cast<size_t>(pl.GetCount());
         }
 
         delete[] coords[0];
@@ -583,7 +583,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
             // Access coords[cell][particle][xyz]
             // coords[0] point to the whole particles access array
             float const ***coords = new float const **[dim_x * dim_y * dim_z];
-            coords[0] = new float const *[pl.GetCount()];
+            coords[0] = new float const *[static_cast<unsigned int>(pl.GetCount())];
 
             // 1. count all particles for each cell
             ci = 0;

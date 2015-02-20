@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2DBFDFDC-C32E-4DB5-AFEC-3D40FB30318B}</ProjectGuid>
-    <RootNamespace>mmstd.datatools</RootNamespace>
+    <RootNamespace>mmstd_datatools</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -100,19 +100,19 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mmstd.datatools</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mmstd_datatools</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mmstd.datatools</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mmstd_datatools</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">mmstd.datatools</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">mmstd_datatools</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mmstd.datatools</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mmstd_datatools</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.mmplg</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -145,7 +145,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -176,7 +176,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -211,7 +211,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -240,11 +240,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractParticleManipulator.cpp" />
-    <ClCompile Include="DataFileSequence.cpp" />
-    <ClCompile Include="DataFileSequenceStepper.cpp" />
-    <ClCompile Include="DataSetTimeRewriteModule.cpp" />
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="src/AbstractParticleManipulator.cpp" />
+    <ClCompile Include="src/DataFileSequence.cpp" />
+    <ClCompile Include="src/DataFileSequenceStepper.cpp" />
+    <ClCompile Include="src/DataSetTimeRewriteModule.cpp" />
+    <ClCompile Include="src/dllmain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -258,42 +258,42 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       </PrecompiledHeader>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
-    <ClCompile Include="DumpIColorHistogramModule.cpp" />
-    <ClCompile Include="ForceCubicCBoxModule.cpp" />
-    <ClCompile Include="mmstd.datatools.cpp" />
-    <ClCompile Include="OverrideParticleGlobals.cpp" />
-    <ClCompile Include="ParticleDensityOpacityModule.cpp" />
-    <ClCompile Include="ParticleListMergeModule.cpp" />
-    <ClCompile Include="ParticleListSelector.cpp" />
-    <ClCompile Include="ParticleRelaxationModule.cpp" />
-    <ClCompile Include="ParticleThinner.cpp" />
-    <ClCompile Include="SphereDataUnifier.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="src/DumpIColorHistogramModule.cpp" />
+    <ClCompile Include="src/ForceCubicCBoxModule.cpp" />
+    <ClCompile Include="src/mmstd_datatools.cpp" />
+    <ClCompile Include="src/OverrideParticleGlobals.cpp" />
+    <ClCompile Include="src/ParticleDensityOpacityModule.cpp" />
+    <ClCompile Include="src/ParticleListMergeModule.cpp" />
+    <ClCompile Include="src/ParticleListSelector.cpp" />
+    <ClCompile Include="src/ParticleRelaxationModule.cpp" />
+    <ClCompile Include="src/ParticleThinner.cpp" />
+    <ClCompile Include="src/SphereDataUnifier.cpp" />
+    <ClCompile Include="src/stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TransferFunctionQuery.cpp" />
+    <ClCompile Include="src/TransferFunctionQuery.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractParticleManipulator.h" />
-    <ClInclude Include="DataFileSequence.h" />
-    <ClInclude Include="DataFileSequenceStepper.h" />
-    <ClInclude Include="DataSetTimeRewriteModule.h" />
-    <ClInclude Include="DumpIColorHistogramModule.h" />
-    <ClInclude Include="ForceCubicCBoxModule.h" />
-    <ClInclude Include="mmstd.datatools.h" />
-    <ClInclude Include="OverrideParticleGlobals.h" />
-    <ClInclude Include="ParticleDensityOpacityModule.h" />
-    <ClInclude Include="ParticleListMergeModule.h" />
-    <ClInclude Include="ParticleListSelector.h" />
-    <ClInclude Include="ParticleRelaxationModule.h" />
-    <ClInclude Include="ParticleThinner.h" />
-    <ClInclude Include="SphereDataUnifier.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="TransferFunctionQuery.h" />
+    <ClInclude Include="src/AbstractParticleManipulator.h" />
+    <ClInclude Include="src/DataFileSequence.h" />
+    <ClInclude Include="src/DataFileSequenceStepper.h" />
+    <ClInclude Include="src/DataSetTimeRewriteModule.h" />
+    <ClInclude Include="src/DumpIColorHistogramModule.h" />
+    <ClInclude Include="src/ForceCubicCBoxModule.h" />
+    <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h" />
+    <ClInclude Include="src/OverrideParticleGlobals.h" />
+    <ClInclude Include="src/ParticleDensityOpacityModule.h" />
+    <ClInclude Include="src/ParticleListMergeModule.h" />
+    <ClInclude Include="src/ParticleListSelector.h" />
+    <ClInclude Include="src/ParticleRelaxationModule.h" />
+    <ClInclude Include="src/ParticleThinner.h" />
+    <ClInclude Include="src/SphereDataUnifier.h" />
+    <ClInclude Include="src/stdafx.h" />
+    <ClInclude Include="src/targetver.h" />
+    <ClInclude Include="src/TransferFunctionQuery.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="common.mk" />

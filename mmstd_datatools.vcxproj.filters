@@ -22,108 +22,108 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="src/dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mmstd.datatools.cpp">
+    <ClCompile Include="src/mmstd_datatools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="src/stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleListMergeModule.cpp">
+    <ClCompile Include="src/ParticleListMergeModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DataSetTimeRewriteModule.cpp">
+    <ClCompile Include="src/DataSetTimeRewriteModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SphereDataUnifier.cpp">
+    <ClCompile Include="src/SphereDataUnifier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AbstractParticleManipulator.cpp">
+    <ClCompile Include="src/AbstractParticleManipulator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleThinner.cpp">
+    <ClCompile Include="src/ParticleThinner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OverrideParticleGlobals.cpp">
+    <ClCompile Include="src/OverrideParticleGlobals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleRelaxationModule.cpp">
+    <ClCompile Include="src/ParticleRelaxationModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TransferFunctionQuery.cpp">
+    <ClCompile Include="src/TransferFunctionQuery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleListSelector.cpp">
+    <ClCompile Include="src/ParticleListSelector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleDensityOpacityModule.cpp">
+    <ClCompile Include="src/ParticleDensityOpacityModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ForceCubicCBoxModule.cpp">
+    <ClCompile Include="src/ForceCubicCBoxModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DumpIColorHistogramModule.cpp">
+    <ClCompile Include="src/DumpIColorHistogramModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DataFileSequence.cpp">
+    <ClCompile Include="src/DataFileSequence.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DataFileSequenceStepper.cpp">
+    <ClCompile Include="src/DataFileSequenceStepper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="mmstd.datatools.h">
+    <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="src/stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="src/targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleListMergeModule.h">
+    <ClInclude Include="src/ParticleListMergeModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DataSetTimeRewriteModule.h">
+    <ClInclude Include="src/DataSetTimeRewriteModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SphereDataUnifier.h">
+    <ClInclude Include="src/SphereDataUnifier.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AbstractParticleManipulator.h">
+    <ClInclude Include="src/AbstractParticleManipulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleThinner.h">
+    <ClInclude Include="src/ParticleThinner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OverrideParticleGlobals.h">
+    <ClInclude Include="src/OverrideParticleGlobals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleRelaxationModule.h">
+    <ClInclude Include="src/ParticleRelaxationModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TransferFunctionQuery.h">
+    <ClInclude Include="src/TransferFunctionQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleListSelector.h">
+    <ClInclude Include="src/ParticleListSelector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleDensityOpacityModule.h">
+    <ClInclude Include="src/ParticleDensityOpacityModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ForceCubicCBoxModule.h">
+    <ClInclude Include="src/ForceCubicCBoxModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DumpIColorHistogramModule.h">
+    <ClInclude Include="src/DumpIColorHistogramModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DataFileSequence.h">
+    <ClInclude Include="src/DataFileSequence.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DataFileSequenceStepper.h">
+    <ClInclude Include="src/DataFileSequenceStepper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

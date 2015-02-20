@@ -6,9 +6,9 @@
  */
 
 #include "stdafx.h"
-#include "mmstd.datatools.h"
+#include "mmstd_datatools/mmstd_datatools.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/ModuleAutoDescription.h"
+#include "mmcore/factories/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/ThreadSafeStackTrace.h"
@@ -76,18 +76,18 @@ MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
  */
 MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
     switch(idx) {
-    case 0: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
-    case 1: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
-    case 2: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequenceStepper>();
-    case 3: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
-    case 4: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
-    case 5: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();
-    case 6: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
-    case 7: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListSelector>();
-    case 8: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleDensityOpacityModule>();
-    case 9: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
-    case 10: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
-    case 11: return new megamol::core::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
+    case 0: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
+    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
+    case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequenceStepper>();
+    case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
+    case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
+    case 5: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();
+    case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
+    case 7: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListSelector>();
+    case 8: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleDensityOpacityModule>();
+    case 9: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
+    case 10: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
+    case 11: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
     }
     return nullptr;
 }

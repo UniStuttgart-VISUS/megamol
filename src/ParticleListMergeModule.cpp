@@ -216,7 +216,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
     case SimpleSphericalParticles::COLDATA_FLOAT_I: bpp += 4; break;
     }
 
-    this->data.AssertSize(partCnt * bpp);
+    this->data.AssertSize(static_cast<SIZE_T>(partCnt * bpp));
     this->parts.SetVertexData(vdType, this->data.At(0), bpp);
     this->parts.SetColourData(cdType, this->data.At(cdoff), bpp);
 
@@ -254,9 +254,9 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
             // vertex data
             if (vdType == SimpleSphericalParticles::VERTDATA_SHORT_XYZ) {
                 ASSERT(p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_SHORT_XYZ);
-                ::memcpy(this->data.At(partCnt * bpp), pvd, 6);
+                ::memcpy(this->data.At(static_cast<SIZE_T>(partCnt * bpp)), pvd, 6);
             } else {
-                float *v = this->data.AsAt<float>(partCnt * bpp);
+                float *v = this->data.AsAt<float>(static_cast<SIZE_T>(partCnt * bpp));
                 const float *pv = reinterpret_cast<const float*>(pvd);
                 if (p.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_SHORT_XYZ) {
                     const uint16_t *pv = reinterpret_cast<const uint16_t*>(pvd);
@@ -285,7 +285,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
                 if (p.GetColourDataType() != SimpleSphericalParticles::COLDATA_NONE) {
                     ::memcpy(col, pcd, (p.GetColourDataType() == SimpleSphericalParticles::COLDATA_UINT8_RGB) ? 3 : 4);
                 }
-                ::memcpy(this->data.At(partCnt * bpp + cdoff),
+                ::memcpy(this->data.At(static_cast<SIZE_T>(partCnt * bpp + cdoff)),
                     (p.GetColourDataType() == SimpleSphericalParticles::COLDATA_NONE) ? pgc : col,
                     ((cdType == SimpleSphericalParticles::COLDATA_UINT8_RGBA) ? 4 : 3));
             }
@@ -323,7 +323,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
                     this->tfq.Query(col, colI);
                 } break;
                 }
-                ::memcpy(this->data.At(partCnt * bpp + cdoff), col, sizeof(float) * ((cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGBA) ? 4 : 3));
+                ::memcpy(this->data.At(static_cast<SIZE_T>(partCnt * bpp + cdoff)), col, sizeof(float) * ((cdType == SimpleSphericalParticles::COLDATA_FLOAT_RGBA) ? 4 : 3));
             }
 
             if (cdType == SimpleSphericalParticles::COLDATA_FLOAT_I) {
@@ -332,7 +332,7 @@ void datatools::ParticleListMergeModule::setData(core::moldyn::MultiParticleData
                 col = *reinterpret_cast<const float*>(pcd);
                 col = (col - pgcimin) / (pgcimax - pgcimin);
                 col = col * (gcimax - gcimin) + gcimin;
-                *this->data.AsAt<float>(partCnt * bpp + cdoff) = col;
+                *this->data.AsAt<float>(static_cast<SIZE_T>(partCnt * bpp + cdoff)) = col;
             }
         }
     }
