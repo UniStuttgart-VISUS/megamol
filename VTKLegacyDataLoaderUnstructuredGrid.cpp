@@ -11,11 +11,11 @@
 #include "stdafx.h"
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
-#include "moldyn/MultiParticleDataCall.h"
-#include "param/FilePathParam.h"
-#include "param/IntParam.h"
-#include "param/FloatParam.h"
-#include "param/StringParam.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
 #include <cmath>
 #include <ctype.h>
 #include "vislib/sys/Log.h"

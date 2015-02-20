@@ -8,9 +8,9 @@
 #ifndef MMPROTEINPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED
 #define MMPROTEINPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED
 
-#include "view/Renderer3DModuleDS.h"
-#include "CalleeSlot.h"
-#include "view/MouseFlags.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/view/MouseFlags.h"
 #include "CallMouseInput.h"
 
 namespace megamol {

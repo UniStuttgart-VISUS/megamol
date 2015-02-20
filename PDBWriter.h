@@ -14,10 +14,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "job/AbstractJob.h"
-#include "view/TimeControl.h"
-#include "Module.h"
-#include "CallerSlot.h"
+#include "mmcore/job/AbstractJob.h"
+#include "mmcore/view/TimeControl.h"
+#include "mmcore/Module.h"
+#include "mmcore/CallerSlot.h"
 #include "MolecularDataCall.h"
 
 namespace megamol {

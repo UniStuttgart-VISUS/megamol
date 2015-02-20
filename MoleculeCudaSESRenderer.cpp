@@ -19,10 +19,10 @@
 #define VISIBILITY_FBO_DIM 512
 
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "CoreInstance.h"
-#include "param/BoolParam.h"
-#include "param/IntParam.h"
-#include "param/FloatParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <iostream>

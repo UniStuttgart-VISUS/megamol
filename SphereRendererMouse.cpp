@@ -15,14 +15,14 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
-#include <CoreInstance.h>
+#include "mmcore/CoreInstance.h"
 #include "MolecularDataCall.h"
-#include <param/FloatParam.h>
-#include <param/StringParam.h>
-#include <param/BoolParam.h>
-#include <utility/ShaderSourceFactory.h>
-#include <utility/ColourParser.h>
-#include <view/AbstractCallRender3D.h>
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore/utility/ColourParser.h"
+#include "mmcore/view/AbstractCallRender3D.h"
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Vector.h"

@@ -27,15 +27,15 @@
 #include "CUDAMarchingCubes.h"
 #include "CUDACurl.cuh"
 
-#include <param/BoolParam.h>
-#include <param/FloatParam.h>
-#include <param/IntParam.h>
-#include <param/EnumParam.h>
-#include <param/StringParam.h>
-#include <param/FilePathParam.h>
-#include <param/ButtonParam.h>
-#include <CoreInstance.h>
-#include <utility/ColourParser.h>
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/ColourParser.h"
 
 #include "vislib/sys/Log.h"
 #include "vislib/graphics/gl/ShaderSource.h"

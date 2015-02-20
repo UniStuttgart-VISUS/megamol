@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/net/Socket.h"
 #include "vislib/sys/Runnable.h"

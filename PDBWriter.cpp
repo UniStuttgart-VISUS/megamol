@@ -10,9 +10,9 @@
 
 #include <stdafx.h>
 #include "PDBWriter.h"
-#include "param/BoolParam.h"
-#include "param/IntParam.h"
-#include "param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/File.h"
 #include <cmath>

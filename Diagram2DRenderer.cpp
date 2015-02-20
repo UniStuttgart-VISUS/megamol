@@ -10,11 +10,11 @@
 #define _USE_MATH_DEFINES 1
 
 #include "Diagram2DRenderer.h"
-#include "CoreInstance.h"
-#include "param/IntParam.h"
-#include "param/StringParam.h"
-#include "param/ButtonParam.h"
-#include "utility/ColourParser.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/utility/ColourParser.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>

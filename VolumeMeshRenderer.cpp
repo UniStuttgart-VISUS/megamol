@@ -16,15 +16,15 @@
 #include "VolumeMeshRenderer.h"
 #include "IntSelectionCall.h"
 #include "MolecularDataCall.h"
-#include "view/CallRender3D.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
-#include "param/BoolParam.h"
-#include "param/StringParam.h"
-#include "param/IntParam.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
 #include "MappableFloatPair.h"
 #include "MappableCategoryFloat.h"
-#include "CoreInstance.h"
+#include "mmcore/CoreInstance.h"
 #include "MolecularSurfaceFeature.h"
 #include "SplitMergeFeature.h"
 #include "vislib/sys/Log.h"
@@ -43,7 +43,7 @@
 #include <omp.h>
 #include <ctime>
 
-#include "utility/ColourParser.h"
+#include "mmcore/utility/ColourParser.h"
 
 using namespace megamol;
 using namespace megamol::core;

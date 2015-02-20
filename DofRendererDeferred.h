@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <view/Renderer3DModuleDS.h>
+#include "mmcore/view/Renderer3DModuleDS.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include <CallerSlot.h>
+#include "mmcore/CallerSlot.h"
 
 
 namespace megamol {

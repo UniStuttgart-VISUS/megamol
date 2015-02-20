@@ -13,9 +13,9 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CallProteinVolumeData.h"
-#include "Module.h"
-#include "CalleeSlot.h"
-#include "param/ParamSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/math/Vector.h"
 #include "vislib/Array.h"

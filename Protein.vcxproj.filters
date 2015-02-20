@@ -64,9 +64,6 @@
     <ClCompile Include="gmx_system_xdr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MolecularDataCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MoleculeCartoonRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

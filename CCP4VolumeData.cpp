@@ -9,7 +9,7 @@
 
 #include "stdafx.h"
 #include "CCP4VolumeData.h"
-#include "param/FilePathParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib/sys/Log.h"
 #include "vislib/IllegalParamException.h"

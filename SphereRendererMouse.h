@@ -12,16 +12,16 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "ModuleAutoDescription.h"
+#include "mmcore/ModuleAutoDescription.h"
 #include "Renderer3DModuleMouse.h"
-#include "Call.h"
-#include "view/MouseFlags.h"
+#include "mmcore/Call.h"
+#include "mmcore/view/MouseFlags.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "MolecularDataCall.h"
-#include "CallerSlot.h"
-#include "param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Vector.h"
 
 namespace megamol {

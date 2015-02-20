@@ -14,10 +14,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Call.h"
-#include "CallAutoDescription.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
 #include "vislib/math/Cuboid.h"
-#include "view/CallRender3D.h"
+#include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {

@@ -8,9 +8,9 @@
 #ifndef MMPROTEINPLUGIN_CALLMOUSEINPUT_H_INCLUDED
 #define MMPROTEINPLUGIN_CALLMOUSEINPUT_H_INCLUDED
 
-#include <Call.h>
-#include "CallAutoDescription.h"
-#include "view/MouseFlags.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallAutoDescription.h"
+#include "mmcore/view/MouseFlags.h"
 
 namespace megamol {
 namespace protein {

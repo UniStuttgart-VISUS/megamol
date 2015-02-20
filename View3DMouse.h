@@ -8,9 +8,9 @@
 #ifndef MMPROTEINPLUGIN_VIEW3DMOUSE_H_INCLUDED
 #define MMPROTEINPLUGIN_VIEW3DMOUSE_H_INCLUDED
 
-#include "view/View3D.h"
-#include "view/MouseFlags.h"
-#include "CallerSlot.h"
+#include "mmcore/view/View3D.h"
+#include "mmcore/view/MouseFlags.h"
+#include "mmcore/CallerSlot.h"
 
 namespace megamol {
 namespace protein {

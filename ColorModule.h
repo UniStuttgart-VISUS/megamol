@@ -13,11 +13,11 @@
 
 #include "BindingSiteCall.h"
 #include "CallColor.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "MolecularDataCall.h"
-#include "param/ParamSlot.h"
-#include "view/Renderer3DModule.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/Renderer3DModule.h"
 
 namespace megamol {
 namespace protein {

@@ -13,10 +13,10 @@
 #define _USE_MATH_DEFINES 1
 
 #include "UnstructuredGridRenderer.h"
-#include "CoreInstance.h"
-#include "utility/ShaderSourceFactory.h"
-#include "param/EnumParam.h"
-#include "param/FloatParam.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "vislib/assert.h"
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"

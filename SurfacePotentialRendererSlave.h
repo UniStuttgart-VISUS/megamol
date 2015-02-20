@@ -14,13 +14,13 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/CallRender3D.h"
-#include "view/Renderer3DModuleDS.h"
-#include "CallerSlot.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/CallerSlot.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "view/CallRender3D.h"
+#include "mmcore/view/CallRender3D.h"
 //#include "vislib_vector_typedefs.h"
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "VBODataCall.h"
 
 namespace megamol {

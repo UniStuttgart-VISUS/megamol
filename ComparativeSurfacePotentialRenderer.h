@@ -16,10 +16,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "param/ParamSlot.h"
-#include "CallerSlot.h"
-#include "view/Renderer3DModuleDS.h"
-#include "view/CallRender3D.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/view/CallRender3D.h"
 #include "VTIDataCall.h"
 #include "MolecularDataCall.h"
 #include "CUDAMarchingCubes.h"

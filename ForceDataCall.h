@@ -13,9 +13,9 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "Call.h"
-#include "AbstractGetData3DCall.h"
-#include "CallAutoDescription.h"
+#include "mmcore/Call.h"
+#include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/CallAutoDescription.h"
 
 namespace megamol {
 namespace protein {

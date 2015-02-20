@@ -9,10 +9,10 @@
 #define _USE_MATH_DEFINES
 
 #include "View3DMouse.h"
-#include "CallAutoDescription.h"
+#include "mmcore/CallAutoDescription.h"
 #include "CallMouseInput.h"
-#include "param/ButtonParam.h"
-#include "view/MouseFlags.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/view/MouseFlags.h"
 
 using namespace megamol;
 

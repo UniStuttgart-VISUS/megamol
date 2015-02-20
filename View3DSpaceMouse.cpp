@@ -2,9 +2,9 @@
 #include "View3DSpaceMouse.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/Cuboid.h"
-#include "param/FloatParam.h"
-#include "param/BoolParam.h"
-#include "param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 
 using namespace megamol::core;
 using namespace megamol::protein;

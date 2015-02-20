@@ -15,10 +15,10 @@
 
 #include "MolecularDataCall.h"
 #include "Color.h"
-#include "param/ParamSlot.h"
-#include "CallerSlot.h"
-#include "view/Renderer3DModuleDS.h"
-#include "view/AbstractCallRender3D.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/view/AbstractCallRender3D.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 #include "WKFUtils.h"

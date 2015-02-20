@@ -4,7 +4,7 @@
 #include "GlButton.h"
 #include "vislib/types.h"
 #include "vislib/Array.h"
-#include "view/MouseFlags.h"
+#include "mmcore/view/MouseFlags.h"
 
 GlWidgetLibrary::GlWidgetLibrary(void)
 : widgets(new vislib::Array<GlButton*>())

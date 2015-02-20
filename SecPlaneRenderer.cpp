@@ -15,11 +15,11 @@
 #include "ogl_error_check.h"
 //#include "vislib_vector_typedefs.h"
 
-#include "view/AbstractCallRender3D.h"
-#include "param/FloatParam.h"
-#include "param/BoolParam.h"
-#include "param/EnumParam.h"
-#include "CoreInstance.h"
+#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/CoreInstance.h"
 
 #include "vislib/sys/Log.h"
 

@@ -11,14 +11,14 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "Module.h"
-#include "CalleeSlot.h"
-#include "CallerSlot.h"
-#include "misc/BezierCurvesListDataCall.h"
+#include "mmcore/Module.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/misc/BezierCurvesListDataCall.h"
 #include "MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
-#include "param/ParamSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {

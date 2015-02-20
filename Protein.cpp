@@ -8,7 +8,7 @@
 #include "stdafx.h"
 
 #include "Protein.h"
-#include "api/MegaMolCore.std.h"
+#include "mmcore/api/MegaMolCore.std.h"
 
 // views
 #include "View3DSpaceMouse.h"
@@ -83,7 +83,7 @@
 
 // data interfaces (calls)
 #include "SolPathDataCall.h"
-#include "CallVolumeData.h"
+#include "mmcore/CallVolumeData.h"
 #include "CallColor.h"
 #include "MolecularDataCall.h"
 #include "SphereDataCall.h"
@@ -113,8 +113,8 @@
 #include "ProteinVariantMatch.h"
 #include "MultiParticleDataFilter.h"
 
-#include "CallAutoDescription.h"
-#include "ModuleAutoDescription.h"
+#include "mmcore/CallAutoDescription.h"
+#include "mmcore/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 
 #include "vislib/sys/Log.h"

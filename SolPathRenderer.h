@@ -10,12 +10,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "view/Renderer3DModule.h"
-#include "param/ParamSlot.h"
+#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "Call.h"
-#include "CallerSlot.h"
+#include "mmcore/Call.h"
+#include "mmcore/CallerSlot.h"
 
 
 namespace megamol {

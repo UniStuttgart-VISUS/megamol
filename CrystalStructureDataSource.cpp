@@ -12,11 +12,11 @@
 
 #include "CrystalStructureDataSource.h"
 #include "CrystalStructureDataCall.h"
-#include "param/FilePathParam.h"
-#include "param/IntParam.h"
-#include "param/FloatParam.h"
-#include "param/EnumParam.h"
-#include <moldyn/DirectionalParticleDataCall.h>
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/Vector.h"
 
