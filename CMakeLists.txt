@@ -108,8 +108,8 @@ target_link_libraries(MegaMolCore PRIVATE ${LIBS})
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
 install(TARGETS MegaMolCore DESTINATION "lib/megamol" EXPORT MegaMolCore-target)
 # Export the target to be used in the configuration file for find_package
-install(EXPORT MegaMolCore-target DESTINATION share/MegaMolCore)
-# Install configure script
+set(package_name "MegaMolCore")
+install(EXPORT MegaMolCore-target DESTINATION "share/cmake/${package_name}")
 set(cfg_MegaMolCore_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -119,10 +119,16 @@ set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
 configure_file(MegaMolCoreConfigInstall.cmake.in
 	${CMAKE_BINARY_DIR}/MegaMolCoreConfigInstall.cmake
 	@ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/MegaMolCoreConfigInstall.cmake DESTINATION share/MegaMolCore RENAME MegaMolCoreConfig.cmake)
+install(FILES ${CMAKE_BINARY_DIR}/MegaMolCoreConfigInstall.cmake DESTINATION "share/cmake/${package_name}" RENAME MegaMolCoreConfig.cmake)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamol/core/Shaders")
-# TODO: Add entry to the package registry
+set(package_install_dir "${CMAKE_INSTALL_PREFIX}/share/cmake/${package_name}")
+# Install search directory into the cmake package user registry
+include(${vislib_DIR}/cmake_package_register_utility.cmake)
+vislibutil_prepare_cmake_package_user_repository("${package_name}" "${package_install_dir}" package_registry_file package_user_registry)
+message(STATUS "Install will register ${package_registry_file} at ${package_user_registry}")
+install(FILES ${package_registry_file} DESTINATION ${package_user_registry})
 # TODO: Add or update megamol.cfg file (?)
+
 
 if (${register_build_trees})
 	# Export the build tree of this package. This makes it possible to include
