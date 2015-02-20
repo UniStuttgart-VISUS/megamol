@@ -29,7 +29,7 @@ endif()
 # compiler options
 add_definitions(-Wall -pedantic -ansi -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS})
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
-    message(STATUS "Version < 4.7")
+	message(STATUS "Version < 4.7")
 	add_definitions(-std=c++0x)
 else()
 	add_definitions(-std=c++11)
@@ -92,10 +92,16 @@ endif()
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
 install(TARGETS vislib DESTINATION "lib/vislib" EXPORT vislib-target)
 # Export the target to be used in the configuration file for find_package
-install(EXPORT vislib-target DESTINATION share/vislib)
-# Install configure script
-install(FILES vislibConfig.cmake DESTINATION share/vislib)
-# TODO: Add entry to the package registry
+set(package_name "vislib")
+install(EXPORT vislib-target DESTINATION "share/cmake/${package_name}")
+install(FILES vislibConfig.cmake DESTINATION "share/cmake/${package_name}")
+set(package_install_dir "${CMAKE_INSTALL_PREFIX}/share/cmake/${package_name}")
+# Install search directory into the cmake package user registry
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake_package_register_utility.cmake)
+vislibutil_prepare_cmake_package_user_repository("${package_name}" "${package_install_dir}" package_registry_file package_user_registry)
+message(STATUS "Install will register ${package_registry_file} at ${package_user_registry}")
+install(FILES ${package_registry_file} DESTINATION ${package_user_registry})
+
 
 if (${register_build_trees})
 	# Export the build tree of this package. This makes it possible to include

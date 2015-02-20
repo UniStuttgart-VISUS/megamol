@@ -4,7 +4,7 @@ project(ogltest)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
-find_package(vislib REQUIRED)
+find_package(vislib REQUIRED HINTS ${vislib_DIR})
 include_directories(${vislib_INCLUDE_DIRS})
 
 add_executable(ogltest ogltest.cpp)
