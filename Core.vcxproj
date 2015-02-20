@@ -470,6 +470,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\moldyn\MMPGDWriter.cpp" />
     <ClCompile Include="src\moldyn\MMPLDDataSource.cpp" />
     <ClCompile Include="src\moldyn\MMPLDWriter.cpp" />
+    <ClCompile Include="src\moldyn\MolecularDataCall.cpp" />
     <ClCompile Include="src\moldyn\MultiParticleDataCall.cpp" />
     <ClCompile Include="src\moldyn\NGSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\OracleSphereRenderer.cpp" />
@@ -712,6 +713,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\moldyn\MMPGDWriter.h" />
     <ClInclude Include="include\mmcore\moldyn\MMPLDDataSource.h" />
     <ClInclude Include="include\mmcore\moldyn\MMPLDWriter.h" />
+    <ClInclude Include="include\mmcore\moldyn\MolecularDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\MultiParticleDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\NGSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\OracleSphereRenderer.h" />

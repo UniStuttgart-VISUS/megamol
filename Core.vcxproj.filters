@@ -884,6 +884,9 @@
     <ClCompile Include="src\utility\plugins\PluginManager.cpp">
       <Filter>Source Files\utility\plugins</Filter>
     </ClCompile>
+    <ClCompile Include="src\moldyn\MolecularDataCall.cpp">
+      <Filter>Source Files\moldyn</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1521,6 +1524,9 @@
     </ClInclude>
     <ClInclude Include="src\utility\plugins\PluginManager.h">
       <Filter>Private Header Files\utility\plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\MolecularDataCall.h">
+      <Filter>Public Header Files\moldyn</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
