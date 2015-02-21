@@ -62,10 +62,11 @@ target_link_libraries(mmstd_moldyn PRIVATE ${LIBS})
 
 
 # Installation rules for generated files
+set(package_name "mmstd_moldyn")
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
 install(TARGETS mmstd_moldyn DESTINATION "lib/megamol" EXPORT mmstd_moldyn-target)
 # Export the target to be used in the configuration file for find_package
-install(EXPORT mmstd_moldyn-target DESTINATION share/mmstd_moldyn)
+install(EXPORT mmstd_moldyn-target DESTINATION share/cmake/${package_name})
 # Install configure script
 set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -75,9 +76,14 @@ set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
 configure_file(cmake/mmstd_moldynConfigInstall.cmake.in
 	${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake
 	@ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake DESTINATION share/mmstd_moldyn RENAME mmstd_moldynConfig.cmake)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamol/mmstd_moldyn/Shaders")
-# TODO: Add entry to the package registry
+install(FILES ${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake DESTINATION share/cmake/${package_name} RENAME mmstd_moldynConfig.cmake)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamol/${package_name}/Shaders")
+set(package_install_dir "${CMAKE_INSTALL_PREFIX}/share/cmake/${package_name}")
+# Install search directory into the cmake package user registry
+include(${vislib_DIR}/cmake_package_register_utility.cmake)
+vislibutil_prepare_cmake_package_user_repository("${package_name}" "${package_install_dir}" package_registry_file package_user_registry)
+message(STATUS "Install will register ${package_registry_file} at ${package_user_registry}")
+install(FILES ${package_registry_file} DESTINATION ${package_user_registry})
 # TODO: Add or update megamol.cfg file (?)
 
 if (${register_build_trees})

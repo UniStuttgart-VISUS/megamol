@@ -1,5 +1,5 @@
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-get_filename_component(ROOT_DIR "${SELF_DIR}/../../" ABSOLUTE)
+get_filename_component(ROOT_DIR "${SELF_DIR}/../../../" ABSOLUTE)
 
 include(${SELF_DIR}/mmstd_moldyn-target.cmake)
 
