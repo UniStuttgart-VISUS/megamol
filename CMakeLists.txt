@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(vislib)
 set(BUILDING_VISLIB_PROJECT 1)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 #find_package(OpenGL REQUIRED)
 set(CMAKE_THREAD_PREFER_PTHREAD)
@@ -95,13 +95,13 @@ install(TARGETS vislib DESTINATION "lib/vislib" EXPORT vislib-target)
 set(package_name "vislib")
 install(EXPORT vislib-target DESTINATION "share/cmake/${package_name}")
 install(FILES
-		vislibConfig.cmake
-		${CMAKE_CURRENT_SOURCE_DIR}/cmake_package_register_utility.cmake
+		cmake/vislibConfig.cmake
+		cmake/cmake_package_register_utility.cmake
 	DESTINATION
 		"share/cmake/${package_name}")
 set(package_install_dir "${CMAKE_INSTALL_PREFIX}/share/cmake/${package_name}")
 # Install search directory into the cmake package user registry
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake_package_register_utility.cmake)
+include(cmake/cmake_package_register_utility.cmake)
 vislibutil_prepare_cmake_package_user_repository("${package_name}" "${package_install_dir}" package_registry_file package_user_registry)
 message(STATUS "Install will register ${package_registry_file} at ${package_user_registry}")
 install(FILES ${package_registry_file} DESTINATION ${package_user_registry})
@@ -119,11 +119,11 @@ if (${register_build_trees})
 		set(cfg_CMAKE_BUILD_TYPE Release)
 	endif()
 	# Configure our local config script
-	configure_file(vislibConfigLocal.cmake.in
+	configure_file(cmake/vislibConfigLocal.cmake.in
 				${CMAKE_BINARY_DIR}/vislibConfig.cmake
 				@ONLY)
 	# Configure our local version script
-	configure_file(vislibConfigVersion.cmake.in
+	configure_file(cmake/vislibConfigVersion.cmake.in
 				${CMAKE_BINARY_DIR}/vislibConfigVersion.cmake
 				@ONLY)
 	export(TARGETS vislib FILE ${CMAKE_BINARY_DIR}/vislib-target.cmake)
