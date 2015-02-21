@@ -116,7 +116,7 @@ if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(cfg_CMAKE_BUILD_TYPE Release)
 endif()
 set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
-configure_file(MegaMolCoreConfigInstall.cmake.in
+configure_file(cmake/MegaMolCoreConfigInstall.cmake.in
 	${CMAKE_BINARY_DIR}/MegaMolCoreConfigInstall.cmake
 	@ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/MegaMolCoreConfigInstall.cmake DESTINATION "share/cmake/${package_name}" RENAME MegaMolCoreConfig.cmake)
@@ -144,11 +144,11 @@ if (${register_build_trees})
 	endif()
 	set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
 	# Configure our local config script
-	configure_file(MegaMolCoreConfigLocal.cmake.in
+	configure_file(cmake/MegaMolCoreConfigLocal.cmake.in
 		${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake
 		@ONLY)
 	# Configure our local version script
-	configure_file(MegaMolCoreConfigVersion.cmake.in
+	configure_file(cmake/MegaMolCoreConfigVersion.cmake.in
 		${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake
 		@ONLY)
 	export(TARGETS MegaMolCore FILE ${CMAKE_BINARY_DIR}/MegaMolCore-target.cmake)

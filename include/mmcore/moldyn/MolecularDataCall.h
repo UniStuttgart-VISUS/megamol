@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore\Call.h"
-#include "mmcore\AbstractGetData3DCall.h"
-#include "mmcore\CallAutoDescription.h"
+#include "mmcore/Call.h"
+#include "mmcore/AbstractGetData3DCall.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/math/Vector.h"
 #include "vislib/Array.h"
@@ -1539,7 +1539,7 @@ namespace moldyn {
     };
 
     /** Description class typedef */
-    typedef megamol::core::CallAutoDescription<MolecularDataCall> MolecularDataCallDescription;
+    typedef megamol::core::factories::CallAutoDescription<MolecularDataCall> MolecularDataCallDescription;
     
 
 
