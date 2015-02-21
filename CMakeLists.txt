@@ -72,7 +72,7 @@ if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(cfg_CMAKE_BUILD_TYPE Release)
 endif()
 set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
-configure_file(mmstd_moldynConfigInstall.cmake.in
+configure_file(cmake/mmstd_moldynConfigInstall.cmake.in
 	${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake
 	@ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake DESTINATION share/mmstd_moldyn RENAME mmstd_moldynConfig.cmake)
@@ -93,11 +93,11 @@ if (${register_build_trees})
 		set(cfg_CMAKE_BUILD_TYPE Release)
 	endif()
 	# Configure our local config script
-	configure_file(mmstd_moldynConfigLocal.cmake.in
+	configure_file(cmake/mmstd_moldynConfigLocal.cmake.in
 		${CMAKE_BINARY_DIR}/mmstd_moldynConfig.cmake
 		@ONLY)
 	# Configure our local version script
-	configure_file(mmstd_moldynConfigVersion.cmake.in
+	configure_file(cmake/mmstd_moldynConfigVersion.cmake.in
 		${CMAKE_BINARY_DIR}/mmstd_moldynConfigVersion.cmake
 		@ONLY)
 	export(TARGETS mmstd_moldyn FILE ${CMAKE_BINARY_DIR}/mmstd_moldyn-target.cmake)
