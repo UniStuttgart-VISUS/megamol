@@ -107,6 +107,7 @@ target_link_libraries(MegaMolCore PRIVATE ${LIBS})
 # Installation rules for generated files
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
 install(TARGETS MegaMolCore DESTINATION "lib/megamol" EXPORT MegaMolCore-target)
+install(FILES ${vislib_NEED_TO_COPY} DESTINATION "lib/megamol")
 # Export the target to be used in the configuration file for find_package
 set(package_name "MegaMolCore")
 install(EXPORT MegaMolCore-target DESTINATION "share/cmake/${package_name}")
