@@ -37,6 +37,7 @@ include_directories(${MegaMolCon_Viewer_DIR}/include)
 add_definitions(${MegaMolCon_common_definitions})
 
 # Target definition
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_library(MegaMolGlut SHARED ${header_files} ${source_files})
 # Set target naming conventions for different build types
 set_target_properties(MegaMolGlut PROPERTIES DEBUG_POSTFIX "d")

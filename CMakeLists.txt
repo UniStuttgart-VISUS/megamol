@@ -45,8 +45,8 @@ set(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
 
 # Adding subdirectories
 add_subdirectory(Viewer)
-add_subdirectory(Console)
 add_subdirectory(Glut)
+add_subdirectory(Console)
 
 # Specifying subproject dependencies
 add_dependencies(MegaMolGlut MegaMolCon_Viewer)

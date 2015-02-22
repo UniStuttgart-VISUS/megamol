@@ -37,6 +37,7 @@ add_definitions(${MegaMolCon_common_definitions})
 add_executable(MegaMolCon ${header_files} ${source_files})
 # Set target naming conventions for different build types
 set_target_properties(MegaMolCon PROPERTIES DEBUG_POSTFIX "d")
+set_target_properties(MegaMolCon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # Dependent projects only need to link against the core.so itself.
 target_link_libraries(MegaMolCon PRIVATE ${LIBS})
 add_dependencies(MegaMolCon MegaMolCon_CONSOLE_versioninfo)
