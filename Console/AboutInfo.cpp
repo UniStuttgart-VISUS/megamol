@@ -31,6 +31,9 @@ megamol::console::utility::AboutInfo::LibFileNameFormatString(void) {
         "lib"    // Linux
 #endif /* _WIN32 */
         "%s" // MEGAMOL_FILENAME_BITSD 
+#if !defined(_WIN32) && (defined(DEBUG) || defined(_DEBUG))
+	"d"
+#endif
         MEGAMOL_DLL_FILENAME_EXT;
 }
 
