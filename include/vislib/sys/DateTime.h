@@ -738,7 +738,7 @@ namespace sys {
          * @param ticks The ticks since 01.01.0001.
          * @param dowel Ignore this. Any data is acceptable
          */
-        inline DateTime(const INT64 value, const INT dowel) : ticks(ticks) {
+        inline DateTime(const INT64 value, const INT dowel) : ticks(value) {
             VLSTACKTRACE("DateTime::DateTime", __FILE__, __LINE__);
         }
 
