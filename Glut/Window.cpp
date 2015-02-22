@@ -352,7 +352,9 @@ void megamol::viewer::Window::glutReshapeCallback(int w, int h) {
             thisWindow()->height = h;
         }
         ::glViewport(0, 0, w, h);
-        unsigned int size[2] = { w, h };
+        unsigned int size[2] = {
+            static_cast<unsigned int>(w),
+            static_cast<unsigned int>(h) };
         thisWindow()->resizeCallback.Call(*thisWindow(), size);
 
     } catch(vislib::Exception ex) {
