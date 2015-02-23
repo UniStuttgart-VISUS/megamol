@@ -764,7 +764,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="MDDriverConnector.h" />
     <ClInclude Include="MolecularAOShader.h" />
     <ClInclude Include="MolecularBezierData.h" />
-    <ClInclude Include="MolecularDataCall.h" />
     <ClInclude Include="MoleculeBallifier.h" />
     <ClInclude Include="MolecularSurfaceFeature.h" />
     <ClInclude Include="MoleculeCartoonRenderer.h" />
