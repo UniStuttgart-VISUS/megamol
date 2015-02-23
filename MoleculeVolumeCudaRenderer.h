@@ -136,7 +136,7 @@ namespace protein {
         /**
          * Volume rendering using molecular data.
         */
-        bool RenderMolecularData( megamol::core::view::CallRender3D *call, MolecularDataCall *mol);
+        bool RenderMolecularData(megamol::core::view::CallRender3D *call, megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Refresh all parameters.
@@ -148,7 +148,7 @@ namespace protein {
          *
          * @param mol The data interface.
         */
-        void UpdateVolumeTexture( MolecularDataCall *mol);
+        void UpdateVolumeTexture(megamol::core::moldyn::MolecularDataCall *mol);
         
         /**
          * Draw the volume.

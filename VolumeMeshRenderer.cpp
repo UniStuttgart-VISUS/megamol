@@ -47,6 +47,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 using namespace megamol::protein;
 
 #define CUDA_VERIFY(call) CudaVerify(call, __LINE__)

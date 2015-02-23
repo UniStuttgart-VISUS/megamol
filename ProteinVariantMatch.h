@@ -205,14 +205,14 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool getRMSPosArray(MolecularDataCall *mol, HostArr<float> &posArr,
+    bool getRMSPosArray(megamol::core::moldyn::MolecularDataCall *mol, HostArr<float> &posArr,
             unsigned int &cnt);
 
 
     /**
      * TODO
      */
-    void getAtomPosArray(MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt);
+    void getAtomPosArray(megamol::core::moldyn::MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt);
 
     /**
      * Update parameters slots.

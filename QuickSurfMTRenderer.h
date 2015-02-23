@@ -97,7 +97,7 @@ namespace protein {
          *
          * @return 
          */
-        int calcMap(MolecularDataCall *mol, float *posInter,
+        int calcMap(megamol::core::moldyn::MolecularDataCall *mol, float *posInter,
                          int quality, float radscale, float gridspacing,
                          float isoval, bool useCol);
 
@@ -168,7 +168,7 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters( const MolecularDataCall *mol);
+        void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol);
 
 
         /**********************************************************************

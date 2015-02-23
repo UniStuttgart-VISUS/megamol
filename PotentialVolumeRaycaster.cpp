@@ -13,7 +13,7 @@
 // + Set max frame to min fram
 
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "PotentialVolumeRaycaster.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
@@ -47,6 +47,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 using namespace megamol::protein;
 
 

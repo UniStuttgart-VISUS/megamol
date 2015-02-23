@@ -110,17 +110,17 @@ namespace protein {
 		/**
 		 * Initialize CUDA
 		 */
-        bool initCuda( MolecularDataCall *mol, uint gridDim, core::view::CallRender3D *cr3d);
+        bool initCuda(megamol::core::moldyn::MolecularDataCall *mol, uint gridDim, core::view::CallRender3D *cr3d);
 
 		/**
 		 * Write atom positions and radii to an array for processing in CUDA
 		 */
-		void writeAtomPositions( const MolecularDataCall *mol);
+        void writeAtomPositions(const megamol::core::moldyn::MolecularDataCall *mol);
 
 		/**
 		 * Write atom positions and radii to a VBO for processing in CUDA
 		 */
-		void writeAtomPositionsVBO( MolecularDataCall *mol);
+		void writeAtomPositionsVBO(megamol::core::moldyn::MolecularDataCall *mol);
 
     private:
         
@@ -186,7 +186,7 @@ namespace protein {
          * TODO
          *
          */
-        void ContourBuildupCuda( MolecularDataCall *mol);
+        void ContourBuildupCuda(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * CPU version of contour buildup algorithm
@@ -194,14 +194,14 @@ namespace protein {
          * TODO
          *
          */
-        void ContourBuildupCPU( MolecularDataCall *mol);
+        void ContourBuildupCPU(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Update all parameter slots.
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters( const MolecularDataCall *mol);
+        void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol);
 
 		/**
 		 * Deinitialises this renderer. This is only called if there was a 
