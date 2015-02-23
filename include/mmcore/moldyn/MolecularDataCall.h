@@ -37,7 +37,7 @@ namespace moldyn {
      * compatible data source should therefore use the public nested class of
      */
 
-    class MolecularDataCall : public megamol::core::AbstractGetData3DCall {
+    class MEGAMOLCORE_API MolecularDataCall : public megamol::core::AbstractGetData3DCall {
     public:
 
         /**
