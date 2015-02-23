@@ -46,7 +46,7 @@ namespace moldyn {
          * Base class for all specific residues like amino acids, nucleic 
          * acids, lipids etc.
          */
-        class Residue {
+        class MEGAMOLCORE_API Residue {
         public:
             /** Residue types */
             enum ResidueType {
@@ -240,7 +240,7 @@ namespace moldyn {
         /**
          * Nested class describing one specific amino acid.
          */
-        class AminoAcid : public Residue {
+        class MEGAMOLCORE_API AminoAcid : public Residue {
         public:
 
             /** Default ctor initialising all fields to zero. */
@@ -400,7 +400,7 @@ namespace moldyn {
         /**
          * Nested class describing a molecule
          */
-        class Molecule {
+        class MEGAMOLCORE_API Molecule {
         public:
             /** ctor */
             Molecule();
@@ -593,7 +593,7 @@ namespace moldyn {
          * Nested class holding all information about one segment of a proteins
          * secondary structure.
          */
-        class SecStructure {
+        class MEGAMOLCORE_API SecStructure {
         public:
 
             /** possible types of secondary structure elements */
@@ -715,7 +715,7 @@ namespace moldyn {
         /**
          * Nested class describing a chain
          */
-        class Chain {
+        class MEGAMOLCORE_API Chain {
         public:
             /** Residue types */
             enum ChainType {
@@ -874,7 +874,7 @@ namespace moldyn {
         /**
          * Nested class holding all information about one atom type.
          */
-        class AtomType {
+        class MEGAMOLCORE_API AtomType {
         public:
 
             /**
