@@ -14,7 +14,7 @@
 #include "slicing.h"
 #include "CallProteinVolumeData.h"
 #include "Color.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -157,7 +157,7 @@ namespace protein {
 		/**
          * Volume rendering using molecular data.
 		*/
-		bool RenderMolecularData( megamol::core::view::CallRender3D *call, MolecularDataCall *mol);
+		bool RenderMolecularData(megamol::core::view::CallRender3D *call, megamol::core::moldyn::MolecularDataCall *mol);
 		
 		/**
          * Render the current mouse position on the clipping plane as a small sphere.
@@ -185,7 +185,7 @@ namespace protein {
 		 *
 		 * @param mol The data interface.
 		*/
-		void UpdateVolumeTexture( MolecularDataCall *mol);
+		void UpdateVolumeTexture(megamol::core::moldyn::MolecularDataCall *mol);
 		
 		/**
          * Draw the volume.

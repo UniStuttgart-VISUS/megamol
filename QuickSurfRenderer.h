@@ -13,7 +13,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"

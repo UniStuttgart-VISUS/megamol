@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 
 namespace megamol {
 namespace protein {
@@ -31,12 +31,12 @@ namespace protein {
          * Computes the AO Volume. The callee takes ownership of the returned 
 		 * volume (delete[] it!)
          */
-        float* createVolume(class MolecularDataCall& mol);
+		float* createVolume(class megamol::core::moldyn::MolecularDataCall& mol);
         /**
          * Computes the AO Volume. The callee takes ownership of the returned 
 		 * volume (delete[] it!)
          */
-        float* createVolumeDebug(class MolecularDataCall& mol);
+		float* createVolumeDebug(class megamol::core::moldyn::MolecularDataCall& mol);
 
 		/**
          * Gets the AO volume's size in voxels.

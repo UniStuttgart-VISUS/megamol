@@ -26,7 +26,7 @@
 #define BENCHMARK
 
 #include "VTIDataCall.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/Module.h"
 #include "DiagramCall.h"
 #include "VariantMatchDataCall.h"

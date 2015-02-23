@@ -10,7 +10,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "vislib/math/Quaternion.h"
 #include <vector>
 #include <set>
@@ -221,7 +221,7 @@ namespace protein {
          * @param mol Pointer to the MolecularDataCall.
          * @param probeRad The radius of the probe.
          */
-        ReducedSurface( MolecularDataCall *mol,
+		ReducedSurface(megamol::core::moldyn::MolecularDataCall *mol,
                              float probeRad = 1.4f);
 
         /**
@@ -233,7 +233,7 @@ namespace protein {
 		 * @param mol       Pointer to the MolecularDataCall.
 		 * @param probeRad  The radius of the probe.
 		 */
-        ReducedSurface( unsigned int molId, MolecularDataCall *mol, 
+		ReducedSurface(unsigned int molId, megamol::core::moldyn::MolecularDataCall *mol,
             float probeRad = 1.4f);
 		
 		/** dtor */
@@ -402,7 +402,7 @@ namespace protein {
 				
 	private:
 		// The pointer to the protein data interface
-        MolecularDataCall *molecule;
+		megamol::core::moldyn::MolecularDataCall *molecule;
 		
 		// Boolean flag for global (true) or single chain (false) computation
 		const bool globalRS;

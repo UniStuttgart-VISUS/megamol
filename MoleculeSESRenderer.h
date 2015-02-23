@@ -10,7 +10,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "BindingSiteCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -131,7 +131,7 @@ namespace protein {
          * @param protein The protein data interface.
          * @param scale The scale factor for the atom radius.
          */
-        void RenderAtomsGPU( const MolecularDataCall *mol,
+		void RenderAtomsGPU(const megamol::core::moldyn::MolecularDataCall *mol,
             const float scale = 1.0f);
 
         /**
@@ -187,14 +187,14 @@ namespace protein {
          *
          * @param protein Pointer to the protein data interface.
          */
-        void RenderSESGpuRaycasting( const MolecularDataCall *mol);
+		void RenderSESGpuRaycasting(const megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
          *
          * @param protein Pointer to the protein data interface.
          */
-        void RenderDebugStuff( const MolecularDataCall *mol);
+		void RenderDebugStuff(const megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Postprocessing: use screen space ambient occlusion
@@ -238,7 +238,7 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters( const MolecularDataCall *mol, const BindingSiteCall *bs = 0);
+		void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol, const BindingSiteCall *bs = 0);
 
         /**
          * The get capabilities callback. The module should set the members

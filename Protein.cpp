@@ -85,7 +85,7 @@
 #include "SolPathDataCall.h"
 #include "mmcore/CallVolumeData.h"
 #include "CallColor.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "SphereDataCall.h"
 #include "VolumeSliceCall.h"
 #include "Diagram2DCall.h"
@@ -280,7 +280,7 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
     switch (idx) {
         case 0: return new megamol::core::CallAutoDescription<megamol::protein::SolPathDataCall>();
         case 1: return new megamol::core::CallAutoDescription<megamol::protein::CallProteinVolumeData>();
-        case 2: return new megamol::core::CallAutoDescription<megamol::protein::MolecularDataCall>();
+		case 2: return new megamol::core::CallAutoDescription<megamol::core::moldyn::MolecularDataCall>();
         case 3: return new megamol::core::CallAutoDescription<megamol::protein::SphereDataCall>();
         case 4: return new megamol::core::CallAutoDescription<megamol::protein::VolumeSliceCall>();
         case 5: return new megamol::core::CallAutoDescription<megamol::protein::Diagram2DCall>();

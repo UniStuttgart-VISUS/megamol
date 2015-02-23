@@ -59,7 +59,7 @@ void Color::FillAminoAcidColorTable(
 /*
  * Color::GetModeByIndex
  */
-Color::ColoringMode Color::GetModeByIndex(const MolecularDataCall *mol,
+Color::ColoringMode Color::GetModeByIndex(const megamol::core::moldyn::MolecularDataCall *mol,
     unsigned int idx) {
 
     switch(idx) {
@@ -79,7 +79,7 @@ Color::ColoringMode Color::GetModeByIndex(const MolecularDataCall *mol,
 /*
  * Color::GetModeByIndex
  */
-Color::ColoringMode Color::GetModeByIndex(const MolecularDataCall *mol,
+Color::ColoringMode Color::GetModeByIndex(const megamol::core::moldyn::MolecularDataCall *mol,
         const BindingSiteCall *bs, unsigned int idx) {
     switch(idx) {
         case 0 : return ELEMENT;
@@ -125,7 +125,7 @@ std::string Color::GetName(Color::ColoringMode col) {
 /*
  * MakeColorTable routine for molecular data call
  */
-void Color::MakeColorTable( const MolecularDataCall *mol,
+void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
         ColoringMode currentColoringMode,
         vislib::Array<float> &atomColorTable,
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
@@ -234,7 +234,7 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                 atomColorTable.Add( colNone.Z());
             }
             // write colors for sec structure elements
-            MolecularDataCall::SecStructure::ElementType elemType;
+			megamol::core::moldyn::MolecularDataCall::SecStructure::ElementType elemType;
 
             for( cntSecS = 0; cntSecS < mol->SecondaryStructureCount();
                  ++cntSecS ) {
@@ -249,17 +249,17 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                     atomCnt = atomIdx + mol->Residues()[cntRes]->AtomCount();
                     for( cntAtom = atomIdx; cntAtom < atomCnt; ++cntAtom ) {
                         if( elemType ==
-                            MolecularDataCall::SecStructure::TYPE_HELIX ) {
+							megamol::core::moldyn::MolecularDataCall::SecStructure::TYPE_HELIX) {
                             atomColorTable[3*cntAtom+0] = colHelix.X();
                             atomColorTable[3*cntAtom+1] = colHelix.Y();
                             atomColorTable[3*cntAtom+2] = colHelix.Z();
                         } else if( elemType ==
-                            MolecularDataCall::SecStructure::TYPE_SHEET ) {
+							megamol::core::moldyn::MolecularDataCall::SecStructure::TYPE_SHEET) {
                             atomColorTable[3*cntAtom+0] = colSheet.X();
                             atomColorTable[3*cntAtom+1] = colSheet.Y();
                             atomColorTable[3*cntAtom+2] = colSheet.Z();
                         } else if( elemType ==
-                            MolecularDataCall::SecStructure::TYPE_COIL ) {
+							megamol::core::moldyn::MolecularDataCall::SecStructure::TYPE_COIL) {
                             atomColorTable[3*cntAtom+0] = colRCoil.X();
                             atomColorTable[3*cntAtom+1] = colRCoil.Y();
                             atomColorTable[3*cntAtom+2] = colRCoil.Z();
@@ -288,13 +288,13 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
             // temp color variable
             vislib::math::Vector<float, 3> col;
 
-            float min( mol->MinimumBFactor());
-            float max( mol->MaximumBFactor());
-            float mid( ( max - min)/2.0f + min );
+            float min_val( mol->MinimumBFactor());
+            float max_val( mol->MaximumBFactor());
+            float mid( ( max_val - min_val)/2.0f + min_val );
             float val;
 
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
-                if( min == max ) {
+                if( min_val == max_val ) {
                     atomColorTable.Add( colMid.GetX() );
                     atomColorTable.Add( colMid.GetY() );
                     atomColorTable.Add( colMid.GetZ() );
@@ -304,15 +304,15 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                 val = mol->AtomBFactors()[cnt];
                 // below middle value --> blend between min and mid color
                 if( val < mid ) {
-                    col = colMin + ( ( colMid - colMin ) / ( mid - min) ) *
-                        ( val - min );
+                    col = colMin + ( ( colMid - colMin ) / ( mid - min_val) ) *
+                        ( val - min_val );
                     atomColorTable.Add( col.GetX() );
                     atomColorTable.Add( col.GetY() );
                     atomColorTable.Add( col.GetZ() );
                 }
                 // above middle value --> blend between max and mid color
                 else if( val > mid ) {
-                    col = colMid + ( ( colMax - colMid ) / ( max - mid) ) *
+                    col = colMid + ( ( colMax - colMid ) / ( max_val - mid) ) *
                         ( val - mid );
                     atomColorTable.Add( col.GetX() );
                     atomColorTable.Add( col.GetY() );
@@ -346,13 +346,13 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
             // temp color variable
             vislib::math::Vector<float, 3> col;
 
-            float min( mol->MinimumCharge());
-            float max( mol->MaximumCharge());
-            float mid( ( max - min)/2.0f + min );
+            float min_val( mol->MinimumCharge());
+            float max_val( mol->MaximumCharge());
+            float mid( ( max_val - min_val)/2.0f + min_val );
             float val;
 
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
-                if( min == max ) {
+                if( min_val == max_val ) {
                     atomColorTable.Add( colMid.GetX() );
                     atomColorTable.Add( colMid.GetY() );
                     atomColorTable.Add( colMid.GetZ() );
@@ -362,15 +362,15 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                 val = mol->AtomCharges()[cnt];
                 // below middle value --> blend between min and mid color
                 if( val < mid ) {
-                    col = colMin + ( ( colMid - colMin ) / ( mid - min) ) *
-                        ( val - min );
+                    col = colMin + ( ( colMid - colMin ) / ( mid - min_val) ) *
+                        ( val - min_val );
                     atomColorTable.Add( col.GetX() );
                     atomColorTable.Add( col.GetY() );
                     atomColorTable.Add( col.GetZ() );
                 }
                 // above middle value --> blend between max and mid color
                 else if( val > mid ) {
-                    col = colMid + ( ( colMax - colMid ) / ( max - mid) ) *
+                    col = colMid + ( ( colMax - colMid ) / ( max_val - mid) ) *
                         ( val - mid );
                     atomColorTable.Add( col.GetX() );
                     atomColorTable.Add( col.GetY() );
@@ -404,13 +404,13 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
             // temp color variable
             vislib::math::Vector<float, 3> col;
 
-            float min( mol->MinimumOccupancy());
-            float max( mol->MaximumOccupancy());
-            float mid( ( max - min)/2.0f + min );
+            float min_val( mol->MinimumOccupancy());
+            float max_val( mol->MaximumOccupancy());
+            float mid( ( max_val - min_val)/2.0f + min_val );
             float val;
 
             for( cnt = 0; cnt < mol->AtomCount(); ++cnt ) {
-                if( min == max ) {
+                if( min_val == max_val ) {
                     atomColorTable.Add( colMid.GetX() );
                     atomColorTable.Add( colMid.GetY() );
                     atomColorTable.Add( colMid.GetZ() );
@@ -420,15 +420,15 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
                 val = mol->AtomOccupancies()[cnt];
                 // below middle value --> blend between min and mid color
                 if( val < mid ) {
-                    col = colMin + ( ( colMid - colMin ) / ( mid - min) ) *
-                        ( val - min );
+                    col = colMin + ( ( colMid - colMin ) / ( mid - min_val) ) *
+                        ( val - min_val );
                     atomColorTable.Add( col.GetX() );
                     atomColorTable.Add( col.GetY() );
                     atomColorTable.Add( col.GetZ() );
                 }
                 // above middle value --> blend between max and mid color
                 else if( val > mid ) {
-                    col = colMid + ( ( colMax - colMid ) / ( max - mid) ) *
+                    col = colMid + ( ( colMax - colMid ) / ( max_val - mid) ) *
                         ( val - mid );
                     atomColorTable.Add( col.GetX() );
                     atomColorTable.Add( col.GetY() );
@@ -567,7 +567,7 @@ void Color::MakeColorTable( const MolecularDataCall *mol,
  * MakeColorTable routine for molecular data call interpolating between two
  * colors
  */
-void Color::MakeColorTable(const MolecularDataCall *mol,
+void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
         ColoringMode cm0,
         ColoringMode cm1,
         float weight0,
@@ -619,8 +619,8 @@ void Color::MakeColorTable(const MolecularDataCall *mol,
     }
 }
 
-void Color::MakeComparisonColorTable(const MolecularDataCall *mol1,
-	const MolecularDataCall *mol2,
+void Color::MakeComparisonColorTable(const megamol::core::moldyn::MolecularDataCall *mol1,
+	const megamol::core::moldyn::MolecularDataCall *mol2,
 	ColoringMode currentColoringMode,
 	vislib::Array<float> &atomColorTable,
 	vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
@@ -675,18 +675,18 @@ void Color::MakeComparisonColorTable(const MolecularDataCall *mol1,
 			atomCnt = atomIdx + mol1->Residues()[cntRes]->AtomCount();
 			atomCnt2 = atomIdx2 + mol2->Residues()[cntRes]->AtomCount(); 
 
-			MolecularDataCall::AminoAcid * aminoacid1;
-			MolecularDataCall::AminoAcid * aminoacid2;
+			megamol::core::moldyn::MolecularDataCall::AminoAcid * aminoacid1;
+			megamol::core::moldyn::MolecularDataCall::AminoAcid * aminoacid2;
 
-			const MolecularDataCall::Residue* t1 = mol2->Residues()[cntRes];
+			const megamol::core::moldyn::MolecularDataCall::Residue* t1 = mol2->Residues()[cntRes];
 
 			if(t1 == NULL)
 				break;
 
-			if( mol1->Residues()[cntRes]->Identifier() == MolecularDataCall::Residue::AMINOACID
-				&& mol2->Residues()[cntRes]->Identifier() == MolecularDataCall::Residue::AMINOACID) {
-				aminoacid1 = (MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
-				aminoacid2 = (MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
+			if (mol1->Residues()[cntRes]->Identifier() == megamol::core::moldyn::MolecularDataCall::Residue::AMINOACID
+				&& mol2->Residues()[cntRes]->Identifier() == megamol::core::moldyn::MolecularDataCall::Residue::AMINOACID) {
+				aminoacid1 = (megamol::core::moldyn::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
+				aminoacid2 = (megamol::core::moldyn::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
 			} else {// TODO check if this is correct
 				continue;
 			}

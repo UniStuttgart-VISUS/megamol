@@ -37,6 +37,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::moldyn;
 
 
 /*
@@ -1632,9 +1633,9 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
                 continue;
             for( unsigned int j = 2; j < bSplineCoordsCPU[i].size()-1; j++ )
             {
-                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == protein::MolecularDataCall::SecStructure::TYPE_SHEET )
+                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_SHEET )
                     this->totalCountArrow++;
-                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == protein::MolecularDataCall::SecStructure::TYPE_HELIX )
+                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_HELIX )
                     this->totalCountHelix++;
                 else
                     this->totalCountTube++;
@@ -1730,10 +1731,10 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
                 else if( j == bSplineCoordsCPU[i].size()-2 )
                     start = 1.0f;
                 // set inParams --> set type and stretch factors of arrow head segments for the sheet
-                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == protein::MolecularDataCall::SecStructure::TYPE_SHEET )
+                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_SHEET )
                 {
                     type = 1.0f;
-                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg+1] != protein::MolecularDataCall::SecStructure::TYPE_SHEET )
+                    if( bSplineSecStruct[i][j/this->numberOfSplineSeg+1] != MolecularDataCall::SecStructure::TYPE_SHEET )
                     {
                         if(  j%this->numberOfSplineSeg == 0 )
                             end = 1.0f;
@@ -1741,7 +1742,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
                         f2 = 1.0f - float(j%this->numberOfSplineSeg)/float(this->numberOfSplineSeg-1)+0.2f;
                     }
                 }
-                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == protein::MolecularDataCall::SecStructure::TYPE_HELIX )
+                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_HELIX )
                     type = 2.0f;
                 else
                     type = 0.0f;
@@ -1811,7 +1812,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
                 // -----------------------------------
 
                 // store information in the apropriate arrays
-                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == protein::MolecularDataCall::SecStructure::TYPE_SHEET )
+                if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_SHEET )
                 {
                     this->vertArrow[counterArrow*3*16+0] = (v2 - dir1 + norm1*scale).GetX();
                     this->vertArrow[counterArrow*3*16+1] = (v2 - dir1 + norm1*scale).GetY();
@@ -1963,7 +1964,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
                     this->normalArrow[counterArrow*3*16+47] = (-dir2).GetZ();
                     counterArrow++;
                 }
-                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == protein::MolecularDataCall::SecStructure::TYPE_HELIX )
+                else if( bSplineSecStruct[i][j/this->numberOfSplineSeg] == MolecularDataCall::SecStructure::TYPE_HELIX )
                 {
                     this->vertHelix[counterHelix*3*16+0] = (v2 - dir1 + norm1*scale).GetX();
                     this->vertHelix[counterHelix*3*16+1] = (v2 - dir1 + norm1*scale).GetY();

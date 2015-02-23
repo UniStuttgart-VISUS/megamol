@@ -39,7 +39,7 @@ megamol::protein::AggregatedDensity::AggregatedDensity(void) :
     this->getZvelocitySlot.SetCallback("CallVolumeData", "getExtent", &AggregatedDensity::getExtentCallback);
     this->MakeSlotAvailable(&this->getZvelocitySlot);
 
-    this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
+	this->molDataCallerSlot.SetCompatibleCall<megamol::core::moldyn::MolecularDataCallDescription>();
     this->MakeSlotAvailable (&this->molDataCallerSlot);
 
 	pdbfilename="K.pdb";
@@ -157,7 +157,7 @@ bool megamol::protein::AggregatedDensity::getExtentCallback(megamol::core::Call&
 }
 
 bool megamol::protein::AggregatedDensity::aggregate() {
-	MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+	megamol::core::moldyn::MolecularDataCall *mol = this->molDataCallerSlot.CallAs<megamol::core::moldyn::MolecularDataCall>();
     if(!mol) {
         return false;
     }   
@@ -167,7 +167,7 @@ bool megamol::protein::AggregatedDensity::aggregate() {
     // set frame ID and call data
     mol->SetFrameID(0);
 
-    if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+	if (!(*mol)(megamol::core::moldyn::MolecularDataCall::CallForGetData)) return false;
 
 // this number must remain constant!
 	unsigned int n_atoms = mol->AtomCount();
@@ -178,7 +178,7 @@ bool megamol::protein::AggregatedDensity::aggregate() {
 
 	for (unsigned int frame=0; frame < mol->FrameCount(); frame++) {
 		mol->SetFrameID(frame);
-        if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+		if (!(*mol)(megamol::core::moldyn::MolecularDataCall::CallForGetData)) return false;
 		if (mol->AtomCount()!=n_atoms) {
 			delete[] pos0, vel;
 			return false;

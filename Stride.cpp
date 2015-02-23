@@ -9,9 +9,10 @@
 
 
 using namespace megamol::protein;
+using namespace megamol::core::moldyn;
 
 
-Stride::Stride( megamol::protein::MolecularDataCall *mol) :
+Stride::Stride( MolecularDataCall *mol) :
         Successful( false )
 {
 	// set protein chain count to zero
@@ -93,7 +94,7 @@ void Stride::FreeHBond(HBOND *h) {
 	free( h );
 }
 
-void Stride::GetChains( megamol::protein::MolecularDataCall *mol) {
+void Stride::GetChains(MolecularDataCall *mol) {
 	int ChainCnt;
 	int cntCha, cntRes, cntAtm, idx, cnt, chain;
 	int atomCount, firstAtom;

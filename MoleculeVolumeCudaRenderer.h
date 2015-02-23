@@ -15,7 +15,7 @@
 
 #include "slicing.h"
 #include "Color.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"

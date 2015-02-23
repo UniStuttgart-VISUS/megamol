@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "MolecularAOShader.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include <omp.h>
 #include <algorithm>
 
@@ -78,7 +78,7 @@ void MolecularAOShader::setGenerationFactor(float genFac)
 /*
  * MolecularAOShader::createVolume
  */
-float* MolecularAOShader::createVolume(class MolecularDataCall& mol)
+float* MolecularAOShader::createVolume(class megamol::core::moldyn::MolecularDataCall& mol)
 {
     int sx = this->volSizeX - 2;
     int sy = this->volSizeY - 2;
@@ -142,7 +142,7 @@ float* MolecularAOShader::createVolume(class MolecularDataCall& mol)
 /*
  * MolecularAOShader::createVolumeDebug
  */
-float* MolecularAOShader::createVolumeDebug(class MolecularDataCall& mol)
+float* MolecularAOShader::createVolumeDebug(class megamol::core::moldyn::MolecularDataCall& mol)
 {
     int sx = this->volSizeX - 2;
     int sy = this->volSizeY - 2;

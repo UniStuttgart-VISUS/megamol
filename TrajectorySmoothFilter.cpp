@@ -19,7 +19,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
@@ -29,6 +29,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::moldyn;
 
 
 /*
