@@ -254,12 +254,13 @@ unsigned int CallTriMeshData::Material::loadTexture(vislib::TString &filename) {
  */
 CallTriMeshData::Mesh::Mesh(void) : triCnt(0), triDT(DT_NONE), /*tri(NULL), */triMemOwned(false),
         vrtCnt(0), vrtDT(DT_NONE), /*vrt(NULL), */nrmDT(DT_NONE), /*nrm(NULL), */
-        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vrtMemOwned(false), mat(NULL) {
+        colDT(DT_NONE), /*col(NULL), */texDT(DT_NONE), /*tex(NULL), */vattDT(DT_NONE), vrtMemOwned(false), mat(NULL) {
     this->tri.dataByte = NULL;
     this->vrt.dataFloat = NULL;
     this->nrm.dataFloat = NULL;
     this->col.dataByte = NULL;
     this->tex.dataFloat = NULL;
+    this->vatt.dataUInt32 = NULL;
 }
 
 
@@ -311,6 +312,9 @@ CallTriMeshData::Mesh& CallTriMeshData::Mesh::operator=(const CallTriMeshData::M
     this->texDT = rhs.texDT;
     this->tex.dataFloat = rhs.tex.dataFloat;
 
+    this->vattDT = rhs.vattDT;
+    this->vatt.dataUInt32 = rhs.vatt.dataUInt32;
+
     this->mat = rhs.mat;
 
     return *this;
@@ -328,6 +332,8 @@ bool CallTriMeshData::Mesh::operator==(const CallTriMeshData::Mesh& rhs) const {
         && (this->nrmDT == rhs.nrmDT)
         && (this->tex.dataFloat == rhs.tex.dataFloat)
         && (this->texDT == rhs.texDT)
+        && (this->vatt.dataUInt32 == rhs.vatt.dataUInt32)
+        && (this->vattDT == rhs.vattDT)
         && (this->tri.dataByte == rhs.tri.dataByte)
         && (this->triDT == rhs.triDT)
         && (this->triCnt == rhs.triCnt)
@@ -389,9 +395,15 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
         }
         if (this->tex.dataFloat != NULL) {
             switch (this->texDT) {
-                case DT_FLOAT: delete[] this->tex.dataFloat; break;
-                case DT_DOUBLE: delete[] this->tex.dataDouble; break;
-                default: ASSERT(false);
+            case DT_FLOAT: delete[] this->tex.dataFloat; break;
+            case DT_DOUBLE: delete[] this->tex.dataDouble; break;
+            default: ASSERT(false);
+            }
+        }
+        if (this->vatt.dataUInt32 != NULL) {
+            switch (this->vattDT) {
+            case DT_UINT32: delete[] this->vatt.dataUInt32; break;
+            default: ASSERT(false);
             }
         }
     }
@@ -403,6 +415,8 @@ void CallTriMeshData::Mesh::clearVrtData(void) {
     this->col.dataByte = NULL;
     this->texDT = DT_NONE;
     this->tex.dataFloat = NULL;
+    this->vattDT = DT_NONE;
+    this->vatt.dataUInt32 = NULL;
 }
 
 /****************************************************************************/

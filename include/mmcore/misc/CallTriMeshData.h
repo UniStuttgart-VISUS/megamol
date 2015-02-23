@@ -639,6 +639,34 @@ namespace misc {
             }
 
             /**
+            * Answer the data type for vertex attrib
+            *
+            * @return The data type for vertex attrib
+            */
+            inline DataType GetVertexAttribDataType(void) const {
+                return this->vattDT;
+            }
+
+            /**
+            * Answer if vertex attrib data has been set to non-null
+            *
+            * @return True if vertex attrib data is present
+            */
+            inline bool HasVertexAttribPointer(void) const {
+                return this->vatt.dataUInt32 != NULL;
+            }
+
+            /**
+            * Gets vertex attrib
+            *
+            * @return vertex attrib
+            */
+            inline const unsigned int * GetVertexAttribPointerUInt32(void) const {
+                ASSERT(this->vattDT == DT_UINT32);
+                return this->vatt.dataUInt32;
+            }
+
+            /**
              * Gets The material
              *
              * @return The material
@@ -672,24 +700,24 @@ namespace misc {
             }
 
             /**
-             * Sets the vertex data
-             *
-             * @param cnt The number of vertices
-             * @param vertices Pointer to 3 times cnt floats holding the vertices; Must not be NULL
-             * @param normals Pointer to 3 times cnt floats holding the normal vectors
-             * @param colours Pointer to 3 times cnt unsigned bytes holding the colours
-             * @param textureCoordinates Pointer to 2 times cnt float holding the texture coordinates
-             * @param takeOwnership If true the object will take ownership of
-             *                      all the memory of the pointers provided
-             *                      and will free the memory on its
-             *                      destruction. Otherwise the caller must
-             *                      ensure the memory stays valid as long as
-             *                      it is used.
-             */
+            * Sets the vertex data
+            *
+            * @param cnt The number of vertices
+            * @param vertices Pointer to 3 times cnt floats holding the vertices; Must not be NULL
+            * @param normals Pointer to 3 times cnt floats holding the normal vectors
+            * @param colours Pointer to 3 times cnt unsigned bytes holding the colours
+            * @param textureCoordinates Pointer to 2 times cnt float holding the texture coordinates
+            * @param takeOwnership If true the object will take ownership of
+            *                      all the memory of the pointers provided
+            *                      and will free the memory on its
+            *                      destruction. Otherwise the caller must
+            *                      ensure the memory stays valid as long as
+            *                      it is used.
+            */
             template<class Tp1, class Tp2, class Tp3, class Tp4>
             inline void SetVertexData(unsigned int cnt,
-                    Tp1 vertices, Tp2 normals, Tp3 colours, Tp4 textureCoordinates,
-                    bool takeOwnership) {
+                Tp1 vertices, Tp2 normals, Tp3 colours, Tp4 textureCoordinates,
+                bool takeOwnership) {
                 this->clearVrtData();
                 this->vrtCnt = cnt;
                 if (cnt > 0) {
@@ -698,6 +726,40 @@ namespace misc {
                     this->setNrmData(normals);
                     this->setColData(colours);
                     this->setTexData(textureCoordinates);
+                    this->setVertexAttribData(NULL);
+                    this->vrtMemOwned = takeOwnership;
+                }
+            }
+
+            /**
+            * Sets the vertex data
+            *
+            * @param cnt The number of vertices
+            * @param vertices Pointer to 3 times cnt floats holding the vertices; Must not be NULL
+            * @param normals Pointer to 3 times cnt floats holding the normal vectors
+            * @param colours Pointer to 3 times cnt unsigned bytes holding the colours
+            * @param textureCoordinates Pointer to 2 times cnt float holding the texture coordinates
+            * @param vertexAttribute Pointer to cnt insigned int holding the per-vertex attribute
+            * @param takeOwnership If true the object will take ownership of
+            *                      all the memory of the pointers provided
+            *                      and will free the memory on its
+            *                      destruction. Otherwise the caller must
+            *                      ensure the memory stays valid as long as
+            *                      it is used.
+            */
+            template<class Tp1, class Tp2, class Tp3, class Tp4, class Tp5>
+            inline void SetVertexData(unsigned int cnt,
+                Tp1 vertices, Tp2 normals, Tp3 colours, Tp4 textureCoordinates,
+                Tp5 vertexAttribute, bool takeOwnership) {
+                this->clearVrtData();
+                this->vrtCnt = cnt;
+                if (cnt > 0) {
+                    ASSERT(vertices != NULL);
+                    this->setVrtData(vertices);
+                    this->setNrmData(normals);
+                    this->setColData(colours);
+                    this->setTexData(textureCoordinates);
+                    this->setVertexAttribData(vertexAttribute);
                     this->vrtMemOwned = takeOwnership;
                 }
             }
@@ -924,6 +986,28 @@ namespace misc {
                 this->tex.dataDouble = NULL;
             }
 
+            /**
+            * Sets the triangle data pointer
+            *
+            * @param v The new pointer value
+            */
+            inline void setVertexAttribData(unsigned int *v) {
+                this->vattDT = DT_UINT32;
+                this->vatt.dataUInt32 = v;
+            }
+
+            /**
+            * Sets the triangle data pointer
+            *
+            * @param v The new pointer value
+            */
+            template<class Tp>
+            inline void setVertexAttribData(Tp v) {
+                ASSERT(v == NULL);
+                this->vattDT = DT_NONE;
+                this->vatt.dataUInt32 = NULL;
+            }
+
             /** Triangle count (ignored if t is NULL) */
             unsigned int triCnt;
 
@@ -982,6 +1066,14 @@ namespace misc {
                 float * dataFloat;
                 double * dataDouble;
             } tex;
+
+            /** The vertex attrob data type */
+            DataType vattDT;
+
+            /** Vertex attrib data */
+            union _vatt_t {
+                unsigned int * dataUInt32;
+            } vatt;
 
             /**
              * Flag indicating the if the vertex data memory is owned by this
