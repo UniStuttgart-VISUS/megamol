@@ -8,7 +8,7 @@
 //     Author: scharnkn
 //
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "VTIWriter.h"
 #include "VTIDataCall.h"
 #include "Base64.h"

@@ -9,7 +9,7 @@
 //
 
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "VBODataCall.h"
 
 using namespace megamol;

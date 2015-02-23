@@ -8,7 +8,7 @@
 //     Author: scharnkn
 //
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "VariantMatchDataCall.h"
 
 using namespace megamol;
