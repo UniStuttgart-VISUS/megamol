@@ -42,6 +42,7 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
+using namespace megamol::core::moldyn;
 using namespace megamol::protein;
 
 // 99 75 0

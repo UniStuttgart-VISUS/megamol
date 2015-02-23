@@ -31,6 +31,7 @@
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "ResidueSelectionCall.h"
+#include "mmcore\moldyn\MolecularDataCall.h"
 
 namespace megamol {
 namespace protein {
@@ -137,7 +138,7 @@ namespace protein {
          *
          * @return 
          */
-        int calcMap(MolecularDataCall *mol, float *posInter,
+        int calcMap(megamol::core::moldyn::MolecularDataCall *mol, float *posInter,
                          int quality, float radscale, float gridspacing,
                          float isoval, bool useCol);
 
@@ -181,7 +182,7 @@ namespace protein {
         bool UpdateMesh(float* densityMap, 
             vislib::math::Vector<float, 3> translation, 
             vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, 
-            MolecularDataCall *mol, int* neighborMap);
+            megamol::core::moldyn::MolecularDataCall *mol, int* neighborMap);
 
         /**
          *
@@ -191,7 +192,7 @@ namespace protein {
         /**
          *
          */
-        void ParameterRefresh( const MolecularDataCall *mol, const BindingSiteCall *bs = 0);
+        void ParameterRefresh(const megamol::core::moldyn::MolecularDataCall *mol, const BindingSiteCall *bs = 0);
         
         /**
          *

@@ -105,7 +105,7 @@ namespace protein {
          * Renders all atoms using GPU ray casting and write atom ID to red color channel.
          * @param protein The protein call.
          */
-        void RenderAtomIdGPU( MolecularDataCall *protein);
+        void RenderAtomIdGPU(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Create the FBO for visibility test.
@@ -123,25 +123,25 @@ namespace protein {
          * Find all visible atoms
          * @param protein The protein call.
          */
-        void FindVisibleAtoms( MolecularDataCall *protein);
+        void FindVisibleAtoms(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Find for each visible atom all atoms that are in the proximity.
          * @param protein The protein call.
          */
-        void ComputeVisibleAtomsVicinityTable( MolecularDataCall *protein);
+        void ComputeVisibleAtomsVicinityTable(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Use CUDA to find for each visible atom all atoms that are in the neighborhood.
          * @param protein The protein call.
          */
-        void ComputeVicinityTableCUDA( MolecularDataCall *protein);
+        void ComputeVicinityTableCUDA(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Compute the Reduced Surface using the Fragment Shader.
          * @param protein The protein call.
          */
-        void ComputeRSFragShader( MolecularDataCall *protein);
+        void ComputeRSFragShader(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Creates the FBO for reduced surface triangle generation.
@@ -159,13 +159,13 @@ namespace protein {
          * Render all potential RS-faces as triangles using a vertex shader.
          * @param protein The protein call.
          */
-        void RenderTriangles( MolecularDataCall *protein);
+        void RenderTriangles(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Find all visible triangles (i.e. visible RS-faces).
          * @param protein The protein call.
          */
-        void FindVisibleTriangles( MolecularDataCall *protein);
+        void FindVisibleTriangles(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Create fbo for adjacent triangles of visible triangles
@@ -178,50 +178,50 @@ namespace protein {
          * Find the adjacent triangles to all visible triangles.
          * @param protein The protein call.
          */
-        void FindAdjacentTriangles( MolecularDataCall *protein);
+        void FindAdjacentTriangles(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Find the adjacent triangles to all visible triangles.
          * @param mol The molecular data call.
          */
-        void FindAdjacentTrianglesCUDA( MolecularDataCall *mol);
+        void FindAdjacentTrianglesCUDA(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Create the VBO for transform feedback.
          */
-        void CreateTransformFeedbackVBO( MolecularDataCall *mol);
+        void CreateTransformFeedbackVBO(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Find all intersecting probes for each probe and create the singularity texture.
          * @param mol The molecular data call.
          * @param numProbes The number of RS-faces (i.e. probes in fixed positions).
          */
-        void CreateSingularityTextureCuda( MolecularDataCall *mol, unsigned int numProbes);
+        void CreateSingularityTextureCuda(megamol::core::moldyn::MolecularDataCall *mol, unsigned int numProbes);
 
         /**
          * Render the SES using GPU ray casting.
          * @param mol The molecular data call.
          * @param primitiveCount The number of primitives.
          */
-        void RenderSESCuda( MolecularDataCall *mol, unsigned int primitiveCount);
+        void RenderSESCuda(megamol::core::moldyn::MolecularDataCall *mol, unsigned int primitiveCount);
 
         /**
          * Render all visible atoms using GPU ray casting.
          * @param protein The protein call.
          */
-        void RenderVisibleAtomsGPU( MolecularDataCall *protein);
+        void RenderVisibleAtomsGPU(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Mark all atoms which are vertices of adjacent triangles as visible
          */
-        void MarkAdjacentAtoms( MolecularDataCall *protein);
+        void MarkAdjacentAtoms(megamol::core::moldyn::MolecularDataCall *protein);
 
         /**
          * Mark all atoms which are vertices of adjacent triangles as visible
          *
          * @param mol The molecular data call.
          */
-        void MarkAdjacentAtomsCUDA( MolecularDataCall *mol);
+        void MarkAdjacentAtomsCUDA(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Initialize CUDA
@@ -230,12 +230,12 @@ namespace protein {
          * @param cr3d Pointer to the render call.
          * @return 'true' if initialization was successful, otherwise 'false'
          */
-        bool initCuda( MolecularDataCall *protein, uint gridDim, core::view::CallRender3D *cr3d);
+        bool initCuda(megamol::core::moldyn::MolecularDataCall *protein, uint gridDim, core::view::CallRender3D *cr3d);
 
         /**
          * Write atom positions and radii to an array for processing in CUDA
          */
-        void writeAtomPositions( MolecularDataCall *protein );
+        void writeAtomPositions(megamol::core::moldyn::MolecularDataCall *protein );
 
     private:
         
@@ -279,38 +279,38 @@ namespace protein {
          *
          * @param mol The molecular data call.
          */
-        void ComputeRSCuda( MolecularDataCall *mol);
+        void ComputeRSCuda(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Find all visible triangles (i.e. visible RS-faces).
          * @param mol The molecular call.
          */
-        void FindVisibleTrianglesCuda( MolecularDataCall *mol);
+        void FindVisibleTrianglesCuda(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Render all potential RS-faces as triangles.
          * @param mol The protein call.
          */
-        void RenderTrianglesCuda( MolecularDataCall *mol);
+        void RenderTrianglesCuda(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Render all potential RS-faces as triangles.
          * @param mol The protein call.
          */
-        void RenderTrianglesCuda2( MolecularDataCall *mol);
+        void RenderTrianglesCuda2(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Render all visible RS-faces as triangles.
          * @param mol The protein call.
          */
-        void RenderVisibleTrianglesCuda( MolecularDataCall *mol);
+        void RenderVisibleTrianglesCuda(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**
          * Create geometric primitives for ray casting.
          * @param mol The molecular data call.
          * @return The number of primitives which were read back.
          */
-        unsigned int CreateGeometricPrimitivesCuda( MolecularDataCall *mol);
+        unsigned int CreateGeometricPrimitivesCuda(megamol::core::moldyn::MolecularDataCall *mol);
 
         /**********************************************************************
          * variables

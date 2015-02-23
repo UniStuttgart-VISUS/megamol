@@ -10,6 +10,8 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#define _USE_MATH_DEFINES
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +26,7 @@
 namespace megamol {
 namespace protein {	
 
-#define Pi                        3.1415927
+#define Pi                        M_PI
 #define Eps                       0.000001
 #define Minimum(x,y)              ((x)<(y) ? x : y)
 #define Maximum(x,y)              ((x)<(y) ? y : x)

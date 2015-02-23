@@ -84,7 +84,7 @@ protected:
      * @param mol The data call containing the particles
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDensityMap(const MolecularDataCall *mol);
+    bool computeDensityMap(const megamol::core::moldyn::MolecularDataCall *mol);
 
     /**
      * Implementation of 'create'.

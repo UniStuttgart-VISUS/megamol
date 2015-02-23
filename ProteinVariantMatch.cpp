@@ -55,6 +55,7 @@
 using namespace megamol;
 using namespace megamol::protein;
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 
 // TODO Make diagram renderer react to singleFrame-parameter
 

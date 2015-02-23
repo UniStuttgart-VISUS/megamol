@@ -172,7 +172,7 @@ protected:
      */
     bool computeDensityMap(
             const float *atomPos,
-            const MolecularDataCall *mol,
+            const megamol::core::moldyn::MolecularDataCall *mol,
             CUDAQuickSurf *cqs);
 
     /**
@@ -192,7 +192,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool fitMoleculeRMS(MolecularDataCall *mol1, MolecularDataCall *mol2);
+    bool fitMoleculeRMS(megamol::core::moldyn::MolecularDataCall *mol1, megamol::core::moldyn::MolecularDataCall *mol2);
 
     /**
      * The get capabilities callback. The module should set the members

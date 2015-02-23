@@ -10,7 +10,7 @@
 #define SFB_DEMO // Disable everything that is unnecessary and slows down the rendering
 
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "CrystalStructureVolumeRenderer.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
