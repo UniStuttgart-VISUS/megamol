@@ -887,6 +887,9 @@
     <ClCompile Include="src\moldyn\MolecularDataCall.cpp">
       <Filter>Source Files\moldyn</Filter>
     </ClCompile>
+    <ClCompile Include="src\misc\CallTriMeshData.cpp">
+      <Filter>Source Files\misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1527,6 +1530,9 @@
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MolecularDataCall.h">
       <Filter>Public Header Files\moldyn</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\misc\CallTriMeshData.h">
+      <Filter>Public Header Files\misc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -440,6 +440,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\MegaMolCoreConfiguratorBackdoor.cpp" />
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="src\misc\CalloutImageCall.cpp" />
+    <ClCompile Include="src\misc\CallTriMeshData.cpp" />
     <ClCompile Include="src\misc\ImageViewer.cpp" />
     <ClCompile Include="src\misc\LinesDataCall.cpp" />
     <ClCompile Include="src\misc\LinesRenderer.cpp" />
@@ -680,6 +681,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\job\JobThread.h" />
     <ClInclude Include="include\mmcore\misc\BezierCurvesListDataCall.h" />
     <ClInclude Include="include\mmcore\misc\CalloutImageCall.h" />
+    <ClInclude Include="include\mmcore\misc\CallTriMeshData.h" />
     <ClInclude Include="include\mmcore\misc\ImageViewer.h" />
     <ClInclude Include="include\mmcore\misc\LinesDataCall.h" />
     <ClInclude Include="include\mmcore\misc\LinesRenderer.h" />

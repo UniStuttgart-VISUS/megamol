@@ -39,6 +39,7 @@
 #include "mmcore/view/Call6DofInteraction.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
+#include "mmcore/misc/CallTriMeshData.h"
 
 
 using namespace megamol::core;
@@ -79,4 +80,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<view::Call6DofInteraction>();
     instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
     instance.RegisterAutoDescription<moldyn::MolecularDataCall>();
+    instance.RegisterAutoDescription<misc::CallTriMeshData>();
 }
