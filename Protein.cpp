@@ -85,7 +85,6 @@
 #include "SolPathDataCall.h"
 #include "mmcore/CallVolumeData.h"
 #include "CallColor.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
 #include "SphereDataCall.h"
 #include "VolumeSliceCall.h"
 #include "Diagram2DCall.h"
@@ -269,7 +268,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 20;
+    return 19;
 }
 
 
@@ -280,24 +279,23 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
     switch (idx) {
         case 0: return new megamol::core::CallAutoDescription<megamol::protein::SolPathDataCall>();
         case 1: return new megamol::core::CallAutoDescription<megamol::protein::CallProteinVolumeData>();
-		case 2: return new megamol::core::CallAutoDescription<megamol::core::moldyn::MolecularDataCall>();
-        case 3: return new megamol::core::CallAutoDescription<megamol::protein::SphereDataCall>();
-        case 4: return new megamol::core::CallAutoDescription<megamol::protein::VolumeSliceCall>();
-        case 5: return new megamol::core::CallAutoDescription<megamol::protein::Diagram2DCall>();
-        case 6: return new megamol::core::CallAutoDescription<megamol::protein::ParticleDataCall>();
-        case 7: return new megamol::core::CallAutoDescription<megamol::protein::ForceDataCall>();
-        case 8: return new megamol::core::CallAutoDescription<megamol::protein::CallMouseInput>();
-        case 9: return new megamol::core::CallAutoDescription<megamol::protein::DiagramCall>();
-        case 10: return new megamol::core::CallAutoDescription<megamol::protein::SplitMergeCall>();
-        case 11: return new megamol::core::CallAutoDescription<megamol::protein::IntSelectionCall>();
-        case 12: return new megamol::core::CallAutoDescription<megamol::protein::ResidueSelectionCall>();
-        case 13: return new megamol::core::CallAutoDescription<megamol::protein::CrystalStructureDataCall>();
-        case 14: return new megamol::core::CallAutoDescription<megamol::protein::BindingSiteCall>();
-        case 15: return new megamol::core::CallAutoDescription<megamol::protein::VTIDataCall>();
-        case 16: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
-        case 17: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
-        case 18: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
-		case 19: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
+        case 2: return new megamol::core::CallAutoDescription<megamol::protein::SphereDataCall>();
+        case 3: return new megamol::core::CallAutoDescription<megamol::protein::VolumeSliceCall>();
+        case 4: return new megamol::core::CallAutoDescription<megamol::protein::Diagram2DCall>();
+        case 5: return new megamol::core::CallAutoDescription<megamol::protein::ParticleDataCall>();
+        case 6: return new megamol::core::CallAutoDescription<megamol::protein::ForceDataCall>();
+        case 7: return new megamol::core::CallAutoDescription<megamol::protein::CallMouseInput>();
+        case 8: return new megamol::core::CallAutoDescription<megamol::protein::DiagramCall>();
+        case 9: return new megamol::core::CallAutoDescription<megamol::protein::SplitMergeCall>();
+        case 10: return new megamol::core::CallAutoDescription<megamol::protein::IntSelectionCall>();
+        case 11: return new megamol::core::CallAutoDescription<megamol::protein::ResidueSelectionCall>();
+        case 12: return new megamol::core::CallAutoDescription<megamol::protein::CrystalStructureDataCall>();
+        case 13: return new megamol::core::CallAutoDescription<megamol::protein::BindingSiteCall>();
+        case 14: return new megamol::core::CallAutoDescription<megamol::protein::VTIDataCall>();
+        case 15: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
+        case 16: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
+        case 17: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
+		case 18: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
         default: return NULL;
     }
     return NULL;
