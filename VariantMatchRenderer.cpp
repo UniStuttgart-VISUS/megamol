@@ -8,7 +8,7 @@
 //     Author: scharnkn
 //
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "VariantMatchRenderer.h"
 #include "VariantMatchDataCall.h"
 #include "ogl_error_check.h"

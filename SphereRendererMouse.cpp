@@ -5,7 +5,7 @@
 // All rights reserved.
 //
 
-#include <stdafx.h>
+#include "stdafx.h"
 
 #define _USE_MATH_DEFINES
 #include "SphereRendererMouse.h"

@@ -9,7 +9,7 @@
 //
 
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "SurfacePotentialRendererSlave.h"
 #include "VBODataCall.h"
 #include "ogl_error_check.h"
