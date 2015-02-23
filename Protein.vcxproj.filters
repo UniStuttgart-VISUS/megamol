@@ -432,9 +432,6 @@
     <ClInclude Include="GridNeighbourFinder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MolecularDataCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MoleculeCartoonRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
