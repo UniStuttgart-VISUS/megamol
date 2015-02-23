@@ -15,7 +15,7 @@
 #include "CallColor.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
 
@@ -115,7 +115,7 @@ public:
       * @param forceRecompute      Force recomputation of the color table.
       * @param bs                  The binding site data call.
       */
-     void MakeColorTable(const MolecularDataCall *mol,
+	 void MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
 		ColoringMode cm0,
         ColoringMode cm1,
         vislib::Array<float> &atomColorTable,
@@ -141,7 +141,7 @@ public:
       * @param forceRecompute      Force recomputation of the color table.
       * @param bs                  The binding site data call.
       */
-     void MakeColorTable(const MolecularDataCall *mol,
+	 void MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
 		ColoringMode currentColoringMode,
         vislib::Array<float> &atomColorTable,
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
@@ -164,7 +164,7 @@ public:
       * @param forceRecompute      Force recomputation of the color table.
       * @param bs                  The binding site data call.
       */
-	 void MakeComparisonColorTable(MolecularDataCall *mol1,
+	 void MakeComparisonColorTable(megamol::core::moldyn::MolecularDataCall *mol1,
 		ColoringMode currentColoringMode,
 		vislib::Array<float> &atomColorTable,
 		vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,

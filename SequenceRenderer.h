@@ -18,7 +18,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "BindingSiteCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #ifdef USE_SIMPLE_FONT
@@ -98,7 +98,7 @@ namespace protein {
          * @param mol The molecular data call.
          * @return true if preparation was successful, false otherwise
          */
-        bool PrepareData( MolecularDataCall *mol, BindingSiteCall *bs);
+		bool PrepareData(megamol::core::moldyn::MolecularDataCall *mol, BindingSiteCall *bs);
         
         /**
          * TODO
@@ -206,7 +206,7 @@ namespace protein {
         // the index of the residue
         vislib::Array<unsigned int> resIndex;
         // the secondary structure element type of the residue
-        vislib::Array<MolecularDataCall::SecStructure::ElementType> resSecStructType;
+		vislib::Array<megamol::core::moldyn::MolecularDataCall::SecStructure::ElementType> resSecStructType;
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
         

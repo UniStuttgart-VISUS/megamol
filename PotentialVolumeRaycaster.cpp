@@ -19,7 +19,7 @@
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
 #include "VTIDataCall.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
 #include "slicing.h"
 #include "cuda_error_check.h"

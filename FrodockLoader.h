@@ -22,7 +22,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Cuboid.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "Stride.h"
 #include "vislib/net/Socket.h"
 #include "vislib/RawStorage.h"
@@ -175,7 +175,7 @@ namespace protein {
          * @param solIdx The solution index.
          * @return 'true' if the solution could be applied, 'false' otherwise.
          */
-        bool applySolution( const MolecularDataCall *ligand, unsigned int solIdx);
+		bool applySolution(const megamol::core::moldyn::MolecularDataCall *ligand, unsigned int solIdx);
 
         // -------------------- variables --------------------
 

@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "BindingSiteCall.h"
 #include <string>
 
@@ -58,7 +58,7 @@ namespace protein {
          *
          * @return The coloring mode.
          */
-        static Color::ColoringMode GetModeByIndex(const MolecularDataCall *mol,
+		static Color::ColoringMode GetModeByIndex(const megamol::core::moldyn::MolecularDataCall *mol,
             unsigned int idx);
 
         /**
@@ -70,7 +70,7 @@ namespace protein {
          *
          * @return The coloring mode.
          */
-        static Color::ColoringMode GetModeByIndex(const MolecularDataCall *mol,
+		static Color::ColoringMode GetModeByIndex(const megamol::core::moldyn::MolecularDataCall *mol,
             const BindingSiteCall *bs, unsigned int idx);
 
         /**
@@ -89,7 +89,7 @@ namespace protein {
          *
          * @return The number of coloring modes.
          */
-        static unsigned int GetNumOfColoringModes(const MolecularDataCall *mol) {
+		static unsigned int GetNumOfColoringModes(const megamol::core::moldyn::MolecularDataCall *mol) {
             return 9;
         }
 
@@ -100,7 +100,7 @@ namespace protein {
          *
          * @return The number of coloring modes.
          */
-        static unsigned int GetNumOfColoringModes(const MolecularDataCall *mol, const BindingSiteCall *bs) {
+		static unsigned int GetNumOfColoringModes(const megamol::core::moldyn::MolecularDataCall *mol, const BindingSiteCall *bs) {
             return 10;
         }
 
@@ -125,7 +125,7 @@ namespace protein {
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
          */
-        static void MakeColorTable(const MolecularDataCall *mol,
+		static void MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
             ColoringMode cm0,
             ColoringMode cm1,
             float weight0,
@@ -157,7 +157,7 @@ namespace protein {
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
          */
-        static void MakeColorTable(const MolecularDataCall *mol,
+		static void MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
             ColoringMode currentColoringMode,
             vislib::Array<float> &atomColorTable,
             vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
@@ -187,8 +187,8 @@ namespace protein {
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
          */
-		static void MakeComparisonColorTable(const MolecularDataCall *mol1,
-			const MolecularDataCall *mol2,
+		static void MakeComparisonColorTable(const megamol::core::moldyn::MolecularDataCall *mol1,
+			const megamol::core::moldyn::MolecularDataCall *mol2,
 			ColoringMode currentColoringMode,
 			vislib::Array<float> &atomColorTable,
 			vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,

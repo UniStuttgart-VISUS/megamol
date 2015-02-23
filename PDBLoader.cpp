@@ -31,6 +31,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::moldyn;
 
 #define SOLVENT_CHAIN_IDENTIFIER 127
 

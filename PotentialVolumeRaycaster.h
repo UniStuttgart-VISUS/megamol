@@ -21,7 +21,7 @@
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/view/CallRender3D.h"
 #include "VTIDataCall.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "CUDAMarchingCubes.h"
 #include "slicing.h"
 #include <GL/glu.h>

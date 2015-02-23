@@ -15,7 +15,7 @@
 #undef max
 #include "VolumeMeshRenderer.h"
 #include "IntSelectionCall.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"

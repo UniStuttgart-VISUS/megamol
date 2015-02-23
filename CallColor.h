@@ -13,7 +13,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CallAutoDescription.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "BindingSiteCall.h"
 
 namespace megamol {
@@ -98,7 +98,7 @@ public:
 	  *
 	  *	@param mol1 The MolecularDataCall of the protein
 	  */
-	 void SetColoringTarget(MolecularDataCall *mol1) {
+	 void SetColoringTarget(megamol::core::moldyn::MolecularDataCall *mol1) {
 		 this->mol1 = mol1;
 	 }
 
@@ -108,7 +108,7 @@ public:
 	  *
 	  * @return The MolecularDataCall containing the protein.
 	  */
-	 MolecularDataCall* GetColoringTarget() {
+	 megamol::core::moldyn::MolecularDataCall* GetColoringTarget() {
 		 return this->mol1;
 	 }
 
@@ -306,7 +306,7 @@ private:
 	vislib::Array<vislib::math::Vector< float, 3> > * rainbowColors;
 
 	/** The protein that the color table is computed for*/
-	MolecularDataCall * mol1;
+	megamol::core::moldyn::MolecularDataCall * mol1;
 	
 	/** The binding site call*/
 	const BindingSiteCall * bs;

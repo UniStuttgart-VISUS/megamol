@@ -22,7 +22,7 @@
 #include "vislib/Array.h"
 #include "HostArr.h"
 #include "DiagramCall.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"

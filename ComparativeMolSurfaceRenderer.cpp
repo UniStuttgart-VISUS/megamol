@@ -18,7 +18,7 @@
 
 #include "VBODataCall.h"
 #include "VTIDataCall.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "RMS.h"
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"

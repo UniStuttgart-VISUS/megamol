@@ -10,7 +10,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "vislib/math/Quaternion.h"
 #include <vector>
 #include <set>
@@ -39,7 +39,7 @@ namespace protein {
 			 * @param inter Pointer to the protein data interface.
 			 * @param chId ID of the chain.
 			 */
-			SimplifiedChain( MolecularDataCall *inter,
+			SimplifiedChain(megamol::core::moldyn::MolecularDataCall *inter,
 								  unsigned int chId);
 			/** dtor */
 			virtual ~SimplifiedChain();
@@ -65,7 +65,7 @@ namespace protein {
 			void Init();
 		private:
 			/** the protein data interface */
-			MolecularDataCall *protein;
+			megamol::core::moldyn::MolecularDataCall *protein;
 			/** the chain ID */
 			unsigned int chainId;
 			/** null vector in R^3 */
@@ -284,7 +284,7 @@ namespace protein {
 		 * @param prot Pointer to the MolecularDataCall.
 		 * @param probeRad The radius of the probe.
 		 */
-		ReducedSurfaceSimplified( MolecularDataCall *prot,
+		ReducedSurfaceSimplified(megamol::core::moldyn::MolecularDataCall *prot,
 							 float probeRad = 1.4f);
 		
 		/** dtor */
@@ -456,7 +456,7 @@ namespace protein {
 				
 	private:
 		// The pointer to the protein data interface
-		MolecularDataCall *protein;
+		megamol::core::moldyn::MolecularDataCall *protein;
 		
 		std::vector<SimplifiedChain*> simpleChain;
 		

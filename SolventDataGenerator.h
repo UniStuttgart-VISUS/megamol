@@ -18,7 +18,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "Stride.h"
 #include "mmcore/view/AnimDataModule.h"
 #include <fstream>
@@ -94,26 +94,26 @@ namespace protein {
 		/**
 		 * for now just calculate the arithmetic average positions of each atom ...
 		 */
-		void calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst);
+		void calcSpatialProbabilities(megamol::core::moldyn::MolecularDataCall *src, megamol::core::moldyn::MolecularDataCall *dst);
 
 		/**
 		 * Get the hydrogen bonds for the current frameID of 'dataSource' and store the result in 'dataTarget'.
 		 * The hydrogen-bonds may be already precomputed (in core or file-IO) so this function won't take much time.
 		 */
-		bool getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource);
+		bool getHBonds(megamol::core::moldyn::MolecularDataCall *dataTarget, megamol::core::moldyn::MolecularDataCall *dataSource);
 
 		/**
 		 * calculate hydrogen-bonds with a neighbor-search of possible donors/acceptors and check for connected hydrogens ...
 		 */
-		void calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr);
-		inline void calcHydroBondsForCurFrame(MolecularDataCall *data, int *atomHydroBondsIndicesPtr) {
+		void calcHydroBondsForCurFrame(megamol::core::moldyn::MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr);
+		inline void calcHydroBondsForCurFrame(megamol::core::moldyn::MolecularDataCall *data, int *atomHydroBondsIndicesPtr) {
 			calcHydroBondsForCurFrame(data, data->AtomPositions(), atomHydroBondsIndicesPtr);
 		}
 
 		/**
 		 * create hydrogen-bond statistics for the polymer atoms ...
 		 */
-		bool calcHydrogenBondStatistics(MolecularDataCall *dataTarget, MolecularDataCall *dataSource);
+		bool calcHydrogenBondStatistics(megamol::core::moldyn::MolecularDataCall *dataTarget, megamol::core::moldyn::MolecularDataCall *dataSource);
 
 		/**
          * Implementation of 'Release'.
@@ -125,7 +125,7 @@ namespace protein {
         /**
          * Helper class to unlock frame data.
          */
-        class Unlocker : public MolecularDataCall::Unlocker {
+		class Unlocker : public megamol::core::moldyn::MolecularDataCall::Unlocker {
         public:
 
             /**
@@ -134,7 +134,7 @@ namespace protein {
              * @param mol The molecular data call whos 'Unlock'-method is to be 
              *            called.
              */
-            Unlocker(MolecularDataCall& mol) : MolecularDataCall::Unlocker(),
+			Unlocker(megamol::core::moldyn::MolecularDataCall& mol) : megamol::core::moldyn::MolecularDataCall::Unlocker(),
                 mol(&mol){
                 // intentionally empty
             }
@@ -151,7 +151,7 @@ namespace protein {
             
         private:
         
-            MolecularDataCall *mol;
+			megamol::core::moldyn::MolecularDataCall *mol;
 
         };        
         

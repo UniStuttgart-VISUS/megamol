@@ -12,7 +12,7 @@
 
 #include "stdafx.h"
 #include "PotentialCalculator.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "VTIDataCall.h"
 #include "VTKImageData.h"
 //#include "vislib_vector_typedefs.h"
@@ -33,6 +33,7 @@
 
 using namespace megamol;
 using namespace megamol::protein;
+using namespace megamol::core::moldyn;
 
 typedef unsigned int uint;
 

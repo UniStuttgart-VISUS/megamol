@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "BindingSiteCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "BSpline.h"
@@ -208,40 +208,40 @@ namespace protein {
          *
          * @param prot The data interface.
          */
-        void RenderCartoonHybrid( const MolecularDataCall *mol, float* atomPos);
+		void RenderCartoonHybrid(const megamol::core::moldyn::MolecularDataCall *mol, float* atomPos);
         
         /**
          * Render protein in CPU CARTOON mode using OpenGL primitives.
          *
          * @param prot The data interface.
          */
-        void RenderCartoonCPU( const MolecularDataCall *mol, float* atomPos);
+		void RenderCartoonCPU(const megamol::core::moldyn::MolecularDataCall *mol, float* atomPos);
 
         /**
          * Render protein in CPU CARTOON mode using OpenGL lines.
          *
          * @param prot The data interface.
          */
-        void RenderCartoonLineCPU( const MolecularDataCall *mol, float* atomPos);
+		void RenderCartoonLineCPU(const megamol::core::moldyn::MolecularDataCall *mol, float* atomPos);
 
          /**
          * Render protein in GPU CARTOON mode using OpenGL primitives.
          *
          * @param prot The data interface.
          */
-        void RenderCartoonGPU( const MolecularDataCall *mol, float* atomPos);
+		void RenderCartoonGPU(const megamol::core::moldyn::MolecularDataCall *mol, float* atomPos);
 
         /**
         * Render protein in GPU CARTOON mode using OpenGL primitives.
         *
         * @param prot The data interface.
         */
-       void RenderCartoonGPUTubeOnly( const MolecularDataCall *mol, float* atomPos);
+		void RenderCartoonGPUTubeOnly(const megamol::core::moldyn::MolecularDataCall *mol, float* atomPos);
 
         /**
          * Render the molecular data in stick mode.
          */
-        void RenderStick( const MolecularDataCall *mol, const float *atomPos, const BindingSiteCall *bs = NULL);
+		void RenderStick(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos, const BindingSiteCall *bs = NULL);
 
          /**
           * Recompute all values.
@@ -257,7 +257,7 @@ namespace protein {
 		 *	@param frameID The current frame id used for the data call.
 		 *	@param bs Pointer to the binding site call.
          */
-		 void UpdateParameters( MolecularDataCall *mol, unsigned int frameID, const BindingSiteCall * bs = 0);
+		 void UpdateParameters(megamol::core::moldyn::MolecularDataCall *mol, unsigned int frameID, const BindingSiteCall * bs = 0);
 
         /**********************************************************************
          * variables
