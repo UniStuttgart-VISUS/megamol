@@ -1,9 +1,9 @@
 #
 # VISlib
-# Copyright (C) 2015 by Sebastian Grottel
+# Copyright (C) 2015 by VISlib Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(vislib)
 set(BUILDING_VISLIB_PROJECT 1)
