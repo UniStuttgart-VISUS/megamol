@@ -3,7 +3,7 @@
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(mmstd_moldyn)
 
