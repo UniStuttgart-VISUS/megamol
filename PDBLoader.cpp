@@ -1887,6 +1887,9 @@ bool PDBLoader::IsAminoAcid( vislib::StringA resName ) {
  * reset all data containers.
  */
 void PDBLoader::resetAllData() {
+    // stop frame-loading thread before clearing data array
+    resetFrameCache();
+
     unsigned int cnt;
     //this->data.Clear();
     this->atomTypeIdx.Clear();
