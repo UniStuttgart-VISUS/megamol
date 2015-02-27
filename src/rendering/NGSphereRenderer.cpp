@@ -19,7 +19,7 @@
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
 #define MAP_BUFFER_LOCALLY
-//#define DEBUG_BLAHBLAH
+#define DEBUG_BLAHBLAH
 
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
@@ -101,10 +101,11 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
 	sphereShader(), bufSize(32 * 1024 * 1024), currBuf(0), numBuffers(3),
 	fences(),
-    bufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
-	bufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
-	singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-	singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
+	// this variant should not need the fence
+	//singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
+	//singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
+	singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
+    singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)  {
 
 	fences.resize(numBuffers);
 }
@@ -135,19 +136,6 @@ void NGSphereRenderer::waitSingle(GLsync& syncObj) {
 	}
 }
 
-void NGSphereRenderer::checkFences(void) {
-	// fixme
-	for (int i(0); i < 2; ++i) {
-        if (fences[i] > 0) {
-		    while (glClientWaitSync(fences[i], GL_SYNC_FLUSH_COMMANDS_BIT, 0) == GL_TIMEOUT_EXPIRED) {
-			    // zzzzz
-		    }
-		    glDeleteSync(fences[i]);
-            fences[i] = 0;
-        }
-	}
-}
-
 
 /*
  * moldyn::SimpleSphereRenderer::create
@@ -156,7 +144,6 @@ bool NGSphereRenderer::create(void) {
 #ifdef DEBUG_BLAHBLAH
     glDebugMessageCallback(MyFunkyDebugCallback, NULL);
 #endif
-
     vislib::graphics::gl::ShaderSource vert, frag;
 
     if (!instance()->ShaderSourceFactory().MakeShaderSource("NGsphere::vertex", vert)) {
@@ -195,21 +182,11 @@ bool NGSphereRenderer::create(void) {
 
     glGenVertexArrays(1, &this->vertArray);
     glBindVertexArray(this->vertArray);
-    //glGenBuffers(2, this->theBuffers);
-    //glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[0]);
-    //glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
-    //glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[1]);
-    //glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
 	glBindBuffer(GL_ARRAY_BUFFER, this->theSingleBuffer);
 	glBufferStorage(GL_ARRAY_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
 	this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-#ifndef MAP_BUFFER_LOCALLY
-    mappedMem[0] = glMapNamedBufferRangeEXT(this->theBuffers[0], 0, this->bufSize, bufferMappingBits);
-    mappedMem[1] = glMapNamedBufferRangeEXT(this->theBuffers[1], 0, this->bufSize, bufferMappingBits);
-#endif
 
     return AbstractSimpleSphereRenderer::create();
 }
@@ -219,12 +196,13 @@ bool NGSphereRenderer::create(void) {
  * moldyn::SimpleSphereRenderer::release
  */
 void NGSphereRenderer::release(void) {
-#ifndef MAP_BUFFER_LOCALLY
-    glUnmapNamedBufferEXT(this->theBuffers[0]);
-    glUnmapNamedBufferEXT(this->theBuffers[1]);
-#endif
+	glUnmapNamedBufferEXT(this->theSingleBuffer);
+	for (auto &x : fences) {
+		if (x) {
+			glDeleteSync(x);
+		}
+	}
     this->sphereShader.Release();
-    //glDeleteBuffers(2, this->theBuffers);
     glDeleteVertexArrays(1, &this->vertArray);
     AbstractSimpleSphereRenderer::release();
 }
@@ -310,7 +288,6 @@ bool NGSphereRenderer::Render(Call& call) {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
-
     view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
@@ -346,15 +323,8 @@ bool NGSphereRenderer::Render(Call& call) {
     glScalef(scaling, scaling, scaling);
 
     colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
-
-	// check fences from last frame
-#ifndef MAP_BUFFER_LOCALLY
-    checkFences();
-#endif
-
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
-
 
         unsigned int colBytes = 0, vertBytes = 0;
         switch (parts.GetColourDataType()) {
@@ -402,7 +372,6 @@ bool NGSphereRenderer::Render(Call& call) {
         unsigned int vertStride = parts.GetVertexDataStride();
         vertStride = vertStride < vertBytes ? vertBytes : vertStride;
         UINT64 numVerts, vertCounter;
-
         // does all data reside interleaved in the same memory?
         if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) 
                 - reinterpret_cast<const ptrdiff_t>(parts.GetVertexData()) <= vertStride
@@ -417,30 +386,21 @@ bool NGSphereRenderer::Render(Call& call) {
                         currCol = colStride == 0 ? currVert : currCol;
                         const char *whence = currVert < currCol ? currVert : currCol;
                         UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
-
 						this->waitSingle(fences[currBuf]);
-#ifdef MAP_BUFFER_LOCALLY
-                        //this->mappedMem[currBuf] = glMapNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride, bufferMappingBits);
-#else
-                        checkFences();
-#endif
-                        //memcpy(this->mappedMem[currBuf], whence, vertsThisTime * vertStride);
-                        //GL_VERIFY_THROW(glFlushMappedNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride));
+						vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 4\n");
 						memcpy(mem, whence, vertsThisTime * vertStride);
-						//glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
+						vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 5\n");
+						glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
+						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 6\n");
                         //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-#ifdef MAP_BUFFER_LOCALLY
-                        //glUnmapNamedBufferEXT(this->theBuffers[currBuf]);
-#endif
-                        //this->setPointers(parts, vb, reinterpret_cast<const void *>(currVert - whence), vb, reinterpret_cast<const void *>(currCol - whence));
 						this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
-                        glDrawArrays(GL_POINTS, (this->bufSize * currBuf) / vertStride, vertsThisTime);
+						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 7\n");
+                        glDrawArrays(GL_POINTS, numVerts * currBuf, vertsThisTime);
+						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 8\n");
 						this->lockSingle(fences[currBuf]);
-						// http://www.opengl.org/wiki/Sync_Object
-#ifndef MAP_BUFFER_LOCALLY
-						fences[currBuf] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-#endif
-                        currBuf = (currBuf + 1) % this->numBuffers;
+						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 9\n");
+
+						currBuf = (currBuf + 1) % this->numBuffers;
                         vertCounter += vertsThisTime;
                         currVert += vertsThisTime * vertStride;
                         currCol += vertsThisTime * colStride;
@@ -449,7 +409,6 @@ bool NGSphereRenderer::Render(Call& call) {
 
         }
 
-        //glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_VERTEX_ARRAY);

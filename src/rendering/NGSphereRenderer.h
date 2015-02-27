@@ -99,8 +99,6 @@ namespace rendering {
 
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 
-        void checkFences();
-
 		void lockSingle(GLsync& syncObj);
 		void waitSingle(GLsync& syncObj);
 
@@ -108,17 +106,13 @@ namespace rendering {
         vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
-        //GLuint theBuffers[2];
         std::vector<GLsync> fences;
 		GLuint theSingleBuffer;
         unsigned int currBuf;
         GLuint colIdxAttribLoc;
         GLsizeiptr bufSize;
 		int numBuffers;
-        //void *mappedMem[2];
 		void *theSingleMappedMem;
-        GLuint bufferCreationBits;
-        GLuint bufferMappingBits;
 		GLuint singleBufferCreationBits;
 		GLuint singleBufferMappingBits;
 
