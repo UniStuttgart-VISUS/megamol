@@ -17,6 +17,7 @@
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
+#include "vislib/macro_utils.h"
 
 
 namespace megamol {
@@ -377,9 +378,11 @@ namespace misc {
             float Ke[3];
 
             /** colour texture map file */
+            VISLIB_MSVC_SUPPRESS_WARNING(4251)
             mutable vislib::TString mapFileName;
 
             /** bump/normal texture map file */
+            VISLIB_MSVC_SUPPRESS_WARNING(4251)
             mutable vislib::TString bumpMapFileName;
 
             /** OpenGL texture object ID for colour texture */

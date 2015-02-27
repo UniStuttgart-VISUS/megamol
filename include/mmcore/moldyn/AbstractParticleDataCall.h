@@ -11,6 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
@@ -28,7 +29,7 @@ namespace moldyn {
      * template parameter T is the particle class
      */
     template<class T>
-    class AbstractParticleDataCall : public AbstractGetData3DCall {
+    class MEGAMOLCORE_API AbstractParticleDataCall : public AbstractGetData3DCall {
     public:
 
         /**

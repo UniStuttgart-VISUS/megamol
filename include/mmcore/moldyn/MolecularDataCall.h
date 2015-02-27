@@ -18,6 +18,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
+#include "vislib/macro_utils.h"
 #include <vector>
 
 namespace megamol {
@@ -221,6 +222,7 @@ namespace moldyn {
             unsigned int firstAtomIdx;
 
             /** The bouding box surrounding all the atoms in this residue */
+            VISLIB_MSVC_SUPPRESS_WARNING(4251)
             vislib::math::Cuboid<float> boundingBox;
 
             /** The index of the type of the residue */
@@ -991,6 +993,7 @@ namespace moldyn {
             unsigned char col[3];
 
             /** The name of the atom type. */
+            VISLIB_MSVC_SUPPRESS_WARNING(4251)
             vislib::StringA name;
 
             /** The radius of atoms of this type. */
@@ -1492,6 +1495,7 @@ namespace moldyn {
         unsigned int molCount;
 
         /** The array of secondary structures */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
         vislib::Array<SecStructure> secStruct;
 
         /** The array of chains. */
