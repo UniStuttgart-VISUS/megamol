@@ -3,7 +3,7 @@
 # configure.win.pl
 # MegaMol Core
 #
-# Copyright (C) 2008-2010 by VISUS (Universitaet Stuttgart).
+# Copyright (C) 2008-2015 by VISUS (Universitaet Stuttgart).
 # Alle Rechte vorbehalten.
 #
 use Cwd qw{abs_path};
@@ -105,10 +105,20 @@ $a = PathParameter->new();
     $a->dependencyFlagID("mpi");
     $a->dependencyDisabledValue("");
     push @pps, $a;
+$a = FlagParameter->new();
+    $a->id("buildd3d");
+    $a->placeholder("buildd3d");
+    $a->description("enable Direct3D support - requires DXSDK with shader compiler!");
+    $a->value(0);
+    push @fps, $a;
 
 $c = ConfigFilePair->new();
     $c->inFile("ExtLibs.props.input");
     $c->outFile("ExtLibs.props");
+    push @cfps, $c;
+$c = ConfigFilePair->new();
+    $c->inFile("D3D.props.input");
+    $c->outFile("D3D.props");
     push @cfps, $c;
 
 VISUS::configperl::Configure("MegaMol(TM) Core Configuration for Windows", ".megamol.core.win.cache", \@pps, \@fps, \@cfps, \@sps, \@ARGV);

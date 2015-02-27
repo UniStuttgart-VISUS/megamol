@@ -56,6 +56,7 @@
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi32.props" />
     <Import Project="vislib.props" />
+    <Import Project="D3D.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -64,6 +65,7 @@
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi32.props" />
     <Import Project="vislib.props" />
+    <Import Project="D3D.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -72,6 +74,7 @@
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi64.props" />
     <Import Project="vislib.props" />
+    <Import Project="D3D.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -80,6 +83,7 @@
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi64.props" />
     <Import Project="vislib.props" />
+    <Import Project="D3D.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -133,7 +137,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -177,7 +181,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -217,7 +221,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -260,7 +264,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(PngPath)\include;$(ZlibPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;MEGAMOLCORE_WITH_DIRECT3D11;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLCORE_EXPORTS;$(MpiEnabled);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -473,7 +477,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\moldyn\MMPLDWriter.cpp" />
     <ClCompile Include="src\moldyn\MolecularDataCall.cpp" />
     <ClCompile Include="src\moldyn\MultiParticleDataCall.cpp" />
-    <ClCompile Include="src\moldyn\NGSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\OracleSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\ParticleGridDataCall.cpp" />
     <ClCompile Include="src\moldyn\ParticleListFilter.cpp" />
@@ -717,7 +720,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\moldyn\MMPLDWriter.h" />
     <ClInclude Include="include\mmcore\moldyn\MolecularDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\MultiParticleDataCall.h" />
-    <ClInclude Include="include\mmcore\moldyn\NGSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\OracleSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\ParticleGridDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\ParticleListFilter.h" />
