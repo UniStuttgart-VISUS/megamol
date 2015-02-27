@@ -19,6 +19,7 @@
 #include "io/SIFFWriter.h"
 #include "io/VIMDataSource.h"
 #include "io/VisIttDataSource.h"
+#include "rendering/NGSphereRenderer.h"
 
 
 /*
@@ -62,7 +63,7 @@ MMSTD_MOLDYN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_MOLDYN_API int mmplgModuleCount(void) {
-    return 6;
+    return 7;
 }
 
 
@@ -77,6 +78,7 @@ MMSTD_MOLDYN_API void* mmplgModuleDescription(int idx) {
     case 3: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::SIFFWriter>();
     case 4: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VIMDataSource>();
     case 5: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VisIttDataSource>();
+	case 6: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSphereRenderer>();
     }
     return NULL;
 }

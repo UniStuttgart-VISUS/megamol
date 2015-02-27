@@ -32,6 +32,15 @@
     <Filter Include="io\Source Files">
       <UniqueIdentifier>{72551f30-6716-4b3c-89e2-c9a5eae19eb6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="rendering">
+      <UniqueIdentifier>{87c3e921-df43-4bd1-9e3b-548445d05a4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rendering\Header Files">
+      <UniqueIdentifier>{c04635a3-c9bb-4f10-b76c-e083f983f552}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rendering\Source Files">
+      <UniqueIdentifier>{45134ae1-e1dd-465f-9034-8a5379aff642}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/dllmain.cpp">
@@ -66,6 +75,9 @@
     </ClCompile>
     <ClCompile Include="src\io\VisIttDataSource.cpp">
       <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\NGSphereRenderer.cpp">
+      <Filter>rendering\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -102,6 +114,9 @@
     <ClInclude Include="src\io\MMSPDHeader.h">
       <Filter>io\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\rendering\NGSphereRenderer.h">
+      <Filter>rendering\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat">
@@ -112,6 +127,9 @@
     </None>
     <None Include="ExtLibs.props.input">
       <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="Shaders\NGsphere.btf">
+      <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
 </Project>
