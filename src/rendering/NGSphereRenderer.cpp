@@ -18,7 +18,7 @@
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
-//#define MAP_BUFFER_LOCALLY
+#define MAP_BUFFER_LOCALLY
 //#define DEBUG_BLAHBLAH
 
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
@@ -99,11 +99,14 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-    sphereShader(), bufSize(10 * 1024 * 1024), currBuf(0),
+	sphereShader(), bufSize(32 * 1024 * 1024), currBuf(0), numBuffers(3),
+	fences(),
     bufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
-	bufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
-    
-    this->fences[0] = this->fences[1] = 0;
+	bufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
+	singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
+	singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
+
+	fences.resize(numBuffers);
 }
 
 
@@ -114,6 +117,23 @@ NGSphereRenderer::~NGSphereRenderer(void) {
     this->Release();
 }
 
+void NGSphereRenderer::lockSingle(GLsync& syncObj) {
+	if (syncObj) {
+		glDeleteSync(syncObj);
+	}
+	syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+}
+
+void NGSphereRenderer::waitSingle(GLsync& syncObj) {
+	if (syncObj) {
+		while (1) {
+			GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
+			if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
+				return;
+			}
+		}
+	}
+}
 
 void NGSphereRenderer::checkFences(void) {
 	// fixme
@@ -175,11 +195,14 @@ bool NGSphereRenderer::create(void) {
 
     glGenVertexArrays(1, &this->vertArray);
     glBindVertexArray(this->vertArray);
-    glGenBuffers(2, this->theBuffers);
-    glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[0]);
-    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
-    glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[1]);
-    glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
+    //glGenBuffers(2, this->theBuffers);
+    //glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[0]);
+    //glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
+    //glBindBuffer(GL_ARRAY_BUFFER, this->theBuffers[1]);
+    //glBufferStorage(GL_ARRAY_BUFFER, this->bufSize, NULL, bufferCreationBits);
+	glBindBuffer(GL_ARRAY_BUFFER, this->theSingleBuffer);
+	glBufferStorage(GL_ARRAY_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
+	this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -201,7 +224,7 @@ void NGSphereRenderer::release(void) {
     glUnmapNamedBufferEXT(this->theBuffers[1]);
 #endif
     this->sphereShader.Release();
-    glDeleteBuffers(2, this->theBuffers);
+    //glDeleteBuffers(2, this->theBuffers);
     glDeleteVertexArrays(1, &this->vertArray);
     AbstractSimpleSphereRenderer::release();
 }
@@ -389,28 +412,35 @@ bool NGSphereRenderer::Render(Call& call) {
                     const char *currCol = static_cast<const char *>(parts.GetColourData());
                     vertCounter = 0;
                     while (vertCounter < parts.GetCount()) {
-                        GLuint vb = this->theBuffers[currBuf];
+                        //GLuint vb = this->theBuffers[currBuf];
+						void *mem = static_cast<char*>(theSingleMappedMem) + numVerts * vertStride * currBuf;
                         currCol = colStride == 0 ? currVert : currCol;
                         const char *whence = currVert < currCol ? currVert : currCol;
                         UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
+
+						this->waitSingle(fences[currBuf]);
 #ifdef MAP_BUFFER_LOCALLY
-                        this->mappedMem[currBuf] = glMapNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride, bufferMappingBits);
+                        //this->mappedMem[currBuf] = glMapNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride, bufferMappingBits);
 #else
                         checkFences();
 #endif
-                        memcpy(this->mappedMem[currBuf], whence, vertsThisTime * vertStride);
-                        GL_VERIFY_THROW(glFlushMappedNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride));
+                        //memcpy(this->mappedMem[currBuf], whence, vertsThisTime * vertStride);
+                        //GL_VERIFY_THROW(glFlushMappedNamedBufferRangeEXT(this->theBuffers[currBuf], 0, vertsThisTime * vertStride));
+						memcpy(mem, whence, vertsThisTime * vertStride);
+						//glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
                         //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 #ifdef MAP_BUFFER_LOCALLY
-                        glUnmapNamedBufferEXT(this->theBuffers[currBuf]);
+                        //glUnmapNamedBufferEXT(this->theBuffers[currBuf]);
 #endif
-                        this->setPointers(parts, vb, reinterpret_cast<const void *>(currVert - whence), vb, reinterpret_cast<const void *>(currCol - whence));
-                        GL_VERIFY_THROW(glDrawArrays(GL_POINTS, 0, vertsThisTime));
+                        //this->setPointers(parts, vb, reinterpret_cast<const void *>(currVert - whence), vb, reinterpret_cast<const void *>(currCol - whence));
+						this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
+                        glDrawArrays(GL_POINTS, (this->bufSize * currBuf) / vertStride, vertsThisTime);
+						this->lockSingle(fences[currBuf]);
 						// http://www.opengl.org/wiki/Sync_Object
 #ifndef MAP_BUFFER_LOCALLY
 						fences[currBuf] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 #endif
-                        currBuf = (currBuf + 1) % 2;
+                        currBuf = (currBuf + 1) % this->numBuffers;
                         vertCounter += vertsThisTime;
                         currVert += vertsThisTime * vertStride;
                         currCol += vertsThisTime * colStride;

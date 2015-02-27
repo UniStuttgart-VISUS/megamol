@@ -101,18 +101,26 @@ namespace rendering {
 
         void checkFences();
 
+		void lockSingle(GLsync& syncObj);
+		void waitSingle(GLsync& syncObj);
+
         /** The sphere shader */
         vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
-        GLuint theBuffers[2];
-        GLsync fences[2];
+        //GLuint theBuffers[2];
+        std::vector<GLsync> fences;
+		GLuint theSingleBuffer;
         unsigned int currBuf;
         GLuint colIdxAttribLoc;
         GLsizeiptr bufSize;
-        void *mappedMem[2];
+		int numBuffers;
+        //void *mappedMem[2];
+		void *theSingleMappedMem;
         GLuint bufferCreationBits;
         GLuint bufferMappingBits;
+		GLuint singleBufferCreationBits;
+		GLuint singleBufferMappingBits;
 
     };
 
