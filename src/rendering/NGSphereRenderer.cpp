@@ -387,9 +387,9 @@ bool NGSphereRenderer::Render(Call& call) {
                         const char *whence = currVert < currCol ? currVert : currCol;
                         UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
 						this->waitSingle(fences[currBuf]);
-						vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 4\n");
+						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 4\n");
 						memcpy(mem, whence, vertsThisTime * vertStride);
-						vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 5\n");
+						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 5\n");
 						glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
 						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 6\n");
                         //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
