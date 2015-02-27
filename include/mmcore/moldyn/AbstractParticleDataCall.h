@@ -27,9 +27,13 @@ namespace moldyn {
      * Call for multi-stream particle data.
      *
      * template parameter T is the particle class
+     *
+     * note: Do not use MEGAMOLCORE_API here(!)
+     *       Because it is a template which is incomplete here.
+     *       The type is exported as API when it is completed, e.g. "MultiParticleDataCall.h"
      */
     template<class T>
-    class MEGAMOLCORE_API AbstractParticleDataCall : public AbstractGetData3DCall {
+    class /* MEGAMOLCORE_API */ AbstractParticleDataCall : public AbstractGetData3DCall {
     public:
 
         /**
