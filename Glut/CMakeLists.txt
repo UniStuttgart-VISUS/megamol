@@ -35,6 +35,8 @@ add_definitions(-DMEGAMOLVIEWER_EXPORTS -DMEGAMOLVIEWER_USESTATIC)
 #message(STATUS "Viewer_DIR == ${MegaMolCon_Viewer_DIR}")
 include_directories(${MegaMolCon_Viewer_DIR}/include)
 add_definitions(${MegaMolCon_common_definitions})
+set(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic") 
 
 # Target definition
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
