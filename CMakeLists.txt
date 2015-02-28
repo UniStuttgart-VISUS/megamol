@@ -9,6 +9,12 @@ project(vislib)
 set(BUILDING_VISLIB_PROJECT 1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+	message(STATUS "You should always specify a build type! Defaulting build type to 'Release'")
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
+
 #find_package(OpenGL REQUIRED)
 set(CMAKE_THREAD_PREFER_PTHREAD)
 find_package(Threads REQUIRED)
@@ -36,7 +42,8 @@ else()
 endif()
 
 # Set CXX flags for debug mode
-set(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0")
 
 # Build 3rd party libraries
 add_subdirectory(3rd)
@@ -79,7 +86,8 @@ add_library(vislib STATIC ${header_files} ${source_files})
 # Set target naming conventions for different build types
 set_target_properties(vislib PROPERTIES DEBUG_POSTFIX "d")
 
-target_link_libraries(vislib ${LIBS})
+target_link_libraries(vislib PRIVATE ${LIBS})
+file(COPY cmake/cmake_package_register_utility.cmake DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # build tests if variable VISLIB_BUILD_TESTS is defined
 if (DEFINED VISLIB_BUILD_TESTS)
