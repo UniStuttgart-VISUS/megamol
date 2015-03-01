@@ -24,7 +24,7 @@ using namespace megamol::stdplugin::moldyn::rendering;
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
 void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
     const GLchar* message, const GLvoid* userParam) {
-        char *sourceText, *typeText, *severityText;
+        const char *sourceText, *typeText, *severityText;
         switch(source) {
             case GL_DEBUG_SOURCE_API:
                 sourceText = "API";
@@ -99,8 +99,8 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-	sphereShader(), bufSize(32 * 1024 * 1024), currBuf(0), numBuffers(3),
-	fences(),
+	sphereShader(), fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
+	
 	// this variant should not need the fence
 	//singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
 	//singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
@@ -283,7 +283,6 @@ void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLui
  * moldyn::SimpleSphereRenderer::Render
  */
 bool NGSphereRenderer::Render(Call& call) {
-    USES_GL_VERIFY;
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -299,7 +298,7 @@ bool NGSphereRenderer::Render(Call& call) {
     float clipCol[4];
     this->getClipData(clipDat, clipCol);
 	
-	glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 

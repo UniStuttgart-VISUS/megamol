@@ -7,6 +7,12 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(mmstd_moldyn)
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+	message(STATUS "You should always specify a build type! Defaulting build type to 'Release'")
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
+
 # search for 3rd party libs
 find_package(MegaMolCore REQUIRED HINTS ${MegaMolCore_DIR})
 message(STATUS "MegaMolCore suggests vislib at: ${MegaMolCore_vislib_DIR}")
@@ -36,8 +42,10 @@ else()
 	add_definitions(-std=c++11)
 endif()
 
-# Set CXX flags for debug mode
-set(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
+# Set CXX flags
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic") 
 
 # Build MegaMol Plugin
 # public header files for installation

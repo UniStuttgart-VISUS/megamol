@@ -140,9 +140,9 @@ if [ $build_release -eq 1 ] ; then
     echo "create build tree subdirectory"
     rm -rf $build_dir
     mkdir $build_dir
-    echo "invoke 'cmake' ($cmake_cmd)"
+    echo "invoke 'cmake' (-DCMAKE_BUILD_TYPE=Release $cmake_cmd)"
     cd $build_dir
-    cmake .. $cmake_cmd
+    cmake .. -DCMAKE_BUILD_TYPE=Release $cmake_cmd
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then

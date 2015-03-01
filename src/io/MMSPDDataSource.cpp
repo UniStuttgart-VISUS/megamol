@@ -810,7 +810,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void *userdata) {
         } else {
             unsigned int parserState = 0;
             UINT64 framePartCnt;
-            UINT64 partIdx;
+            UINT64 partIdx = 0;
 
             while (!f.IsEOF()) {
                 UINT64 bufPos = f.Tell();
@@ -1135,7 +1135,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     // reading format marker
     BYTE headerID[9];
     _ASSERT_READFILE(headerID, 9);
-    bool jmpBk, text, unicode, bigEndian;
+    bool jmpBk, text, unicode, bigEndian = false;
     
     // scharnkn: I'm pretty sure the code below does not work due to the short 
     // circuit evaluation of conditional statements in C++. The execution stops
