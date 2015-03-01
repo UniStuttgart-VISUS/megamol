@@ -111,6 +111,7 @@
 #include "PotentialCalculator.h"
 #include "ProteinVariantMatch.h"
 #include "MultiParticleDataFilter.h"
+#include "PDBInterpolator.h"
 
 #include "mmcore/CallAutoDescription.h"
 #include "mmcore/ModuleAutoDescription.h"
@@ -163,7 +164,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 52;
+    int moduleCount = 53;
 #ifdef WITH_CUDA
     moduleCount+=14;
 #endif // WITH_CUDA
@@ -257,7 +258,8 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
         case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
-		case CUDA_OFFSET + HAPTICS_OFFSET + 51 : return new ModuleAutoDescription<protein::ColorModule>();
+		case CUDA_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::ColorModule>();
+		case CUDA_OFFSET + HAPTICS_OFFSET + 52: return new ModuleAutoDescription<protein::PDBInterpolator>();
         default: return NULL;
     }
     return NULL;
