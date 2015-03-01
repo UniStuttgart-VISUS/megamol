@@ -9,10 +9,15 @@ if (NOT DEFINED Building_MegaMolCon)
 	message(FATAL_ERROR "This CMakefile cannot be processed independently.")
 endif()
 
-
 set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES})
 list(APPEND LIBS "dl")
 include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS})
+if (AntTweakBar_FOUND)
+	message(STATUS "AntTweakBar will be used")
+	add_definitions("-DWITH_TWEAKBAR")
+	list(APPEND LIBS ${AntTweakBar_LIBRARIES})
+	include_directories(${AntTweakBar_INCLUDE_DIR})
+endif()
 
 
 # collect version information
