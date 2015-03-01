@@ -9,6 +9,11 @@ project(MegaMolCon)
 set(Building_MegaMolCon TRUE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
+	message(STATUS "You should always specify a build type! Defaulting build type to 'Release'")
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
 
 # finding main dependencies
 find_package(MegaMolCore REQUIRED HINTS ${MegaMolCore_DIR})
