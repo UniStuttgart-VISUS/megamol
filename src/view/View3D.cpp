@@ -323,9 +323,9 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
             static_cast<GLsizei>(this->camParams->TileRect().Height()));
     }
 
-	if (this->overrideCall != NULL) {
+    if (this->overrideCall != NULL) {
         this->overrideCall->EnableOutputBuffer();
-    } else {
+    } else if (cr3d != nullptr) {
         cr3d->SetOutputBuffer(GL_BACK);
     }
 
