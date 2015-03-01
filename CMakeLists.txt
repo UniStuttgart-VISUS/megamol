@@ -65,6 +65,7 @@ add_library(mmstd_moldyn SHARED ${header_files} ${source_files})
 # Set target naming conventions for different build types
 set_target_properties(mmstd_moldyn PROPERTIES DEBUG_POSTFIX "d")
 set_target_properties(mmstd_moldyn PROPERTIES SUFFIX ".mmplg")
+set_target_properties(mmstd_moldyn PROPERTIES PREFIX "")
 # Dependent projects only need to link against the core.so itself.
 target_link_libraries(mmstd_moldyn PRIVATE ${LIBS})
 
