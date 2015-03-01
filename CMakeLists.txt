@@ -24,7 +24,7 @@ if (USE_MEGAMOLCORE_INSTALL_PREFIX)
 	message(STATUS "Using MegaMolCore install prefix")
 endif()
 find_package(vislib REQUIRED HINTS ${MegaMolCore_vislib_DIR})
-find_package(AntTweakBar REQUIRED)
+find_package(AntTweakBar)
 
 # processor word size detection
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
