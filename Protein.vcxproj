@@ -630,6 +630,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="MultiParticleDataFilter.cpp" />
     <ClCompile Include="MultiPDBLoader.cpp" />
     <ClCompile Include="ParticleDataCall.cpp" />
+    <ClCompile Include="PDBInterpolator.cpp" />
     <ClCompile Include="PDBLoader.cpp" />
     <ClCompile Include="PDBWriter.cpp" />
     <ClCompile Include="PhantomDeviceWrapper.cpp" />
@@ -775,6 +776,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="MultiParticleDataFilter.h" />
     <ClInclude Include="MultiPDBLoader.h" />
     <ClInclude Include="ParticleDataCall.h" />
+    <ClInclude Include="PDBInterpolator.h" />
     <ClInclude Include="PDBLoader.h" />
     <ClInclude Include="PDBWriter.h" />
     <ClInclude Include="PhantomDeviceWrapper.h" />
