@@ -15,6 +15,8 @@
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
+#include <inttypes.h>
+#include <stdint.h>
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
@@ -104,7 +106,7 @@ NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
 	// this variant should not need the fence
 	//singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
 	//singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT)  {
-	singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
+	singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT)  {
 
 	fences.resize(numBuffers);
@@ -182,6 +184,7 @@ bool NGSphereRenderer::create(void) {
 
     glGenVertexArrays(1, &this->vertArray);
     glBindVertexArray(this->vertArray);
+	glGenBuffers(1, &this->theSingleBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, this->theSingleBuffer);
 	glBufferStorage(GL_ARRAY_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
 	this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
@@ -204,6 +207,7 @@ void NGSphereRenderer::release(void) {
 	}
     this->sphereShader.Release();
     glDeleteVertexArrays(1, &this->vertArray);
+	glDeleteBuffers(1, &this->theSingleBuffer);
     AbstractSimpleSphereRenderer::release();
 }
 
@@ -383,21 +387,17 @@ bool NGSphereRenderer::Render(Call& call) {
                         //GLuint vb = this->theBuffers[currBuf];
 						void *mem = static_cast<char*>(theSingleMappedMem) + numVerts * vertStride * currBuf;
                         currCol = colStride == 0 ? currVert : currCol;
+						//currCol = currCol == 0 ? currVert : currCol;
                         const char *whence = currVert < currCol ? currVert : currCol;
                         UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
 						this->waitSingle(fences[currBuf]);
-						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 4\n");
+						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
 						memcpy(mem, whence, vertsThisTime * vertStride);
-						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 5\n");
 						glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
-						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 6\n");
                         //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
 						this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
-						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 7\n");
                         glDrawArrays(GL_POINTS, numVerts * currBuf, vertsThisTime);
-						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 8\n");
 						this->lockSingle(fences[currBuf]);
-						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "NGSphereRenderer::render 9\n");
 
 						currBuf = (currBuf + 1) % this->numBuffers;
                         vertCounter += vertsThisTime;
