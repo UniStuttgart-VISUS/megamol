@@ -25,7 +25,7 @@
 bool vislib::graphics::gl::GLSLShader::IsValidHandle(GLhandleARB hProg) {
     USES_GL_VERIFY;
     GLint status = 0;
-
+	if (hProg == 0) return false;
     if (::glGetProgramiv != NULL) {
         if (GL_SUCCEEDED(::glGetProgramiv(hProg, 
                 GL_DELETE_STATUS, &status))) {
