@@ -20,6 +20,7 @@
 #include "io/VIMDataSource.h"
 #include "io/VisIttDataSource.h"
 #include "rendering/NGSphereRenderer.h"
+#include "rendering/NGSphereBufferArrayRenderer.h"
 
 
 /*
@@ -63,7 +64,7 @@ MMSTD_MOLDYN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_MOLDYN_API int mmplgModuleCount(void) {
-    return 7;
+    return 8;
 }
 
 
@@ -79,6 +80,7 @@ MMSTD_MOLDYN_API void* mmplgModuleDescription(int idx) {
     case 4: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VIMDataSource>();
     case 5: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VisIttDataSource>();
 	case 6: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSphereRenderer>();
+	case 7: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSphereBufferArrayRenderer>();
     }
     return NULL;
 }

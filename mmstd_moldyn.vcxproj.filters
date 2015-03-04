@@ -79,6 +79,9 @@
     <ClCompile Include="src\rendering\NGSphereRenderer.cpp">
       <Filter>rendering\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\NGSphereBufferArrayRenderer.cpp">
+      <Filter>rendering\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -117,6 +120,9 @@
     <ClInclude Include="src\rendering\NGSphereRenderer.h">
       <Filter>rendering\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\rendering\NGSphereBufferArrayRenderer.h">
+      <Filter>rendering\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat">
@@ -129,6 +135,9 @@
       <Filter>Config and Make Files</Filter>
     </None>
     <None Include="Shaders\NGsphere.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\NGsphereBufferArray.btf">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

@@ -249,6 +249,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\io\SIFFWriter.cpp" />
     <ClCompile Include="src\io\VIMDataSource.cpp" />
     <ClCompile Include="src\io\VisIttDataSource.cpp" />
+    <ClCompile Include="src\rendering\NGSphereBufferArrayRenderer.cpp" />
     <ClCompile Include="src\rendering\NGSphereRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -263,6 +264,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\io\SIFFWriter.h" />
     <ClInclude Include="src\io\VIMDataSource.h" />
     <ClInclude Include="src\io\VisIttDataSource.h" />
+    <ClInclude Include="src\rendering\NGSphereBufferArrayRenderer.h" />
     <ClInclude Include="src\rendering\NGSphereRenderer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -270,6 +272,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="configure.win.pl" />
     <None Include="ExtLibs.props.input" />
     <None Include="Shaders\NGsphere.btf" />
+    <None Include="Shaders\NGsphereBufferArray.btf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

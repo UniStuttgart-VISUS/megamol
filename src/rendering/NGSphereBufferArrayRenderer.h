@@ -5,19 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_NGSPHERERENDERER_H_INCLUDED
-#define MEGAMOLCORE_NGSPHERERENDERER_H_INCLUDED
+#ifndef MEGAMOLCORE_NGSPHEREBUFFERARRAYRENDERER_H_INCLUDED
+#define MEGAMOLCORE_NGSPHEREBUFFERARRAYRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/moldyn/AbstractSimpleSphereRenderer.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-//#include "vislib/graphics/gl/shaders"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include <map>
-#include <utility>
 
 namespace megamol {
 namespace stdplugin {
@@ -26,12 +22,11 @@ namespace rendering {
 
 	using namespace megamol::core;
 	using namespace megamol::core::moldyn;
-	using namespace vislib::graphics::gl;
 
     /**
      * Renderer for simple sphere glyphs
      */
-    class NGSphereRenderer : public megamol::core::moldyn::AbstractSimpleSphereRenderer {
+    class NGSphereBufferArrayRenderer : public megamol::core::moldyn::AbstractSimpleSphereRenderer {
     public:
 
         /**
@@ -40,7 +35,7 @@ namespace rendering {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "NGSphereRenderer";
+            return "NGSphereBufferArrayRenderer";
         }
 
         /**
@@ -72,10 +67,10 @@ namespace rendering {
         }
 
         /** Ctor. */
-        NGSphereRenderer(void);
+		NGSphereBufferArrayRenderer(void);
 
         /** Dtor. */
-        virtual ~NGSphereRenderer(void);
+		virtual ~NGSphereBufferArrayRenderer(void);
 
     protected:
 
@@ -103,18 +98,12 @@ namespace rendering {
     private:
 
         void setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
-		std::shared_ptr<GLSLShader> generateShader(MultiParticleDataCall::Particles &parts);
-		std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
-		bool makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-		bool makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration);
-		void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
-			unsigned int &colStride, unsigned int &vertStride);
 
 		void lockSingle(GLsync& syncObj);
 		void waitSingle(GLsync& syncObj);
 
         /** The sphere shader */
-        //vislib::graphics::gl::GLSLShader sphereShader;
+        vislib::graphics::gl::GLSLShader sphereShader;
 
         GLuint vertArray;
         std::vector<GLsync> fences;
@@ -126,13 +115,7 @@ namespace rendering {
 		void *theSingleMappedMem;
 		GLuint singleBufferCreationBits;
 		GLuint singleBufferMappingBits;
-		SimpleSphericalParticles::ColourDataType colType;
-		SimpleSphericalParticles::VertexDataType vertType;
-		typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
-		std::shared_ptr<GLSLShader> newShader;
-		shaderMap theShaders;
-		vislib::SmartPtr<ShaderSource> vert, frag;
-		//megamol::core::utility::ShaderSourceFactory::sh
+
     };
 
 } /* end namespace rendering */
@@ -140,4 +123,4 @@ namespace rendering {
 } /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_NGSPHERERENDERER_H_INCLUDED */
+#endif /* MEGAMOLCORE_NGSPHEREBUFFERARRAYRENDERER_H_INCLUDED */

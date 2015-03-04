@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<btf type="MegaMolGLSLShader" version="1.0" namespace="NGsphere">
+<btf type="MegaMolGLSLShader" version="1.0" namespace="NGsphereBufferArray">
     <include file="common"/>
 
     <shader name="vertex">
@@ -7,8 +7,6 @@
         <snippet name="common::defines"/>
         <snippet name="attributes" type="string">
             <![CDATA[
-#extension GL_ARB_shader_storage_buffer_object : require
-#extension GL_EXT_gpu_shader4 : require
 uniform vec4 viewAttr;
 
 #ifdef WITH_SCALING
@@ -24,7 +22,6 @@ uniform vec3 camRight;
 // clipping plane attributes
 uniform vec4 clipDat;
 uniform vec4 clipCol;
-uniform int instanceOffset;
 
 uniform vec4 inConsts1;
 attribute float colIdx;
@@ -51,26 +48,18 @@ varying vec2 centerFragment;
 ]]>
         </snippet>
         <snippet name="MainParams" type="string">
-        <![CDATA[
+            <![CDATA[
 void main(void) {
-    float theColIdx;
-    vec4 theColor;
-    vec4 inPos;
-]]>
-        </snippet>
-        <snippet name="MainRest" type="string">
-        <![CDATA[
+
     // remove the sphere radius from the w coordinates to the rad varyings
-    //vec4 inPos = gl_Vertex;
-    //rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;
-    //inPos.w = 1.0;
-    //inPos = vec4(0.0, 0.0, 0.0, 1.0);
-    //rad = 1.0;
+    vec4 inPos = gl_Vertex;
+    rad = (CONSTRAD < -0.5) ? inPos.w : CONSTRAD;
+    inPos.w = 1.0;
     float cid = MAX_COLV - MIN_COLV;
     if (cid < 0.000001) {
-        gl_FrontColor = theColor;
+        gl_FrontColor = gl_Color;
     } else {
-        cid = (theColIdx - MIN_COLV) / cid;
+        cid = (colIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
         
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
@@ -85,7 +74,6 @@ void main(void) {
 
     squarRad = rad * rad;
 ]]>
-        
         </snippet>
         <snippet name="posTrans" type="string">
             <![CDATA[
@@ -227,7 +215,6 @@ void main(void) {
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
 #endif // BACKSIDE_ENABLED
-//#define DISCARD_COLOR_MARKER
 
 // clipping plane attributes
 uniform vec4 clipDat;
@@ -276,7 +263,7 @@ void main(void) {
 #ifdef CLIP
     if (radicand < 0.0) { 
 #ifdef DISCARD_COLOR_MARKER
-        color = vec4(1.0, 0.0, 0.0, 1.0);       
+        color = vec3(1.0, 0.0, 0.0);       
 #else // DISCARD_COLOR_MARKER
         discard; 
 #endif // DISCARD_COLOR_MARKER
