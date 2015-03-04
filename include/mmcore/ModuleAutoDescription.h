@@ -14,7 +14,11 @@ namespace megamol {
 namespace core {
 
 #ifdef _MSC_VER
-#pragma message( "Both '#include \"mmcore/ModuleAutoDescription.h\"' and '::megamol::core::ModuleAutoDescription' are deprecated! Update to '#include \"mmcore/factories/ModuleAutoDescription.h\"' and '::megamol::core::factories::ModuleAutoDescription'." )
+#ifndef STRINGIZE
+#define STRINGIZE_HELPER(x) #x
+#define STRINGIZE(x) STRINGIZE_HELPER(x)
+#endif
+#pragma message(__FILE__"("STRINGIZE(__LINE__)") : warning: Both '#include \"mmcore/ModuleAutoDescription.h\"' and '::megamol::core::ModuleAutoDescription' are deprecated! Update to '#include \"mmcore/factories/ModuleAutoDescription.h\"' and '::megamol::core::factories::ModuleAutoDescription'." )
 #else
 #pragma GCC warning "Both '#include \"mmcore/ModuleAutoDescription.h\"' and '::megamol::core::ModuleAutoDescription' are deprecated! Update to '#include \"mmcore/factories/ModuleAutoDescription.h\"' and '::megamol::core::factories::ModuleAutoDescription'."
 #endif

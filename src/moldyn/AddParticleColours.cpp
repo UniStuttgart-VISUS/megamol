@@ -131,8 +131,8 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
 
                 const unsigned char *cd = static_cast<const unsigned char*>(part.GetColourData());
                 unsigned int stride = std::max<unsigned int>(part.GetColourDataStride(), sizeof(float));
-                unsigned int i2 = (cnt - 1) / 2;
-                unsigned int i3 = cnt - 1;
+                unsigned int i2 = static_cast<unsigned int>(cnt - 1) / 2;
+                unsigned int i3 = static_cast<unsigned int>(cnt - 1);
                 uhWriter.Write(*reinterpret_cast<const float*>(cd + (0  * stride)));
                 uhWriter.Write(*reinterpret_cast<const float*>(cd + (i2 * stride)));
                 uhWriter.Write(*reinterpret_cast<const float*>(cd + (i3 * stride)));
@@ -182,7 +182,7 @@ bool moldyn::AddParticleColours::getDataCallback(Call& caller) {
                 this->colData.EnforceSize(cntCol * colcompcnt);
 
                 unsigned int texDatSize = 2;
-                if (texDat.GetSize() < 2 * 4 * colcompcnt) {
+                if (texDat.GetSize() < static_cast<SIZE_T>(2 * 4 * colcompcnt)) {
                     texDat.EnforceSize(2 * 4 * colcompcnt);
                     *texDat.AsAt<float>(0) = 0.0f;
                     *texDat.AsAt<float>(4) = 0.0f;

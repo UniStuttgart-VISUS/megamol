@@ -13,7 +13,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
@@ -1176,7 +1176,7 @@ namespace misc {
     };
 
     /** Description class typedef */
-    typedef core::CallAutoDescription<CallTriMeshData> CallTriMeshDataDescription;
+    typedef core::factories::CallAutoDescription<CallTriMeshData> CallTriMeshDataDescription;
 
 } /* end namespace misc */
 } /* end namespace core */

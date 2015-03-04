@@ -131,7 +131,7 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         pts.SetVertexData(vrtDatType, this->dat.At(p), stride);
         pts.SetColourData(colDatType, this->dat.At(p + vrtSize), stride);
 
-        p += stride * pts.GetCount();
+        p += static_cast<SIZE_T>(stride * pts.GetCount());
 
         if (this->fileVersion == 101) {
             // TODO: who deletes this?

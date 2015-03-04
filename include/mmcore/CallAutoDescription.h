@@ -14,7 +14,11 @@ namespace megamol {
 namespace core {
 
 #ifdef _MSC_VER
-#pragma message( "Both '#include \"mmcore/CallAutoDescription.h\"' and '::megamol::core::CallAutoDescription' are deprecated! Update to '#include \"mmcore/factories/CallAutoDescription.h\"' and '::megamol::core::factories::CallAutoDescription'." )
+#ifndef STRINGIZE
+#define STRINGIZE_HELPER(x) #x
+#define STRINGIZE(x) STRINGIZE_HELPER(x)
+#endif
+#pragma message(__FILE__"("STRINGIZE(__LINE__)") : warning: Both '#include \"mmcore/CallAutoDescription.h\"' and '::megamol::core::CallAutoDescription' are deprecated! Update to '#include \"mmcore/factories/CallAutoDescription.h\"' and '::megamol::core::factories::CallAutoDescription'." )
 #else
 #pragma GCC warning "Both '#include \"mmcore/CallAutoDescription.h\"' and '::megamol::core::CallAutoDescription' are deprecated! Update to '#include \"mmcore/factories/CallAutoDescription.h\"' and '::megamol::core::factories::CallAutoDescription'."
 #endif
