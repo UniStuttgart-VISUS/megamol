@@ -21,10 +21,19 @@ const std::string& AbstractPluginInstance::GetAssemblyName(void) const {
 
 
 /*
+ * AbstractPluginInstance::GetDescription
+ */
+const std::string& AbstractPluginInstance::GetDescription(void) const {
+    return this->description;
+}
+
+
+/*
  * AbstractPluginInstance::AbstractPluginInstance
  */
-AbstractPluginInstance::AbstractPluginInstance(const char *asm_name) 
-        : factories::AbstractAssemblyInstance(), asm_name(asm_name) {
+AbstractPluginInstance::AbstractPluginInstance(const char *asm_name,
+        const char *description) : factories::AbstractAssemblyInstance(),
+        asm_name(asm_name), description(description) {
     assert(asm_name != nullptr);
     // intentionally empty
 }

@@ -31,17 +31,24 @@ namespace plugins {
         typedef std::shared_ptr<AbstractPluginInstance const> ptr_type;
 
         /**
-         * Answer the (machine-readable) name of the assembly. This usually is
-         * The name of the plugin dll/so without prefix and extension.
-         *
-         * @return The (machine-readable) name of the assembly
-         */
+        * Answer the (machine-readable) name of the assembly. This usually is
+        * The name of the plugin dll/so without prefix and extension.
+        *
+        * @return The (machine-readable) name of the assembly
+        */
         virtual const std::string& GetAssemblyName(void) const;
+
+        /**
+        * Answer the (human-readable) description of the plugin assembly.
+        *
+        * @return The (human-readable) description of the plugin assembly
+        */
+        virtual const std::string& GetDescription(void) const;
 
     protected:
 
         /** Ctor. */
-        AbstractPluginInstance(const char *asm_name);
+        AbstractPluginInstance(const char *asm_name, const char *description);
 
         /** Dtor. */
         virtual ~AbstractPluginInstance(void);
@@ -54,10 +61,13 @@ namespace plugins {
         /** deleted assignment operatior */
         AbstractPluginInstance& operator=(const AbstractPluginInstance& rhs) = delete;
 
-
         /** The (machine-readable) name of the assembly */
         VISLIB_MSVC_SUPPRESS_WARNING(4251)
         std::string asm_name;
+
+        /** The (human-readable) description of the plugin assembly */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
+        std::string description;
 
     };
 

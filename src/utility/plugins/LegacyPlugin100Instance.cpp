@@ -60,7 +60,7 @@ PluginManager::collection_type LegacyPlugin100Instance::ContinueLoad(
 
     // load plugin description
     const char * (*mmplgPluginName)(void) = function_cast<const char * (*)()>(lib->GetProcAddress("mmplgPluginName"));
-//    const char * (*mmplgPluginDescription)(void) = function_cast<const char * (*)()>(lib->GetProcAddress("mmplgPluginDescription"));
+    const char * (*mmplgPluginDescription)(void) = function_cast<const char * (*)()>(lib->GetProcAddress("mmplgPluginDescription"));
     if ((mmplgPluginName == nullptr)/* || (mmplgPluginDescription == NULL)*/) {
         throw vislib::Exception("API name/description functions not found", __FILE__, __LINE__);
     }
@@ -68,11 +68,15 @@ PluginManager::collection_type LegacyPlugin100Instance::ContinueLoad(
     if (plgName.IsEmpty()) {
         throw vislib::Exception("Plugin does not export a name", __FILE__, __LINE__);
     }
+    vislib::StringA plgDesc;
+    if (mmplgPluginDescription != nullptr) {
+        plgDesc = mmplgPluginDescription();
+    }
 
     // From here on, plugin loading cannot fail any more
     // (except for unexpected errors)
 
-    LegacyPlugin100Instance *lp100i = new LegacyPlugin100Instance(plgName.PeekBuffer(), lib);
+    LegacyPlugin100Instance *lp100i = new LegacyPlugin100Instance(plgName.PeekBuffer(), plgDesc.PeekBuffer(), lib);
     PluginManager::collection_type rv;
     rv.push_back(PluginManager::plugin_ptr_type(lp100i));
 
@@ -112,8 +116,9 @@ PluginManager::collection_type LegacyPlugin100Instance::ContinueLoad(
  * LegacyPlugin100Instance::LegacyPlugin100Instance
  */
 LegacyPlugin100Instance::LegacyPlugin100Instance(const char *asm_name,
+        const char *description, 
         std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib)
-        : AbstractPluginInstance(asm_name), lib(lib) {
+        : AbstractPluginInstance(asm_name, description), lib(lib) {
     assert(asm_name != nullptr);
     assert(this->lib);
     // intentionally empty

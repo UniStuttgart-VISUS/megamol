@@ -46,14 +46,14 @@ namespace plugins {
             std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib,
             ::megamol::core::CoreInstance& coreInst);
 
-        /** Ctor. */
-        LegacyPlugin100Instance(const char *asm_name,
-            std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib);
-
         /** Dtor. */
         virtual ~LegacyPlugin100Instance(void);
 
     private:
+
+        /** Ctor. */
+        LegacyPlugin100Instance(const char *asm_name, const char *description,
+            std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib);
 
         /** deleted copy ctor */
         LegacyPlugin100Instance(const LegacyPlugin100Instance& src) = delete;

@@ -887,6 +887,9 @@
     <ClCompile Include="src\misc\CallTriMeshData.cpp">
       <Filter>Source Files\misc</Filter>
     </ClCompile>
+    <ClCompile Include="src\utility\plugins\Plugin200Instance.cpp">
+      <Filter>Source Files\utility\plugins</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1527,6 +1530,9 @@
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\CallTriMeshData.h">
       <Filter>Public Header Files\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\utility\plugins\Plugin200Instance.h">
+      <Filter>Public Header Files\utility\plugins</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

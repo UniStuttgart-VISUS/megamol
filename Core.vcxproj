@@ -534,6 +534,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\utility\LogEchoTarget.cpp" />
     <ClCompile Include="src\utility\plugins\AbstractPluginInstance.cpp" />
     <ClCompile Include="src\utility\plugins\LegacyPlugin100Instance.cpp" />
+    <ClCompile Include="src\utility\plugins\Plugin200Instance.cpp" />
     <ClCompile Include="src\utility\plugins\PluginManager.cpp" />
     <ClCompile Include="src\utility\ProjectParser.cpp" />
     <ClCompile Include="src\utility\ResourceWrapper.cpp" />
@@ -764,6 +765,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\utility\D3D11BoundingBox.h" />
     <ClInclude Include="include\mmcore\utility\LogEchoTarget.h" />
     <ClInclude Include="include\mmcore\utility\plugins\AbstractPluginInstance.h" />
+    <ClInclude Include="include\mmcore\utility\plugins\Plugin200Instance.h" />
     <ClInclude Include="include\mmcore\utility\ProjectParser.h" />
     <ClInclude Include="include\mmcore\utility\ResourceWrapper.h" />
     <ClInclude Include="include\mmcore\utility\ShaderSourceFactory.h" />
