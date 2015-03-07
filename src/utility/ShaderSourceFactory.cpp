@@ -40,7 +40,7 @@ const UINT32 utility::ShaderSourceFactory::FLAGS_HLSL_LINE_PRAGMAS = 0x00000003u
  * utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS
  */
 const UINT32 utility::ShaderSourceFactory::FLAGS_DEFAULT_FLAGS
-    = utility::ShaderSourceFactory::FLAGS_GLSL_LINE_PRAGMAS;
+    = utility::ShaderSourceFactory::FLAGS_NO_LINE_PRAGMAS;
 
 
 /*
