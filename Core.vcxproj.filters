@@ -23,120 +23,165 @@
     <Filter Include="Shader Files\sphereEx">
       <UniqueIdentifier>{eab012c0-52da-40d2-b23a-ecdd32fe0f52}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\cluster">
-      <UniqueIdentifier>{0fbd3b04-ef08-4a06-877e-93cba0d1e5de}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\cluster\mpi">
-      <UniqueIdentifier>{de740d2f-82b5-4b3c-af06-10d608298507}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\cluster\simple">
-      <UniqueIdentifier>{ffb0c84e-d331-479a-bb2f-375aa7d3db31}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\job">
-      <UniqueIdentifier>{a18855df-9e2e-45cb-ba12-d9af6a9fea48}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\misc">
-      <UniqueIdentifier>{b5782fd7-4bbf-49f1-81e8-a1078c49a7d2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\moldyn">
-      <UniqueIdentifier>{7b3e83f4-c79e-45aa-b987-52e5d813e671}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\param">
-      <UniqueIdentifier>{520ccc68-084c-44a2-a0a1-37f21ef21fd0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\profiler">
-      <UniqueIdentifier>{909c247f-223f-4493-bfa9-5c81daf37a7a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\special">
-      <UniqueIdentifier>{9d7dfa2b-d3e8-4a3a-9b67-bf8288b972d5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\utility">
-      <UniqueIdentifier>{c6178d57-15bd-417e-9632-9253b5cadf5c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\utility\xml">
-      <UniqueIdentifier>{f2812919-5f6c-4f26-a92f-482430128acd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\view">
-      <UniqueIdentifier>{91ee79ab-aded-433d-b290-fc9b98e36961}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\view\special">
-      <UniqueIdentifier>{4cee824c-b24d-4850-b5ed-0ab34ffe0c6f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\vismol2">
-      <UniqueIdentifier>{2df01365-f486-4089-aa34-85c0194b6eeb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\factories">
-      <UniqueIdentifier>{76a37291-baaf-44c2-b856-1de604883ce2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Private Header Files">
-      <UniqueIdentifier>{9fd4b438-9744-41f3-9454-a1215c3d8e62}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Private Header Files\factories">
-      <UniqueIdentifier>{54646af5-8400-49e7-b370-fb7dbb905af6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files">
+    <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Public Header Files\api">
+    <Filter Include="api">
+      <UniqueIdentifier>{9b319d88-6de7-47c9-b92d-7bba648c8296}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\Header Files">
       <UniqueIdentifier>{fde5b2f7-1214-40bb-b914-f602ce385353}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Public Header Files\cluster">
+    <Filter Include="cluster">
+      <UniqueIdentifier>{f086af61-b44b-4794-8306-506b139b81cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\Header Files">
       <UniqueIdentifier>{95bc1bad-37fb-4462-97b8-b0bcb0f5d35d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Public Header Files\cluster\mpi">
-      <UniqueIdentifier>{a0f970ea-3d9c-44ae-b3ac-db8653766002}</UniqueIdentifier>
+    <Filter Include="factories">
+      <UniqueIdentifier>{d215d986-1deb-4f8a-af3d-8aee16943c2d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Public Header Files\cluster\simple">
-      <UniqueIdentifier>{6fd88a7c-ba35-4101-a29a-8a7e5de0b598}</UniqueIdentifier>
+    <Filter Include="factories\Private Header Files">
+      <UniqueIdentifier>{54646af5-8400-49e7-b370-fb7dbb905af6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Public Header Files\job">
-      <UniqueIdentifier>{336820e2-b54a-4f73-bd7f-1a937eeb01e5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\misc">
-      <UniqueIdentifier>{3e6e156a-14b3-4a56-9b88-9ffa3b654d1d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\moldyn">
-      <UniqueIdentifier>{39f41fdd-8a93-4ab5-bdce-6e34be111c3d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\param">
-      <UniqueIdentifier>{15b0efa4-52c9-4251-9e98-39bfc92056ec}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\profiler">
-      <UniqueIdentifier>{ede3fef8-4ede-4453-a46e-f959d275d6d7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\special">
-      <UniqueIdentifier>{23b6294d-de1f-4c76-bdcb-ffc34a1fd31d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\utility">
-      <UniqueIdentifier>{8ed328fa-d6d9-4dc5-b374-d120380d1e46}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\utility\xml">
-      <UniqueIdentifier>{3cf5b65f-726b-4ff6-9086-78ea16c8d753}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\view">
-      <UniqueIdentifier>{e48b88aa-3e93-42b4-a96f-044deb3bfbd4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\view\special">
-      <UniqueIdentifier>{fb43ae4f-e285-46b4-b99e-a96803685a71}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\vismol2">
-      <UniqueIdentifier>{35afb7e9-1bca-487f-b836-19e1a19183bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Public Header Files\factories">
+    <Filter Include="factories\Header Files">
       <UniqueIdentifier>{35833ddb-da37-44de-ba42-d4048ef6a5fa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\utility\plugins">
-      <UniqueIdentifier>{53c9b4d5-9b52-4c17-8297-401a1b78fdb6}</UniqueIdentifier>
+    <Filter Include="factories\Source Files">
+      <UniqueIdentifier>{76a37291-baaf-44c2-b856-1de604883ce2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Public Header Files\utility\plugins">
-      <UniqueIdentifier>{f3257459-fc63-4f10-8712-82a87a0180c8}</UniqueIdentifier>
+    <Filter Include="utility">
+      <UniqueIdentifier>{9fd4b438-9744-41f3-9454-a1215c3d8e62}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Private Header Files\utility">
+    <Filter Include="utility\plugins">
       <UniqueIdentifier>{97a1451f-795b-4f27-89f9-43baed3d57b7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Private Header Files\utility\plugins">
+    <Filter Include="utility\plugins\Private Header Files">
       <UniqueIdentifier>{16bf9a0c-2c91-4287-aa42-9eb338b0e0fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility\plugins\Header Files">
+      <UniqueIdentifier>{f3257459-fc63-4f10-8712-82a87a0180c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility\xml">
+      <UniqueIdentifier>{9c33ec5e-aebe-492f-aba4-e360aa763bd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility\xml\Header Files">
+      <UniqueIdentifier>{3cf5b65f-726b-4ff6-9086-78ea16c8d753}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility\Header Files">
+      <UniqueIdentifier>{8ed328fa-d6d9-4dc5-b374-d120380d1e46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="job">
+      <UniqueIdentifier>{e1b875a5-d1e7-42c2-82d2-c0d2e44a1395}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="job\Header Files">
+      <UniqueIdentifier>{336820e2-b54a-4f73-bd7f-1a937eeb01e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{f5152479-7413-4556-b85d-7fe9b4237483}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc\Header Files">
+      <UniqueIdentifier>{3e6e156a-14b3-4a56-9b88-9ffa3b654d1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="moldyn">
+      <UniqueIdentifier>{ee671879-6839-46ba-969c-6e4bc8c51697}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="moldyn\Header Files">
+      <UniqueIdentifier>{39f41fdd-8a93-4ab5-bdce-6e34be111c3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="param">
+      <UniqueIdentifier>{8fd82091-63ac-4357-bc14-510a5ea0b989}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="param\Header Files">
+      <UniqueIdentifier>{15b0efa4-52c9-4251-9e98-39bfc92056ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="profiler">
+      <UniqueIdentifier>{b3afe4fe-d92f-4a84-ad81-ccd132df72fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="profiler\Header Files">
+      <UniqueIdentifier>{ede3fef8-4ede-4453-a46e-f959d275d6d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="special">
+      <UniqueIdentifier>{0beb6f7a-f269-4b6e-9551-36da74708c9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="special\Header Files">
+      <UniqueIdentifier>{23b6294d-de1f-4c76-bdcb-ffc34a1fd31d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="view">
+      <UniqueIdentifier>{b777b3e6-e092-4d32-8f42-efdd4d6501a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="view\special">
+      <UniqueIdentifier>{1cf3fb9b-ec22-48df-9980-2fe6bae97d7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="view\special\Header Files">
+      <UniqueIdentifier>{fb43ae4f-e285-46b4-b99e-a96803685a71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="view\Header Files">
+      <UniqueIdentifier>{e48b88aa-3e93-42b4-a96f-044deb3bfbd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\mpi">
+      <UniqueIdentifier>{7ace3c0e-70f9-4391-a16a-8d9d6ea9551c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\mpi\Header Files">
+      <UniqueIdentifier>{a0f970ea-3d9c-44ae-b3ac-db8653766002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\simple">
+      <UniqueIdentifier>{9ec8dc02-051f-4f4d-964e-4cc868051041}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\simple\Header Files">
+      <UniqueIdentifier>{6fd88a7c-ba35-4101-a29a-8a7e5de0b598}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vismol2">
+      <UniqueIdentifier>{e91e3a62-93b8-403c-bd06-d97d1d7f590b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vismol2\Header Files">
+      <UniqueIdentifier>{35afb7e9-1bca-487f-b836-19e1a19183bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\mpi\Source Files">
+      <UniqueIdentifier>{de740d2f-82b5-4b3c-af06-10d608298507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\simple\Source Files">
+      <UniqueIdentifier>{ffb0c84e-d331-479a-bb2f-375aa7d3db31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cluster\Source Files">
+      <UniqueIdentifier>{0fbd3b04-ef08-4a06-877e-93cba0d1e5de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="job\Source Files">
+      <UniqueIdentifier>{a18855df-9e2e-45cb-ba12-d9af6a9fea48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc\Source Files">
+      <UniqueIdentifier>{b5782fd7-4bbf-49f1-81e8-a1078c49a7d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="moldyn\Source Files">
+      <UniqueIdentifier>{7b3e83f4-c79e-45aa-b987-52e5d813e671}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="param\Source Files">
+      <UniqueIdentifier>{520ccc68-084c-44a2-a0a1-37f21ef21fd0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="profiler\Source Files">
+      <UniqueIdentifier>{909c247f-223f-4493-bfa9-5c81daf37a7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="special\Source Files">
+      <UniqueIdentifier>{9d7dfa2b-d3e8-4a3a-9b67-bf8288b972d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vismol2\Source Files">
+      <UniqueIdentifier>{2df01365-f486-4089-aa34-85c0194b6eeb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="view\special\Source Files">
+      <UniqueIdentifier>{4cee824c-b24d-4850-b5ed-0ab34ffe0c6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="view\Source Files">
+      <UniqueIdentifier>{91ee79ab-aded-433d-b290-fc9b98e36961}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility\xml\Source Files">
+      <UniqueIdentifier>{f2812919-5f6c-4f26-a92f-482430128acd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility\plugins\Source Files">
+      <UniqueIdentifier>{53c9b4d5-9b52-4c17-8297-401a1b78fdb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility\Source Files">
+      <UniqueIdentifier>{c6178d57-15bd-417e-9632-9253b5cadf5c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -269,10 +314,10 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="src\cluster\HelvUC.inc">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </None>
     <None Include="src\view\special\MegaMolLogoData.inl">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -375,1167 +420,1167 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\CallRegisterAtController.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\ClusterController.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\ClusterControllerClient.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\ClusterViewMaster.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\CommChannel.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\CommChannelServer.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\InfoIconRenderer.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\NetMessages.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\PowerwallView.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\AbstractClusterView.cpp">
-      <Filter>Source Files\cluster</Filter>
+      <Filter>cluster\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\mpi\MpiCall.cpp">
-      <Filter>Source Files\cluster\mpi</Filter>
+      <Filter>cluster\mpi\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\mpi\MpiProvider.cpp">
-      <Filter>Source Files\cluster\mpi</Filter>
+      <Filter>cluster\mpi\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\mpi\View.cpp">
-      <Filter>Source Files\cluster\mpi</Filter>
+      <Filter>cluster\mpi\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\simple\CommUtil.cpp">
-      <Filter>Source Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\simple\Heartbeat.cpp">
-      <Filter>Source Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\simple\HeartbeatClient.cpp">
-      <Filter>Source Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\simple\Server.cpp">
-      <Filter>Source Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\simple\View.cpp">
-      <Filter>Source Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\simple\Client.cpp">
-      <Filter>Source Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cluster\simple\ClientViewRegistration.cpp">
-      <Filter>Source Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\job\AbstractThreadedJob.cpp">
-      <Filter>Source Files\job</Filter>
+      <Filter>job\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\job\DataWriterJob.cpp">
-      <Filter>Source Files\job</Filter>
+      <Filter>job\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\job\JobThread.cpp">
-      <Filter>Source Files\job</Filter>
+      <Filter>job\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\job\AbstractJob.cpp">
-      <Filter>Source Files\job</Filter>
+      <Filter>job\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\QRCodeDataCall.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\SiffCSplineFitter.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\TestSpheresDataSource.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\VolumetricDataCall.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\CalloutImageCall.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\ImageViewer.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\LinesDataCall.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\LinesRenderer.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\PngBitmapCodec.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\MipDepthSphereRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\MMPGDDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\MMPGDWriter.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\MMPLDDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\MMPLDWriter.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\MultiParticleDataCall.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\OracleSphereRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\ParticleGridDataCall.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\ParticleListFilter.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\ParticleWorker.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\SimpleGeoSphereRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\SimpleSphereRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\SphereOutlineRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\VolumeDataCall.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\VTFDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\VTFResDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\AbstractParticleDataCall.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\AbstractSimpleParticleDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\AbstractSimpleSphereRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\AbstractSimpleStoringParticleDataSource.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\AddClusterColours.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\AddParticleColours.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\ArrowRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\ClusteredSphereRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\D3D11SimpleSphereRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\DataGridder.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\DirectionalParticleDataCall.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\DirPartColModulate.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\DirPartFilter.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\DynDensityGradientEstimator.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\GrimRenderer.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\IntParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\ParamHandle.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\ParamSlot.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\ParamUpdateListener.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\StringParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\TernaryParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\Vector2fParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\Vector3fParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\Vector4fParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\AbstractParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\AbstractParamSlot.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\BoolParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\ButtonParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\EnumParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\FilePathParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\param\FloatParam.cpp">
-      <Filter>Source Files\param</Filter>
+      <Filter>param\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\profiler\Manager.cpp">
-      <Filter>Source Files\profiler</Filter>
+      <Filter>profiler\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\profiler\Connection.cpp">
-      <Filter>Source Files\profiler</Filter>
+      <Filter>profiler\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\special\ColStereoDisplay.cpp">
-      <Filter>Source Files\special</Filter>
+      <Filter>special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\special\AbstractStereoDisplay.cpp">
-      <Filter>Source Files\special</Filter>
+      <Filter>special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\BTFParser.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\ColourParser.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\Configuration.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\D3D11BoundingBox.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\LogEchoTarget.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\ProjectParser.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\ResourceWrapper.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\ShaderSourceFactory.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\AbstractD3D11RenderObject.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\APIValueUtil.cpp">
-      <Filter>Source Files\utility</Filter>
+      <Filter>utility\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\xml\XmlParser.cpp">
-      <Filter>Source Files\utility\xml</Filter>
+      <Filter>utility\xml\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\xml\XmlReader.cpp">
-      <Filter>Source Files\utility\xml</Filter>
+      <Filter>utility\xml\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\xml\ConditionalParser.cpp">
-      <Filter>Source Files\utility\xml</Filter>
+      <Filter>utility\xml\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\xml\ConfigurationParser.cpp">
-      <Filter>Source Files\utility\xml</Filter>
+      <Filter>utility\xml\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractRenderingView.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractRenderOutput.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractTileView.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractView.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractView3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AnimDataModule.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\BlinnPhongRendererDeferred.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\Call6DofInteraction.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallCamParams.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallCamParamSync.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallClipPlane.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallGetTransferFunction.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallRender2D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallRender3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallRenderDeferred3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallRenderView.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallTimeControl.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CallUpdateDirect3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\CameraParamOverride.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\ClipPlane.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\DataSourceModule.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\graphicsresources.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\LinearTransferFunction.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\LinkedView3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\MouseFlags.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\MuxRenderer3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\RenderDeferredOutput.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\Renderer2DModule.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\Renderer3DModule.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\Renderer3DModuleDS.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\RenderOutput.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\SharedCameraParameters.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\SplitView.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\SwitchRenderer3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\TileView.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\TimeControl.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\TransferFunctionRenderer.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\View2D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\View3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\ViewDirect3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractCallRender.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractCallRender3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractCamParamSync.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractOverrideView.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\AbstractRendererDeferred3D.cpp">
-      <Filter>Source Files\view</Filter>
+      <Filter>view\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\TitleRenderer.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\AbstractStereoView.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\AnaglyphStereoView.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\ChronoGraph.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\DemoRenderer2D.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\MegaMolLogo.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\QuadBufferStereoView.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\view\special\ScreenShooter.cpp">
-      <Filter>Source Files\view\special</Filter>
+      <Filter>view\special\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vismol2\Mol20DataCall.cpp">
-      <Filter>Source Files\vismol2</Filter>
+      <Filter>vismol2\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vismol2\Mol20DataSource.cpp">
-      <Filter>Source Files\vismol2</Filter>
+      <Filter>vismol2\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vismol2\Mol20Renderer.cpp">
-      <Filter>Source Files\vismol2</Filter>
+      <Filter>vismol2\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\vismol2\Mol2Data.cpp">
-      <Filter>Source Files\vismol2</Filter>
+      <Filter>vismol2\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\ModuleDescription.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\ModuleDescriptionManager.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\ObjectDescription.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\CallDescription.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\CallDescriptionManager.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\ModuleClassRegistry.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\CallClassRegistry.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\factories\AbstractAssemblyInstance.cpp">
-      <Filter>Source Files\factories</Filter>
+      <Filter>factories\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MegaMolCoreConfiguratorBackdoor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\plugins\AbstractPluginInstance.cpp">
-      <Filter>Source Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\plugins\PluginManager.cpp">
-      <Filter>Source Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\MolecularDataCall.cpp">
-      <Filter>Source Files\moldyn</Filter>
+      <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\misc\CallTriMeshData.cpp">
-      <Filter>Source Files\misc</Filter>
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\plugins\Plugin200Instance.cpp">
-      <Filter>Source Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\plugins\Plugin100Instance.cpp">
-      <Filter>Source Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\Call.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\CalleeSlot.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\CallerSlot.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\CallVolumeData.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\CoreInstance.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\DataWriterCtrlCall.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\InstanceDescription.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\InstanceRequest.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\JobDescription.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\JobInstance.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\JobInstanceRequest.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\mmd3d.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\Module.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ModuleNamespace.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\nvstereo.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ParamValueSetRequest.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\productversion.gen.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\productversion.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\productversion.template.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\RootModuleNamespace.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\versioninfo.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ViewDescription.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ViewInstance.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ViewInstanceRequest.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\AbstractDataWriter.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\AbstractDataWriterBase.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\AbstractGetData3DCall.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\AbstractGetDataCall.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\AbstractNamedObject.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\AbstractNamedObjectContainer.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\AbstractSlot.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ApiHandle.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\api\MegaMolCore.std.h">
-      <Filter>Public Header Files\api</Filter>
+      <Filter>api\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\api\MegaMolCore.std.template.h">
-      <Filter>Public Header Files\api</Filter>
+      <Filter>api\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\api\MegaMolCore.h">
-      <Filter>Public Header Files\api</Filter>
+      <Filter>api\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\ClusterController.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\ClusterControllerClient.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\ClusterViewMaster.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\CommChannel.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\CommChannelServer.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\InfoIconRenderer.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\NetMessages.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\PowerwallView.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\AbstractClusterView.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\CallRegisterAtController.h">
-      <Filter>Public Header Files\cluster</Filter>
+      <Filter>cluster\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\mpi\MpiCall.h">
-      <Filter>Public Header Files\cluster\mpi</Filter>
+      <Filter>cluster\mpi\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\mpi\MpiProvider.h">
-      <Filter>Public Header Files\cluster\mpi</Filter>
+      <Filter>cluster\mpi\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\mpi\View.h">
-      <Filter>Public Header Files\cluster\mpi</Filter>
+      <Filter>cluster\mpi\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\simple\HeartbeatClient.h">
-      <Filter>Public Header Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\simple\Server.h">
-      <Filter>Public Header Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\simple\View.h">
-      <Filter>Public Header Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\simple\Client.h">
-      <Filter>Public Header Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\simple\ClientViewRegistration.h">
-      <Filter>Public Header Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\simple\CommUtil.h">
-      <Filter>Public Header Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\cluster\simple\Heartbeat.h">
-      <Filter>Public Header Files\cluster\simple</Filter>
+      <Filter>cluster\simple\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\job\DataWriterJob.h">
-      <Filter>Public Header Files\job</Filter>
+      <Filter>job\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\job\JobThread.h">
-      <Filter>Public Header Files\job</Filter>
+      <Filter>job\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\job\AbstractJob.h">
-      <Filter>Public Header Files\job</Filter>
+      <Filter>job\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\job\AbstractThreadedJob.h">
-      <Filter>Public Header Files\job</Filter>
+      <Filter>job\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\SiffCSplineFitter.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\TestSpheresDataSource.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\VolumetricDataCall.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\VolumetricDataCallTypes.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\BezierCurvesListDataCall.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\CalloutImageCall.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\ImageViewer.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\LinesDataCall.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\LinesRenderer.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\PngBitmapCodec.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\QRCodeDataCall.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MMPLDDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MMPLDWriter.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MultiParticleDataCall.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\OracleSphereRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\ParticleGridDataCall.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\ParticleListFilter.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\ParticleWorker.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\SimpleGeoSphereRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\SimpleSphereRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\SphereOutlineRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\VolumeDataCall.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\VTFDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\VTFResDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\AbstractParticleDataCall.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\AbstractSimpleParticleDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\AbstractSimpleSphereRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\AbstractSimpleStoringParticleDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\AddClusterColours.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\AddParticleColours.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\ArrowRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\ClusteredSphereRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\D3D11SimpleSphereRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\DataGridder.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\DirectionalParticleDataCall.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\DirPartColModulate.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\DirPartFilter.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\DynDensityGradientEstimator.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\GrimRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MipDepthSphereRenderer.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MMPGDDataSource.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MMPGDWriter.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\ParamUpdateListener.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\StringParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\TernaryParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\Vector2fParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\Vector3fParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\Vector4fParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\AbstractParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\AbstractParamSlot.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\BoolParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\ButtonParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\EnumParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\FilePathParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\FloatParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\IntParam.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\ParamHandle.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\param\ParamSlot.h">
-      <Filter>Public Header Files\param</Filter>
+      <Filter>param\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\profiler\Connection.h">
-      <Filter>Public Header Files\profiler</Filter>
+      <Filter>profiler\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\profiler\Manager.h">
-      <Filter>Public Header Files\profiler</Filter>
+      <Filter>profiler\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\special\AbstractStereoDisplay.h">
-      <Filter>Public Header Files\special</Filter>
+      <Filter>special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\special\ColStereoDisplay.h">
-      <Filter>Public Header Files\special</Filter>
+      <Filter>special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\AbstractD3D11RenderObject.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\APIValueUtil.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\BTFParser.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\ColourParser.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\Configuration.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\D3D11BoundingBox.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\LogEchoTarget.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\ProjectParser.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\ResourceWrapper.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\ShaderSourceFactory.h">
-      <Filter>Public Header Files\utility</Filter>
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\xml\XmlParser.h">
-      <Filter>Public Header Files\utility\xml</Filter>
+      <Filter>utility\xml\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\xml\XmlReader.h">
-      <Filter>Public Header Files\utility\xml</Filter>
+      <Filter>utility\xml\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\xml\ConditionalParser.h">
-      <Filter>Public Header Files\utility\xml</Filter>
+      <Filter>utility\xml\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\xml\ConfigurationParser.h">
-      <Filter>Public Header Files\utility\xml</Filter>
+      <Filter>utility\xml\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractCallRender.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractCallRender3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractCamParamSync.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractOverrideView.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractRendererDeferred3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractRenderingView.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractRenderOutput.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractTileView.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractView.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AbstractView3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\AnimDataModule.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\BlinnPhongRendererDeferred.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\Call6DofInteraction.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallCamParams.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallCamParamSync.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallClipPlane.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallGetTransferFunction.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallRender2D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallRender3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallRenderDeferred3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallRenderView.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallTimeControl.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CallUpdateDirect3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\CameraParamOverride.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\ClipPlane.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\DataSourceModule.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\graphicsresources.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\LinearTransferFunction.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\LinkedView3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\MouseFlags.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\MuxRenderer3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\RenderDeferredOutput.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\Renderer2DModule.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\Renderer3DModule.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\Renderer3DModuleDS.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\RenderOutput.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\SharedCameraParameters.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\SplitView.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\SwitchRenderer3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\TileView.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\TimeControl.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\TransferFunctionRenderer.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\View2D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\View3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\ViewDirect3D.h">
-      <Filter>Public Header Files\view</Filter>
+      <Filter>view\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\MegaMolLogo.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\QuadBufferStereoView.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\ScreenShooter.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\TitleRenderer.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\AbstractStereoView.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\AnaglyphStereoView.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\ChronoGraph.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\DemoRenderer2D.h">
-      <Filter>Public Header Files\view\special</Filter>
+      <Filter>view\special\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\vismol2\Mol20DataSource.h">
-      <Filter>Public Header Files\vismol2</Filter>
+      <Filter>vismol2\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\vismol2\Mol20Renderer.h">
-      <Filter>Public Header Files\vismol2</Filter>
+      <Filter>vismol2\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\vismol2\Mol2Data.h">
-      <Filter>Public Header Files\vismol2</Filter>
+      <Filter>vismol2\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\vismol2\Mol20DataCall.h">
-      <Filter>Public Header Files\vismol2</Filter>
+      <Filter>vismol2\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\CallDescriptionManager.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\ModuleAutoDescription.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\ModuleDescription.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\ModuleDescriptionManager.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\ObjectDescription.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\ObjectDescriptionManager.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\CallAutoDescription.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\CallDescription.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\LoaderADModuleAutoDescription.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\CallAutoDescription.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\ModuleAutoDescription.h">
-      <Filter>Public Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\factories\AbstractAssemblyInstance.h">
-      <Filter>Public Header Files\factories</Filter>
+      <Filter>factories\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\factories\ModuleClassRegistry.h">
-      <Filter>Private Header Files\factories</Filter>
+      <Filter>factories\Private Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\factories\CallClassRegistry.h">
-      <Filter>Private Header Files\factories</Filter>
+      <Filter>factories\Private Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\plugins\AbstractPluginInstance.h">
-      <Filter>Public Header Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\plugins\PluginManager.h">
-      <Filter>Private Header Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Private Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\MolecularDataCall.h">
-      <Filter>Public Header Files\moldyn</Filter>
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\CallTriMeshData.h">
-      <Filter>Public Header Files\misc</Filter>
+      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\plugins\Plugin200Instance.h">
-      <Filter>Public Header Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\plugins\Plugin100Instance.h">
-      <Filter>Private Header Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Private Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\plugins\Plugin200Utilities.h">
-      <Filter>Public Header Files\utility\plugins</Filter>
+      <Filter>utility\plugins\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
