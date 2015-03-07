@@ -533,7 +533,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\utility\D3D11BoundingBox.cpp" />
     <ClCompile Include="src\utility\LogEchoTarget.cpp" />
     <ClCompile Include="src\utility\plugins\AbstractPluginInstance.cpp" />
-    <ClCompile Include="src\utility\plugins\LegacyPlugin100Instance.cpp" />
+    <ClCompile Include="src\utility\plugins\Plugin100Instance.cpp" />
     <ClCompile Include="src\utility\plugins\Plugin200Instance.cpp" />
     <ClCompile Include="src\utility\plugins\PluginManager.cpp" />
     <ClCompile Include="src\utility\ProjectParser.cpp" />
@@ -837,7 +837,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\factories\CallClassRegistry.h" />
     <ClInclude Include="src\factories\ModuleClassRegistry.h" />
     <ClInclude Include="src\stdafx.h" />
-    <ClInclude Include="src\utility\plugins\LegacyPlugin100Instance.h" />
+    <ClInclude Include="src\utility\plugins\Plugin100Instance.h" />
     <ClInclude Include="src\utility\plugins\PluginManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

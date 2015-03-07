@@ -5,7 +5,7 @@
  */
 
 #include "stdafx.h"
-#include "utility/plugins/LegacyPlugin100Instance.h"
+#include "utility/plugins/Plugin100Instance.h"
 #include <cassert>
 #include "mmcore/CoreInstance.h"
 #include "vislib/functioncast.h"
@@ -17,9 +17,9 @@ using namespace megamol::core::utility::plugins;
 
 
 /*
- * LegacyPlugin100Instance::ContinueLoad
+ * Plugin100Instance::ContinueLoad
  */
-PluginManager::collection_type LegacyPlugin100Instance::ContinueLoad(
+PluginManager::collection_type Plugin100Instance::ContinueLoad(
         const std::basic_string<TCHAR> &path,
         std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib,
         CoreInstance& coreInst) {
@@ -76,7 +76,7 @@ PluginManager::collection_type LegacyPlugin100Instance::ContinueLoad(
     // From here on, plugin loading cannot fail any more
     // (except for unexpected errors)
 
-    LegacyPlugin100Instance *lp100i = new LegacyPlugin100Instance(plgName.PeekBuffer(), plgDesc.PeekBuffer(), lib);
+    Plugin100Instance *lp100i = new Plugin100Instance(plgName.PeekBuffer(), plgDesc.PeekBuffer(), lib);
     PluginManager::collection_type rv;
     rv.push_back(PluginManager::plugin_ptr_type(lp100i));
 
@@ -113,9 +113,9 @@ PluginManager::collection_type LegacyPlugin100Instance::ContinueLoad(
 
 
 /*
- * LegacyPlugin100Instance::LegacyPlugin100Instance
+ * Plugin100Instance::Plugin100Instance
  */
-LegacyPlugin100Instance::LegacyPlugin100Instance(const char *asm_name,
+Plugin100Instance::Plugin100Instance(const char *asm_name,
         const char *description, 
         std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib)
         : AbstractPluginInstance(asm_name, description), lib(lib) {
@@ -126,9 +126,9 @@ LegacyPlugin100Instance::LegacyPlugin100Instance(const char *asm_name,
 
 
 /*
- * LegacyPlugin100Instance::~LegacyPlugin100Instance
+ * Plugin100Instance::~Plugin100Instance
  */
-LegacyPlugin100Instance::~LegacyPlugin100Instance(void) {
+Plugin100Instance::~Plugin100Instance(void) {
     // Descriptions must be freed before the plugin lib is unloaded.
     // Thus, we manually free the descriptions first.
     this->module_descriptions.Shutdown();

@@ -9,6 +9,9 @@
 #pragma once
 
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
+#include "vislib/sys/DynamicLinkLibrary.h"
+#include "vislib/macro_utils.h"
+#include <memory>
 
 
 namespace megamol {
@@ -45,6 +48,9 @@ namespace plugins {
 
     } PluginCompatibilityInfo;
 
+    /** Callback to be fired on an error during plugin initialization */
+    typedef void (*ErrorCallback)(const char *msg, const char *file, unsigned int line);
+
     /**
      * Base class for Instances of Plugins using the 2.0 API interface
      */
@@ -55,13 +61,13 @@ namespace plugins {
         typedef int (*mmplgPluginAPIVersion_funcptrtype)(void);
 
         /** Type declaration of 'mmplgGetPluginCompatibilityInfo' */
-        typedef PluginCompatibilityInfo *(*mmplgGetPluginCompatibilityInfo_funcptrtype)(void);
+        typedef PluginCompatibilityInfo *(*mmplgGetPluginCompatibilityInfo_funcptrtype)(ErrorCallback onError);
 
         /** Type declaration of 'mmplgReleasePluginCompatibilityInfo' */
         typedef void(*mmplgReleasePluginCompatibilityInfo_funcptrtype)(PluginCompatibilityInfo*);
 
         /** Type declaration of 'mmplgGetPluginInstance' */
-        typedef AbstractPluginInstance* (*mmplgGetPluginInstance_funcptrtype)(void);
+        typedef AbstractPluginInstance* (*mmplgGetPluginInstance_funcptrtype)(ErrorCallback onError);
 
         /** Type declaration of 'mmplgReleasePluginInstance' */
         typedef void(*mmplgReleasePluginInstance_funcptrtype)(AbstractPluginInstance*);
@@ -81,9 +87,25 @@ namespace plugins {
         virtual void registerClasses(void) = 0;
 
         /**
-        * TODO: Document
-        */
+         * TODO: Document
+         */
         virtual void connectStatics(StaticConnectorType which, void* value) = 0;
+
+        /**
+         * Stores the lib object as part of this instance
+         *
+         * @param lib The lib object to be stored
+         *
+         * @remarks This method is for framework management only. DO NOT CALL!
+         */
+        void store_lib(std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib);
+
+        /**
+         * Answer the stored lib
+         *
+         * @return The stored lib
+         */
+        std::shared_ptr<vislib::sys::DynamicLinkLibrary> get_lib(void) const;
 
     protected:
 
@@ -102,6 +124,10 @@ namespace plugins {
 
         /* deleted assignment operator */
         Plugin200Instance& operator=(const Plugin200Instance& src) = delete;
+
+        /** The plugin library object */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
+        std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib;
 
     };
 

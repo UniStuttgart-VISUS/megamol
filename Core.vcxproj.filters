@@ -875,9 +875,6 @@
     <ClCompile Include="src\utility\plugins\AbstractPluginInstance.cpp">
       <Filter>Source Files\utility\plugins</Filter>
     </ClCompile>
-    <ClCompile Include="src\utility\plugins\LegacyPlugin100Instance.cpp">
-      <Filter>Source Files\utility\plugins</Filter>
-    </ClCompile>
     <ClCompile Include="src\utility\plugins\PluginManager.cpp">
       <Filter>Source Files\utility\plugins</Filter>
     </ClCompile>
@@ -888,6 +885,9 @@
       <Filter>Source Files\misc</Filter>
     </ClCompile>
     <ClCompile Include="src\utility\plugins\Plugin200Instance.cpp">
+      <Filter>Source Files\utility\plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utility\plugins\Plugin100Instance.cpp">
       <Filter>Source Files\utility\plugins</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1519,9 +1519,6 @@
     <ClInclude Include="include\mmcore\utility\plugins\AbstractPluginInstance.h">
       <Filter>Public Header Files\utility\plugins</Filter>
     </ClInclude>
-    <ClInclude Include="src\utility\plugins\LegacyPlugin100Instance.h">
-      <Filter>Private Header Files\utility\plugins</Filter>
-    </ClInclude>
     <ClInclude Include="src\utility\plugins\PluginManager.h">
       <Filter>Private Header Files\utility\plugins</Filter>
     </ClInclude>
@@ -1533,6 +1530,9 @@
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\plugins\Plugin200Instance.h">
       <Filter>Public Header Files\utility\plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility\plugins\Plugin100Instance.h">
+      <Filter>Private Header Files\utility\plugins</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

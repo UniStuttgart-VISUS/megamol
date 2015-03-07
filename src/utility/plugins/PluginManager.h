@@ -11,6 +11,8 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include <vector>
 #include "vislib/tchar.h"
+#include "vislib/sys/DynamicLinkLibrary.h"
+#include <string>
 
 
 namespace megamol {
@@ -75,6 +77,23 @@ namespace plugins {
 
         /** deleted assignment operatior */
         PluginManager& operator=(const PluginManager& rhs) = delete;
+
+        /**
+         * Continue to load 'lib' as plugin of version 2.00
+         *
+         * @param path The plugin's file system path
+         * @param lib The loaded library
+         * @param coreInst The calling core instance
+         *
+         * @return A collection containing the loaded plugin
+         *
+         * @throw vislib::Exception on failure
+         */
+        collection_type ContinueLoad200(
+            const std::basic_string<TCHAR> &path,
+            std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib,
+            CoreInstance& coreInst);
+
 
         /** The loaded plugins */
         collection_type plugins;

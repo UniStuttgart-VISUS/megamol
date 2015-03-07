@@ -27,7 +27,7 @@ namespace plugins {
      * An object is described using a unique name. This name is compared case
      * insensitive!
      */
-    class LegacyPlugin100Instance : public AbstractPluginInstance {
+    class Plugin100Instance : public AbstractPluginInstance {
     public:
 
         /**
@@ -47,19 +47,19 @@ namespace plugins {
             ::megamol::core::CoreInstance& coreInst);
 
         /** Dtor. */
-        virtual ~LegacyPlugin100Instance(void);
+        virtual ~Plugin100Instance(void);
 
     private:
 
         /** Ctor. */
-        LegacyPlugin100Instance(const char *asm_name, const char *description,
+        Plugin100Instance(const char *asm_name, const char *description,
             std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib);
 
         /** deleted copy ctor */
-        LegacyPlugin100Instance(const LegacyPlugin100Instance& src) = delete;
+        Plugin100Instance(const Plugin100Instance& src) = delete;
 
         /** deleted assignment operatior */
-        LegacyPlugin100Instance& operator=(const LegacyPlugin100Instance& rhs) = delete;
+        Plugin100Instance& operator=(const Plugin100Instance& rhs) = delete;
 
         /** The plugin library object */
         std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib;
