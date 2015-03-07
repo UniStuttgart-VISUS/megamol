@@ -766,6 +766,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\utility\LogEchoTarget.h" />
     <ClInclude Include="include\mmcore\utility\plugins\AbstractPluginInstance.h" />
     <ClInclude Include="include\mmcore\utility\plugins\Plugin200Instance.h" />
+    <ClInclude Include="include\mmcore\utility\plugins\Plugin200Utilities.h" />
     <ClInclude Include="include\mmcore\utility\ProjectParser.h" />
     <ClInclude Include="include\mmcore\utility\ResourceWrapper.h" />
     <ClInclude Include="include\mmcore\utility\ShaderSourceFactory.h" />

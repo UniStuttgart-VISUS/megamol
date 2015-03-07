@@ -12,6 +12,7 @@
 #include "vislib/sys/DynamicLinkLibrary.h"
 #include "vislib/macro_utils.h"
 #include <memory>
+#include "mmcore/utility/plugins/Plugin200Utilities.h"
 
 
 namespace megamol {

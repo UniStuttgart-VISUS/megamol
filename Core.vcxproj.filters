@@ -1534,5 +1534,8 @@
     <ClInclude Include="src\utility\plugins\Plugin100Instance.h">
       <Filter>Private Header Files\utility\plugins</Filter>
     </ClInclude>
+    <ClInclude Include="include\mmcore\utility\plugins\Plugin200Utilities.h">
+      <Filter>Public Header Files\utility\plugins</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
