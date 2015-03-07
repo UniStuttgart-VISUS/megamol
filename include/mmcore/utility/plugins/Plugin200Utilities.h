@@ -21,6 +21,12 @@
 
 /*
  * Usage:
+ *   MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
+ */
+#define MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion return 200;
+
+/*
+ * Usage:
  *   MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV)
  */
 #define MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(Obj, Name, V1, V2, V3, V4) { \
