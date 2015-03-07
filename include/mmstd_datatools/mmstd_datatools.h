@@ -1,7 +1,7 @@
 /*
- * mmstd.datatools.h
+ * mmstd_datatools.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef MMSTD_DATATOOLS_H_INCLUDED
@@ -27,6 +27,7 @@
 #define MMSTD_DATATOOLS_API
 #endif /* _WIN32 */
 
+#include "mmcore/utility/plugins/Plugin200Instance.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,73 +36,58 @@ extern "C" {
 /**
  * Returns the version of the MegaMol™ plugin api used by this plugin.
  *
- * @return The used MegaMol™ plugin api
+ * @return 200 -- (ver.: 2.00)
  */
 MMSTD_DATATOOLS_API int mmplgPluginAPIVersion(void);
 
 /**
- * Answer the name of the plugin in UTF8/ASCII7
+ * Provides compatibility information
  *
- * @return The name of the plugin in UTF8/ASCII7
+ * @param onError Callback function pointer used when an error occures
+ *
+ * @return The compatibility information struct, or nullptr in case of an
+ *         error.
+ *
+ * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
+ *          memory of the returned struct.
  */
-MMSTD_DATATOOLS_API const char * mmplgPluginName(void);
+MMSTD_DATATOOLS_API
+megamol::core::utility::plugins::PluginCompatibilityInfo *
+mmplgGetPluginCompatibilityInfo(
+    megamol::core::utility::plugins::ErrorCallback onError);
 
 /**
- * Answer the description of the plugin in UTF8/ASCII7
+ * Releases the memory of a compatibility information struct previously
+ * returned by 'mmplgGetPluginCompatibilityInfo'
  *
- * @return The description of the plugin in UTF8/ASCII7
+ * @param ci The compatibility information struct to be released
  */
-MMSTD_DATATOOLS_API const char * mmplgPluginDescription(void);
+MMSTD_DATATOOLS_API void mmplgReleasePluginCompatibilityInfo(
+    megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
- * Answer the core compatibility information
+ * Creates a new instance of this plugin
  *
- * @return The core compatibility information
+ * @param onError Callback function pointer used when an error occures
+ *
+ * @return A new instance of this plugin, or nullptr in case of an error
+ *
+ * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
+ *          the returned object.
  */
-MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void);
+MMSTD_DATATOOLS_API
+megamol::core::utility::plugins::AbstractPluginInstance*
+mmplgGetPluginInstance
+    (megamol::core::utility::plugins::ErrorCallback onError);
 
 /**
- * Answer the number of exported modules
+ * Releases the memory of the plugin instance previously returned by
+ * 'mmplgGetPluginInstance'
  *
- * @return The number of exported modules
+ * @param pi The plugin instance to be released
  */
-MMSTD_DATATOOLS_API int mmplgModuleCount(void);
-
-/**
- * Answer the module definition object of the idx-th module
- *
- * @param idx The zero-based index
- *
- * @return The module definition
- */
-MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx);
-
-/**
- * Answer the number of exported calls
- *
- * @return The number of exported calls
- */
-MMSTD_DATATOOLS_API int mmplgCallCount(void);
-
-/**
- * Answer the call definition object of the idx-th call
- *
- * @param idx The zero-based index
- *
- * @return The call definition
- */
-MMSTD_DATATOOLS_API void* mmplgCallDescription(int idx);
-
-/**
- * Connects static objects to the core. (See docu for more information)
- *
- * @param which A numberic value identifying the static object
- * @param value The value to connect the static object to
- *
- * @return True if this static object has been connected, false if the object
- *         either does not exist or if there was an error.
- */
-MMSTD_DATATOOLS_API bool mmplgConnectStatics(int which, void* value);
+MMSTD_DATATOOLS_API void mmplgReleasePluginInstance(
+    megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
 } /* extern "C" */

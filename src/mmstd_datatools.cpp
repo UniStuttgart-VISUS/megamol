@@ -1,17 +1,18 @@
 /*
- * mmstd.datatools.cpp
+ * mmstd_datatools.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "mmstd_datatools/mmstd_datatools.h"
+
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/factories/ModuleAutoDescription.h"
+#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
+
 #include "DataSetTimeRewriteModule.h"
 #include "ParticleListMergeModule.h"
 #include "DataFileSequenceStepper.h"
@@ -30,103 +31,98 @@
  * mmplgPluginAPIVersion
  */
 MMSTD_DATATOOLS_API int mmplgPluginAPIVersion(void) {
-    return 100;
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
 
 /*
- * mmplgPluginName
+ * mmplgGetPluginCompatibilityInfo
  */
-MMSTD_DATATOOLS_API const char * mmplgPluginName(void) {
-    return "mmstd.datatools";
+MMSTD_DATATOOLS_API
+megamol::core::utility::plugins::PluginCompatibilityInfo *
+mmplgGetPluginCompatibilityInfo(
+        megamol::core::utility::plugins::ErrorCallback onError) {
+    // compatibility information with core and vislib
+    using megamol::core::utility::plugins::PluginCompatibilityInfo;
+    using megamol::core::utility::plugins::LibraryVersionInfo;
+
+    PluginCompatibilityInfo *ci = new PluginCompatibilityInfo;
+    ci->libs_cnt = 2;
+    ci->libs = new LibraryVersionInfo[2];
+
+    MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV)
+    MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(ci->libs[1], "vislib", VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD)
+
+    return ci;
 }
 
 
 /*
- * mmplgPluginDescription
+ * mmplgReleasePluginCompatibilityInfo
  */
-MMSTD_DATATOOLS_API const char * mmplgPluginDescription(void) {
-    return "MegaMol Standard-Plugin containing data manipulation and conversion modules";
+MMSTD_DATATOOLS_API void mmplgReleasePluginCompatibilityInfo(
+        megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
+    // release compatiblity data on the correct heap
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)
 }
 
 
-/*
- * mmplgCoreCompatibilityValue
- */
-MMSTD_DATATOOLS_API const void * mmplgCoreCompatibilityValue(void) {
-    static const mmplgCompatibilityValues compRev = {
-        sizeof(mmplgCompatibilityValues),
-        MEGAMOL_CORE_COMP_REV,
-        VISLIB_VERSION_REVISION
+/* anonymous namespace hides this type from any other object files */
+namespace {
+    /** Implementing the instance class of this plugin */
+    class plugin_instance : public megamol::core::utility::plugins::Plugin200Instance {
+    public:
+        /** ctor */
+        plugin_instance(void)
+            : megamol::core::utility::plugins::Plugin200Instance(
+                /* machine-readable plugin assembly name */
+                "mmstd_datatools",
+                /* human-readable plugin description */
+                "MegaMol Standard-Plugin containing data manipulation and conversion modules") {
+            // here we could perform addition initialization
+        };
+        /** Dtor */
+        virtual ~plugin_instance(void) {
+            // here we could perform addition de-initialization
+        }
+        /** Registers modules and calls */
+        virtual void registerClasses(void) {
+            // register modules here:
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequenceStepper>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleListSelector>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleDensityOpacityModule>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
+            // register calls here:
+            // ...
+        }
+        MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
-    return &compRev;
 }
 
 
 /*
- * mmplgModuleCount
+ * mmplgGetPluginInstance
  */
-MMSTD_DATATOOLS_API int mmplgModuleCount(void) {
-    return 12;
+MMSTD_DATATOOLS_API
+megamol::core::utility::plugins::AbstractPluginInstance*
+mmplgGetPluginInstance(
+        megamol::core::utility::plugins::ErrorCallback onError) {
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgGetPluginInstance(plugin_instance, onError)
 }
 
 
 /*
- * mmplgModuleDescription
+ * mmplgReleasePluginInstance
  */
-MMSTD_DATATOOLS_API void* mmplgModuleDescription(int idx) {
-    switch(idx) {
-    case 0: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DataSetTimeRewriteModule>();
-    case 1: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListMergeModule>();
-    case 2: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequenceStepper>();
-    case 3: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::SphereDataUnifier>();
-    case 4: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleThinner>();
-    case 5: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::OverrideParticleGlobals>();
-    case 6: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleRelaxationModule>();
-    case 7: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleListSelector>();
-    case 8: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ParticleDensityOpacityModule>();
-    case 9: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
-    case 10: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
-    case 11: return new megamol::core::factories::ModuleAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
-    }
-    return nullptr;
-}
-
-
-/*
- * mmplgCallCount
- */
-MMSTD_DATATOOLS_API int mmplgCallCount(void) {
-    return 0;
-}
-
-
-/*
- * mmplgCallDescription
- */
-MMSTD_DATATOOLS_API void* mmplgCallDescription(int idx) {
-    return nullptr;
-}
-
-
-/*
- * mmplgConnectStatics
- */
-MMSTD_DATATOOLS_API bool mmplgConnectStatics(int which, void* value) {
-    switch (which) {
-
-        case 1: // vislib::log
-            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(nullptr), false);
-            vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-            vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value)));
-            vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-            vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-            return true;
-
-        case 2: // vislib::stacktrace
-            return vislib::sys::ThreadSafeStackTrace::Initialise(
-                *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true);
-
-    }
-    return false;
+MMSTD_DATATOOLS_API void mmplgReleasePluginInstance(
+        megamol::core::utility::plugins::AbstractPluginInstance* pi) {
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
 }
