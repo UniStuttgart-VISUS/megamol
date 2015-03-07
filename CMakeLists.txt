@@ -1,5 +1,5 @@
 #
-# MegaMol™ mmstd.moldyn Plugin
+# MegaMol™ mmstd_moldyn Plugin
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
@@ -26,6 +26,7 @@ find_package(vislib REQUIRED HINTS ${MegaMolCore_vislib_DIR})
 set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES})
 include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS})
 
+
 # processor word size detection
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set(BITS 64)
@@ -34,7 +35,9 @@ else()
 endif()
 
 # compiler options
-add_definitions(-Wall -pedantic -ansi -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -DMMSTD_MOLDYN_EXPORTS)
+string(TOUPPER ${CMAKE_PROJECT_NAME} PROJECT_NAME_UPPER)
+#message(STATUS "${CMAKE_PROJECT_NAME} ${PROJECT_NAME_UPPER}")
+add_definitions(-Wall -pedantic -ansi -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -D${PROJECT_NAME_UPPER}_EXPORTS)
 if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
 	message(STATUS "Version < 4.7")
 	add_definitions(-std=c++0x)
@@ -61,31 +64,31 @@ file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/
 include_directories("include" "src")
 
 # Target definition
-add_library(mmstd_moldyn SHARED ${header_files} ${source_files})
+add_library(${CMAKE_PROJECT_NAME} SHARED ${header_files} ${source_files})
 # Set target naming conventions for different build types
-set_target_properties(mmstd_moldyn PROPERTIES DEBUG_POSTFIX "d")
-set_target_properties(mmstd_moldyn PROPERTIES SUFFIX ".mmplg")
-set_target_properties(mmstd_moldyn PROPERTIES PREFIX "")
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES PREFIX "")
 # Dependent projects only need to link against the core.so itself.
-target_link_libraries(mmstd_moldyn PRIVATE ${LIBS})
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${LIBS})
 
 
 # Installation rules for generated files
-set(package_name "mmstd_moldyn")
+set(package_name "${CMAKE_PROJECT_NAME}")
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-install(TARGETS mmstd_moldyn DESTINATION "lib/megamol" EXPORT mmstd_moldyn-target)
+install(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION "lib/megamol" EXPORT ${CMAKE_PROJECT_NAME}-target)
 # Export the target to be used in the configuration file for find_package
-install(EXPORT mmstd_moldyn-target DESTINATION share/cmake/${package_name})
+install(EXPORT ${CMAKE_PROJECT_NAME}-target DESTINATION share/cmake/${package_name})
 # Install configure script
 set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 	set(cfg_CMAKE_BUILD_TYPE Release)
 endif()
-set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
-configure_file(cmake/mmstd_moldynConfigInstall.cmake.in
-	${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake
+set(cfg_MegaMolCore_DIR ${MegaMolCore_DIR})
+configure_file(cmake/ConfigInstall.cmake.in
+	${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigInstall.cmake
 	@ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/mmstd_moldynConfigInstall.cmake DESTINATION share/cmake/${package_name} RENAME mmstd_moldynConfig.cmake)
+install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigInstall.cmake DESTINATION share/cmake/${package_name} RENAME ${CMAKE_PROJECT_NAME}Config.cmake)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/megamol/${package_name}/Shaders")
 set(package_install_dir "${CMAKE_INSTALL_PREFIX}/share/cmake/${package_name}")
 # Install search directory into the cmake package user registry
@@ -100,22 +103,22 @@ if (${register_build_trees})
 	# this package without installing. Also place a version config file for cmake
 	# to decide whether to take release or debug accordingly.
 	# Set our known paths
-	set(cfg_mmstd_moldyn_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
-	set(cfg_mmstd_moldyn_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
-	set(cfg_mmstd_moldyn_MegaMolCore_DIR ${MegaMolCore_DIR})
+	set(cfg_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+	set(cfg_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
+	set(cfg_MegaMolCore_DIR ${MegaMolCore_DIR})
 	set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 	if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
 		set(cfg_CMAKE_BUILD_TYPE Release)
 	endif()
 	# Configure our local config script
-	configure_file(cmake/mmstd_moldynConfigLocal.cmake.in
-		${CMAKE_BINARY_DIR}/mmstd_moldynConfig.cmake
+	configure_file(cmake/ConfigLocal.cmake.in
+		${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}Config.cmake
 		@ONLY)
 	# Configure our local version script
-	configure_file(cmake/mmstd_moldynConfigVersion.cmake.in
-		${CMAKE_BINARY_DIR}/mmstd_moldynConfigVersion.cmake
+	configure_file(cmake/ConfigVersion.cmake.in
+		${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}ConfigVersion.cmake
 		@ONLY)
-	export(TARGETS mmstd_moldyn FILE ${CMAKE_BINARY_DIR}/mmstd_moldyn-target.cmake)
-	export(PACKAGE mmstd_moldyn)
+	export(TARGETS ${CMAKE_PROJECT_NAME} FILE ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}-target.cmake)
+	export(PACKAGE ${CMAKE_PROJECT_NAME})
 endif()
 

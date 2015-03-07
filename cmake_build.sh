@@ -64,9 +64,9 @@ while getopts "hp:dDcC:mirf:" opt; do
     echo
     echo "  creates the build tree subdirectory for the debug version, not for the release version, and invokes 'cmake', but does not invoke 'make' or 'make install'-"
     echo
-    echo "$0 -dcmi -p ~/my_inst -v ~/vislib_inst"
+    echo "$0 -dcmi -p ~/my_inst -f ~/mmcore_inst"
     echo
-    echo "  creates the build tree subdirectors for release and debug, and invokes 'cmake', 'make' and 'make install' in both build trees. Additionally the installation prefix is set to '~/my_inst' and as search hint for the vislib package '~/vislib_inst' is passed to cmake."
+    echo "  creates the build tree subdirectors for release and debug, and invokes 'cmake', 'make' and 'make install' in both build trees. Additionally the installation prefix is set to '~/my_inst' and as search hint for the MegaMolCore package '~/mmcore_inst' is passed to cmake."
     echo
     exit 0
     ;;
@@ -130,7 +130,7 @@ cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 #echo "  invoke_make=$invoke_make"
 #echo "  invoke_make_install=$invoke_make_install"
 #echo "  invoke_default=$invoke_default"
-#echo "  vislib_DIR=$vislib_DIR"
+#echo "  MegaMolCore_DIR=$MegaMolCore_DIR"
 #echo "  cmake_cmd=$cmake_cmd"
 
 if [ $build_release -eq 1 ] ; then
