@@ -1,0 +1,31 @@
+#
+# MegaMol™ Console Front End
+# Copyright 2015, by MegaMol TEAM
+# Alle Rechte vorbehalten. All rights reserved.
+#
+cmake_minimum_required(VERSION 2.8.12)
+
+set(TARGET_DIR "@CMAKE_INSTALL_PREFIX@")
+
+set(LINK_FILE "${TARGET_DIR}/lib/megamol/libAntTweakBar.so.1")
+set(TO_FILE "${TARGET_DIR}/lib/megamol/libAntTweakBar.so")
+if(NOT EXISTS "${LINK_FILE}")
+	execute_process(COMMAND ln -s "${TO_FILE}" "${LINK_FILE}")
+	message(STATUS "Install symbolic link: ${LINK_FILE}")
+else()
+	message(STATUS "Skipping symbolic link: ${LINK_FILE}")
+endif()
+
+set(LINK_FILE "${TARGET_DIR}/bin/megamol/libMegaMolGlut.so")
+set(TO_FILE "${TARGET_DIR}/lib/megamol/libMegaMolGlut.so")
+if ("@CMAKE_BUILD_TYPE@" STREQUAL "Debug")
+	set(LINK_FILE "${TARGET_DIR}/bin/megamol/libMegaMolGlutd.so")
+	set(TO_FILE "${TARGET_DIR}/lib/megamol/libMegaMolGlutd.so")
+endif()
+if(NOT EXISTS "${LINK_FILE}")
+	execute_process(COMMAND ln -s "${TO_FILE}" "${LINK_FILE}")
+	message(STATUS "Install symbolic link: ${LINK_FILE}")
+else()
+	message(STATUS "Skipping symbolic link: ${LINK_FILE}")
+endif()
+

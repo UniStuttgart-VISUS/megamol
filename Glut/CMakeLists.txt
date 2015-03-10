@@ -3,7 +3,7 @@
 # Copyright 2015, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 if (NOT DEFINED Building_MegaMolCon)
 	message(FATAL_ERROR "This CMakefile cannot be processed independently.")
@@ -48,4 +48,7 @@ set_target_properties(MegaMolGlut PROPERTIES DEBUG_POSTFIX "d")
 # Dependent projects only need to link against the core.so itself.
 target_link_libraries(MegaMolGlut PRIVATE ${LIBS})
 add_dependencies(MegaMolGlut MegaMolCon_GLUT_versioninfo)
+
+# install target
+install(TARGETS MegaMolGlut DESTINATION "lib/megamol")
 

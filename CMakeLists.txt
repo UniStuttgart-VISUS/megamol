@@ -3,7 +3,7 @@
 # Copyright 2015, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(MegaMolCon)
 set(Building_MegaMolCon TRUE)
@@ -53,6 +53,23 @@ set(CMAKE_CXX_FLAGS_DEBUG -DDEBUG)
 add_subdirectory(Viewer)
 add_subdirectory(Glut)
 add_subdirectory(Console)
+
+# install target
+set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib/megamol")
+
+set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/megamol/MegaMolCon")
+set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+	set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/megamol/MegaMolCond")
+	set(MEGAMOL_SHELL_START_SCRIPT "megamold.sh")
+endif()
+configure_file(extra/megamol.sh ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
+
+configure_file(extra/megamol.cfg ${CMAKE_BINARY_DIR}/megamol.cfg @ONLY)
+configure_file(extra/install_megamol_cfg.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake @ONLY)
+install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamol_cfg.cmake)
+
 
 # Specifying subproject dependencies
 add_dependencies(MegaMolGlut MegaMolCon_Viewer)

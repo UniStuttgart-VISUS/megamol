@@ -3,7 +3,7 @@
 # Copyright 2015, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
 
 if (NOT DEFINED Building_MegaMolCon)
 	message(FATAL_ERROR "This CMakefile cannot be processed independently.")
@@ -48,4 +48,12 @@ set_target_properties(MegaMolCon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BIN
 # Dependent projects only need to link against the core.so itself.
 target_link_libraries(MegaMolCon PRIVATE ${LIBS})
 add_dependencies(MegaMolCon MegaMolCon_CONSOLE_versioninfo)
+
+# install target
+install(TARGETS MegaMolCon DESTINATION "bin/megamol")
+if (AntTweakBar_FOUND)
+	install(FILES ${AntTweakBar_LIBRARIES} DESTINATION "lib/megamol")
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/linkAntTweakBar.cmake.in ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake @ONLY)
+	install(SCRIPT ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake)
+endif()
 
