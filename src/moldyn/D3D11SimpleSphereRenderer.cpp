@@ -114,7 +114,7 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
     DirectX::XMFLOAT4 vector;                   // Temporary result.
     D3D11_VIEWPORT viewport;                    // Currently active viewport.
 
-    UINT strides = D3D11SimpleSphereRenderer::VERTEX_SIZE;
+    UINT strides = static_cast<UINT>(D3D11SimpleSphereRenderer::VERTEX_SIZE);
     UINT offsets = 0;
 
     /* Update stereo stuff. */
@@ -158,7 +158,7 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
     /* If 'vb' is not NULL here, it has a sufficient size. */
 
     if (this->vertexBuffer == NULL) {
-        hr = this->createVertexBuffer(reqBytes, true);
+        hr = this->createVertexBuffer(static_cast<UINT>(reqBytes), true);
     }
     if (FAILED(hr)) {
         return false;
@@ -332,7 +332,7 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
 
         this->immediateContext->RSSetState(NULL);
 
-        this->immediateContext->Draw(cntVertices, 0);
+        this->immediateContext->Draw(static_cast<UINT>(cntVertices), 0);
     
         this->bboxResources.Draw(false);
     }
@@ -608,7 +608,7 @@ HRESULT megamol::core::moldyn::D3D11SimpleSphereRenderer::initialiseD3D(
     //D3D11_DEPTH_STENCIL_DESC dsDesc;
     //HRESULT hr = S_OK;
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-    D3D11_SAMPLER_DESC ssDesc;
+    //D3D11_SAMPLER_DESC ssDesc;
     D3D11_TEXTURE2D_DESC texDesc;
 
     if (SUCCEEDED(hr)) {
