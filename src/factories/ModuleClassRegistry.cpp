@@ -42,10 +42,6 @@
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
-#include "mmcore/moldyn/ParticleWorker.h"
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-#include "mmcore/moldyn/D3D11SimpleSphereRenderer.h"
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 //#include "mmcore/special/ColStereoDisplay.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/LinearTransferFunction.h"
@@ -62,6 +58,7 @@
 #include "mmcore/view/View3D.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "mmcore/view/ViewDirect3D.h"
+#include "mmcore/moldyn/D3D11SimpleSphereRenderer.h"
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "mmcore/view/BlinnPhongRendererDeferred.h"
 #include "mmcore/view/SplitView.h"
@@ -72,8 +69,6 @@
 //#include "mmcore/vismol2/Mol20DataSource.h"
 //#include "mmcore/vismol2/Mol20Renderer.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
-#include "mmcore/moldyn/VTFDataSource.h"
-#include "mmcore/moldyn/VTFResDataSource.h"
 #include "mmcore/moldyn/AddClusterColours.h"
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 
@@ -119,7 +114,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::OracleSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
-    instance.RegisterAutoDescription<moldyn::ParticleWorker>();
     instance.RegisterAutoDescription<moldyn::DirPartFilter>();
     //instance.RegisterAutoDescription<special::ColStereoDisplay>();
     instance.RegisterAutoDescription<view::ClipPlane>();
@@ -139,9 +133,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
     instance.RegisterAutoDescription<view::View3D>();
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-    instance.RegisterAutoDescription<view::ViewDirect3D>();
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::SharedCameraParameters>();
@@ -150,12 +141,11 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     //instance.RegisterAutoDescription<vismol2::Mol20DataSource>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
-    instance.RegisterAutoDescription<moldyn::VTFDataSource>();
-    instance.RegisterAutoDescription<moldyn::VTFResDataSource>();
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-    instance.RegisterAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();
     instance.RegisterAutoDescription<moldyn::DynDensityGradientEstimator>();
+#ifdef MEGAMOLCORE_WITH_DIRECT3D11
+    instance.RegisterAutoDescription<view::ViewDirect3D>();
+    instance.RegisterAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
+#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 
 }
