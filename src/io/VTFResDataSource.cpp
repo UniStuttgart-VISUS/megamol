@@ -27,6 +27,7 @@
 #include "vislib/sys/ConsoleProgressBar.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/sys/DirectoryIterator.h"
+#include <cstdint>
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn;
@@ -63,7 +64,7 @@ io::VTFResDataSource::Frame::~Frame() {
 		this->col[t].EnforceSize(0);
 	}
 	
-	for(int i = 0; i < this->particleGrid.Count(); ++i)
+	for(size_t i = 0; i < this->particleGrid.Count(); ++i)
 		this->particleGrid[i].Clear();
 	particleGrid.Clear();
 
@@ -84,7 +85,7 @@ void io::VTFResDataSource::Frame::Clear(void) {
     this->partCnt.Clear();
 	this->pos.Clear();
 	this->col.Clear();
-	for(int i = 0; i < this->particleGrid.Count(); ++i)
+	for(size_t i = 0; i < this->particleGrid.Count(); ++i)
 		this->particleGrid[i].Clear();
 	particleGrid.Clear();
 }
@@ -225,11 +226,11 @@ bool io::VTFResDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned in
 					// rgba = type=0, cluster, DF
 					// NOTE TODO Changed for SFB_DEMO
 					float *particleData = col[0].AsAt<float>(4 * sizeof(float)* particleId);
-					particleData[1] = parsedClusters;
+					particleData[1] = static_cast<float>(parsedClusters);
 					float soa = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 4]);
 					float ld = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 3]);
 					//particleData[0] = (float)vislib::CharTraitsA::ParseDouble(shreds[shreds.Count() - 1]);
-					particleData[0] = ld/std::pow(soa*0.25, 1.0/3.0);
+					particleData[0] = ld/std::pow(soa*0.25f, 1.0f/3.0f);
 
 					this->clusterInfos.data[parsedClusters].Append(particleId);
 
@@ -249,19 +250,19 @@ bool io::VTFResDataSource::Frame::LoadFrame(vislib::sys::File *file, unsigned in
 	//								                  count + start                              + data
 	this->clusterInfos.sizeofPlainData = 2 * this->clusterInfos.data.Count() * sizeof(int)+this->partCnt[0] * sizeof(int);
 	this->clusterInfos.plainData = (unsigned int*)malloc(this->clusterInfos.sizeofPlainData);
-	this->clusterInfos.numClusters = this->clusterInfos.data.Count();
+	this->clusterInfos.numClusters = static_cast<unsigned int>(this->clusterInfos.data.Count());
 	unsigned int ptr = 0;
-	unsigned int summedSizesSoFar = 2 * this->clusterInfos.data.Count();
+	unsigned int summedSizesSoFar = static_cast<unsigned int>(2 * this->clusterInfos.data.Count());
 	auto it = this->clusterInfos.data.GetConstIterator();
 	while (it.HasNext())
 	{
 		const auto current = it.Next();
 		const auto arr = current.Value();
-		this->clusterInfos.plainData[ptr++] = arr.Count();
+		this->clusterInfos.plainData[ptr++] = static_cast<unsigned int>(arr.Count());
 		this->clusterInfos.plainData[ptr++] = summedSizesSoFar;
 
 		memcpy(&this->clusterInfos.plainData[summedSizesSoFar], arr.PeekElements(), sizeof(unsigned int)* arr.Count());
-		summedSizesSoFar += arr.Count();
+		summedSizesSoFar += static_cast<unsigned int>(arr.Count());
 	}
 /*
 	timestep indexed
@@ -595,9 +596,10 @@ void io::VTFResDataSource::preprocessFrame(Frame &frame)
 		const float *v = frame.PartPoss(t);
 		for(unsigned int p = 0; p < frame.PartCnt(t); ++p)
 		{
-			unsigned int x = (unsigned int)floorf((float)N * v[3*p + 0]) / this->extents.GetX();
-			unsigned int y = (unsigned int)floorf((float)N * v[3*p + 1]) / this->extents.GetY();
-			unsigned int z = (unsigned int)floorf((float)N * v[3*p + 2]) / this->extents.GetZ();
+            // HAZARD: This cast brackets might be wrong
+			unsigned int x = static_cast<unsigned int>(floorf((float)N * v[3*p + 0])) / static_cast<unsigned int>(this->extents.GetX());
+			unsigned int y = static_cast<unsigned int>(floorf((float)N * v[3*p + 1])) / static_cast<unsigned int>(this->extents.GetY());
+			unsigned int z = static_cast<unsigned int>(floorf((float)N * v[3*p + 2])) / static_cast<unsigned int>(this->extents.GetZ());
 			vislib::Array<int> &cell = frame.particleGridCell(x, y, z);
 			cell.Add(p);
 		}
@@ -613,14 +615,14 @@ void io::VTFResDataSource::preprocessFrame(Frame &frame)
 		{
 			vislib::math::ShallowVector<float, 3> pos(const_cast<float*>(&v[3*p]));
 
-			unsigned int x = (unsigned int)floorf((float)N * pos.GetX()) / this->extents.GetX();
-			unsigned int y = (unsigned int)floorf((float)N * pos.GetY()) / this->extents.GetY();
-			unsigned int z = (unsigned int)floorf((float)N * pos.GetZ()) / this->extents.GetZ();
+			unsigned int x = static_cast<unsigned int>(floorf((float)N * pos.GetX())) / static_cast<unsigned int>(this->extents.GetX());
+			unsigned int y = static_cast<unsigned int>(floorf((float)N * pos.GetY())) / static_cast<unsigned int>(this->extents.GetY());
+			unsigned int z = static_cast<unsigned int>(floorf((float)N * pos.GetZ())) / static_cast<unsigned int>(this->extents.GetZ());
 
 			// over each neighboring cell
-			for(int i = x-1; i < x+1; ++i)
-				for(int j = y-1; j < y+1; ++j)
-					for(int k = z-1; k < z+1; ++k)
+			for(int i = x-1; i < static_cast<int>(x+1); ++i)
+				for(int j = y-1; j < static_cast<int>(y+1); ++j)
+					for(int k = z-1; k < static_cast<int>(z+1); ++k)
 					{
 						vislib::Array<int> &cell = frame.particleGridCell(x, y, z);
 						for(unsigned int c = 0; c < cell.Count(); ++c)
