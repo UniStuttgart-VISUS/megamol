@@ -21,6 +21,9 @@
 #include "io/VisIttDataSource.h"
 #include "rendering/NGSphereRenderer.h"
 #include "rendering/NGSphereBufferArrayRenderer.h"
+#include "io/VTFDataSource.h"
+#include "io/VTFResDataSource.h"
+#include "misc/ParticleWorker.h"
 
 
 /*
@@ -64,7 +67,7 @@ MMSTD_MOLDYN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 MMSTD_MOLDYN_API int mmplgModuleCount(void) {
-    return 8;
+    return 11;
 }
 
 
@@ -81,6 +84,9 @@ MMSTD_MOLDYN_API void* mmplgModuleDescription(int idx) {
     case 5: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VisIttDataSource>();
 	case 6: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSphereRenderer>();
 	case 7: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSphereBufferArrayRenderer>();
+	case 8: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VTFDataSource>();
+	case 9: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::io::VTFResDataSource>();
+	case 10: return new ::megamol::core::factories::ModuleAutoDescription<::megamol::stdplugin::moldyn::misc::ParticleWorker>();
     }
     return NULL;
 }

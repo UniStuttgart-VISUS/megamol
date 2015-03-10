@@ -41,6 +41,15 @@
     <Filter Include="rendering\Source Files">
       <UniqueIdentifier>{45134ae1-e1dd-465f-9034-8a5379aff642}</UniqueIdentifier>
     </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{ec84fbd1-a2cf-4307-9f96-7e5922c825c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc\Header Files">
+      <UniqueIdentifier>{2bf5109e-a16c-4793-aded-624d2a524acc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc\Source Files">
+      <UniqueIdentifier>{9a132a1e-1d19-4061-a4b1-a4fbeea8f198}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/dllmain.cpp">
@@ -81,6 +90,15 @@
     </ClCompile>
     <ClCompile Include="src\rendering\NGSphereBufferArrayRenderer.cpp">
       <Filter>rendering\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VTFResDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VTFDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\misc\ParticleWorker.cpp">
+      <Filter>misc\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +141,15 @@
     <ClInclude Include="src\rendering\NGSphereBufferArrayRenderer.h">
       <Filter>rendering\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\io\VTFDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\VTFResDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\misc\ParticleWorker.h">
+      <Filter>misc\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat">
@@ -138,6 +165,9 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="Shaders\NGsphereBufferArray.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\particleWorkerCompute.btf">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
