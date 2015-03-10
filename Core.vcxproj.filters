@@ -307,9 +307,6 @@
     <None Include="Shaders\simplegeosphere.btf">
       <Filter>Shader Files</Filter>
     </None>
-    <None Include="Shaders\particleWorkerCompute.btf">
-      <Filter>Shader Files</Filter>
-    </None>
     <None Include="Shaders\d3d11sphere.btf">
       <Filter>Shader Files</Filter>
     </None>
@@ -548,9 +545,6 @@
     <ClCompile Include="src\moldyn\ParticleListFilter.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\moldyn\ParticleWorker.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\moldyn\SimpleGeoSphereRenderer.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
@@ -561,12 +555,6 @@
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\VolumeDataCall.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\VTFDataSource.cpp">
-      <Filter>moldyn\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\moldyn\VTFResDataSource.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\moldyn\AbstractParticleDataCall.cpp">
@@ -1168,9 +1156,6 @@
     <ClInclude Include="include\mmcore\moldyn\ParticleListFilter.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\ParticleWorker.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\SimpleGeoSphereRenderer.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
@@ -1181,12 +1166,6 @@
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\VolumeDataCall.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\VTFDataSource.h">
-      <Filter>moldyn\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\moldyn\VTFResDataSource.h">
       <Filter>moldyn\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\AbstractParticleDataCall.h">

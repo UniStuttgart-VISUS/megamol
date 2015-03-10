@@ -308,7 +308,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="Shaders\deferred.btf">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Shaders\particleWorkerCompute.btf" />
     <None Include="Shaders\simplegeosphere.btf" />
     <CustomBuildStep Include="config.bat">
       <FileType>Document</FileType>
@@ -480,13 +479,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\moldyn\OracleSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\ParticleGridDataCall.cpp" />
     <ClCompile Include="src\moldyn\ParticleListFilter.cpp" />
-    <ClCompile Include="src\moldyn\ParticleWorker.cpp" />
     <ClCompile Include="src\moldyn\SimpleGeoSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\SimpleSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\SphereOutlineRenderer.cpp" />
     <ClCompile Include="src\moldyn\VolumeDataCall.cpp" />
-    <ClCompile Include="src\moldyn\VTFDataSource.cpp" />
-    <ClCompile Include="src\moldyn\VTFResDataSource.cpp" />
     <ClCompile Include="src\ParamValueSetRequest.cpp" />
     <ClCompile Include="src\param\AbstractParam.cpp" />
     <ClCompile Include="src\param\AbstractParamSlot.cpp" />
@@ -724,13 +720,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\moldyn\OracleSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\ParticleGridDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\ParticleListFilter.h" />
-    <ClInclude Include="include\mmcore\moldyn\ParticleWorker.h" />
     <ClInclude Include="include\mmcore\moldyn\SimpleGeoSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\SimpleSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\SphereOutlineRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\VolumeDataCall.h" />
-    <ClInclude Include="include\mmcore\moldyn\VTFDataSource.h" />
-    <ClInclude Include="include\mmcore\moldyn\VTFResDataSource.h" />
     <ClInclude Include="include\mmcore\nvstereo.h" />
     <ClInclude Include="include\mmcore\ParamValueSetRequest.h" />
     <ClInclude Include="include\mmcore\param\AbstractParam.h" />
