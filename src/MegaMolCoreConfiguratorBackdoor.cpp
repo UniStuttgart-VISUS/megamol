@@ -376,3 +376,32 @@ MEGAMOLCORE_EXT_APICALL(void, mmcReleaseCallDescriptionInfo)(mmcCallDescriptionI
     delete[] desc->funcNames;
     delete desc;
 }
+
+
+MEGAMOLCORE_EXT_APICALL(void, mmcPlugin200TestCompatInfo)(void* ci) {
+
+}
+
+MEGAMOLCORE_EXT_APICALL(const char*, mmcPlugin200GetName)(void* i) {
+
+}
+
+MEGAMOLCORE_EXT_APICALL(const char*, mmcPlugin200GetDesc)(void* i) {
+
+}
+
+MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetModCnt)(void* i) {
+
+}
+
+MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcPlugin200GetModDesc)(void* i, int idx) {
+
+}
+
+MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetCallCnt)(void* i) {
+
+}
+
+MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcPlugin200GetCallDesc)(void* i, int idx) {
+
+}
