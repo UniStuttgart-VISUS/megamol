@@ -22,6 +22,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/Array.h"
 #include "vislib/Stack.h"
+#include "vislib/VersionNumber.h"
+#include "vislib/vislibversion.h"
+#include "mmcore/versioninfo.h"
+#include "mmcore/utility/plugins/Plugin200Instance.h"
 
 namespace {
     static megamol::core::factories::ModuleDescriptionManager& backdoor_modules(void) {
@@ -378,30 +382,102 @@ MEGAMOLCORE_EXT_APICALL(void, mmcReleaseCallDescriptionInfo)(mmcCallDescriptionI
 }
 
 
-MEGAMOLCORE_EXT_APICALL(void, mmcPlugin200TestCompatInfo)(void* ci) {
+MEGAMOLCORE_EXT_APICALL(bool, mmcPlugin200TestCompatInfo)(void* ci) {
+    using namespace megamol::core::utility::plugins;
+    PluginCompatibilityInfo *comp_info = static_cast<PluginCompatibilityInfo*>(ci);
 
+    bool MegaMolCore_compatibility_checked = false;
+    bool vislib_compatibility_checked = false;
+    vislib::VersionNumber mmcoreVer(MEGAMOL_CORE_VERSION);
+    vislib::VersionNumber vislibVer(VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD);
+
+    for (unsigned int li = 0; li < comp_info->libs_cnt; li++) {
+        LibraryVersionInfo &lvi = comp_info->libs[li];
+        if (vislib::StringA("MegaMolCore").Equals(lvi.name)) {
+            MegaMolCore_compatibility_checked = true;
+            vislib::VersionNumber v(
+                (lvi.version_len > 0) ? lvi.version[0] : 0,
+                (lvi.version_len > 1) ? lvi.version[1] : 0,
+                (lvi.version_len > 2) ? lvi.version[2] : 0,
+                (lvi.version_len > 3) ? lvi.version[3] : 0);
+            if (v != mmcoreVer) {/*
+                coreInst.Log().WriteError("Plugin %s seems incompatible with MegaMolCore: core \"%s\" != plugin \"%s\" ",
+                vislib::StringA(path.c_str()).PeekBuffer(),
+                mmcoreVer.ToStringA().PeekBuffer(),
+                v.ToStringA().PeekBuffer());
+                throw vislib::Exception("Plugin compatibility check failed", __FILE__, __LINE__);*/
+                return false;
+            }
+
+        } else if (vislib::StringA("vislib").Equals(lvi.name)) {
+            vislib_compatibility_checked = true;
+            vislib::VersionNumber v(
+                (lvi.version_len > 0) ? lvi.version[0] : 0,
+                (lvi.version_len > 1) ? lvi.version[1] : 0,
+                (lvi.version_len > 2) ? lvi.version[2] : 0,
+                (lvi.version_len > 3) ? lvi.version[3] : 0);
+            if (v != vislibVer) {
+                //coreInst.Log().WriteError("Plugin %s seems incompatible with vislib: vislib \"%s\" != plugin \"%s\" ",
+                //    vislib::StringA(path.c_str()).PeekBuffer(),
+                //    vislibVer.ToStringA().PeekBuffer(),
+                //    v.ToStringA().PeekBuffer());
+                //throw vislib::Exception("Plugin compatibility check failed", __FILE__, __LINE__);
+                return false;
+            }
+
+        } else {
+            //coreInst.Log().WriteInfo("Plugin %s compatibility with %s is not checked",
+            //    vislib::StringA(path.c_str()).PeekBuffer(), lvi.name);
+        }
+    }
+
+    return true;
 }
 
 MEGAMOLCORE_EXT_APICALL(const char*, mmcPlugin200GetName)(void* i) {
-
+    megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
+    return pi->GetAssemblyName().c_str();
 }
 
 MEGAMOLCORE_EXT_APICALL(const char*, mmcPlugin200GetDesc)(void* i) {
-
+    megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
+    return pi->GetDescription().c_str();
 }
 
 MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetModCnt)(void* i) {
-
+    megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
+    return static_cast<int>(pi->GetModuleDescriptionManager().Count());
 }
 
 MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcPlugin200GetModDesc)(void* i, int idx) {
-
+    megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
+    auto it = pi->GetModuleDescriptionManager().begin();
+    auto end = pi->GetModuleDescriptionManager().end();
+    while ((idx > 0) && (it != end)) {
+        it++;
+        idx--;
+    }
+    if (it != end) {
+        // TODO: Implement
+    }
+    return nullptr;
 }
 
 MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetCallCnt)(void* i) {
-
+    megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
+    return static_cast<int>(pi->GetCallDescriptionManager().Count());
 }
 
 MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcPlugin200GetCallDesc)(void* i, int idx) {
-
+    megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
+    auto it = pi->GetCallDescriptionManager().begin();
+    auto end = pi->GetCallDescriptionManager().end();
+    while ((idx > 0) && (it != end)) {
+        it++;
+        idx--;
+    }
+    if (it != end) {
+        // TODO: Implement
+    }
+    return nullptr;
 }
