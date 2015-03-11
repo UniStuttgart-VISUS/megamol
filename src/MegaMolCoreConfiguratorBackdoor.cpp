@@ -458,7 +458,7 @@ MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcPlugin200GetModDesc)(void*
         idx--;
     }
     if (it != end) {
-        // TODO: Implement
+        return mmcGetModuleDescriptionInfo(const_cast<::megamol::core::factories::ModuleDescription*>(it->get()));
     }
     return nullptr;
 }
@@ -477,7 +477,14 @@ MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcPlugin200GetCallDesc)(void* 
         idx--;
     }
     if (it != end) {
-        // TODO: Implement
+        return mmcGetCallDescriptionInfo(const_cast<::megamol::core::factories::CallDescription*>(it->get()));
     }
     return nullptr;
+}
+
+MEGAMOLCORE_EXT_APICALL(void, mmcPlugin200ReleaseInstanceWrapper(void *i, void(*dtor)(void *))) {
+    megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
+    auto acks = pi->get_lib();
+    dtor(i);
+    acks.reset();
 }

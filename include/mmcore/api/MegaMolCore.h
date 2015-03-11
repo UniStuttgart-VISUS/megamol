@@ -1065,6 +1065,7 @@ MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetModCnt)(void* i);
 MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcPlugin200GetModDesc)(void* i, int idx);
 MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetCallCnt)(void* i);
 MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcPlugin200GetCallDesc)(void* i, int idx);
+MEGAMOLCORE_EXT_APICALL(void, mmcPlugin200ReleaseInstanceWrapper(void *i, void(*dtor)(void *)));
 
 
 #ifdef __cplusplus
