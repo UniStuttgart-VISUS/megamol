@@ -482,7 +482,7 @@ MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcPlugin200GetCallDesc)(void* 
     return nullptr;
 }
 
-MEGAMOLCORE_EXT_APICALL(void, mmcPlugin200ReleaseInstanceWrapper(void *i, void(*dtor)(void *))) {
+MEGAMOLCORE_EXT_APICALL(void, mmcPlugin200ReleaseInstanceWrapper)(void *i, void(*dtor)(void *)) {
     megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
     auto acks = pi->get_lib();
     dtor(i);
