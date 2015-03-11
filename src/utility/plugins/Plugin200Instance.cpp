@@ -20,9 +20,11 @@ Plugin200Instance::~Plugin200Instance(void) {
     this->module_descriptions.Shutdown();
     this->call_descriptions.Shutdown();
     // then release the pointer to the library object. 
-    assert(this->lib.use_count() > 1); // ensure the manager still holds on to
-                                       // this one! Otherwise the heap we are
-                                       // using will ge removed too early.
+    assert(this->lib.use_count() != 1); // ensure the manager still holds on to
+                                        // this one! Otherwise the heap we are
+                                        // using will ge removed too early.
+        // Note: it is also valid to be zero! In that case, we assume the lib
+        // is completely managed externally.
     this->lib.reset();
     // This is tricky! Derived objects are implemented in Dlls and must be
     // freed on their heap. That heap, however, will be removed when this lib
