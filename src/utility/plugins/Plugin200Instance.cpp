@@ -32,11 +32,30 @@ Plugin200Instance::~Plugin200Instance(void) {
 }
 
 
+/* 
+ * Plugin200Instance::GetCallDescriptionManager
+ */
+const factories::CallDescriptionManager& Plugin200Instance::GetCallDescriptionManager(void) const {
+    this->ensureRegisterClassesWrapper();
+    return AbstractPluginInstance::GetCallDescriptionManager();
+}
+
+
+/* 
+ * Plugin200Instance::GetModuleDescriptionManager
+ */
+const factories::ModuleDescriptionManager& Plugin200Instance::GetModuleDescriptionManager(void) const {
+    this->ensureRegisterClassesWrapper();
+    return AbstractPluginInstance::GetModuleDescriptionManager();
+}
+
+
 /*
  * Plugin200Instance::Plugin200Instance
  */
 Plugin200Instance::Plugin200Instance(const char *asm_name, const char *description)
-        : AbstractPluginInstance(asm_name, description), lib() {
+        : AbstractPluginInstance(asm_name, description), lib(),
+        classes_registered(false) {
     // intentionally empty
 }
 
@@ -56,4 +75,14 @@ void Plugin200Instance::store_lib(std::shared_ptr<vislib::sys::DynamicLinkLibrar
  */
 std::shared_ptr<vislib::sys::DynamicLinkLibrary> Plugin200Instance::get_lib(void) const {
     return this->lib;
+}
+
+
+/*
+ * Plugin200Instance::ensureRegisterClassesWrapper
+ */
+void Plugin200Instance::ensureRegisterClassesWrapper(void) const {
+    if (this->classes_registered) return;
+    const_cast<Plugin200Instance*>(this)->registerClasses();
+    const_cast<Plugin200Instance*>(this)->classes_registered = true;
 }

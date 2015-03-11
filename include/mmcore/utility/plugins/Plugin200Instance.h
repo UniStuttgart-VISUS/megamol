@@ -83,12 +83,28 @@ namespace plugins {
         virtual ~Plugin200Instance(void);
 
         /**
-         * TODO: Document
+         * Answer the call description manager of the assembly.
+         *
+         * @return The call description manager of the assembly.
          */
-        virtual void registerClasses(void) = 0;
+        virtual const factories::CallDescriptionManager& GetCallDescriptionManager(void) const;
 
         /**
-         * TODO: Document
+         * Answer the module description manager of the assembly.
+         *
+         * @return The module description manager of the assembly.
+         */
+        virtual const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
+
+        /**
+         * Connect static objects of the core with their counterparts in the
+         * plugin instance.
+         *
+         * @param which Id of the static object to be connected
+         * @param value The value to connect to
+         *
+         * @remark Do not implement this method manually, but use the macro
+         * 'MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics'
          */
         virtual void connectStatics(StaticConnectorType which, void* value) = 0;
 
@@ -111,6 +127,15 @@ namespace plugins {
     protected:
 
         /**
+         * This factory methode registers all module and call classes exported
+         * by this plugin instance at the respective factories.
+         *
+         * @remarks This method is automatically called when the factories are
+         *          accessed for the first time. Do not call manually.
+         */
+        virtual void registerClasses(void) = 0;
+
+        /**
          * Ctor
          *
          * @param asm_name The (machine-readable) name of the assembly
@@ -119,6 +144,9 @@ namespace plugins {
         Plugin200Instance(const char *asm_name, const char *description);
 
     private:
+
+        /** Ensures that registered classes was called */
+        void ensureRegisterClassesWrapper(void) const;
 
         /* deleted copy ctor */
         Plugin200Instance(const Plugin200Instance& src) = delete;
@@ -129,6 +157,11 @@ namespace plugins {
         /** The plugin library object */
         VISLIB_MSVC_SUPPRESS_WARNING(4251)
         std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib;
+
+        /** 
+         * Flag whether or not the module and call classes have been registered
+         */
+        bool classes_registered;
 
     };
 

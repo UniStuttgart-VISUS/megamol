@@ -449,7 +449,7 @@ MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetModCnt)(void* i) {
     return static_cast<int>(pi->GetModuleDescriptionManager().Count());
 }
 
-MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcPlugin200GetModDesc)(void* i, int idx) {
+MEGAMOLCORE_EXT_APICALL(void*, mmcPlugin200GetModDesc)(void* i, int idx) {
     megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
     auto it = pi->GetModuleDescriptionManager().begin();
     auto end = pi->GetModuleDescriptionManager().end();
@@ -458,7 +458,7 @@ MEGAMOLCORE_EXT_APICALL(mmcModuleDescriptionInfo*, mmcPlugin200GetModDesc)(void*
         idx--;
     }
     if (it != end) {
-        return mmcGetModuleDescriptionInfo(const_cast<::megamol::core::factories::ModuleDescription*>(it->get()));
+        return const_cast<::megamol::core::factories::ModuleDescription*>(it->get());
     }
     return nullptr;
 }
@@ -468,7 +468,7 @@ MEGAMOLCORE_EXT_APICALL(int, mmcPlugin200GetCallCnt)(void* i) {
     return static_cast<int>(pi->GetCallDescriptionManager().Count());
 }
 
-MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcPlugin200GetCallDesc)(void* i, int idx) {
+MEGAMOLCORE_EXT_APICALL(void*, mmcPlugin200GetCallDesc)(void* i, int idx) {
     megamol::core::utility::plugins::Plugin200Instance *pi = static_cast<megamol::core::utility::plugins::Plugin200Instance *>(i);
     auto it = pi->GetCallDescriptionManager().begin();
     auto end = pi->GetCallDescriptionManager().end();
@@ -477,7 +477,7 @@ MEGAMOLCORE_EXT_APICALL(mmcCallDescriptionInfo*, mmcPlugin200GetCallDesc)(void* 
         idx--;
     }
     if (it != end) {
-        return mmcGetCallDescriptionInfo(const_cast<::megamol::core::factories::CallDescription*>(it->get()));
+        return const_cast<::megamol::core::factories::CallDescription*>(it->get());
     }
     return nullptr;
 }

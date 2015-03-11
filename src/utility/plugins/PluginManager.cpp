@@ -243,7 +243,7 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
     plugin200->connectStatics(Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&vislib::sys::Log::DefaultLog));
 
     // initialize factories
-    plugin200->registerClasses();
+    plugin200->GetModuleDescriptionManager();
 
     // store library object
     plugin200->store_lib(lib);
