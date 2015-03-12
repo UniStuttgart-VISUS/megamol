@@ -104,8 +104,9 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * moldyn::NGSphereRenderer::NGSphereRenderer
  */
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-	//sphereShader(),
+//sphereShader(),
 	fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
+//	timer(),
 	// this variant should not need the fence
 	//singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
 	//singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
@@ -179,6 +180,12 @@ bool NGSphereRenderer::create(void) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
 
+	//timer.SetNumRegions(4);
+	//const char *regions[4] = {"Upload1", "Upload2", "Upload3", "Rendering"};
+	//timer.SetRegionNames(4, regions);
+	//timer.SetStatisticsFileName("fullstats.csv");
+	//timer.SetSummaryFileName("summary.csv");
+	//timer.SetMaximumFrames(20, 100);
     return AbstractSimpleSphereRenderer::create();
 }
 
@@ -259,8 +266,10 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
 		//glEnableClientState(GL_VERTEX_ARRAY);
 		//glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC, float(colTabSize));
 		//glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-		declaration = "    vec3 pos;\n";
-		code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].pos, 1.0); \n"
+		declaration = "    float posX; float posY; float posZ;\n";
+		code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+			   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+			   "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
 			   "    rad = CONSTRAD;";
 		break;
 	case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
@@ -523,6 +532,8 @@ bool NGSphereRenderer::Render(Call& call) {
     MultiParticleDataCall *c2 = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
     if (c2 == NULL) return false;
 
+//	timer.BeginFrame();
+
     float clipDat[4];
     float clipCol[4];
     this->getClipData(clipDat, clipCol);
@@ -542,7 +553,9 @@ bool NGSphereRenderer::Render(Call& call) {
     //this->sphereShader.Enable();
 
     glScalef(scaling, scaling, scaling);
-
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
+	//currBuf = 0;
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
 
@@ -593,6 +606,7 @@ bool NGSphereRenderer::Render(Call& call) {
 		unsigned int colBytes, vertBytes, colStride, vertStride;
 		this->getBytesAndStride(parts, colBytes, vertBytes, colStride, vertStride);
 
+		//currBuf = 0;
         UINT64 numVerts, vertCounter;
         // does all data reside interleaved in the same memory?
         if ((reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) 
@@ -601,11 +615,10 @@ bool NGSphereRenderer::Render(Call& call) {
                     numVerts = this->bufSize / vertStride;
                     const char *currVert = static_cast<const char *>(parts.GetVertexData());
                     const char *currCol = static_cast<const char *>(parts.GetColourData());
-					currBuf = 0;
                     vertCounter = 0;
                     while (vertCounter < parts.GetCount()) {
                         //GLuint vb = this->theBuffers[currBuf];
-						void *mem = static_cast<char*>(theSingleMappedMem) + numVerts * vertStride * currBuf;
+						void *mem = static_cast<char*>(theSingleMappedMem) + bufSize * currBuf;
                         currCol = colStride == 0 ? currVert : currCol;
 						//currCol = currCol == 0 ? currVert : currCol;
                         const char *whence = currVert < currCol ? currVert : currCol;
@@ -613,15 +626,15 @@ bool NGSphereRenderer::Render(Call& call) {
 						this->waitSingle(fences[currBuf]);
 						//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
 						memcpy(mem, whence, vertsThisTime * vertStride);
-						glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
+						glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
                         //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
-						glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
+						//glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
+						glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
 
 						//this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
 						//glBindBuffer(GL_ARRAY_BUFFER, 0);
-						glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
-						glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
-                        glDrawArrays(GL_POINTS, numVerts * currBuf, vertsThisTime);
+						glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
+                        glDrawArrays(GL_POINTS, 0, vertsThisTime);
 						//glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
 						this->lockSingle(fences[currBuf]);
 
@@ -640,17 +653,19 @@ bool NGSphereRenderer::Render(Call& call) {
         glDisableClientState(GL_VERTEX_ARRAY);
         //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
-    }
+		newShader->Disable();
+	}
 
     c2->Unlock();
 
-    newShader->Disable();
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #ifdef DEBUG_BLAHBLAH
     glDisable(GL_DEBUG_OUTPUT);
     glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
+
+//	timer.EndFrame();
 
     return true;
 }

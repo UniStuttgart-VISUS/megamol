@@ -18,6 +18,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <map>
 #include <utility>
+//#include "TimeMeasure.h"
 
 namespace megamol {
 namespace stdplugin {
@@ -132,6 +133,7 @@ namespace rendering {
 		std::shared_ptr<GLSLShader> newShader;
 		shaderMap theShaders;
 		vislib::SmartPtr<ShaderSource> vert, frag;
+		//TimeMeasure timer;
 		//megamol::core::utility::ShaderSourceFactory::sh
     };
 
