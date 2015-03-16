@@ -23,6 +23,9 @@
     <Filter Include="Public Header Files">
       <UniqueIdentifier>{7e43d7d1-1177-482d-9f75-210e465c8433}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Config and Make Files\cmake">
+      <UniqueIdentifier>{95dd01f6-3da2-411e-bccd-28833d2ab805}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat">
@@ -33,6 +36,18 @@
     </None>
     <None Include="ExtLibs.props.input">
       <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="cmake_build.sh">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="cmake\ConfigVersion.cmake.in">
+      <Filter>Config and Make Files\cmake</Filter>
+    </None>
+    <None Include="cmake\ConfigInstall.cmake.in">
+      <Filter>Config and Make Files\cmake</Filter>
+    </None>
+    <None Include="cmake\ConfigLocal.cmake.in">
+      <Filter>Config and Make Files\cmake</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -56,5 +71,10 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt">
+      <Filter>Config and Make Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
