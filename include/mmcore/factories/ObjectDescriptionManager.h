@@ -16,6 +16,7 @@
 #include <algorithm>
 #include "vislib/IllegalParamException.h"
 #include "vislib/macro_utils.h"
+#include "vislib/String.h"
 
 
 namespace megamol {
