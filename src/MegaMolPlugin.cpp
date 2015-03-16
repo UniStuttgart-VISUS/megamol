@@ -6,100 +6,123 @@
 
 #include "stdafx.h"
 #include "MegaMolPlugin/MegaMolPlugin.h"
+
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/factories/ModuleDescription.h"
+#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
+
+
+/* anonymous namespace hides this type from any other object files */
+namespace {
+    /** Implementing the instance class of this plugin */
+    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
+    public:
+        /** ctor */
+        plugin_instance(void)
+            : ::megamol::core::utility::plugins::Plugin200Instance(
+
+                /* machine-readable plugin assembly name */
+                "MegaMolPlugin", // TODO: Change this!
+
+                /* human-readable plugin description */
+                "Describing MegaMolPlugin (TODO: Change this!)") {
+
+            // here we could perform addition initialization
+        };
+        /** Dtor */
+        virtual ~plugin_instance(void) {
+            // here we could perform addition de-initialization
+        }
+        /** Registers modules and calls */
+        virtual void registerClasses(void) {
+
+            // register modules here:
+
+            //
+            // TODO: Register your plugin's modules here
+            // like:
+            //   this->module_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyModule1>();
+            //   this->module_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyModule2>();
+            //   ...
+            //
+
+            // register calls here:
+
+            //
+            // TODO: Register your plugin's calls here
+            // like:
+            //   this->call_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyCall1>();
+            //   this->call_descriptions.RegisterAutoDescription<megamol::MegaMolPlugin::MyCall2>();
+            //   ...
+            //
+
+        }
+        MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
+    };
+}
 
 
 /*
  * mmplgPluginAPIVersion
  */
 MEGAMOLPLUGIN_API int mmplgPluginAPIVersion(void) {
-    return 100;
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
 
 /*
- * mmplgPluginName
+ * mmplgGetPluginCompatibilityInfo
  */
-MEGAMOLPLUGIN_API const char * mmplgPluginName(void) {
-    return "PluginTemplate";
+MEGAMOLPLUGIN_API
+::megamol::core::utility::plugins::PluginCompatibilityInfo *
+mmplgGetPluginCompatibilityInfo(
+        ::megamol::core::utility::plugins::ErrorCallback onError) {
+    // compatibility information with core and vislib
+    using ::megamol::core::utility::plugins::PluginCompatibilityInfo;
+    using ::megamol::core::utility::plugins::LibraryVersionInfo;
+
+    PluginCompatibilityInfo *ci = new PluginCompatibilityInfo;
+    ci->libs_cnt = 2;
+    ci->libs = new LibraryVersionInfo[2];
+
+    MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV)
+    MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(ci->libs[1], "vislib", VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD)
+    //
+    // If you want to test additional compatibilties, add the corresponding versions here
+    //
+
+    return ci;
 }
 
 
 /*
- * mmplgPluginDescription
+ * mmplgReleasePluginCompatibilityInfo
  */
-MEGAMOLPLUGIN_API const char * mmplgPluginDescription(void) {
-    return "Template for MegaMol Plugins (TODO: CHANGE this description)";
+MEGAMOLPLUGIN_API
+void mmplgReleasePluginCompatibilityInfo(
+        ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
+    // release compatiblity data on the correct heap
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)
 }
 
 
 /*
- * mmplgCoreCompatibilityValue
+ * mmplgGetPluginInstance
  */
-MEGAMOLPLUGIN_API const void * mmplgCoreCompatibilityValue(void) {
-    static const mmplgCompatibilityValues compRev = {
-        sizeof(mmplgCompatibilityValues),
-        MEGAMOL_CORE_COMP_REV,
-        VISLIB_VERSION_REVISION
-    };
-    return &compRev;
+MEGAMOLPLUGIN_API
+::megamol::core::utility::plugins::AbstractPluginInstance*
+mmplgGetPluginInstance(
+        ::megamol::core::utility::plugins::ErrorCallback onError) {
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgGetPluginInstance(plugin_instance, onError)
 }
 
 
 /*
- * mmplgModuleCount
+ * mmplgReleasePluginInstance
  */
-MEGAMOLPLUGIN_API int mmplgModuleCount(void) {
-    return 0; // TODO: Implement
-}
-
-
-/*
- * mmplgModuleDescription
- */
-MEGAMOLPLUGIN_API void* mmplgModuleDescription(int idx) {
-    return NULL; // TODO: Implement
-}
-
-
-/*
- * mmplgCallCount
- */
-MEGAMOLPLUGIN_API int mmplgCallCount(void) {
-    return 0; // TODO: Implement
-}
-
-
-/*
- * mmplgCallDescription
- */
-MEGAMOLPLUGIN_API void* mmplgCallDescription(int idx) {
-    return NULL; // TODO: Implement
-}
-
-
-/*
- * mmplgConnectStatics
- */
-MEGAMOLPLUGIN_API bool mmplgConnectStatics(int which, void* value) {
-    switch (which) {
-
-        case 1: // vislib::log
-            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-            vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-            vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value)));
-            vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-            vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-            return true;
-
-        case 2: // vislib::stacktrace
-            return vislib::sys::ThreadSafeStackTrace::Initialise(
-                *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true);
-
-    }
-    return false;
+MEGAMOLPLUGIN_API
+void mmplgReleasePluginInstance(
+        ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
 }
