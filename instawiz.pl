@@ -1,4 +1,9 @@
 #!/usr/bin/perl
+#
+# MegaMol™ Plugin Instantiation Wizard
+# Copyright 2010-2015 by MegaMol Team
+# Alle Rechte vorbehalten.
+#
 use strict;
 use warnings 'all';
 
@@ -74,7 +79,7 @@ sub writeFile($$) {
 # greeting
 print "\n";
 print "MegaMol(TM) Plugin Instantiation Wizard\n";
-print "Copyright 2010 by VISUS (Universitaet Stuttgart)\n";
+print "Copyright 2010-2015 by MegaMol Team\n";
 print "Alle Rechte vorbehalten.\n\n";
 
 # anti-idiot test
@@ -89,15 +94,24 @@ close SOLUTION;
 autoEuthanize($ERR_ALREADY_INSTA) unless $ok == 1;
 
 # ask for parameters
+#  filename
 if ($HAVE_CWD) {
     $filename = getcwd();
 }
 $filename =~ s/.*[\/\\]//;
-print "Input the plugin filename [$filename]: ";
-chomp($temp = <STDIN>);
-if ($temp ne "") {
-    $filename = $temp;
-}
+do {
+    $filename =~ s/[^0-9a-zA-Z_]/_/g;
+    print "Input the plugin filename [$filename]: ";
+    chomp($temp = <STDIN>);
+    if ($temp ne "") {
+        $filename = $temp;
+    }
+    if (not $filename =~ /^[a-zA-Z][0-9a-zA-Z_]*$/) {
+        print "ERROR: filename is invalid\n";
+        print "       A plugin filename must start with a character and must only contain characters, numbers and underscores.\n";
+    }
+} while (not $filename =~ /^[a-zA-Z][0-9a-zA-Z_]*$/);
+#  guid
 if ($HAVE_MD5) {
     $guid = genGUID($filename);
 } else {
@@ -113,54 +127,55 @@ if (not checkGUID($guid)) {
 }
 
 # paranoia confirmation
-print "generating plugin $filename with GUID $guid. OK? [ /n]: ";
+print "generating plugin \"$filename\" with GUID \"$guid\". OK? [ /n]: ";
 chomp($temp = <STDIN>);
 if (IsInputNo($temp)) {
     autoEuthanize("aborting.");
 }
 
 # action jackson
-foreach $temp (glob "MegaMolPlugin.*") {
-    $temp =~ /^[^\.]*\.(.+)$/;
-    my $ext = $1;
-    print "$temp -> $filename.$ext: ";
-    if (rename $temp, "$filename.$ext") {
-        print "ok\n";
-    } elsif (-e "$filename.$ext") {
-		print "ok(magic)\n";
-	} else {
-        autoEuthanize("FAILED.");
-    }
-}
-
-$temp = slurpFile("$filename.sln");
-$temp =~ s/MegaMolPlugin/$filename/g;
-$temp =~ s/$SRCGUID/$guid/g;
-writeFile("$filename.sln", $temp);
-
-$temp = slurpFile("$filename.vcxproj");
-$temp =~ s/$SRCGUID/$guid/g;
-$temp =~ s/MEGAMOLPLUGIN_EXPORTS/\U$filename\E_EXPORTS/g;
-$temp =~ s/Template\$\(BitsD\).win\$\(Bits\)/$filename\$\(BitsD\).win\$\(Bits\)/g;
-$temp =~ s/MegaMolPlugin/$filename/g;
-writeFile("$filename.vcxproj", $temp);
-
-$temp = slurpFile("$filename.vcxproj.filters");
-$temp =~ s/MegaMolPlugin/$filename/g;
-writeFile("$filename.vcxproj.filters", $temp);
-
-$temp = slurpFile("Makefile");
-$temp =~ s/TargetName := Template/TargetName := $filename/g;
-$temp =~ s/PluginTemplate/$filename/;
-writeFile("Makefile", $temp);
-
-$temp = slurpFile("$filename.h");
-$temp =~ s/MegaMolPlugin/$filename/g;
-$temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
-writeFile("$filename.h", $temp);
-
-$temp = slurpFile("$filename.cpp");
-$temp =~ s/MegaMolPlugin/$filename/g;
-$temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
-$temp =~ s/PluginTemplate/$filename/;
-writeFile("$filename.cpp", $temp);
+## foreach $temp (glob "MegaMolPlugin.*") {
+##     $temp =~ /^[^\.]*\.(.+)$/;
+##     my $ext = $1;
+##     print "$temp -> $filename.$ext: ";
+##     if (rename $temp, "$filename.$ext") {
+##         print "ok\n";
+##     } elsif (-e "$filename.$ext") {
+## 		print "ok(magic)\n";
+## 	} else {
+##         autoEuthanize("FAILED.");
+##     }
+## }
+## 
+## $temp = slurpFile("$filename.sln");
+## $temp =~ s/MegaMolPlugin/$filename/g;
+## $temp =~ s/$SRCGUID/$guid/g;
+## writeFile("$filename.sln", $temp);
+## 
+## $temp = slurpFile("$filename.vcxproj");
+## $temp =~ s/$SRCGUID/$guid/g;
+## $temp =~ s/MEGAMOLPLUGIN_EXPORTS/\U$filename\E_EXPORTS/g;
+## $temp =~ s/Template\$\(BitsD\).win\$\(Bits\)/$filename\$\(BitsD\).win\$\(Bits\)/g;
+## $temp =~ s/MegaMolPlugin/$filename/g;
+## writeFile("$filename.vcxproj", $temp);
+## 
+## $temp = slurpFile("$filename.vcxproj.filters");
+## $temp =~ s/MegaMolPlugin/$filename/g;
+## writeFile("$filename.vcxproj.filters", $temp);
+## 
+## $temp = slurpFile("Makefile");
+## $temp =~ s/TargetName := Template/TargetName := $filename/g;
+## $temp =~ s/PluginTemplate/$filename/;
+## writeFile("Makefile", $temp);
+## 
+## $temp = slurpFile("$filename.h");
+## $temp =~ s/MegaMolPlugin/$filename/g;
+## $temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
+## writeFile("$filename.h", $temp);
+## 
+## $temp = slurpFile("$filename.cpp");
+## $temp =~ s/MegaMolPlugin/$filename/g;
+## $temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
+## $temp =~ s/PluginTemplate/$filename/;
+## writeFile("$filename.cpp", $temp);
+## 
