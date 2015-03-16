@@ -1,7 +1,6 @@
 /*
  * stdafx.h
- *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
