@@ -1,7 +1,6 @@
 /*
  * MegaMolPlugin.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef MEGAMOLPLUGIN_H_INCLUDED

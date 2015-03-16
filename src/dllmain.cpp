@@ -1,7 +1,6 @@
 /*
  * MegaMolPlugin.cpp
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
