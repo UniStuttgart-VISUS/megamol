@@ -20,53 +20,41 @@
     <Filter Include="Config and Make Files">
       <UniqueIdentifier>{5362f4ef-8251-4de5-874a-3480840b30c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Public Header Files">
+      <UniqueIdentifier>{7e43d7d1-1177-482d-9f75-210e465c8433}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MegaMolPlugin.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="MegaMolPlugin.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="common.mk">
-      <Filter>Config and Make Files</Filter>
-    </None>
     <None Include="config.bat">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="config.sh">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="configure.lin.pl">
       <Filter>Config and Make Files</Filter>
     </None>
     <None Include="configure.win.pl">
       <Filter>Config and Make Files</Filter>
     </None>
-    <None Include="ExtLibs.mk.input">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="Makefile">
-      <Filter>Config and Make Files</Filter>
-    </None>
     <None Include="ExtLibs.props.input">
       <Filter>Config and Make Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\MegaMolPlugin\MegaMolPlugin.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\MegaMolPlugin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
