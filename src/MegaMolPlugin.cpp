@@ -6,12 +6,12 @@
  */
 
 #include "stdafx.h"
-#include "MegaMolPlugin.h"
-#include "api/MegaMolCore.std.h"
-#include "ModuleAutoDescription.h"
+#include "MegaMolPlugin/MegaMolPlugin.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/factories/ModuleDescription.h"
 #include "vislib/vislibversion.h"
-#include "vislib/Log.h"
-#include "vislib/ThreadSafeStackTrace.h"
+#include "vislib/sys/Log.h"
+#include "vislib/sys/ThreadSafeStackTrace.h"
 
 
 /*
