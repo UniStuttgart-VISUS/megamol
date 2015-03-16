@@ -55,7 +55,7 @@
     <Import Project="vislibVSProps\TargetRelease32.props" />
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi32.props" />
-    <Import Project="vislib.props" />
+    <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
@@ -64,7 +64,7 @@
     <Import Project="vislibVSProps\TargetDebug32.props" />
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi32.props" />
-    <Import Project="vislib.props" />
+    <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
@@ -73,7 +73,7 @@
     <Import Project="vislibVSProps\TargetRelease64.props" />
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi64.props" />
-    <Import Project="vislib.props" />
+    <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
@@ -82,7 +82,7 @@
     <Import Project="vislibVSProps\TargetDebug64.props" />
     <Import Project="nvapi\nvapi.props" />
     <Import Project="nvapi\nvapi64.props" />
-    <Import Project="vislib.props" />
+    <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
