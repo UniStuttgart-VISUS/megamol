@@ -1,5 +1,5 @@
 /*
- * MegaMolPlugin.cpp
+ * dllmain.cpp
  * Copyright (C) 2010-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
