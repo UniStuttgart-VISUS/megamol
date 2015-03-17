@@ -25,6 +25,7 @@ my $ok = 0;
 my $filename;
 my $temp;
 my $guid;
+my $fn;
 
 # subs
 sub autoEuthanize($) {
@@ -76,6 +77,19 @@ sub writeFile($$) {
     close VICTIM;
 }
 
+sub renameFile($$) {
+    my $oldName = shift;
+    my $newName = shift;
+    print "$oldName -> $newName: ";
+    if (rename $oldName, $newName) {
+        print "ok\n";
+    } elsif (-e $newName) {
+        print "ok(magic)\n";
+    } else {
+        autoEuthanize("FAILED.");
+    }
+}
+
 # greeting
 print "\n";
 print "MegaMol(TM) Plugin Instantiation Wizard\n";
@@ -94,7 +108,7 @@ close SOLUTION;
 autoEuthanize($ERR_ALREADY_INSTA) unless $ok == 1;
 
 # ask for parameters
-#  filename
+#  - filename
 if ($HAVE_CWD) {
     $filename = getcwd();
 }
@@ -111,7 +125,7 @@ do {
         print "       A plugin filename must start with a character and must only contain characters, numbers and underscores.\n";
     }
 } while (not $filename =~ /^[a-zA-Z][0-9a-zA-Z_]*$/);
-#  guid
+#  - guid
 if ($HAVE_MD5) {
     $guid = genGUID($filename);
 } else {
@@ -133,49 +147,69 @@ if (IsInputNo($temp)) {
     autoEuthanize("aborting.");
 }
 
-# action jackson
-## foreach $temp (glob "MegaMolPlugin.*") {
-##     $temp =~ /^[^\.]*\.(.+)$/;
-##     my $ext = $1;
-##     print "$temp -> $filename.$ext: ";
-##     if (rename $temp, "$filename.$ext") {
-##         print "ok\n";
-##     } elsif (-e "$filename.$ext") {
-## 		print "ok(magic)\n";
-## 	} else {
-##         autoEuthanize("FAILED.");
-##     }
-## }
-## 
-## $temp = slurpFile("$filename.sln");
-## $temp =~ s/MegaMolPlugin/$filename/g;
-## $temp =~ s/$SRCGUID/$guid/g;
-## writeFile("$filename.sln", $temp);
-## 
-## $temp = slurpFile("$filename.vcxproj");
-## $temp =~ s/$SRCGUID/$guid/g;
-## $temp =~ s/MEGAMOLPLUGIN_EXPORTS/\U$filename\E_EXPORTS/g;
-## $temp =~ s/Template\$\(BitsD\).win\$\(Bits\)/$filename\$\(BitsD\).win\$\(Bits\)/g;
-## $temp =~ s/MegaMolPlugin/$filename/g;
-## writeFile("$filename.vcxproj", $temp);
-## 
-## $temp = slurpFile("$filename.vcxproj.filters");
-## $temp =~ s/MegaMolPlugin/$filename/g;
-## writeFile("$filename.vcxproj.filters", $temp);
-## 
-## $temp = slurpFile("Makefile");
-## $temp =~ s/TargetName := Template/TargetName := $filename/g;
-## $temp =~ s/PluginTemplate/$filename/;
-## writeFile("Makefile", $temp);
-## 
-## $temp = slurpFile("$filename.h");
-## $temp =~ s/MegaMolPlugin/$filename/g;
-## $temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
-## writeFile("$filename.h", $temp);
-## 
-## $temp = slurpFile("$filename.cpp");
-## $temp =~ s/MegaMolPlugin/$filename/g;
-## $temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
-## $temp =~ s/PluginTemplate/$filename/;
-## writeFile("$filename.cpp", $temp);
-## 
+# Now perform the instantiation
+#  - source code files
+renameFile("include/MegaMolPlugin", "include/$filename");
+
+$fn = "include/$filename/$filename.h";
+renameFile("include/$filename/MegaMolPlugin.h", $fn);
+$temp = slurpFile($fn);
+$temp =~ s/MegaMolPlugin/$filename/g;
+$temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
+writeFile($fn, $temp);
+
+$fn = "src/$filename.cpp";
+renameFile("src/MegaMolPlugin.cpp", $fn);
+$temp = slurpFile($fn);
+$temp =~ s/MegaMolPlugin/$filename/g;
+$temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
+writeFile($fn, $temp);
+
+$fn = "src/stdafx.h";
+$temp = slurpFile($fn);
+$temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
+writeFile($fn, $temp);
+
+#  - VS solution and project files
+$fn = "$filename.sln";
+renameFile("MegaMolPlugin.sln", $fn);
+$temp = slurpFile($fn);
+$temp =~ s/MegaMolPlugin/$filename/g;
+$temp =~ s/$SRCGUID/$guid/g;
+writeFile($fn, $temp);
+
+$fn = "$filename.vcxproj";
+renameFile("MegaMolPlugin.vcxproj", $fn);
+$temp = slurpFile($fn);
+$temp =~ s/$SRCGUID/$guid/g;
+$temp =~ s/MEGAMOLPLUGIN_EXPORTS/\U$filename\E_EXPORTS/g;
+$temp =~ s/Template/$filename/g;
+$temp =~ s/MegaMolPlugin/$filename/g;
+writeFile($fn, $temp);
+
+$fn = "$filename.vcxproj.filters";
+renameFile("MegaMolPlugin.vcxproj.filters", $fn);
+$temp = slurpFile($fn);
+$temp =~ s/MegaMolPlugin/$filename/g;
+writeFile($fn, $temp);
+
+#  - Cmake files
+$fn = "CMakeLists.txt";
+$temp = slurpFile($fn);
+$temp =~ s/MegaMolPlugin/$filename/g;
+writeFile($fn, $temp);
+
+$fn = "cmake_build.sh";
+$temp = slurpFile($fn);
+$temp =~ s/MegaMolPlugin/$filename/g;
+writeFile($fn, $temp);
+
+# Completed
+print("\n== Instantiation complete ==\n\n");
+print("You should do now:\n");
+print("  * delete instawiz.pl\n");
+print("  * Call svn to reflect the file renames\n");
+print("  * Update ignore settings\n");
+print("\n");
+
+return 0;
