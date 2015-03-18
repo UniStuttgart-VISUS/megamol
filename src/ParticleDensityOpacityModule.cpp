@@ -585,9 +585,6 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 
     // 4. finally compute distance information
     ci = 0;
-    bool cyclX = this->cyclBoundXSlot.Param<core::param::BoolParam>()->Value();
-    bool cyclY = this->cyclBoundYSlot.Param<core::param::BoolParam>()->Value();
-    bool cyclZ = this->cyclBoundZSlot.Param<core::param::BoolParam>()->Value();
     for (unsigned int pli = 0; pli < plc; pli++) {
         core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
         if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
@@ -614,41 +611,57 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
             unsigned int z = static_cast<unsigned int>(::vislib::math::Clamp<float>((v[2] - box.Back()) / rad, 0.0f, static_cast<float>(dim_z - 1)));
 
             int n_cnt = 0;
+            float x_move = 0.0f;
+            float y_move = 0.0f;
+            float z_move = 0.0f;
 
             for (int ix = -1; ix <= 1; ix++) {
                 int cx = static_cast<int>(x) + ix;
                 if (cx == -1) {
-                    if (cyclX) cx = dim_x - 1;
-                    else continue;
+                    if (cycX) {
+                        cx = dim_x - 1;
+                        x_move = box.Width();
+                    } else continue;
                 } else if (cx == dim_x) {
-                    if (cyclX) cx = 0;
+                    if (cycX) {
+                        cx = 0;
+                        x_move = -box.Width();
+                    }
                     else continue;
-                }
+                } else x_move = 0.0f;
                 for (int iy = -1; iy <= 1; iy++) {
                     int cy = static_cast<int>(y) + iy;
                     if (cy == -1) {
-                        if (cyclY) cy = dim_y - 1;
-                        else continue;
+                        if (cycY) {
+                            cy = dim_y - 1;
+                            y_move = box.Height();
+                        } else continue;
                     } else if (cy == dim_y) {
-                        if (cyclY) cy = 0;
-                        else continue;
-                    }
+                        if (cycY) {
+                            cy = 0;
+                            y_move = -box.Height();
+                        } else continue;
+                    } else y_move = 0.0f;
                     for (int iz = -1; iz <= 1; iz++) {
                         int cz = static_cast<int>(z) + iz;
                         if (cz == -1) {
-                            if (cyclZ) cz = dim_z - 1;
-                            else continue;
+                            if (cycZ) {
+                                cz = dim_z - 1;
+                                z_move = box.Depth();
+                            } else continue;
                         } else if (cz == dim_z) {
-                            if (cyclZ) cz = 0;
-                            else continue;
-                        }
+                            if (cycZ) {
+                                cz = 0;
+                                z_move = -box.Depth();
+                            } else continue;
+                        } else z_move = 0.0f;
 
                         unsigned int c_idx = static_cast<unsigned int>(cx + dim_x * (cy + dim_y * cz));
                         for (int cpi = cnt_grid[c_idx] - 1; cpi >= 0; cpi--) {
                             const float *pf = coords[c_idx][cpi];
-                            float dx = pf[0] - v[0];
-                            float dy = pf[1] - v[1];
-                            float dz = pf[2] - v[2];
+                            float dx = (pf[0] - x_move) - v[0];
+                            float dy = (pf[1] - y_move) - v[1];
+                            float dz = (pf[2] - z_move) - v[2];
                             dx *= dx;
                             dy *= dy;
                             dz *= dz;
@@ -688,9 +701,6 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
     unsigned int dim_x = static_cast<unsigned int>(::std::ceil(box.Width() / rad));
     unsigned int dim_y = static_cast<unsigned int>(::std::ceil(box.Height() / rad));
     unsigned int dim_z = static_cast<unsigned int>(::std::ceil(box.Depth() / rad));
-    bool cyclX = this->cyclBoundXSlot.Param<core::param::BoolParam>()->Value();
-    bool cyclY = this->cyclBoundYSlot.Param<core::param::BoolParam>()->Value();
-    bool cyclZ = this->cyclBoundZSlot.Param<core::param::BoolParam>()->Value();
 
     unsigned int *cnt_grid = new unsigned int[dim_x * dim_y * dim_z];
 
@@ -769,28 +779,28 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
             for (int ix = -1; ix <= 1; ix++) {
                 int cx = static_cast<int>(x) + ix;
                 if (cx == -1) {
-                    if (cyclX) cx = dim_x - 1;
+                    if (cycX) cx = dim_x - 1;
                     else continue;
                 } else if (cx == dim_x) {
-                    if (cyclX) cx = 0;
+                    if (cycX) cx = 0;
                     else continue;
                 }
                 for (int iy = -1; iy <= 1; iy++) {
                     int cy = static_cast<int>(y) + iy;
                     if (cy == -1) {
-                        if (cyclY) cy = dim_y - 1;
+                        if (cycY) cy = dim_y - 1;
                         else continue;
                     } else if (cy == dim_y) {
-                        if (cyclY) cy = 0;
+                        if (cycY) cy = 0;
                         else continue;
                     }
                     for (int iz = -1; iz <= 1; iz++) {
                         int cz = static_cast<int>(z) + iz;
                         if (cz == -1) {
-                            if (cyclZ) cz = dim_z - 1;
+                            if (cycZ) cz = dim_z - 1;
                             else continue;
                         } else if (cz == dim_z) {
-                            if (cyclZ) cz = 0;
+                            if (cycZ) cz = 0;
                             else continue;
                         }
 
