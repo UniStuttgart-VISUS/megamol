@@ -9,6 +9,16 @@
 	<PropertyGroup>
 		<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
 	</PropertyGroup>
+	<ItemDefinitionGroup>
+		<ClCompile>
+			<AdditionalIncludeDirectories>%withANN%!$(ANNPath)include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+			<PreprocessorDefinitions>%withANN%!WITH_ANN;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
+		</ClCompile>
+		<Link>
+			<AdditionalLibraryDirectories>%withANN%!$(ANNPath)lib;!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+			<AdditionalDependencies>%withANN%!ANN$(BitsD).lib;!!%(AdditionalDependencies)</AdditionalDependencies>
+		</Link>
+	</ItemDefinitionGroup>
 	<ItemGroup>
 		<BuildMacro Include="OutputBin">
 			<Value>$(OutputBin)</Value>

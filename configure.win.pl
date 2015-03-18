@@ -50,10 +50,18 @@ $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
+
+$b = FlagParameter->new();
+    $b->id("withANN");
+    $b->description("Enable the use of the ANN library");
+    $b->placeholder("%withANN%");
+    $b->value(0);
+    push @fps, $b;
 $a = PathParameter->new();
     $a->id("ANN");
     $a->description("Path to the ApproximateNearestNeighbor library (custom built names)");
     $a->placeholder("%ANNPath%");
+    $a->dependencyFlagID("withANN");
     $a->markerFile("include/ANN/ANN.h");
     $a->relativeLocation("../../");
     $a->autoDetect(1);

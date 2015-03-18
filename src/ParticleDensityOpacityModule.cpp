@@ -9,7 +9,9 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cstdint>
 #include "vislib/math/ShallowPoint.h"
+#ifdef WITH_ANN
 #include "ANN/ANN.h"
+#endif
 #include "mmcore/param/EnumParam.h"
 
 
@@ -81,7 +83,9 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
     this->MakeSlotAvailable(&this->mapModeSlot);
 
     core::param::EnumParam *dAlg = new core::param::EnumParam(static_cast<int>(DensityAlgorithmType::grid));
+#ifdef WITH_ANN
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::ANN), "ANN");
+#endif
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::grid), "grid");
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::listSepGrid), "listSepGrid");
     this->densitAlgorithmSlot.SetParameter(dAlg);
@@ -322,12 +326,15 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
         this->densitAlgorithmSlot.Param<core::param::EnumParam>()->Value());
     float rad = this->densityRadiusSlot.Param<core::param::FloatParam>()->Value();
     if (dAlg == DensityAlgorithmType::ANN) {
+#ifdef WITH_ANN
         this->compute_density_ANN(dat,
             this->cyclBoundXSlot.Param<core::param::BoolParam>()->Value(),
             this->cyclBoundYSlot.Param<core::param::BoolParam>()->Value(),
             this->cyclBoundZSlot.Param<core::param::BoolParam>()->Value(),
             rad, f, col_step, col_off);
-
+#else
+        throw std::runtime_error("ANN not enabled");
+#endif
     } else if (dAlg == DensityAlgorithmType::grid) {
         this->compute_density_grid(dat,
             this->cyclBoundXSlot.Param<core::param::BoolParam>()->Value(),
@@ -429,6 +436,7 @@ size_t megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_pa
  * megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_ANN
  */
 void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_ANN(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
+#ifdef WITH_ANN
     // implementation using ANN
     unsigned int plc = dat->GetParticleListCount();
     size_t all_cnt = this->count_all_particles(dat);
@@ -477,7 +485,9 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 
     delete[] dataPts;
     delete[] dataPtsData;
-
+#else
+    assert(false);
+#endif
 }
 
 

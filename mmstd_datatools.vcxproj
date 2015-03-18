@@ -112,7 +112,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -124,8 +124,8 @@
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;ANN$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);$(ANNPath)lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -133,7 +133,7 @@
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
-xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ANNPath)\bin\ANN$(BitsD).dll" xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 
 </Command>
@@ -145,7 +145,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -157,8 +157,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;ANN$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);$(ANNPath)lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -166,7 +166,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
-xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ANNPath)\bin\ANN$(BitsD).dll" xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 
 </Command>
@@ -176,7 +176,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -187,8 +187,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;ANN$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);$(ANNPath)lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -198,7 +198,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
-xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ANNPath)\bin\ANN$(BitsD).dll" xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 
 </Command>
@@ -211,7 +211,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ANNPath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include\;$(ProjectDir)include\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_WINDOWS;_USRDLL;MMSTD_DATATOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -222,8 +222,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;ANN$(BitsD).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);$(ANNPath)lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -233,7 +233,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
-xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ANNPath)\bin\ANN$(BitsD).dll" xcopy "$(ANNPath)\bin\ANN$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 
 </Command>
@@ -296,14 +296,17 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src/TransferFunctionQuery.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="common.mk" />
+    <None Include="cmake\ConfigInstall.cmake.in" />
+    <None Include="cmake\ConfigLocal.cmake.in" />
+    <None Include="cmake\ConfigVersion.cmake.in" />
+    <None Include="cmake\FindANN.cmake" />
+    <None Include="cmake_build.sh" />
     <None Include="config.bat" />
-    <None Include="config.sh" />
-    <None Include="configure.lin.pl" />
     <None Include="configure.win.pl" />
-    <None Include="ExtLibs.mk.input" />
     <None Include="ExtLibs.props.input" />
-    <None Include="Makefile" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

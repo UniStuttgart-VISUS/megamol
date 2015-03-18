@@ -20,6 +20,9 @@
     <Filter Include="Config and Make Files">
       <UniqueIdentifier>{5362f4ef-8251-4de5-874a-3480840b30c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Config and Make Files\cmake">
+      <UniqueIdentifier>{5c04e2e6-cc44-4e9f-8f2f-ad340c4a8e5a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/dllmain.cpp">
@@ -128,29 +131,34 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="common.mk">
-      <Filter>Config and Make Files</Filter>
-    </None>
     <None Include="config.bat">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="config.sh">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="configure.lin.pl">
       <Filter>Config and Make Files</Filter>
     </None>
     <None Include="configure.win.pl">
       <Filter>Config and Make Files</Filter>
     </None>
-    <None Include="ExtLibs.mk.input">
-      <Filter>Config and Make Files</Filter>
-    </None>
-    <None Include="Makefile">
-      <Filter>Config and Make Files</Filter>
-    </None>
     <None Include="ExtLibs.props.input">
       <Filter>Config and Make Files</Filter>
     </None>
+    <None Include="cmake_build.sh">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="cmake\ConfigInstall.cmake.in">
+      <Filter>Config and Make Files\cmake</Filter>
+    </None>
+    <None Include="cmake\ConfigLocal.cmake.in">
+      <Filter>Config and Make Files\cmake</Filter>
+    </None>
+    <None Include="cmake\ConfigVersion.cmake.in">
+      <Filter>Config and Make Files\cmake</Filter>
+    </None>
+    <None Include="cmake\FindANN.cmake">
+      <Filter>Config and Make Files\cmake</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt">
+      <Filter>Config and Make Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
