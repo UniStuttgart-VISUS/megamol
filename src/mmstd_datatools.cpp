@@ -30,6 +30,7 @@
 #ifdef WITH_ANN
 #include "ParticleColorSignedDistance.h"
 #endif
+#include "EnforceSymmetricParticleColorRanges.h"
 
 
 /*
@@ -110,6 +111,7 @@ namespace {
 #ifdef WITH_ANN
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignedDistance>();
 #endif
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::EnforceSymmetricParticleColorRanges>();
             // register calls here:
             // ...
         }

@@ -275,6 +275,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src/TransferFunctionQuery.cpp" />
+    <ClCompile Include="src\EnforceSymmetricParticleColorRanges.cpp" />
     <ClCompile Include="src\OverrideParticleBBox.cpp" />
     <ClCompile Include="src\ParticleColorSignedDistance.cpp" />
     <ClCompile Include="src\ParticleColorSignThreshold.cpp" />
@@ -297,6 +298,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src/stdafx.h" />
     <ClInclude Include="src/targetver.h" />
     <ClInclude Include="src/TransferFunctionQuery.h" />
+    <ClInclude Include="src\EnforceSymmetricParticleColorRanges.h" />
     <ClInclude Include="src\OverrideParticleBBox.h" />
     <ClInclude Include="src\ParticleColorSignedDistance.h" />
     <ClInclude Include="src\ParticleColorSignThreshold.h" />
