@@ -26,6 +26,7 @@
 #include "DumpIColorHistogramModule.h"
 #include "DataFileSequence.h"
 #include "OverrideParticleBBox.h"
+#include "ParticleColorSignThreshold.h"
 
 
 /*
@@ -102,6 +103,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::OverrideParticleBBox>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignThreshold>();
             // register calls here:
             // ...
         }

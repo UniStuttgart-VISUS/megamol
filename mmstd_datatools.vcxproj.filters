@@ -79,6 +79,9 @@
     <ClCompile Include="src\OverrideParticleBBox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleColorSignThreshold.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
@@ -133,6 +136,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\OverrideParticleBBox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleColorSignThreshold.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
