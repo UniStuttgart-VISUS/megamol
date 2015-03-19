@@ -505,9 +505,9 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 
     // count neighbours within 'rad'
     const vislib::math::Cuboid<float> &box = dat->AccessBoundingBoxes().ObjectSpaceClipBox();
-    unsigned int dim_x = static_cast<unsigned int>(::std::ceil(box.Width() / rad));
-    unsigned int dim_y = static_cast<unsigned int>(::std::ceil(box.Height() / rad));
-    unsigned int dim_z = static_cast<unsigned int>(::std::ceil(box.Depth() / rad));
+    unsigned int dim_x = static_cast<unsigned int>(::std::ceil(box.Width() / (1.1f * rad)));
+    unsigned int dim_y = static_cast<unsigned int>(::std::ceil(box.Height() / (1.1f * rad)));
+    unsigned int dim_z = static_cast<unsigned int>(::std::ceil(box.Depth() / (1.1f * rad)));
 
     unsigned int *cnt_grid = new unsigned int[dim_x * dim_y * dim_z];
     ::memset(cnt_grid, 0, sizeof(unsigned int) * dim_x * dim_y * dim_z);
@@ -585,6 +585,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
 
     // 4. finally compute distance information
     ci = 0;
+    auto bbox = dat->AccessBoundingBoxes().ObjectSpaceBBox();
     for (unsigned int pli = 0; pli < plc; pli++) {
         core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
         if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
@@ -614,45 +615,46 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
             float x_move = 0.0f;
             float y_move = 0.0f;
             float z_move = 0.0f;
+            const float range = 1;
 
-            for (int ix = -1; ix <= 1; ix++) {
+            for (int ix = -range; ix <= range; ix++) {
                 int cx = static_cast<int>(x) + ix;
-                if (cx == -1) {
+                if (cx < 0) {
                     if (cycX) {
-                        cx = dim_x - 1;
-                        x_move = box.Width();
+                        cx += dim_x;
+                        x_move = bbox.Width();
                     } else continue;
-                } else if (cx == dim_x) {
+                } else if (cx >= dim_x) {
                     if (cycX) {
-                        cx = 0;
-                        x_move = -box.Width();
+                        cx -= dim_x;
+                        x_move = -bbox.Width();
                     }
                     else continue;
                 } else x_move = 0.0f;
-                for (int iy = -1; iy <= 1; iy++) {
+                for (int iy = -range; iy <= range; iy++) {
                     int cy = static_cast<int>(y) + iy;
-                    if (cy == -1) {
+                    if (cy < 0) {
                         if (cycY) {
-                            cy = dim_y - 1;
-                            y_move = box.Height();
+                            cy += dim_y;
+                            y_move = bbox.Height();
                         } else continue;
-                    } else if (cy == dim_y) {
+                    } else if (cy >= dim_y) {
                         if (cycY) {
-                            cy = 0;
-                            y_move = -box.Height();
+                            cy -= dim_y;
+                            y_move = -bbox.Height();
                         } else continue;
                     } else y_move = 0.0f;
-                    for (int iz = -1; iz <= 1; iz++) {
+                    for (int iz = -range; iz <= range; iz++) {
                         int cz = static_cast<int>(z) + iz;
-                        if (cz == -1) {
+                        if (cz < 0) {
                             if (cycZ) {
-                                cz = dim_z - 1;
-                                z_move = box.Depth();
+                                cz += dim_z;
+                                z_move = bbox.Depth();
                             } else continue;
-                        } else if (cz == dim_z) {
+                        } else if (cz >= dim_z) {
                             if (cycZ) {
-                                cz = 0;
-                                z_move = -box.Depth();
+                                cz -= dim_z;
+                                z_move = -bbox.Depth();
                             } else continue;
                         } else z_move = 0.0f;
 
@@ -698,9 +700,9 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
     float rad_sq = rad * rad;
     // count neighbours within 'rad'
     const vislib::math::Cuboid<float> &box = dat->AccessBoundingBoxes().ObjectSpaceClipBox();
-    unsigned int dim_x = static_cast<unsigned int>(::std::ceil(box.Width() / rad));
-    unsigned int dim_y = static_cast<unsigned int>(::std::ceil(box.Height() / rad));
-    unsigned int dim_z = static_cast<unsigned int>(::std::ceil(box.Depth() / rad));
+    unsigned int dim_x = static_cast<unsigned int>(::std::ceil(box.Width() / (1.1f * rad)));
+    unsigned int dim_y = static_cast<unsigned int>(::std::ceil(box.Height() / (1.1f * rad)));
+    unsigned int dim_z = static_cast<unsigned int>(::std::ceil(box.Depth() / (1.1f * rad)));
 
     unsigned int *cnt_grid = new unsigned int[dim_x * dim_y * dim_z];
 
