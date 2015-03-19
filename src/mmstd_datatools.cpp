@@ -25,6 +25,7 @@
 #include "ForceCubicCBoxModule.h"
 #include "DumpIColorHistogramModule.h"
 #include "DataFileSequence.h"
+#include "OverrideParticleBBox.h"
 
 
 /*
@@ -100,6 +101,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ForceCubicCBoxModule>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DumpIColorHistogramModule>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::OverrideParticleBBox>();
             // register calls here:
             // ...
         }
