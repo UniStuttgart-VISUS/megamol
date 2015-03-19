@@ -7,10 +7,9 @@
 
 #ifndef MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED
 #define MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#ifdef WITH_ANN
 #include "AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
@@ -69,9 +68,13 @@ namespace datatools {
         void set_colors(megamol::core::moldyn::MultiParticleDataCall& dat);
 
         core::param::ParamSlot enableSlot;
+        core::param::ParamSlot cyclXSlot;
+        core::param::ParamSlot cyclYSlot;
+        core::param::ParamSlot cyclZSlot;
         size_t datahash;
         unsigned int time;
         std::vector<float> newColors;
+        float minCol, maxCol;
 
     };
 
@@ -79,4 +82,5 @@ namespace datatools {
 } /* end namespace stdplugin */
 } /* end namespace megamol */
 
+#endif
 #endif /* MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED */

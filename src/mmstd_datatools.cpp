@@ -27,7 +27,9 @@
 #include "DataFileSequence.h"
 #include "OverrideParticleBBox.h"
 #include "ParticleColorSignThreshold.h"
+#ifdef WITH_ANN
 #include "ParticleColorSignedDistance.h"
+#endif
 
 
 /*
@@ -105,7 +107,9 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::OverrideParticleBBox>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignThreshold>();
+#ifdef WITH_ANN
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignedDistance>();
+#endif
             // register calls here:
             // ...
         }
