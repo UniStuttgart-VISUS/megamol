@@ -177,6 +177,13 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
     ANNkd_tree* negTree = new ANNkd_tree(negnulPts, static_cast<int>(negpartcnt + nulpartcnt), 3);
 
     // final computation
+    bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool cycl_y = this->cyclYSlot.Param<megamol::core::param::BoolParam>()->Value();
+    bool cycl_z = this->cyclZSlot.Param<megamol::core::param::BoolParam>()->Value();
+    auto bbox = dat.AccessBoundingBoxes().ObjectSpaceBBox();
+    bbox.EnforcePositiveSize(); // paranoia
+    auto bbox_cntr = bbox.CalcCenter();
+
     allpartcnt = 0;
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
@@ -200,28 +207,36 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
         for (int part_i = 0; part_i < part_cnt; ++part_i) {
             float c = *reinterpret_cast<const float *>(col + (part_i * col_stride));
             const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
-            ANNcoord q[3] = {
-                static_cast<ANNcoord>(v[0]),
-                static_cast<ANNcoord>(v[1]),
-                static_cast<ANNcoord>(v[2])};
-            ANNidx ni;
-            ANNdist nd;
 
-            if (c < -border_epsilon) {
-                // neg
-                posTree->annkSearch(q, 1, &ni, &nd);
-                nd = /*-*/sqrt(nd);
-                c = static_cast<float>(nd);
-
-            } else if (c < border_epsilon) {
-                // null
+            if ((-border_epsilon < c) && (c < border_epsilon)) {
                 c = 0.0f;
-
             } else {
-                // pos
-                negTree->annkSearch(q, 1, &ni, &nd);
-                nd = sqrt(nd);
-                c = static_cast<float>(nd);
+                ANNcoord q[3];
+                ANNidx ni;
+                ANNdist nd, dist = static_cast<ANNdist>(DBL_MAX);
+                ANNkd_tree *tree = (c < 0.0f) ? posTree : negTree;
+
+                for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
+                    for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
+                        for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
+
+                            q[0] = static_cast<ANNcoord>(v[0]);
+                            q[1] = static_cast<ANNcoord>(v[1]);
+                            q[2] = static_cast<ANNcoord>(v[2]);
+                            if (x_s > 0) q[0] = static_cast<ANNcoord>(v[0] + ((v[0] > bbox_cntr.X()) ? -bbox.Width()  : bbox.Width() ));
+                            if (y_s > 0) q[1] = static_cast<ANNcoord>(v[1] + ((v[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height()));
+                            if (z_s > 0) q[2] = static_cast<ANNcoord>(v[2] + ((v[2] > bbox_cntr.Z()) ? -bbox.Depth()  : bbox.Depth() ));
+
+                            tree->annkSearch(q, 1, &ni, &nd);
+                            if (nd < dist) dist = nd;
+
+                        }
+                    }
+                }
+
+                dist = sqrt(dist);
+                if (c < 0.0f) dist = -dist;
+                c = static_cast<float>(dist);
             }
 
             if (c < this->minCol) this->minCol = c;
@@ -232,7 +247,7 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
 
         allpartcnt += static_cast<size_t>(part_cnt);
     }
-    
+
     delete posTree;
     delete negTree;
     delete[] posnulPts;
