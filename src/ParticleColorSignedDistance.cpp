@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <cfloat>
+#include <cassert>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -93,10 +94,12 @@ bool datatools::ParticleColorSignedDistance::manipulateData(
 void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
     using megamol::core::moldyn::SimpleSphericalParticles;
     size_t allpartcnt = 0;
-    size_t borderpartcnt = 0;
+    size_t negpartcnt = 0;
+    size_t nulpartcnt = 0;
+    size_t pospartcnt = 0;
     const float border_epsilon = 0.001f;
 
-    // count all particles and border particles
+    // count particles
     unsigned int plc = dat.GetParticleListCount();
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
@@ -105,30 +108,17 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
             && (pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)) {
             continue;
         }
-
-        int part_cnt = static_cast<int>(pl.GetCount());
-        const unsigned char *col = static_cast<const unsigned char*>(pl.GetColourData());
-        unsigned int stride = std::max<unsigned int>(pl.GetColourDataStride(), sizeof(float));
-
-        for (int part_i = 0; part_i < part_cnt; ++part_i) {
-            float c = *reinterpret_cast<const float *>(col + (part_i * stride));
-            if ((-border_epsilon < c) && (c < border_epsilon)) {
-                borderpartcnt++;
-            }
-        }
-
-        allpartcnt += static_cast<size_t>(part_cnt);
+        allpartcnt += static_cast<size_t>(pl.GetCount());
     }
 
-    // allocate memory for new color values
     this->newColors.resize(allpartcnt);
+    ANNpoint dataPtsData = new ANNcoord[3 * allpartcnt];
+    std::vector<size_t> posparts;
+    std::vector<size_t> negparts;
+    posparts.reserve(allpartcnt);
+    negparts.reserve(allpartcnt);
 
-    // allocate ANN data structures for border
-    ANNpointArray dataPts = new ANNpoint[borderpartcnt];
-    ANNpoint dataPtsData = new ANNcoord[3 * borderpartcnt];
-
-    // collect border particles
-    borderpartcnt = 0;
+    allpartcnt = 0;
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
         if (pl.GetColourDataType() != SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
@@ -146,27 +136,48 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
 
         int part_cnt = static_cast<int>(pl.GetCount());
         const unsigned char *col = static_cast<const unsigned char*>(pl.GetColourData());
-        unsigned int col_stride = std::max<unsigned int>(pl.GetColourDataStride(), sizeof(float));
+        unsigned int stride = std::max<unsigned int>(pl.GetColourDataStride(), sizeof(float));
 
         for (int part_i = 0; part_i < part_cnt; ++part_i) {
-            const float *c = reinterpret_cast<const float *>(col + (part_i * col_stride));
-            if ((-border_epsilon > *c) || (*c > border_epsilon)) continue;
-
+            float c = *reinterpret_cast<const float *>(col + (part_i * stride));
             const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
-            dataPts[borderpartcnt] = dataPtsData + borderpartcnt * 3;
-            dataPtsData[borderpartcnt * 3 + 0] = static_cast<ANNcoord>(v[0]);
-            dataPtsData[borderpartcnt * 3 + 1] = static_cast<ANNcoord>(v[1]);
-            dataPtsData[borderpartcnt * 3 + 2] = static_cast<ANNcoord>(v[2]);
+            dataPtsData[(allpartcnt + part_i) * 3 + 0] = static_cast<ANNcoord>(v[0]);
+            dataPtsData[(allpartcnt + part_i) * 3 + 1] = static_cast<ANNcoord>(v[1]);
+            dataPtsData[(allpartcnt + part_i) * 3 + 2] = static_cast<ANNcoord>(v[2]);
 
-            borderpartcnt++;
+            if (c < -border_epsilon) {
+                negpartcnt++;
+                negparts.push_back(allpartcnt + part_i);
+            } else if (c < border_epsilon) {
+                nulpartcnt++;
+                negparts.push_back(allpartcnt + part_i);
+                posparts.push_back(allpartcnt + part_i);
+            } else {
+                pospartcnt++;
+                posparts.push_back(allpartcnt + part_i);
+            }
         }
+        allpartcnt += static_cast<size_t>(pl.GetCount());
     }
 
-    ANNkd_tree* kdTree = new ANNkd_tree(dataPts, static_cast<int>(borderpartcnt), 3);
+    // allocate ANN data structures for border
+    assert(pospartcnt + nulpartcnt == posparts.size());
+    ANNpointArray posnulPts = new ANNpoint[posparts.size()];
+    for (size_t i = 0; i < pospartcnt + nulpartcnt; ++i) {
+        posnulPts[i] = dataPtsData + (posparts[i] * 3);
+    }
+    posparts.clear();
+    assert(negpartcnt + nulpartcnt == negparts.size());
+    ANNpointArray negnulPts = new ANNpoint[negparts.size()];
+    for (size_t i = 0; i < negpartcnt + nulpartcnt; ++i) {
+        negnulPts[i] = dataPtsData + (negparts[i] * 3);
+    }
+    negparts.clear();
+    ANNkd_tree* posTree = new ANNkd_tree(posnulPts, static_cast<int>(pospartcnt + nulpartcnt), 3);
+    ANNkd_tree* negTree = new ANNkd_tree(negnulPts, static_cast<int>(negpartcnt + nulpartcnt), 3);
 
+    // final computation
     allpartcnt = 0;
-    this->minCol = 0;
-    this->maxCol = 0;
     for (unsigned int pli = 0; pli < plc; pli++) {
         auto& pl = dat.AccessParticles(pli);
         if (pl.GetColourDataType() != SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
@@ -189,33 +200,43 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
         for (int part_i = 0; part_i < part_cnt; ++part_i) {
             float c = *reinterpret_cast<const float *>(col + (part_i * col_stride));
             const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
+            ANNcoord q[3] = {
+                static_cast<ANNcoord>(v[0]),
+                static_cast<ANNcoord>(v[1]),
+                static_cast<ANNcoord>(v[2])};
+            ANNidx ni;
+            ANNdist nd;
 
-            if ((-border_epsilon < c) && (c < border_epsilon)) {
-                c = 0.0f;
-            } else {
-                ANNcoord q[3] = {
-                    static_cast<ANNcoord>(v[0]),
-                    static_cast<ANNcoord>(v[1]),
-                    static_cast<ANNcoord>(v[2])};
-                ANNidx ni;
-                ANNdist nd;
-
-                kdTree->annkSearch(q, 1, &ni, &nd);
-                nd = sqrt(nd);
-                //if (c < 0.0f) nd = -nd;
+            if (c < -border_epsilon) {
+                // neg
+                posTree->annkSearch(q, 1, &ni, &nd);
+                nd = /*-*/sqrt(nd);
                 c = static_cast<float>(nd);
-                if (c < this->minCol) this->minCol = c;
-                if (c > this->maxCol) this->maxCol = c;
 
+            } else if (c < border_epsilon) {
+                // null
+                c = 0.0f;
+
+            } else {
+                // pos
+                negTree->annkSearch(q, 1, &ni, &nd);
+                nd = sqrt(nd);
+                c = static_cast<float>(nd);
             }
+
+            if (c < this->minCol) this->minCol = c;
+            if (c > this->maxCol) this->maxCol = c;
+
             this->newColors[allpartcnt + part_i] = c;
         }
 
         allpartcnt += static_cast<size_t>(part_cnt);
     }
-
-    delete kdTree;
-    delete[] dataPts;
+    
+    delete posTree;
+    delete negTree;
+    delete[] posnulPts;
+    delete[] negnulPts;
     delete[] dataPtsData;
 }
 
