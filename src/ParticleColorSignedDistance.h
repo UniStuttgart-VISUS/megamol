@@ -1,12 +1,12 @@
 /*
- * ParticleColorSignThreshold.h
+ * ParticleColorSignedDistance.h
  *
  * Copyright (C) 2015 by S. Grottel
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLECOLORSIGNTHRESHOLD_H_INCLUDED
-#define MEGAMOLCORE_PARTICLECOLORSIGNTHRESHOLD_H_INCLUDED
+#ifndef MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED
+#define MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -23,17 +23,17 @@ namespace datatools {
     /**
      * Module overriding global attributes of particles
      */
-    class ParticleColorSignThreshold : public AbstractParticleManipulator {
+    class ParticleColorSignedDistance : public AbstractParticleManipulator {
     public:
 
         /** Return module class name */
         static const char *ClassName(void) {
-            return "ParticleColorSignThreshold";
+            return "ParticleColorSignedDistance";
         }
 
         /** Return module class description */
         static const char *Description(void) {
-            return "Performs a sign threshold adjustment of the particles' colors";
+            return "Computes signed distances of particles to the closest particle with a color value of zero. The sign is preserved from the original color.";
         }
 
         /** Module is always available */
@@ -42,10 +42,10 @@ namespace datatools {
         }
 
         /** Ctor */
-        ParticleColorSignThreshold(void);
+        ParticleColorSignedDistance(void);
 
         /** Dtor */
-        virtual ~ParticleColorSignThreshold(void);
+        virtual ~ParticleColorSignedDistance(void);
 
     protected:
 
@@ -69,8 +69,6 @@ namespace datatools {
         void set_colors(megamol::core::moldyn::MultiParticleDataCall& dat);
 
         core::param::ParamSlot enableSlot;
-        core::param::ParamSlot negativeThresholdSlot;
-        core::param::ParamSlot positiveThresholdSlot;
         size_t datahash;
         unsigned int time;
         std::vector<float> newColors;
@@ -81,4 +79,4 @@ namespace datatools {
 } /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_PARTICLECOLORSIGNTHRESHOLD_H_INCLUDED */
+#endif /* MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED */

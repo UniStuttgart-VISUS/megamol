@@ -276,6 +276,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="src/TransferFunctionQuery.cpp" />
     <ClCompile Include="src\OverrideParticleBBox.cpp" />
+    <ClCompile Include="src\ParticleColorSignedDistance.cpp" />
     <ClCompile Include="src\ParticleColorSignThreshold.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -297,6 +298,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src/targetver.h" />
     <ClInclude Include="src/TransferFunctionQuery.h" />
     <ClInclude Include="src\OverrideParticleBBox.h" />
+    <ClInclude Include="src\ParticleColorSignedDistance.h" />
     <ClInclude Include="src\ParticleColorSignThreshold.h" />
   </ItemGroup>
   <ItemGroup>
