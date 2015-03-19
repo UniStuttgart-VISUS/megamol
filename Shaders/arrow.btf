@@ -14,9 +14,7 @@ uniform vec3 camUp;
 uniform vec3 camRight;
 
 uniform vec4 inConsts1;
-attribute float colIdx;
 uniform sampler1D colTab;
-attribute vec3 dir;
 uniform float lengthScale;
 uniform float lengthFilter;
 
@@ -40,6 +38,9 @@ varying vec3 rotMatT2;
         </snippet>
         <snippet type="string">
             <![CDATA[
+attribute float colIdx;
+attribute vec3 dir;            
+            
 void main(void) {
 ]]>
 </snippet>
