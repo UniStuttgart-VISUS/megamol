@@ -35,8 +35,8 @@ datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule(void) : core::Modu
     //    this->inDataSlot.SetCompatibleCall(*cd);
     //}
 
-    this->MakeSlotAvailable(&this->outDataSlot);
-    this->MakeSlotAvailable(&this->inDataSlot);
+    //this->MakeSlotAvailable(&this->outDataSlot);
+    //this->MakeSlotAvailable(&this->inDataSlot);
 
     this->firstFrameSlot.SetParameter(new core::param::IntParam(0, 0));
     this->MakeSlotAvailable(&this->firstFrameSlot);
