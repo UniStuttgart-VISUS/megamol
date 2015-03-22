@@ -274,9 +274,6 @@
     <ClCompile Include="CallProteinVolumeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BindingSiteCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CenterLineGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -667,9 +664,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BindingSiteDataSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BindingSiteCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CenterLineGenerator.h">

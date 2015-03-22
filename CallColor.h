@@ -14,7 +14,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallAutoDescription.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 
 namespace megamol {
 namespace protein {
@@ -117,7 +117,7 @@ public:
 	  *
 	  *	@param bs The BindingSiteCall
 	  */
-	 void SetBindingSiteCall(const BindingSiteCall *bs) {
+	 void SetBindingSiteCall(const core::moldyn::BindingSiteCall *bs) {
 		 this->bs = bs;
 	 }
 
@@ -126,7 +126,7 @@ public:
 	  *
 	  *	@return The BindingSiteCall
 	  */
-	 const BindingSiteCall* GetBindingSiteCall() {
+	 const core::moldyn::BindingSiteCall* GetBindingSiteCall() {
 		 return this->bs;
 	 }
 
@@ -309,7 +309,7 @@ private:
 	megamol::core::moldyn::MolecularDataCall * mol1;
 	
 	/** The binding site call*/
-	const BindingSiteCall * bs;
+	const core::moldyn::BindingSiteCall * bs;
 
 	/** Should the color table be recomputed?*/
 	bool forceRecompute;

@@ -2579,7 +2579,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(
  * update parameters
  */
 void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall *mol,
-        const BindingSiteCall *bs) {
+	const core::moldyn::BindingSiteCall *bs) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
         Color::ReadColorTableFromFile(

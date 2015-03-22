@@ -502,7 +502,7 @@ void ColorModule::MakeColorTable(const megamol::core::moldyn::MolecularDataCall 
     vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
     bool forceRecompute,
-    const BindingSiteCall *bs) {
+	const core::moldyn::BindingSiteCall *bs) {
 	
 	// if recomputation is forced: clear current color table
     if(forceRecompute) {
@@ -551,7 +551,7 @@ void ColorModule::MakeColorTable(const megamol::core::moldyn::MolecularDataCall 
     vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
     vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
     bool forceRecompute,
-    const BindingSiteCall *bs) {
+	const core::moldyn::BindingSiteCall *bs) {
 	
 	// temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx,
@@ -974,7 +974,7 @@ void ColorModule::MakeComparisonColorTable(megamol::core::moldyn::MolecularDataC
 	vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
 	unsigned int frameID,
 	bool forceRecompute,
-	const BindingSiteCall *bs) {
+	const core::moldyn::BindingSiteCall *bs) {
 
 	// temporary variables
     unsigned int cntAtom;

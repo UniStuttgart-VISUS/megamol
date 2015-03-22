@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "BindingSiteDataSource.h"
 
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/IntParam.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
@@ -13,6 +13,7 @@
 #include "Color.h"
 
 using namespace megamol::core;
+using namespace megamol::core::moldyn;
 using namespace megamol::protein;
 
 /*

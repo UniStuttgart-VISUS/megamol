@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 #include "CallColor.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -122,7 +122,7 @@ public:
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
         vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
         bool forceRecompute = false,
-        const BindingSiteCall *bs = 0);
+		const core::moldyn::BindingSiteCall *bs = 0);
 	 
      /**
       * Make color table for all atoms acoording to the current coloring
@@ -147,7 +147,7 @@ public:
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
         vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
         bool forceRecompute = false,
-        const BindingSiteCall *bs = 0);
+		const core::moldyn::BindingSiteCall *bs = 0);
 
 	 /**
       * Make color table for all atoms acoording to compare two different
@@ -171,7 +171,7 @@ public:
 		vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
 		unsigned int frameID,
 		bool forceRecompute = false,
-		const BindingSiteCall *bs = 0);
+		const core::moldyn::BindingSiteCall *bs = 0);
 
 	 /**
       * Fill amino acid color table.

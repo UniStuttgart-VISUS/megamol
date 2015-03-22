@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/moldyn/MolecularDataCall.h"
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "BSpline.h"
 #include "mmcore/CallerSlot.h"
@@ -241,7 +241,7 @@ namespace protein {
         /**
          * Render the molecular data in stick mode.
          */
-		void RenderStick(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos, const BindingSiteCall *bs = NULL);
+		void RenderStick(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos, const core::moldyn::BindingSiteCall *bs = NULL);
 
          /**
           * Recompute all values.
@@ -257,7 +257,7 @@ namespace protein {
 		 *	@param frameID The current frame id used for the data call.
 		 *	@param bs Pointer to the binding site call.
          */
-		 void UpdateParameters(megamol::core::moldyn::MolecularDataCall *mol, unsigned int frameID, const BindingSiteCall * bs = 0);
+		 void UpdateParameters(megamol::core::moldyn::MolecularDataCall *mol, unsigned int frameID, const core::moldyn::BindingSiteCall * bs = 0);
 
         /**********************************************************************
          * variables

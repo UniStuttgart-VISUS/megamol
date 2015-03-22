@@ -11,7 +11,7 @@
 #endif /* (_MSC_VER > 1000) */
 
 #include "mmcore/moldyn/MolecularDataCall.h"
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "Color.h"
@@ -238,7 +238,7 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-		void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol, const BindingSiteCall *bs = 0);
+		void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol, const core::moldyn::BindingSiteCall *bs = 0);
 
         /**
          * The get capabilities callback. The module should set the members

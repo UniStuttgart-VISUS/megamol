@@ -96,7 +96,6 @@
 #include "SplitMergeCall.h"
 #include "IntSelectionCall.h"
 #include "ResidueSelectionCall.h"
-#include "BindingSiteCall.h"
 #include "VTIDataCall.h"
 #include "VBODataCall.h"
 #include "VariantMatchDataCall.h"
@@ -270,7 +269,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 19;
+    return 18;
 }
 
 
@@ -292,12 +291,11 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 10: return new megamol::core::CallAutoDescription<megamol::protein::IntSelectionCall>();
         case 11: return new megamol::core::CallAutoDescription<megamol::protein::ResidueSelectionCall>();
         case 12: return new megamol::core::CallAutoDescription<megamol::protein::CrystalStructureDataCall>();
-        case 13: return new megamol::core::CallAutoDescription<megamol::protein::BindingSiteCall>();
-        case 14: return new megamol::core::CallAutoDescription<megamol::protein::VTIDataCall>();
-        case 15: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
-        case 16: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
-        case 17: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
-		case 18: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
+        case 13: return new megamol::core::CallAutoDescription<megamol::protein::VTIDataCall>();
+        case 14: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
+        case 15: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
+        case 16: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
+		case 17: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
         default: return NULL;
     }
     return NULL;

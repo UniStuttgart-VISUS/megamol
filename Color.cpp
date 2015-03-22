@@ -80,7 +80,7 @@ Color::ColoringMode Color::GetModeByIndex(const megamol::core::moldyn::Molecular
  * Color::GetModeByIndex
  */
 Color::ColoringMode Color::GetModeByIndex(const megamol::core::moldyn::MolecularDataCall *mol,
-        const BindingSiteCall *bs, unsigned int idx) {
+	const core::moldyn::BindingSiteCall *bs, unsigned int idx) {
     switch(idx) {
         case 0 : return ELEMENT;
         case 1 : return RESIDUE;
@@ -134,7 +134,7 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-        const BindingSiteCall *bs) {
+		const core::moldyn::BindingSiteCall *bs) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx,
@@ -579,7 +579,7 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-        const BindingSiteCall *bs) {
+		const core::moldyn::BindingSiteCall *bs) {
 
     // if recomputation is forced: clear current color table
     if(forceRecompute) {
@@ -629,7 +629,7 @@ void Color::MakeComparisonColorTable(const megamol::core::moldyn::MolecularDataC
 	vislib::TString midGradColor,
 	vislib::TString maxGradColor,
 	bool forceRecompute,
-	const BindingSiteCall *bs) {
+	const core::moldyn::BindingSiteCall *bs) {
 
 	// temporary variables
     unsigned int cnt, cnt2, idx, idx2, cntAtom, cntRes, cntSecS, atomIdx,

@@ -17,7 +17,7 @@
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "DiagramCall.h"
 #include "SplitMergeCall.h"
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
@@ -192,7 +192,7 @@ namespace protein {
         /**
          *
          */
-        void ParameterRefresh(const megamol::core::moldyn::MolecularDataCall *mol, const BindingSiteCall *bs = 0);
+		void ParameterRefresh(const megamol::core::moldyn::MolecularDataCall *mol, const core::moldyn::BindingSiteCall *bs = 0);
         
         /**
          *
