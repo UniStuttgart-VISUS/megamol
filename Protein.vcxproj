@@ -535,7 +535,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="AbstractGPUSurface.cpp" />
     <ClCompile Include="AbstractVTKLegacyData.cpp" />
     <ClCompile Include="AggregatedDensity.cpp" />
-    <ClCompile Include="BindingSiteCall.cpp" />
     <ClCompile Include="BindingSiteDataSource.cpp" />
     <ClCompile Include="Base64.cpp" />
     <ClCompile Include="BSpline.cpp" />
@@ -712,7 +711,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="AbstractGPUSurface.h" />
     <ClInclude Include="AbstractVTKLegacyData.h" />
     <ClInclude Include="AggregatedDensity.h" />
-    <ClInclude Include="BindingSiteCall.h" />
     <ClInclude Include="Base64.h" />
     <ClInclude Include="BSpline.h" />
     <ClInclude Include="CallColor.h" />

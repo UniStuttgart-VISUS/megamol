@@ -19,7 +19,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #ifdef USE_SIMPLE_FONT
 #include "vislib/graphics/gl/SimpleFont.h"
@@ -98,7 +98,7 @@ namespace protein {
          * @param mol The molecular data call.
          * @return true if preparation was successful, false otherwise
          */
-		bool PrepareData(megamol::core::moldyn::MolecularDataCall *mol, BindingSiteCall *bs);
+		bool PrepareData(megamol::core::moldyn::MolecularDataCall *mol, core::moldyn::BindingSiteCall *bs);
         
         /**
          * TODO

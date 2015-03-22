@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/moldyn/MolecularDataCall.h"
-#include "BindingSiteCall.h"
+#include "mmcore/moldyn/BindingSiteCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -224,7 +224,7 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-		void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol, const BindingSiteCall *bs = 0);
+		void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol, const core::moldyn::BindingSiteCall *bs = 0);
 
 
         /**********************************************************************
