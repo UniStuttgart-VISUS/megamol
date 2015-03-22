@@ -461,6 +461,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\moldyn\AddClusterColours.cpp" />
     <ClCompile Include="src\moldyn\AddParticleColours.cpp" />
     <ClCompile Include="src\moldyn\ArrowRenderer.cpp" />
+    <ClCompile Include="src\moldyn\BindingSiteCall.cpp" />
     <ClCompile Include="src\moldyn\ClusteredSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\D3D11SimpleSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\DataGridder.cpp" />
@@ -702,6 +703,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\moldyn\AddClusterColours.h" />
     <ClInclude Include="include\mmcore\moldyn\AddParticleColours.h" />
     <ClInclude Include="include\mmcore\moldyn\ArrowRenderer.h" />
+    <ClInclude Include="include\mmcore\moldyn\BindingSiteCall.h" />
     <ClInclude Include="include\mmcore\moldyn\ClusteredSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\D3D11SimpleSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\DataGridder.h" />

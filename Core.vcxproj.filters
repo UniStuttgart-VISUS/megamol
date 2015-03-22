@@ -923,6 +923,9 @@
     <ClCompile Include="src\utility\plugins\Plugin100Instance.cpp">
       <Filter>utility\plugins\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\moldyn\BindingSiteCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1560,6 +1563,9 @@
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\plugins\Plugin200Utilities.h">
       <Filter>utility\plugins\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\BindingSiteCall.h">
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
