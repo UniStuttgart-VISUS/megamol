@@ -57,6 +57,7 @@
     <Import Project="nvapi\nvapi32.props" />
     <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
+    <Import Project="mpi.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -66,6 +67,7 @@
     <Import Project="nvapi\nvapi32.props" />
     <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
+    <Import Project="mpi.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -75,6 +77,7 @@
     <Import Project="nvapi\nvapi64.props" />
     <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
+    <Import Project="mpi.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -84,6 +87,7 @@
     <Import Project="nvapi\nvapi64.props" />
     <Import Project="vislibVSProps\vislib.props" />
     <Import Project="D3D.props" />
+    <Import Project="mpi.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>

@@ -6,10 +6,6 @@
         <ExpatPath>%expatPath%</ExpatPath>
         <PngPath>%pngPath%</PngPath>
         <ZlibPath>%zlibPath%</ZlibPath>
-        <MpiEnabled>withmpi$WITH_MPI$$</MpiEnabled>
-        <MpiIncPath>%mpiincpath%</MpiIncPath>
-        <MpiLib32Path>%mpilib32path%</MpiLib32Path>
-        <MpiLib64Path>%mpilib64path%</MpiLib64Path>
     </PropertyGroup>
     <PropertyGroup>
         <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -29,18 +25,6 @@
         </BuildMacro>
         <BuildMacro Include="ZlibPath">
             <Value>$(ZlibPath)</Value>
-        </BuildMacro>
-        <BuildMacro Include="MpiEnabled">
-            <Value>$(MpiEnabled)</Value>
-        </BuildMacro>
-        <BuildMacro Include="MpiIncPath">
-            <Value>$(MpiIncPath)</Value>
-        </BuildMacro>
-        <BuildMacro Include="MpiLib32Path">
-            <Value>$(MpiLib32Path)</Value>
-        </BuildMacro>
-        <BuildMacro Include="MpiLib64Path">
-            <Value>$(MpiLib64Path)</Value>
         </BuildMacro>
     </ItemGroup>
 </Project>
