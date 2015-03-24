@@ -148,15 +148,7 @@ bool StreamlineRenderer::create(void) {
 
     // Init extensions
     if (!ogl_IsVersionGEQ(2,0) || !areExtsAvailable(
-            "GL_ARB_vertex_shader \
-            GL_ARB_vertex_program \
-            GL_ARB_shader_objects \
-            GL_EXT_gpu_shader4 \
-            GL_EXT_geometry_shader4 \
-            GL_EXT_bindable_uniform \
-            GL_ARB_draw_buffers \
-            GL_ARB_copy_buffer \
-            GL_ARB_vertex_buffer_object")) {
+            "GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform GL_ARB_draw_buffers GL_ARB_copy_buffer GL_ARB_vertex_buffer_object")) {
         return false;
     }
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {

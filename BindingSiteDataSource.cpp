@@ -136,7 +136,7 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
             // get the current line from the file
             line = file.Line( lineCnt);
             // store all site entries
-            if( line.StartsWith( "SITE") ) {
+            if (line.StartsWith("SITE") || line.StartsWith("BSITE")) {
                 // add site entry
                 bsEntries.Add( line);
             }
@@ -179,9 +179,15 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
             // get number of residues
             line = bsEntries[i].Substring( 15, 2);
             line.TrimSpaces();
-            resCnt = vislib::math::Clamp( 
-                static_cast<unsigned int>(atoi( line) - bindingSites[bsIdx].Count()), 
-                0U, 4U);
+            // regular PDB SITE entries can store a maximum of 4 residues per line
+            if (bsEntries[i].StartsWith("SITE")) {
+                resCnt = vislib::math::Clamp(
+                    static_cast<unsigned int>(atoi(line) - bindingSites[bsIdx].Count()),
+                    0U, 4U);
+            }
+            else {
+                resCnt = static_cast<unsigned int>(atoi(line) - bindingSites[bsIdx].Count());
+            }
 
             // add residues
             cnt = 0;

@@ -756,7 +756,7 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
         solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
         calcBBoxPerFrameSlot("calcBBoxPerFrame", "Calculate the bounding box for each frame separately"),
-
+        calcBondsSlot("calculateBonds", "Calculate covalent bonds when loading the file"),
         bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f),
         datahash(0),
         stride( 0), secStructAvailable( false), numXTCFrames( 0),
@@ -785,7 +785,10 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
     this->MakeSlotAvailable( &this->solventResidues);
 
     this->calcBBoxPerFrameSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable( &this->calcBBoxPerFrameSlot);
+    this->MakeSlotAvailable(&this->calcBBoxPerFrameSlot);
+
+    this->calcBondsSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->calcBondsSlot);
 
     mdd = NULL; // no mdd object
 }
@@ -1112,129 +1115,133 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
     Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Loading PDB file: %s", T2A( filename.PeekBuffer())); // DEBUG
     // try to load the file
-    if( file.LoadFile( T2A( filename) ) ) {
+    if (file.LoadFile(T2A(filename))) {
         // file successfully loaded, read first frame
         lineCnt = 0;
-        while( lineCnt < file.Count() && !line.StartsWith( "END") ) {
+        while (lineCnt < file.Count() && !line.StartsWith("END")) {
             // get the current line from the file
-            line = file.Line( lineCnt);
+            line = file.Line(lineCnt);
             // Store bounding box if provided
-//            if( line.StartsWith( "BBOX") ) {
-//                this->parseBBoxEntry(line);
-//                Log::DefaultLog.WriteMsg( Log::LEVEL_INFO,
-//                        "Found PDB bounding box (%f %f %f, %f %f %f)",
-//                        this->bboxPDB.Left(),
-//                        this->bboxPDB.Bottom(),
-//                        this->bboxPDB.Back(),
-//                        this->bboxPDB.Right(),
-//                        this->bboxPDB.Top(),
-//                        this->bboxPDB.Front()); // DEBUG
-//            }
+            //            if( line.StartsWith( "BBOX") ) {
+            //                this->parseBBoxEntry(line);
+            //                Log::DefaultLog.WriteMsg( Log::LEVEL_INFO,
+            //                        "Found PDB bounding box (%f %f %f, %f %f %f)",
+            //                        this->bboxPDB.Left(),
+            //                        this->bboxPDB.Bottom(),
+            //                        this->bboxPDB.Back(),
+            //                        this->bboxPDB.Right(),
+            //                        this->bboxPDB.Top(),
+            //                        this->bboxPDB.Front()); // DEBUG
+            //            }
             // store all atom entries
-            if( line.StartsWith( "ATOM") ) {
+            if (line.StartsWith("ATOM")) {
                 // ignore alternate locations
-                if( line.Substring( 16, 1 ).Equals( " ", false) ||
-                    line.Substring( 16, 1 ).Equals( "A", false) ) {
+                if (line.Substring(16, 1).Equals(" ", false) ||
+                    line.Substring(16, 1).Equals("A", false)) {
                     // resize atom entry array, if necessary
-                    if( atomEntries.Count() == atomEntriesCapacity ) {
+                    if (atomEntries.Count() == atomEntriesCapacity) {
                         atomEntriesCapacity += 10000;
-                        atomEntries.AssertCapacity( atomEntriesCapacity);
+                        atomEntries.AssertCapacity(atomEntriesCapacity);
                     }
                     // add atom entry
-                    atomEntries.Add( line);
+                    atomEntries.Add(line);
                 }
             }
             // next line
             lineCnt++;
         }
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Atom count: %i", atomEntries.Count() ); // DEBUG
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Atom count: %i", atomEntries.Count()); // DEBUG
 
         // Init atom filter array with 1 (= 'visible')
-        if(!this->atomVisibility.IsEmpty())
+        if (!this->atomVisibility.IsEmpty())
             this->atomVisibility.Clear(true);
         this->atomVisibility.SetCount(atomEntries.Count());
-        for(unsigned int at = 0; at < atomEntries.Count(); at++)
+        for (unsigned int at = 0; at < atomEntries.Count(); at++)
             this->atomVisibility[at] = 1;
 
         // set the atom count for the first frame
         frameCnt = 0;
-        this->data.AssertCapacity( frameCapacity);
-        this->data.SetCount( 1);
+        this->data.AssertCapacity(frameCapacity);
+        this->data.SetCount(1);
         this->data[0] = new Frame(*const_cast<PDBLoader*>(this));
-        this->data[0]->SetAtomCount( static_cast<unsigned int>(atomEntries.Count()));
+        this->data[0]->SetAtomCount(static_cast<unsigned int>(atomEntries.Count()));
         this->data[0]->setFrameIdx(0);
         // resize atom type index array
-        this->atomTypeIdx.SetCount( atomEntries.Count());
+        this->atomTypeIdx.SetCount(atomEntries.Count());
         // set the capacity of the atom type array
-        this->atomType.AssertCapacity( atomEntries.Count());
+        this->atomType.AssertCapacity(atomEntries.Count());
         // set the capacity of the residue array
-        this->residue.AssertCapacity( atomEntries.Count());
+        this->residue.AssertCapacity(atomEntries.Count());
 
         this->atomResidueIdx.SetCount(atomEntries.Count());
 
         // check for residue-parameter and make it a chain of its own ( if no chain-id is specified ...?)
         const vislib::TString& solventResiduesStr = this->solventResidues.Param<core::param::StringParam>()->Value();
         // get all the solvent residue names to filter out
-        vislib::Array<vislib::TString> solventResidueNames = vislib::StringTokeniser<vislib::TCharTraits>::Split( solventResiduesStr, ';', true);
+        vislib::Array<vislib::TString> solventResidueNames = vislib::StringTokeniser<vislib::TCharTraits>::Split(solventResiduesStr, ';', true);
         //this->solventResidueIdx.SetCount(solventResidueNames);
         //memset(&this->solventResidueIdx[0], -1, this->solventResidueIdx.Count()*sizeof(int));
         this->solventResidueIdx.Clear();
 
         // parse all atoms of the first frame
-        for( atomCnt = 0; atomCnt < atomEntries.Count(); ++atomCnt ) {
-            this->parseAtomEntry( atomEntries[atomCnt], atomCnt, frameCnt, solventResidueNames);
+        for (atomCnt = 0; atomCnt < atomEntries.Count(); ++atomCnt) {
+            this->parseAtomEntry(atomEntries[atomCnt], atomCnt, frameCnt, solventResidueNames);
         }
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for parsing first frame: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for parsing first frame: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
-        this->molecule.AssertCapacity( this->residue.Count());
+        this->molecule.AssertCapacity(this->residue.Count());
         //this->chain.AssertCapacity( this->residue.Count()); ?????
 
         unsigned int first, cnt;
 
         unsigned int firstConIdx;
-        // loop over all chains
-        this->chain.AssertCapacity( this->chainFirstRes.Count());
-        for( chainCnt = 0; chainCnt < this->chainFirstRes.Count(); ++chainCnt ) {
-            // add new molecule
-            if( chainCnt == 0 ) {
-                this->molecule.Add( MolecularDataCall::Molecule(  0, 1, chainCnt));
-                firstConIdx = 0;
-            } else {
-                this->molecule.Add( MolecularDataCall::Molecule(
-                    this->molecule.Last().FirstResidueIndex()
-                    + this->molecule.Last().ResidueCount(), 1, chainCnt));
-                firstConIdx = static_cast<unsigned int>(this->connectivity.Count());
-            }
-            // add new chain
-            this->chain.Add( MolecularDataCall::Chain( static_cast<unsigned int>(this->molecule.Count() - 1),
-                1, this->chainName[chainCnt], this->chainType[chainCnt]));
-            // get the residue range of the current chain
-            first = this->chainFirstRes[chainCnt];
-            cnt = first + this->chainResCount[chainCnt];
-            // loop over all residues in the current chain
-            for( resCnt = first; resCnt < cnt; ++resCnt ) {
-                this->residue[resCnt]->SetMoleculeIndex( static_cast<unsigned int>(this->molecule.Count() - 1));
-                // search for connections inside the current residue
-                this->MakeResidueConnections( resCnt, 0);
-                // search for connections between consecutive residues
-                if( ( resCnt + 1) < cnt ) {
-                    if( this->MakeResidueConnections( resCnt, resCnt+1, 0) ) {
-                        this->molecule.Last().SetPosition(
-                            this->molecule.Last().FirstResidueIndex(),
-                            this->molecule.Last().ResidueCount() + 1);
-                    } else {
-                        this->molecule.Last().SetConnectionRange( firstConIdx, ( static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
-                        firstConIdx = static_cast<unsigned int>(this->connectivity.Count());
-                        this->molecule.Add( MolecularDataCall::Molecule( resCnt+1, 1, chainCnt));
-                        this->chain.Last().SetPosition(
-                            this->chain.Last().FirstMoleculeIndex(),
-                            this->chain.Last().MoleculeCount() + 1 );
+        if ( this->calcBondsSlot.Param<param::BoolParam>()->Value()) {
+            // loop over all chains
+            this->chain.AssertCapacity(this->chainFirstRes.Count());
+            for (chainCnt = 0; chainCnt < this->chainFirstRes.Count(); ++chainCnt) {
+                // add new molecule
+                if (chainCnt == 0) {
+                    this->molecule.Add(MolecularDataCall::Molecule(0, 1, chainCnt));
+                    firstConIdx = 0;
+                }
+                else {
+                    this->molecule.Add(MolecularDataCall::Molecule(
+                        this->molecule.Last().FirstResidueIndex()
+                        + this->molecule.Last().ResidueCount(), 1, chainCnt));
+                    firstConIdx = static_cast<unsigned int>(this->connectivity.Count());
+                }
+                // add new chain
+                this->chain.Add(MolecularDataCall::Chain(static_cast<unsigned int>(this->molecule.Count() - 1),
+                    1, this->chainName[chainCnt], this->chainType[chainCnt]));
+                // get the residue range of the current chain
+                first = this->chainFirstRes[chainCnt];
+                cnt = first + this->chainResCount[chainCnt];
+                // loop over all residues in the current chain
+                for (resCnt = first; resCnt < cnt; ++resCnt) {
+                    this->residue[resCnt]->SetMoleculeIndex(static_cast<unsigned int>(this->molecule.Count() - 1));
+                    // search for connections inside the current residue
+                    this->MakeResidueConnections(resCnt, 0);
+                    // search for connections between consecutive residues
+                    if ((resCnt + 1) < cnt) {
+                        if (this->MakeResidueConnections(resCnt, resCnt + 1, 0)) {
+                            this->molecule.Last().SetPosition(
+                                this->molecule.Last().FirstResidueIndex(),
+                                this->molecule.Last().ResidueCount() + 1);
+                        }
+                        else {
+                            this->molecule.Last().SetConnectionRange(firstConIdx, (static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
+                            firstConIdx = static_cast<unsigned int>(this->connectivity.Count());
+                            this->molecule.Add(MolecularDataCall::Molecule(resCnt + 1, 1, chainCnt));
+                            this->chain.Last().SetPosition(
+                                this->chain.Last().FirstMoleculeIndex(),
+                                this->chain.Last().MoleculeCount() + 1);
+                        }
                     }
                 }
+                this->molecule.Last().SetConnectionRange(firstConIdx, (static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
             }
-            this->molecule.Last().SetConnectionRange( firstConIdx, ( static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
+            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for finding all bonds: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
         }
-        Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for finding all bonds: %f", ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
 
         // search for CA, C, O and N in amino acids
         MolecularDataCall::AminoAcid *aminoacid;
