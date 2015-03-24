@@ -144,12 +144,7 @@ bool SecPlaneRenderer::create(void) {
     using namespace vislib::graphics::gl;
 
     // Init extensions
-    if(!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("\
-            GL_EXT_texture3D \
-            GL_EXT_framebuffer_object \
-            GL_ARB_multitexture \
-            GL_ARB_draw_buffers \
-            GL_ARB_vertex_buffer_object")) {
+    if(!ogl_IsVersionGEQ(2,0) || !areExtsAvailable("GL_EXT_texture3D GL_EXT_framebuffer_object GL_ARB_multitexture GL_ARB_draw_buffers GL_ARB_vertex_buffer_object")) {
         return false;
     }
 

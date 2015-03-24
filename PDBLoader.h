@@ -624,6 +624,8 @@ namespace protein {
         core::param::ParamSlot solventResidues;
         /** Determine whether to use the PDB bbox */
         core::param::ParamSlot calcBBoxPerFrameSlot;
+        /** Determine whether to use the PDB bbox */
+        core::param::ParamSlot calcBondsSlot;
 
         /** The data */
         vislib::Array<Frame*> data;
