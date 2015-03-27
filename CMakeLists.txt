@@ -102,11 +102,11 @@ install(TARGETS vislib DESTINATION "lib/vislib" EXPORT vislib-target)
 # Export the target to be used in the configuration file for find_package
 set(package_name "vislib")
 install(EXPORT vislib-target DESTINATION "share/cmake/${package_name}")
-install(FILES
-		cmake/vislibConfig.cmake
-		cmake/cmake_package_register_utility.cmake
-	DESTINATION
-		"share/cmake/${package_name}")
+install(FILES		cmake/vislibConfig.cmake.in
+	DESTINATION	"share/cmake/${package_name}"
+	RENAME		cmake/vislibConfig.cmake)
+install(FILES		cmake/cmake_package_register_utility.cmake
+	DESTINATION	"share/cmake/${package_name}")
 set(package_install_dir "${CMAKE_INSTALL_PREFIX}/share/cmake/${package_name}")
 # Install search directory into the cmake package user registry
 include(cmake/cmake_package_register_utility.cmake)
