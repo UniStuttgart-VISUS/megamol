@@ -458,7 +458,7 @@ MEGAMOLCORE_EXT_APICALL(void*, mmcPlugin200GetModDesc)(void* i, int idx) {
         idx--;
     }
     if (it != end) {
-        return const_cast<::megamol::core::factories::ModuleDescription*>(it->get());
+        return const_cast< ::megamol::core::factories::ModuleDescription*>(it->get());
     }
     return nullptr;
 }
@@ -477,7 +477,7 @@ MEGAMOLCORE_EXT_APICALL(void*, mmcPlugin200GetCallDesc)(void* i, int idx) {
         idx--;
     }
     if (it != end) {
-        return const_cast<::megamol::core::factories::CallDescription*>(it->get());
+        return const_cast< ::megamol::core::factories::CallDescription*>(it->get());
     }
     return nullptr;
 }
