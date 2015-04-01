@@ -139,27 +139,29 @@ install(FILES ${package_registry_file} DESTINATION ${package_user_registry})
 # TODO: Add or update megamol.cfg file (?)
 
 
+
+# Export build tree target
+# Then, this build tree can be used as hint for find package
+#
+# Set our known paths
+set(cfg_MegaMolCore_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+set(cfg_MegaMolCore_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
+set(cfg_MegaMolCore_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
+	set(cfg_CMAKE_BUILD_TYPE Release)
+endif()
+set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
+# Configure our local config script
+configure_file(cmake/MegaMolCoreConfigLocal.cmake.in ${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake @ONLY)
+# Configure our local version script
+configure_file(cmake/MegaMolCoreConfigVersion.cmake.in ${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake @ONLY)
+export(TARGETS MegaMolCore FILE ${CMAKE_BINARY_DIR}/MegaMolCore-target.cmake)
 if (${register_build_trees})
-	# Export the build tree of this package. This makes it possible to include
-	# this package without installing. Also place a version config file for cmake
-	# to decide whether to take release or debug accordingly.
-	# Set our known paths
-	set(cfg_MegaMolCore_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
-	set(cfg_MegaMolCore_SHADERS_DIRS ${CMAKE_SOURCE_DIR}/Shaders)
-	set(cfg_MegaMolCore_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-	set(cfg_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
-	if ("${cfg_CMAKE_BUILD_TYPE}" STREQUAL "")
-		set(cfg_CMAKE_BUILD_TYPE Release)
-	endif()
-	set(cfg_MegaMolCore_vislib_DIR ${vislib_DIR})
-	# Configure our local config script
-	configure_file(cmake/MegaMolCoreConfigLocal.cmake.in
-		${CMAKE_BINARY_DIR}/MegaMolCoreConfig.cmake
-		@ONLY)
-	# Configure our local version script
-	configure_file(cmake/MegaMolCoreConfigVersion.cmake.in
-		${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake
-		@ONLY)
-	export(TARGETS MegaMolCore FILE ${CMAKE_BINARY_DIR}/MegaMolCore-target.cmake)
+	# Register exported build tree as package
+	# This makes it possible to include this package without installing.
+	# Also place a version config file for cmake to decide whether to take
+	# release or debug accordingly.
 	export(PACKAGE MegaMolCore)
 endif()
+
