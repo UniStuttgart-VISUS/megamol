@@ -68,16 +68,16 @@ megamol::core::param::ParamSlot * megamol::stdplugin::datatools::DataFileSequenc
 
     this->ModuleGraphLock().LockExclusive();
 
-    AbstractNamedObjectContainer *anoc = this;
-    AbstractNamedObject *ano = NULL;
-    while ((anoc != NULL) && (ano == NULL)) {
+    AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->shared_from_this());
+    AbstractNamedObject::ptr_type ano;
+    while ((anoc) && (!ano)) {
         ano = anoc->FindNamedObject(name.PeekBuffer());
-        anoc = dynamic_cast<AbstractNamedObjectContainer*>(anoc->Parent());
+        anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(anoc->Parent());
     }
 
     this->ModuleGraphLock().UnlockExclusive();
 
-    return dynamic_cast<core::param::ParamSlot*>(ano);
+    return dynamic_cast<core::param::ParamSlot*>(ano.get());
 }
 
 

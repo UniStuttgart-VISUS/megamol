@@ -460,10 +460,10 @@ bool stdplugin::datatools::DataFileSequence::onFileNameSlotNameChanged(core::par
 core::param::ParamSlot *stdplugin::datatools::DataFileSequence::findFileNameSlot(void) {
     core::param::StringParam *P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if (P != NULL) {
-        AbstractNamedObjectContainer *anoc = this;
-        while (anoc != NULL) {
+        AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->shared_from_this());
+        while (anoc) {
             core::param::ParamSlot *slot = dynamic_cast<core::param::ParamSlot*>(anoc->FindNamedObject(
-                vislib::StringA(P->Value()).PeekBuffer()));
+                vislib::StringA(P->Value()).PeekBuffer()).get());
             if (slot != NULL) {
                 if ((slot->Param<core::param::FilePathParam>() != NULL)
                         || (slot->Param<core::param::StringParam>() != NULL)) {
@@ -471,7 +471,7 @@ core::param::ParamSlot *stdplugin::datatools::DataFileSequence::findFileNameSlot
                     return slot;
                 }
             }
-            anoc = dynamic_cast<AbstractNamedObjectContainer *>(anoc->Parent());
+            anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(anoc->Parent());
         }
     }
     return NULL;
