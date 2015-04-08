@@ -1,7 +1,7 @@
 /*
  * AbstractNamedObject.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
@@ -20,10 +20,11 @@ using namespace megamol::core;
 /*
  * AbstractNamedObject::GraphLocker::GraphLocker
  */
-AbstractNamedObject::GraphLocker::GraphLocker(const AbstractNamedObject *obj,
+AbstractNamedObject::GraphLocker::GraphLocker(AbstractNamedObject::const_ptr_type obj,
         bool writelock) : vislib::sys::SyncObject(),
         writelock(writelock), root(NULL) {
     ASSERT(obj != NULL);
+
     this->root = obj->RootModule();
 }
 
@@ -68,8 +69,8 @@ void AbstractNamedObject::GraphLocker::Unlock(void) {
  * AbstractNamedObject::~AbstractNamedObject
  */
 AbstractNamedObject::~AbstractNamedObject(void) {
-    this->parent = NULL; // DO NOT DELETE
-    this->owner = NULL; // DO NOT DELETE
+    this->parent.reset();
+    this->owner = nullptr; // DO NOT DELETE
 }
 
 
@@ -77,12 +78,12 @@ AbstractNamedObject::~AbstractNamedObject(void) {
  * AbstractNamedObject::FullName
  */
 vislib::StringA AbstractNamedObject::FullName(void) const {
-    AbstractNamedObject::GraphLocker locker(this, false);
+    AbstractNamedObject::GraphLocker locker(this->shared_from_this(), false);
     vislib::sys::AutoLock lock(locker);
     vislib::StringA name;
-    const AbstractNamedObject *ano = this;
-    while (ano != NULL) {
-        if (ano->Name().IsEmpty() && (ano->Parent() == NULL)) {
+    const_ptr_type ano = this->shared_from_this();
+    while (ano) {
+        if (ano->Name().IsEmpty() && (!ano->Parent())) {
             break;
         }
         name.Prepend(ano->Name());
@@ -146,7 +147,7 @@ bool AbstractNamedObject::IsParamRelevant(
  * AbstractNamedObject::ModuleGraphLock
  */
 vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void) {
-    ASSERT(this->parent != NULL); // HAZARD: better return a dummy object
+    ASSERT(!this->parent.expired()); // HAZARD: better return a dummy object
     return this->RootModule()->ModuleGraphLock();
 }
 
@@ -155,7 +156,7 @@ vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void
  * AbstractNamedObject::ModuleGraphLock
  */
 vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void) const {
-    ASSERT(this->parent != NULL); // HAZARD: better return a dummy object
+    ASSERT(!this->parent.expired()); // HAZARD: better return a dummy object
     return this->RootModule()->ModuleGraphLock();
 }
 
@@ -171,8 +172,8 @@ bool AbstractNamedObject::isNameValid(const vislib::StringA& name) {
 /*
  * AbstractNamedObject::AbstractNamedObject
  */
-AbstractNamedObject::AbstractNamedObject(void) : name(),
-        parent(NULL), owner(NULL), cleanupMark(false) {
+AbstractNamedObject::AbstractNamedObject(void) : enable_shared_from_this(), name(),
+        parent(), owner(nullptr), cleanupMark(false) {
     // intentionally empty
 }
 
@@ -181,7 +182,7 @@ AbstractNamedObject::AbstractNamedObject(void) : name(),
  * AbstractNamedObject::SetOwner
  */
 void AbstractNamedObject::SetOwner(void *owner) {
-    ASSERT(this->owner == NULL);
+    ASSERT(this->owner == nullptr);
     this->owner = owner;
 }
 
@@ -197,6 +198,6 @@ void AbstractNamedObject::setName(const vislib::StringA& name) {
 /*
  * AbstractNamedObject::setParent
  */
-void AbstractNamedObject::setParent(AbstractNamedObject *parent) {
+void AbstractNamedObject::setParent(AbstractNamedObject::weak_ptr_type parent) {
     this->parent = parent;
 }

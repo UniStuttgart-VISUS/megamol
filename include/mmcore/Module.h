@@ -24,7 +24,20 @@ namespace core {
     namespace factories {
         class ModuleDescription;
     }
+    class Module;
 
+} /* end namespace core */
+} /* end namespace megamol */
+
+namespace std {
+
+    // dll-export of std-type instantiations
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < ::megamol::core::Module >;
+
+}
+
+namespace megamol {
+namespace core {
 
     /**
      * Base class of all graph modules
@@ -32,6 +45,36 @@ namespace core {
     class MEGAMOLCORE_API Module: public AbstractNamedObjectContainer {
     public:
         friend class ::megamol::core::factories::ModuleDescription;
+
+        /** Shared ptr type alias */
+        typedef ::std::shared_ptr<Module> ptr_type;
+
+        /** Shared ptr type alias */
+        typedef ::std::shared_ptr<const Module> const_ptr_type;
+
+        /**
+         * Utility function to dynamically cast to a shared_ptr of this type
+         *
+         * @param p The shared pointer to cast from
+         *
+         * @return A shared pointer of this type
+         */
+        template<class T>
+        inline static ptr_type dynamic_pointer_cast(std::shared_ptr<T> p) {
+            return std::dynamic_pointer_cast<Module, T>(p);
+        }
+
+        /**
+         * Utility function to dynamically cast to a shared_ptr of this type
+         *
+         * @param p The shared pointer to cast from
+         *
+         * @return A shared pointer of this type
+         */
+        template<class T>
+        inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
+            return std::dynamic_pointer_cast<const Module, const T>(p);
+        }
 
         /**
          * Answer whether or not this module supports being used in a
@@ -158,6 +201,9 @@ namespace core {
 
         /** Flag whether this module is created or not */
         bool created;
+
+        /* Allow the container to access the internal create flag */
+        friend class ::megamol::core::AbstractNamedObjectContainer;
 
     };
 

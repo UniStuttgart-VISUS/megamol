@@ -29,9 +29,10 @@ factories::ModuleDescription::~ModuleDescription(void) {
 /*
  * factories::ModuleDescription::CreateModule
  */
-Module *factories::ModuleDescription::CreateModule(const vislib::StringA& name) const {
-    Module *m = this->createModuleImpl();
-    if (m != nullptr) {
+Module::ptr_type factories::ModuleDescription::CreateModule(const vislib::StringA& name) const {
+    Module::ptr_type m = this->createModuleImpl();
+    if (m) {
+        m->fixParentBackreferences();
         m->setModuleName(name);
     }
     return m;

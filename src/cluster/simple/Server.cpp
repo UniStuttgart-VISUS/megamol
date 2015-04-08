@@ -144,7 +144,8 @@ bool cluster::simple::Server::Client::OnMessageReceived(
         } break;
         case MSG_MODULGRAPH: {
             vislib::RawStorage mem;
-            RootModuleNamespace *rmns = dynamic_cast<RootModuleNamespace*>(this->parent.RootModule());
+            AbstractNamedObject::ptr_type rmnsp = this->parent.RootModule();
+            RootModuleNamespace *rmns = dynamic_cast<RootModuleNamespace*>(rmnsp.get());
             rmns->ModuleGraphLock().LockExclusive();
             rmns->SerializeGraph(mem);
             rmns->ModuleGraphLock().UnlockExclusive();
@@ -200,6 +201,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
 
             double instTime = this->parent.GetCoreInstance()->GetCoreInstanceTime();
             float time = 0.0f;
+            AbstractNamedObject::const_ptr_type avp;
             const view::AbstractView *av = NULL;
             vislib::RawStorage mem;
             mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData) + sizeof(double) + sizeof(float));
@@ -209,7 +211,8 @@ bool cluster::simple::Server::Client::OnMessageReceived(
             this->parent.ModuleGraphLock().LockExclusive();
             Call *call = this->parent.viewSlot.CallAs<Call>();
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
-                av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+                avp = call->PeekCalleeSlot()->Parent();
+                av = dynamic_cast<const view::AbstractView*>(avp.get());
             }
             this->parent.ModuleGraphLock().UnlockExclusive();
 
@@ -525,7 +528,8 @@ bool cluster::simple::Server::onViewNameUpdated(param::ParamSlot& slot) {
     this->disconnectView();
     vislib::StringA viewmodname(this->viewnameSlot.Param<param::StringParam>()->Value());
     this->ModuleGraphLock().LockExclusive();
-    megamol::core::view::AbstractView *av = dynamic_cast<megamol::core::view::AbstractView *>(this->FindNamedObject(viewmodname, true));
+    AbstractNamedObject::ptr_type avp = this->FindNamedObject(viewmodname, true);
+    megamol::core::view::AbstractView *av = dynamic_cast<megamol::core::view::AbstractView *>(avp.get());
     this->ModuleGraphLock().UnlockExclusive();
     if (av != NULL) {
         if (this->instance()->InstantiateCall(this->viewSlot.FullName(), av->FullName() + "::render", 
@@ -741,6 +745,7 @@ bool cluster::simple::Server::onServerStartStopClicked(param::ParamSlot& slot) {
  * cluster::simple::Server::cameraUpdateThread
  */
 DWORD cluster::simple::Server::cameraUpdateThread(void *userData) {
+    AbstractNamedObject::const_ptr_type avp;
     const view::AbstractView *av = NULL;
     Server *This = static_cast<Server *>(userData);
     unsigned int syncnumber = static_cast<unsigned int>(-1);
@@ -756,7 +761,8 @@ DWORD cluster::simple::Server::cameraUpdateThread(void *userData) {
         av = NULL;
         call = This->viewSlot.CallAs<Call>();
         if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
-            av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+            avp = call->PeekCalleeSlot()->Parent();
+            av = dynamic_cast<const view::AbstractView*>(avp.get());
         }
         This->ModuleGraphLock().UnlockExclusive();
         if (av == NULL) break;

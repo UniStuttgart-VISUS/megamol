@@ -429,7 +429,8 @@ void cluster::AbstractClusterView::OnCommChannelMessage(cluster::CommChannel& se
         case cluster::netmessages::MSG_SET_PARAMVALUE: {
             vislib::StringA name(msg.GetBodyAs<char>());
             vislib::StringA value(msg.GetBodyAsAt<char>(name.Length() + 1));
-            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(name, true));
+            AbstractNamedObject::ptr_type p = this->FindNamedObject(name, true);
+            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(p.get());
             if (ps != NULL) {
                 //printf("SET[%s]=%s\n", name.PeekBuffer(), value.PeekBuffer());
                 ps->Parameter()->ParseValue(value);

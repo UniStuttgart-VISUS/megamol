@@ -106,20 +106,24 @@ namespace factories {
          * @return The newly created module object or 'NULL' in case of an
          *         error.
          */
-        virtual Module *createModuleImpl(void) const {
+        virtual Module::ptr_type createModuleImpl(void) const {
             try {
-                Module *m = new C();
+                Module::ptr_type m = std::make_shared<C>();
                 return m;
-            } catch(vislib::Exception ex) {
+            } catch (vislib::Exception& ex) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                     "Exception while creating module %s: %s\n",
                     C::ClassName(), ex.GetMsgA());
+            } catch (std::exception& ex) {
+                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    "Exception while creating module %s: %s\n",
+                    C::ClassName(), ex.what());
             } catch(...) {
                 vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                     "Exception while creating module %s: Unknown exception\n",
                     C::ClassName());
             }
-            return NULL;
+            return nullptr;
         }
 
     };

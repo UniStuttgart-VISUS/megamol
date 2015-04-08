@@ -151,31 +151,31 @@ bool CalleeSlot::IsParamRelevant(
     vislib::sys::AbstractReaderWriterLock& lock = this->ModuleGraphLock();
     lock.LockExclusive();
 
-    const AbstractNamedObject *ano = this->RootModule();
-    const AbstractNamedObjectContainer *anoc
-        = dynamic_cast<const AbstractNamedObjectContainer*>(ano);
-    if (anoc == NULL) {
+    const_ptr_type ano = this->RootModule();
+    AbstractNamedObjectContainer::const_ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(ano);
+    if (!anoc) {
         lock.UnlockExclusive();
         return false;
     }
 
-    vislib::SingleLinkedList<const AbstractNamedObjectContainer *> heap;
+    vislib::SingleLinkedList<AbstractNamedObjectContainer::const_ptr_type> heap;
     const CallerSlot* cs;
     heap.Append(anoc);
     while (!heap.IsEmpty()) {
         anoc = heap.First();
         heap.RemoveFirst();
 
-        vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> iter
-            = anoc->GetConstChildIterator();
-        while (iter.HasNext()) {
-            ano = iter.Next();
-            anoc = dynamic_cast<const AbstractNamedObjectContainer*>(ano);
+        AbstractNamedObjectContainer::child_list_type::const_iterator iter, end;
+        iter = anoc->ChildList_Begin();
+        end = anoc->ChildList_End();
+        for (; iter != end; ++iter) {
+            ano = *iter;
+            anoc = std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
             if (anoc != NULL) {
                 heap.Append(anoc);
                 continue;
             }
-            cs = dynamic_cast<const CallerSlot*>(ano);
+            cs = dynamic_cast<const CallerSlot*>(ano.get());
             if ((cs != NULL) && cs->IsConnectedTo(this) && (ano->Parent() != NULL)) {
                 if (ano->Parent()->IsParamRelevant(searched, param)) {
                     lock.UnlockExclusive();

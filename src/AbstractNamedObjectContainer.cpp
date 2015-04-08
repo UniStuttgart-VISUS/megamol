@@ -1,7 +1,7 @@
 /*
  * AbstractNamedObjectContainer.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
@@ -10,6 +10,8 @@
 #include "vislib/assert.h"
 #include "vislib/sys/Log.h"
 #include "vislib/String.h"
+#include <algorithm>
+#include "mmcore/Module.h"
 
 using namespace megamol::core;
 
@@ -18,20 +20,19 @@ using namespace megamol::core;
  * AbstractNamedObjectContainer::~AbstractNamedObjectContainer
  */
 AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
-    if (this->children.Count() > 0) {
+    if (this->children.size() > 0) {
         vislib::StringA msg;
         vislib::StringA name = "::";
         name.Append(this->name);
-        AbstractNamedObject *ano = this->parent;
-        while (ano != NULL) {
+        AbstractNamedObject::ptr_type ano = this->parent.lock();
+        while (ano) {
             name.Prepend(ano->Name());
             name.Prepend("::");
             ano = ano->Parent();
         }
-        msg.Format("Possible memory problem detected: NamedObjectContainer (%s) with children destructed",
-            name.PeekBuffer());
+        msg.Format("Possible memory problem detected: NamedObjectContainer (%s) with children destructed", name.PeekBuffer());
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, msg.PeekBuffer());
-        this->children.Clear();
+        this->children.clear();
     }
     // The child list should already be empty at this time
 }
@@ -49,101 +50,100 @@ AbstractNamedObjectContainer::AbstractNamedObjectContainer(void)
 /*
  * AbstractNamedObjectContainer::addChild
  */
-void AbstractNamedObjectContainer::addChild(AbstractNamedObject *child) {
-    if (child == NULL) return;
-    ASSERT(child->Parent() == NULL);
-    this->children.Add(child);
-    child->setParent(this);
+void AbstractNamedObjectContainer::addChild(AbstractNamedObject::ptr_type child) {
+    if (!child) return;
+    ASSERT(!child->Parent());
+    this->children.push_back(child);
+    Module* mod = dynamic_cast<Module *>(this);
+    if (mod) {
+        // for modules, calling "shared_from_this" is illegal if they have not been created!
+        if (mod->created) {
+            child->setParent(this->shared_from_this());
+        }
+    } else {
+        child->setParent(this->shared_from_this());
+    }
 }
 
 
 /*
  * AbstractNamedObjectContainer::removeChild
  */
-void AbstractNamedObjectContainer::removeChild(AbstractNamedObject *child) {
-    if (child == NULL) return;
-    ASSERT(child->Parent() == this);
-    this->children.Remove(child);
-    child->setParent(NULL);
-}
-
-
-/*
- * AbstractNamedObjectContainer::getChildIterator
- */
-AbstractNamedObjectContainer::ChildList::Iterator
-AbstractNamedObjectContainer::getChildIterator(void) {
-    return this->children.GetIterator();
-}
-
-
-/*
- * AbstractNamedObjectContainer::getConstChildIterator
- */
-vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator>
-AbstractNamedObjectContainer::getConstChildIterator(void) const {
-    return this->children.GetConstIterator();
+void AbstractNamedObjectContainer::removeChild(AbstractNamedObject::ptr_type child) {
+    if (!child) return;
+    ASSERT(child->Parent().get() == this);
+    this->children.remove(child);
+    child->setParent(AbstractNamedObject::ptr_type(nullptr));
 }
 
 
 /*
  * AbstractNamedObjectContainer::findChild
  */
-AbstractNamedObject *AbstractNamedObjectContainer::findChild(
+AbstractNamedObject::ptr_type AbstractNamedObjectContainer::findChild(
         const vislib::StringA& name) {
-    ChildList::Iterator iter = this->children.GetIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *child = iter.Next();
-        ASSERT(child != NULL);
-        if (child->Name().Equals(name)) {
-            return child;
-        }
-    }
-    return NULL;
+    child_list_type::iterator end = this->children.end();
+    child_list_type::iterator found = std::find_if(
+        this->children.begin(), 
+        end,
+        [&](AbstractNamedObject::ptr_type c) {
+            return c->Name().Equals(name);
+        });
+    return (found != end) ? *found : AbstractNamedObject::ptr_type(nullptr);
 }
 
 
 /*
  * AbstractNamedObjectContainer::FindNamedObject
  */
-AbstractNamedObject *AbstractNamedObjectContainer::FindNamedObject(const char *name, bool forceRooted) {
-    AbstractNamedObject *f = NULL;
-    AbstractNamedObjectContainer *c = this;
-    const char *next = NULL;
+AbstractNamedObject::ptr_type AbstractNamedObjectContainer::FindNamedObject(const char *name, bool forceRooted) {
+    AbstractNamedObject::ptr_type f;
+    ptr_type c = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->shared_from_this());
+    const char *next = nullptr;
     vislib::StringA n;
 
+    // skip global namespace operator if presentd
     if (::strncmp(name, "::", 2) == 0) {
         forceRooted = true;
         name += 2;
     }
+
+    // if forced to search from the root, search from the root, otherwise we search from this object (see init of c)
     if (forceRooted) {
-        c = dynamic_cast<AbstractNamedObjectContainer*>(this->RootModule());
-        if (c == NULL) {
-            return NULL;
-        }
+        c = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->RootModule());
+        if (!c) return nullptr;
     }
 
+    // while we still have a name to search:
     while (*name != 0) {
-        if (c != NULL) {
+        // search for a direct child
+        if (c) {
             f = c->findChild(name);
-            if (f != NULL) break;
+            if (f) break;
         }
 
+        // search for a child with the next name segment
         next = ::strstr(name, "::");
-        if (next != NULL) {
+        if (next != nullptr) {
             n = vislib::StringA(name, static_cast<int>(next - name));
             name = next + 2;
         } else {
+            // this is the last name segment, thus no seperator was found
             n = name;
             name += n.Length();
         }
-        if (c == NULL) {
-            return NULL;
+
+        if (!c) {
+            // not found
+            return ptr_type(nullptr);
         }
+        // search for a child with a fitting name
         f = c->findChild(n);
-        c = dynamic_cast<AbstractNamedObjectContainer*>(f);
+        // try casting to a container for the next loop.
+        c = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(f);
     }
 
+    // return the found child
     return f;
 }
 
@@ -153,10 +153,7 @@ AbstractNamedObject *AbstractNamedObjectContainer::FindNamedObject(const char *n
  */
 void AbstractNamedObjectContainer::SetAllCleanupMarks(void) {
     AbstractNamedObject::SetAllCleanupMarks();
-    ChildList::Iterator iter = this->children.GetIterator();
-    while (iter.HasNext()) {
-        iter.Next()->SetAllCleanupMarks();
-    }
+    for (AbstractNamedObject::ptr_type i : this->children) i->SetAllCleanupMarks();
 }
 
 
@@ -165,38 +162,31 @@ void AbstractNamedObjectContainer::SetAllCleanupMarks(void) {
  */
 void AbstractNamedObjectContainer::PerformCleanup(void) {
     AbstractNamedObject::PerformCleanup();
-
-    AbstractNamedObject *ano;
-    ChildList::Iterator iter = this->children.GetIterator();
-    while (iter.HasNext()) {
-        iter.Next()->PerformCleanup();
+    // inform all children that we perform a cleanup
+    for (AbstractNamedObject::ptr_type i : this->children) {
+        i->PerformCleanup();
     }
 
-    ChildList remoov;
-    iter = this->getChildIterator();
-    while (iter.HasNext()) {
-        ano = iter.Next();
-        if (ano->CleanupMark()) {
-            remoov.Add(ano);
+    child_list_type remoov; // list of children to be removed
+    for (AbstractNamedObject::ptr_type i : this->children) {
+        if (i->CleanupMark()) {
+            remoov.push_back(i);
         }
     }
 
-    iter = remoov.GetIterator();
-    while (iter.HasNext()) {
-        ano = iter.Next();
-
+    // actually remove
+    for (AbstractNamedObject::ptr_type i : remoov) {
 #if defined(DEBUG) || defined(_DEBUG)
-        // no children should have any further children
-        AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer*>(ano);
-        if (anoc != NULL) {
-            ASSERT(!anoc->GetChildIterator().HasNext());
+        // Debug-check: no children to be removed should have children of their own left!
+        ptr_type c = std::dynamic_pointer_cast<AbstractNamedObjectContainer>(i);
+        if (c) {
+            ASSERT(c->children.empty());
         }
 #endif /* defined(DEBUG) || defined(_DEBUG) */
 
-        this->removeChild(ano);
-        delete ano; // <= woho! Finally!
+        this->removeChild(i);
     }
-
+    remoov.clear(); // these should be the very last shared_ptr instances!
 }
 
 
@@ -204,9 +194,9 @@ void AbstractNamedObjectContainer::PerformCleanup(void) {
  * AbstractNamedObjectContainer::DisconnectCalls
  */
 void AbstractNamedObjectContainer::DisconnectCalls(void) {
-    ChildList::Iterator iter = this->children.GetIterator();
-    while (iter.HasNext()) {
-        iter.Next()->DisconnectCalls();
+    // propagate 'DisconnectCalls' to all children
+    for (AbstractNamedObject::ptr_type i : this->children) {
+        i->DisconnectCalls();
     }
 }
 
@@ -217,19 +207,34 @@ void AbstractNamedObjectContainer::DisconnectCalls(void) {
 bool AbstractNamedObjectContainer::IsParamRelevant(
         vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
         const vislib::SmartPtr<param::AbstractParam>& param) const {
+    // ensure each container is only asked ones
+    // We need this, because this call might propagate through the graph and not only through the tree
     if (searched.Contains(this)) {
         return false;
     } else {
         searched.Add(this);
     }
 
-    vislib::ConstIterator<ChildList::Iterator> iter
-        = this->children.GetConstIterator();
-    while (iter.HasNext()) {
-        if (iter.Next()->IsParamRelevant(searched, param)) {
+    // ask all children if the given parameter is relevant for them
+    for (AbstractNamedObject::ptr_type i : this->children) {
+        if (i->IsParamRelevant(searched, param)) {
             return true;
         }
     }
 
+    // none is interested
     return false;
+}
+
+
+/*
+ * AbstractNamedObjectContainer::fixParentBackreferences
+ */
+void AbstractNamedObjectContainer::fixParentBackreferences(void) {
+    // required for lazy initialization of module slots made available in module::ctor
+    for (auto i : this->children) {
+        if (i->parent.expired()) {
+            i->setParent(this->shared_from_this());
+        }
+    }
 }

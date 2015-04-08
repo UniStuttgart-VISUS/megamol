@@ -323,7 +323,8 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
             vislib::UTF8Encoder::Decode(value, name.Substring(pos + 1));
             name.Truncate(pos);
             //Log::DefaultLog.WriteInfo("Setting Parameter %s to %s\n", name.PeekBuffer(), vislib::StringA(value).PeekBuffer());
-            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(name, true));
+            AbstractNamedObject::ptr_type psp = this->FindNamedObject(name, true);
+            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(psp.get());
             if (ps == NULL) {
                 Log::DefaultLog.WriteWarn("Unable to set parameter %s; not found\n", name.PeekBuffer());
             } else {

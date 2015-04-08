@@ -132,11 +132,11 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
     ASSERT(outCntCallerSlots != NULL);
     ASSERT(outCallerSlots != NULL);
 
-    megamol::core::RootModuleNamespace rms;
+    megamol::core::RootModuleNamespace::ptr_type rms = std::make_shared<megamol::core::RootModuleNamespace>();
     megamol::core::factories::ModuleDescription *md = static_cast<megamol::core::factories::ModuleDescription*>(desc);
     ASSERT(md != NULL);
 
-    megamol::core::Module *m = md->CreateModule(NULL);
+    megamol::core::Module::ptr_type m(md->CreateModule(NULL));
     if (m == NULL) {
         *outCntParamSlots = 0;
         *outParamSlots = NULL;
@@ -146,23 +146,26 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
         *outCallerSlots = NULL;
         return;
     }
-    rms.AddChild(m);
+    rms->AddChild(m);
+
 
     vislib::Array<mmcParamSlotDescription> pa;
     vislib::Array<mmcCalleeSlotDescription> cea;
     vislib::Array<mmcCallerSlotDescription> cra;
 
-    vislib::Stack<megamol::core::Module::ChildList::Iterator> stack;
-    stack.Push(m->GetChildIterator());
+    typedef vislib::Pair <
+        megamol::core::Module::child_list_type::iterator,
+        megamol::core::Module::child_list_type::iterator > IterPair;
+    vislib::Stack<IterPair> stack;
+    stack.Push(IterPair(m->ChildList_Begin(), m->ChildList_End()));
 
     while (!stack.IsEmpty()) {
-        megamol::core::Module::ChildList::Iterator iter = stack.Pop();
-        while (iter.HasNext()) {
-            megamol::core::AbstractNamedObject *ano = iter.Next();
+        for (IterPair range = stack.Pop(); range.First() != range.Second(); ++(range.First())) {
+            megamol::core::AbstractNamedObject::ptr_type ano = *range.First();
 
-            megamol::core::param::ParamSlot *ps = dynamic_cast<megamol::core::param::ParamSlot*>(ano);
-            megamol::core::CalleeSlot *ces = dynamic_cast<megamol::core::CalleeSlot*>(ano);
-            megamol::core::CallerSlot *crs = dynamic_cast<megamol::core::CallerSlot*>(ano);
+            megamol::core::param::ParamSlot *ps = dynamic_cast<megamol::core::param::ParamSlot*>(ano.get());
+            megamol::core::CalleeSlot *ces = dynamic_cast<megamol::core::CalleeSlot*>(ano.get());
+            megamol::core::CallerSlot *crs = dynamic_cast<megamol::core::CallerSlot*>(ano.get());
 
             if (ps != NULL) {
                 SIZE_T i = pa.Count();
@@ -256,10 +259,10 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetModuleSlotDescriptions(void * desc,
     *outCallerSlots = new mmcCallerSlotDescription[*outCntCallerSlots];
     ::memcpy(*outCallerSlots, cra.PeekElements(), sizeof(mmcCallerSlotDescription) * *outCntCallerSlots);
 
-    rms.RemoveChild(m);
+    rms->RemoveChild(m);
     m->SetAllCleanupMarks();
     m->PerformCleanup();
-    delete m;
+    m.reset();
 }
 
 

@@ -101,7 +101,9 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void *data,
     if (core != NULL) {
         ModuleNamespace *vj = dynamic_cast<ModuleNamespace*>(obj);
         if (vj != NULL) {
-            core->closeViewJob(vj);
+            core->closeViewJob(
+                ModuleNamespace::dynamic_pointer_cast(vj->shared_from_this())
+                );
         }
     }
 }
@@ -124,8 +126,10 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
 #endif /* ULTRA_SOCKET_STARTUP */
     this->plugins = new utility::plugins::PluginManager();
 
+    this->namespaceRoot = std::make_shared<RootModuleNamespace>();
+
     profiler::Manager::Instance().SetCoreInstance(this);
-    this->namespaceRoot.SetCoreInstance(*this);
+    this->namespaceRoot->SetCoreInstance(*this);
     this->config.instanceLog = &this->log;
     factories::register_module_classes(this->module_descriptions);
     for (auto md : this->module_descriptions) this->all_module_descriptions.Register(md);
@@ -172,24 +176,17 @@ megamol::core::CoreInstance::~CoreInstance(void) {
         "Core Instance destroyed");
 
     // Shutdown all views and jobs, which might still run
-    this->namespaceRoot.ModuleGraphLock().LockExclusive();
-    AbstractNamedObjectContainer::ChildList remoov;
-    AbstractNamedObjectContainer::ChildList::Iterator iter
-        = this->namespaceRoot.GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *child = iter.Next();
-        if ((dynamic_cast<ViewInstance*>(child) != NULL)
-                || (dynamic_cast<JobInstance*>(child) != NULL)) {
-            remoov.Add(child);
-        }
+    this->namespaceRoot->ModuleGraphLock().LockExclusive();
+    AbstractNamedObjectContainer::child_list_type::iterator iter, end;
+    while (true) {
+        iter = this->namespaceRoot->ChildList_Begin();
+        end = this->namespaceRoot->ChildList_End();
+        if (iter == end) break;
+        ModuleNamespace::ptr_type mn = ModuleNamespace::dynamic_pointer_cast(*iter);
+//        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>((*iter).get());
+        this->closeViewJob(mn);
     }
-
-    iter = remoov.GetIterator();
-    while (iter.HasNext()) {
-        ModuleNamespace *child = dynamic_cast<ModuleNamespace*>(iter.Next());
-        this->closeViewJob(child);
-    }
-    this->namespaceRoot.ModuleGraphLock().UnlockExclusive();
+    this->namespaceRoot->ModuleGraphLock().UnlockExclusive();
 
     // we need to manually clean up all data structures in the right order!
     // first view- and job-descriptions
@@ -689,12 +686,12 @@ void megamol::core::CoreInstance::RequestJobInstantiation(
 /*
  * megamol::core::CoreInstance::InstantiatePendingView
  */
-megamol::core::ViewInstance *
+megamol::core::ViewInstance::ptr_type
 megamol::core::CoreInstance::InstantiatePendingView(void) {
     using vislib::sys::Log;
     VLSTACKTRACE("InstantiatePendingView", __FILE__, __LINE__);
 
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, true);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
     if (this->pendingViewInstRequests.IsEmpty()) return NULL;
@@ -703,48 +700,39 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
         = this->pendingViewInstRequests.First();
     this->pendingViewInstRequests.RemoveFirst();
 
-    ModuleNamespace *preViewInst = NULL;
+    std::shared_ptr<ModuleNamespace> preViewInst = NULL;
     bool hasErrors = false;
     view::AbstractView *view = NULL, *fallbackView = NULL;
     vislib::StringA viewFullPath
-        = this->namespaceRoot.FullNamespace(request.Name(), request.Description()->ViewModuleID());
+        = this->namespaceRoot->FullNamespace(request.Name(), request.Description()->ViewModuleID());
 
-    AbstractNamedObject *ano = this->namespaceRoot.FindChild(request.Name());
-    if (ano != NULL) {
-        preViewInst = dynamic_cast<ModuleNamespace*>(ano);
-        if (preViewInst == NULL) {
+    AbstractNamedObject::ptr_type ano = this->namespaceRoot->FindChild(request.Name());
+    if (ano) {
+        preViewInst = std::dynamic_pointer_cast<ModuleNamespace>(ano);
+        if (!preViewInst) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate view %s: non-namespace object blocking instance name\n",
                 request.Name().PeekBuffer());
             return NULL;
         }
     } else {
-        // thomasbm: das hier erzeugt memory leaks! Wem soll das neue 'ModuleNamespace' gehoeren bzw. wer ist fuers deleten zustaendig?
-        preViewInst = new ModuleNamespace(request.Name());
-        this->namespaceRoot.AddChild(preViewInst);
+        preViewInst = std::make_shared<ModuleNamespace>(request.Name());
+        this->namespaceRoot->AddChild(preViewInst);
     }
 
-    if (preViewInst == NULL) {
+    if (!preViewInst) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to instantiate view %s: Internal Error %d\n",
             request.Name().PeekBuffer(), __LINE__);
         return NULL;
     }
 
-    //{ // glh "fix"
-    //    vislib::Array<vislib::StringA> exts(vislib::StringTokeniserA::Split(
-    //        vislib::StringA(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS))), ' ', true));
-    //    for (SIZE_T i = 0; i < exts.Count(); i++) {
-    //        glh_init_extension(exts[i]);
-    //    }
-    //}
-
     // instantiate modules
     for (unsigned int idx = 0; idx < request.Description()->ModuleCount(); idx++) {
         const ViewDescription::ModuleInstanceRequest &mir = request.Description()->Module(idx);
         factories::ModuleDescription::ptr desc = mir.Second();
 
-        vislib::StringA fullName = this->namespaceRoot.FullNamespace(request.Name(), mir.First());
+        vislib::StringA fullName = this->namespaceRoot->FullNamespace(request.Name(), mir.First());
 
         if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -754,13 +742,13 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
             continue;
         }
 
-        Module *mod = this->instantiateModule(fullName, desc);
-        if (mod == NULL) {
+        Module::ptr_type mod = this->instantiateModule(fullName, desc);
+        if (!mod) {
             hasErrors = true;
             continue;
 
         } else {
-            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod);
+            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod.get());
             if (av != NULL) {
                 // view module instantiated.
                 if (fullName.Equals(viewFullPath)) {
@@ -790,8 +778,8 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
         const ViewDescription::CallInstanceRequest &cir = request.Description()->Call(idx);
         factories::CallDescription::ptr desc = cir.Description();
 
-        vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.From());
-        vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.To());
+        vislib::StringA fromFullName = this->namespaceRoot->FullNamespace(request.Name(), cir.From());
+        vislib::StringA toFullName = this->namespaceRoot->FullNamespace(request.Name(), cir.To());
 
         if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -815,16 +803,16 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
 
     } else {
         // Create Instance object replacing the temporary namespace
-        ViewInstance *inst = new ViewInstance();
-        if (inst == NULL) {
+        ViewInstance::ptr_type inst(new ViewInstance());
+        if (!inst) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to construct instance %s\n",
                 request.Name().PeekBuffer());
             return NULL;
         }
 
-        if (!inst->Initialize(preViewInst, view)) {
-            SAFE_DELETE(inst);
+        if (!dynamic_cast<ViewInstance*>(inst.get())->Initialize(preViewInst, view)) {
+            inst.reset();
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to initialize instance %s\n",
                 request.Name().PeekBuffer());
@@ -847,7 +835,7 @@ megamol::core::view::AbstractView *
 megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *vd) {
     using vislib::sys::Log;
     VLSTACKTRACE("instantiateSubView", __FILE__, __LINE__);
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, true);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
     bool hasErrors = false;
@@ -867,13 +855,13 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
             continue;
         }
 
-        Module *mod = this->instantiateModule(fullName, desc);
+        Module::ptr_type mod = this->instantiateModule(fullName, desc);
         if (mod == NULL) {
             hasErrors = true;
             continue;
 
         } else {
-            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod);
+            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod.get());
             if (av != NULL) {
                 // view module instantiated.
                 if (fullName.Equals(vd->ViewModuleID())) {
@@ -934,11 +922,11 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
 /*
  * megamol::core::CoreInstance::InstantiatePendingJob
  */
-megamol::core::JobInstance *
+megamol::core::JobInstance::ptr_type
 megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
     VLSTACKTRACE("InstantiatePendingJob", __FILE__, __LINE__);
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, true);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
     if (this->pendingJobInstRequests.IsEmpty()) return NULL;
@@ -946,27 +934,27 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
     JobInstanceRequest request = this->pendingJobInstRequests.First();
     this->pendingJobInstRequests.RemoveFirst();
 
-    ModuleNamespace *preJobInst = NULL;
+    ModuleNamespace::ptr_type preJobInst;
     bool hasErrors = false;
     job::AbstractJob *job = NULL, *fallbackJob = NULL;
     vislib::StringA jobFullPath
-        = this->namespaceRoot.FullNamespace(request.Name(), request.Description()->JobModuleID());
+        = this->namespaceRoot->FullNamespace(request.Name(), request.Description()->JobModuleID());
 
-    AbstractNamedObject *ano = this->namespaceRoot.FindChild(request.Name());
-    if (ano != NULL) {
-        preJobInst = dynamic_cast<ModuleNamespace*>(ano);
-        if (preJobInst == NULL) {
+    AbstractNamedObject::ptr_type ano = this->namespaceRoot->FindChild(request.Name());
+    if (ano) {
+        preJobInst = ModuleNamespace::dynamic_pointer_cast(ano);
+        if (!preJobInst) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to instantiate job %s: non-namespace object blocking instance name\n",
                 request.Name().PeekBuffer());
             return NULL;
         }
     } else {
-        preJobInst = new ModuleNamespace(request.Name());
-        this->namespaceRoot.AddChild(preJobInst);
+        preJobInst = std::make_shared<ModuleNamespace>(request.Name());
+        this->namespaceRoot->AddChild(preJobInst);
     }
 
-    if (preJobInst == NULL) {
+    if (!preJobInst) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to instantiate job %s: Internal Error %d\n",
             request.Name().PeekBuffer(), __LINE__);
@@ -978,7 +966,7 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
         const JobDescription::ModuleInstanceRequest &mir = request.Description()->Module(idx);
         factories::ModuleDescription::ptr desc = mir.Second();
 
-        vislib::StringA fullName = this->namespaceRoot.FullNamespace(request.Name(), mir.First());
+        vislib::StringA fullName = this->namespaceRoot->FullNamespace(request.Name(), mir.First());
 
         if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -988,13 +976,13 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
             continue;
         }
 
-        Module *mod = this->instantiateModule(fullName, desc);
-        if (mod == NULL) {
+        Module::ptr_type mod = this->instantiateModule(fullName, desc);
+        if (!mod) {
             hasErrors = true;
             continue;
 
         } else {
-            job::AbstractJob* aj = dynamic_cast<job::AbstractJob*>(mod);
+            job::AbstractJob* aj = dynamic_cast<job::AbstractJob*>(mod.get());
             if (aj != NULL) {
                 // view module instantiated.
                 if (fullName.Equals(jobFullPath)) {
@@ -1024,8 +1012,8 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
         const JobDescription::CallInstanceRequest &cir = request.Description()->Call(idx);
         factories::CallDescription::ptr desc = cir.Description();
 
-        vislib::StringA fromFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.From());
-        vislib::StringA toFullName = this->namespaceRoot.FullNamespace(request.Name(), cir.To());
+        vislib::StringA fromFullName = this->namespaceRoot->FullNamespace(request.Name(), cir.From());
+        vislib::StringA toFullName = this->namespaceRoot->FullNamespace(request.Name(), cir.To());
 
         if (!desc) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -1049,7 +1037,7 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
 
     } else {
         // Create Instance object replacing the temporary namespace
-        JobInstance *inst = new JobInstance();
+        JobInstance::ptr_type inst = std::make_shared<JobInstance>();
         if (inst == NULL) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to construct instance %s\n",
@@ -1057,8 +1045,8 @@ megamol::core::CoreInstance::InstantiatePendingJob(void) {
             return NULL;
         }
 
-        if (!inst->Initialize(preJobInst, job)) {
-            SAFE_DELETE(inst);
+        if (!dynamic_cast<JobInstance*>(inst.get())->Initialize(preJobInst, job)) {
+            inst.reset();
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to initialize instance %s\n",
                 request.Name().PeekBuffer());
@@ -1097,7 +1085,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam>
 megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool quiet, bool create) {
     using vislib::sys::Log;
     VLSTACKTRACE("FindParameter", __FILE__, __LINE__);
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, false);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
 
     vislib::Array<vislib::StringA> path = vislib::StringTokeniserA::Split(name, "::", true);
@@ -1114,11 +1102,11 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
         path.RemoveLast();
     }
 
-    ModuleNamespace *mn = NULL;
+    ModuleNamespace::ptr_type mn;
     // parameter slots may have namespace operators in their names!
-    while (mn == NULL) {
-        mn = this->namespaceRoot.FindNamespace(path, false, true);
-        if (mn == NULL) {
+    while (!mn) {
+        mn = this->namespaceRoot->FindNamespace(path, false, true);
+        if (!mn) {
             if (path.Count() > 0) {
                 slotName = modName + "::" + slotName;
                 modName = path.Last();
@@ -1142,8 +1130,8 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
         }
     }
 
-    Module *mod = dynamic_cast<Module *>(mn->FindChild(modName));
-    if (mod == NULL) {
+    Module::ptr_type mod = Module::dynamic_pointer_cast(mn->FindChild(modName));
+    if (!mod) {
     /*	if(create)
         {
             param::ParamSlot *slot = new param::ParamSlot(name, "newly inserted");
@@ -1162,7 +1150,7 @@ megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool qui
         }
     }
 
-    param::ParamSlot *slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName));
+    param::ParamSlot *slot = dynamic_cast<param::ParamSlot*>(mod->FindChild(slotName).get());
     if (slot == NULL) {
     /*	if(create)
         {
@@ -1282,17 +1270,17 @@ void megamol::core::CoreInstance::OffsetInstanceTime(double offset) {
  */
 void megamol::core::CoreInstance::CleanupModuleGraph(void) {
     VLSTACKTRACE("CleanupModuleGraph", __FILE__, __LINE__);
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, true);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
-    this->namespaceRoot.SetAllCleanupMarks();
+    this->namespaceRoot->SetAllCleanupMarks();
 
-    AbstractNamedObjectContainer::ChildList::Iterator iter
-        = this->namespaceRoot.GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *child = iter.Next();
-        ViewInstance *vi = dynamic_cast<ViewInstance*>(child);
-        JobInstance *ji = dynamic_cast<JobInstance*>(child);
+    AbstractNamedObjectContainer::child_list_type::iterator iter, end;
+    end = this->namespaceRoot->ChildList_End();
+    for (iter = this->namespaceRoot->ChildList_Begin(); iter != end; ++iter) {
+        AbstractNamedObject::ptr_type child = *iter;
+        ViewInstance *vi = dynamic_cast<ViewInstance*>(child.get());
+        JobInstance *ji = dynamic_cast<JobInstance*>(child.get());
 
         if (vi != NULL) {
             vi->ClearCleanupMark();
@@ -1302,8 +1290,8 @@ void megamol::core::CoreInstance::CleanupModuleGraph(void) {
         }
     }
 
-    this->namespaceRoot.DisconnectCalls();
-    this->namespaceRoot.PerformCleanup();
+    this->namespaceRoot->DisconnectCalls();
+    this->namespaceRoot->PerformCleanup();
 
 }
 
@@ -1312,12 +1300,12 @@ void megamol::core::CoreInstance::CleanupModuleGraph(void) {
  * megamol::core::CoreInstance::Shutdown
  */
 void megamol::core::CoreInstance::Shutdown(void) {
-    AbstractNamedObjectContainer::ChildList::Iterator iter
-        = this->namespaceRoot.GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *child = iter.Next();
-        ViewInstance *vi = dynamic_cast<ViewInstance*>(child);
-        JobInstance *ji = dynamic_cast<JobInstance*>(child);
+    AbstractNamedObjectContainer::child_list_type::iterator iter, end;
+    end = this->namespaceRoot->ChildList_End();
+    for (iter = this->namespaceRoot->ChildList_Begin(); iter != end; ++iter) {
+        AbstractNamedObject::ptr_type child = *iter;
+        ViewInstance *vi = dynamic_cast<ViewInstance*>(child.get());
+        JobInstance *ji = dynamic_cast<JobInstance*>(child.get());
 
         if (vi != NULL) {
             vi->RequestClose();
@@ -1341,7 +1329,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
         = static_cast<const AbstractSimpleMessage *>(data);
     const AbstractSimpleMessage &dat = *dataPtr;
 
-    this->namespaceRoot.ModuleGraphLock().LockExclusive();
+    this->namespaceRoot->ModuleGraphLock().LockExclusive();
     try {
 
         UINT64 cntMods = *dat.GetBodyAs<UINT64>();
@@ -1364,14 +1352,14 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
             }
 
             factories::ModuleDescription::ptr d = this->GetModuleDescriptionManager().Find(modClass);
-            if (d == NULL) {
+            if (!d) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "Unable to instantiate module %s(%s): class description not found\n",
                     modName.PeekBuffer(), modClass.PeekBuffer());
                 continue;
             }
-            Module *m = this->instantiateModule(modName, d);
-            if (m == NULL) {
+            Module::ptr_type m = this->instantiateModule(modName, d);
+            if (!m) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "Unable to instantiate module %s(%s): instantiation failed\n",
                     modName.PeekBuffer(), modClass.PeekBuffer());
@@ -1389,14 +1377,14 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
             vislib::StringA callTo(dat.GetBodyAsAt<char>(pos));
             pos += callTo.Length() + 1;
 
-            AbstractNamedObject *ano = this->namespaceRoot.FindNamedObject(callFrom);
+            AbstractNamedObject::ptr_type ano = this->namespaceRoot->FindNamedObject(callFrom);
             if (ano == NULL) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 10, // could be a warning, but we intentionally omitted some modules
                     "Not connecting call %s from missing module %s\n",
                     callClass.PeekBuffer(), callFrom.PeekBuffer());
                 continue;
             }
-            ano = this->namespaceRoot.FindNamedObject(callTo);
+            ano = this->namespaceRoot->FindNamedObject(callTo);
             if (ano == NULL) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 10, // could be a warning, but we intentionally omitted some modules
                     "Not connecting call %s to missing module %s\n",
@@ -1405,7 +1393,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
             }
 
             factories::CallDescription::ptr d = this->GetCallDescriptionManager().Find(callClass);
-            if (d == NULL) {
+            if (!d) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "Unable to instantiate call %s=>%s(%s): class description not found\n",
                     callFrom.PeekBuffer(), callTo.PeekBuffer(), callClass.PeekBuffer());
@@ -1427,13 +1415,13 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
             vislib::StringA paramValue(dat.GetBodyAsAt<char>(pos));
             pos += paramValue.Length() + 1;
 
-            AbstractNamedObject *ano = this->namespaceRoot.FindNamedObject(paramName);
-            if (ano == NULL) {
+            AbstractNamedObject::ptr_type ano = this->namespaceRoot->FindNamedObject(paramName);
+            if (!ano) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 10, // could be a warning, but we intentionally omitted some modules
                     "Parameter %s not found\n", paramName.PeekBuffer());
                 continue;
             }
-            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(ano);
+            param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(ano.get());
             if (ps == NULL) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s is not a parameter slot\n", paramName.PeekBuffer());
                 continue;
@@ -1460,7 +1448,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void * data) {
     } catch(...) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
     }
-    this->namespaceRoot.ModuleGraphLock().UnlockExclusive();
+    this->namespaceRoot->ModuleGraphLock().UnlockExclusive();
 }
 
 
@@ -1756,8 +1744,8 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
 
     // Loop through active view instances
     // collect data
-    vislib::Stack<AbstractNamedObject *> stack;
-    stack.Push(&this->namespaceRoot);
+    vislib::Stack<AbstractNamedObject::ptr_type> stack;
+    stack.Push(this->namespaceRoot);
     //auto itervd = this->projViewDescs.GetIterator();
     //auto iterjd = this->projJobDescs.GetIterator();
 
@@ -1767,24 +1755,24 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
     vislib::StringA closeViewJobTags = "";
     vislib::StringA callDesc = "";
     while (!stack.IsEmpty()) {
-        AbstractNamedObject *ano = stack.Pop();
-        ASSERT(ano != NULL);
-        AbstractNamedObjectContainer *anoc =
-                dynamic_cast<AbstractNamedObjectContainer *>(ano);
-        Module *mod = dynamic_cast<Module *>(ano);
-        //CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano);
-        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano);
-        param::ParamSlot *param = dynamic_cast<param::ParamSlot *>(ano);
+        AbstractNamedObject::ptr_type ano = stack.Pop();
+        ASSERT(ano);
+        AbstractNamedObjectContainer::ptr_type anoc =
+                std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+        Module *mod = dynamic_cast<Module *>(ano.get());
+        //CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano.get());
+        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano.get());
+        param::ParamSlot *param = dynamic_cast<param::ParamSlot *>(ano.get());
 
-        megamol::core::ViewInstance *vi = dynamic_cast<megamol::core::ViewInstance *>(ano);
-        megamol::core::JobInstance *ji = dynamic_cast<megamol::core::JobInstance *>(ano);
+        megamol::core::ViewInstance *vi = dynamic_cast<megamol::core::ViewInstance *>(ano.get());
+        megamol::core::JobInstance *ji = dynamic_cast<megamol::core::JobInstance *>(ano.get());
 
         if (anoc != NULL) {
 //            printf("NAMED OBJECT: %s\n", anoc->FullName().PeekBuffer());
-            AbstractNamedObjectContainer::ChildList::Iterator anoccli =
-                    anoc->GetChildIterator();
-            while (anoccli.HasNext()) {
-                stack.Push(anoccli.Next());
+            AbstractNamedObjectContainer::child_list_type::iterator i, e;
+            e = anoc->ChildList_End();
+            for (i = anoc->ChildList_Begin(); i != e; ++i) {
+                stack.Push(*i);
             }
         }
 
@@ -2029,13 +2017,15 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer *c) {
     using megamol::core::CalleeSlot;
     using megamol::core::CallerSlot;
     using megamol::core::param::ParamSlot;
-    vislib::SingleLinkedList<megamol::core::AbstractNamedObject*>::Iterator iter = c->GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *ano = iter.Next();
-        AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer *>(ano);
-        CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano);
-        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano);
-        ParamSlot *param = dynamic_cast<ParamSlot *>(ano);
+
+    auto e = c->ChildList_End();
+    for (auto b = c->ChildList_Begin(); b != e; ++b) {
+        AbstractNamedObject::ptr_type ano = *b;
+        AbstractNamedObjectContainer::ptr_type anoc =
+            std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+        CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano.get());
+        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano.get());
+        ParamSlot *param = dynamic_cast<ParamSlot *>(ano.get());
 
         if (callee != NULL) {
             Log::DefaultLog.WriteInfo(150, "Callee Slot: %s", callee->FullName().PeekBuffer());
@@ -2044,7 +2034,7 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer *c) {
         } else if (param != NULL) {
             Log::DefaultLog.WriteInfo(150, "Param Slot: %s", param->FullName().PeekBuffer());
         } else if (anoc != NULL) {
-            debugDumpSlots(anoc);
+            debugDumpSlots(anoc.get());
         }
     }
 }
@@ -2055,7 +2045,7 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer *c) {
 /*
  * megamol::core::CoreInstance::instantiateModule
  */
-megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
+megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
         const vislib::StringA path, factories::ModuleDescription::ptr desc) {
     using vislib::sys::Log;
     VLSTACKTRACE("instantiateModule", __FILE__, __LINE__);
@@ -2084,22 +2074,21 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to make module \"%s\" (%s): Module type is installed but not available.",
             desc->ClassName(), path.PeekBuffer());
-        return NULL;
+        return Module::ptr_type(nullptr);
     }
 
     vislib::Array<vislib::StringA> dirs = vislib::StringTokeniserA::Split(path, "::", true);
     vislib::StringA modName = dirs.Last();
     dirs.RemoveLast();
 
-    ModuleNamespace *cns = this->namespaceRoot.FindNamespace(dirs, true);
-    if (cns == NULL) {
-        return NULL;
-    }
+    ModuleNamespace::ptr_type cns = 
+        ModuleNamespace::dynamic_pointer_cast(this->namespaceRoot->FindNamespace(dirs, true));
+    if (!cns) return Module::ptr_type(nullptr);
 
-    AbstractNamedObject *ano = cns->FindChild(modName);
-    if (ano != NULL) {
-        Module *tstMod = dynamic_cast<Module*>(ano);
-        if ((tstMod != NULL) && (desc->IsDescribing(tstMod))) {
+    AbstractNamedObject::ptr_type ano = cns->FindChild(modName);
+    if (ano) {
+        Module::ptr_type tstMod = std::dynamic_pointer_cast<Module>(ano);
+        if ((tstMod != NULL) && (desc->IsDescribing(tstMod.get()))) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
                 "Unable to make module \"%s\": module already present",
                 path.PeekBuffer());
@@ -2109,35 +2098,35 @@ megamol::core::Module* megamol::core::CoreInstance::instantiateModule(
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to make module \"%s\" (%s): name conflict with other namespace object.",
             desc->ClassName(), path.PeekBuffer());
-        return NULL;
+        return Module::ptr_type(nullptr);
     }
 
-    Module *mod = desc->CreateModule(modName);
-    if (mod == NULL) {
+    Module::ptr_type mod = Module::ptr_type(desc->CreateModule(modName));
+    if (!mod) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to construct module \"%s\" (%s)",
             desc->ClassName(), path.PeekBuffer());
 
     } else{
-        RootModuleNamespace tmpRoot;
-        tmpRoot.SetCoreInstance(*this);
-        tmpRoot.AddChild(mod);
+        std::shared_ptr<RootModuleNamespace> tmpRoot = std::make_shared<RootModuleNamespace>();
+        tmpRoot->SetCoreInstance(*this);
+        tmpRoot->AddChild(mod);
 
         if (!mod->Create()) {
-            tmpRoot.RemoveChild(mod);
+            tmpRoot->RemoveChild(mod);
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to create module \"%s\" (%s)",
                 desc->ClassName(), path.PeekBuffer());
-            SAFE_DELETE(mod);
+            mod.reset();
 
         } else {
-            tmpRoot.RemoveChild(mod);
+            tmpRoot->RemoveChild(mod);
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
                 "Created module \"%s\" (%s)",
                 desc->ClassName(), path.PeekBuffer());
             cns->AddChild(mod);
 #if defined(DEBUG) || defined(_DEBUG)
-            debugDumpSlots(mod);
+            debugDumpSlots(mod.get());
 #endif /* DEBUG || _DEBUG */
 
         }
@@ -2172,33 +2161,36 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
     vislib::StringA toModName = toDirs.Last();
     toDirs.RemoveLast();
 
-    ModuleNamespace *fromNS = this->namespaceRoot.FindNamespace(fromDirs, false);
-    if (fromNS == NULL) {
+    ModuleNamespace::ptr_type fromNS = 
+        ModuleNamespace::dynamic_pointer_cast(
+            this->namespaceRoot->FindNamespace(fromDirs, false));
+    if (!fromNS) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to instantiate call: can not find source namespace \"%s\"",
             fromPath.PeekBuffer());
         return NULL;
     }
 
-    ModuleNamespace *toNS = this->namespaceRoot.FindNamespace(toDirs, false);
-
-    if (toNS == NULL) {
+    ModuleNamespace::ptr_type toNS =
+        ModuleNamespace::dynamic_pointer_cast(
+            this->namespaceRoot->FindNamespace(toDirs, false));
+    if (!toNS) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to instantiate call: can not find target namespace \"%s\"",
             toPath.PeekBuffer());
         return NULL;
     }
 
-    Module *fromMod = dynamic_cast<Module*>(fromNS->FindChild(fromModName));
-    if (fromMod == NULL) {
+    Module::ptr_type fromMod = std::dynamic_pointer_cast<Module>(fromNS->FindChild(fromModName));
+    if (!fromMod) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to instantiate call: can not find source module \"%s\"",
             fromPath.PeekBuffer());
         return NULL;
     }
 
-    Module *toMod = dynamic_cast<Module*>(toNS->FindChild(toModName));
-    if (toMod == NULL) {
+    Module::ptr_type toMod = std::dynamic_pointer_cast<Module>(toNS->FindChild(toModName));
+    if (!toMod) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to instantiate call: can not find target module \"%s\"",
             toPath.PeekBuffer());
@@ -2291,25 +2283,25 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
  * megamol::core::CoreInstance::enumParameters
  */
 void megamol::core::CoreInstance::enumParameters(
-        const megamol::core::ModuleNamespace* path,
+        megamol::core::ModuleNamespace::const_ptr_type path,
         mmcEnumStringAFunction func, void *data) const {
     VLSTACKTRACE("enumParameters", __FILE__, __LINE__);
 
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, false);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
 
-    vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> i
-        = path->GetConstChildIterator();
-    while (i.HasNext()) {
-        const AbstractNamedObject *child = i.Next();
-        const Module *mod = dynamic_cast<const Module*>(child);
-        const ModuleNamespace *ns = dynamic_cast<const ModuleNamespace*>(child);
+    AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
+    e = path->ChildList_End();
+    for (i = path->ChildList_Begin(); i != e; ++i) {
+        AbstractNamedObject::const_ptr_type child = *i;
+        Module::const_ptr_type mod = Module::dynamic_pointer_cast(child);
+        ModuleNamespace::const_ptr_type ns = ModuleNamespace::dynamic_pointer_cast(child);
 
-        if (mod != NULL) {
-            vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> si
-                = mod->GetConstChildIterator();
-            while (si.HasNext()) {
-                const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>(si.Next());
+        if (mod) {
+            AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
+            se = mod->ChildList_End();
+            for (si = mod->ChildList_Begin(); si != se; ++si) {
+                const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>((*si).get());
                 if (slot != NULL) {
                     vislib::StringA name(mod->FullName());
                     name.Append("::");
@@ -2318,7 +2310,7 @@ void megamol::core::CoreInstance::enumParameters(
                 }
             }
 
-        } else if (ns != NULL) {
+        } else if (ns) {
             this->enumParameters(ns, func, data);
         }
     }
@@ -2329,26 +2321,26 @@ void megamol::core::CoreInstance::enumParameters(
  * megamol::core::CoreInstance::findParameterName
  */
 vislib::StringA megamol::core::CoreInstance::findParameterName(
-        const megamol::core::ModuleNamespace* path,
+        megamol::core::ModuleNamespace::const_ptr_type path,
         const vislib::SmartPtr<megamol::core::param::AbstractParam>& param)
         const {
     VLSTACKTRACE("findParameterName", __FILE__, __LINE__);
 
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, false);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
 
-    vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> i
-        = path->GetConstChildIterator();
-    while (i.HasNext()) {
-        const AbstractNamedObject *child = i.Next();
-        const Module *mod = dynamic_cast<const Module*>(child);
-        const ModuleNamespace *ns = dynamic_cast<const ModuleNamespace*>(child);
+    AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
+    e = path->ChildList_End();
+    for (i = path->ChildList_Begin(); i != e; ++i) {
+        AbstractNamedObject::const_ptr_type child = *i;
+        Module::const_ptr_type mod = Module::dynamic_pointer_cast(child);
+        ModuleNamespace::const_ptr_type ns = ModuleNamespace::dynamic_pointer_cast(child);
 
-        if (mod != NULL) {
-            vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> si
-                = mod->GetConstChildIterator();
-            while (si.HasNext()) {
-                const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>(si.Next());
+        if (mod) {
+            AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
+            se = mod->ChildList_End();
+            for (si = mod->ChildList_Begin(); si != se; ++si) {
+                const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>((*si).get());
                 if ((slot != NULL) && (slot->Parameter() == param)) {
                     vislib::StringA name(mod->FullName());
                     name.Append("::");
@@ -2357,7 +2349,7 @@ vislib::StringA megamol::core::CoreInstance::findParameterName(
                 }
             }
 
-        } else if (ns != NULL) {
+        } else if (ns) {
             vislib::StringA n = this->findParameterName(ns, param);
             if (!n.IsEmpty()) {
                 return n;
@@ -2371,21 +2363,21 @@ vislib::StringA megamol::core::CoreInstance::findParameterName(
 /*
  * megamol::core::CoreInstance::closeViewJob
  */
-void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace *obj) {
+void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::ptr_type obj) {
     VLSTACKTRACE("closeViewJob", __FILE__, __LINE__);
 
     ASSERT(obj != NULL);
-    AbstractNamedObject::GraphLocker locker(&this->namespaceRoot, true);
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
-    if (obj->Parent() != &this->namespaceRoot) {
+    if (obj->Parent() != this->namespaceRoot) {
         // this happens when a job/view is removed from the graph before it's
         // handle is deletes (core instance destructor)
         return;
     }
 
-    ViewInstance *vi = dynamic_cast<ViewInstance*>(obj);
-    JobInstance *ji = dynamic_cast<JobInstance*>(obj);
+    ViewInstance *vi = dynamic_cast<ViewInstance*>(obj.get());
+    JobInstance *ji = dynamic_cast<JobInstance*>(obj.get());
     if (vi != NULL) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 50,
             "View instance %s terminating ...", vi->Name().PeekBuffer());
@@ -2397,22 +2389,20 @@ void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace *o
         ji->Terminate();
     }
 
-    ModuleNamespace *mn = new ModuleNamespace(obj->Name());
+    ModuleNamespace::ptr_type mn = std::make_shared<ModuleNamespace>(obj->Name());
 
-    AbstractNamedObjectContainer::ChildList::Iterator iter = obj->GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *ano = iter.Next();
+    while (obj->ChildList_Begin() != obj->ChildList_End()) {
+        AbstractNamedObject::ptr_type ano = *obj->ChildList_Begin();
         obj->RemoveChild(ano);
         mn->AddChild(ano);
     }
 
-    AbstractNamedObjectContainer *p = dynamic_cast<AbstractNamedObjectContainer *>(obj->Parent());
+    AbstractNamedObjectContainer::ptr_type p = AbstractNamedObjectContainer::dynamic_pointer_cast(obj->Parent());
     p->RemoveChild(obj);
     p->AddChild(mn);
 
     ASSERT(obj->Parent() == NULL);
-    ASSERT(!obj->GetChildIterator().HasNext());
-    // obj will be deleted outside this method
+    ASSERT(obj->ChildList_Begin() == obj->ChildList_End());
 
     this->CleanupModuleGraph();
 }
@@ -2662,23 +2652,26 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factorie
     ASSERT(from != NULL);
     step.Clear();
 
-    Module *m = from->CreateModule("quickstarttest");
-    if (m == NULL) {
+    Module::ptr_type m(from->CreateModule("quickstarttest"));
+    if (!m) {
         Log::DefaultLog.WriteError("Unable to test-instantiate module %s", from->ClassName());
         return;
     }
+
     vislib::SingleLinkedList<vislib::Pair<factories::CallDescription::ptr, vislib::StringA> > inCalls;
-    vislib::Stack<AbstractNamedObjectContainer *> stack(m);
+    vislib::Stack<AbstractNamedObjectContainer::ptr_type> stack(m);
     while (!stack.IsEmpty()) {
-        AbstractNamedObjectContainer *anoc = stack.Pop();
-        AbstractNamedObjectContainer::ChildList::Iterator ci = anoc->GetChildIterator();
-        while (ci.HasNext()) {
-            AbstractNamedObject *ano = ci.Next();
-            if (dynamic_cast<AbstractNamedObjectContainer*>(ano) != NULL) {
-                stack.Push(dynamic_cast<AbstractNamedObjectContainer*>(ano));
+        AbstractNamedObjectContainer::ptr_type anoc = stack.Pop();
+        AbstractNamedObjectContainer::child_list_type::iterator ci, ce;
+        ce = anoc->ChildList_End();
+        for (ci = anoc->ChildList_Begin(); ci != ce; ++ci) {
+            AbstractNamedObject::ptr_type ano = *ci;
+            AbstractNamedObjectContainer::ptr_type anoc2 = AbstractNamedObjectContainer::dynamic_pointer_cast(ano);
+            if (anoc2) {
+                stack.Push(anoc2);
             }
-            if (dynamic_cast<CalleeSlot*>(ano) != NULL) {
-                CalleeSlot *callee = dynamic_cast<CalleeSlot*>(ano);
+            if (dynamic_cast<CalleeSlot*>(ano.get()) != NULL) {
+                CalleeSlot *callee = dynamic_cast<CalleeSlot*>(ano.get());
 
                 //factoirCallDescriptionManager::DescriptionIterator cdi = CallDescriptionManager::Instance()->GetIterator();
                 //while (cdi.HasNext()) {
@@ -2695,7 +2688,7 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factorie
     }
     m->SetAllCleanupMarks();
     m->PerformCleanup();
-    delete m;
+    m.reset();
     // now 'inCalls' holds all calls which can connect to 'from' (some slot)
 
     //ModuleDescriptionManager::DescriptionIterator mdi = ModuleDescriptionManager::Instance()->GetIterator();
@@ -2704,23 +2697,25 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factorie
     for (auto md : this->GetModuleDescriptionManager()) {
         if (md == from) continue;
         if (!md->IsVisibleForQuickstart()) continue;
-        m = md->CreateModule("quickstarttest");
-        if (m == NULL) continue;
+        m = Module::ptr_type(md->CreateModule("quickstarttest"));
+        if (!m) continue;
 
         bool connectable = false;
         stack.Push(m);
         while (!stack.IsEmpty() && !connectable) {
-            AbstractNamedObjectContainer *anoc = stack.Pop();
-            ASSERT(anoc != NULL);
-            AbstractNamedObjectContainer::ChildList::Iterator ci = anoc->GetChildIterator();
-            while (ci.HasNext() && !connectable) {
-                AbstractNamedObject *ano = ci.Next();
-                ASSERT(ano != NULL);
-                if (dynamic_cast<AbstractNamedObjectContainer*>(ano) != NULL) {
-                    stack.Push(dynamic_cast<AbstractNamedObjectContainer*>(ano));
+            AbstractNamedObjectContainer::ptr_type anoc = stack.Pop();
+            ASSERT(anoc);
+            AbstractNamedObjectContainer::child_list_type::iterator ci, ce;
+            ce = anoc->ChildList_End();
+            for (ci = anoc->ChildList_Begin(); (ci != ce) && !connectable; ++ci) {
+                AbstractNamedObject::ptr_type ano = *ci;
+                ASSERT(ano);
+                AbstractNamedObjectContainer::ptr_type anoc2 = AbstractNamedObjectContainer::dynamic_pointer_cast(ano);
+                if (anoc2) {
+                    stack.Push(anoc2);
                 }
-                if (dynamic_cast<CallerSlot*>(ano) != NULL) {
-                    CallerSlot *caller = dynamic_cast<CallerSlot*>(ano);
+                if (dynamic_cast<CallerSlot*>(ano.get()) != NULL) {
+                    CallerSlot *caller = dynamic_cast<CallerSlot*>(ano.get());
                     ASSERT(caller != NULL);
 
                     vislib::SingleLinkedList<vislib::Pair<factories::CallDescription::ptr, vislib::StringA> >::Iterator cdi = inCalls.GetIterator();
@@ -2745,7 +2740,7 @@ void megamol::core::CoreInstance::quickConnectUpStepInfo(megamol::core::factorie
         m->SetAllCleanupMarks();
         m->PerformCleanup();
         VLTRACE(VISLIB_TRCELVL_INFO, "dtoring %s ... ", md->ClassName());
-        delete m;
+        m.reset();
         VLTRACE(VISLIB_TRCELVL_INFO, "done dtoring.\n");
     }
 

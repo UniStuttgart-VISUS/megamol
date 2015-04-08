@@ -862,9 +862,9 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
         "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
 
     this->ModuleGraphLock().LockExclusive();
-    AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer*>(this->RootModule());
-    AbstractNamedObject *ano = anoc->FindChild(mvn);
-    ViewInstance *vi = dynamic_cast<ViewInstance *>(ano);
+    AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+    AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
+    ViewInstance *vi = dynamic_cast<ViewInstance *>(ano.get());
     if (vi != NULL) {
         if (vi->View() != NULL) {
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
@@ -906,10 +906,10 @@ param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView
     param::ParamSlot *timeSlot = nullptr;
 
     if (name.IsEmpty()) {
-        timeSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time"));
+        timeSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time").get());
     } else {
-        AbstractNamedObjectContainer * anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule());
-        timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)));
+        AbstractNamedObjectContainer * anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
+        timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
     }
 
     return timeSlot;

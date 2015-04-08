@@ -77,7 +77,7 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
     if (this->firstFrame) {
         this->firstFrame = false;
         this->initTileViewParameters();
-        AbstractNamedObject *ano = this;
+        AbstractNamedObject::ptr_type ano = this->shared_from_this();
         while (ano != NULL) {
             if (this->loadConfiguration(ano->Name())) break;
             ano = ano->Parent();
@@ -173,9 +173,13 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
         //        this->netVSyncBarrier->GetData() + 4,
         //        this->netVSyncBarrier->GetDataSize() - 4);
         //}
+        AbstractNamedObject::const_ptr_type view_p;
         view::AbstractView *view = NULL;
-        if (crv->PeekCalleeSlot() != NULL) view = dynamic_cast<view::AbstractView*>(
-                const_cast<AbstractNamedObject*>(crv->PeekCalleeSlot()->Parent()));
+        if (crv->PeekCalleeSlot() != NULL) {
+            view_p = crv->PeekCalleeSlot()->Parent();
+            view = dynamic_cast<view::AbstractView*>(
+                const_cast<AbstractNamedObject*>(view_p.get()));
+        }
         if (view != NULL){
             if (this->frozenCam != NULL) view->DeserialiseCamera(*this->frozenCam);
             /* this forces to use this time */

@@ -76,27 +76,27 @@ vislib::StringA RootModuleNamespace::FullNamespace(const vislib::StringA& base,
 /*
  * RootModuleNamespace::FindNamespace
  */
-ModuleNamespace * RootModuleNamespace::FindNamespace(
+ModuleNamespace::ptr_type RootModuleNamespace::FindNamespace(
         const vislib::Array<vislib::StringA>& path, bool createMissing, bool quiet) {
 
-    ModuleNamespace *cns = this;
+    ModuleNamespace::ptr_type cns = dynamic_pointer_cast(this->shared_from_this());
 
     for (SIZE_T i = 0; i < path.Count(); i++) {
-        AbstractNamedObject *ano = cns->FindChild(path[i]);
+        AbstractNamedObject::ptr_type ano = cns->FindChild(path[i]);
 
         if (ano == NULL) {
             if (createMissing) {
-                ModuleNamespace *nns = new ModuleNamespace(path[i]);
+                ModuleNamespace::ptr_type nns = std::make_shared<ModuleNamespace>(path[i]);
                 cns->AddChild(nns);
-                cns = nns;
+                cns = ModuleNamespace::dynamic_pointer_cast(nns);
             } else {
                 return NULL;
             }
 
         } else {
-            ModuleNamespace *nns = dynamic_cast<ModuleNamespace*>(ano);
+            ModuleNamespace *nns = dynamic_cast<ModuleNamespace*>(ano.get());
             if (nns != NULL) {
-                cns = nns;
+                cns = ModuleNamespace::dynamic_pointer_cast(ano);
 
             } else {
                 if (!quiet) {
@@ -150,21 +150,24 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
     vislib::Array<vislib::StringA> paramValue;
 
     // collect data
-    vislib::Stack<AbstractNamedObject *> stack;
-    stack.Push(this);
-    while (!stack.IsEmpty()) {
-        AbstractNamedObject *ano = stack.Pop();
-        ASSERT(ano != NULL);
-        AbstractNamedObjectContainer *anoc = dynamic_cast<AbstractNamedObjectContainer *>(ano);
-        Module *mod = dynamic_cast<Module *>(ano);
-        //CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano);
-        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano);
-        param::ParamSlot *param = dynamic_cast<param::ParamSlot *>(ano);
+    vislib::Stack<AbstractNamedObject::ptr_type> stack;
 
-        if (anoc != NULL) {
-            AbstractNamedObjectContainer::ChildList::Iterator anoccli = anoc->GetChildIterator();
-            while (anoccli.HasNext()) {
-                stack.Push(anoccli.Next());
+    stack.Push(this->shared_from_this());
+    while (!stack.IsEmpty()) {
+        AbstractNamedObject::ptr_type ano = stack.Pop();
+        ASSERT(ano != NULL);
+        AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(ano);
+        Module *mod = dynamic_cast<Module *>(ano.get());
+        //CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano.get());
+        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano.get());
+        param::ParamSlot *param = dynamic_cast<param::ParamSlot *>(ano.get());
+
+        if (anoc) {
+            child_list_type::iterator i, e;
+            i = anoc->ChildList_Begin();
+            e = anoc->ChildList_End();
+            for (; i != e; ++i) {
+                stack.Push(*i);
             }
         }
 

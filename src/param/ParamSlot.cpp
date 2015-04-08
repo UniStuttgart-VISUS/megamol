@@ -71,7 +71,7 @@ void param::ParamSlot::update(void) {
     bool oldDirty = this->IsDirty();
     AbstractParamSlot::update();
 
-    Module *m = dynamic_cast<Module*>(this->Parent());
+    Module *m = dynamic_cast<Module*>(this->Parent().get());
     if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
         m->GetCoreInstance()->ParameterValueUpdate(*this);
     }

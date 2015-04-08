@@ -166,16 +166,17 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     }
 
     this->ModuleGraphLock().LockExclusive();
-    AbstractNamedObject *ano = this->FindNamedObject(viewName);
-    view::AbstractView *av = dynamic_cast<view::AbstractView*>(ano);
+    AbstractNamedObject::ptr_type ano = this->FindNamedObject(viewName);
+    view::AbstractView *av = dynamic_cast<view::AbstractView*>(ano.get());
     if (av == NULL) {
-        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>(ano);
+        ModuleNamespace *mn = dynamic_cast<ModuleNamespace*>(ano.get());
         if (mn != NULL) {
             view::AbstractView *av2;
-            AbstractNamedObjectContainer::ChildList::Iterator ci = mn->GetChildIterator();
-            while (ci.HasNext()) {
-                ano = ci.Next();
-                av2 = dynamic_cast<view::AbstractView*>(ano);
+            child_list_type::iterator ci, cie;
+            ci = mn->ChildList_Begin();
+            cie = mn->ChildList_End();
+            for (; ci != cie; ++ci) {
+                av2 = dynamic_cast<view::AbstractView*>((*ci).get());
                 if (av2 != NULL) {
                     if (av != NULL) {
                         av = NULL;
@@ -336,7 +337,8 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
             vislib::RawStorage mem;
             this->ModuleGraphLock().LockExclusive();
             try {
-                RootModuleNamespace *root = dynamic_cast<RootModuleNamespace*>(this->RootModule());
+                AbstractNamedObject::ptr_type root_ptr = this->RootModule();
+                RootModuleNamespace *root = dynamic_cast<RootModuleNamespace*>(root_ptr.get());
                 if (root != NULL) {
                     root->SerializeGraph(mem);
                 }
@@ -353,9 +355,9 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
         } break;
 
         case cluster::netmessages::MSG_REQUEST_CAMERASETUP: {
-            AbstractNamedObject *ano = NULL;
+            AbstractNamedObject::ptr_type ano;
             Call *call = this->viewSlot.CallAs<Call>();
-            if (call != NULL) ano = const_cast<CalleeSlot*>(call->PeekCalleeSlot());
+            if (call != NULL) ano = AbstractNamedObject::ptr_type(const_cast<CalleeSlot*>(call->PeekCalleeSlot()));
             if (ano != NULL) ano = ano->Parent();
             if (ano == NULL) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Cluster View Master not connected to a view. Lazy evaluation NOT implemented");
@@ -372,9 +374,11 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(cluster::CommChannelServer
         case cluster::netmessages::MSG_REQUEST_CAMERAVALUES: {
             Call *call = this->viewSlot.CallAs<Call>();
             this->ModuleGraphLock().LockExclusive();
+            AbstractNamedObject::const_ptr_type avp;
             const view::AbstractView *av = NULL;
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL)) {
-                av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+                avp = call->PeekCalleeSlot()->Parent();
+                av = dynamic_cast<const view::AbstractView*>(avp.get());
             }
             this->ModuleGraphLock().UnlockExclusive();
             if (av != NULL) {
@@ -436,6 +440,7 @@ void cluster::ClusterViewMaster::ParamUpdated(param::ParamSlot& slot) {
  * cluster::ClusterViewMaster::cameraUpdateThread
  */
 DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
+    AbstractNamedObject::const_ptr_type avp;
     const view::AbstractView *av = NULL;
     ClusterViewMaster *This = static_cast<ClusterViewMaster *>(userData);
     unsigned int syncnumber = static_cast<unsigned int>(-1);
@@ -451,7 +456,8 @@ DWORD cluster::ClusterViewMaster::cameraUpdateThread(void *userData) {
         av = NULL;
         call = This->viewSlot.CallAs<Call>();
         if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
-            av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
+            avp = call->PeekCalleeSlot()->Parent();
+            av = dynamic_cast<const view::AbstractView*>(avp.get());
         }
         This->ModuleGraphLock().UnlockExclusive();
         if (av == NULL) break;

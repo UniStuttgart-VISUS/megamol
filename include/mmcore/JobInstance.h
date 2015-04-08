@@ -45,7 +45,7 @@ namespace core {
          *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialize(ModuleNamespace *ns, job::AbstractJob *job);
+        bool Initialize(ModuleNamespace::ptr_type ns, job::AbstractJob *job);
 
         /**
          * Gets the view object encapsuled by this instance.

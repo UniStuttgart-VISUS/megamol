@@ -45,16 +45,17 @@ void profiler::Manager::SetMode(Mode mode) {
         } else {
             ASSERT(mode == PROFILE_ALL);
             // collect all calls
-            vislib::Stack<const AbstractNamedObjectContainer*> stack;
+            vislib::Stack<AbstractNamedObjectContainer::const_ptr_type> stack;
             stack.Push(ci->ModuleGraphRoot());
             while (!stack.IsEmpty()) {
-                const AbstractNamedObjectContainer* node = stack.Pop();
-                vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> children = node->GetConstChildIterator();
-                while (children.HasNext()) {
-                    const AbstractNamedObject *child = children.Next();
-                    const AbstractNamedObjectContainer *anoc = dynamic_cast<const AbstractNamedObjectContainer*>(child);
-                    if (anoc != NULL) stack.Push(anoc); // continue
-                    const CallerSlot *caller = dynamic_cast<const CallerSlot*>(child);
+                AbstractNamedObjectContainer::const_ptr_type node = stack.Pop();
+                AbstractNamedObjectContainer::child_list_type::const_iterator children, childrenend;
+                childrenend = node->ChildList_End();
+                for (children = node->ChildList_Begin(); children != childrenend; ++children) {
+                    AbstractNamedObject::const_ptr_type child = *children;
+                    AbstractNamedObjectContainer::const_ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(child);
+                    if (anoc) stack.Push(anoc); // continue
+                    const CallerSlot *caller = dynamic_cast<const CallerSlot*>(child.get());
                     if (caller != NULL) {
                         Call *call = const_cast<CallerSlot*>(caller)->CallAs<Call>();
                         if (call != NULL) {
@@ -90,16 +91,17 @@ void profiler::Manager::UnselectAll(void) {
 void profiler::Manager::Select(const vislib::StringA& caller) {
     const Call *call = NULL;
 
-    vislib::Stack<const AbstractNamedObjectContainer*> stack;
+    vislib::Stack<AbstractNamedObjectContainer::const_ptr_type> stack;
     stack.Push(ci->ModuleGraphRoot());
     while (!stack.IsEmpty()) {
-        const AbstractNamedObjectContainer* node = stack.Pop();
-        vislib::ConstIterator<AbstractNamedObjectContainer::ChildList::Iterator> children = node->GetConstChildIterator();
-        while (children.HasNext()) {
-            const AbstractNamedObject *child = children.Next();
-            const AbstractNamedObjectContainer *anoc = dynamic_cast<const AbstractNamedObjectContainer*>(child);
-            if (anoc != NULL) stack.Push(anoc); // continue
-            const CallerSlot *callerSlot = dynamic_cast<const CallerSlot*>(child);
+        AbstractNamedObjectContainer::const_ptr_type node = stack.Pop();
+        AbstractNamedObjectContainer::child_list_type::const_iterator children, childrenend;
+        childrenend = node->ChildList_End();
+        for (children = node->ChildList_Begin(); children != childrenend; ++children) {
+            AbstractNamedObject::const_ptr_type child = *children;
+            AbstractNamedObjectContainer::const_ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(child);
+            if (anoc) stack.Push(anoc); // continue
+            const CallerSlot *callerSlot = dynamic_cast<const CallerSlot*>(child.get());
             if (callerSlot != NULL) {
                 if (callerSlot->FullName().Equals(caller, false)) {
                     call = const_cast<CallerSlot*>(callerSlot)->CallAs<Call>();

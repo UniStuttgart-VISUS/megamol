@@ -107,9 +107,8 @@ bool CallerSlot::IsParamRelevant(
         } else {
             searched.Add(this->call->PeekCalleeSlot());
         }
-        AbstractNamedObject *ano = const_cast<AbstractNamedObject *>(
-            this->call->PeekCalleeSlot()->Parent());
-        if (ano != NULL){
+        const_ptr_type ano = this->call->PeekCalleeSlot()->Parent();
+        if (ano) {
             return ano->IsParamRelevant(searched, param);
         }
     }

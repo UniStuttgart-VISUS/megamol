@@ -162,7 +162,7 @@ view::AbstractView *view::AbstractOverrideView::getConnectedView(void) const {
     Call* c = const_cast<CallerSlot*>(&this->renderViewSlot)->CallAs<Call>();
     if ((c == NULL) || (c->PeekCalleeSlot() == NULL)) return NULL;
     return const_cast<view::AbstractView*>(
-        dynamic_cast<const view::AbstractView*>(c->PeekCalleeSlot()->Parent()));
+        dynamic_cast<const view::AbstractView*>(c->PeekCalleeSlot()->Parent().get()));
 }
 
 

@@ -18,7 +18,7 @@ using namespace megamol::core;
 /*
  * view::AnimDataModule::AnimDataModule
  */
-view::AnimDataModule::AnimDataModule(void) : frameCnt(0),
+view::AnimDataModule::AnimDataModule(void) : Module(), frameCnt(0),
         loader(loaderFunction), frameCache(NULL), cacheSize(0),
         stateLock(), lastRequested(0) {
     this->isRunning.store(false);

@@ -256,7 +256,7 @@ namespace plugins {
          *
          * @return The newly created view object or 'NULL' in case of an error.
          */
-        ViewInstance * InstantiatePendingView(void);
+        ViewInstance::ptr_type InstantiatePendingView(void);
 
         /**
          * Instantiates a view description filled with full names! This method
@@ -271,7 +271,7 @@ namespace plugins {
          *
          * @return The newly created job object or 'NULL' in case of an error.
          */
-        JobInstance * InstantiatePendingJob(void);
+        JobInstance::ptr_type InstantiatePendingJob(void);
 
         /**
          * Returns a pointer to the parameter with the given name.
@@ -342,7 +342,7 @@ namespace plugins {
          */
         inline void EnumParameters(mmcEnumStringAFunction func, void *data)
                 const {
-            this->enumParameters(&this->namespaceRoot, func, data);
+            this->enumParameters(this->namespaceRoot, func, data);
         }
 
         /**
@@ -356,7 +356,7 @@ namespace plugins {
          */
         inline vislib::StringA FindParameterName(
                 const vislib::SmartPtr<param::AbstractParam>& param) const {
-            return this->findParameterName(&this->namespaceRoot, param);
+            return this->findParameterName(this->namespaceRoot, param);
         }
 
         /**
@@ -387,7 +387,7 @@ namespace plugins {
          *
          * @param obj The object to be removed from the module namespace.
          */
-        inline void CloseViewJob(ModuleNamespace *obj) {
+        inline void CloseViewJob(ModuleNamespace::ptr_type obj) {
             this->closeViewJob(obj);
         }
 
@@ -474,8 +474,8 @@ namespace plugins {
          *
          * @return The root object of the module graph
          */
-        inline const RootModuleNamespace * ModuleGraphRoot(void) const {
-            return &this->namespaceRoot;
+        inline RootModuleNamespace::const_ptr_type ModuleGraphRoot(void) const {
+            return this->namespaceRoot;
         }
 
         /**
@@ -699,7 +699,7 @@ namespace plugins {
          *
          * @return The new module or 'NULL' in case of an error
          */
-        Module* instantiateModule(const vislib::StringA path,
+        Module::ptr_type instantiateModule(const vislib::StringA path,
             factories::ModuleDescription::ptr desc);
 
         /**
@@ -711,7 +711,7 @@ namespace plugins {
          * @param data The user specified pointer to be passed to the callback
          *             function.
          */
-        void enumParameters(const ModuleNamespace* path,
+        void enumParameters(ModuleNamespace::const_ptr_type path,
             mmcEnumStringAFunction func, void *data) const;
 
         /**
@@ -724,7 +724,7 @@ namespace plugins {
          * @return The full name of the parameter, or an empty string if the
          *         parameter is not found
          */
-        vislib::StringA findParameterName(const ModuleNamespace* path,
+        vislib::StringA findParameterName(ModuleNamespace::const_ptr_type path,
             const vislib::SmartPtr<param::AbstractParam>& param) const;
 
         /**
@@ -733,7 +733,7 @@ namespace plugins {
          *
          * @param obj The object to be removed from the module namespace.
          */
-        void closeViewJob(ModuleNamespace *obj);
+        void closeViewJob(ModuleNamespace::ptr_type obj);
 
         /**
          * Apply parameters from configuration file
@@ -830,7 +830,7 @@ namespace plugins {
         vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
 
         /** The module namespace root */
-        RootModuleNamespace namespaceRoot;
+        RootModuleNamespace::ptr_type namespaceRoot;
 
         /** the time offset */
         double timeOffset;

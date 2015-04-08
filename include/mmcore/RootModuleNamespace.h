@@ -25,12 +25,58 @@
 namespace megamol {
 namespace core {
 
+    class RootModuleNamespace;
+
+} /* end namespace core */
+} /* end namespace megamol */
+
+namespace std {
+
+    // dll-export of std-type instantiations
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < ::megamol::core::RootModuleNamespace >;
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < const ::megamol::core::RootModuleNamespace >;
+
+}
+
+namespace megamol {
+namespace core {
+
 
     /**
      * Class represents the root namespace for the module namespace
      */
     class MEGAMOLCORE_API RootModuleNamespace: public ModuleNamespace {
     public:
+
+        /** Type alias for containers */
+        typedef std::shared_ptr< RootModuleNamespace > ptr_type;
+
+        /** Type alias for containers */
+        typedef std::shared_ptr< const RootModuleNamespace > const_ptr_type;
+
+        /**
+         * Utility function to dynamically cast to a shared_ptr of this type
+         *
+         * @param p The shared pointer to cast from
+         *
+         * @return A shared pointer of this type
+         */
+        template<class T>
+        inline static ptr_type dynamic_pointer_cast(std::shared_ptr<T> p) {
+            return std::dynamic_pointer_cast<RootModuleNamespace, T>(p);
+        }
+
+        /**
+         * Utility function to dynamically cast to a shared_ptr of this type
+         *
+         * @param p The shared pointer to cast from
+         *
+         * @return A shared pointer of this type
+         */
+        template<class T>
+        inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
+            return std::dynamic_pointer_cast<const RootModuleNamespace, const T>(p);
+        }
 
         /**
          * Ctor.
@@ -62,7 +108,7 @@ namespace core {
          *
          * @return The requested namespace or 'NULL' in case of an error.
          */
-        ModuleNamespace * FindNamespace(const vislib::Array<vislib::StringA>& path,
+        ModuleNamespace::ptr_type FindNamespace(const vislib::Array<vislib::StringA>& path,
             bool createMissing, bool quiet = false);
 
         /**

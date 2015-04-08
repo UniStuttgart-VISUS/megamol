@@ -38,23 +38,24 @@ ViewInstance::~ViewInstance(void) {
 /*
  * ViewInstance::Initialize
  */
-bool ViewInstance::Initialize(ModuleNamespace *ns, view::AbstractView *view) {
+bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *view) {
     VLSTACKTRACE("Initialize", __FILE__, __LINE__);
     if ((this->view != NULL) || (ns == NULL) || (view == NULL)) {
         return false;
     }
 
+    // this replaces the namespace object ns with this new view instance object
+
     AbstractNamedObject::GraphLocker locker(ns, true);
     vislib::sys::AutoLock lock(locker);
 
-    ModuleNamespace *p = dynamic_cast<ModuleNamespace*>(ns->Parent());
-    if (p == NULL) {
+    ModuleNamespace::ptr_type p = ModuleNamespace::dynamic_pointer_cast(ns->Parent());
+    if (!p) {
         return false;
     }
 
-    AbstractNamedObjectContainer::ChildList::Iterator iter = ns->GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *ano = iter.Next();
+    while (ns->ChildList_Begin() != ns->ChildList_End())  {
+        AbstractNamedObject::ptr_type ano = *ns->ChildList_Begin();
         ns->RemoveChild(ano);
         this->AddChild(ano);
     }
@@ -62,10 +63,10 @@ bool ViewInstance::Initialize(ModuleNamespace *ns, view::AbstractView *view) {
     this->setName(ns->Name());
 
     p->RemoveChild(ns);
-    p->AddChild(this);
+    p->AddChild(this->shared_from_this());
 
     ASSERT(ns->Parent() == NULL);
-    ASSERT(!ns->GetChildIterator().HasNext());
+    ASSERT(ns->ChildList_Begin() == ns->ChildList_End());
 
     this->view = view;
 

@@ -1,7 +1,7 @@
 /*
  * AbstractNamedObject.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -15,24 +15,50 @@
 #include "vislib/String.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/sys/AbstractReaderWriterLock.h"
-#include "vislib/SmartPtr.h"
 #include "vislib/SingleLinkedList.h"
+#include "vislib/SmartPtr.h"
 #include "vislib/sys/SyncObject.h"
-//#include "mmcore/CoreInstance.h"
+#include <memory>
 
 
 namespace megamol {
 namespace core {
 
+    // forward declarations of types
+    class AbstractNamedObject;
     class CoreInstance;
+    class AbstractNamedObjectContainer;
 
+}
+}
+
+namespace std {
+
+    // dll-export of std-type instantiations
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API weak_ptr < ::megamol::core::AbstractNamedObject >;
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < ::megamol::core::AbstractNamedObject >;
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API enable_shared_from_this < ::megamol::core::AbstractNamedObject >;
+
+}
+
+namespace megamol {
+namespace core {
 
     /**
      * Abstract base class for object placed in the module network namespaces
      */
-    class MEGAMOLCORE_API AbstractNamedObject {
+    class MEGAMOLCORE_API AbstractNamedObject : public std::enable_shared_from_this<AbstractNamedObject> {
     public:
-        friend class AbstractNamedObjectContainer;
+        friend class ::megamol::core::AbstractNamedObjectContainer;
+
+        /** Shared ptr type alias */
+        typedef ::std::shared_ptr<AbstractNamedObject> ptr_type;
+
+        /** Shared ptr type alias */
+        typedef ::std::shared_ptr<const AbstractNamedObject> const_ptr_type;
+
+        /** Weak ptr type alias */
+        typedef ::std::weak_ptr<AbstractNamedObject> weak_ptr_type;
 
         /**
          * Utility class
@@ -46,7 +72,7 @@ namespace core {
              * @param obj Any object from the module graph
              * @param writelock Flag if a write lock is required
              */
-            GraphLocker(const AbstractNamedObject *obj, bool writelock);
+            GraphLocker(AbstractNamedObject::const_ptr_type obj, bool writelock);
 
             /**
              * Dtor.
@@ -73,7 +99,7 @@ namespace core {
             bool writelock;
 
             /** The root object of the graph */
-            const AbstractNamedObject *root;
+            AbstractNamedObject::const_ptr_type root;
 
         };
 
@@ -112,8 +138,8 @@ namespace core {
          *
          * @return The parent of the object.
          */
-        inline AbstractNamedObject* Parent(void) {
-            return this->parent;
+        inline ptr_type Parent(void) {
+            return this->parent.lock();
         }
 
         /**
@@ -121,8 +147,8 @@ namespace core {
          *
          * @return The parent of the object.
          */
-        inline const AbstractNamedObject* Parent(void) const {
-            return this->parent;
+        inline const const_ptr_type Parent(void) const {
+            return this->parent.lock();
         }
 
         /**
@@ -130,10 +156,14 @@ namespace core {
          *
          * @return The root of the module graph
          */
-        inline AbstractNamedObject *RootModule(void) {
-            AbstractNamedObject *rv = this;
-            while (rv->parent != NULL) rv = rv->parent;
-            return rv;
+        inline ptr_type RootModule(void) {
+            ptr_type rv = this->shared_from_this();
+            ptr_type lrv = rv;
+            while (rv) {
+                lrv = rv;
+                rv = rv->parent.lock();
+            }
+            return lrv;
         }
 
         /**
@@ -141,10 +171,14 @@ namespace core {
          *
          * @return The root of the module graph
          */
-        inline const AbstractNamedObject *RootModule(void) const {
-            const AbstractNamedObject *rv = this;
-            while (rv->parent != NULL) rv = rv->parent;
-            return rv;
+        inline const const_ptr_type RootModule(void) const {
+            const_ptr_type rv = this->shared_from_this();
+            const_ptr_type lrv = rv;
+            while (rv) {
+                lrv = rv;
+                rv = rv->parent.lock();
+            }
+            return lrv;
         }
 
         /**
@@ -225,7 +259,8 @@ namespace core {
          * @return The core instance of this named object
          */
         virtual CoreInstance* GetCoreInstance(void) const {
-            return (this->parent != nullptr) ? this->parent->GetCoreInstance() : nullptr;
+            const_ptr_type p = this->parent.lock();
+            return p ? p->GetCoreInstance() : nullptr;
         }
 
     protected:
@@ -258,7 +293,7 @@ namespace core {
          *
          * @param parent The new parent for the object.
          */
-        void setParent(AbstractNamedObject *parent);
+        void setParent(weak_ptr_type parent);
 
     private:
 #ifdef _WIN32
@@ -271,7 +306,7 @@ namespace core {
 #endif /* _WIN32 */
 
         /** The parent of the object. Weak reference, do not delete. */
-        AbstractNamedObject *parent;
+        weak_ptr_type parent;
 
         /** The identification of the owner of the object */
         const void *owner;

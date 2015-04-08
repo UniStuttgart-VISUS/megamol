@@ -47,7 +47,7 @@ namespace core {
          *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialize(ModuleNamespace *ns, view::AbstractView *view);
+        bool Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *view);
 
         /**
          * Gets the view object encapsuled by this instance.

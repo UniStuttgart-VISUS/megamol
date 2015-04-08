@@ -14,7 +14,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/String.h"
@@ -226,7 +226,7 @@ namespace moldyn {
     };
 
     /** Description class typedef */
-    typedef megamol::core::CallAutoDescription<BindingSiteCall> BindingSiteCallDescription;
+    typedef megamol::core::factories::CallAutoDescription<BindingSiteCall> BindingSiteCallDescription;
 
 } /* end namespace moldyn */
 } /* end namespace core */

@@ -1,7 +1,7 @@
 /*
  * Module.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
@@ -50,6 +50,10 @@ bool Module::Create(void) {
             "%s module \"%s\"\n", ((this->created) ? "Created"
             : "Failed to create"), typeid(*this).name());
     }
+    if (this->created) {
+        // Now reregister parents at children
+        this->fixParentBackreferences();
+    }
     return this->created;
 }
 
@@ -58,9 +62,11 @@ bool Module::Create(void) {
  * Module::FindSlot
  */
 AbstractSlot * Module::FindSlot(const vislib::StringA& name) {
-    ChildList::Iterator iter = this->getChildIterator();
-    while (iter.HasNext()) {
-        AbstractSlot* slot = dynamic_cast<AbstractSlot*>(iter.Next());
+    child_list_type::iterator iter, end;
+    iter = this->ChildList_Begin();
+    end = this->ChildList_End();
+    for (; iter != end; ++iter) {
+        AbstractSlot* slot = dynamic_cast<AbstractSlot*>(iter->get());
         if (slot == NULL) continue;
         if (slot->Name().Equals(name, false)) {
             return slot;
@@ -74,9 +80,9 @@ AbstractSlot * Module::FindSlot(const vislib::StringA& name) {
  * Module::GetDemiRootName
  */
 vislib::StringA Module::GetDemiRootName() const {
-    const Module *tm = this;
-    while (tm->Parent() != NULL && !tm->Parent()->Name().IsEmpty()) {
-        tm = static_cast<const Module *>(tm->Parent());
+    AbstractNamedObject::const_ptr_type tm = this->shared_from_this();
+    while (tm->Parent() && !tm->Parent()->Name().IsEmpty()) {
+        tm = tm->Parent();
     }
     return tm->Name();
 }
@@ -103,13 +109,17 @@ void Module::ClearCleanupMark(void) {
     if (!this->CleanupMark()) return;
 
     AbstractNamedObject::ClearCleanupMark();
-    ChildList::Iterator iter = this->GetChildIterator();
-    while (iter.HasNext()) {
-        iter.Next()->ClearCleanupMark();
+
+    child_list_type::iterator iter, end;
+    iter = this->ChildList_Begin();
+    end = this->ChildList_End();
+    for (; iter != end; ++iter) {
+        (*iter)->ClearCleanupMark();
     }
 
-    if (this->Parent() != NULL){
-        this->Parent()->ClearCleanupMark();
+    AbstractNamedObject::ptr_type p = this->Parent();
+    if (p) {
+        p->ClearCleanupMark();
     }
 }
 
@@ -124,19 +134,14 @@ void Module::PerformCleanup(void) {
 
     if (!this->CleanupMark()) return;
 
-    ChildList::Iterator iter;
-    AbstractNamedObject *c;
-
-    // just remove the pointers, so nobody gets confused
-    do {
-        iter = this->getChildIterator();
-        if (iter.HasNext()) {
-            c = iter.Next();
-            this->removeChild(c);
-        } else {
-            c = NULL;
-        }
-    } while (c != NULL);
+    // clear list of children
+    child_list_type::iterator b, e;
+    while(true) {
+        b = this->ChildList_Begin();
+        e = this->ChildList_End();
+        if (b == e) break;
+        this->removeChild(*b);
+    }
 
 }
 
@@ -180,7 +185,7 @@ void Module::MakeSlotAvailable(AbstractSlot *slot) {
             "A slot with this name is already registered",
             __FILE__, __LINE__);
     }
-    this->addChild(slot);
+    this->addChild(::std::shared_ptr<AbstractNamedObject>(slot, [](AbstractNamedObject* d){}));
     slot->SetOwner(this);
     slot->MakeAvailable();
 }

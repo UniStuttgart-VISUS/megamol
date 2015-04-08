@@ -34,7 +34,7 @@ JobInstance::~JobInstance(void) {
 /*
  * JobInstance::Initialize
  */
-bool JobInstance::Initialize(ModuleNamespace *ns, job::AbstractJob *job) {
+bool JobInstance::Initialize(ModuleNamespace::ptr_type ns, job::AbstractJob *job) {
     if ((this->job != NULL) || (ns == NULL) || (job == NULL)) {
         return false;
     }
@@ -42,14 +42,13 @@ bool JobInstance::Initialize(ModuleNamespace *ns, job::AbstractJob *job) {
     AbstractNamedObject::GraphLocker locker(ns, true);
     vislib::sys::AutoLock lock(locker);
 
-    ModuleNamespace *p = dynamic_cast<ModuleNamespace*>(ns->Parent());
+    ModuleNamespace::ptr_type p = ModuleNamespace::dynamic_pointer_cast(ns->Parent());
     if (p == NULL) {
         return false;
     }
 
-    AbstractNamedObjectContainer::ChildList::Iterator iter = ns->GetChildIterator();
-    while (iter.HasNext()) {
-        AbstractNamedObject *ano = iter.Next();
+    while (ns->ChildList_Begin() != ns->ChildList_End()) {
+        AbstractNamedObject::ptr_type ano = *ns->ChildList_Begin();
         ns->RemoveChild(ano);
         this->AddChild(ano);
     }
@@ -57,10 +56,10 @@ bool JobInstance::Initialize(ModuleNamespace *ns, job::AbstractJob *job) {
     this->setName(ns->Name());
 
     p->RemoveChild(ns);
-    p->AddChild(this);
+    p->AddChild(this->shared_from_this());
 
     ASSERT(ns->Parent() == NULL);
-    ASSERT(!ns->GetChildIterator().HasNext());
+    ASSERT(ns->ChildList_Begin() == ns->ChildList_End());
 
     this->job = job;
     // Job must be started AFTER setting the parameter values

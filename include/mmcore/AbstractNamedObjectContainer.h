@@ -1,7 +1,7 @@
 /*
  * AbstractNamedObjectContainer.h
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -13,9 +13,26 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractNamedObject.h"
-#include "vislib/ConstIterator.h"
-#include "vislib/SingleLinkedList.h"
+#include <list>
+#include <memory>
 
+
+namespace megamol {
+namespace core {
+
+    class AbstractNamedObjectContainer;
+
+} /* end namespace core */
+} /* end namespace megamol */
+
+namespace std {
+
+    // dll-export of std-type instantiations
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API list < ::megamol::core::AbstractNamedObject::ptr_type >;
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < ::megamol::core::AbstractNamedObjectContainer >;
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < const ::megamol::core::AbstractNamedObjectContainer >;
+
+}
 
 namespace megamol {
 namespace core {
@@ -27,8 +44,38 @@ namespace core {
     class MEGAMOLCORE_API AbstractNamedObjectContainer: public AbstractNamedObject {
     public:
 
+        /** Type alias for containers */
+        typedef std::shared_ptr< AbstractNamedObjectContainer > ptr_type;
+
+        /** Type alias for containers */
+        typedef std::shared_ptr< const AbstractNamedObjectContainer > const_ptr_type;
+
         /** Type of single linked list of children. */
-        typedef vislib::SingleLinkedList<AbstractNamedObject*> ChildList;
+        typedef std::list<AbstractNamedObject::ptr_type> child_list_type;
+
+        /**
+         * Utility function to dynamically cast to a shared_ptr of this type
+         *
+         * @param p The shared pointer to cast from
+         *
+         * @return A shared pointer of this type
+         */
+        template<class T>
+        inline static ptr_type dynamic_pointer_cast(std::shared_ptr<T> p) {
+            return std::dynamic_pointer_cast<AbstractNamedObjectContainer, T>(p);
+        }
+
+        /**
+         * Utility function to dynamically cast to a shared_ptr of this type
+         *
+         * @param p The shared pointer to cast from
+         *
+         * @return A shared pointer of this type
+         */
+        template<class T>
+        inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
+            return std::dynamic_pointer_cast<const AbstractNamedObjectContainer, const T>(p);
+        }
 
         /**
          * Dtor.
@@ -42,7 +89,7 @@ namespace core {
          *
          * @param child The child to be added.
          */
-        inline void AddChild(AbstractNamedObject *child) {
+        inline void AddChild(AbstractNamedObject::ptr_type child) {
             this->addChild(child);
         }
 
@@ -51,7 +98,7 @@ namespace core {
          *
          * @param child The child to be removed.
          */
-        inline void RemoveChild(AbstractNamedObject *child) {
+        inline void RemoveChild(AbstractNamedObject::ptr_type child) {
             this->removeChild(child);
         }
 
@@ -62,7 +109,7 @@ namespace core {
          *
          * @return The found child or NULL if there is no child with this name.
          */
-        inline AbstractNamedObject *FindChild(const vislib::StringA& name) {
+        inline AbstractNamedObject::ptr_type FindChild(const vislib::StringA& name) {
             return this->findChild(name);
         }
 
@@ -74,25 +121,42 @@ namespace core {
          *
          * @return The found object or NULL if no module matches
          */
-        AbstractNamedObject *FindNamedObject(const char *name, bool forceRooted = false);
+        AbstractNamedObject::ptr_type FindNamedObject(const char *name, bool forceRooted = false);
 
         /**
-         * Answer an iterator of the children.
+         * Answer an interator to the first child
          *
-         * @return An iterator of the children.
+         * @return An iterator to the first child
          */
-        inline ChildList::Iterator GetChildIterator(void) {
-            return this->getChildIterator();
+        inline child_list_type::iterator ChildList_Begin() {
+            return this->children.begin();
         }
 
         /**
-         * Answer a const iterator of the children.
+         * Answer an interator to the first child
          *
-         * @return A const iterator of the children.
+         * @return An iterator to the first child
          */
-        inline vislib::ConstIterator<ChildList::Iterator>
-        GetConstChildIterator(void) const {
-            return this->getConstChildIterator();
+        inline child_list_type::const_iterator ChildList_Begin() const {
+            return this->children.begin();
+        }
+
+        /**
+         * Answer an iterator behind the last child
+         *
+         * @return An iterator behind the last child
+         */
+        inline child_list_type::iterator ChildList_End() {
+            return this->children.end();
+        }
+
+        /**
+         * Answer an iterator behind the last child
+         *
+         * @return An iterator behind the last child
+         */
+        inline child_list_type::const_iterator ChildList_End() const {
+            return this->children.end();
         }
 
         /**
@@ -137,29 +201,14 @@ namespace core {
          *
          * @param child The child to be added.
          */
-        void addChild(AbstractNamedObject *child);
+        void addChild(AbstractNamedObject::ptr_type child);
 
         /**
          * Removes a child from the list of children.
          *
          * @param child The child to be removed.
          */
-        void removeChild(AbstractNamedObject *child);
-
-        /**
-         * Answer an iterator of the children.
-         *
-         * @return An iterator of the children.
-         */
-        ChildList::Iterator getChildIterator(void);
-
-        /**
-         * Answer a const iterator of the children.
-         *
-         * @return A const iterator of the children.
-         */
-        vislib::ConstIterator<ChildList::Iterator>
-        getConstChildIterator(void) const;
+        void removeChild(AbstractNamedObject::ptr_type child);
 
         /**
          * Finds the child with the given name.
@@ -168,20 +217,19 @@ namespace core {
          *
          * @return The found child or NULL if there is no child with this name.
          */
-        AbstractNamedObject *findChild(const vislib::StringA& name);
+        AbstractNamedObject::ptr_type findChild(const vislib::StringA& name);
+
+        /**
+         * Ensures that all children correctly reference their parent
+         */
+        void fixParentBackreferences(void);
 
     private:
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
+
         /** The children of the container */
-        ChildList children;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
+        child_list_type children;
 
     };
-
 
 } /* end namespace core */
 } /* end namespace megamol */

@@ -556,7 +556,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,
     if (megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView) != NULL) return false;
 
-    megamol::core::ViewInstance *view = core->InstantiatePendingView();
+    megamol::core::ViewInstance *view = dynamic_cast<megamol::core::ViewInstance*>(core->InstantiatePendingView().get());
     if (view == NULL) return false;
 
     if (megamol::core::ApiHandle::CreateHandle(hView, view)) {
@@ -596,7 +596,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
     if (megamol::core::ApiHandle::InterpretHandle<
         megamol::core::JobInstance>(hJob) != NULL) return false;
 
-    megamol::core::JobInstance *job = core->InstantiatePendingJob();
+    megamol::core::JobInstance *job = dynamic_cast<megamol::core::JobInstance*>(core->InstantiatePendingJob().get());
     if (job == NULL) return false;
 
     if (megamol::core::ApiHandle::CreateHandle(hJob, job)) {

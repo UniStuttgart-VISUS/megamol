@@ -196,8 +196,8 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
     if (this->viewState == ViewState::CREATED) {
         this->viewState = ViewState::LAZY_INITIALISED;
         this->initTileViewParameters();
-        AbstractNamedObject *ano = this;
-        while (ano != nullptr) {
+        AbstractNamedObject::ptr_type ano = this->shared_from_this();
+        while (ano) {
             if (this->loadConfiguration(ano->Name())) break;
             ano = ano->Parent();
         }
@@ -345,8 +345,8 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
                         name.Substring(pos + 1));
                     name.Truncate(pos);
                     ////Log::DefaultLog.WriteInfo("Setting Parameter %s to %s\n", name.PeekBuffer(), vislib::StringA(value).PeekBuffer());
-                    param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(
-                        this->FindNamedObject(name, true));
+                    AbstractNamedObject::ptr_type psp = this->FindNamedObject(name, true);
+                    param::ParamSlot *ps = dynamic_cast<param::ParamSlot*>(psp.get());
                     if (ps != nullptr) {
                         ps->Param<param::AbstractParam>()->ParseValue(value);
                     }

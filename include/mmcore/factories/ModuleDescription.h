@@ -14,13 +14,13 @@
 #include "mmcore/factories/ObjectDescription.h"
 #include "vislib/String.h"
 #include <memory>
+#include "mmcore/Module.h"
 
 namespace megamol {
 namespace core {
 
     /** forward declaration */
     class CoreInstance;
-    class Module;
 
 namespace factories {
 
@@ -54,7 +54,7 @@ namespace factories {
          * @return The newly created module object or 'NULL' in case of an
          *         error.
          */
-        Module *CreateModule(const vislib::StringA& name) const;
+        Module::ptr_type CreateModule(const vislib::StringA& name) const;
 
         /**
          * Gets a human readable description of the module.
@@ -159,7 +159,7 @@ namespace factories {
          * @return The newly created module object or 'NULL' in case of an
          *         error.
          */
-        virtual Module *createModuleImpl(void) const = 0;
+        virtual Module::ptr_type createModuleImpl(void) const = 0;
 
     };
 
