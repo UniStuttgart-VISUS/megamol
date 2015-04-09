@@ -78,8 +78,7 @@ list(REMOVE_ITEM source_files
 	)
 include_directories("include" "src")
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/linux)
-
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/linux)
 # Target definition
 add_library(vislib STATIC ${header_files} ${source_files})
 # Set target naming conventions for different build types

@@ -5,8 +5,31 @@ if ("${CURRENT_BUILD_TYPE}" STREQUAL "")
 	set(CURRENT_BUILD_TYPE "Release")
 endif()
 
+# check build type
 if (NOT "${CURRENT_BUILD_TYPE}" STREQUAL "${MY_BUILD_TYPE}")
-	set(PACKAGE_VERSION_COMPATIBLE False)
-	set(PACKAGE_VERSION_UNSUITABLE True) 
+	# wrong build type
+	# search if there is another package matching
+	if (NOT vislibConfigVersionSecondPass@cfg_CMAKE_BUILD_TYPE@)
+		set(vislibConfigVersionSecondPass@cfg_CMAKE_BUILD_TYPE@ "X")
+		# 1. pass
+		# search for alternative package
+		find_package(vislib QUIET)
+		if (NOT vislib_FOUND)
+			# there is no matching package
+			# So I am acceptable
+			set(PACKAGE_VERSION_COMPATIBLE True)
+			set(PACKAGE_VERSION_UNSUITABLE False) 
+		endif()
+	else()
+		# 2. pass
+		# I do not match
+		set(PACKAGE_VERSION_COMPATIBLE False)
+		set(PACKAGE_VERSION_UNSUITABLE True) 
+	endif()
+else()
+	# correct build type!
+	# I do match
+	set(PACKAGE_VERSION_COMPATIBLE True)
+	set(PACKAGE_VERSION_UNSUITABLE False) 
 endif()
 
