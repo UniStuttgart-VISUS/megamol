@@ -22,7 +22,8 @@ invoke_make_install=0
 invoke_default=1
 cmake_extra_cmd=
 build_tests=0
-on_register_build_trees=0
+no_register_build_trees=0
+make_jobs=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 # be proud of yourself
 echo
@@ -33,7 +34,7 @@ echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcmintC:" opt; do
+while getopts "hp:dDcmj:intC:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -44,6 +45,7 @@ while getopts "hp:dDcmintC:" opt; do
     echo "  -c    (cmake) invokes 'cmake'. This also deletes all files and subdirectories which might be present in the build tree subdirectory"
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
+    echo "  -j XX (jobs) the number of parallel make jobs to be started (Similar to 'make -j XX'). The default value is the number of cores of your system are returned by ''."
     echo "  -i    (install) invokes 'make install'"
     echo "  -n    (not register) Tells cmake to *not* register the cmake build tree results in the user package repository, making them *not* available for find_package commands"
     echo "  -t    (tests) also builds the vislib test applications"
@@ -89,6 +91,9 @@ while getopts "hp:dDcmintC:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make=1
     ;;
+  j)
+    make_jobs=$OPTARG
+    ;;
   i)
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
@@ -117,6 +122,10 @@ if [ $build_tests -eq 1 ] ; then cmake_cmd="$cmake_cmd -DVISLIB_BUILD_TESTS=1"; 
 if [ $no_register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dno_register_build_trees=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 
+# prepare command line for make
+make_cmd=""
+if [ $make_jobs -gt 1 ] ; then make_cmd="$make_cmd -j$make_jobs"; fi
+
 # debug output of settings
 #echo "Specified settings:"
 #echo "  install_prefix=$install_prefix"
@@ -127,6 +136,10 @@ cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 #echo "  invoke_make_install=$invoke_make_install"
 #echo "  invoke_default=$invoke_default"
 #echo "  cmake_cmd=$cmake_cmd"
+
+if [ $build_release -eq 1 ] || [ $build_debug -eq 1 ] ; then
+  rm -rf "3rd/glload/build"
+fi
 
 if [ $build_release -eq 1 ] ; then
   echo "Building release"
@@ -141,9 +154,9 @@ if [ $build_release -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then
@@ -167,9 +180,9 @@ if [ $build_debug -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then

@@ -130,7 +130,7 @@ configure_file(cmake/vislibConfigLocal.cmake.in ${CMAKE_BINARY_DIR}/vislibConfig
 # Configure our local version script
 configure_file(cmake/vislibConfigVersion.cmake.in ${CMAKE_BINARY_DIR}/vislibConfigVersion.cmake @ONLY)
 export(TARGETS vislib FILE ${CMAKE_BINARY_DIR}/vislib-target.cmake)
-if (NOT ${no_register_build_trees})
+if (NOT ${no_register_build_trees} EQUAL 1)
 	# Register exported build tree as package
 	# This makes it possible to include this package without installing.
 	# Also place a version config file for cmake to decide whether to take
