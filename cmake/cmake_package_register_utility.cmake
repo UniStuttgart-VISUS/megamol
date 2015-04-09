@@ -41,7 +41,7 @@ function(vislibutil_prepare_cmake_package_user_repository
 
 	# create a temp file in the built tree holding the installation path
 	set(tmp_file_name "${CMAKE_CURRENT_BINARY_DIR}/inst_tmp")
-	file(WRITE ${tmp_file_name} "${package_install_dir}")
+	file(WRITE ${tmp_file_name} "${package_install_dir}\n")
 	# compute a content hash to be the files final name
 	file(MD5 ${tmp_file_name} package_registry_hash)
 	set(reg_file_name "${CMAKE_CURRENT_BINARY_DIR}/${package_registry_hash}")

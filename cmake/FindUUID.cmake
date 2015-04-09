@@ -26,8 +26,16 @@ else()
   set(UUID_LIBRARY_VAR uuid)
 endif()
 
+set(lib_search_hints)
+set(inc_search_hints)
+if (UUID_DIR)
+	list(APPEND lib_search_hints "${UUID_DIR}" "${UUID_DIR}/lib")
+	list(APPEND inc_search_hints "${UUID_DIR}" "${UUID_DIR}/include")
+endif()
+
 find_library(UUID_LIBRARY
   NAMES ${UUID_LIBRARY_VAR}
+  HINTS ${lib_search_hints}
   PATHS /lib /usr/lib /usr/local/lib
   )
 
@@ -35,10 +43,11 @@ find_library(UUID_LIBRARY
 set(CMAKE_FIND_FRAMEWORK_SAVE ${CMAKE_FIND_FRAMEWORK})
 set(CMAKE_FIND_FRAMEWORK NEVER)
 
-find_path(UUID_INCLUDE_DIR uuid/uuid.h
-/usr/local/include
-/usr/include
-)
+find_path(UUID_INCLUDE_DIR
+  NAMES uuid/uuid.h
+  HINTS ${inc_search_hints}
+  PATHS /usr/local/include /usr/include
+  )
 
 if (UUID_LIBRARY AND UUID_INCLUDE_DIR)
   set(UUID_LIBRARIES ${UUID_LIBRARY})
