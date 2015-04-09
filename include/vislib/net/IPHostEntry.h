@@ -173,15 +173,18 @@ namespace net {
             socklen_t size = (ep.GetAddressFamily() == IPEndPoint::FAMILY_INET)
                 ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
             if ((err = ::getnameinfo(static_cast<const sockaddr *>(ep), size,
-                buffer, sizeof(buffer), NULL, 0, NI_NAMEREQD)) != 0) {
-                    VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
-                        "IPHostEntry::fixHostName(): %s\n",
+                    buffer, sizeof(buffer), NULL, 0, NI_NAMEREQD)) != 0) {
+#ifdef VISLIBLOCAL_GAI_STRERROR
+#error VISLIBLOCAL_GAI_STRERROR already defined
+#endif
 #ifdef _WIN32
-                    ::gai_strerrorA(err)
+#define VISLIBLOCAL_GAI_STRERROR ::gai_strerrorA(err)
 #else /* _WIN32 */
-                    ::gai_strerror(err)
+#define VISLIBLOCAL_GAI_STRERROR ::gai_strerror(err)
 #endif /* _WIN32 */
-                );
+                VLTRACE(Trace::LEVEL_VL_ERROR, "::getnameinfo failed in "
+                    "IPHostEntry::fixHostName(): %s\n", VISLIBLOCAL_GAI_STRERROR );
+#undef VISLIBLOCAL_GAI_STRERROR
                 buffer[0] = 0;
             }
 
