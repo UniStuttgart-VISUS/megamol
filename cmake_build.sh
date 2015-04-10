@@ -2,7 +2,7 @@
 #
 # MegaMol Core
 # building utilty script
-# Copyright 2015 by MegaMol Consortium
+# Copyright 2015 by MegaMol Team
 # All rights reserved
 #
 #  use '-h' for help
@@ -22,18 +22,19 @@ invoke_make_install=0
 invoke_default=1
 cmake_extra_cmd=
 vislib_DIR=
-register_build_trees=0
+no_register_build_trees=0
+make_jobs=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 # be proud of yourself
 echo
 echo "  MegaMol(TM) Core"
 echo "  cmake_build.sh utilty script"
-echo "  Copyright 2015, by MegaMol Consortium"
+echo "  Copyright 2015, by MegaMol Team"
 echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcC:mirv:" opt; do
+while getopts "hp:dDcC:mj:inv:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -44,8 +45,9 @@ while getopts "hp:dDcC:mirv:" opt; do
     echo "  -c    (cmake) invokes 'cmake'. This also deletes all files and subdirectories which might be present in the build tree subdirectory"
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
+    echo "  -j XX (jobs) the number of parallel make jobs to be started (Similar to 'make -j XX'). The default value is the number of cores of your system are returned by ''."
     echo "  -i    (install) invokes 'make install'"
-    echo "  -r    (register) registers the cmake build tree results in the user package repository, making them available for find_package commands"
+    echo "  -n    (not register) Tells cmake to *not* register the cmake build tree results in the user package repository, making them *not* available for find_package commands"
     echo "  -v XX (vislib) specifies an optional hint in which directory the vislib is located"
     echo
     echo "Default behavior (when no arguments are given):"
@@ -89,12 +91,15 @@ while getopts "hp:dDcC:mirv:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make=1
     ;;
+  j)
+    make_jobs=$OPTARG
+    ;;
   i)
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
     ;;
-  r)
-    register_build_trees=1
+  n)
+    no_register_build_trees=1
     ;;
   v)
     vislib_DIR=$OPTARG
@@ -114,8 +119,12 @@ done
 cmake_cmd=""
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
 if [ $vislib_DIR ] ; then cmake_cmd="$cmake_cmd -Dvislib_DIR=$vislib_DIR"; fi
-if [ $register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dregister_build_trees=1"; fi
+if [ $no_register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dno_register_build_trees=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
+
+# prepare command line for make
+make_cmd=""
+if [ $make_jobs -gt 1 ] ; then make_cmd="$make_cmd -j$make_jobs"; fi
 
 # debug output of settings
 #echo "Specified settings:"
@@ -142,9 +151,9 @@ if [ $build_release -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then
@@ -168,9 +177,9 @@ if [ $build_debug -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then

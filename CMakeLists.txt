@@ -14,7 +14,13 @@ endif()
 
 
 # search for 3rd party libs
-find_package(vislib REQUIRED HINTS ${vislib_DIR})
+set(vislib_search_hints)
+if (vislib_DIR)
+	string(TOLOWER "${CMAKE_BUILD_TYPE}" lower_build_type)
+	list(APPEND vislib_search_hints ${vislib_DIR} "${vislib_DIR}/build.${lower_build_type}")
+	message(STATUS "Looking for vislib with hints: ${vislib_search_hints}")
+endif()
+find_package(vislib REQUIRED HINT ${vislib_search_hints})
 set(CMAKE_THREAD_PREFER_PTHREAD)
 find_package(Threads REQUIRED)
 find_package(EXPAT REQUIRED)
@@ -157,7 +163,7 @@ configure_file(cmake/MegaMolCoreConfigLocal.cmake.in ${CMAKE_BINARY_DIR}/MegaMol
 # Configure our local version script
 configure_file(cmake/MegaMolCoreConfigVersion.cmake.in ${CMAKE_BINARY_DIR}/MegaMolCoreConfigVersion.cmake @ONLY)
 export(TARGETS MegaMolCore FILE ${CMAKE_BINARY_DIR}/MegaMolCore-target.cmake)
-if (${register_build_trees})
+if (NOT (no_register_build_trees EQUAL 1))
 	# Register exported build tree as package
 	# This makes it possible to include this package without installing.
 	# Also place a version config file for cmake to decide whether to take
