@@ -24,6 +24,7 @@ cmake_extra_cmd=
 MegaMolCore_DIR=
 use_mmcore_install_prefix=1
 register_build_trees=0
+make_jobs=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 
 # be proud of yourself
@@ -35,7 +36,7 @@ echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcC:mirf:" opt; do
+while getopts "hp:dDcC:mj:irf:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -46,6 +47,7 @@ while getopts "hp:dDcC:mirf:" opt; do
     echo "  -c    (cmake) invokes 'cmake'. This also deletes all files and subdirectories which might be present in the build tree subdirectory"
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
+    echo "  -j XX (jobs) the number of parallel make jobs to be started (Similar to 'make -j XX'). The default value is the number of cores of your system are returned by ''."
     echo "  -i    (install) invokes 'make install'"
     echo "  -r    (register) registers the cmake build tree results in the user package repository, making them available for find_package commands"
     echo "  -f XX (find hint) specifies the find hint path where the MegaMolCore is located"
@@ -92,6 +94,9 @@ while getopts "hp:dDcC:mirf:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make=1
     ;;
+  j)
+    make_jobs=$OPTARG
+    ;;
   i)
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
@@ -121,6 +126,10 @@ if [ $use_mmcore_install_prefix ] ; then cmake_cmd="$cmake_cmd -DUSE_MEGAMOLCORE
 if [ $register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dregister_build_trees=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 
+# prepare command line for make
+make_cmd=""
+if [ $make_jobs -gt 1 ] ; then make_cmd="$make_cmd -j$make_jobs"; fi
+
 # debug output of settings
 #echo "Specified settings:"
 #echo "  install_prefix=$install_prefix"
@@ -146,9 +155,9 @@ if [ $build_release -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then
@@ -172,9 +181,9 @@ if [ $build_debug -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then

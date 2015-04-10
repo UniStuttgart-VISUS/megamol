@@ -29,7 +29,9 @@ set(inc_search_paths /usr/include /usr/local/include)
 
 # setup of additional search hint paths
 set(hint_paths ${CMAKE_CURRENT_SOURCE_DIR})
-list(APPEND hint_paths ${visglut_DIR})
+if (visglut_DIR)
+	list(APPEND hint_paths ${visglut_DIR})
+endif()
 # traverse file system up to the second-highest level
 get_filename_component(my_dir "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
 while (${my_dir} STRGREATER "/")

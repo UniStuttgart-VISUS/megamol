@@ -19,6 +19,9 @@ set(inc_search_paths /usr/include /usr/local/include)
 
 # setup of additional search hint paths
 set(hint_paths ${CMAKE_CURRENT_SOURCE_DIR})
+if (AntTweakBar_DIR)
+	list(APPEND hint_paths ${AntTweakBar_DIR})
+endif()
 # traverse file system up to the second-highest level
 get_filename_component(my_dir "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
 while (${my_dir} STRGREATER "/")
