@@ -2,7 +2,7 @@
 #
 # VISlib
 # building utilty script
-# Copyright 2015 by MegaMol Consortium
+# Copyright 2015 by VISlib Team
 # All rights reserved
 #
 #  use '-h' for help
@@ -29,12 +29,12 @@ make_jobs=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 echo
 echo "  VISlib"
 echo "  cmake_build.sh utilty script"
-echo "  Copyright 2015, by MegaMol Consortium"
+echo "  Copyright 2015, by VISlib Team"
 echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcmj:intC:" opt; do
+while getopts "hp:dDcC:mj:int" opt; do
   case $opt in
   h)
     echo "Available command line options:"
