@@ -606,7 +606,7 @@ bool protein::MoleculeVolumeCudaRenderer::RenderMolecularData( view::CallRender3
     
     vislib::StringA paramSlotName( call->PeekCallerSlot()->Parent()->FullName());
     paramSlotName += "::anim::play";
-    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
+    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
     if( paramSlot->Param<param::BoolParam>()->Value() || this->forceUpdateVolumeTexture ) {
         this->UpdateVolumeTexture( mol);
         CHECK_FOR_OGL_ERROR();
