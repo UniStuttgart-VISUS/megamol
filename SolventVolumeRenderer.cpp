@@ -1561,7 +1561,7 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
     
     vislib::StringA paramSlotName( call->PeekCallerSlot()->Parent()->FullName());
     paramSlotName += "::anim::play";
-    param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
+    param::ParamSlot *playSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true).get());
 
     if( playSlot->Param<param::BoolParam>()->Value() || this->forceUpdateVolumeTexture || fabs(call->Time() - this->lastUpdateVolumeTextureTime) > 0.01) {
         this->lastUpdateVolumeTextureTime = call->Time();

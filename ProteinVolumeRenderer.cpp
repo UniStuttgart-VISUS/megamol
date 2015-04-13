@@ -687,7 +687,7 @@ bool ProteinVolumeRenderer::Render( Call& call ) {
             // get and set play param
             vislib::StringA paramSlotName( cr3d->PeekCallerSlot()->Parent()->FullName());
             paramSlotName += "::anim::play";
-            param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
+            param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
             if( paramSlot && this->stopSegmentationParam.Param<param::BoolParam>()->Value() ) {
                 paramSlot->Param<param::BoolParam>()->SetValue( false);
             }
@@ -798,7 +798,7 @@ bool ProteinVolumeRenderer::Render( Call& call ) {
     // TEST ...
     vislib::StringA paramSlotName( cr3d->PeekCallerSlot()->Parent()->FullName());
     paramSlotName += "::anim::play";
-    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
+    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
     if( paramSlot ) {
         this->stopSegmentation = !paramSlot->Param<param::BoolParam>()->Value();
     }
@@ -864,7 +864,7 @@ bool ProteinVolumeRenderer::RenderMolecularData( view::CallRender3D *call, Molec
     
     vislib::StringA paramSlotName( call->PeekCallerSlot()->Parent()->FullName());
     paramSlotName += "::anim::play";
-    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>( this->FindNamedObject( paramSlotName, true));
+    param::ParamSlot *paramSlot = dynamic_cast<param::ParamSlot*>(this->FindNamedObject(paramSlotName, true).get());
     if( paramSlot->Param<param::BoolParam>()->Value() || this->forceUpdateVolumeTexture ) {
         this->UpdateVolumeTexture( mol);
         CHECK_FOR_OGL_ERROR();
