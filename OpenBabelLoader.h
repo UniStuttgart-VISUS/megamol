@@ -90,6 +90,8 @@ private:
 	vislib::Array<unsigned int> atomTypeIdx_arr;
 	vislib::Array<megamol::core::moldyn::MolecularDataCall::AtomType> atomType_arr;
 	std::vector<float> charge;
+	std::vector<float> bfactor;
+	std::vector<float> occupancy;
 	std::vector<float> pos;
 	std::vector<int> residueIdx;
 	float charge_min;
@@ -103,8 +105,16 @@ private:
 
 	std::vector<MolecularDataCall::Residue*> residues;
 	unsigned int res_count;
+	vislib::Array<unsigned int> resTypeIdx_arr;
+	vislib::Array<vislib::StringA> residueTypeName;
+	vislib::Array<unsigned int> solventResidueIdx;
+	vislib::math::Cuboid<float> bbox;
+	vislib::Array<vislib::math::Cuboid<float> > res_bbox;
 
 	std::vector<MolecularDataCall::Molecule> molecules;
+	vislib::Array<int> filter;
+
+	vislib::Array<megamol::core::moldyn::MolecularDataCall::Chain> chain;
 };
 
 } // namespace protein
