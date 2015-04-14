@@ -72,9 +72,16 @@ bool OpenBabelLoader::getData(core::Call& call)
 		}
 		pos = std::vector<float>(atom_count * 3);
 		charge = std::vector<float>(atom_count);
+		bfactor = std::vector<float>(atom_count);
+		occupancy = std::vector<float>(atom_count);
 		atomType_arr.AssertCapacity(atom_count);
 		atomTypeIdx_arr.SetCount(atom_count);
 		residueIdx = std::vector<int>(atom_count);
+		res_bbox = vislib::Array<vislib::math::Cuboid<float> >(atom_count);
+		for (unsigned int i = 0; i < atom_count; i++)
+		{
+			res_bbox[i] = vislib::math::Cuboid<float>();
+		}
 		residues = std::vector<MolecularDataCall::Residue*>(res_count);
 		charge_min = std::numeric_limits<float>::max();
 		charge_max = std::numeric_limits<float>::lowest();
@@ -87,6 +94,7 @@ bool OpenBabelLoader::getData(core::Call& call)
 		not_end = conv.ReadFile(mol, T2A(file));
 		unsigned int global_atomIdx = 0;
 		unsigned int global_resIdx = 0;
+		unsigned int global_molIdx = 0;
 		while (not_end)
 		{
 			unsigned int local_atom_count = mol->NumAtoms();
@@ -111,9 +119,32 @@ bool OpenBabelLoader::getData(core::Call& call)
 				if (charge[global_atomIdx] < charge_min) charge_min = charge[global_atomIdx];
 				if (charge[global_atomIdx] > charge_max) charge_max = charge[global_atomIdx];
 
-				//todo: bfactor and occupancy
+				bfactor[global_atomIdx] = (float)(rand() % 2);
+				if (bfactor[global_atomIdx] < bfactor_min) bfactor_min = bfactor[global_atomIdx];
+				if (bfactor[global_atomIdx] > bfactor_max) bfactor_max = bfactor[global_atomIdx];
+
+				occupancy[global_atomIdx] = (float)(rand() % 2);
+				if (occupancy[global_atomIdx] < occupancy_min) occupancy_min = occupancy[global_atomIdx];
+				if (occupancy[global_atomIdx] > occupancy_max) occupancy_max = occupancy[global_atomIdx];
+
+				// update the bounding box
+				vislib::math::Cuboid<float> atomBBox(
+					pos[global_atomIdx * 3 + 0] - this->atomType_arr[this->atomTypeIdx_arr[global_atomIdx]].Radius(),
+					pos[global_atomIdx * 3 + 1] - this->atomType_arr[this->atomTypeIdx_arr[global_atomIdx]].Radius(),
+					pos[global_atomIdx * 3 + 2] - this->atomType_arr[this->atomTypeIdx_arr[global_atomIdx]].Radius(),
+					pos[global_atomIdx * 3 + 0] + this->atomType_arr[this->atomTypeIdx_arr[global_atomIdx]].Radius(),
+					pos[global_atomIdx * 3 + 1] + this->atomType_arr[this->atomTypeIdx_arr[global_atomIdx]].Radius(),
+					pos[global_atomIdx * 3 + 2] + this->atomType_arr[this->atomTypeIdx_arr[global_atomIdx]].Radius());
+				if (global_atomIdx == 0) {
+					this->bbox = atomBBox;
+				}
+				else {
+					this->bbox.Union(atomBBox);
+				}
 
 				residueIdx[global_atomIdx] = mol->GetAtom(i)->GetResidue()->GetIdx();
+
+				res_bbox[residueIdx[global_atomIdx]].Union(atomBBox);
 
 				pos[global_atomIdx * 3 + 0] = mol->GetAtom(i)->GetX();
 				pos[global_atomIdx * 3 + 1] = mol->GetAtom(i)->GetY();
@@ -131,31 +162,60 @@ bool OpenBabelLoader::getData(core::Call& call)
 
 			unsigned int local_res_count = mol->NumResidues();
 
+			/* TODO:
+			 * For now every molecule is in one chain. If there is a way to figure
+			 * out what molecule belongs to what chain in the OpenBabel datastructure
+			 * fix this.
+			 */
 			MolecularDataCall::Molecule mdc_mol
-				= MolecularDataCall::Molecule(global_resIdx, local_res_count,/*todo: chainIdx*/ -99);
+				= MolecularDataCall::Molecule(global_resIdx, local_res_count,0);
 			molecules.push_back(mdc_mol);
 			
 			for (unsigned int i = 0; i < local_res_count; i++)
 			{
 				unsigned int first_atom_index = (*mol->GetResidue(i)->BeginAtoms())->GetIdx();
 				unsigned int res_atom_count = mol->GetResidue(i)->GetNumAtoms();
-				vislib::math::Cuboid<float> bbox; //todo: bbox
-				unsigned int typeIdx;//todo: typeIdx
-				int moleculeIdx;//todo: moleculeIdx
-				unsigned int origResIdx;//todo: origResIdx
 
-				residues[global_resIdx] = new MolecularDataCall::Residue(first_atom_index, res_atom_count, bbox,
-					typeIdx, moleculeIdx, origResIdx);
+				mol->GetResidue(i)->GetAtoms();
+
+				vislib::StringA resName = mol->GetResidue(i)->GetName().c_str();
+				unsigned int typeIdx;
+				INT_PTR resTypeNameIdx = this->residueTypeName.IndexOf(resName);
+				if (resTypeNameIdx == vislib::Array<vislib::StringA>::INVALID_POS)
+				{
+					typeIdx = static_cast<unsigned int>(this->residueTypeName.Count());
+					this->residueTypeName.Add(resName);
+					if (mol->GetResidue(i)->GetResidueProperty(8) || mol->GetResidue(i)->GetResidueProperty(9))
+					{
+						this->solventResidueIdx.Add(typeIdx);
+					}
+				}
+				else
+				{
+					typeIdx = static_cast<unsigned int>(resTypeNameIdx);
+					if (mol->GetResidue(i)->GetResidueProperty(8) || mol->GetResidue(i)->GetResidueProperty(9))
+					{
+						this->solventResidueIdx.Add(typeIdx);
+					}
+				}
+
+				int moleculeIdx = global_molIdx;
+
+				unsigned int origResIdx = mol->GetResidue(i)->GetIdx();
+
+				residues[global_resIdx] = new MolecularDataCall::Residue(first_atom_index, res_atom_count, res_bbox[global_resIdx],
+					typeIdx, moleculeIdx, origResIdx); 
 
 				global_resIdx++;
 			}
 
+			global_molIdx++;
 			mol = new OpenBabel::OBMol();
 			not_end = conv.Read(mol);
 		}
 
 		mdc_in->SetAtoms(atom_count, atomType_arr.Count(), atomTypeIdx_arr.PeekElements(), pos.data(),
-			atomType_arr.PeekElements(), residueIdx.data(), NULL/*todo: bfactor*/, charge.data(), NULL/*todo: occupancy*/);
+			atomType_arr.PeekElements(), residueIdx.data(), bfactor.data(), charge.data(), occupancy.data());
 
 		mdc_in->SetBFactorRange(bfactor_min, bfactor_max);
 		mdc_in->SetChargeRange(charge_min, charge_max);
@@ -165,12 +225,27 @@ bool OpenBabelLoader::getData(core::Call& call)
 
 		mdc_in->SetResidues(res_count, (const MolecularDataCall::Residue**)residues.data());
 
-		//todo: fill the set-Functions
-		//mdc_in->SetSolventResidueIndices();
-		//mdc_in->SetResidueTypeNames();
+		mdc_in->SetSolventResidueIndices(solventResidueIdx.Count(), solventResidueIdx.PeekElements());
+		mdc_in->SetResidueTypeNames(residueTypeName.Count(), residueTypeName.PeekElements());
 		mdc_in->SetMolecules(molecules.size(), molecules.data());
-		//mdc_in->SetChains();
-		//mdc_in->SetFilter();
+
+		/* TODO:
+		 * For now every molecule is in one chain. If there is a way to figure
+		 * out what molecule belongs to what chain in the OpenBabel datastructure
+		 * fix this.
+		 */
+		unsigned int firstMolIdx = 0;
+		unsigned int molCnt = global_molIdx;
+		char name = ' ';
+		MolecularDataCall::Chain::ChainType chainType = MolecularDataCall::Chain::ChainType::UNSPECIFIC;
+		MolecularDataCall::Chain new_chain = MolecularDataCall::Chain(firstMolIdx, molCnt, name, chainType);
+		chain.Add(new_chain);
+
+		mdc_in->SetChains(chain.Count(),chain.PeekElements());
+		filter.SetCount(atom_count);
+		for (unsigned int i = 0; i < filter.Count(); i++)
+			filter[i] = 0;
+		mdc_in->SetFilter(filter.PeekElements());
 	}	
 	return true;
 }
