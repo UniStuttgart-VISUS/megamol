@@ -1242,6 +1242,22 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             }
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for finding all bonds: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
         }
+		else
+		{
+			/*
+			 * Add one chain covering every molecule in the data.
+			 * Also add one molecule covering ervery residue.
+			 * If possible, or necessary try to add more molecules.
+			 * But for now this works.
+			 */
+			unsigned int firstMolIdx = 0;
+			unsigned int molCnt = 1;
+			char name = ' ';
+			MolecularDataCall::Chain::ChainType chainType = MolecularDataCall::Chain::ChainType::UNSPECIFIC;
+			MolecularDataCall::Chain new_chain = MolecularDataCall::Chain(firstMolIdx, molCnt, name, chainType);
+			this->chain.Add(new_chain);
+			this->molecule.Add(MolecularDataCall::Molecule(0, this->residue.Count(), 0));
+		}
 
         // search for CA, C, O and N in amino acids
         MolecularDataCall::AminoAcid *aminoacid;
