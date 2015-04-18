@@ -18,9 +18,9 @@
 #include "vislib/sys/KeyCode.h"
 #include "vislib/Map.h"
 #include "vislib/SmartPtr.h"
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
 #include "GUILayer.h"
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 
 #ifdef _WIN32
 #define MMAPI_CALLBACK __stdcall
@@ -175,7 +175,7 @@ namespace console {
         void RegisterHotKeyAction(const vislib::sys::KeyCode& key,
             HotKeyAction *action, const vislib::StringA& target);
 
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
         /**
          * Activates the GUI client
          */
@@ -196,7 +196,7 @@ namespace console {
          * @param hCore The core handle
          */
         void InitGUI(CoreHandle& hCore);
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 
     private:
 
@@ -237,7 +237,7 @@ namespace console {
         /** global flag if any window has been closed */
         static bool hasClosed;
 
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
         /**
          * Initialises the GUI client
          *
@@ -245,7 +245,7 @@ namespace console {
          * @param contextPtr Pointer to the context structure
          */
         static void MEGAMOLCORE_CALLBACK initGUI(const char *paramName, void *contextPtr);
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 
         /**
          * Enumeration method for the core parameters
@@ -275,10 +275,10 @@ namespace console {
         /** Handle to the viewer window */
         CoreHandle hWnd;
 
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
         /** The gui object */
         GUILayer::GUIClient gui;
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 
         /** Flag whether this window is closed, or not. */
         bool isClosed;

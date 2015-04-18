@@ -602,14 +602,14 @@ void menuCommandCallback(void *wnd, int *params) {
             if (parameterFile.IsEmpty()) break;
             readParameterFile();
             break;
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
         case 3:
             static_cast<megamol::console::Window *>(wnd)->ActivateGUI();
             break;
         case 4:
             static_cast<megamol::console::Window *>(wnd)->DeactivateGUI();
             break;
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
         case 5:
         {
             // Generate filename
@@ -1435,7 +1435,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
             if (::mmvSupportContextMenu(win->HWnd())) {
                 ::mmvInstallContextMenu(win->HWnd());
 
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
                 /* TODO: Move GUI */
                 /*if (::mmvSupportParameterGUI(win->HWnd()))*/ {
                     ::mmvInstallContextMenuCommandA(win->HWnd(), "Activate GUI", 3);
@@ -1450,7 +1450,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                             "Parameter GUI is not supported by the viewer");
                     }
                 } */
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 
                 if (!parameterFile.IsEmpty()) {
                     ::mmvInstallContextMenuCommandA(win->HWnd(),
@@ -1578,12 +1578,12 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
                     | */(WORD)'f'), new megamol::console::HotKeyCallback(::fixFileName),
                     "FileNameFix");
             }
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
             win->InitGUI(hCore);
             if (showGUI) {
                 win->ActivateGUI();
             }
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
         }
 
         if (megamol::console::WindowManager::Instance()->Count() == 0) {

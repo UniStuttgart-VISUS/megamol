@@ -4,15 +4,13 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
 #ifndef _MEGAMOL_CONSOLE_GUILAYER_H_INCLUDED
 #define _MEGAMOL_CONSOLE_GUILAYER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#define TW_STATIC
-#define TW_NO_LIB_PRAGMA
 #include "AntTweakBar.h"
 #include "CoreHandle.h"
 #include "vislib/Array.h"
@@ -770,4 +768,4 @@ namespace console {
 } /* end namespace megamol */
 
 #endif /* _MEGAMOL_CONSOLE_GUILAYER_H_INCLUDED */
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */

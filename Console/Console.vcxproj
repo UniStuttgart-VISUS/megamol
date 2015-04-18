@@ -53,28 +53,24 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetRelease32.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\ExtLibTw.props" />
     <Import Project="..\vislibVSProps\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetDebug32.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\ExtLibTw.props" />
     <Import Project="..\vislibVSProps\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetRelease64.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\ExtLibTw.props" />
     <Import Project="..\vislibVSProps\vislib.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\vislibVSProps\TargetDebug64.props" />
     <Import Project="..\ExtLibs.props" />
-    <Import Project="..\ExtLibTw.props" />
     <Import Project="..\vislibVSProps\vislib.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -108,6 +104,7 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MegaMolCon</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MegaMolCon</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MegaMolCon</TargetName>
+    <NuGetPackageImportStamp>8628c878</NuGetPackageImportStamp>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -119,7 +116,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -132,9 +129,9 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;$(LibTweakbarDebug);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -145,6 +142,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+xcopy "$(TargetDir)AntTweakBar*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -162,7 +160,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -175,9 +173,9 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;$(LibTweakbarDebug);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -188,6 +186,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+xcopy "$(TargetDir)AntTweakBar*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -201,7 +200,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -212,9 +211,9 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;$(LibTweakbarRelease);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -227,6 +226,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+xcopy "$(TargetDir)AntTweakBar*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -243,7 +243,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </Midl>
     <ClCompile>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
@@ -254,9 +254,9 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <AdditionalIncludeDirectories>$(MegaMolCorePath)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;$(LibTweakbarRelease);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)\lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;AntTweakBarStatic.lib;AntTweakBarStatic64.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>MegaMolViewer$(BitsD).lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -269,6 +269,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
 xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+xcopy "$(TargetDir)AntTweakBar*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
@@ -338,7 +339,19 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\AntTweakBar.redist.1.16\build\native\AntTweakBar.redist.targets" Condition="Exists('..\packages\AntTweakBar.redist.1.16\build\native\AntTweakBar.redist.targets')" />
+    <Import Project="..\packages\AntTweakBar.1.16\build\native\AntTweakBar.targets" Condition="Exists('..\packages\AntTweakBar.1.16\build\native\AntTweakBar.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\AntTweakBar.redist.1.16\build\native\AntTweakBar.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AntTweakBar.redist.1.16\build\native\AntTweakBar.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\AntTweakBar.1.16\build\native\AntTweakBar.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AntTweakBar.1.16\build\native\AntTweakBar.targets'))" />
+  </Target>
 </Project>

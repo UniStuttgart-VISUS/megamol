@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "GUILayer.h"
 #include "mmcore/api/MegaMolCore.h"
@@ -850,4 +850,4 @@ GUILayer::~GUILayer(void) {
         "GUI Layer shutdown");
 }
 
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */

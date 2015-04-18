@@ -107,9 +107,9 @@ void megamol::console::Window::RenderCallback(void *wnd, void *params) {
     } else {
         win->MarkToClose();
     }
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
     win->gui.Draw();
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 }
 
 
@@ -122,9 +122,9 @@ void megamol::console::Window::ResizeCallback(void *wnd,
     ASSERT((win != NULL) && (params != NULL));
     ASSERT(::mmcIsHandleValid(win->hView));
     ASSERT(::mmvIsHandleValid(win->hWnd));
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
     win->gui.SetWindowSize(params[0], params[1]);
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
     ::mmcResizeView(win->hView, params[0], params[1]);
 }
 
@@ -141,9 +141,9 @@ void megamol::console::Window::KeyCallback(void *wnd, mmvKeyParams *params) {
     ::mmcSet2DMousePosition(win->hView,
         static_cast<float>(params->mouseX),
         static_cast<float>(params->mouseY));
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
     if (!win->gui.KeyPressed(params->keycode, params->modShift, params->modAlt, params->modCtrl)) {
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
     vislib::sys::KeyCode key(params->keycode);
     if (win->hotkeys.Contains(key)) {
         vislib::SmartPtr<HotKeyAction> action = win->hotkeys[key];
@@ -154,9 +154,9 @@ void megamol::console::Window::KeyCallback(void *wnd, mmvKeyParams *params) {
     }
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO + 1000,
         "Unused key %i\n", int(key));
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
     }
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 
 }
 
@@ -171,9 +171,9 @@ void megamol::console::Window::MouseButtonCallback(void *wnd,
     ASSERT(::mmcIsHandleValid(win->hView));
     ASSERT(::mmvIsHandleValid(win->hWnd));
     win->setModifierStates(params->modAlt, params->modCtrl, params->modShift);
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
     if (!win->gui.MouseButton(params->button, params->buttonDown) || !params->buttonDown) {
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
     switch (params->button) {
         case 0: case 1: case 2:
             if (win->mouseBtns[params->button] != params->buttonDown) {
@@ -185,9 +185,9 @@ void megamol::console::Window::MouseButtonCallback(void *wnd,
         default:
             break;
     }
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
     }
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
     ::mmcSet2DMousePosition(win->hView,
         static_cast<float>(params->mouseX),
         static_cast<float>(params->mouseY));
@@ -204,9 +204,9 @@ void megamol::console::Window::MouseMoveCallback(void *wnd,
     ASSERT(::mmcIsHandleValid(win->hView));
     ASSERT(::mmvIsHandleValid(win->hWnd));
     win->setModifierStates(params->modAlt, params->modCtrl, params->modShift);
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
     win->gui.MouseMove(params->mouseX, params->mouseY);
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
     ::mmcSet2DMousePosition(win->hView,
         static_cast<float>(params->mouseX),
         static_cast<float>(params->mouseY));
@@ -241,9 +241,9 @@ void MMAPI_CALLBACK megamol::console::Window::CloseRequestCallback(void* data) {
  * megamol::console::Window::Window
  */
 megamol::console::Window::Window(void) : hView(), hWnd(),
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
         gui(),
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
         isClosed(false), modAlt(false), modCtrl(false), modShift(false),
         hotkeys() {
     this->mouseBtns[0] = false;
@@ -297,7 +297,7 @@ void megamol::console::Window::RegisterHotKeyAction(
 }
 
 
-#ifdef WITH_TWEAKBAR
+#ifdef HAS_ANTTWEAKBAR
 /*
  * megamol::console::Window::InitGUI
  */
@@ -330,7 +330,7 @@ void MEGAMOLCORE_CALLBACK megamol::console::Window::initGUI(const char *paramNam
 
     context->wnd->gui.AddParameter(hParam, paramName, desc.As<unsigned char>(), len);
 }
-#endif /* WITH_TWEAKBAR */
+#endif /* HAS_ANTTWEAKBAR */
 
 
 /*

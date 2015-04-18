@@ -105,4 +105,7 @@
     <CustomBuildStep Include="Makefile" />
     <CustomBuildStep Include="VersionInfo.pl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>
