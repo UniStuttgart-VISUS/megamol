@@ -64,9 +64,7 @@
  *
  * Defined if Vislib working copy has local modifications
  */
-#if $VISLIB_HAS_MODIFICATIONS$
-#define VISLIB_DIRTY_BUILD 1
-#endif
+#define VISLIB_DIRTY_BUILD $VISLIB_HAS_MODIFICATIONS$
 
 
 
