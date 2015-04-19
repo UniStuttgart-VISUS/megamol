@@ -60,7 +60,7 @@
 #define MEGAMOL_PRODUCT_VERSION_STR MEGAMOL_STRINGIZE(MEGAMOL_PRODUCT_VERSION)
 
 #define MEGAMOL_PRODUCT_NAME "MegaMol"
-#define MEGAMOL_PRODUCT_COMPANY "MegaMol Consortium: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, Germany)"
+#define MEGAMOL_PRODUCT_COMPANY "MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, Germany)"
 
 
 #endif /* MEGAMOL_PRODUCTVERSION_H_INCLUDED */

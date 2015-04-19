@@ -45,6 +45,25 @@
 
 /*
  * Usage:
+ *   MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V5(ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV, MEGAMOL_CORE_ISDIRTY)
+ */
+#define MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V5(Obj, Name, V1, V2, V3, V4, V5) { \
+    const char libname[] = Name; \
+    const int libnamelen = sizeof(libname) + 1; \
+    char *str; \
+    Obj.name = str = new char[libnamelen]; \
+    ::memcpy(str, libname, libnamelen); \
+    Obj.version_len = 5; \
+    Obj.version = new unsigned short[5]; \
+    Obj.version[0] = V1; \
+    Obj.version[1] = V2; \
+    Obj.version[2] = V3; \
+    Obj.version[3] = V4; \
+    Obj.version[4] = 0##V5; \
+}
+
+/*
+ * Usage:
  *   MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)
  */
 #define MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci) \
