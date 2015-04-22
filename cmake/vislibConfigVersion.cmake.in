@@ -8,24 +8,16 @@ endif()
 # check build type
 if (NOT "${CURRENT_BUILD_TYPE}" STREQUAL "${MY_BUILD_TYPE}")
 	# wrong build type
-	# search if there is another package matching
-	if (NOT vislibConfigVersionSecondPass@cfg_CMAKE_BUILD_TYPE@)
-		set(vislibConfigVersionSecondPass@cfg_CMAKE_BUILD_TYPE@ "X")
-		# 1. pass
-		# search for alternative package
-		find_package(vislib QUIET)
-		if (NOT vislib_FOUND)
-			# there is no matching package
-			# So I am acceptable
-			set(PACKAGE_VERSION_COMPATIBLE True)
-			set(PACKAGE_VERSION_UNSUITABLE False) 
-		endif()
-	else()
-		# 2. pass
-		# I do not match
-		set(PACKAGE_VERSION_COMPATIBLE False)
-		set(PACKAGE_VERSION_UNSUITABLE True) 
-	endif()
+	# I do not match
+	set(PACKAGE_VERSION_COMPATIBLE False)
+	set(PACKAGE_VERSION_UNSUITABLE True) 
+	
+	# Note: we do not search for alternatives!
+	#       We did that in an earlier version and it was a bad idea.
+	# Breaking scenario:
+	#       vislib available in debug and release
+	#       mmcore available in release
+	#       mmplg build in debug (will use a different vislib as the core)
 else()
 	# correct build type!
 	# I do match
