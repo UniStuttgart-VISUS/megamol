@@ -19,48 +19,63 @@
  */
 
 
+/** Flag marking that this is a normal build (release, clean) */
+#define MEGAMOLCORE_PLUGIN200UTIL_FLAGS_NONE        0x00000000
+
+/** Flag marking that this is a debug build */
+#define MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD 0x00000001
+
+/** Flag marking that this is a dirty build (unclean repository working copy state) */
+#define MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD 0x00000002
+
 /*
  * Usage:
  *   MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
  */
 #define MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion return 200;
 
-/*
- * Usage:
- *   MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV)
- */
-#define MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V4(Obj, Name, V1, V2, V3, V4) { \
-    const char libname[] = Name; \
-    const int libnamelen = sizeof(libname) + 1; \
-    char *str; \
-    Obj.name = str = new char[libnamelen]; \
-    ::memcpy(str, libname, libnamelen); \
-    Obj.version_len = 4; \
-    Obj.version = new unsigned short[4]; \
-    Obj.version[0] = V1; \
-    Obj.version[1] = V2; \
-    Obj.version[2] = V3; \
-    Obj.version[3] = V4; \
+
+#include <string>
+
+namespace megamol {
+namespace core{
+namespace utility {
+namespace plugins {
+
+    /**
+     * Sets the LibraryVersionInfo fields
+     *
+     * @param info The LibraryVersionInfo object
+     * @param name The library name
+     * @param v1 The version number component 1
+     * @param v2 The version number component 2
+     * @param v3 The version number component 3
+     * @param v4 The version number component 4
+     * @param flags The build flags
+     */
+    template<class T1, class T2, class T3, class T4>
+    inline void SetLibraryVersionInfo(LibraryVersionInfo &info,
+            const char* name, 
+            T1 v1, T2 v2, T3 v3, T4 v4, 
+            unsigned int flags = MEGAMOLCORE_PLUGIN200UTIL_FLAGS_NONE) {
+        std::string n(name);
+        char *nm = new char[n.length() + 1];
+        info.name = nm;
+        ::memcpy(nm, n.c_str(), n.length() + 1);
+        info.version_len = 4;
+        info.version = new unsigned short[4];
+        info.version[0] = static_cast<unsigned short>(v1);
+        info.version[1] = static_cast<unsigned short>(v2);
+        info.version[2] = static_cast<unsigned short>(v3);
+        info.version[3] = static_cast<unsigned short>(v4);
+        info.flags = flags;
+    }
+
+}
+}
+}
 }
 
-/*
- * Usage:
- *   MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V5(ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV, MEGAMOL_CORE_ISDIRTY)
- */
-#define MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V5(Obj, Name, V1, V2, V3, V4, V5) { \
-    const char libname[] = Name; \
-    const int libnamelen = sizeof(libname) + 1; \
-    char *str; \
-    Obj.name = str = new char[libnamelen]; \
-    ::memcpy(str, libname, libnamelen); \
-    Obj.version_len = 5; \
-    Obj.version = new unsigned short[5]; \
-    Obj.version[0] = V1; \
-    Obj.version[1] = V2; \
-    Obj.version[2] = V3; \
-    Obj.version[3] = V4; \
-    Obj.version[4] = V5; \
-}
 
 /*
  * Usage:
