@@ -43,17 +43,35 @@ MMSTD_MOLDYN_API int mmplgPluginAPIVersion(void) {
 MMSTD_MOLDYN_API
 megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
-        megamol::core::utility::plugins::ErrorCallback onError) {
+megamol::core::utility::plugins::ErrorCallback onError) {
     // compatibility information with core and vislib
     using megamol::core::utility::plugins::PluginCompatibilityInfo;
     using megamol::core::utility::plugins::LibraryVersionInfo;
+    using megamol::core::utility::plugins::SetLibraryVersionInfo;
 
     PluginCompatibilityInfo *ci = new PluginCompatibilityInfo;
     ci->libs_cnt = 2;
     ci->libs = new LibraryVersionInfo[2];
 
-    MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V5(ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV, MEGAMOL_CORE_DIRTY)
-    MEGAMOLCORE_PLUGIN200UTIL_Set_LibraryVersionInfo_V5(ci->libs[1], "vislib", VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD, VISLIB_DIRTY_BUILD)
+    SetLibraryVersionInfo(ci->libs[0], "MegaMolCore",
+        MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV, 0
+#if defined(DEBUG) || defined(_DEBUG)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
+#endif
+#if defined(MEGAMOL_CORE_DIRTY) && (MEGAMOL_CORE_DIRTY != 0)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
+#endif
+        );
+
+    SetLibraryVersionInfo(ci->libs[1], "vislib",
+        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD, 0
+#if defined(DEBUG) || defined(_DEBUG)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
+#endif
+#if defined(VISLIB_DIRTY_BUILD) && (VISLIB_DIRTY_BUILD != 0)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
+#endif
+        );
 
     return ci;
 }
