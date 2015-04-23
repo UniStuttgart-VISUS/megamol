@@ -615,7 +615,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
             float x_move = 0.0f;
             float y_move = 0.0f;
             float z_move = 0.0f;
-            const float range = 1;
+            const int range = 1;
 
             for (int ix = -range; ix <= range; ix++) {
                 int cx = static_cast<int>(x) + ix;
