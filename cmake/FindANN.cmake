@@ -7,6 +7,15 @@
 #
 
 
+# setup of hint paths
+set(lib_search_hints )
+set(inc_search_hints )
+if (ANN_DIR)
+	set(lib_search_hints "${ANN_DIR}" "${ANN_DIR}/lib")
+	set(inc_search_hints "${ANN_DIR}" "${ANN_DIR}/include")
+endif()
+
+
 # setup of system search paths
 set(lib_search_paths /lib /usr/lib /usr/local/lib)
 set(inc_search_paths /usr/include /usr/local/include)
@@ -15,12 +24,12 @@ set(inc_search_paths /usr/include /usr/local/include)
 # perform the search
 find_library(ANN_LIBRARIES
 	NAMES libann.so
-	#HINTS ${lib_search_hints}
+	HINTS ${lib_search_hints}
 	PATHS ${lib_search_paths}
 	)
 find_path(ANN_INCLUDE_DIR
 	NAMES ANN/ANN.h
-	#HINTS ${inc_search_hints}
+	HINTS ${inc_search_hints}
 	PATHS ${inc_search_paths}
 	)
 
