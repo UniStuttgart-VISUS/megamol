@@ -59,7 +59,7 @@
     Obj.version[1] = V2; \
     Obj.version[2] = V3; \
     Obj.version[3] = V4; \
-    Obj.version[4] = 0##V5; \
+    Obj.version[4] = V5; \
 }
 
 /*
