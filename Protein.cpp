@@ -80,6 +80,7 @@
 #include "VTKLegacyDataLoaderUnstructuredGrid.h"
 #include "MolecularBezierData.h"
 #include "MultiPDBLoader.h"
+#include "OpenBabelLoader.h"
 
 // data interfaces (calls)
 #include "SolPathDataCall.h"
@@ -170,6 +171,9 @@ PROTEIN_API int mmplgModuleCount(void) {
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
 #endif // WITH_OPENHAPTICS
+#ifdef WITH_OPENBABEL
+	moduleCount += 1;
+#endif // WITH_OPENBABEL
     return moduleCount;
 }
 
@@ -206,59 +210,65 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
-        case CUDA_OFFSET + HAPTICS_OFFSET +  0 : return new ModuleAutoDescription<protein::SequenceRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  1 : return new ModuleAutoDescription<protein::BindingSiteDataSource>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  2 : return new ModuleAutoDescription<protein::SolPathDataSource>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  3 : return new ModuleAutoDescription<protein::SolPathRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  4 : return new ModuleAutoDescription<protein::ProteinVolumeRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  5 : return new ModuleAutoDescription<protein::CCP4VolumeData>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  6 : return new ModuleAutoDescription<protein::PDBLoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  7 : return new ModuleAutoDescription<protein::SimpleMoleculeRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  8 : return new ModuleAutoDescription<protein::CoarseGrainDataLoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET +  9 : return new ModuleAutoDescription<protein::SphereRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 10 : return new ModuleAutoDescription<protein::MoleculeSESRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 11 : return new ModuleAutoDescription<protein::MoleculeCartoonRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 12 : return new ModuleAutoDescription<protein::FrodockLoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 13 : return new ModuleAutoDescription<protein::VolumeSliceRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 14 : return new ModuleAutoDescription<protein::Diagram2DRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 15 : return new ModuleAutoDescription<protein::XYZLoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 16 : return new ModuleAutoDescription<protein::ElectrostaticsRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 17 : return new ModuleAutoDescription<protein::SolventVolumeRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 18 : return new ModuleAutoDescription<protein::Filter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 19 : return new ModuleAutoDescription<protein::SolventDataGenerator>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 20 : return new ModuleAutoDescription<protein::View3DSpaceMouse>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 21 : return new ModuleAutoDescription<protein::GROLoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 22 : return new ModuleAutoDescription<protein::SSAORendererDeferred>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 23 : return new ModuleAutoDescription<protein::ToonRendererDeferred>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 24 : return new ModuleAutoDescription<protein::DofRendererDeferred>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 25 : return new ModuleAutoDescription<protein::SphereRendererMouse>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 26 : return new ModuleAutoDescription<protein::View3DMouse>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 27 : return new ModuleAutoDescription<protein::GLSLVolumeRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 28 : return new ModuleAutoDescription<protein::DiagramRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 29 : return new ModuleAutoDescription<protein::SplitMergeRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 30 : return new ModuleAutoDescription<protein::IntSelection>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 31 : return new ModuleAutoDescription<protein::CrystalStructureDataSource>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 32 : return new ModuleAutoDescription<protein::VTILoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 33 : return new ModuleAutoDescription<protein::PDBWriter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 34 : return new ModuleAutoDescription<protein::VTIWriter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::PotentialCalculator>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::VMDDXLoader>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::SurfacePotentialRendererSlave>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::ResidueSelection>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
-		case CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::AggregatedDensity>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::MolecularBezierData>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
-        case CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
-		case CUDA_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::ColorModule>();
-		case CUDA_OFFSET + HAPTICS_OFFSET + 52: return new ModuleAutoDescription<protein::PDBInterpolator>();
+#ifdef WITH_OPENBABEL
+		case CUDA_OFFSET + HAPTICS_OFFSET +  0 : return new ModuleAutoDescription<protein::OpenBabelLoader>();
+		#define OPENBABAEL_OFFSET 1
+#else
+		#define OPENBABAEL_OFFSET 0
+#endif //WITH_OPENBABEL
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  0 : return new ModuleAutoDescription<protein::SequenceRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  1 : return new ModuleAutoDescription<protein::BindingSiteDataSource>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  2 : return new ModuleAutoDescription<protein::SolPathDataSource>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  3 : return new ModuleAutoDescription<protein::SolPathRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  4 : return new ModuleAutoDescription<protein::ProteinVolumeRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  5 : return new ModuleAutoDescription<protein::CCP4VolumeData>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  6 : return new ModuleAutoDescription<protein::PDBLoader>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  7 : return new ModuleAutoDescription<protein::SimpleMoleculeRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  8 : return new ModuleAutoDescription<protein::CoarseGrainDataLoader>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  9 : return new ModuleAutoDescription<protein::SphereRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 10 : return new ModuleAutoDescription<protein::MoleculeSESRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 11 : return new ModuleAutoDescription<protein::MoleculeCartoonRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 12 : return new ModuleAutoDescription<protein::FrodockLoader>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 13 : return new ModuleAutoDescription<protein::VolumeSliceRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 14 : return new ModuleAutoDescription<protein::Diagram2DRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 15 : return new ModuleAutoDescription<protein::XYZLoader>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 16 : return new ModuleAutoDescription<protein::ElectrostaticsRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 17 : return new ModuleAutoDescription<protein::SolventVolumeRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 18 : return new ModuleAutoDescription<protein::Filter>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 19 : return new ModuleAutoDescription<protein::SolventDataGenerator>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 20 : return new ModuleAutoDescription<protein::View3DSpaceMouse>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 21 : return new ModuleAutoDescription<protein::GROLoader>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 22 : return new ModuleAutoDescription<protein::SSAORendererDeferred>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 23 : return new ModuleAutoDescription<protein::ToonRendererDeferred>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 24 : return new ModuleAutoDescription<protein::DofRendererDeferred>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 25 : return new ModuleAutoDescription<protein::SphereRendererMouse>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 26 : return new ModuleAutoDescription<protein::View3DMouse>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 27 : return new ModuleAutoDescription<protein::GLSLVolumeRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 28 : return new ModuleAutoDescription<protein::DiagramRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 29 : return new ModuleAutoDescription<protein::SplitMergeRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 30 : return new ModuleAutoDescription<protein::IntSelection>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 31 : return new ModuleAutoDescription<protein::CrystalStructureDataSource>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 32 : return new ModuleAutoDescription<protein::VTILoader>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 33 : return new ModuleAutoDescription<protein::PDBWriter>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 34 : return new ModuleAutoDescription<protein::VTIWriter>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::PotentialCalculator>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::VMDDXLoader>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::SurfacePotentialRendererSlave>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::ResidueSelection>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
+		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::AggregatedDensity>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::MolecularBezierData>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
+		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::ColorModule>();
+		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 52: return new ModuleAutoDescription<protein::PDBInterpolator>();
         default: return NULL;
     }
     return NULL;

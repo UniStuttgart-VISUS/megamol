@@ -1,3 +1,5 @@
+#ifdef WITH_OPENBABEL
+
 #ifndef MMPROTEINPLUGIN_OPENBABELLOADER_H_INCLUDED
 #define MMPROTEINPLUGIN_OPENBABELLOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -14,7 +16,7 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/StringConverter.h"
 
-#include <openbabel/obconversion.h> // add path to perl script, for now include path is added
+#include <openbabel/obconversion.h>
 #include <openbabel/mol.h>
 #include <openbabel/atom.h>
 
@@ -121,3 +123,5 @@ private:
 } // namespace megamol
 
 #endif // MMPROTEINPLUGIN_OPENBABELLOADER_H_INCLUDED
+
+#endif

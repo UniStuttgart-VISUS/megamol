@@ -101,6 +101,23 @@ $a = PathParameter->new();
     $a->dependencyFlagID("withHAPTICS");
     $a->dependencyDisabledValue("");
     push @pps, $a;
+	
+$b = FlagParameter->new();
+	$b->id("withOPENBABEL");
+	$b->description("Enable the uses of OpenBabel");
+	$b->placeholder("%withOPENBABEL%");
+	$b->value(0);
+	push @fps, $b;
+$a = PathParameter->new();
+	$a->directorySeparator("\\");
+	$a->enforceTrailingDirectorySeparator(1);
+	$a->id("openbabel");
+	$a->description("Path to the OpenBabel directory");
+	$a->placeholder("%openbabelPath%");
+	$a->autoDetect(0);
+	$a->dependencyFlagID("withOPENBABEL");
+	$a->dependencyDisabledValue("");
+	push @pps, $a;
 
 $c = ConfigFilePair->new();
     $c->inFile("ExtLibs.props.input");
