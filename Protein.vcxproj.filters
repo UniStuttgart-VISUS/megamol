@@ -388,6 +388,9 @@
     <ClCompile Include="PDBInterpolator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="OpenBabelLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BSpline.h">
@@ -799,6 +802,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PDBInterpolator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenBabelLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

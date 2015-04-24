@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "OpenBabelLoader.h"
 
+#ifdef WITH_OPENBABEL
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -255,6 +257,16 @@ bool OpenBabelLoader::getData(core::Call& call)
 */
 bool OpenBabelLoader::getExtent(core::Call& call)
 {
+	MolecularDataCall *dc = dynamic_cast<MolecularDataCall*>(&call);
+	if (dc == NULL) return false;
+
+	vislib::math::Cuboid<float> bBoxPlus3;
+	bBoxPlus3.Grow(3.0f);
+
+	dc->AccessBoundingBoxes().Clear();
+	dc->AccessBoundingBoxes().SetObjectSpaceBBox(bBoxPlus3);
+	dc->AccessBoundingBoxes().SetObjectSpaceClipBox(bBoxPlus3);
+
 	return true;
 }
 
@@ -366,3 +378,5 @@ vislib::math::Vector<unsigned char, 3> OpenBabelLoader::getElementColor(vislib::
 
 	return vislib::math::Vector<unsigned char, 3>(191, 191, 191);
 }
+
+#endif

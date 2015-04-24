@@ -628,6 +628,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="MoleculeVolumeCudaRenderer.cpp" />
     <ClCompile Include="MultiParticleDataFilter.cpp" />
     <ClCompile Include="MultiPDBLoader.cpp" />
+    <ClCompile Include="OpenBabelLoader.cpp" />
     <ClCompile Include="ParticleDataCall.cpp" />
     <ClCompile Include="PDBInterpolator.cpp" />
     <ClCompile Include="PDBLoader.cpp" />
@@ -773,6 +774,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="MoleculeVolumeCudaRenderer.h" />
     <ClInclude Include="MultiParticleDataFilter.h" />
     <ClInclude Include="MultiPDBLoader.h" />
+    <ClInclude Include="OpenBabelLoader.h" />
     <ClInclude Include="ParticleDataCall.h" />
     <ClInclude Include="PDBInterpolator.h" />
     <ClInclude Include="PDBLoader.h" />
