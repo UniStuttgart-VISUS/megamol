@@ -85,34 +85,39 @@ void read_file_test(const TC& path) {
 }
 
 int main(int argc, char **argv) {
+#ifdef _WIN32
+#define TEST_PATH "D:\\tmp\\"
+#else
+#define TEST_PATH "/tmp/sgrottel/"
+#endif
     std::cout << "Starting tests on file writing speed:" << std::endl;
     std::cout << std::endl;
     
-    const uint64_t size1 = 1000ull;
-    const uint64_t size2 = 1000000ull;
+    const uint64_t size1 = 100000ull;
+    const uint64_t size2 = 10000000ull;
        
-    write_text_file_test<vislib::sys::File>("/tmp/sgrottel/vislib_iotest_file2.txt", size1);
-    write_formatted_text_file_test<vislib::sys::File>("/tmp/sgrottel/vislib_iotest_file.txt", size1);
+    write_text_file_test<vislib::sys::File>(TEST_PATH "vislib_iotest_file2.txt", size1);
+    write_formatted_text_file_test<vislib::sys::File>(TEST_PATH "vislib_iotest_file.txt", size1);
     std::cout << std::endl;
     
-    write_text_file_test<vislib::sys::BufferedFile>("/tmp/sgrottel/vislib_iotest_buffedfile2.txt", size2);
-    write_formatted_text_file_test<vislib::sys::BufferedFile>("/tmp/sgrottel/vislib_iotest_buffedfile.txt", size2);
+    write_text_file_test<vislib::sys::BufferedFile>(TEST_PATH "vislib_iotest_buffedfile2.txt", size2);
+    write_formatted_text_file_test<vislib::sys::BufferedFile>(TEST_PATH "vislib_iotest_buffedfile.txt", size2);
     std::cout << std::endl;
 
-    write_text_file_test<vislib::sys::MemmappedFile>("/tmp/sgrottel/vislib_iotest_memmapfile2.txt", size2);
-    write_formatted_text_file_test<vislib::sys::MemmappedFile>("/tmp/sgrottel/vislib_iotest_memmapfile.txt", size2);
+    write_text_file_test<vislib::sys::MemmappedFile>(TEST_PATH "vislib_iotest_memmapfile2.txt", size2);
+    write_formatted_text_file_test<vislib::sys::MemmappedFile>(TEST_PATH "vislib_iotest_memmapfile.txt", size2);
     std::cout << std::endl;
     
     std::cout << "Starting tests on file reading speed:" << std::endl;
     std::cout << std::endl;
        
-    read_file_test<vislib::sys::File>("/tmp/sgrottel/vislib_iotest_buffedfile2.txt");
+    read_file_test<vislib::sys::File>(TEST_PATH "vislib_iotest_buffedfile2.txt");
     std::cout << std::endl;
     
-    read_file_test<vislib::sys::BufferedFile>("/tmp/sgrottel/vislib_iotest_buffedfile2.txt");
+    read_file_test<vislib::sys::BufferedFile>(TEST_PATH "vislib_iotest_buffedfile2.txt");
     std::cout << std::endl;
 
-    read_file_test<vislib::sys::MemmappedFile>("/tmp/sgrottel/vislib_iotest_buffedfile2.txt");
+    read_file_test<vislib::sys::MemmappedFile>(TEST_PATH "vislib_iotest_buffedfile2.txt");
     std::cout << std::endl;
     
     std::cout << "Finished" << std::endl;
