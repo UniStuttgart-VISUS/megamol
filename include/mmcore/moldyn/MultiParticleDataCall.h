@@ -86,9 +86,10 @@ namespace moldyn {
         }
 
         /**
-         * Answer the colour data stride
+         * Answer the colour data stride.
+         * It represents the distance to the succeeding colour.
          *
-         * @return The colour data stride
+         * @return The colour data stride in byte.
          */
         inline unsigned int GetColourDataStride(void) const {
             return this->colStride;
@@ -168,9 +169,10 @@ namespace moldyn {
         }
 
         /**
-         * Answer the vertex data stride
+         * Answer the vertex data stride.
+         * It represents the distance to the succeeding vertex.
          *
-         * @return The vertex data stride
+         * @return The vertex data stride in byte.
          */
         inline unsigned int GetVertexDataStride(void) const {
             return this->vertStride;
