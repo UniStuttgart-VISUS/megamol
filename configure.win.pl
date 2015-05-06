@@ -33,7 +33,6 @@ $a = PathParameter->new();
 $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
-
     $a->id("mmcore");
     $a->description("Path to the MegaMol core directory");
     $a->placeholder("%mmcorePath%");
