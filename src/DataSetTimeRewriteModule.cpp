@@ -110,7 +110,7 @@ bool datatools::DataSetTimeRewriteModule::getDataCallback(core::Call& caller) {
 
     this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(ggdc, pgdc);
     // Change time code
-    ggdc->SetFrameID(minF + pgdc->FrameID() * lenF);
+    ggdc->SetFrameID(minF + pgdc->FrameID() * lenF, pgdc->IsFrameForced());
 
     if (!(*ggdc)(0)) return false;
 
