@@ -151,6 +151,35 @@ view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned 
 
 
 /*
+ * view::AnimDataModule::requestLockedFrame
+ */
+view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned int idx, bool forceIdx) {
+    Frame *f = this->requestLockedFrame(idx);
+    if ((f->FrameNumber() == idx) || (!forceIdx)) return f;
+    // wrong frame number and frame is forced
+
+    // clamp idx
+    if (idx >= this->frameCnt) {
+        idx = this->frameCnt - 1;
+        f->Unlock();
+        f = this->requestLockedFrame(idx);
+    }
+
+    // wait for the new frame
+    while (idx != f->FrameNumber()) {
+        f->Unlock();
+
+        // HAZARD: This will wait for all eternity if the requested frame is never loaded
+
+        vislib::sys::Thread::Sleep(100); // time for the loader thread to load
+        f = this->requestLockedFrame(idx);
+    }
+
+    return f;
+}
+
+
+/*
  * view::AnimDataModule::resetFrameCache
  */
 void view::AnimDataModule::resetFrameCache(void) {

@@ -366,7 +366,7 @@ bool moldyn::MMPLDDataSource::getDataCallback(Call& caller) {
 
     Frame *f = NULL;
     if (c2 != NULL) {
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
+        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID(), c2->IsFrameForced()));
         if (f == NULL) return false;
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());

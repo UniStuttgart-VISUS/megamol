@@ -168,10 +168,14 @@ namespace view {
          * deadlock of the streaming mechanism loading the data.
          *
          * @param idx The index of the frame to be returned.
+         * @param forceIdx If set to true, the frame is only returned for
+         *                 exactly the requested idx, and not the closest
+         *                 match.
          *
          * @return The frame most suitable to the request.
          */
         Frame * requestLockedFrame(unsigned int idx);
+        Frame * requestLockedFrame(unsigned int idx, bool forceIdx);
 
         /**
          * Resets the whole module to the same state as directly after the
