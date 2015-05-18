@@ -103,7 +103,7 @@ bool SIFFWriter::run(void) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
     }
 
-    mpdc->SetFrameID(0);
+    mpdc->SetFrameID(0, true);
     if (!(*mpdc)(0)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Could not get data (Frame 0). Abort.");
         return false;
