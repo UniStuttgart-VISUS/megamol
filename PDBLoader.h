@@ -27,7 +27,9 @@
 #include "MultiPDBLoader.h"
 #include "vislib/math/Vector.h"
 
-
+#ifdef WITH_CURL
+#include <curl/curl.h>
+#endif
 
 namespace megamol {
 namespace protein {
@@ -504,6 +506,20 @@ namespace protein {
             Frame *frame;
         };
 
+#ifdef WITH_CURL
+		/**
+		 *
+		 * @param filename for the pdb file in the database
+		 */
+		std::string loadFromPDB(std::string filename);
+
+		/**
+		 *
+		 *
+		 */
+		//size_t WriteMemoryCallback(char* buf, size_t size, size_t nmemb, void* up);
+		
+#endif
 
         /**
          * Loads a PDB file.

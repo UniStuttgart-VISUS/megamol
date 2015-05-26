@@ -6,18 +6,19 @@
     <VISlibPath>%vislib%</VISlibPath>
     <HAPTICSPath>%hapticsPath%</HAPTICSPath>
 	<OPENBABELPath>%openbabelPath%</OPENBABELPath>
+	<CURLPath>%curlPath%</CURLPath>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%withOPENBABEL%!$(OPENBABELPath)/include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>%withCUDA%!WITH_CUDA;!!%withHAPTICS%!WITH_OPENHAPTICS;!!%withOPENBABEL%!WITH_OPENBABEL;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%withOPENBABEL%!$(OPENBABELPath)/include;!!%withCURL%!$(CURLPath)\include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>%withCUDA%!WITH_CUDA;!!%withHAPTICS%!WITH_OPENHAPTICS;!!%withOPENBABEL%!WITH_OPENBABEL;!!%withCURL%!WITH_CURL;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%withOPENBABEL%!$(OPENBABELPath)\lib\$(Platform)\$(Configuration);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%withCUDA%!cudart.lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%withOPENBABEL%!openbabel-2.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%withOPENBABEL%!$(OPENBABELPath)\lib\$(Platform)\$(Configuration);!!%withCURL%!$(CURLPath)\lib\$(Platform)\$(Configuration);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%withCUDA%!cudart.lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%withOPENBABEL%!openbabel-2.lib;!!%withCURL%!libcurl.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <Include>$(VISlibPath)gl\include</Include>
@@ -39,5 +40,8 @@
 	<BuildMacro Include="OPENBABELPath">
 	  <Value>$(OPENBABELPath)</Value>
     </BuildMacro>
+	<BuildMacro Include="CURLPath">
+		<Value>$(CURLPath)</Value>
+	</BuildMacro>
   </ItemGroup>
 </Project>

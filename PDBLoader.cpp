@@ -1115,8 +1115,10 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
     Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Loading PDB file: %s", T2A( filename.PeekBuffer())); // DEBUG
     // try to load the file
+	bool file_loaded = false;
     if (file.LoadFile(T2A(filename))) {
         // file successfully loaded, read first frame
+		file_loaded = true;
         lineCnt = 0;
         while (lineCnt < file.Count() && !line.StartsWith("END")) {
             // get the current line from the file
@@ -1151,7 +1153,48 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
             lineCnt++;
         }
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Atom count: %i", atomEntries.Count()); // DEBUG
+	}
+	else
+	{
+#ifdef WITH_CURL
+		auto seperator_list_linux = vislib::StringTokeniserA::Split(filename, "/");
+		vislib::TString tmp = seperator_list_linux[seperator_list_linux.Count() - 1];
+		auto seperator_list_win = vislib::StringTokeniserA::Split(tmp, "\\");
+		std::string file_exists = seperator_list_win[seperator_list_win.Count() - 1];
+		std::string complete_file = loadFromPDB(file_exists);
 
+		lineCnt = 0;
+		tmp = A2T(complete_file.c_str());
+		auto lines = vislib::StringTokeniserA::Split(tmp, "\n");
+		if (lines.Count() > 1) file_loaded = true;
+
+		while (lineCnt < lines.Count() && !line.StartsWith("END"))
+		{
+			line = lines[lineCnt];
+			if (line.StartsWith("ATOM")) {
+				// ignore alternate locations
+				if (line.Substring(16, 1).Equals(" ", false) ||
+					line.Substring(16, 1).Equals("A", false)) {
+					// resize atom entry array, if necessary
+					if (atomEntries.Count() == atomEntriesCapacity) {
+						atomEntriesCapacity += 10000;
+						atomEntries.AssertCapacity(atomEntriesCapacity);
+					}
+					// add atom entry
+					atomEntries.Add(line);
+				}
+			}
+			// next line
+			lineCnt++;
+		}
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Atom count: %i", atomEntries.Count()); // DEBUG
+#endif
+	}
+	if (!file_loaded)
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A(filename)); // DEBUG
+		return;
+	}
         // Init atom filter array with 1 (= 'visible')
         if (!this->atomVisibility.IsEmpty())
             this->atomVisibility.Clear(true);
@@ -1398,11 +1441,6 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
                 }
             }
         }
-
-
-    } else {
-        Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A( filename)); // DEBUG
-    }
 }
 
 /*
@@ -2116,3 +2154,39 @@ void PDBLoader::parseBBoxEntry(vislib::StringA &bboxEntry){
 }
 
 
+#ifdef WITH_CURL
+
+std::string curl_data;
+size_t WriteMemoryCallback(char* buf, size_t size, size_t nmemb, void* up)
+{
+	for (int c = 0; c<size*nmemb; c++)
+	{
+		curl_data.push_back(buf[c]);
+	}
+	return size*nmemb;
+}
+
+std::string PDBLoader::loadFromPDB(std::string filename)
+{
+	CURL* curl;
+	std::string url = "http://www.rcsb.org/pdb/files/";
+	url.append(filename);
+	std::string buffer;
+
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl = curl_easy_init();
+
+	curl_easy_setopt(curl, CURLOPT_URL, url);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &WriteMemoryCallback);
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	curl_easy_perform(curl);
+
+	//printf("%s \n", curl_data.c_str());
+	buffer = curl_data;
+
+	curl_easy_cleanup(curl);
+	curl_global_cleanup();
+
+	return buffer;
+}
+#endif
