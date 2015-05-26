@@ -211,7 +211,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
 #ifdef WITH_OPENBABEL
-		case CUDA_OFFSET + HAPTICS_OFFSET +  0 : return new ModuleAutoDescription<protein::OpenBabelLoader>();
+		case CUDA_OFFSET + HAPTICS_OFFSET + 0: return new ModuleAutoDescription<protein::OpenBabelLoader>();
 		#define OPENBABAEL_OFFSET 1
 #else
 		#define OPENBABAEL_OFFSET 0

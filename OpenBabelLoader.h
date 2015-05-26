@@ -15,10 +15,14 @@
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/StringConverter.h"
+#include "vislib/sys/Log.h"
 
 #include <openbabel/obconversion.h>
 #include <openbabel/mol.h>
 #include <openbabel/atom.h>
+#ifdef WITH_CURL
+#include <curl/curl.h>
+#endif
 
 using namespace megamol::core::moldyn;
 
@@ -43,7 +47,7 @@ public:
 	* @return A human readable description of this module.
 	*/
 	static const char *Description(void) {
-		return "Connects the OpenBabel framework to MegaMol";
+		return "Offers data conversations.";
 	}
 
 	/**
@@ -82,13 +86,21 @@ protected:
 	bool getExtent(megamol::core::Call& call);
 
 private:
-	float getElementRadius(vislib::StringA name);
-	vislib::math::Vector<unsigned char, 3> getElementColor(vislib::StringA name);
+	float getElementRadius(OpenBabel::OBAtom* atom);
+	vislib::math::Vector<unsigned char, 3> getElementColor(OpenBabel::OBAtom* atom);
+#ifdef WITH_CURL
+	/**
+	*
+	* @param filename for the pdb file in the database
+	*/
+	void loadFromPDB(std::string filename, const char* path);
+#endif
 	
 	megamol::core::CalleeSlot dataOutSlot;
 	core::param::ParamSlot filenameSlot;
 
 	unsigned int atom_count;
+	unsigned int con_count;
 	vislib::Array<unsigned int> atomTypeIdx_arr;
 	vislib::Array<megamol::core::moldyn::MolecularDataCall::AtomType> atomType_arr;
 	std::vector<float> charge;
@@ -103,9 +115,11 @@ private:
 	float occupancy_min;
 	float occupancy_max;
 
+	unsigned int local_atom_count;
+
 	std::vector<unsigned int> connections;
 
-	std::vector<MolecularDataCall::Residue*> residues;
+	std::vector<MolecularDataCall::Residue*>* residues;
 	unsigned int res_count;
 	vislib::Array<unsigned int> resTypeIdx_arr;
 	vislib::Array<vislib::StringA> residueTypeName;

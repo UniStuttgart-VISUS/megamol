@@ -777,7 +777,7 @@ void SimpleMoleculeRenderer::RenderLines(const MolecularDataCall *mol,
 
     // ----- draw bonds as lines -----
     unsigned int cnt, atomIdx0, atomIdx1;
-    glBegin (GL_LINES);
+	glBegin(GL_LINES);
     for (cnt = 0; cnt < mol->ConnectionCount(); ++cnt) {
         // get atom indices
         atomIdx0 = mol->Connection()[2 * cnt + 0];

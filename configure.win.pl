@@ -117,6 +117,23 @@ $a = PathParameter->new();
 	$a->dependencyFlagID("withOPENBABEL");
 	$a->dependencyDisabledValue("");
 	push @pps, $a;
+	
+$b = FlagParameter->new();
+	$b->id("withCURL");
+	$b->description("Enable the uese of LibCurl");
+	$b->placeholder("%withCURL%");
+	$b->value(0);
+	push @fps, $b;
+$a = PathParameter->new();
+	$a->directorySeparator("\\");
+	$a->enforceTrailingDirectorySeparator(1);
+	$a->id("curl");
+	$a->description("Path to the LibCurl directory");
+	$a->placeholder("%curlPath%");
+	$a->autoDetect(0);
+	$a->dependencyFlagID("withCURL");
+	$a->dependencyDisabledValue("");
+	push @pps, $a;
 
 $c = ConfigFilePair->new();
     $c->inFile("ExtLibs.props.input");
