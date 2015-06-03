@@ -429,6 +429,7 @@
     <ClInclude Include="include\vislib\sys\Environment.h" />
     <ClInclude Include="include\vislib\sys\error.h" />
     <ClInclude Include="include\vislib\sys\Event.h" />
+    <ClInclude Include="include\vislib\sys\FastFile.h" />
     <ClInclude Include="include\vislib\sys\FatReaderWriterLock.h" />
     <ClInclude Include="include\vislib\sys\File.h" />
     <ClInclude Include="include\vislib\sys\FileNameSequence.h" />

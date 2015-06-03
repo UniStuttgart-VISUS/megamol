@@ -987,6 +987,9 @@
     <ClInclude Include="include\vislib\macro_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\sys\FastFile.h">
+      <Filter>Header Files\sys</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
