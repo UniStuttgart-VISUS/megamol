@@ -41,6 +41,7 @@
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/moldyn/BindingSiteCall.h"
 #include "mmcore/misc/CallTriMeshData.h"
+#include "mmcore/moldyn/EllipsoidalDataCall.h"
 
 
 using namespace megamol::core;
@@ -79,8 +80,9 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<misc::QRCodeDataCall>();
     instance.RegisterAutoDescription<misc::CalloutImageCall>();
     instance.RegisterAutoDescription<view::Call6DofInteraction>();
-	instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
-	instance.RegisterAutoDescription<moldyn::MolecularDataCall>();
-	instance.RegisterAutoDescription<moldyn::BindingSiteCall>();
+    instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
+    instance.RegisterAutoDescription<moldyn::MolecularDataCall>();
+    instance.RegisterAutoDescription<moldyn::BindingSiteCall>();
     instance.RegisterAutoDescription<misc::CallTriMeshData>();
+    instance.RegisterAutoDescription<moldyn::EllipsoidalParticleDataCall>();
 }
