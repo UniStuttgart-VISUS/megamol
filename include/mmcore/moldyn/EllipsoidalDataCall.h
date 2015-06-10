@@ -25,7 +25,7 @@ namespace moldyn {
     /**
      * Class holding all data of a single directed particle type
      */
-    class EllipsoidalParticles : public SimpleSphericalParticles {
+    class MEGAMOLCORE_API EllipsoidalParticles : public SimpleSphericalParticles {
     public:
 
         /**
@@ -165,13 +165,13 @@ namespace moldyn {
     };
 
 
-    //MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API megamol::core::moldyn::AbstractParticleDataCall<EllipsoidalParticles>;
+    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API AbstractParticleDataCall<EllipsoidalParticles>;
 
 
     /**
      * Call for multi-stream particle data.
      */
-    class EllipsoidalParticleDataCall : public AbstractParticleDataCall<EllipsoidalParticles> {
+    class MEGAMOLCORE_API EllipsoidalParticleDataCall : public AbstractParticleDataCall<EllipsoidalParticles> {
     public:
 
         /** typedef for legacy name */
