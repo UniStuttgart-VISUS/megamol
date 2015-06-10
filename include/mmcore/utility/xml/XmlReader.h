@@ -28,7 +28,7 @@ typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
 
 
 #include "vislib/Array.h"
-#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
 #include "vislib/Pair.h"
 #include "vislib/Stack.h"
@@ -50,7 +50,7 @@ namespace xml {
     private:
 
         /** The alias for the file type to use */
-        typedef vislib::sys::BufferedFile FileType;
+        typedef vislib::sys::FastFile FileType;
 
     public:
 

@@ -11,7 +11,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 #include "vislib/sys/Thread.h"
 
@@ -114,7 +114,7 @@ bool moldyn::MMPGDWriter::run(void) {
         }
     }
 
-    vislib::sys::MemmappedFile file;
+    vislib::sys::FastFile file;
     if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to create output file \"%s\". Abort.",

@@ -26,7 +26,7 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"
 #include <climits>
@@ -412,7 +412,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView *view) {
 
     view::CallRenderView crv;
     BYTE *buffer = NULL;
-    vislib::sys::MemmappedFile file;
+    vislib::sys::FastFile file;
     bool rollback = false;
     vislib::graphics::gl::FramebufferObject *overlayfbo = NULL;
 

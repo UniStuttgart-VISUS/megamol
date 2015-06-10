@@ -13,7 +13,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 #include "vislib/sys/SystemInformation.h"
 
@@ -262,7 +262,7 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     this->data_hash++;
 
     if (this->file == NULL) {
-        this->file = new vislib::sys::MemmappedFile();
+        this->file = new vislib::sys::FastFile();
     } else {
         this->file->Close();
     }

@@ -17,7 +17,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/sys/Log.h"
-#include "vislib/sys/File.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/sys/Thread.h"
 #include <climits>
 
@@ -99,7 +99,7 @@ namespace core {
                 return false;
             }
 
-            vislib::sys::File file;
+            vislib::sys::FastFile file;
             if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
                 d->Unlock();
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());

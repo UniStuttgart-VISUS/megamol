@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/sys/Path.h"
-#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/FastFile.h"
 
 using namespace megamol::core;
 using namespace megamol::core::utility;
@@ -60,9 +60,8 @@ SIZE_T ResourceWrapper::LoadResource(const Configuration& config, const vislib::
         return 0;
     }
     *outData = new BYTE[size];
-    vislib::sys::BufferedFile f;
-    if (!f.Open(filename, vislib::sys::BufferedFile::READ_ONLY, vislib::sys::BufferedFile::SHARE_READ,
-        vislib::sys::BufferedFile::OPEN_ONLY)) {
+    vislib::sys::FastFile f;
+    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to load resource \"%s\": cannot open file\n",
             name.PeekBuffer());
@@ -106,9 +105,8 @@ SIZE_T ResourceWrapper::LoadTextResource(const Configuration& config, const visl
     }
     
     *outData = new char[size + 1];
-    vislib::sys::BufferedFile f;
-    if (!f.Open(filename, vislib::sys::BufferedFile::READ_ONLY, vislib::sys::BufferedFile::SHARE_READ,
-        vislib::sys::BufferedFile::OPEN_ONLY)) {
+    vislib::sys::FastFile f;
+    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to load resource \"%s\": cannot open file\n",
             name.PeekBuffer());

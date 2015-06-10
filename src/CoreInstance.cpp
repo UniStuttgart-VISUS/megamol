@@ -58,7 +58,7 @@
 #include "utility/plugins/PluginManager.h"
 
 #include "vislib/Array.h"
-#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Console.h"
 #include "vislib/functioncast.h"
@@ -1724,7 +1724,7 @@ void megamol::core::CoreInstance::QuickstartRegistry(const vislib::TString& fron
 bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
     //using namespace vislib::sys;
 
-    vislib::sys::BufferedFile outfile;
+    vislib::sys::FastFile outfile;
     if (!outfile.Open(outFilename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::CREATE_OVERWRITE)) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,

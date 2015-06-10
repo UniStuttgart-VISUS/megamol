@@ -11,7 +11,7 @@
 #include "mmcore/param/StringParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::core;
@@ -844,7 +844,7 @@ bool vismol2::Mol20DataSource::filenameChanged(param::ParamSlot& slot) {
     //getLockedPointCloud = nullGetLockedPointCloud;
     //unlockPointCloud = nullUnlockPointCloud;
 
-    vislib::sys::File *fil = new vislib::sys::MemmappedFile();
+    vislib::sys::File *fil = new vislib::sys::FastFile();
     if (!fil->Open(this->filename.Param<param::StringParam>()->Value(), vislib::sys::File::READ_ONLY,
             vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         SAFE_DELETE(fil);

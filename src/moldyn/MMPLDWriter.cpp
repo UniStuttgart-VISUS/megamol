@@ -10,7 +10,7 @@
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 #include "vislib/sys/Thread.h"
 #include <algorithm>
@@ -120,7 +120,7 @@ bool moldyn::MMPLDWriter::run(void) {
 //    frameCnt = 10;
     // END DEBUG
 
-    vislib::sys::MemmappedFile file;
+    vislib::sys::FastFile file;
     if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to create output file \"%s\". Abort.",

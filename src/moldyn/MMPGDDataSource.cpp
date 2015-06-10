@@ -12,7 +12,7 @@
 #include "mmcore/moldyn/ParticleGridDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 #include "vislib/sys/SystemInformation.h"
 
@@ -276,7 +276,7 @@ bool moldyn::MMPGDDataSource::filenameChanged(param::ParamSlot& slot) {
     this->clipbox = this->bbox;
 
     if (this->file == NULL) {
-        this->file = new vislib::sys::MemmappedFile();
+        this->file = new vislib::sys::FastFile();
     } else {
         this->file->Close();
     }
