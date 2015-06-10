@@ -27,6 +27,8 @@
 #include "vislib/sys/ConsoleProgressBar.h"
 #include "vislib/math/ShallowVector.h"
 #include <cstdint>
+#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/FastFile.h"
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn;
@@ -475,9 +477,9 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     this->datahash++;
 
     if (this->file == NULL) {
-        //this->file = new vislib::sys::MemmappedFile();
+        //this->file = new vislib::sys::FastFile();
 		this->file = new vislib::sys::BufferedFile();
-		this->file->SetBufferSize(2 << 30);
+		dynamic_cast<vislib::sys::BufferedFile*>(this->file)->SetBufferSize(2 << 30);
     } else {
         this->file->Close();
     }

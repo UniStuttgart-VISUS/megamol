@@ -11,10 +11,10 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/sys/BufferedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/File.h"
 #include "vislib/Array.h"
 #include "vislib/Map.h"
 
@@ -516,7 +516,7 @@ namespace io {
         core::CalleeSlot getData;
 
         /** The opened data file */
-        vislib::sys::BufferedFile *file;
+        vislib::sys::File *file;
 
         /** The types */
         vislib::Array<SimpleType> types;

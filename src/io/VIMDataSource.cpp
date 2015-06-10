@@ -542,8 +542,7 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->datahash++;
 
     if (this->file == NULL) {
-        //this->file = new vislib::sys::MemmappedFile();
-        this->file = new vislib::sys::File();
+        this->file = new vislib::sys::FastFile();
     } else {
         this->file->Close();
     }

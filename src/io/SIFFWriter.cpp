@@ -12,7 +12,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
 #include "vislib/sys/Thread.h"
 #include "vislib/sys/sysfunctions.h"
@@ -109,7 +109,7 @@ bool SIFFWriter::run(void) {
         return false;
     }
 
-    vislib::sys::MemmappedFile file;
+    vislib::sys::FastFile file;
     if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
         return false;

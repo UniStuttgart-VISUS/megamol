@@ -27,7 +27,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/SystemMessage.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "vislib/math/Vector.h"
 #include "vislib/PtrArray.h"
 
@@ -1190,7 +1190,7 @@ void IMDAtomDataSource::assertData(void) {
 
     this->clear();
 
-    vislib::sys::MemmappedFile file;
+    vislib::sys::FastFile file;
     vislib::TString filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
 //    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
     //this->datahash = static_cast<SIZE_T>(filename.HashCode());

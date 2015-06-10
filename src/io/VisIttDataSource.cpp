@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include <climits>
 #include "io/VisIttDataSource.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -320,7 +320,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->dataHash++;
 
     if (this->file == NULL) {
-        this->file = new vislib::sys::MemmappedFile();
+        this->file = new vislib::sys::FastFile();
     } else {
         this->file->Close();
     }

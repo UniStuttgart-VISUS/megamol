@@ -671,8 +671,8 @@ bool io::VTFResDataSource::filenameChanged(param::ParamSlot& slot) {
 
 	/*
     if (this->file == NULL) {
-        //this->file = new vislib::sys::MemmappedFile();
-		this->file = new vislib::sys::BufferedFile();
+        //this->file = new vislib::sys::FastFile();
+		this->file = new vislib::sys::FastFile();
 		this->file->SetBufferSize(2 << 30);
     } else {
         this->file->Close();

@@ -18,7 +18,7 @@
 #include "vislib/sys/File.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/FastFile.h"
 
 
 namespace megamol {
