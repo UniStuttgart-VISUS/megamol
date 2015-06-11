@@ -10,6 +10,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/moldyn/EllipsoidalDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/error.h"
 #include "vislib/sys/Log.h"
@@ -23,6 +24,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/SystemInformation.h"
 #include "vislib/Trace.h"
+#include <cassert>
 
 using namespace megamol;
 using namespace megamol::stdplugin::moldyn::io;
@@ -43,7 +45,7 @@ using namespace megamol::stdplugin::moldyn::io;
  */
 VIMDataSource::Frame::Frame(core::view::AnimDataModule& owner)
         : core::view::AnimDataModule::Frame(owner), typeCnt(0), partCnt(NULL),
-        pos(NULL), quat(NULL) {
+        pos(NULL), quat(NULL), radii() {
 }
 
 
@@ -66,6 +68,7 @@ void VIMDataSource::Frame::Clear(void) {
         this->pos[i].EnforceSize(0);
         this->quat[i].EnforceSize(0);
     }
+    this->radii.clear();
 }
 
 
@@ -81,6 +84,7 @@ bool VIMDataSource::Frame::LoadFrame(vislib::sys::File *file,
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         this->partCnt[i] = 0;
     }
+    this->radii.clear();
 
     // read frame
     vislib::StringA startLine = vislib::sys::ReadLineFromFileA(*file);
@@ -199,6 +203,7 @@ void VIMDataSource::Frame::SetTypeCount(unsigned int cnt) {
     this->partCnt = new unsigned int[cnt];
     this->pos = new vislib::RawStorage[cnt];
     this->quat = new vislib::RawStorage[cnt];
+    this->radii.clear();
     for (unsigned int i = 0; i < cnt; i++) {
         this->partCnt[i] = 0;
     }
@@ -211,6 +216,45 @@ void VIMDataSource::Frame::SetTypeCount(unsigned int cnt) {
 const float *VIMDataSource::Frame::PartPoss(unsigned int type) const {
     ASSERT(type < this->typeCnt);
     return this->pos[type].As<float>();
+}
+
+
+/*
+ * VIMDataSource::Frame::PartQuats
+ */
+const float *VIMDataSource::Frame::PartQuats(unsigned int type) const {
+    ASSERT(type < this->typeCnt);
+    return this->quat[type].As<float>();
+}
+
+
+/*
+ * VIMDataSource::Frame::PartRadii
+ */
+const float *VIMDataSource::Frame::PartRadii(unsigned int type, SimpleType& t) const {
+    if (this->radii.size() <= type) {
+        // must reconstruct radii data
+        this->radii.resize(this->typeCnt);
+        for (unsigned int type_i = 0; type_i < this->typeCnt; ++type_i) {
+            this->radii[type_i].EnforceSize(0);
+        }
+    }
+    if (this->radii[type].GetSize() < sizeof(float) * 3 * this->partCnt[type]) {
+        this->radii[type].EnforceSize(sizeof(float) * 3 * this->partCnt[type]);
+
+        float radi[3];
+
+        radi[0] = t.Radius();
+        radi[1] = 0.666f * t.Radius();
+        radi[2] = 0.333f * t.Radius();
+
+        for (unsigned int p_i = 0; p_i < this->partCnt[type]; ++p_i) {
+            float *f = this->radii[type].AsAt<float>(sizeof(float) * 3 * p_i);
+            memcpy(f, radi, sizeof(float) * 3);
+        }
+    }
+
+    return this->radii[type].As<const float>();
 }
 
 
@@ -354,10 +398,10 @@ VIMDataSource::VIMDataSource(void) : core::view::AnimDataModule(),
     this->filename.SetUpdateCallback(&VIMDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filename);
 
-    this->getData.SetCallback("MultiParticleDataCall", "GetData",
-        &VIMDataSource::getDataCallback);
-    this->getData.SetCallback("MultiParticleDataCall", "GetExtent",
-        &VIMDataSource::getExtentCallback);
+    this->getData.SetCallback("MultiParticleDataCall", "GetData", &VIMDataSource::getDataCallback);
+    this->getData.SetCallback("MultiParticleDataCall", "GetExtent", &VIMDataSource::getExtentCallback);
+    this->getData.SetCallback(core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetData", &VIMDataSource::getDataCallback);
+    this->getData.SetCallback(core::moldyn::EllipsoidalParticleDataCall::ClassName(), "GetExtent", &VIMDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
 
     this->setFrameCount(1);
@@ -816,11 +860,14 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
  */
 bool VIMDataSource::getDataCallback(core::Call& caller) {
     core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    core::moldyn::EllipsoidalParticleDataCall *c3 = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&caller);
+    if ((c2 == nullptr) && (c3 == nullptr)) return false;
 
-    Frame *f = NULL;
-    if (c2 != NULL) {
-        f = dynamic_cast<Frame *>(this->requestLockedFrame(c2->FrameID()));
-        if (f == NULL) return false;
+    unsigned int fid = (c2 != nullptr) ? c2->FrameID() : c3->FrameID();
+    Frame *f = dynamic_cast<Frame *>(this->requestLockedFrame(fid));
+    if (f == NULL) return false;
+
+    if (c2 != nullptr) {
         c2->SetDataHash((this->file == NULL) ? 0 : this->datahash);
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetParticleListCount(this->typeCnt);
@@ -835,10 +882,33 @@ bool VIMDataSource::getDataCallback(core::Call& caller) {
                 : core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
                 vd);
         }
-        return true;
+    } else {
+        assert(c3 != nullptr);
+        c3->SetDataHash((this->file == NULL) ? 0 : this->datahash);
+        c3->SetUnlocker(new Unlocker(*f));
+        c3->SetParticleListCount(this->typeCnt);
+        for (unsigned int i = 0; i < this->typeCnt; i++) {
+
+//            c3->AccessParticles(i).SetGlobalRadius(this->types[i].Radius()/* / this->boxScaling*/);
+
+            c3->AccessParticles(i).SetCount(f->PartCnt(i));
+
+            c3->AccessParticles(i).SetGlobalColour(this->types[i].Red(), this->types[i].Green(), this->types[i].Blue());
+            c3->AccessParticles(i).SetColourData(core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE, NULL);
+
+            const float *vd = f->PartPoss(i);
+            const float *qd = f->PartQuats(i);
+            const float *rd = f->PartRadii(i, this->types[i]);
+            c3->AccessParticles(i).SetVertexData((vd == NULL)
+                ? core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE
+                : core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+                vd);
+            if (qd) c3->AccessParticles(i).SetQuatData(qd);
+            if (rd) c3->AccessParticles(i).SetRadData(rd);
+        }
     }
 
-    return false;
+    return true;
 }
 
 
@@ -846,7 +916,7 @@ bool VIMDataSource::getDataCallback(core::Call& caller) {
  * VIMDataSource::getExtentCallback
  */
 bool VIMDataSource::getExtentCallback(core::Call& caller) {
-    core::moldyn::MultiParticleDataCall *c2 = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&caller);
+    core::AbstractGetData3DCall *c2 = dynamic_cast<core::AbstractGetData3DCall*>(&caller);
     float border = 0.0f;
 
     if (c2 != NULL) {

@@ -19,6 +19,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 #include "vislib/sys/FastFile.h"
+#include <vector>
 
 
 namespace megamol {
@@ -328,6 +329,24 @@ namespace io {
             const float *PartPoss(unsigned int type) const;
 
             /**
+             * Gets the array of particle quaternions for the requested type.
+             *
+             * @param type The requested type index.
+             *
+             * @return The array of particle quaternions.
+             */
+            const float *PartQuats(unsigned int type) const;
+
+            /**
+             * Returns radii data (three radii per particle). Data is generated if necessary.
+             *
+             * @param type The requested type index.
+             *
+             * @return The array of particle radii.
+             */
+            const float *PartRadii(unsigned int type, SimpleType& t) const;
+
+            /**
              * Answers the size of the loaded data in bytes.
              *
              * @return The size of the loaded data in bytes.
@@ -385,6 +404,8 @@ namespace io {
 
             /** quaternion data per type */
             vislib::RawStorage *quat;
+
+            mutable std::vector<vislib::RawStorage> radii;
 
         };
 
