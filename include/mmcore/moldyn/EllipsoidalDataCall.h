@@ -14,7 +14,7 @@
 #include "mmcore/moldyn/AbstractParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/assert.h"
+#include <cassert>
 
 
 namespace megamol {
@@ -23,7 +23,13 @@ namespace moldyn {
 
 
     /**
-     * Class holding all data of a single directed particle type
+     * Class holding all data of a single ellipsoidal particle type
+     *
+     * Consistency Assumptions:
+     *  Position-Data must be VERTDATA_FLOAT_XYZ
+     *  The global radius is never used
+     *  You must set the quaternion data
+     *  You must set the radii data
      */
     class MEGAMOLCORE_API EllipsoidalParticles : public SimpleSphericalParticles {
     public:
@@ -44,17 +50,6 @@ namespace moldyn {
          * Dtor
          */
         ~EllipsoidalParticles(void);
-
-        static const char* FunctionName(unsigned int idx) {
-            switch (idx) {
-                case 0:
-                    return "GetData";
-                case 1:
-                    return "GetExtents";
-                default:
-                    return "";
-            }
-        }
 
         /**
          * Answer the quaternion data pointer
@@ -102,7 +97,7 @@ namespace moldyn {
          * @param s The stride of the direction data
          */
         void SetQuatData(const float *p, unsigned int s = 0) {
-            ASSERT(p != NULL);
+            assert(p != nullptr);
             this->quatPtr = p;
             this->quatStride = s;
         }
@@ -115,7 +110,7 @@ namespace moldyn {
         * @param s The stride of the radii data
         */
         void SetRadData(const float *p, unsigned int s = 0) {
-            ASSERT(p != NULL);
+            assert(p != nullptr);
             this->radPtr = p;
             this->radStride = s;
         }
@@ -127,7 +122,8 @@ namespace moldyn {
          * @param cnt The number of stored objects
          */
         void SetCount(UINT64 cnt) {
-            this->quatPtr = NULL; // DO NOT DELETE
+            this->quatPtr = nullptr; // DO NOT DELETE
+            this->radPtr = nullptr; // DO NOT DELETE
             SimpleSphericalParticles::SetCount(cnt);
         }
 
