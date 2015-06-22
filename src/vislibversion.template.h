@@ -35,11 +35,11 @@
  *
  * Increment on addition of new functions
  *
- * Exception: During the v2.0 redesign we increase the minor revision on
+ * Exception: During the v2.x redesign we increase the minor revision on
  *            function porting
  *            (from old classes to newly added external libraries)
  */
-#define VISLIB_VERSION_MINOR 0
+#define VISLIB_VERSION_MINOR 1
 
 
 /**
