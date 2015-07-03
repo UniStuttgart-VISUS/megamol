@@ -929,6 +929,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-NoCUDA|x64'">true</ExcludedFromBuild>
     </None>
     <None Include="PotentialCalculator.cuh" />
+    <None Include="Shaders\colormaps.btf" />
+    <None Include="Shaders\electrostatics.btf" />
     <None Include="Shaders\layeredisosurfaces.btf">
       <SubType>Designer</SubType>
     </None>

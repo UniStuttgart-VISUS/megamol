@@ -440,7 +440,7 @@ void main(void) {
     </shader>
 
     <shader name="sphereVertexGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet type="string">
         <!--
 uniform mat4 modelview;
@@ -460,11 +460,14 @@ void main(void) {
     </shader>
 
     <shader name="sphereGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet type="string">
         <!--
-layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
+#extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_geometry_shader4 : enable
+
+//layout (points) in;
+//layout (triangle_strip, max_vertices = 4) out;
 
 uniform mat4 modelview;
 uniform mat4 proj;
@@ -492,7 +495,8 @@ mat4 modelviewInv = inverse(modelview);
 void main(void) {
     
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_in[0].gl_Position;
+    //vec4 inPos = gl_in[0].gl_Position;
+    vec4 inPos = gl_PositionIn[0];
     rad = inPos.w;
     squareRad = rad*rad;
     inPos.w = 1.0;
@@ -1068,11 +1072,14 @@ void main(void) {
     </shader>
 
     <shader name="sphereFragmentGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
       <snippet type="string">
         <!--
+#extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_geometry_shader4 : enable
+
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 uniform mat4 modelview;
 uniform mat4 proj;
@@ -2022,7 +2029,7 @@ void main(void) {
     </shader>
 
     <shader name="cylinderVertexGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet type="string">
         <!--
 in vec4 vertex;
@@ -2048,12 +2055,14 @@ void main(void) {
     </shader>
 
     <shader name="cylinderGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet type="string">
         <!--
-                
-layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
+#extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_geometry_shader4 : enable
+
+//layout (points) in;
+//layout (triangle_strip, max_vertices = 4) out;
 
 uniform mat4 modelview;
 uniform mat4 proj;
@@ -2089,7 +2098,7 @@ void main(void) {
     vec4 tmp, tmp1;
 
     // remove the sphere radius from the w coordinates to the rad varyings
-    vec4 inPos = gl_in[0].gl_Position;
+    vec4 inPos = gl_PositionIn[0];
 
     radz.x = inParams[0].x;
     radz.y = radz.x*radz.x;
@@ -2439,11 +2448,14 @@ void main(void) {
     </shader>
 
     <shader name="cylinderFragmentGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
       <snippet type="string">
         <!--
+#extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_geometry_shader4 : enable
+
 //#undef CLIP
 
 uniform mat4 modelview;
@@ -2608,11 +2620,15 @@ void main(void) {
 
     <!-- offscreen rendering -->
     <shader name="cylinderFragmentOR">
-      <snippet type="version">150</snippet>
+      <!--<snippet type="version">130</snippet>-->
+      <snippet type="string">
+        <!--
+        #version 120
+        -->
+      </snippet>
       <snippet name="commondefines"/>
       <snippet type="string">
         <!--
-
 #extension GL_ARB_gpu_shader5 : enable
 
 #ifndef CALC_CAM_SYS
@@ -3659,7 +3675,7 @@ void main(void) {
     </shader>
 
     <shader name="arrowVertexGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
       <snippet type="string">
@@ -3861,11 +3877,14 @@ void main(void) {
     </shader>
     
     <shader name="arrowGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
       <snippet type="string">
         <!--
+#extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_geometry_shader4 : enable
+
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
@@ -4087,12 +4106,14 @@ void main(void) {
     </shader>
 
     <shader name="arrowFragmentGeom">
-      <snippet type="version">150</snippet>
+      <snippet type="version">140</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
       <snippet type="string">
         <!--
 // #undef CLIP
+#extension GL_ARB_gpu_shader5 : enable
+#extension GL_EXT_geometry_shader4 : enable
 
 #define RENDER_CAPS
 
