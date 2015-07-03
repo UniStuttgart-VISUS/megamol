@@ -876,6 +876,12 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="ClassDiagram.cd" />
+    <None Include="Shaders\colormaps.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\electrostatics.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="Shaders\protein.btf">

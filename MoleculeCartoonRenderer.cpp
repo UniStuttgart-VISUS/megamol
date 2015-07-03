@@ -61,8 +61,8 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         stickRadiusParam( "stickRadius", "The radius for stick rendering"),
         offscreenRenderingParam( "offscreenRendering", "Toggle offscreen rendering"),
         interpolParam( "posInterpolation", "Enable positional interpolation between frames" ),
-		compareParam( "comparison::compare", "Enable comparing between two different molecules" ),
-		molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module"),
+        compareParam( "comparison::compare", "Enable comparing between two different molecules" ),
+        molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module"),
         proteinOnlyParam("proteinOnly", "Render only the protein"),
         tubeRadiusParam("tubeScl", "Scale factor for the tubes when rendering in tubes only mode."),
         currentFrameId( 0), atomCount( 0) {
@@ -78,8 +78,8 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable (&this->bsDataCallerSlot);
 
-	this->molColorCallerSlot.SetCompatibleCall<CallColorDescription>();
-	this->MakeSlotAvailable(&this->molColorCallerSlot);
+    this->molColorCallerSlot.SetCompatibleCall<CallColorDescription>();
+    this->MakeSlotAvailable(&this->molColorCallerSlot);
 
     // check if geom-shader is supported
     //if( this->cartoonShader.AreExtensionsAvailable())
@@ -167,11 +167,11 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable( &this->offscreenRenderingParam);
 
-	this->compareParam.SetParameter(new param::BoolParam(false));
-	this->MakeSlotAvailable( &this->compareParam);
+    this->compareParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable( &this->compareParam);
 
     this->proteinOnlyParam.SetParameter(new param::BoolParam(false));
-	this->MakeSlotAvailable( &this->proteinOnlyParam);
+    this->MakeSlotAvailable( &this->proteinOnlyParam);
 
     // --- set the radius for the cartoon rednering mode ---
     this->radiusCartoon = 0.2f;
@@ -750,9 +750,9 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     mol->SetFrameID(static_cast<int>( callTime));
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 
-	// TODO store c-alpha of mol
-	// TODO if mol2 == NULL : callForGetData with callTime + frameOffset of mol ; else : use mol2
-	// TODO store c-alpha of mol2 (or new c-alpha of mol)
+    // TODO store c-alpha of mol
+    // TODO if mol2 == NULL : callForGetData with callTime + frameOffset of mol ; else : use mol2
+    // TODO store c-alpha of mol2 (or new c-alpha of mol)
 
 
     // interpolate between frames ...
@@ -846,7 +846,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
 
     // parameter refresh
     // Note this also recomputes the atom color table using the color call if necessary
-	this->UpdateParameters( mol, mol->FrameID(), bs);
+    this->UpdateParameters( mol, mol->FrameID(), bs);
 
 
     // render...
@@ -895,7 +895,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
         // --- CARTOON_CPU                                          ---
         // --- render the protein using OpenGL primitives           ---
         // ------------------------------------------------------------
-		this->RenderCartoonCPU( mol, posInter);
+        this->RenderCartoonCPU( mol, posInter);
     }
     
     if( this->currentRenderMode == CARTOON_LINE ) {
@@ -968,7 +968,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
  * update parameters
  */
 void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol, 
-											   unsigned int frameID, const BindingSiteCall *bs) {
+                                               unsigned int frameID, const BindingSiteCall *bs) {
     // color table param
     if( this->colorTableFileParam.IsDirty() ) {
         Color::ReadColorTableFromFile(
@@ -986,23 +986,23 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
         this->prepareCartoonHybrid = true;
         this->tubeRadiusParam.ResetDirty();
     }
-	// ask the color module if a param is dirty
-	CallColor* col = this->molColorCallerSlot.CallAs<CallColor>();
-	bool colDirty = false;
-	if(col != NULL) {
-		(*col)(1); // GetExtents
-		colDirty = col->IsDirty();
-		col->SetDirty(false);
-	}
+    // ask the color module if a param is dirty
+    CallColor* col = this->molColorCallerSlot.CallAs<CallColor>();
+    bool colDirty = false;
+    if(col != NULL) {
+        (*col)(1); // GetExtents
+        colDirty = col->IsDirty();
+        col->SetDirty(false);
+    }
 
-	if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty() || this->compareParam.IsDirty() || colDirty) {
+    if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty() || this->compareParam.IsDirty() || colDirty) {
 
-	    this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+        this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
         this->currentColoringMode1 = static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
-		this->compare = this->compareParam.Param<param::BoolParam>()->Value();
+        this->compare = this->compareParam.Param<param::BoolParam>()->Value();
         RecomputeAll();
 
-		if (!this->compare) {
+        if (!this->compare) {
             Color::MakeColorTable(mol,
                 this->currentColoringMode0,
                 this->currentColoringMode1,
@@ -1015,28 +1015,28 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
                 true, bs);
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                     "Recomputing atom color table WITHOUT color module!");
-		} else if (col != nullptr) {
-			col->SetColoringTarget(mol);
-			col->SetAtomColorTable(&this->atomColorTable);
-			col->SetColorLookupTable(&this->colorLookupTable);
-			col->SetRainbowColorTable(&this->rainbowColors);
-			col->SetBindingSiteCall(bs);
-			col->SetWeighted(true);
-			col->SetForceRecompute(true);
-			col->SetComparisonEnabled(true); // enable comparison
-			col->SetNumEntries(100);
-			col->SetFrameID(frameID);
+        } else if (col != nullptr) {
+            col->SetColoringTarget(mol);
+            col->SetAtomColorTable(&this->atomColorTable);
+            col->SetColorLookupTable(&this->colorLookupTable);
+            col->SetRainbowColorTable(&this->rainbowColors);
+            col->SetBindingSiteCall(bs);
+            col->SetWeighted(true);
+            col->SetForceRecompute(true);
+            col->SetComparisonEnabled(true); // enable comparison
+            col->SetNumEntries(100);
+            col->SetFrameID(frameID);
         
-			(*col)(0); //getColor
-			//this->atomColorTable =  *col->GetAtomColorTable();
+            (*col)(0); //getColor
+            //this->atomColorTable =  *col->GetAtomColorTable();
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
                     "Recomputing atom color table using color module!");
-		}
+        }
 
         this->coloringModeParam0.ResetDirty();
         this->coloringModeParam1.ResetDirty();
         this->cmWeightParam.ResetDirty();
-		this->compareParam.ResetDirty();
+        this->compareParam.ResetDirty();
     }
     if (this->smoothCartoonColoringParam.IsDirty()) {
         this->smoothCartoonColoringMode = this->smoothCartoonColoringParam.Param<param::BoolParam>()->Value();
@@ -1506,82 +1506,82 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
  * MoleculeCartoonRenderer::RenderCartoonCPU
  */
 void MoleculeCartoonRenderer::RenderCartoonCPU(
-	const MolecularDataCall *mol, float* atomPos) {
+    const MolecularDataCall *mol, float* atomPos) {
 
     // prepare CPU cartoon representation, if necessary
     if( this->prepareCartoonCPU ) {
-	    unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
-	    // B-Spline
-	    BSpline bSpline;
-	    // control points for the first (center) b-spline
-	    std::vector<vislib::math::Vector<float, 3> > controlPoints;
+        unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
+        // B-Spline
+        BSpline bSpline;
+        // control points for the first (center) b-spline
+        std::vector<vislib::math::Vector<float, 3> > controlPoints;
         // control points for the second (direction) b-spline
         std::vector<vislib::math::Vector<float, 3> > controlPointsDir;
-	    // temporary vectors
-	    vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld( 0.0f, 0.0f, 0.0f);
-	    // temporary color vector
-	    vislib::math::Vector<float, 3> colorVec;
+        // temporary vectors
+        vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld( 0.0f, 0.0f, 0.0f);
+        // temporary color vector
+        vislib::math::Vector<float, 3> colorVec;
 
-	    // secondary structure type for b-spline
-	    std::vector<std::vector<MolecularDataCall::SecStructure::ElementType> > bSplineSecStruct;
+        // secondary structure type for b-spline
+        std::vector<std::vector<MolecularDataCall::SecStructure::ElementType> > bSplineSecStruct;
 
 
-	    // set the number of segments to create
-	    bSpline.setN( this->numberOfSplineSeg);
+        // set the number of segments to create
+        bSpline.setN( this->numberOfSplineSeg);
         
-	    // resize result vector for coordinates of first b-spline segments
-	    bSplineCoordsCPU.resize( mol->MoleculeCount());
-	    // resize result vector for coordinates of first b-spline segments
+        // resize result vector for coordinates of first b-spline segments
+        bSplineCoordsCPU.resize( mol->MoleculeCount());
+        // resize result vector for coordinates of first b-spline segments
         bSplineCoordsDirCPU.resize( mol->MoleculeCount());
-	    // resize vector for secondary structure
-	    bSplineSecStruct.resize( mol->MoleculeCount());
-	    // resize color vector
-	    this->cartoonColorCPU.resize( mol->MoleculeCount());
+        // resize vector for secondary structure
+        bSplineSecStruct.resize( mol->MoleculeCount());
+        // resize color vector
+        this->cartoonColorCPU.resize( mol->MoleculeCount());
 
-	    // --- compute the b-splines ---
-	    // loop over all chains
-	    MolecularDataCall::Molecule chain;
-	    MolecularDataCall::AminoAcid *aminoacid;
-	    for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
-		    chain = mol->Molecules()[cntChain];
-		    controlPoints.clear();
+        // --- compute the b-splines ---
+        // loop over all chains
+        MolecularDataCall::Molecule chain;
+        MolecularDataCall::AminoAcid *aminoacid;
+        for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
+            chain = mol->Molecules()[cntChain];
+            controlPoints.clear();
             controlPointsDir.clear();
             this->cartoonColorCPU[cntChain].clear();
-		    // check if the first residue is an amino acid
-		    if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
-			    continue;
-		    }
-		    firstSS = chain.FirstSecStructIndex();
-		    countSS = firstSS + chain.SecStructCount();
-		    // loop over all secondary structure elements
-		    for( cntS = firstSS; cntS < countSS; ++cntS ) {
-			    firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
-			    countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
-			    // loop over all amino acids in the current sec struct
-			    for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
-				    // add sec struct type
-				    bSplineSecStruct[cntChain].push_back( mol->SecondaryStructures()[cntS].Type());
-                    
-				    // get the index of the C-alpha atom
-				    if( mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID )
-					    aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
-				    else
-					    continue;
+            // check if the first residue is an amino acid
+            if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
+                continue;
+            }
+            firstSS = chain.FirstSecStructIndex();
+            countSS = firstSS + chain.SecStructCount();
+            // loop over all secondary structure elements
+            for( cntS = firstSS; cntS < countSS; ++cntS ) {
+                firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
+                countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
+                // loop over all amino acids in the current sec struct
+                for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
+                    // add sec struct type
+                    bSplineSecStruct[cntChain].push_back( mol->SecondaryStructures()[cntS].Type());
                     
                     // get the index of the C-alpha atom
-				    idx = aminoacid->CAlphaIndex();
-				    // get the coordinates of the C-alpha atom
-				    vecCA.SetX( atomPos[idx*3+0]);
-				    vecCA.SetY( atomPos[idx*3+1]);
-				    vecCA.SetZ( atomPos[idx*3+2]);
-				    // add the C-alpha coords to the list of control points
-				    controlPoints.push_back( vecCA);
+                    if( mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID )
+                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                    else
+                        continue;
+                    
+                    // get the index of the C-alpha atom
+                    idx = aminoacid->CAlphaIndex();
+                    // get the coordinates of the C-alpha atom
+                    vecCA.SetX( atomPos[idx*3+0]);
+                    vecCA.SetY( atomPos[idx*3+1]);
+                    vecCA.SetZ( atomPos[idx*3+2]);
+                    // add the C-alpha coords to the list of control points
+                    controlPoints.push_back( vecCA);
 
-				    // add the color of the C-alpha atom to the color vector
-				    colorVec.SetX( this->atomColorTable[3*idx]);
-				    colorVec.SetY( this->atomColorTable[3*idx+1]);
-				    colorVec.SetZ( this->atomColorTable[3*idx+2]);
-				    cartoonColorCPU[cntChain].push_back( colorVec);
+                    // add the color of the C-alpha atom to the color vector
+                    colorVec.SetX( this->atomColorTable[3*idx]);
+                    colorVec.SetY( this->atomColorTable[3*idx+1]);
+                    colorVec.SetZ( this->atomColorTable[3*idx+2]);
+                    cartoonColorCPU[cntChain].push_back( colorVec);
                     
                     // get the index of the C atom
                     idx = aminoacid->CCarbIndex();
@@ -1607,13 +1607,13 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
                     // add control point for the second b-spline to the list of control points
                     controlPointsDir.push_back( vecTmp + vecCA);
                 }
-		    }
-		    // set the control points, compute the first spline and fetch the result
-		    bSpline.setBackbone( controlPoints);
-		    if( bSpline.computeSpline() )
-			    bSpline.getResult( bSplineCoordsCPU[cntChain]);
-		    else
-			    continue; // --> return if spline could not be computed
+            }
+            // set the control points, compute the first spline and fetch the result
+            bSpline.setBackbone( controlPoints);
+            if( bSpline.computeSpline() )
+                bSpline.getResult( bSplineCoordsCPU[cntChain]);
+            else
+                continue; // --> return if spline could not be computed
             
             // set the control points, compute the second spline and fetch the result
             bSpline.setBackbone( controlPointsDir);
@@ -1621,7 +1621,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
                     bSpline.getResult( bSplineCoordsDirCPU[cntChain]);
             else
                     continue; // --> return if spline could not be computed
-	    }
+        }
         
         // --- START store the vertices, colors and parameters ---
         this->totalCountTube = 0;
@@ -2199,7 +2199,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
         // --- END store vertex/color/inparams ---
 
         // set cartoon CPU as created
-	    this->prepareCartoonCPU = false;
+        this->prepareCartoonCPU = false;
     }
 
     float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
@@ -2246,101 +2246,101 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(
  * MoleculeCartoonRenderer::RenderCartoonLineCPU
  */
 void MoleculeCartoonRenderer::RenderCartoonLineCPU(
-	const MolecularDataCall *mol, float* atomPos) {
+    const MolecularDataCall *mol, float* atomPos) {
 
     // prepare cartoon line representation, if necessary
     if( this->prepareCartoonLine ) {
-	    unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
-	    // B-Spline
-	    BSpline bSpline;
-	    // control points for the first (center) b-spline
-	    std::vector<vislib::math::Vector<float, 3> > controlPoints;
-	    // temporary vectors
-	    vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld;
-	    // temporary color
-	    //const float *color;
-	    // temporary color vector
-	    vislib::math::Vector<float, 3> colorVec;
+        unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
+        // B-Spline
+        BSpline bSpline;
+        // control points for the first (center) b-spline
+        std::vector<vislib::math::Vector<float, 3> > controlPoints;
+        // temporary vectors
+        vislib::math::Vector<float, 3> vecCA, vecC, vecO, vecTmp, vecTmpOld;
+        // temporary color
+        //const float *color;
+        // temporary color vector
+        vislib::math::Vector<float, 3> colorVec;
 
-	    // secondary structure type for b-spline
-	    std::vector<std::vector<MolecularDataCall::SecStructure::ElementType> > bSplineSecStruct;
+        // secondary structure type for b-spline
+        std::vector<std::vector<MolecularDataCall::SecStructure::ElementType> > bSplineSecStruct;
 
 
-	    // set the number of segments to create
-	    bSpline.setN( this->numberOfSplineSeg);
+        // set the number of segments to create
+        bSpline.setN( this->numberOfSplineSeg);
 
-	    // resize result vector for coordinates of first b-spline segments
-	    bSplineCoordsCPU.resize( mol->MoleculeCount());
-	    // resize vector for secondary structure
-	    bSplineSecStruct.resize( mol->MoleculeCount());
-	    // resize color vector
-	    this->cartoonColorCPU.resize( mol->MoleculeCount());
+        // resize result vector for coordinates of first b-spline segments
+        bSplineCoordsCPU.resize( mol->MoleculeCount());
+        // resize vector for secondary structure
+        bSplineSecStruct.resize( mol->MoleculeCount());
+        // resize color vector
+        this->cartoonColorCPU.resize( mol->MoleculeCount());
 
-	    // --- compute the b-splines ---
-	    // loop over all chains
-	    MolecularDataCall::Molecule chain;
-	    MolecularDataCall::AminoAcid *aminoacid;
-	    for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
-		    chain = mol->Molecules()[cntChain];
-		    controlPoints.clear();
+        // --- compute the b-splines ---
+        // loop over all chains
+        MolecularDataCall::Molecule chain;
+        MolecularDataCall::AminoAcid *aminoacid;
+        for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
+            chain = mol->Molecules()[cntChain];
+            controlPoints.clear();
             this->cartoonColorCPU[cntChain].clear();
-		    // check if the first residue is an amino acid
-		    if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
-			    continue;
-		    }
-		    firstSS = chain.FirstSecStructIndex();
-		    countSS = firstSS + chain.SecStructCount();
-		    // loop over all secondary structure elements
-		    for( cntS = firstSS; cntS < countSS; ++cntS ) {
-			    firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
-			    countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
-			    // loop over all amino acids in the current sec struct
-			    for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
-				    // add sec struct type
-				    bSplineSecStruct[cntChain].push_back( mol->SecondaryStructures()[cntS].Type());
-				    // get the index of the C-alpha atom
-				    if( mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID )
-					    aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
-				    else
-					    continue;
-				    idx = aminoacid->CAlphaIndex();
-				    // get the coordinates of the C-alpha atom
-				    vecCA.SetX( atomPos[idx*3+0]);
-				    vecCA.SetY( atomPos[idx*3+1]);
-				    vecCA.SetZ( atomPos[idx*3+2]);
-				    // add the C-alpha coords to the list of control points
-				    controlPoints.push_back( vecCA);
+            // check if the first residue is an amino acid
+            if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
+                continue;
+            }
+            firstSS = chain.FirstSecStructIndex();
+            countSS = firstSS + chain.SecStructCount();
+            // loop over all secondary structure elements
+            for( cntS = firstSS; cntS < countSS; ++cntS ) {
+                firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
+                countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
+                // loop over all amino acids in the current sec struct
+                for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
+                    // add sec struct type
+                    bSplineSecStruct[cntChain].push_back( mol->SecondaryStructures()[cntS].Type());
+                    // get the index of the C-alpha atom
+                    if( mol->Residues()[cntAA]->Identifier() == MolecularDataCall::Residue::AMINOACID )
+                        aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
+                    else
+                        continue;
+                    idx = aminoacid->CAlphaIndex();
+                    // get the coordinates of the C-alpha atom
+                    vecCA.SetX( atomPos[idx*3+0]);
+                    vecCA.SetY( atomPos[idx*3+1]);
+                    vecCA.SetZ( atomPos[idx*3+2]);
+                    // add the C-alpha coords to the list of control points
+                    controlPoints.push_back( vecCA);
 
-				    // add the color of the C-alpha atom to the color vector
-				    colorVec.SetX( this->atomColorTable[3*idx]);
-				    colorVec.SetY( this->atomColorTable[3*idx+1]);
-				    colorVec.SetZ( this->atomColorTable[3*idx+2]);
-				    cartoonColorCPU[cntChain].push_back( colorVec);
-			    }
-		    }
-		    // set the control points, compute the first spline and fetch the result
-		    bSpline.setBackbone( controlPoints);
-		    if( bSpline.computeSpline() )
-			    bSpline.getResult( bSplineCoordsCPU[cntChain]);
-		    else
-			    continue; // --> return if spline could not be computed
-	    }
+                    // add the color of the C-alpha atom to the color vector
+                    colorVec.SetX( this->atomColorTable[3*idx]);
+                    colorVec.SetY( this->atomColorTable[3*idx+1]);
+                    colorVec.SetZ( this->atomColorTable[3*idx+2]);
+                    cartoonColorCPU[cntChain].push_back( colorVec);
+                }
+            }
+            // set the control points, compute the first spline and fetch the result
+            bSpline.setBackbone( controlPoints);
+            if( bSpline.computeSpline() )
+                bSpline.getResult( bSplineCoordsCPU[cntChain]);
+            else
+                continue; // --> return if spline could not be computed
+        }
 
-	    this->prepareCartoonLine = false;
+        this->prepareCartoonLine = false;
     }
 
 
     if( !this->prepareCartoonLine ) {
-	    glDisable( GL_LIGHTING);
-	    glColor3f( 1.0f, 1.0f, 1.0f);
-	    for( unsigned int j = 0; j < bSplineCoordsCPU.size(); j++ ) {
-		    glBegin( GL_LINE_STRIP);
-		    for( unsigned int i = 0; i < bSplineCoordsCPU[j].size(); i++ ) {
-			    glColor3fv(cartoonColorCPU[j][i/this->numberOfSplineSeg].PeekComponents());
-			    glVertex3fv( bSplineCoordsCPU[j][i].PeekComponents());
-		    }
-		    glEnd(); // GL_LINE_STRIP
-	    }
+        glDisable( GL_LIGHTING);
+        glColor3f( 1.0f, 1.0f, 1.0f);
+        for( unsigned int j = 0; j < bSplineCoordsCPU.size(); j++ ) {
+            glBegin( GL_LINE_STRIP);
+            for( unsigned int i = 0; i < bSplineCoordsCPU[j].size(); i++ ) {
+                glColor3fv(cartoonColorCPU[j][i/this->numberOfSplineSeg].PeekComponents());
+                glVertex3fv( bSplineCoordsCPU[j][i].PeekComponents());
+            }
+            glEnd(); // GL_LINE_STRIP
+        }
     }
 }
 
@@ -2359,7 +2359,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
     if ( !this->geomShaderSupported )
         return;
 
-	unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
+    unsigned int cntChain, cntS, cntAA, idx, firstSS, countSS, firstAA, countAA;
 
     float spec[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
     glMaterialfv ( GL_FRONT_AND_BACK, GL_SPECULAR, spec );
@@ -2372,29 +2372,29 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
     float flip = 1.0f;
     float factor = 0.0f;
     
-	// loop over all molecules
-	MolecularDataCall::Molecule chain;
-	MolecularDataCall::AminoAcid *aminoacid;
-	for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
-		chain = mol->Molecules()[cntChain];
-		// check if the first residue is an amino acid
-		if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
-			continue;
-		}
-		firstSS = chain.FirstSecStructIndex();
-		countSS = firstSS + chain.SecStructCount();
-		// loop over all secondary structure elements
-		for( cntS = firstSS; cntS < countSS; ++cntS ) {
-			firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
-			countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
-			// loop over all amino acids in the current sec struct
-			for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
+    // loop over all molecules
+    MolecularDataCall::Molecule chain;
+    MolecularDataCall::AminoAcid *aminoacid;
+    for( cntChain = 0; cntChain < mol->MoleculeCount(); ++cntChain ) {
+        chain = mol->Molecules()[cntChain];
+        // check if the first residue is an amino acid
+        if( mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID ) {
+            continue;
+        }
+        firstSS = chain.FirstSecStructIndex();
+        countSS = firstSS + chain.SecStructCount();
+        // loop over all secondary structure elements
+        for( cntS = firstSS; cntS < countSS; ++cntS ) {
+            firstAA = mol->SecondaryStructures()[cntS].FirstAminoAcidIndex();
+            countAA = firstAA + mol->SecondaryStructures()[cntS].AminoAcidCount();
+            // loop over all amino acids in the current sec struct
+            for( cntAA = firstAA; cntAA < countAA; ++cntAA ) {
                 idx = chain.FirstResidueIndex() + chain.ResidueCount();
                 if( cntAA + 3 >= idx )
                     continue;
                 // do nothing if the current residue is no amino acid
                 if( mol->Residues()[cntAA]->Identifier() != MolecularDataCall::Residue::AMINOACID )
-					continue;
+                    continue;
                 
                 idx = cntS;
                 while( idx + 1 < mol->SecondaryStructureCount() && cntAA + 2 >= mol->SecondaryStructures()[idx].FirstAminoAcidIndex() + mol->SecondaryStructures()[idx].AminoAcidCount() ){
@@ -2418,15 +2418,15 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
 
                 // vertex 1
                 aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA]);
-				idx = aminoacid->CAlphaIndex();
+                idx = aminoacid->CAlphaIndex();
                 v1.SetX( atomPos[idx*3+0]);
                 v1.SetY( atomPos[idx*3+1]);
                 v1.SetZ( atomPos[idx*3+2]);
-				idx = aminoacid->CCarbIndex();
+                idx = aminoacid->CCarbIndex();
                 v5.SetX( atomPos[idx*3+0]);
                 v5.SetY( atomPos[idx*3+1]);
                 v5.SetZ( atomPos[idx*3+2]);
-				idx = aminoacid->OIndex();
+                idx = aminoacid->OIndex();
                 n1.SetX( atomPos[idx*3+0]);
                 n1.SetY( atomPos[idx*3+1]);
                 n1.SetZ( atomPos[idx*3+2]);
@@ -2438,18 +2438,18 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
                     flip = 1.0;
                 n1 *= flip;
                 aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+2]);
-				idx = aminoacid->CAlphaIndex();
+                idx = aminoacid->CAlphaIndex();
                 glSecondaryColor3f( this->atomColorTable[3*idx], this->atomColorTable[3*idx+1], this->atomColorTable[3*idx+2]);
                 glColor3fv( n1.PeekComponents() );
                 glVertex3fv( v1.PeekComponents() );
 
                 // vertex 2
                 aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+1]);
-				idx = aminoacid->CAlphaIndex();
+                idx = aminoacid->CAlphaIndex();
                 v2.SetX( atomPos[idx*3+0]);
                 v2.SetY( atomPos[idx*3+1]);
                 v2.SetZ( atomPos[idx*3+2]);
-				idx = aminoacid->CCarbIndex();
+                idx = aminoacid->CCarbIndex();
                 v5.SetX( atomPos[idx*3+0]);
                 v5.SetY( atomPos[idx*3+1]);
                 v5.SetZ( atomPos[idx*3+2]);
@@ -2470,11 +2470,11 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
 
                 // vertex 3
                 aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+2]);
-				idx = aminoacid->CAlphaIndex();
+                idx = aminoacid->CAlphaIndex();
                 v3.SetX( atomPos[idx*3+0]);
                 v3.SetY( atomPos[idx*3+1]);
                 v3.SetZ( atomPos[idx*3+2]);
-				idx = aminoacid->CCarbIndex();
+                idx = aminoacid->CCarbIndex();
                 v5.SetX( atomPos[idx*3+0]);
                 v5.SetY( atomPos[idx*3+1]);
                 v5.SetZ( atomPos[idx*3+2]);
@@ -2494,11 +2494,11 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
 
                 // vertex 4
                 aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA+3]);
-				idx = aminoacid->CAlphaIndex();
+                idx = aminoacid->CAlphaIndex();
                 v4.SetX( atomPos[idx*3+0]);
                 v4.SetY( atomPos[idx*3+1]);
                 v4.SetZ( atomPos[idx*3+2]);
-				idx = aminoacid->CCarbIndex();
+                idx = aminoacid->CCarbIndex();
                 v5.SetX( atomPos[idx*3+0]);
                 v5.SetY( atomPos[idx*3+1]);
                 v5.SetZ( atomPos[idx*3+2]);
@@ -2524,9 +2524,9 @@ void MoleculeCartoonRenderer::RenderCartoonGPU ( const MolecularDataCall *mol, f
                 this->helixSplineShader.Disable();
                 this->arrowSplineShader.Disable();
                 this->tubeSplineShader.Disable();
-			}
-		}
-	}
+            }
+        }
+    }
 
     /*
     for ( cntCha = 0; cntCha < prot->ProteinChainCount(); ++cntCha )
