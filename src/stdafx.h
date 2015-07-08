@@ -14,27 +14,13 @@
 #ifdef _WIN32
 /* Windows includes */
 
-#ifndef WINVER // Windows XP or later.
-#define WINVER 0x0501
-#endif
-
-#ifndef _WIN32_WINNT // Windows XP or later.
-#define _WIN32_WINNT 0x0501
-#endif
-
-#ifndef _WIN32_WINDOWS // Windows 98 or later.
-#define _WIN32_WINDOWS 0x0410
-#endif
-
-#ifndef _WIN32_IE // IE 6.0 or later.
-#define _WIN32_IE 0x0600
-#endif
+#include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
 
-#define MMXML_CHAR wchar_t
+//#define MMXML_CHAR wchar_t
 
 #else /* _WIN32 */
 /* Linux includes */
@@ -47,7 +33,7 @@
 #   define NULL 0
 #endif
 
-#define MMXML_CHAR char
+//#define MMXML_CHAR char
 
 #endif /* _WIN32 */
 
@@ -55,6 +41,6 @@
 #include "vislib/types.h"
 #include "vislib/String.h"
 
-typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
+//typedef vislib::String<vislib::CharTraits<MMXML_CHAR> > MMXML_STRING;
 
 #endif /* MEGAMOL_PROTEIN_STDAFX_H_INCLUDED */

@@ -625,7 +625,7 @@ bool MoleculeCudaSESRenderer::Render( Call& call ) {
     memcpy( pos0, protein->AtomPositions(), protein->AtomCount() * 3 * sizeof( float));
     // check if the atom positions have to be interpolated
     bool interpolate = this->interpolParam.Param<param::BoolParam>()->Value();
-    float *pos1;
+    float *pos1 = NULL;
     if( interpolate ) {
         // set next frame ID and get positions of the second frame
         if( ( static_cast<int>( callTime) + 1) < int(protein->FrameCount()) ) 

@@ -23,7 +23,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "CudaDevArr.h"
 #include "HostArr.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
 #include "gridParams.h"
 #include <cmath>
@@ -151,7 +151,7 @@ private:
      * @return 'True' on success, 'false' otherwise
      */
     bool applyRMSFittingToPosArray(
-            MolecularDataCall *mol,
+            megamol::core::moldyn::MolecularDataCall *mol,
             CudaDevArr<float> &vertexPos_D,
             uint vertexCnt,
             float rotation[3][3],
@@ -169,7 +169,7 @@ private:
      * @return 'True' on success, 'false' otherwise
      */
     bool computeDensityMap(
-            MolecularDataCall *mol,
+            megamol::core::moldyn::MolecularDataCall *mol,
             CUDAQuickSurf *cqs,
             gridParams &gridDensMap);
 
@@ -227,7 +227,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool getRMSPosArray(MolecularDataCall *mol, HostArr<float> &posArr,
+    bool getRMSPosArray(megamol::core::moldyn::MolecularDataCall *mol, HostArr<float> &posArr,
             unsigned int &cnt);
 
     /**
@@ -380,7 +380,7 @@ private:
             float externalForcesWeight,
             InterpolationMode interpMode);
 
-    bool initDensMapParams(MolecularDataCall *mol);
+    bool initDensMapParams(megamol::core::moldyn::MolecularDataCall *mol);
 
     /// Flag whether the job is done
     bool jobDone;

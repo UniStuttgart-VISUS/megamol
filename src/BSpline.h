@@ -38,10 +38,10 @@ namespace protein {
 		void getResult( std::vector<vislib::math::Vector<float, 3> > &res) { res = result; };
 
 	protected:
-		vislib::math::Matrix4<float, vislib::math::ROW_MAJOR> S;
-		vislib::math::Matrix4<float, vislib::math::ROW_MAJOR> B;
-		vislib::math::Matrix4<float, vislib::math::ROW_MAJOR> G;
-		vislib::math::Matrix4<float, vislib::math::ROW_MAJOR> M;
+		vislib::math::Matrix<float, 4, vislib::math::ROW_MAJOR> S;
+		vislib::math::Matrix<float, 4, vislib::math::ROW_MAJOR> B;
+		vislib::math::Matrix<float, 4, vislib::math::ROW_MAJOR> G;
+		vislib::math::Matrix<float, 4, vislib::math::ROW_MAJOR> M;
 
 		unsigned int N;
 

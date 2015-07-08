@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 
-#include "Protein.h"
+#include "../include/protein/Protein.h"
 #include "mmcore/api/MegaMolCore.std.h"
 
 // views
@@ -172,7 +172,7 @@ PROTEIN_API int mmplgModuleCount(void) {
     moduleCount+=1;
 #endif // WITH_OPENHAPTICS
 #ifdef WITH_OPENBABEL
-	moduleCount += 1;
+    moduleCount += 1;
 #endif // WITH_OPENBABEL
     return moduleCount;
 }
@@ -211,10 +211,10 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
 #ifdef WITH_OPENBABEL
-		case CUDA_OFFSET + HAPTICS_OFFSET + 0: return new ModuleAutoDescription<protein::OpenBabelLoader>();
-		#define OPENBABAEL_OFFSET 1
+        case CUDA_OFFSET + HAPTICS_OFFSET + 0: return new ModuleAutoDescription<protein::OpenBabelLoader>();
+        #define OPENBABAEL_OFFSET 1
 #else
-		#define OPENBABAEL_OFFSET 0
+        #define OPENBABAEL_OFFSET 0
 #endif //WITH_OPENBABEL
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  0 : return new ModuleAutoDescription<protein::SequenceRenderer>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET +  1 : return new ModuleAutoDescription<protein::BindingSiteDataSource>();
@@ -259,7 +259,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::ResidueSelection>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
-		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::AggregatedDensity>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::AggregatedDensity>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::MolecularBezierData>();
@@ -267,8 +267,8 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 49 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
         case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 50 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
-		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::ColorModule>();
-		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 52: return new ModuleAutoDescription<protein::PDBInterpolator>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::ColorModule>();
+        case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 52: return new ModuleAutoDescription<protein::PDBInterpolator>();
         default: return NULL;
     }
     return NULL;
@@ -305,7 +305,7 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 14: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
         case 15: return new megamol::core::CallAutoDescription<megamol::protein::VBODataCall>();
         case 16: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
-		case 17: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
+        case 17: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
         default: return NULL;
     }
     return NULL;

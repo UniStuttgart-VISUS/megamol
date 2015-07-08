@@ -19,7 +19,7 @@
 #include "mmcore/param/EnumParam.h"
 
 #include "VTIDataCall.h"
-#include "MolecularDataCall.h"
+#include "mmcore/moldyn/MolecularDataCall.h"
 #include "DiagramCall.h"
 #include "VariantMatchDataCall.h"
 #include "MolecularSurfaceFeature.h"
@@ -150,7 +150,7 @@ SurfaceMappingTest::SurfaceMappingTest(void) : Module() , AbstractJob(),
         jobDone(false) {
 
     // Data caller for particle data
-    this->particleDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
+    this->particleDataCallerSlot.SetCompatibleCall<megamol::core::moldyn::MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->particleDataCallerSlot);
 
     // Data caller for volume data
