@@ -100,6 +100,9 @@
     <ClCompile Include="src\misc\ParticleWorker.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\rendering\NGSplatRenderer.cpp">
+      <Filter>rendering\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -150,6 +153,9 @@
     <ClInclude Include="src\misc\ParticleWorker.h">
       <Filter>misc\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\rendering\NGSplatRenderer.h">
+      <Filter>rendering\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat">
@@ -168,6 +174,9 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="Shaders\particleWorkerCompute.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\NGsplat.btf">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

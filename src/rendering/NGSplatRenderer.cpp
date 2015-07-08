@@ -1,17 +1,18 @@
 /*
- * NGSphereRenderer.cpp
+ * NGSplatRenderer.cpp
  *
  * Copyright (C) 2014 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "NGSphereRenderer.h"
+#include "NGSplatRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/FloatParam.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include <inttypes.h>
@@ -27,83 +28,13 @@ const GLuint SSBObindingPoint = 2;
 #define NGS_THE_INSTANCE "gl_VertexID"
 
 //typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
-void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-    const GLchar* message, const GLvoid* userParam) {
-        const char *sourceText, *typeText, *severityText;
-        switch(source) {
-            case GL_DEBUG_SOURCE_API:
-                sourceText = "API";
-                break;
-            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-                sourceText = "Window System";
-                break;
-            case GL_DEBUG_SOURCE_SHADER_COMPILER:
-                sourceText = "Shader Compiler";
-                break;
-            case GL_DEBUG_SOURCE_THIRD_PARTY:
-                sourceText = "Third Party";
-                break;
-            case GL_DEBUG_SOURCE_APPLICATION:
-                sourceText = "Application";
-                break;
-            case GL_DEBUG_SOURCE_OTHER:
-                sourceText = "Other";
-                break;
-            default:
-                sourceText = "Unknown";
-                break;
-        }
-        switch(type) {
-            case GL_DEBUG_TYPE_ERROR:
-                typeText = "Error";
-                break;
-            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-                typeText = "Deprecated Behavior";
-                break;
-            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-                typeText = "Undefined Behavior";
-                break;
-            case GL_DEBUG_TYPE_PORTABILITY:
-                typeText = "Portability";
-                break;
-            case GL_DEBUG_TYPE_PERFORMANCE:
-                typeText = "Performance";
-                break;
-            case GL_DEBUG_TYPE_OTHER:
-                typeText = "Other";
-                break;
-            case GL_DEBUG_TYPE_MARKER:
-                typeText = "Marker";
-                break;
-            default:
-                typeText = "Unknown";
-                break;
-        }
-        switch(severity) {
-            case GL_DEBUG_SEVERITY_HIGH:
-                severityText = "High";
-                break;
-            case GL_DEBUG_SEVERITY_MEDIUM:
-                severityText = "Medium";
-                break;
-            case GL_DEBUG_SEVERITY_LOW:
-                severityText = "Low";
-                break;
-            case GL_DEBUG_SEVERITY_NOTIFICATION:
-                severityText = "Notification";
-                break;
-            default:
-                severityText = "Unknown";
-                break;
-        }
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
-}
-
+extern void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+    const GLchar* message, const GLvoid* userParam);
 
 /*
- * moldyn::NGSphereRenderer::NGSphereRenderer
+ * moldyn::NGSplatRenderer::NGSplatRenderer
  */
-NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
+NGSplatRenderer::NGSplatRenderer(void) : AbstractSimpleSphereRenderer(),
 //sphereShader(),
     fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
 //	timer(),
@@ -113,27 +44,35 @@ NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE),
-    theShaders() {
+    theShaders(),
+    scalingParam("scaling", "scaling factor for particle radii"),
+    alphaScalingParam("alphaScaling", "scaling factor for particle alpha") {
+
+    this->scalingParam << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->scalingParam);
+
+    this->alphaScalingParam << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->alphaScalingParam);
 
     fences.resize(numBuffers);
 }
 
 
 /*
- * moldyn::NGSphereRenderer::~NGSphereRenderer
+ * moldyn::NGSplatRenderer::~NGSplatRenderer
  */
-NGSphereRenderer::~NGSphereRenderer(void) {
+NGSplatRenderer::~NGSplatRenderer(void) {
     this->Release();
 }
 
-void NGSphereRenderer::lockSingle(GLsync& syncObj) {
+void NGSplatRenderer::lockSingle(GLsync& syncObj) {
     if (syncObj) {
         glDeleteSync(syncObj);
     }
     syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
-void NGSphereRenderer::waitSingle(GLsync& syncObj) {
+void NGSplatRenderer::waitSingle(GLsync& syncObj) {
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -148,17 +87,17 @@ void NGSphereRenderer::waitSingle(GLsync& syncObj) {
 /*
  * moldyn::SimpleSphereRenderer::create
  */
-bool NGSphereRenderer::create(void) {
+bool NGSplatRenderer::create(void) {
 #ifdef DEBUG_BLAHBLAH
     glDebugMessageCallback(MyFunkyDebugCallback, NULL);
 #endif
     //vislib::graphics::gl::ShaderSource vert, frag;
     vert = new ShaderSource();
     frag = new ShaderSource();
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("NGsphere::vertex", *vert)) {
+    if (!instance()->ShaderSourceFactory().MakeShaderSource("NGsplat::vertex", *vert)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("NGsphere::fragment", *frag)) {
+    if (!instance()->ShaderSourceFactory().MakeShaderSource("NGsplat::fragment", *frag)) {
         return false;
     }
 
@@ -189,7 +128,7 @@ bool NGSphereRenderer::create(void) {
     return AbstractSimpleSphereRenderer::create();
 }
 
-bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration) {
+bool NGSplatRenderer::makeColorString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration) {
     bool ret = true;
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
@@ -252,7 +191,7 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
     return ret;
 }
 
-bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration)  {
+bool NGSplatRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, std::string &code, std::string &declaration)  {
     bool ret = true;
     //std::string code;
     //std::string declaration;
@@ -293,7 +232,7 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
     return ret;
 }
 
-std::shared_ptr<GLSLShader> NGSphereRenderer::makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag) {
+std::shared_ptr<GLSLShader> NGSplatRenderer::makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag) {
     std::shared_ptr<GLSLShader> sh = std::make_shared<GLSLShader>(GLSLShader());
     try {
         if (!sh->Create(vert->Code(), vert->Count(), frag->Code(), frag->Count())) {
@@ -323,7 +262,7 @@ std::shared_ptr<GLSLShader> NGSphereRenderer::makeShader(vislib::SmartPtr<Shader
     return sh;
 }
 
-std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShader(MultiParticleDataCall::Particles &parts) {
+std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSplatRenderer::generateShader(MultiParticleDataCall::Particles &parts) {
     int c = parts.GetColourDataType();
     int p = parts.GetVertexDataType();
 
@@ -380,7 +319,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
 /*
  * moldyn::SimpleSphereRenderer::release
  */
-void NGSphereRenderer::release(void) {
+void NGSplatRenderer::release(void) {
     glUnmapNamedBufferEXT(this->theSingleBuffer);
     for (auto &x : fences) {
         if (x) {
@@ -395,7 +334,7 @@ void NGSphereRenderer::release(void) {
 }
 
 
-void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr) {
+void NGSplatRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr) {
     float minC = 0.0f, maxC = 0.0f;
     unsigned int colTabSize = 0;
 
@@ -465,7 +404,7 @@ void NGSphereRenderer::setPointers(MultiParticleDataCall::Particles &parts, GLui
     }
 }
 
-void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
+void NGSplatRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
     unsigned int &colStride, unsigned int &vertStride) {
     vertBytes = 0; colBytes = 0;
     switch (parts.GetColourDataType()) {
@@ -520,7 +459,7 @@ void NGSphereRenderer::getBytesAndStride(MultiParticleDataCall::Particles &parts
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool NGSphereRenderer::Render(Call& call) {
+bool NGSplatRenderer::Render(Call& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -538,9 +477,12 @@ bool NGSphereRenderer::Render(Call& call) {
     float clipCol[4];
     this->getClipData(clipDat, clipCol);
     
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glEnable(GL_POINT_SPRITE);
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
@@ -570,6 +512,9 @@ bool NGSphereRenderer::Render(Call& call) {
         glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
         glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
         glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
+        glUniform1f(newShader->ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+        glUniform1f(newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
+        glUniform1f(newShader->ParameterLocation("zNear"), cr->GetCameraParameters()->NearClip());
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
         // colour
@@ -660,6 +605,8 @@ bool NGSphereRenderer::Render(Call& call) {
 
 
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 #ifdef DEBUG_BLAHBLAH
     glDisable(GL_DEBUG_OUTPUT);
     glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

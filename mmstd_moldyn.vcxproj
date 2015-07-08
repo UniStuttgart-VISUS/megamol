@@ -254,6 +254,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\misc\ParticleWorker.cpp" />
     <ClCompile Include="src\rendering\NGSphereBufferArrayRenderer.cpp" />
     <ClCompile Include="src\rendering\NGSphereRenderer.cpp" />
+    <ClCompile Include="src\rendering\NGSplatRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmstd_moldyn\mmstd_moldyn.h" />
@@ -272,6 +273,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\misc\ParticleWorker.h" />
     <ClInclude Include="src\rendering\NGSphereBufferArrayRenderer.h" />
     <ClInclude Include="src\rendering\NGSphereRenderer.h" />
+    <ClInclude Include="src\rendering\NGSplatRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat" />
@@ -279,6 +281,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="ExtLibs.props.input" />
     <None Include="Shaders\NGsphere.btf" />
     <None Include="Shaders\NGsphereBufferArray.btf" />
+    <None Include="Shaders\NGsplat.btf" />
     <None Include="Shaders\particleWorkerCompute.btf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
