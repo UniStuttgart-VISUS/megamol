@@ -168,11 +168,11 @@ xdr_int (XDR *xdrs, int *ip)
 
     case XDR_DECODE:
       if (!xdr_getint32 (xdrs, &l))
-	  {
-	    return FALSE;
-	  }
+      {
+        return FALSE;
+      }
       *ip = (int) l;
-	  
+      
     case XDR_FREE:
       return TRUE;
   }
@@ -196,11 +196,11 @@ xdr_u_int (XDR *xdrs, unsigned int *up)
 
     case XDR_DECODE:
       if (!xdr_getuint32 (xdrs, &l))
-	  {
-	    return FALSE;
-	  }
+      {
+        return FALSE;
+      }
       *up = (unsigned int) l;
-	  
+      
     case XDR_FREE:
       return TRUE;
   }
@@ -226,9 +226,9 @@ xdr_short (XDR *xdrs, short *sp)
 
     case XDR_DECODE:
       if (!xdr_getint32 (xdrs, &l))
-	{
-	  return FALSE;
-	}
+    {
+      return FALSE;
+    }
       *sp = (short) l;
       return TRUE;
 
@@ -255,10 +255,10 @@ xdr_u_short (XDR *xdrs, unsigned short *usp)
 
     case XDR_DECODE:
       if (!xdr_getuint32 (xdrs, &l))
-	{
-	  return FALSE;
-	}
-	  *usp = (unsigned short) l;
+    {
+      return FALSE;
+    }
+      *usp = (unsigned short) l;
       return TRUE;
 
     case XDR_FREE:
@@ -321,9 +321,9 @@ xdr_bool (XDR *xdrs, int *bp)
 
     case XDR_DECODE:
       if (!xdr_getint32 (xdrs, &lb))
-	{
-	  return FALSE;
-	}
+    {
+      return FALSE;
+    }
       *bp = (lb == XDR_FALSE) ? FALSE : TRUE;
       return TRUE;
 
@@ -365,20 +365,20 @@ xdr_opaque (XDR *xdrs, char *cp, unsigned int cnt)
     {
     case XDR_DECODE:
       if (!xdr_getbytes (xdrs, cp, cnt))
-	{
-	  return FALSE;
-	}
+    {
+      return FALSE;
+    }
       if (rndup == 0)
-	return TRUE;
+    return TRUE;
       return xdr_getbytes (xdrs, (char *)crud, rndup);
 
     case XDR_ENCODE:
       if (!xdr_putbytes (xdrs, cp, cnt))
-	{
-	  return FALSE;
-	}
+    {
+      return FALSE;
+    }
       if (rndup == 0)
-	return TRUE;
+    return TRUE;
       return xdr_putbytes (xdrs, xdr_zero, rndup);
 
     case XDR_FREE:
@@ -413,13 +413,13 @@ xdr_string (xdrs, cpp, maxsize)
     {
     case XDR_FREE:
       if (sp == NULL)
-	{
-	  return TRUE;		/* already free */
-	}
+    {
+      return TRUE;		/* already free */
+    }
       /* fall through... */
     case XDR_ENCODE:
       if (sp == NULL)
-	    return FALSE;
+        return FALSE;
       size = (unsigned int)strlen (sp);
       break;
     case XDR_DECODE:
@@ -443,16 +443,16 @@ xdr_string (xdrs, cpp, maxsize)
     {
     case XDR_DECODE:
       if (nodesize == 0)
-	{
-	  return TRUE;
-	}
+    {
+      return TRUE;
+    }
       if (sp == NULL)
-	*cpp = sp = (char *) malloc (nodesize);
+    *cpp = sp = (char *) malloc (nodesize);
       if (sp == NULL)
-	{
-	  (void) fputs ("xdr_string: out of memory\n", stderr);
-	  return FALSE;
-	}
+    {
+      (void) fputs ("xdr_string: out of memory\n", stderr);
+      return FALSE;
+    }
       sp[size] = 0;
       /* fall into ... */
 
@@ -476,28 +476,28 @@ xdr_float(xdrs, fp)
      XDR *xdrs;
      float *fp;
 {
-	xdr_int32_t tmp;
-	
-	switch (xdrs->x_op) {
+    xdr_int32_t tmp;
+    
+    switch (xdrs->x_op) {
 
-	case XDR_ENCODE:
-		tmp = *(xdr_int32_t *)fp;
-   	    return (xdr_putint32(xdrs, &tmp));
+    case XDR_ENCODE:
+        tmp = *(xdr_int32_t *)fp;
+        return (xdr_putint32(xdrs, &tmp));
 
-		break;
+        break;
 
-	case XDR_DECODE:
-			if (xdr_getint32(xdrs, &tmp)) {
-				*(xdr_int32_t *)fp = tmp;
-				return (TRUE);
-			}
+    case XDR_DECODE:
+            if (xdr_getint32(xdrs, &tmp)) {
+                *(xdr_int32_t *)fp = tmp;
+                return (TRUE);
+            }
 
-		break;
+        break;
 
-	case XDR_FREE:
-		return (TRUE);
-	}
-	return (FALSE);
+    case XDR_FREE:
+        return (TRUE);
+    }
+    return (FALSE);
 }
 
 
@@ -542,9 +542,9 @@ xdr_double(xdrs, dp)
       LSW=0;  /* Small endian word order */
     else { /* Catch strange errors */
       printf("Error when detecting floating-point word order.\n"
-	     "Do you have a non-IEEE system?\n"
-	     "If possible, use the XDR libraries provided with your system,\n"
-	     "instead of the Gromacs fallback XDR source.\n");
+         "Do you have a non-IEEE system?\n"
+         "If possible, use the XDR libraries provided with your system,\n"
+         "instead of the Gromacs fallback XDR source.\n");
       exit(0);
     }
   }  
@@ -556,17 +556,17 @@ xdr_double(xdrs, dp)
     tmp[0] = ip[!LSW];
     tmp[1] = ip[LSW];
     return (xdr_putint32(xdrs, tmp) &&
- 	      xdr_putint32(xdrs, tmp+1));
+          xdr_putint32(xdrs, tmp+1));
  
     break;
     
   case XDR_DECODE:
     ip = (int *)dp;
     if (xdr_getint32(xdrs, tmp+!LSW) &&
- 	  xdr_getint32(xdrs, tmp+LSW)) {
-	ip[0] = tmp[0];
-	ip[1] = tmp[1];
-	return (TRUE);
+      xdr_getint32(xdrs, tmp+LSW)) {
+    ip[0] = tmp[0];
+    ip[1] = tmp[1];
+    return (TRUE);
     }
 
     break;
@@ -606,9 +606,9 @@ xdr_vector (xdrs, basep, nelem, elemsize, xdr_elem)
   for (i = 0; i < nelem; i++)
     {
       if (!(*xdr_elem) (xdrs, elptr, LASTUNSIGNED))
-	{
-	  return FALSE;
-	}
+    {
+      return FALSE;
+    }
       elptr += elemsize;
     }
   return TRUE;
@@ -679,7 +679,7 @@ static bool_t
 xdrstdio_getbytes (XDR *xdrs, char *addr, unsigned int len)
 {
   if ((len != 0) && (fread (addr, (int) len, 1,
-			    (FILE *) xdrs->x_private) != 1))
+                (FILE *) xdrs->x_private) != 1))
     return FALSE;
   return TRUE;
 }
@@ -688,7 +688,7 @@ static bool_t
 xdrstdio_putbytes (XDR *xdrs, char *addr, unsigned int len)
 {
   if ((len != 0) && (fwrite (addr, (int) len, 1,
-			     (FILE *) xdrs->x_private) != 1))
+                 (FILE *) xdrs->x_private) != 1))
     return FALSE;
   return TRUE;
 }
@@ -745,21 +745,21 @@ xdrstdio_putint32 (XDR *xdrs, xdr_int32_t *ip)
 static bool_t
 xdrstdio_getuint32 (XDR *xdrs, xdr_uint32_t *ip)
 {
-	xdr_uint32_t mycopy;
-	
-	if (fread ((char *) &mycopy, 4, 1, (FILE *) xdrs->x_private) != 1)
-		return FALSE;
-	*ip = xdr_ntohl (mycopy);
-	return TRUE;
+    xdr_uint32_t mycopy;
+    
+    if (fread ((char *) &mycopy, 4, 1, (FILE *) xdrs->x_private) != 1)
+        return FALSE;
+    *ip = xdr_ntohl (mycopy);
+    return TRUE;
 }
 
 static bool_t
 xdrstdio_putuint32 (XDR *xdrs, xdr_uint32_t *ip)
 {
-	xdr_uint32_t mycopy = xdr_htonl (*ip);
-	
-	ip = &mycopy;
-	if (fwrite ((char *) ip, 4, 1, (FILE *) xdrs->x_private) != 1)
-		return FALSE;
-	return TRUE;
+    xdr_uint32_t mycopy = xdr_htonl (*ip);
+    
+    ip = &mycopy;
+    if (fwrite ((char *) ip, 4, 1, (FILE *) xdrs->x_private) != 1)
+        return FALSE;
+    return TRUE;
 }

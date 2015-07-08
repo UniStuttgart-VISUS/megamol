@@ -25,14 +25,14 @@ __constant__ CurlGridParams curlParams;
  */
 __device__
 uint3 protein::CudaGetGridPos(unsigned int idx) {
-	uint3 pos;
-	// Get position in grid
-	// idx = x * w_x * w_z + y * w_z + z
-	//     = w_z * ( x * w_y + y ) + z
-	pos.z = idx%curlParams.gridDim.z;
-	pos.y = (idx/curlParams.gridDim.z)%curlParams.gridDim.y;
-	pos.x = ((idx/curlParams.gridDim.z)/curlParams.gridDim.y);
-	return pos;
+    uint3 pos;
+    // Get position in grid
+    // idx = x * w_x * w_z + y * w_z + z
+    //     = w_z * ( x * w_y + y ) + z
+    pos.z = idx%curlParams.gridDim.z;
+    pos.y = (idx/curlParams.gridDim.z)%curlParams.gridDim.y;
+    pos.x = ((idx/curlParams.gridDim.z)/curlParams.gridDim.y);
+    return pos;
 }
 
 
@@ -43,10 +43,10 @@ uint3 protein::CudaGetGridPos(unsigned int idx) {
  */
 __global__
 void protein::CudaCurlX_D(float *gridVecFieldD,
-		                  float *gridCurlD,
-		                  float hInvHalf) {
+                          float *gridCurlD,
+                          float hInvHalf) {
 
-	// Get thread index
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
@@ -93,10 +93,10 @@ void protein::CudaCurlX_D(float *gridVecFieldD,
  */
 __global__
 void protein::CudaCurlY_D(float *gridVecFieldD,
-		                  float *gridCurlD,
-		                  float hInvHalf) {
+                          float *gridCurlD,
+                          float hInvHalf) {
 
-	// Get thread index
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
@@ -145,10 +145,10 @@ void protein::CudaCurlY_D(float *gridVecFieldD,
  */
 __global__
 void protein::CudaCurlZ_D(float *gridVecFieldD,
-		                  float *gridCurlD,
-		                  float hInvHalf) {
+                          float *gridCurlD,
+                          float hInvHalf) {
 
-	// Get thread index
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
@@ -196,16 +196,16 @@ void protein::CudaCurlZ_D(float *gridVecFieldD,
  */
 __global__
 void protein::CudaCurlMag_D(float *gridCurlD,
-		                    float *gridCurlMagD) {
+                            float *gridCurlMagD) {
 
-	// Get thread index
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
     // Compute magnitude
     float3 vec = make_float3(gridCurlD[3*idx+0],
-    		                 gridCurlD[3*idx+1],
-    		                 gridCurlD[3*idx+2]);
+                             gridCurlD[3*idx+1],
+                             gridCurlD[3*idx+2]);
 
     float res = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
     gridCurlMagD[idx] = res;
@@ -217,22 +217,22 @@ void protein::CudaCurlMag_D(float *gridCurlD,
  */
 __global__
 void protein::CudaNormalizeGrid_D(float *gridVecFieldD) {
-	// Get thread index
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
     // Compute magnitude
     float3 vec = make_float3(gridVecFieldD[3*idx+0],
-    		                 gridVecFieldD[3*idx+1],
-    		                 gridVecFieldD[3*idx+2]);
+                             gridVecFieldD[3*idx+1],
+                             gridVecFieldD[3*idx+2]);
 
     float magVec = sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
     //float magVec = 1.0f;
 
     if(magVec != 0.0) {
-    	gridVecFieldD[3*idx+0] /= magVec;
-    	gridVecFieldD[3*idx+1] /= magVec;
-    	gridVecFieldD[3*idx+2] /= magVec;
+        gridVecFieldD[3*idx+0] /= magVec;
+        gridVecFieldD[3*idx+1] /= magVec;
+        gridVecFieldD[3*idx+2] /= magVec;
     }
 }
 
@@ -242,9 +242,9 @@ void protein::CudaNormalizeGrid_D(float *gridVecFieldD) {
  */
 __global__
 void protein::CudaGradX_D(float *gridVecFieldD,
-		         float *gridGradD,
-		         float hInvHalf) {
-	// Get thread index
+                 float *gridGradD,
+                 float hInvHalf) {
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
@@ -283,10 +283,10 @@ void protein::CudaGradX_D(float *gridVecFieldD,
  */
 __global__
 void protein::CudaGradY_D(float *gridVecFieldD,
-		         float *gridGradD,
-		         float hInvHalf) {
+                 float *gridGradD,
+                 float hInvHalf) {
 
-	// Get thread index
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
@@ -323,10 +323,10 @@ void protein::CudaGradY_D(float *gridVecFieldD,
  */
 __global__
 void protein::CudaGradZ_D(float *gridVecFieldD,
-		         float *gridGradD,
-		         float hInvHalf) {
+                 float *gridGradD,
+                 float hInvHalf) {
 
-	// Get thread index
+    // Get thread index
     uint idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= curlParams.gridDim.x*curlParams.gridDim.y*curlParams.gridDim.z) return;
 
@@ -370,7 +370,7 @@ extern "C" {
 cudaError_t protein::CUDASetCurlParams(CurlGridParams *hostParams) {
     // Copy parameters to constant memory
     cutilSafeCall(cudaMemcpyToSymbol(curlParams, hostParams, sizeof(CurlGridParams)));
-	return cudaGetLastError();
+    return cudaGetLastError();
 }
 
 
@@ -378,13 +378,13 @@ cudaError_t protein::CUDASetCurlParams(CurlGridParams *hostParams) {
  * protein::CudaGetCurlMagnitude
  */
 cudaError_t protein::CudaGetCurlMagnitude(float *gridVecFieldD,
-		                                  float *gridCurlD,
-		                                  float *gridCurlMagD,
-		                                  unsigned int nVoxels,
-		                                  float gridSpacing) {
+                                          float *gridCurlD,
+                                          float *gridCurlMagD,
+                                          unsigned int nVoxels,
+                                          float gridSpacing) {
 
-	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
+    uint nThreadsPerBlock = min(512, nVoxels);
+    uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set magnitude and curl vector to zero
     cutilSafeCall(cudaMemset(gridCurlMagD, 0, nVoxels*sizeof(float)));
@@ -392,27 +392,27 @@ cudaError_t protein::CudaGetCurlMagnitude(float *gridVecFieldD,
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
-	protein::CudaNormalizeGrid_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridVecFieldD);
-	//cutilCheckMsg("protein::CudaNormalizeGrid_D"); // DEBUG
+    protein::CudaNormalizeGrid_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridVecFieldD);
+    //cutilCheckMsg("protein::CudaNormalizeGrid_D"); // DEBUG
 
-	protein::CudaCurlX_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridVecFieldD, gridCurlD, hInvHalf);
-	//cutilCheckMsg("protein::CudaCurlX_D"); // DEBUG
+    protein::CudaCurlX_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridVecFieldD, gridCurlD, hInvHalf);
+    //cutilCheckMsg("protein::CudaCurlX_D"); // DEBUG
 
-	protein::CudaCurlY_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridVecFieldD, gridCurlD, hInvHalf);
-	//cutilCheckMsg("protein::CudaCurlY_D"); // DEBUG
+    protein::CudaCurlY_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridVecFieldD, gridCurlD, hInvHalf);
+    //cutilCheckMsg("protein::CudaCurlY_D"); // DEBUG
 
-	protein::CudaCurlZ_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridVecFieldD, gridCurlD, hInvHalf);
-	//cutilCheckMsg("protein::CudaCurlZ_D"); // DEBUG
+    protein::CudaCurlZ_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridVecFieldD, gridCurlD, hInvHalf);
+    //cutilCheckMsg("protein::CudaCurlZ_D"); // DEBUG
 
-	protein::CudaCurlMag_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridCurlD, gridCurlMagD);
-	//cutilCheckMsg("protein::CudaCurlMagD"); // DEBUG
+    protein::CudaCurlMag_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridCurlD, gridCurlMagD);
+    //cutilCheckMsg("protein::CudaCurlMagD"); // DEBUG
 
-	return cudaGetLastError();
+    return cudaGetLastError();
 }
 
 
@@ -425,23 +425,23 @@ cudaError_t CudaGetGradX(float *gridVecFieldD,
                             unsigned int nVoxels,
                             float gridSpacing) {
 
-	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
+    uint nThreadsPerBlock = min(512, nVoxels);
+    uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
     cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
-	protein::CudaGradX_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridVecFieldD, gridGrad_D, hInvHalf);
-	cutilCheckMsg("protein::CudaGradX_D"); // DEBUG
+    protein::CudaGradX_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridVecFieldD, gridGrad_D, hInvHalf);
+    cutilCheckMsg("protein::CudaGradX_D"); // DEBUG
 
-	// Copy result to host
+    // Copy result to host
     cutilSafeCall(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
-    		cudaMemcpyDeviceToHost));
+            cudaMemcpyDeviceToHost));
 
-	return cudaGetLastError();
+    return cudaGetLastError();
 }
 
 
@@ -454,23 +454,23 @@ cudaError_t CudaGetGradY(float *gridVecFieldD,
                             unsigned int nVoxels,
                             float gridSpacing) {
 
-	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
+    uint nThreadsPerBlock = min(512, nVoxels);
+    uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
     cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
-	protein::CudaGradY_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridVecFieldD, gridGrad_D, hInvHalf);
-	cutilCheckMsg("protein::CudaGradY_D"); // DEBUG
+    protein::CudaGradY_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridVecFieldD, gridGrad_D, hInvHalf);
+    cutilCheckMsg("protein::CudaGradY_D"); // DEBUG
 
-	// Copy result to host
+    // Copy result to host
     cutilSafeCall(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
-    		cudaMemcpyDeviceToHost));
+            cudaMemcpyDeviceToHost));
 
-	return cudaGetLastError();
+    return cudaGetLastError();
 }
 
 
@@ -483,23 +483,23 @@ cudaError_t CudaGetGradZ(float *gridVecFieldD,
                             unsigned int nVoxels,
                             float gridSpacing) {
 
-	uint nThreadsPerBlock = min(512, nVoxels);
-	uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
+    uint nThreadsPerBlock = min(512, nVoxels);
+    uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
     cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
-	protein::CudaGradZ_D <<< nBlocks, nThreadsPerBlock >>>
-			 (gridVecFieldD, gridGrad_D, hInvHalf);
-	cutilCheckMsg("protein::CudaGradZ_D"); // DEBUG
+    protein::CudaGradZ_D <<< nBlocks, nThreadsPerBlock >>>
+             (gridVecFieldD, gridGrad_D, hInvHalf);
+    cutilCheckMsg("protein::CudaGradZ_D"); // DEBUG
 
-	// Copy result to host
+    // Copy result to host
     cutilSafeCall(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
-    		cudaMemcpyDeviceToHost));
+            cudaMemcpyDeviceToHost));
 
-	return cudaGetLastError();
+    return cudaGetLastError();
 }
 
 
