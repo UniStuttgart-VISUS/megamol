@@ -844,7 +844,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
                     (fr->GetPieceExtent(pieceCounter-1).Depth()+1)*
                     (fr->GetPieceExtent(pieceCounter-1).Height()+1) * numComponents;
 
-            float *data;
+            float *data = NULL;
             if(f == VTKImageData::VTISOURCE_ASCII) {
                 data = new float[gridSize];
                 this->readDataAscii2Float(pt_end, data, gridSize);
