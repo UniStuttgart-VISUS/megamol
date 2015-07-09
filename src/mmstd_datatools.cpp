@@ -31,6 +31,7 @@
 #include "ParticleColorSignedDistance.h"
 #endif
 #include "EnforceSymmetricParticleColorRanges.h"
+#include "ParticleSortFixHack.h"
 
 
 /*
@@ -129,6 +130,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignedDistance>();
 #endif
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::EnforceSymmetricParticleColorRanges>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSortFixHack>();
             // register calls here:
             // ...
         }

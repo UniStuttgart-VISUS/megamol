@@ -279,6 +279,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\OverrideParticleBBox.cpp" />
     <ClCompile Include="src\ParticleColorSignedDistance.cpp" />
     <ClCompile Include="src\ParticleColorSignThreshold.cpp" />
+    <ClCompile Include="src\ParticleSortFixHack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/AbstractParticleManipulator.h" />
@@ -302,6 +303,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\OverrideParticleBBox.h" />
     <ClInclude Include="src\ParticleColorSignedDistance.h" />
     <ClInclude Include="src\ParticleColorSignThreshold.h" />
+    <ClInclude Include="src\ParticleSortFixHack.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cmake\ConfigInstall.cmake.in" />
