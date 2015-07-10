@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParticleManipulator.h"
-//#include "mmcore/param/ParamSlot.h"
 #include <vector>
+#include "vislib/math/Dimension.h"
 
 
 namespace megamol {
@@ -83,6 +83,8 @@ namespace datatools {
         bool updateIDdata(megamol::core::moldyn::MultiParticleDataCall& inData);
         void updateData(megamol::core::moldyn::MultiParticleDataCall& inData);
         void copyData(particle_data& tar, core::moldyn::SimpleSphericalParticles& src);
+
+        double part_sqdist(const float *p1, const float *p2, const vislib::math::Dimension<float, 3>& bboxsize);
 
         std::vector<particle_data> data;
         unsigned int inDataTime;
