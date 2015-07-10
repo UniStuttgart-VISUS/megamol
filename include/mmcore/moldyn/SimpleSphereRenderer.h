@@ -93,6 +93,7 @@ namespace moldyn {
 
         /** The sphere shader */
         vislib::graphics::gl::GLSLShader sphereShader;
+		core::param::ParamSlot scalingParam;
 
     };
 

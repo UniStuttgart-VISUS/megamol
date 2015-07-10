@@ -14,6 +14,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
+#include "mmcore/param/FloatParam.h"
 
 using namespace megamol::core;
 
@@ -22,8 +23,12 @@ using namespace megamol::core;
  * moldyn::SimpleSphereRenderer::SimpleSphereRenderer
  */
 moldyn::SimpleSphereRenderer::SimpleSphereRenderer(void) : AbstractSimpleSphereRenderer(),
-        sphereShader() {
+        sphereShader(),
+		scalingParam("scaling", "scaling factor for particle radii") {
     // intentionally empty
+
+	this->scalingParam << new core::param::FloatParam(1.0f);
+	this->MakeSlotAvailable(&this->scalingParam);
 }
 
 
@@ -122,6 +127,7 @@ bool moldyn::SimpleSphereRenderer::Render(Call& call) {
     glUniform3fv(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
     glUniform3fv(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+	glUniform1f(this->sphereShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
 
     glUniform4fv(this->sphereShader.ParameterLocation("clipDat"), 1, clipDat);
     glUniform4fv(this->sphereShader.ParameterLocation("clipCol"), 1, clipCol);
