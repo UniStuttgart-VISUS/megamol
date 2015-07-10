@@ -80,14 +80,17 @@ namespace datatools {
             vislib::RawStorage dat;
         };
 
+        bool updateIDdata(megamol::core::moldyn::MultiParticleDataCall& inData);
         void updateData(megamol::core::moldyn::MultiParticleDataCall& inData);
         void copyData(particle_data& tar, core::moldyn::SimpleSphericalParticles& src);
 
         std::vector<particle_data> data;
-        size_t inDataHash;
         unsigned int inDataTime;
-        size_t outDataHash;
         unsigned int outDataTime;
+
+        std::vector<std::vector<std::vector<unsigned int> > > ids;
+        size_t inDataHash;
+        size_t outDataHash;
 
     };
 
