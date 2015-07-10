@@ -136,7 +136,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
         std::vector<particle_data> &dat_cur = pd[frame_i % 2];
         std::vector<particle_data> &dat_prev = pd[(frame_i + 1) % 2];
         do { // ensure we get the right data
-            inData.SetFrameID(0 /* frame_i */, true);
+            inData.SetFrameID(frame_i, true);
             if (!inData(0)) return false;
             if (inData.FrameID() != frame_i) vislib::sys::Thread::Sleep(1);
         } while (inData.FrameID() != frame_i);
@@ -163,6 +163,22 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                 }
             }
             this->ids[frame_i][list_i].resize(part_cnt);
+
+            if (frame_i > 1) {
+                // estimate new particle positions
+                //  dat_prev is data from frame_i - 1
+                //  dat_cur is data from frame_i - 2 (atm)
+                #pragma omp parallel for
+                for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
+                    const float * part_k_pos = reinterpret_cast<const float*>(static_cast<const unsigned char*>(dat_cur[list_i].parts.GetVertexData()) + dat_cur[list_i].parts.GetVertexDataStride() * 
+                        this->ids[frame_i - 1][list_i][part_i]);
+                    float * part_j_pos = reinterpret_cast<float*>(const_cast<unsigned char*>(static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) + dat_prev[list_i].parts.GetVertexDataStride() * part_i));
+
+                    for (int i = 0; i < 3; i++) {
+                        part_j_pos[i] += 0.5f * (part_j_pos[i] - part_k_pos[i]);
+                    }
+                }
+            }
 
             // copy data locally (for being data_prev in the next iteration)
             copyData(dat_cur[list_i], parts);
@@ -207,10 +223,13 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                         static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) 
                         + dat_prev[list_i].parts.GetVertexDataStride() * part_j);
 
-                    double dist = part_sqdist(part_i_pos, part_j_pos, bboxsize);
+                    double dist = std::sqrt(part_sqdist(part_i_pos, part_j_pos, bboxsize));
 
-                    if (part_i == static_cast<int>(part_j)) dist *= 0.5;
-                    else dist += 0.0001;
+                    if (part_i == static_cast<int>(part_j)) {
+                        dist *= 0.001;
+                    } else {
+                        dist += 0.1;
+                    }
 
                     dists[part_i]->prev[part_j].dist = dist;
                     dists[part_i]->prev[part_j].idx = part_j;
@@ -299,16 +318,19 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                         + a_to_b_tick.dist // distance a->b'
                         + b_to_a_tick->dist; // distance b->a'
 
-                    if (distdiv >= -0.001) {
-                        // makes worse or no difference
-                        // step 6: continue with next b'
-                        //////////////////////////////////////////////////////
+                    if ((a_to_b_tick.dist - a_to_a_tick->dist) > 0) continue;
+                    if ((b_to_a_tick->dist - b_to_b_tick->dist) > 0) continue;
 
-                        // should test, thou, if it makes sense continuing here, or if we should move on to the next particle
-                        // For now, max_tries should help.
+                    //if (distdiv >= -0.01) {
+                    //    // makes worse or no difference
+                    //    // step 6: continue with next b'
+                    //    //////////////////////////////////////////////////////
 
-                        continue;
-                    }
+                    //    // should test, thou, if it makes sense continuing here, or if we should move on to the next particle
+                    //    // For now, max_tries should help.
+
+                    //    continue;
+                    //}
 
                     // step 5: swap and continue with next loop
                     //////////////////////////////////////////////////////////
@@ -583,9 +605,9 @@ double datatools::ParticleSortFixHack::part_sqdist(const float *p1, const float 
     assert(dy <= bboxsize[1]);
     assert(dz <= bboxsize[2]);
 
-    if (dx > bboxsize[0] * 0.5f) dx -= bboxsize[0];
-    if (dy > bboxsize[1] * 0.5f) dy -= bboxsize[1];
-    if (dz > bboxsize[2] * 0.5f) dz -= bboxsize[2];
+    if (dx > bboxsize[0] * 0.5f) dx = bboxsize[0] - dx;
+    if (dy > bboxsize[1] * 0.5f) dy = bboxsize[1] - dy;
+    if (dz > bboxsize[2] * 0.5f) dz = bboxsize[2] - dz;
 
     // squared distance
     return static_cast<double>(dx) * static_cast<double>(dx)
