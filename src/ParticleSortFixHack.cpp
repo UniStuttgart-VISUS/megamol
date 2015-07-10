@@ -80,6 +80,33 @@ bool datatools::ParticleSortFixHack::manipulateData(
     return true;
 }
 
+namespace {
+
+    class prev_part_info {
+    public:
+        bool operator<(const prev_part_info& rhs) {
+            return dist < rhs.dist;
+        }
+
+        unsigned int idx;
+        double dist;
+    };
+
+    class cur_part_info {
+    public:
+        unsigned int idx;
+        double dist;
+
+        unsigned int prev_idx;
+        std::vector<prev_part_info> prev;
+    };
+
+    bool inv_comp_cur_part_info_ptr(const cur_part_info* lhs, const cur_part_info* rhs) {
+        return lhs->dist > rhs->dist;
+    }
+
+}
+
 bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiParticleDataCall& inData) {
     outDataHash++;
     vislib::sys::Log::DefaultLog.WriteInfo("Updating Particle Sorting ID Data...");
@@ -101,6 +128,234 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
     vislib::sys::ConsoleProgressBar cpb;
     cpb.Start("Processing frame data", frame_cnt);
 
+    std::vector<cur_part_info> dists_fix;
+    std::vector<cur_part_info*> dists;
+
+    std::vector<particle_data> pd[2];
+    for (unsigned int frame_i = 0; frame_i < frame_cnt; ++frame_i) {
+        std::vector<particle_data> &dat_cur = pd[frame_i % 2];
+        std::vector<particle_data> &dat_prev = pd[(frame_i + 1) % 2];
+        do { // ensure we get the right data
+            inData.SetFrameID(0 /* frame_i */, true);
+            if (!inData(0)) return false;
+            if (inData.FrameID() != frame_i) vislib::sys::Thread::Sleep(1);
+        } while (inData.FrameID() != frame_i);
+
+        // ensure data structure for lists
+        unsigned int list_cnt = inData.GetParticleListCount();
+        if (frame_i > 0) {
+            if (ids[frame_i - 1].size() != list_cnt) {
+                vislib::sys::Log::DefaultLog.WriteError("Data sets changes lists over time. Unsupported!");
+                return false;
+            }
+        }
+        this->ids[frame_i].resize(list_cnt);
+        dat_cur.resize(list_cnt);
+
+        for (unsigned int list_i = 0; list_i < list_cnt; ++list_i) {
+            // ensure data structure for particls
+            auto& parts = inData.AccessParticles(list_i);
+            unsigned int part_cnt = static_cast<unsigned int>(parts.GetCount());
+            if (frame_i > 0) {
+                if (ids[frame_i - 1][list_i].size() != part_cnt) {
+                    vislib::sys::Log::DefaultLog.WriteError("Data sets changes particle numbers in list over time. Unsupported!");
+                    return false;
+                }
+            }
+            this->ids[frame_i][list_i].resize(part_cnt);
+
+            // copy data locally (for being data_prev in the next iteration)
+            copyData(dat_cur[list_i], parts);
+
+            // initialize with identity
+            for (unsigned int part_i = 0; part_i < part_cnt; ++part_i) {
+                this->ids[frame_i][list_i][part_i] = part_i;
+            }
+            if (frame_i == 0) continue; // identity is great for frame 0
+
+            // for later frames find best matches for particles from current frame to previous frame trying to minimize the overall distance
+
+            // 1. compute distance matrix
+            // 2. select particle a with largest distance
+            // 3. select pair-particle b' with which it would have the lowest distance
+            // 4. test if a->a' b->b' would be switched to a->b' b->a' the overall distance would decrease
+            // 5. if so, swap and continue with 2.
+            // 6. if not, select b' with next lowest distance and continue with 4.
+            // 7. if there is not suitable match with a, select a with next largest distance and continue with 3.
+            // 8. if this was the last a, abort
+            // x. abort after X iterations (?)
+
+            // step 1
+            //////////////////////////////////////////////////////////////////
+            if (dists.size() < part_cnt) {
+                dists_fix.resize(part_cnt);
+                dists.resize(part_cnt);
+                for (unsigned int i = 0; i < part_cnt; ++i) {
+                    dists[i] = &dists_fix[i];
+                    dists[i]->prev.resize(part_cnt);
+                }
+            }
+
+            #pragma omp parallel for
+            for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
+                const float * part_i_pos = reinterpret_cast<const float*>(
+                    static_cast<const unsigned char*>(dat_cur[list_i].parts.GetVertexData()) 
+                    + dat_cur[list_i].parts.GetVertexDataStride() * part_i);
+
+                for (unsigned int part_j = 0; part_j < part_cnt; ++part_j) {
+                    const float * part_j_pos = reinterpret_cast<const float*>(
+                        static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) 
+                        + dat_prev[list_i].parts.GetVertexDataStride() * part_j);
+
+                    double dist = part_sqdist(part_i_pos, part_j_pos, bboxsize);
+
+                    if (part_i == static_cast<int>(part_j)) dist *= 0.5;
+                    else dist += 0.0001;
+
+                    dists[part_i]->prev[part_j].dist = dist;
+                    dists[part_i]->prev[part_j].idx = part_j;
+                }
+
+                dists[part_i]->idx = part_i;
+                dists[part_i]->prev_idx = part_i; // id is a good starting point
+                dists[part_i]->dist = dists[part_i]->prev[part_i].dist; // this works here, because dists->prev is not sorted, yet
+
+            //}
+            //for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
+                // now sort, so we can iterate for the smallest distance (step 3.)
+                std::sort(dists[part_i]->prev.begin(), dists[part_i]->prev.end());
+            }
+
+            // inverse sorting, so we find the pair with the largest distance (step 2.)
+            std::sort(dists.begin(), dists.end(), inv_comp_cur_part_info_ptr);
+
+            double whole_dist = 0.0;
+
+            auto dists_it = dists.begin();
+            auto dists_end = dists.end();
+            for (; dists_it != dists_end; ++dists_it) whole_dist += (*dists_it)->dist;
+            dists_it = dists.begin();
+
+            // step 2
+            //////////////////////////////////////////////////////////////////
+            // for loop ensures the maximum iterations
+            for (unsigned int max_iter = part_cnt;
+                    (dists_it != dists_end) // condition step 8
+                        && (max_iter > 0); // condition step x: maximum iterations
+                    --max_iter) {
+                // dists_it is the pair with the largest distance a->a'
+                cur_part_info *a = *dists_it;
+                prev_part_info *a_to_a_tick = nullptr;
+                for (prev_part_info& i_tick : a->prev) {
+                    if (i_tick.idx == a->prev_idx) {
+                        a_to_a_tick = &i_tick;
+                        break;
+                    }
+                }
+                assert(a_to_a_tick != nullptr);
+
+                //bool swapped = false;
+
+                // step 3: select b'
+                //////////////////////////////////////////////////////////////
+                unsigned int max_tries = 10;
+                for (prev_part_info& a_to_b_tick : a->prev) {
+
+                    // limit iterations in this loop
+                    if (max_tries == 0) break;
+                    --max_tries;
+
+                    // search for b
+                    cur_part_info *b = nullptr;
+                    for (cur_part_info *b_i : dists) {
+                        if (b_i->prev_idx == a_to_b_tick.idx) {
+                            b = b_i;
+                            break;
+                        }
+                    }
+                    assert(b != nullptr);
+                    // search of alternative dists
+                    prev_part_info *b_to_a_tick = nullptr;
+                    for (prev_part_info& i_tick : b->prev) {
+                        if (i_tick.idx == a_to_a_tick->idx) {
+                            b_to_a_tick = &i_tick;
+                            break;
+                        }
+                    }
+                    assert(b_to_a_tick != nullptr);
+                    prev_part_info *b_to_b_tick = nullptr;
+                    for (prev_part_info& i_tick : b->prev) {
+                        if (i_tick.idx == a_to_b_tick.idx) {
+                            b_to_b_tick = &i_tick;
+                            break;
+                        }
+                    }
+                    assert(b_to_b_tick != nullptr);
+
+                    // step 4: test distance difference
+                    //////////////////////////////////////////////////////////
+                    double distdiv = - a_to_a_tick->dist // distance a->a'
+                        - b_to_b_tick->dist // distance b->b'
+                        + a_to_b_tick.dist // distance a->b'
+                        + b_to_a_tick->dist; // distance b->a'
+
+                    if (distdiv >= -0.001) {
+                        // makes worse or no difference
+                        // step 6: continue with next b'
+                        //////////////////////////////////////////////////////
+
+                        // should test, thou, if it makes sense continuing here, or if we should move on to the next particle
+                        // For now, max_tries should help.
+
+                        continue;
+                    }
+
+                    // step 5: swap and continue with next loop
+                    //////////////////////////////////////////////////////////
+                    a->prev_idx = a_to_b_tick.idx;
+                    a->dist = a_to_b_tick.dist;
+                    b->prev_idx = b_to_a_tick->idx;
+                    b->dist = b_to_a_tick->dist;
+                    whole_dist += distdiv;
+                    //swapped = true;
+
+                    // resort: should be quick as only two elements changed their values
+                    std::sort(dists.begin(), dists.end(), inv_comp_cur_part_info_ptr);
+
+                    // just to be sure
+                    dists_it = dists.begin();
+                    dists_end = dists.end();
+                    break;
+                }
+
+                //if (swapped) continue; // continue with step 2
+
+                // step 7: no match with a: continue with next a at 3
+                //////////////////////////////////////////////////////////////
+            }
+
+            // transfer dists matrix
+            #pragma omp parallel for
+            for (int i = 0; i < static_cast<int>(part_cnt); ++i) {
+                this->ids[frame_i][list_i][i] = dists[i]->prev_idx;
+            }
+
+            // some testing output to see how good it works:
+            unsigned int wcc = 0;
+            for (unsigned int i = 0; i < part_cnt; ++i) {
+                if (ids[frame_i][list_i][i] != i) wcc++;
+            }
+            vislib::sys::Log::DefaultLog.WriteInfo("[%u][%u] Particle list mixing: %u/%u\n", frame_i, list_i, wcc, part_cnt);
+
+        }
+
+        inData.Unlock();
+        cpb.Set(frame_i);
+    }
+
+#if 0
+    // first try was completely wrong!
+    
     std::vector<particle_data> pd[2];
 
     typedef struct _sqdist_info_t {
@@ -149,14 +404,14 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                 // estimate new particle positions
                 //  dat_prev is data from frame_i - 1
                 //  dat_cur is data from frame_i - 2 (atm)
-    #pragma omp parallel for
+#pragma omp parallel for
                 for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
                     const float * part_k_pos = reinterpret_cast<const float*>(static_cast<const unsigned char*>(dat_cur[list_i].parts.GetVertexData()) + dat_cur[list_i].parts.GetVertexDataStride() * 
                         this->ids[frame_i - 1][list_i][part_i]);
                     float * part_j_pos = reinterpret_cast<float*>(const_cast<unsigned char*>(static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) + dat_prev[list_i].parts.GetVertexDataStride() * part_i));
 
                     for (int i = 0; i < 3; i++) {
-                        part_j_pos[i] += 0.75f * (part_j_pos[i] - part_k_pos[i]);
+                        part_j_pos[i] += 0.5f * (part_j_pos[i] - part_k_pos[i]);
                     }
                 }
             }
@@ -178,7 +433,8 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                 if (part_i_available.size() < part_cnt) part_i_available.resize(part_cnt);
                 if (part_j_available.size() < part_cnt) part_j_available.resize(part_cnt);
 
-                double diag_bonus_fac = (frame_i < 2) ? 0.1 : 0.4;
+                double diag_bonus_fac = (frame_i < 2) ? 0.1 : 0.666;
+                double off_diag_malus = 0.00001;
 
 #pragma omp parallel for
                 for (int part_i = 0; part_i < static_cast<int>(part_cnt); ++part_i) {
@@ -193,7 +449,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                             + dat_prev[list_i].parts.GetVertexDataStride() * part_j);
                         // squared distance from particle i in this frame to particle j in the previous frame
                         double dist = part_sqdist(part_i_pos, part_j_pos, bboxsize);
-                        if (part_i == part_j) dist *= diag_bonus_fac;
+                        if (part_i == part_j) dist *= diag_bonus_fac; else dist += off_diag_malus;
                         sqdists[part_i + part_j * part_cnt].d = dist;
                         sqdists[part_i + part_j * part_cnt].i = part_i;
                         sqdists[part_i + part_j * part_cnt].j = part_j;
@@ -226,6 +482,8 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
         inData.Unlock();
         cpb.Set(frame_i);
     }
+#endif
+
     cpb.Stop();
 
     // now we make the id list global!
