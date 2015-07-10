@@ -19,19 +19,8 @@ using namespace megamol::stdplugin;
  * datatools::ParticleSortFixHack::ParticleSortFixHack
  */
 datatools::ParticleSortFixHack::ParticleSortFixHack(void)
-        : AbstractParticleManipulator("outData", "indata")/*,
-        enableSlot("enable", "Enables the color manipulation"),
-        negativeThresholdSlot("negativeThreshold", "Color values below this threshold will be mapped to -1"),
-        positiveThresholdSlot("positiveThreshold", "Color values above this threshold will be mapped to 1"),
-        datahash(0), time(0), newColors()*/ {
-    //this->enableSlot.SetParameter(new core::param::BoolParam(true));
-    //this->MakeSlotAvailable(&this->enableSlot);
-
-    //this->negativeThresholdSlot.SetParameter(new core::param::FloatParam(-0.01f));
-    //this->MakeSlotAvailable(&this->negativeThresholdSlot);
-
-    //this->positiveThresholdSlot.SetParameter(new core::param::FloatParam(0.01f));
-    //this->MakeSlotAvailable(&this->positiveThresholdSlot);
+        : AbstractParticleManipulator("outData", "indata"), data(),
+        inDataHash(-1), inDataTime(-1), outDataHash(0), outDataTime(0) {
 }
 
 
@@ -51,83 +40,85 @@ bool datatools::ParticleSortFixHack::manipulateData(
         megamol::core::moldyn::MultiParticleDataCall& inData) {
     using megamol::core::moldyn::MultiParticleDataCall;
 
-    //outData = inData; // also transfers the unlocker to 'outData'
-    //inData.SetUnlocker(nullptr, false); // keep original data locked
-    //                                    // original data will be unlocked through outData
+    // update internal data if required
+    if ((inData.DataHash() == 0) || (inData.DataHash() != inDataHash)
+            || (inData.FrameID() != inDataTime)
+            || (data.size() != inData.GetParticleListCount())) {
+        inDataHash = inData.DataHash();
+        inDataTime = inData.FrameID();
+        updateData(inData);
 
-    //if (!this->enableSlot.Param<core::param::BoolParam>()->Value()) return true;
+    }
 
-    //if (this->negativeThresholdSlot.IsDirty()) {
-    //    this->negativeThresholdSlot.ResetDirty();
-    //    this->datahash = 0;
-    //}
-    //if (this->positiveThresholdSlot.IsDirty()) {
-    //    this->positiveThresholdSlot.ResetDirty();
-    //    this->datahash = 0;
-    //}
-    //if ((this->datahash == 0) || (this->datahash != outData.DataHash()) || (this->time != outData.FrameID())) {
-    //    this->datahash = outData.DataHash();
-    //    this->time = outData.FrameID();
-    //    this->compute_colors(outData);
-    //}
-    //
-    //if (this->newColors.size() > 0) {
-    //    this->set_colors(outData);
-    //}
+    // output internal data copy
+    outData.SetDataHash(outDataHash);
+    outData.SetExtent(inData.FrameCount(), inData.AccessBoundingBoxes());
+    outData.SetFrameID(outDataTime);
+    outData.SetParticleListCount(static_cast<unsigned int>(data.size()));
+    for (unsigned int i = 0; i < static_cast<unsigned int>(data.size()); i++) {
+        outData.AccessParticles(i) = data[i].parts;
+    }
+    outData.SetUnlocker(nullptr); // since this is a hack module, I don't care for thread safety
 
     return true;
 }
 
-/*
-void datatools::ParticleColorSignThreshold::compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
-    size_t allpartcnt = 0;
+void datatools::ParticleSortFixHack::updateData(
+        megamol::core::moldyn::MultiParticleDataCall& inData) {
+    data.resize(inData.GetParticleListCount());
 
-    unsigned int plc = dat.GetParticleListCount();
-    for (unsigned int pli = 0; pli < plc; pli++) {
-        auto& pl = dat.AccessParticles(pli);
-        if (pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
-        allpartcnt += static_cast<size_t>(pl.GetCount());
+    for (unsigned int i = 0; i < static_cast<unsigned int>(data.size()); i++) {
+        copyData(data[i], inData.AccessParticles(i));
+
+        // TODO: Implement
     }
 
-    this->newColors.resize(allpartcnt);
-
-    float negcol = this->negativeThresholdSlot.Param<core::param::FloatParam>()->Value();
-    float poscol = this->positiveThresholdSlot.Param<core::param::FloatParam>()->Value();
-
-    allpartcnt = 0;
-    for (unsigned int pli = 0; pli < plc; pli++) {
-        auto& pl = dat.AccessParticles(pli);
-        if (pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
-
-        int part_cnt = static_cast<int>(pl.GetCount());
-        const unsigned char *col = static_cast<const unsigned char*>(pl.GetColourData());
-        unsigned int stride = std::max<unsigned int>(pl.GetColourDataStride(), sizeof(float));
-#pragma omp parallel for
-        for (int part_i = 0; part_i < part_cnt; ++part_i) {
-            float c = *reinterpret_cast<const float *>(col + (part_i * stride));
-            if (c < negcol) c = -1.0f;
-            else if (c > poscol) c = 1.0f;
-            else c = 0.0f;
-            this->newColors[allpartcnt + part_i] = c;
-        }
-
-        allpartcnt += static_cast<size_t>(part_cnt);
-    }
+    outDataHash++;
+    outDataTime = inData.FrameID();
 }
 
+void datatools::ParticleSortFixHack::copyData(particle_data& tar, core::moldyn::SimpleSphericalParticles& src) {
+    tar.parts = src;
 
-void datatools::ParticleColorSignThreshold::set_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
-    size_t allpartcnt = 0;
+    const unsigned char* colPtr = static_cast<const unsigned char*>(src.GetColourData());
+    const unsigned char* vertPtr = static_cast<const unsigned char*>(src.GetVertexData());
+    unsigned int colSize = 0;
+    unsigned int colStride = src.GetColourDataStride();
+    unsigned int vertSize = 0;
+    unsigned int vertStride = src.GetVertexDataStride();
+    bool vertRad = false;
 
-    unsigned int plc = dat.GetParticleListCount();
-    for (unsigned int pli = 0; pli < plc; pli++) {
-        auto& pl = dat.AccessParticles(pli);
-        if (pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
-
-        pl.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->newColors.data() + allpartcnt);
-        pl.SetColourMapIndexValues(-1.0f, 1.0f);
-
-        allpartcnt += static_cast<size_t>(pl.GetCount());
+    // colour
+    switch (src.GetColourDataType()) {
+    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE: break;
+    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: colSize = 3; break;
+    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: colSize = 4; break;
+    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: colSize = 12; break;
+    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: colSize = 16; break;
+    case core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: colSize = 4; break;
+    default: break;
     }
+    if (colStride < colSize) colStride = colSize;
+
+    // radius and position
+    switch (src.GetVertexDataType()) {
+    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE: break;
+    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ: vertSize = 12; break;
+    case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR: vertSize = 16; break;
+        // We do not support short-vertices ATM
+    default: break;
+    }
+    if (vertStride < vertSize) vertStride = vertSize;
+
+    tar.dat.EnforceSize((colSize + vertSize) * tar.parts.GetCount());
+    tar.parts.SetVertexData(src.GetVertexDataType(), tar.dat.At(0), colSize + vertSize);
+    tar.parts.SetColourData(src.GetColourDataType(), tar.dat.At(vertSize), colSize + vertSize);
+
+    for (UINT64 pi = 0; pi < tar.parts.GetCount(); ++pi) {
+        ::memcpy(tar.dat.At(pi * (colSize + vertSize) + 0), vertPtr, vertSize);
+        vertPtr += vertStride;
+        ::memcpy(tar.dat.At(pi * (colSize + vertSize) + vertSize), colPtr, colSize);
+        colPtr += colStride;
+    }
+
 }
-*/

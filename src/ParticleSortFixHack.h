@@ -80,17 +80,14 @@ namespace datatools {
             vislib::RawStorage dat;
         };
 
+        void updateData(megamol::core::moldyn::MultiParticleDataCall& inData);
+        void copyData(particle_data& tar, core::moldyn::SimpleSphericalParticles& src);
+
         std::vector<particle_data> data;
-
-        //void compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat);
-        //void set_colors(megamol::core::moldyn::MultiParticleDataCall& dat);
-
-        //core::param::ParamSlot enableSlot;
-        //core::param::ParamSlot negativeThresholdSlot;
-        //core::param::ParamSlot positiveThresholdSlot;
-        //size_t datahash;
-        //unsigned int time;
-        //std::vector<float> newColors;
+        size_t inDataHash;
+        unsigned int inDataTime;
+        size_t outDataHash;
+        unsigned int outDataTime;
 
     };
 

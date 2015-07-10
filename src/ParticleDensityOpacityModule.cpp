@@ -624,7 +624,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
                         cx += dim_x;
                         x_move = bbox.Width();
                     } else continue;
-                } else if (cx >= dim_x) {
+                } else if (static_cast<unsigned int>(cx) >= dim_x) {
                     if (cycX) {
                         cx -= dim_x;
                         x_move = -bbox.Width();
@@ -638,7 +638,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
                             cy += dim_y;
                             y_move = bbox.Height();
                         } else continue;
-                    } else if (cy >= dim_y) {
+                    } else if (static_cast<unsigned int>(cy) >= dim_y) {
                         if (cycY) {
                             cy -= dim_y;
                             y_move = -bbox.Height();
@@ -651,7 +651,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_densit
                                 cz += dim_z;
                                 z_move = bbox.Depth();
                             } else continue;
-                        } else if (cz >= dim_z) {
+                        } else if (static_cast<unsigned int>(cz) >= dim_z) {
                             if (cycZ) {
                                 cz -= dim_z;
                                 z_move = -bbox.Depth();
