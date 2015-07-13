@@ -14,7 +14,13 @@ endif()
 
 
 # search for 3rd party libs
-find_package(MegaMolCore REQUIRED HINTS ${MegaMolCore_DIR})
+set(MegaMolCore_search_hints)
+if (MegaMolCore_DIR)
+	string(TOLOWER "${CMAKE_BUILD_TYPE}" lower_build_type)
+	list(APPEND MegaMolCore_search_hints "${MegaMolCore_DIR}" "${MegaMolCore_DIR}/build.${lower_build_type}" "${MegaMolCore_DIR}/share/cmake/MegaMolCore")
+	message(STATUS "Looking for MegaMolCore with hints: ${MegaMolCore_search_hints}")
+endif()
+find_package(MegaMolCore REQUIRED HINTS ${MegaMolCore_search_hints})
 message(STATUS "MegaMolCore suggests vislib at: ${MegaMolCore_vislib_DIR}")
 message(STATUS "MegaMolCore suggests install prefix: ${MegaMolCore_INSTALL_PREFIX}")
 if (USE_MEGAMOLCORE_INSTALL_PREFIX)
