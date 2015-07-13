@@ -18,50 +18,74 @@ set(inc_search_paths /usr/include /usr/local/include)
 
 
 # setup of additional search hint paths
-set(hint_paths ${CMAKE_CURRENT_SOURCE_DIR})
+set(hint_paths)
 if (AntTweakBar_DIR)
-	list(APPEND hint_paths ${AntTweakBar_DIR})
+	get_filename_component(my_dir "${AntTweakBar_DIR}" ABSOLUTE)
+	list(APPEND hint_paths ${my_dir})
 endif()
-# traverse file system up to the second-highest level
-get_filename_component(my_dir "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
+# traverse file system up to the (second-)highest level
+get_filename_component(my_dir "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 while (${my_dir} STRGREATER "/")
-	#message(STATUS "my_dir == ${my_dir}")
-
-	# check on directory level below
-	file(GLOB my_subdirs RELATIVE ${my_dir} "${my_dir}/*")
-	foreach(my_subdir ${my_subdirs}) 
-
-		# only check non-hidden directories
-		string(SUBSTRING ${my_subdir} 0 1 my_subdir_start)
-		if ((IS_DIRECTORY "${my_dir}/${my_subdir}") AND (NOT ${my_subdir_start} STREQUAL "."))
-			#message(STATUS "my_subdir == ${my_subdir}")
-
-			# add this directory to the hints
-			list(APPEND hint_paths "${my_dir}/${my_subdir}")
-		endif()
-	endforeach()
+	if (NOT ${my_dir} STREQUAL "/home")
+		list(APPEND hint_paths "${my_dir}")
+	endif()
 	get_filename_component(my_dir "${my_dir}/.." ABSOLUTE)
 endwhile()
-# construct the hint paths
-foreach(hint_path ${hint_paths})
-	list(APPEND lib_search_hints "${hint_path}/lib")
-	list(APPEND inc_search_hints "${hint_path}/include")
+
+
+# now perform the actual search
+if (NOT AntTweakBar_SEARCH_DEPTH)
+	set(AntTweakBar_SEARCH_DEPTH 2)
+endif()
+foreach(SEARCH_ITERATION RANGE 0 ${AntTweakBar_SEARCH_DEPTH})
+	# message(STATUS "Searching in: ${hint_paths}")
+
+	# search
+	set(lib_search_hints)
+	set(inc_search_hints)
+	# construct the hint paths
+	foreach(hint_path ${hint_paths})
+		list(APPEND lib_search_hints "${hint_path}/lib")
+		list(APPEND inc_search_hints "${hint_path}/include")
+	endforeach()
+
+	find_library(AntTweakBar_LIBRARY
+		NAMES ${lib_NAME}
+		HINTS "${vislut_DIR}/lib" ${lib_search_hints}
+		PATHS ${lib_search_paths}
+		)
+	find_path(AntTweakBar_INCLUDE_DIR
+		NAMES AntTweakBar.h
+		HINTS "${visglut_NEED_TO_COPY}/../include" ${inc_search_hints}
+		PATHS ${inc_search_paths}
+		)
+
+	if (AntTweakBar_LIBRARY AND AntTweakBar_INCLUDE_DIR)
+		break()
+	endif()
+
+	# not found in the current search directories
+        # prepare subdirectories for the next iteration
+	if (${SEARCH_ITERATION} EQUAL ${AntTweakBar_SEARCH_DEPTH})
+		break()
+	endif()
+	set(next_hint_paths)
+	foreach(my_dir in ${hint_paths})
+		file(GLOB my_subdirs RELATIVE ${my_dir} "${my_dir}/*")
+		foreach(my_subdir ${my_subdirs}) 
+			string(SUBSTRING ${my_subdir} 0 1 my_subdir_start)
+			get_filename_component(my_full_dir "${my_dir}/${my_subdir}" ABSOLUTE)
+			list(FIND hint_paths ${my_full_dir} my_full_dir_found)
+			if ((IS_DIRECTORY "${my_full_dir}") AND (NOT ${my_subdir_start} STREQUAL ".") AND (${my_full_dir_found} EQUAL -1))
+				#message(STATUS "my_subdir == ${my_full_dir}")
+				# add this directory to the hints
+				list(APPEND next_hint_paths "${my_full_dir}")
+			endif()
+		endforeach()
+	endforeach()
+	set(hint_paths ${next_hint_paths})
 endforeach()
 
-
-# perform the search
-#message(STATUS "Searching visglut lib in: ${lib_search_hints};${lib_search_paths}")
-#message(STATUS "Searching visglut includes in: ${inc_search_hints};${inc_search_paths}")
-find_library(AntTweakBar_LIBRARY
-	NAMES ${lib_NAME}
-	HINTS "${vislut_DIR}/lib" ${lib_search_hints}
-	PATHS ${lib_search_paths}
-	)
-find_path(AntTweakBar_INCLUDE_DIR
-	NAMES AntTweakBar.h
-	HINTS "${visglut_NEED_TO_COPY}/../include" ${inc_search_hints}
-	PATHS ${inc_search_paths}
-	)
 
 # finalizing search
 if (AntTweakBar_LIBRARY AND AntTweakBar_INCLUDE_DIR)
@@ -70,6 +94,7 @@ if (AntTweakBar_LIBRARY AND AntTweakBar_INCLUDE_DIR)
 else ()
 	set(AntTweakBar_FOUND FALSE)
 endif ()
+
 
 # search result feedback
 if (AntTweakBar_FOUND)
@@ -84,8 +109,8 @@ else ()
 	endif ()
 endif ()
 
+
 mark_as_advanced(
-	AntTweakBar_LIBRARIES
-	AntTweakBar_INCLUDE_DIR
+	AntTweakBar_LIBRARY
 	)
 
