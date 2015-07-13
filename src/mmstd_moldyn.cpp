@@ -24,7 +24,6 @@
 #include "io/VisIttDataSource.h"
 #include "rendering/NGSphereRenderer.h"
 #include "rendering/NGSphereBufferArrayRenderer.h"
-#include "rendering/NGSplatRenderer.h"
 #include "io/VTFDataSource.h"
 #include "io/VTFResDataSource.h"
 #include "misc/ParticleWorker.h"
@@ -109,18 +108,17 @@ namespace {
         /** Registers modules and calls */
         virtual void registerClasses(void) {
             // register modules here:
-            this->module_descriptions.RegisterDescription<::megamol::core::factories::LoaderADModuleAutoDescription<::megamol::stdplugin::moldyn::io::IMDAtomDataSource> >();
-            this->module_descriptions.RegisterDescription<::megamol::core::factories::LoaderADModuleAutoDescription<::megamol::stdplugin::moldyn::io::MMSPDDataSource> >();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::io::SIFFDataSource>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::io::SIFFWriter>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::io::VIMDataSource>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::io::VisIttDataSource>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSphereRenderer>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSplatRenderer>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::rendering::NGSphereBufferArrayRenderer>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::io::VTFDataSource>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::io::VTFResDataSource>();
-            this->module_descriptions.RegisterAutoDescription<::megamol::stdplugin::moldyn::misc::ParticleWorker>();
+            this->module_descriptions.RegisterDescription< ::megamol::core::factories::LoaderADModuleAutoDescription< ::megamol::stdplugin::moldyn::io::IMDAtomDataSource> >();
+            this->module_descriptions.RegisterDescription< ::megamol::core::factories::LoaderADModuleAutoDescription< ::megamol::stdplugin::moldyn::io::MMSPDDataSource> >();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::SIFFDataSource>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::SIFFWriter>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VIMDataSource>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VisIttDataSource>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSphereRenderer>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::NGSphereBufferArrayRenderer>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VTFDataSource>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VTFResDataSource>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::misc::ParticleWorker>();
             // register calls here:
             // ...
         }
