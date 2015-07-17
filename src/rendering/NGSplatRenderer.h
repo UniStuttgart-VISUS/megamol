@@ -136,6 +136,7 @@ namespace rendering {
 
         core::param::ParamSlot scalingParam;
         core::param::ParamSlot alphaScalingParam;
+        core::param::ParamSlot attenuateSubpixelParam;
         //TimeMeasure timer;
         //megamol::core::utility::ShaderSourceFactory::sh
     };

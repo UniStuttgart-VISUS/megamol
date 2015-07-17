@@ -13,6 +13,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include <inttypes.h>
@@ -46,13 +47,17 @@ NGSplatRenderer::NGSplatRenderer(void) : AbstractSimpleSphereRenderer(),
     colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE),
     theShaders(),
     scalingParam("scaling", "scaling factor for particle radii"),
-    alphaScalingParam("alphaScaling", "scaling factor for particle alpha") {
+    alphaScalingParam("alphaScaling", "scaling factor for particle alpha"),
+    attenuateSubpixelParam("attenuateSubpixel", "attenuate alpha of points that should have subpixel size") {
 
     this->scalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->scalingParam);
 
     this->alphaScalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->alphaScalingParam);
+
+    this->attenuateSubpixelParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->attenuateSubpixelParam);
 
     fences.resize(numBuffers);
 }
@@ -514,6 +519,7 @@ bool NGSplatRenderer::Render(Call& call) {
         glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
         glUniform1f(newShader->ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
         glUniform1f(newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
+        glUniform1i(newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
         glUniform1f(newShader->ParameterLocation("zNear"), cr->GetCameraParameters()->NearClip());
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;

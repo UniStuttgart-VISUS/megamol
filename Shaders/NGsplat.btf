@@ -25,6 +25,7 @@ uniform vec3 camRight;
 uniform vec4 clipDat;
 uniform vec4 clipCol;
 uniform int instanceOffset;
+uniform int attenuateSubpixel;
 
 uniform vec4 inConsts1;
 attribute float colIdx;
@@ -35,6 +36,7 @@ varying vec4 camPos;
 varying vec4 lightPos;
 varying float squarRad;
 varying float rad;
+varying float effectiveDiameter;
 
 #ifdef DEFERRED_SHADING
 varying float pointSize;
@@ -188,6 +190,12 @@ void main(void) {
     maxs = (maxs - mins) * 0.5 * winHalf;
     gl_PointSize = max(maxs.x, maxs.y) + 0.5;
 
+    if (attenuateSubpixel == 1) {
+        effectiveDiameter = gl_PointSize;
+    } else {
+        effectiveDiameter = 1.0;
+    }
+
     //vec4 projPos = gl_ModelViewProjectionMatrix * vec4(objPos.xyz, 1.0);
     //projPos /= projPos.w;
     //gl_Position = projPos;
@@ -221,6 +229,7 @@ FLACH varying vec4 camPos;
 FLACH varying vec4 lightPos;
 FLACH varying float squarRad;
 FLACH varying float rad;
+FLACH varying float effectiveDiameter;
 
 #ifdef RETICLE
 FLACH varying vec2 centerFragment;
@@ -233,7 +242,8 @@ void main(void) {
     //gl_FragColor = gl_Color;
     vec2 dist = gl_PointCoord.xy - vec2(0.5);
     float d = sqrt(dot(dist, dist));
-    float alpha = 0.5-d;  
+    float alpha = 0.5-d;
+    alpha *= effectiveDiameter * effectiveDiameter;
     alpha *= alphaScaling;
     gl_FragColor = vec4(gl_Color.rgb, alpha);
     //gl_FragColor = vec4(gl_Color.rgb, 1.0);
