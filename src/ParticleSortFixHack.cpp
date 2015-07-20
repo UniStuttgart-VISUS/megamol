@@ -175,7 +175,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                     float * part_j_pos = reinterpret_cast<float*>(const_cast<unsigned char*>(static_cast<const unsigned char*>(dat_prev[list_i].parts.GetVertexData()) + dat_prev[list_i].parts.GetVertexDataStride() * part_i));
 
                     for (int i = 0; i < 3; i++) {
-                        part_j_pos[i] += 0.5f * (part_j_pos[i] - part_k_pos[i]);
+                        part_j_pos[i] += 0.95f * (part_j_pos[i] - part_k_pos[i]);
                     }
                 }
             }
@@ -226,9 +226,9 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                     double dist = std::sqrt(part_sqdist(part_i_pos, part_j_pos, bboxsize));
 
                     if (part_i == static_cast<int>(part_j)) {
-                        dist *= 0.001;
+                        dist *= 0.1;
                     } else {
-                        dist += 0.1;
+                        dist += 0.001;
                     }
 
                     dists[part_i]->prev[part_j].dist = dist;
@@ -249,6 +249,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
             std::sort(dists.begin(), dists.end(), inv_comp_cur_part_info_ptr);
 
             double whole_dist = 0.0;
+            unsigned int update_print = 0;
 
             auto dists_it = dists.begin();
             auto dists_end = dists.end();
@@ -258,10 +259,11 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
             // step 2
             //////////////////////////////////////////////////////////////////
             // for loop ensures the maximum iterations
-            for (unsigned int max_iter = part_cnt;
+            for (unsigned int max_iter = part_cnt * 100;
                     (dists_it != dists_end) // condition step 8
                         && (max_iter > 0); // condition step x: maximum iterations
                     --max_iter) {
+
                 // dists_it is the pair with the largest distance a->a'
                 cur_part_info *a = *dists_it;
                 prev_part_info *a_to_a_tick = nullptr;
@@ -318,19 +320,19 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                         + a_to_b_tick.dist // distance a->b'
                         + b_to_a_tick->dist; // distance b->a'
 
-                    if ((a_to_b_tick.dist - a_to_a_tick->dist) > 0) continue;
-                    if ((b_to_a_tick->dist - b_to_b_tick->dist) > 0) continue;
+                    //if ((a_to_b_tick.dist - a_to_a_tick->dist) > 0) continue;
+                    //if ((b_to_a_tick->dist - b_to_b_tick->dist) > 0) continue;
 
-                    //if (distdiv >= -0.01) {
-                    //    // makes worse or no difference
-                    //    // step 6: continue with next b'
-                    //    //////////////////////////////////////////////////////
+                    if (distdiv >= -0.0001) {
+                        // makes worse or no difference
+                        // step 6: continue with next b'
+                        //////////////////////////////////////////////////////
 
-                    //    // should test, thou, if it makes sense continuing here, or if we should move on to the next particle
-                    //    // For now, max_tries should help.
+                        // should test, thou, if it makes sense continuing here, or if we should move on to the next particle
+                        // For now, max_tries should help.
 
-                    //    continue;
-                    //}
+                        continue;
+                    }
 
                     // step 5: swap and continue with next loop
                     //////////////////////////////////////////////////////////
@@ -340,6 +342,11 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                     b->dist = b_to_a_tick->dist;
                     whole_dist += distdiv;
                     //swapped = true;
+
+                    if ((update_print % 10) == 0) {
+                        vislib::sys::Log::DefaultLog.WriteInfo("[%u][%u] whole_dist = %g\n", frame_i, list_i, whole_dist);
+                    }
+                    ++update_print;
 
                     // resort: should be quick as only two elements changed their values
                     std::sort(dists.begin(), dists.end(), inv_comp_cur_part_info_ptr);
