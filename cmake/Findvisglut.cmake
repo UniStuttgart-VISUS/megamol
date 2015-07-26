@@ -65,7 +65,7 @@ foreach(SEARCH_ITERATION RANGE 0 ${visglut_SEARCH_DEPTH})
 		PATHS ${lib_search_paths}
 		)
 	find_path(visglut_INCLUDE_DIR
-		NAMES visglut.h GL/glut.h
+		NAMES visglut.h
 		HINTS "${visglut_NEED_TO_COPY}/../include" ${inc_search_hints}
 		PATHS ${inc_search_paths}
 		)

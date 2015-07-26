@@ -51,12 +51,12 @@ foreach(SEARCH_ITERATION RANGE 0 ${AntTweakBar_SEARCH_DEPTH})
 
 	find_library(AntTweakBar_LIBRARY
 		NAMES ${lib_NAME}
-		HINTS "${vislut_DIR}/lib" ${lib_search_hints}
+		HINTS "${AntTweakBar_DIR}/lib" ${lib_search_hints}
 		PATHS ${lib_search_paths}
 		)
 	find_path(AntTweakBar_INCLUDE_DIR
 		NAMES AntTweakBar.h
-		HINTS "${visglut_NEED_TO_COPY}/../include" ${inc_search_hints}
+		HINTS "${AntTweakBar_LIBRARY}/../include" ${inc_search_hints}
 		PATHS ${inc_search_paths}
 		)
 
@@ -103,8 +103,8 @@ if (AntTweakBar_FOUND)
 	endif ()
 else ()
 	if (AntTweakBar_FIND_REQUIRED)
-		#message( "library: ${visglut_LIBRARIES}" )
-		#message( "include: ${visglut_INCLUDE_DIR}" )
+		#message( "library: ${AntTweakBar_LIBRARIES}" )
+		#message( "include: ${AntTweakBar_INCLUDE_DIR}" )
 		message(FATAL_ERROR "Could not find AntTweakBar library")
 	endif ()
 endif ()
