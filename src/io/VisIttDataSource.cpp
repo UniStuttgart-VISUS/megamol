@@ -13,12 +13,15 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/sys/Log.h"
 #include "vislib/String.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/sys/SystemInformation.h"
+#include "vislib/graphics/ColourRGBAu8.h"
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::stdplugin::moldyn::io;
@@ -64,7 +67,11 @@ VisIttDataSource::VisIttDataSource(void) : core::view::AnimDataModule(),
         filterValue("filter::value", "The filter value to be applied"),
         getData("getdata", "Slot to request data from this data source."),
         file(NULL), dataHash(0), frameTable(), header(), headerIdx(),
-        filterIndex(UINT_MAX) {
+        filterIndex(UINT_MAX),
+        sortPartIdSlots("sortById", "Sorts particles by their IDs"), idIndex(UINT_MAX),
+        splitTypesSlots("splitTypes", "Activates splitting based on types"), 
+        splitTypesNameSlots("splitTypesName", "Split types based on this data column"),
+        typeIndex(UINT_MAX) {
 
     this->filename.SetParameter(new core::param::FilePathParam(""));
     this->filename.SetUpdateCallback(&VisIttDataSource::filenameChanged);
@@ -98,6 +105,18 @@ VisIttDataSource::VisIttDataSource(void) : core::view::AnimDataModule(),
     this->getData.SetCallback("MultiParticleDataCall", "GetExtent",
         &VisIttDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getData);
+
+    this->sortPartIdSlots.SetParameter(new core::param::BoolParam(true));
+    this->sortPartIdSlots.SetUpdateCallback(&VisIttDataSource::filterChanged);
+    this->MakeSlotAvailable(&this->sortPartIdSlots);
+
+    this->splitTypesSlots.SetParameter(new core::param::BoolParam(false));
+    this->splitTypesSlots.SetUpdateCallback(&VisIttDataSource::filterChanged);
+    this->MakeSlotAvailable(&this->splitTypesSlots);
+
+    this->splitTypesNameSlots.SetParameter(new core::param::StringParam("t"));
+    this->splitTypesNameSlots.SetUpdateCallback(&VisIttDataSource::filterChanged);
+    this->MakeSlotAvailable(&this->splitTypesNameSlots);
 
     this->setFrameCount(1);
     this->initFrameCache(1);
@@ -136,12 +155,15 @@ bool VisIttDataSource::create(void) {
 void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsigned int idx) {
     Frame *f = dynamic_cast<Frame*>(frame);
     if (f == NULL) return;
-    f->SetSize(0);
+    f->Clear();
     if (this->file == NULL) {
         return;
     }
     ASSERT(idx < this->FrameCount());
     ASSERT(this->headerIdx.Count() >= 3);
+
+    unsigned int typeId = 0;
+    std::map<unsigned int, std::vector< std::pair<unsigned int, unsigned int> > > pids;
 
     SIZE_T len = static_cast<SIZE_T>(
         ((idx + 1 < this->frameTable.Count()) ? this->frameTable[idx + 1] : this->file->GetSize())
@@ -199,9 +221,48 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
             if (doFilter) continue;
         }
 
-        const SIZE_T PAGESIZE = 1024 * sizeof(float) * 3;
-        f->Data().AssertSize(((f->Size() + 3 * sizeof(float)) / PAGESIZE + 1) * PAGESIZE, true);
-        float *pos = f->Data().AsAt<float>(f->Size());
+        if (this->typeIndex != UINT_MAX) {
+
+            unsigned int hidx = this->typeIndex;
+            unsigned int start = 0;
+            for (unsigned int k = 0; k < hidx; k++) {
+                start += this->header[k].Second();
+            }
+            unsigned int end = start + this->header[hidx].Second();
+            char endChar = line[end];
+            line[end] = 0;
+            try {
+                typeId = vislib::CharTraitsA::ParseInt(line + start);
+            } catch(...) {
+                typeId = 0;
+            }
+            line[end] = endChar;
+        }
+
+        if (this->idIndex != UINT_MAX) {
+            unsigned int pid;
+            unsigned int hidx = this->idIndex;
+            unsigned int start = 0;
+            for (unsigned int k = 0; k < hidx; k++) {
+                start += this->header[k].Second();
+            }
+            unsigned int end = start + this->header[hidx].Second();
+            char endChar = line[end];
+            line[end] = 0;
+            try {
+                pid = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(line + start));
+            } catch(...) {
+                pid = static_cast<unsigned int>(pids[typeId].size());
+            }
+            line[end] = endChar;
+            pids[typeId].push_back(std::pair<unsigned int, unsigned int>(static_cast<unsigned int>(pids[typeId].size()), pid));
+        }
+
+        std::vector<float> &vec = f->AccessParticleData(typeId);
+        size_t ovs = vec.size();
+        vec.resize(ovs + 3);
+        float *pos = vec.data() + ovs;
+
         for (unsigned int j = 0; j < 3; j++) {
             unsigned int hidx = this->headerIdx[j];
             unsigned int start = 0;
@@ -218,11 +279,31 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
             }
             line[end] = endChar;
         }
-        f->SetSize(f->Size() + 3 * sizeof(float));
 
     }
     delete[] buf;
     f->SetFrameNumber(idx);
+
+    if (this->idIndex != UINT_MAX) {
+        // now sort particles
+        std::vector<unsigned int> keys = f->ParticleTypes();
+        for (unsigned int key : keys) {
+            std::vector<float>& poss = f->AccessParticleData(key);
+            std::vector< std::pair<unsigned int, unsigned int> >& ids = pids[key];
+            assert(ids.size() * 3 == poss.size());
+            std::sort(ids.begin(), ids.end(),
+                [](const std::pair<unsigned int, unsigned int>& a, const std::pair<unsigned int, unsigned int>& b) -> bool {
+                    return a.second < b.second;
+                });
+            std::vector<float> pos_copy(poss);
+            unsigned int cnt = static_cast<unsigned int>(ids.size());
+            for (unsigned int i = 0; i < cnt; ++i) {
+                for (unsigned int c = 0; c < 3; ++c) {
+                    poss[i * 3 + c] = pos_copy[ids[i].first * 3 + c];
+                }
+            }
+        }
+    }
 
     vislib::sys::Log::DefaultLog.WriteInfo(100, "Frame %u loaded", idx);
 }
@@ -356,6 +437,12 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
+    if (this->sortPartIdSlots.Param<core::param::BoolParam>()->Value()) {
+        this->findIdColumn();
+    }
+    if (this->splitTypesSlots.Param<core::param::BoolParam>()->Value()) {
+        this->findTypeColumn();
+    }
     this->findFilterColumn();
 
     this->frameTable.Add(this->file->Tell());
@@ -366,25 +453,32 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     // calculating the bounding box from frame 0
     this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0);
-    if (tmpFrame.Size() > sizeof(float) * 3) {
-        float *pos = tmpFrame.Data().As<float>();
+    if (tmpFrame.GetFrameSize() > sizeof(float) * 3) {
+        std::vector<unsigned int> keys = tmpFrame.ParticleTypes();
+
+        const float *pos = tmpFrame.ParticleData(keys[0]);
         this->bbox.Set(pos[0], pos[1], pos[2], pos[0], pos[1], pos[2]);
-        unsigned int cnt = static_cast<unsigned int>(tmpFrame.Size() / (sizeof(float) * 3));
-        for (unsigned int i = 1; i < cnt; i++) {
-            pos += 3;
-            this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+
+        for (unsigned int key : keys) {
+            const float *pos = tmpFrame.ParticleData(key);
+            unsigned int cnt = tmpFrame.ParticleCount(key);
+            for (unsigned int i = 0; i < cnt; i++, pos += 3) {
+                this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+            }
         }
     }
 
     //tmpFrame.SetTypeCount(this->typeCnt);
     // use frame zero to estimate the frame size in memory to calculate the
     // frame cache size
-    SIZE_T frameSize = tmpFrame.Data().GetSize();
-    tmpFrame.Data().EnforceSize(0);
-    tmpFrame.SetSize(0);
+    SIZE_T frameSize = tmpFrame.GetFrameSize();
+    tmpFrame.Clear();
     frameSize = static_cast<SIZE_T>(float(frameSize) * CACHE_FRAME_FACTOR);
     UINT64 mem = vislib::sys::SystemInformation::AvailableMemorySize();
     unsigned int cacheSize = static_cast<unsigned int>(mem / frameSize);
+    if (cacheSize > static_cast<unsigned int>(this->frameTable.Count())) {
+        cacheSize = static_cast<unsigned int>(this->frameTable.Count());
+    }
 
     if (cacheSize > CACHE_SIZE_MAX) {
         cacheSize = CACHE_SIZE_MAX;
@@ -403,17 +497,25 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (this->frameTable.Count() > 0) {
         // refine bounding box using more frames
         this->loadFrame(&tmpFrame, static_cast<unsigned int>(this->frameTable.Count() - 1));
-        float *pos = tmpFrame.Data().As<float>();
-        unsigned int cnt = static_cast<unsigned int>(tmpFrame.Size() / (sizeof(float) * 3));
-        for (unsigned int i = 0; i < cnt; i++, pos += 3) {
-            this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+        std::vector<unsigned int> keys = tmpFrame.ParticleTypes();
+        for (unsigned int key : keys) {
+            const float *pos = tmpFrame.ParticleData(key);
+            unsigned int cnt = tmpFrame.ParticleCount(key);
+            for (unsigned int i = 0; i < cnt; i++, pos += 3) {
+                this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+            }
         }
+
         this->loadFrame(&tmpFrame, static_cast<unsigned int>(this->frameTable.Count() / 2));
-        pos = tmpFrame.Data().As<float>();
-        cnt = static_cast<unsigned int>(tmpFrame.Size() / (sizeof(float) * 3));
-        for (unsigned int i = 0; i < cnt; i++, pos += 3) {
-            this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+        keys = tmpFrame.ParticleTypes();
+        for (unsigned int key : keys) {
+            const float *pos = tmpFrame.ParticleData(key);
+            unsigned int cnt = tmpFrame.ParticleCount(key);
+            for (unsigned int i = 0; i < cnt; i++, pos += 3) {
+                this->bbox.GrowToPoint(pos[0], pos[1], pos[2]);
+            }
         }
+
     }
     this->initFrameCache(cacheSize);
 
@@ -497,11 +599,28 @@ bool VisIttDataSource::getDataCallback(core::Call& caller) {
         c2->SetDataHash((this->file == NULL) ? 0 : this->dataHash);
         c2->SetUnlocker(new Unlocker(*f));
         c2->SetFrameID(f->FrameNumber());
-        c2->SetParticleListCount(1);
-        c2->AccessParticles(0).SetGlobalRadius(this->radius.Param<core::param::FloatParam>()->Value());
-        c2->AccessParticles(0).SetGlobalColour(192, 192, 192);
-        c2->AccessParticles(0).SetCount(f->Size() / (sizeof(float) * 3));
-        c2->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, f->Data());
+
+        std::vector<unsigned int> keys = f->ParticleTypes();
+        std::vector<vislib::graphics::ColourRGBAu8> cols;
+        cols.resize(keys.size(), vislib::graphics::ColourRGBAu8(192, 192, 192, 255));
+
+        if (cols.size() > 1) {
+            // some colors
+            cols[0] = vislib::graphics::ColourRGBAu8(255, 0, 0, 255);
+            cols[1] = vislib::graphics::ColourRGBAu8(0, 255, 0, 255);
+            if (cols.size() > 2) cols[2] = vislib::graphics::ColourRGBAu8(0, 0, 255, 255);
+            // not bright, but ok for now
+        }
+
+        c2->SetParticleListCount(static_cast<unsigned int>(keys.size()));
+        unsigned int ti = 0;
+        for (unsigned int key : keys) {
+            c2->AccessParticles(ti).SetGlobalRadius(this->radius.Param<core::param::FloatParam>()->Value());
+            c2->AccessParticles(ti).SetGlobalColour(cols[ti].R(), cols[ti].G(), cols[ti].B());
+            c2->AccessParticles(ti).SetCount(f->ParticleCount(key));
+            c2->AccessParticles(ti).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, f->ParticleData(key));
+            ++ti;
+        }
 
         return true;
     }
@@ -550,12 +669,61 @@ void VisIttDataSource::findFilterColumn(void) {
         }
     }
     if (this->filterIndex == UINT_MAX) {
+        for (SIZE_T i = 0; i < this->header.Count(); i++) {
+            vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
+            if (hi.First().Equals(filtCol, false)) {
+                this->filterIndex = static_cast<unsigned int>(i);
+                break;
+            }
+        }
+    }
+    if (this->filterIndex == UINT_MAX) {
         try {
             int idx = vislib::CharTraitsA::ParseInt(filtCol);
             if ((idx >= 0) && (idx < static_cast<int>(this->header.Count()))) {
                 this->filterIndex = idx;
             }
         } catch(...) {
+        }
+    }
+}
+
+
+/*
+ * VisIttDataSource::findIdColumn
+ */
+void VisIttDataSource::findIdColumn(void) {
+    this->idIndex = UINT_MAX;
+    for (SIZE_T i = 0; i < this->header.Count(); i++) {
+        vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
+        if (hi.First().Equals("id", false)) {
+            this->idIndex = static_cast<unsigned int>(i);
+            break;
+        }
+    }
+}
+
+
+/*
+ * VisIttDataSource::findTypeColumn
+ */
+void VisIttDataSource::findTypeColumn(void) {
+    this->typeIndex = UINT_MAX;
+    vislib::StringA typeCol(this->splitTypesNameSlots.Param<core::param::StringParam>()->Value());
+    for (SIZE_T i = 0; i < this->header.Count(); i++) {
+        vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
+        if (hi.First().Equals(typeCol)) {
+            this->typeIndex = static_cast<unsigned int>(i);
+            break;
+        }
+    }
+    if (this->typeIndex == UINT_MAX) {
+        for (SIZE_T i = 0; i < this->header.Count(); i++) {
+            vislib::Pair<vislib::StringA, unsigned int>& hi = this->header[i];
+            if (hi.First().Equals(typeCol, false)) {
+                this->typeIndex = static_cast<unsigned int>(i);
+                break;
+            }
         }
     }
 }

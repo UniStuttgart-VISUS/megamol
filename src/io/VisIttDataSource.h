@@ -21,6 +21,9 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/Pair.h"
 #include "vislib/RawStorage.h"
+#include <map>
+#include <vector>
+#include <cassert>
 
 
 namespace megamol {
@@ -119,39 +122,11 @@ namespace io {
             virtual ~Frame(void);
 
             /**
-             * Access t othe particle data
-             *
-             * @return The particle data
+             * Clears the particle data
              */
-            inline vislib::RawStorage& Data(void) {
-                return this->dat;
-            }
-
-            /**
-             * Access t othe particle data
-             *
-             * @return The particle data
-             */
-            inline const vislib::RawStorage& Data(void) const {
-                return this->dat;
-            }
-
-            /**
-             * Answer the size of the used memory in bytes
-             *
-             * @return The size of the used memory
-             */
-            inline SIZE_T Size(void) const {
-                return vislib::math::Min<SIZE_T>(this->size, this->dat.GetSize());
-            }
-
-            /**
-             * Sets the size of the used memory
-             *
-             * @param s The size of the used memory
-             */
-            inline void SetSize(SIZE_T s) {
-                this->size = s;
+            inline void Clear(void) {
+                this->frame = 0;
+                this->dat.clear();
             }
 
             /**
@@ -163,13 +138,83 @@ namespace io {
                 this->frame = fn;
             }
 
+            /**
+             * Gets the frame number
+             *
+             * @return frame number
+             */
+            inline unsigned int getFrameNumber(void) {
+                return this->frame;
+            }
+
+            /**
+             * Gets the particle count of typeId
+             *
+             * @param typeId The id of this type
+             *
+             * @return The number of particles
+             */
+            inline unsigned int ParticleCount(unsigned int typeId) const {
+                assert((dat.at(typeId).size() % 3) == 0);
+                return static_cast<unsigned int>(dat.at(typeId).size() / 3);
+            }
+
+            /**
+             * Gets the particle data of typeId
+             *
+             * @param typeId The id of this type
+             *
+             * @return The data structure holding the position data
+             */
+            inline const float* ParticleData(unsigned int typeId) const {
+                return dat.at(typeId).data();
+            }
+
+            /**
+             * Access the particle data of typeId.
+             * Also creates the required data structure if not present
+             *
+             * @param typeId The id of this type
+             *
+             * @return The data structure holding the position data
+             */
+            inline std::vector<float>& AccessParticleData(unsigned int typeId) {
+                return dat[typeId];
+            }
+
+            /**
+             * Answer all stored particle types
+             *
+             * @return All stored particle types
+             */
+            inline std::vector<unsigned int> ParticleTypes(void) const {
+                std::vector<unsigned int> keys;
+                for (const std::pair<unsigned int, std::vector<float> >& p : dat) {
+                    keys.push_back(p.first);
+                }
+                return keys;
+            }
+
+            /**
+             * Answer the approximate in memory frame data size
+             *
+             * @return The approximate size of the frame data
+             */
+            inline uint64_t GetFrameSize(void) const {
+                uint64_t fs = 0;
+                for (const std::pair<unsigned int, std::vector<float> >& p : dat) {
+                    fs += p.second.size() * sizeof(float);
+                }
+                return fs;
+            }
+
         private:
 
             /** The size of the memory really used */
             SIZE_T size;
 
             /** The xyz particle positions */
-            vislib::RawStorage dat;
+            std::map<unsigned int, std::vector<float> > dat;
 
         };
 
@@ -265,6 +310,12 @@ namespace io {
         /** Finds the data column used for filtering */
         void findFilterColumn(void);
 
+        /** Finds the data column used for the particle index */
+        void findIdColumn(void);
+
+        /** Finds the data column used for the color number */
+        void findTypeColumn(void);
+
         /** The file name */
         core::param::ParamSlot filename;
 
@@ -303,6 +354,21 @@ namespace io {
 
         /** The bounding box */
         vislib::math::Cuboid<float> bbox;
+
+        /** Flag to sort particles based on their IDs */
+        core::param::ParamSlot sortPartIdSlots;
+
+        /** The id column index */
+        unsigned int idIndex;
+
+        /** Flag to sort particles based on their IDs */
+        core::param::ParamSlot splitTypesSlots;
+
+        /** Flag to sort particles based on their IDs */
+        core::param::ParamSlot splitTypesNameSlots;
+
+        /** The color number column index */
+        unsigned int typeIndex;
 
     };
 
