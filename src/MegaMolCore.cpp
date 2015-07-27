@@ -106,7 +106,7 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetVersionInfo(
         char *outCommentStr, unsigned int *inOutCommentSize) {
     VLSTACKTRACE("mmvGetVersionInfo", __FILE__, __LINE__);
 
-#if defined(_WIN64) && (_MSC_FULL_VER == 180031101) && defined(NDEBUG)
+#if defined(_WIN64) && ((_MSC_FULL_VER == 180031101) || (_MSC_FULL_VER == 180040629)) && defined(NDEBUG)
     // work around a strange bug in MSVC 2013 x64 (release)
     printf("", //"mmvGetVersionInfo(%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u)\n",
         (unsigned int)outMajorVersion,

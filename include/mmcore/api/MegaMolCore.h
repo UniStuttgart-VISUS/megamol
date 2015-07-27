@@ -38,7 +38,7 @@ extern "C" {
 /** TYPES */
 
 /** Possible values for CONFIGURATION ID */
-typedef enum _mmcConfigID {
+typedef enum _mmcConfigID : int {
     MMC_CFGID_INVALID, // an invalid object!
     MMC_CFGID_APPLICATION_DIR,
     MMC_CFGID_CONFIG_FILE,
@@ -48,7 +48,7 @@ typedef enum _mmcConfigID {
 /** Possible operating systems */
 #ifndef MMCOSYSENUM_DEFINED
 #define MMCOSYSENUM_DEFINED 1
-typedef enum _mmcOSysEnum {
+typedef enum _mmcOSysEnum : int {
     MMC_OSYSTEM_WINDOWS,
     MMC_OSYSTEM_LINUX,
     MMC_OSYSTEM_UNKNOWN
@@ -58,7 +58,7 @@ typedef enum _mmcOSysEnum {
 /** Possible hardware architectures */
 #ifndef MMCHARCHENUM_DEFINED
 #define MMCHARCHENUM_DEFINED 1
-typedef enum _mmcHArchEnum {
+typedef enum _mmcHArchEnum : int {
     MMC_HARCH_I86,
     MMC_HARCH_X64,
     MMC_HARCH_UNKNOWN
@@ -66,7 +66,7 @@ typedef enum _mmcHArchEnum {
 #endif /* MMCHARCHENUM_DEFINED */
 
 /** Possible handle types */
-typedef enum _mmcHandleTypeEnum {
+typedef enum _mmcHandleTypeEnum : int {
     MMC_HTYPE_INVALID, // The handle is invalid or no handle at all.
                        // which type.
     MMC_HTYPE_COREINSTANCE, // Core Instance handle.
@@ -77,7 +77,7 @@ typedef enum _mmcHandleTypeEnum {
 } mmcHandleType;
 
 /** Possible error codes */
-typedef enum _mmcErrorCodeEnum {
+typedef enum _mmcErrorCodeEnum : int {
     MMC_ERR_NO_ERROR = 0, // No Error. This denotes success.
     MMC_ERR_MEMORY, // Generic memory error.
     MMC_ERR_HANDLE, // Generic handle error.
@@ -92,7 +92,7 @@ typedef enum _mmcErrorCodeEnum {
 } mmcErrorCode;
 
 /** Possible value types. */
-typedef enum _mmcValueTypeEnum {
+typedef enum _mmcValueTypeEnum : int {
     MMC_TYPE_INT32, // 32 bit signed integer.(Pointer to!)
     MMC_TYPE_UINT32, // 32 bit unsigned integer.(Pointer to!)
     MMC_TYPE_INT64, // 64 bit signed integer.(Pointer to!)
@@ -111,7 +111,7 @@ typedef enum _mmcValueTypeEnum {
 } mmcValueType;
 
 /** Possible initialisation values */
-typedef enum _mmcInitValueEnum {
+typedef enum _mmcInitValueEnum : int {
     MMC_INITVAL_CFGFILE, // The configuration file to load.
     MMC_INITVAL_CFGSET, // A configuration set to be added.
     MMC_INITVAL_LOGFILE, // The log file to use.
@@ -125,7 +125,7 @@ typedef enum _mmcInitValueEnum {
 } mmcInitValue;
 
 /** Possible input modifier values */
-typedef enum _mmcInputModifierEnum {
+typedef enum _mmcInputModifierEnum : int {
     MMC_INMOD_SHIFT,
     MMC_INMOD_CTRL,
     MMC_INMOD_ALT
