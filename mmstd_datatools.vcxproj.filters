@@ -91,6 +91,9 @@
     <ClCompile Include="src\ParticleSortFixHack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleDataSequenceConcatenate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
@@ -157,6 +160,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ParticleSortFixHack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleDataSequenceConcatenate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
