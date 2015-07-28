@@ -203,6 +203,13 @@ bool MMSPDDataSource::Frame::LoadFrame(
             if (header.HasIDs()) ps += 8;
             ASSERT((parts.GetData().GetSize() % ps) == 0);
             parts.SetCount(parts.GetData().GetSize() / ps);
+            if ((parts.Count() > 1) && (header.HasIDs())) {
+                // we sort particles here!
+                ::qsort(parts.Data(), parts.GetData().GetSize() / ps, ps,
+                    [](const void* a, const void* b) -> int {
+                        return static_cast<int>(static_cast<const uint64_t*>(a)[0] - static_cast<const uint64_t*>(b)[0]);
+                    });
+            }
         }
 
     } catch (...) {
