@@ -279,7 +279,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="config.bat" />
     <None Include="configure.win.pl" />
     <None Include="ExtLibs.props.input" />
-    <None Include="Shaders\NGsphere.btf" />
+    <None Include="Shaders\NGsphere.btf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Shaders\NGsphereBufferArray.btf" />
     <None Include="Shaders\NGsplat.btf" />
     <None Include="Shaders\particleWorkerCompute.btf" />

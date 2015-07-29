@@ -175,7 +175,8 @@ bool NGSplatRenderer::makeColorString(MultiParticleDataCall::Particles &parts, s
             //	colTabSize = cgtf->TextureSize();
             //}
             declaration = "    float colorIndex;\n";
-            code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            //code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            code = "    theColIdx = theBuffer[5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 4]; \n";
             //else {
             //	glBindTexture(GL_TEXTURE_1D, this->greyTF);
             //	colTabSize = 2;
@@ -221,9 +222,15 @@ bool NGSplatRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, 
         //glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
         //glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
         declaration = "    vec4 posR;\n";
-        code = "    inPos = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR; \n"
-               "    rad = inPos.w;\n"
-               "    inPos.w = 1.0;";
+        //code = "    inPos = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR; \n"
+        //       "    rad = inPos.w;\n"
+        //       "    inPos.w = 1.0;";
+        code = "    inPos = vec4(theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 0],"
+                                "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 1],"
+                                "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 2],"
+                                "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 3]);\n"
+            "    rad = inPos.w;\n"
+            "    inPos.w = 1.0;";
         break;
     default:
         declaration = "";
@@ -298,7 +305,8 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSplatRenderer::generateShade
             decl += "};\n";
 
             decl += "layout(packed, binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
-                "    SphereParams theBuffer[];\n"
+                //"    SphereParams theBuffer[];\n"
+                "    float theBuffer[];\n"
                 "};\n";
             std::string code = "\n";
             code += colCode;
@@ -525,9 +533,11 @@ bool NGSplatRenderer::Render(Call& call) {
         unsigned int colTabSize = 0;
         // colour
         switch (parts.GetColourDataType()) {
-            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
+                glEnable(GL_TEXTURE_1D);
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                 if ((cgtf != NULL) && ((*cgtf)())) {
+                    glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                     colTabSize = cgtf->TextureSize();
                 } else {
                     glBindTexture(GL_TEXTURE_1D, this->greyTF);
