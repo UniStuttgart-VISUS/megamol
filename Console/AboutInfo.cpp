@@ -171,48 +171,31 @@ vislib::StringA megamol::console::utility::AboutInfo::consoleCommentString(void)
  */
 vislib::StringA megamol::console::utility::AboutInfo::coreVersionString(bool withCopyright) {
     vislib::StringA retval;
-    unsigned int len1 = 0;
-    unsigned int len2 = 0;
-    unsigned short version[4];
-    vislib::StringA name;
-    vislib::StringA copyright;
-    vislib::StringA str;
-    vislib::VersionNumber ver;
-    mmcOSys system;
-    const char *systemStr = "Unknown";
-    mmcHArch architecture;
     int wordSize = 0;
-    unsigned int flags;
+    vislib::VersionNumber ver;
+    const char *systemStr = "Unknown";
+    vislib::StringA str;
 
-    ::mmcGetVersionInfo(NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL,
-        NULL, &len1,
-        NULL, &len2,
-        NULL, NULL);
-    ::mmcGetVersionInfo(&version[0], &version[1], &version[2], &version[3],
-        &system, &architecture, &flags,
-        name.AllocateBuffer(len1), &len1,
-        copyright.AllocateBuffer(len2), &len2,
-        NULL, NULL);
+    ::mmcBinaryVersionInfo *vi = ::mmcGetVersionInfo();
+    if (vi == nullptr) return nullptr;
 
-    ver.Set(version[0], version[1], version[2], version[3]);
-    switch (architecture) {
+    ver.Set(vi->VersionNumber[0], vi->VersionNumber[1], vi->VersionNumber[2], vi->VersionNumber[3]);
+    switch (vi->HardwareArchitecture) {
         case MMC_HARCH_I86: wordSize = 32; break;
         case MMC_HARCH_X64: wordSize = 64; break;
         default: wordSize = 0;
     }
-    switch (system) {
+    switch (vi->SystemType) {
         case MMC_OSYSTEM_WINDOWS: systemStr = "Windows"; break;
         case MMC_OSYSTEM_LINUX: systemStr = "Linux"; break;
         default: systemStr = "Unknown"; 
     }
 
     retval.Format("Core \"%s\" (Ver.: %s) %d Bit %s",
-        name.PeekBuffer(), ver.ToStringA().PeekBuffer(), wordSize, systemStr);
+        vi->NameStr, ver.ToStringA().PeekBuffer(), wordSize, systemStr);
 
-    str.Clear();
-    if ((flags & MMC_BFLAG_DEBUG)) { str.Append(" DEBUG;"); }
-    if ((flags & MMC_BFLAG_DIRTY)) { str.Append(" DIRTY;"); }
+    if ((vi->Flags & MMC_BFLAG_DEBUG)) { str.Append(" DEBUG;"); }
+    if ((vi->Flags & MMC_BFLAG_DIRTY)) { str.Append(" DIRTY;"); }
     if (!str.IsEmpty()) {
         str[0] = '[';
         str[str.Length() - 1] = ']';
@@ -222,8 +205,10 @@ vislib::StringA megamol::console::utility::AboutInfo::coreVersionString(bool wit
 
     if (withCopyright) {
         retval.Append("\n");
-        retval.Append(copyright);
+        retval.Append(vi->CopyrightStr);
     }
+
+    ::mmcFreeVersionInfo(vi);
 
     return retval;
 }
@@ -233,15 +218,14 @@ vislib::StringA megamol::console::utility::AboutInfo::coreVersionString(bool wit
  * megamol::console::utility::AboutInfo::coreCommentString
  */
 vislib::StringA megamol::console::utility::AboutInfo::coreCommentString(void) {
-    unsigned int len = 0;
     vislib::StringA comment;
 
-    ::mmcGetVersionInfo(NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        NULL, &len);
-    ::mmcGetVersionInfo(NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        comment.AllocateBuffer(len), &len);
+    ::mmcBinaryVersionInfo *vi = ::mmcGetVersionInfo();
+    if (vi == nullptr) return nullptr;
+
+    comment = vi->CommentStr;
+
+    ::mmcFreeVersionInfo(vi);
 
     return comment;
 }
@@ -252,50 +236,39 @@ vislib::StringA megamol::console::utility::AboutInfo::coreCommentString(void) {
  */
 vislib::StringA megamol::console::utility::AboutInfo::viewerVersionString(void) {
     vislib::StringA retval;
-    unsigned int len = 0;
-    unsigned short version[4];
-    vislib::StringA name;
-    vislib::StringA str;
-    vislib::VersionNumber ver;
-    mmcOSys system;
-    const char *systemStr = "Unknown";
-    mmcHArch architecture;
     int wordSize = 0;
-    unsigned int flags;
+    vislib::VersionNumber ver;
+    const char *systemStr = "Unknown";
+    vislib::StringA str;
 
-    ::mmvGetVersionInfo(NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL,
-        NULL, &len,
-        NULL, NULL);
-    ::mmvGetVersionInfo(&version[0], &version[1], &version[2], &version[3],
-        &system, &architecture, &flags,
-        name.AllocateBuffer(len), &len,
-        NULL, NULL);
+    ::mmcBinaryVersionInfo *vi = ::mmvGetVersionInfo();
+    if (vi == nullptr) return nullptr;
 
-    ver.Set(version[0], version[1], version[2], version[3]);
-    switch (architecture) {
+    ver.Set(vi->VersionNumber[0], vi->VersionNumber[1], vi->VersionNumber[2], vi->VersionNumber[3]);
+    switch (vi->HardwareArchitecture) {
         case MMC_HARCH_I86: wordSize = 32; break;
         case MMC_HARCH_X64: wordSize = 64; break;
         default: wordSize = 0;
     }
-    switch (system) {
+    switch (vi->SystemType) {
         case MMC_OSYSTEM_WINDOWS: systemStr = "Windows"; break;
         case MMC_OSYSTEM_LINUX: systemStr = "Linux"; break;
-        default: systemStr = "Unknown"; 
+        default: systemStr = "Unknown";
     }
 
     retval.Format("Viewer \"%s\" (Ver.: %s) %d Bit %s",
-        name.PeekBuffer(), ver.ToStringA().PeekBuffer(), wordSize, systemStr);
+        vi->NameStr, ver.ToStringA().PeekBuffer(), wordSize, systemStr);
 
-    str.Clear();
-    if ((flags & MMV_BFLAG_DEBUG)) { str.Append(" DEBUG;"); }
-    if ((flags & MMV_BFLAG_DIRTY)) { str.Append(" DIRTY;"); }
+    if ((vi->Flags & MMC_BFLAG_DEBUG)) { str.Append(" DEBUG;"); }
+    if ((vi->Flags & MMC_BFLAG_DIRTY)) { str.Append(" DIRTY;"); }
     if (!str.IsEmpty()) {
         str[0] = '[';
         str[str.Length() - 1] = ']';
         str.Prepend(' ');
         retval.Append(str);
     }
+
+    ::mmvFreeVersionInfo(vi);
 
     return retval;
 }
@@ -305,17 +278,14 @@ vislib::StringA megamol::console::utility::AboutInfo::viewerVersionString(void) 
  * megamol::console::utility::AboutInfo::viewerCommentString
  */
 vislib::StringA megamol::console::utility::AboutInfo::viewerCommentString(void) {
-    unsigned int len = 0;
     vislib::StringA comment;
 
-    ::mmvGetVersionInfo(NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL,
-        NULL, NULL,
-        NULL, &len);
-    ::mmvGetVersionInfo(NULL, NULL, NULL, NULL,
-        NULL, NULL, NULL,
-        NULL, NULL,
-        comment.AllocateBuffer(len), &len);
+    ::mmcBinaryVersionInfo *vi = ::mmvGetVersionInfo();
+    if (vi == nullptr) return nullptr;
+
+    comment = vi->CommentStr;
+
+    ::mmvFreeVersionInfo(vi);
 
     return comment;
 }

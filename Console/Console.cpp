@@ -287,12 +287,12 @@ static vislib::TString relativePathTo(const vislib::TString& path,
     if ((pa.Count() <= 0) || (ba.Count() <= 0)) return path;
     if (!stringFSEqual(pa[0], ba[0])) return path;
 
-    int i = 1;
+    SIZE_T i = 1;
     while ((i < pa.Count()) && (i < ba.Count())
         && stringFSEqual(pa[i], ba[i])) ++i; // number of similar levels.
 
     vislib::TString result;
-    for (int j = 0; j < ba.Count() - i; ++j) {
+    for (SIZE_T j = 0; j < ba.Count() - i; ++j) {
         if (j > 0) result += pathSep;
         result += _T("..");
     }
@@ -619,8 +619,8 @@ void menuCommandCallback(void *wnd, int *params) {
             dt.Set(timev);
             int min,h,s,y,mon,d,mil;
             dt.Get(y,mon,d,h,min,s,mil);
-            char statefilename[128];
-            sprintf(statefilename, "%i-%02i-%02i_%02i-%02i-%02i.mmprj", y, mon, d, h, min, s);
+            vislib::StringA statefilename;
+            statefilename.Format("%i-%02i-%02i_%02i-%02i-%02i.mmprj", y, mon, d, h, min, s);
             writeStateToProjectFile(statefilename);
             break;
         }

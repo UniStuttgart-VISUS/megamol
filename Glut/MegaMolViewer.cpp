@@ -64,96 +64,84 @@ void mmCoreMain(int argc, char *argv[]) {
 /*
  * mmvGetVersionInfo
  */
-MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvGetVersionInfo)(
-        unsigned short *outMajorVersion, unsigned short *outMinorVersion,
-        unsigned short *outMajorRevision, unsigned short *outMinorRevision,
-        mmcOSys *outSys, mmcHArch *outArch, unsigned int *outFlags,
-        char *outNameStr, unsigned int *inOutNameSize,
-        char *outCommentStr, unsigned int *inOutCommentSize) {
-    VLSTACKTRACE("mmvGetVersionInfo", __FILE__, __LINE__);
+MEGAMOLVIEWER_API mmcBinaryVersionInfo* MEGAMOLVIEWER_CALL(mmvGetVersionInfo)(void) {
+    mmcBinaryVersionInfo* rv = static_cast<mmcBinaryVersionInfo*>(malloc(sizeof(mmcBinaryVersionInfo)));
 
-#if defined(_WIN64) && ((_MSC_FULL_VER == 180031101) || (_MSC_FULL_VER == 180040629)) && defined(NDEBUG)
-    // work around a strange bug in MSVC 2013 x64 (release)
-    printf("", //"mmvGetVersionInfo(%u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u)\n",
-        (unsigned int)outMajorVersion,
-        (unsigned int)outMinorVersion,
-        (unsigned int)outMajorRevision,
-        (unsigned int)outMinorRevision,
-        (unsigned int)outSys,
-        (unsigned int)outArch,
-        (unsigned int)outFlags,
-        (unsigned int)outNameStr,
-        (unsigned int)inOutNameSize,
-        //(unsigned int)outCopyrightStr,
-        //(unsigned int)inOutCopyrightSize,
-        (unsigned int)outCommentStr,
-        (unsigned int)inOutCommentSize);
-#endif
+    rv->VersionNumber[0] = MEGAMOL_GLUT_MAJOR_VER;
+    rv->VersionNumber[1] = MEGAMOL_GLUT_MINOR_VER;
+    rv->VersionNumber[2] = MEGAMOL_GLUT_MAJOR_REV;
+    rv->VersionNumber[3] = MEGAMOL_GLUT_MINOR_REV;
 
-    // Set version data
-    if (outMajorVersion != NULL) *outMajorVersion = MEGAMOL_GLUT_MAJOR_VER;
-    if (outMinorVersion != NULL) *outMinorVersion = MEGAMOL_GLUT_MINOR_VER;
-    if (outMajorRevision != NULL) *outMajorRevision = MEGAMOL_GLUT_MAJOR_REV;
-    if (outMinorRevision != NULL) *outMinorRevision = MEGAMOL_GLUT_MINOR_REV;
-
-    // Set system architecture information
-    if (outSys != NULL) {
-        *outSys = MMC_OSYSTEM_UNKNOWN;
+    rv->SystemType = MMC_OSYSTEM_UNKNOWN;
 #ifdef _WIN32
 #if defined(WINVER)
 #if (WINVER >= 0x0501)
-        *outSys = MMC_OSYSTEM_WINDOWS;
+    rv->SystemType = MMC_OSYSTEM_WINDOWS;
 #endif /* (WINVER >= 0x0501) */
 #endif /* defined(WINVER) */
 #else /* _WIN32 */
-        *outSys = MMC_OSYSTEM_LINUX;
+    rv->SystemType = MMC_OSYSTEM_LINUX;
 #endif /* _WIN32 */
-    }
-    if (outArch != NULL) {
-        *outArch = MMC_HARCH_UNKNOWN;
-#if defined(_WIN64) || defined(_LIN64)
-        *outArch = MMC_HARCH_X64;
-#else /* defined(_WIN64) || defined(_LIN64) */
-        *outArch = MMC_HARCH_I86;
-#endif /* defined(_WIN64) || defined(_LIN64) */
-    }
 
-    // Set build flags
-    if (outFlags != NULL) {
-        *outFlags = 0
+    rv->HardwareArchitecture = MMC_HARCH_UNKNOWN;
+#if defined(_WIN64) || defined(_LIN64)
+    rv->HardwareArchitecture = MMC_HARCH_X64;
+#else /* defined(_WIN64) || defined(_LIN64) */
+    rv->HardwareArchitecture = MMC_HARCH_I86;
+#endif /* defined(_WIN64) || defined(_LIN64) */
+
+    rv->Flags = 0
 #if defined(_DEBUG) || defined(DEBUG)
-            | MMV_BFLAG_DEBUG
+        | MMV_BFLAG_DEBUG
 #endif /* defined(_DEBUG) || defined(DEBUG) */
 #ifdef MEGAMOL_GLUT_ISDIRTY
-            | MMV_BFLAG_DIRTY
+        | MMV_BFLAG_DIRTY
 #endif /* MEGAMOL_GLUT_ISDIRTY */
-            ;
-    }
+        ;
 
-    // Set library name
-    if (inOutNameSize != NULL) {
-        SIZE_T length = vislib::CharTraitsA::SafeStringLength(MEGAMOL_GLUT_NAME);
-        if (outNameStr != NULL) {
-            if (*inOutNameSize < static_cast<unsigned int>(length)) {
-                length = static_cast<SIZE_T>(*inOutNameSize);
-            }
-            ::memcpy(outNameStr, MEGAMOL_GLUT_NAME, length);
-        }
-        *inOutNameSize = static_cast<unsigned int>(length);
-    }
+    const char *src = MEGAMOL_GLUT_NAME;
+    size_t buf_len = ::strlen(src);
+    char *buf = static_cast<char*>(::malloc(buf_len + 1));
+    ::memcpy(buf, src, buf_len);
+    buf[buf_len] = 0;
+    rv->NameStr = buf;
 
-    // Set library comments
-    if (inOutCommentSize != NULL) {
-        SIZE_T length = vislib::CharTraitsA::SafeStringLength(MEGAMOL_GLUT_COMMENTS);
-        if (outCommentStr != NULL) {
-            if (*inOutCommentSize < static_cast<unsigned int>(length)) {
-                length = static_cast<SIZE_T>(*inOutCommentSize);
-            }
-            ::memcpy(outCommentStr, MEGAMOL_GLUT_COMMENTS, length);
-        }
-        *inOutCommentSize = static_cast<unsigned int>(length);
-    }
+    src = MEGAMOL_GLUT_COPYRIGHT;
+    buf_len = ::strlen(src);
+    buf = static_cast<char*>(::malloc(buf_len + 1));
+    ::memcpy(buf, src, buf_len);
+    buf[buf_len] = 0;
+    rv->CopyrightStr = buf;
 
+    src = MEGAMOL_GLUT_COMMENTS;
+    buf_len = ::strlen(src);
+    buf = static_cast<char*>(::malloc(buf_len + 1));
+    ::memcpy(buf, src, buf_len);
+    buf[buf_len] = 0;
+    rv->CommentStr = buf;
+
+    return rv;
+}
+
+
+/*
+ * mmvFreeVersionInfo
+ */
+MEGAMOLVIEWER_API void MEGAMOLVIEWER_CALL(mmvFreeVersionInfo)(mmcBinaryVersionInfo* info) {
+    if (info == nullptr) return;
+    if (info->NameStr != nullptr) {
+        ::free(const_cast<char*>(info->NameStr));
+        info->NameStr = nullptr;
+    }
+    if (info->CopyrightStr != nullptr) {
+        ::free(const_cast<char*>(info->CopyrightStr));
+        info->CopyrightStr = nullptr;
+    }
+    if (info->CommentStr != nullptr) {
+        ::free(const_cast<char*>(info->CommentStr));
+        info->CommentStr = nullptr;
+    }
+    ::free(info);
 }
 
 
