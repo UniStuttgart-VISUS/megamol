@@ -65,6 +65,19 @@ typedef enum _mmcHArchEnum : int {
 } mmcHArch;
 #endif /* MMCHARCHENUM_DEFINED */
 
+#ifndef MMCBINARYVERSIONINFO_DEFINED
+#define MMCBINARYVERSIONINFO_DEFINED 1
+typedef struct _mmcBinaryVersionInfo_t {
+    unsigned short VersionNumber[4];
+    mmcOSys SystemType;
+    mmcHArch HardwareArchitecture;
+    unsigned int Flags;
+    const char *NameStr;
+    const char *CopyrightStr;
+    const char *CommentStr;
+} mmcBinaryVersionInfo;
+#endif /* MMCBINARYVERSIONINFO_DEFINED */
+
 /** Possible handle types */
 typedef enum _mmcHandleTypeEnum : int {
     MMC_HTYPE_INVALID, // The handle is invalid or no handle at all.
@@ -245,62 +258,23 @@ typedef void (MEGAMOLCORE_CALLBACK *mmcViewCloseRequestFunction)(void *data);
 /** FUNCTIONS */
 
 /**
- * Returns the version of the MegaMolCore.
+ * Returns the binary version info of the MegaMol core.
  *
  * Applications should check this version directly after startup to ensure
  * compatibility with this core.
  *
- * @param outMajorVersion Pointer to a short word receiving the major version
- * @param outMinorVersion Pointer to a short word receiving the minor version
- * @param outMajorRevision Pointer to a short word receiving the major revision
- * @param outMinorRevision Pointer to a short word receiving the minor revision
- * @param outSys Pointer to a mmcOSys variable receiving the system type of 
- *               the core.
- * @param outArch Pointer to a mmcHArchEnum variable receiving the 
- *                architecture of the core.
- * @param outFlags Pointer to a unsigned int receiving build flags MMV_BFLAG_*
- * @param outNameStr Pointer to a ANSI-character buffer receiving the name of
- *                   the library. Copies the whole name, but at least
- *                   'inOutNameSize' bytes and returns the number of copied
- *                   bytes in 'inOutNameSize'. 'inOutNameSize' must not be
- *                   NULL if 'outNameStr' is not NULL.
- * @param inOutNameSize Pointer to an integer defining the size of the buffer
- *                      'outNameStr' points to. If 'outNameStr' is NULL and
- *                      'inOutNameSize' is not NULL, 'inOutNameSize' receives
- *                      the number of characters (excluding the terminating
- *                      zero) required to store the name of the library.
- * @param outCopyrightStr Pointer to a ANSI-character buffer receiving the
- *                        name of the library. Copies the whole name, but at
- *                        least 'inOutCopyrightSize' bytes and returns the
- *                        number of copied bytes in 'inOutCopyrightSize'.
- *                        'inOutCopyrightSize' must not be NULL if
- *                        'outCopyrightStr' is not NULL.
- * @param inOutCopyrightSize Pointer to an integer defining the size of the
- *                           buffer 'outCopyrightStr' points to. If
- *                           'outCopyrightStr' is NULL and
- *                           'inOutCopyrightSize' is not NULL,
- *                           'inOutCopyrightSize' receives the number of
- *                           characters (excluding the terminating zero)
- *                           required to store the name of the library.
- * @param outCommentStr Pointer to a ANSI-character buffer receiving the name
- *                      of the library. Copies the whole name, but at least
- *                      'inOutCommentSize' bytes and returns the number of
- *                      copied bytes in 'inOutCommentSize'. 'inOutCommentSize'
- *                      must not be NULL if 'outCommentStr' is not NULL.
- * @param inOutCommentSize Pointer to an integer defining the size of the
- *                         buffer 'outCommentStr' points to. If
- *                         'outCommentStr' is NULL and 'inOutCommentSize' is
- *                         not NULL, 'inOutCommentSize' receives the number of
- *                         characters (excluding the terminating zero)
- *                         required to store the name of the library.
+ * @return The newly allocated binary version info data
+ *
+ * @remarks Use mmcFreeVersionInfo to free the returned memory
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetVersionInfo(
-    unsigned short *outMajorVersion, unsigned short *outMinorVersion,
-    unsigned short *outMajorRevision, unsigned short *outMinorRevision,
-    mmcOSys *outSys, mmcHArch *outArch, unsigned int *outFlags,
-    char *outNameStr, unsigned int *inOutNameSize,
-    char *outCopyrightStr, unsigned int *inOutCopyrightSize,
-    char *outCommentStr, unsigned int *inOutCommentSize);
+MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void);
+
+/**
+ * Frees the memory of a binary version info previously retunred by mmcGetVersionInfo
+ *
+ * @param info The info memory to be freed
+ */
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreeVersionInfo(mmcBinaryVersionInfo* info);
 
 /**
  * Returns the size needed to store a handle. All handles used by the 
