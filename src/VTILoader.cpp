@@ -844,7 +844,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
                     (fr->GetPieceExtent(pieceCounter-1).Depth()+1)*
                     (fr->GetPieceExtent(pieceCounter-1).Height()+1) * numComponents;
 
-            float *data = NULL;
+            float *data = 0;
             if(f == VTKImageData::VTISOURCE_ASCII) {
                 data = new float[gridSize];
                 this->readDataAscii2Float(pt_end, data, gridSize);
@@ -869,7 +869,8 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
 //                }
 //                // END DEBUG
             }
-            delete[] data;
+            if ( data )
+                delete[] data;
         }
 
         pt = pt_end+1;
