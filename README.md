@@ -11,6 +11,7 @@ The plugin provides the module `MDAO2SphereRenderer`. It has the following featu
 * Uses modern features of OpenGL 4.5., but can fall back to OpenGL 3.3.
 
 The general workflow of the algorithm is:
+
 1. Generate a coarse voxelization of the scene where each voxel represents a density of spheres in the spacial cell (see [this paper by Grottel et al.](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6183593) for more explanations on this concept).
 2. Render the scene's geometry and store the normals, color and depth of visible fragments in buffers for deferred shading
 3. Render the visible fragments and for each fragment:
