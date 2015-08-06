@@ -74,8 +74,8 @@ bool mdao::VolumeGenerator::Init()
 	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 
 	// Check if we can use modern features
-	computeAvailable = ::isExtAvailable("GL_ARB_compute_shader");
-	clearAvailable = ::isExtAvailable("GL_ARB_clear_texture");
+	computeAvailable = (::isExtAvailable("GL_ARB_compute_shader") == GL_TRUE);
+	clearAvailable = (::isExtAvailable("GL_ARB_clear_texture") == GL_TRUE);
 	
 	std::stringstream outmsg;
 	outmsg<<"Voxelization Features enabled: Compute Shader "<<computeAvailable<<", Clear Texture "<<clearAvailable<<std::endl;
@@ -118,7 +118,7 @@ void mdao::VolumeGenerator::SetResolution(float resX, float resY, float resZ)
 	
 	volumeRes.Set(resX, resY, resZ);
 	glBindTexture(GL_TEXTURE_3D, this->volumeHandle);checkGLError;
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, resX, resY, resZ, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);checkGLError
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, static_cast<GLsizei>(resX), static_cast<GLsizei>(resY), static_cast<GLsizei>(resZ), 0, GL_RED, GL_UNSIGNED_BYTE, nullptr); checkGLError
 	glGenerateMipmap(GL_TEXTURE_3D); 
 }
 
@@ -143,7 +143,7 @@ void mdao::VolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& 
 	glBindFramebuffer(GL_FRAMEBUFFER, this->fboHandle);checkGLError;
 	
 	// Set Viewport size for one slice
-	glViewport(0, 0, volumeRes.GetWidth(), volumeRes.GetHeight());
+	glViewport(0, 0, static_cast<GLsizei>(volumeRes.GetWidth()), static_cast<GLsizei>(volumeRes.GetHeight()));
 	
 	volumeShader.Enable();checkGLError;
 	
@@ -168,7 +168,7 @@ void mdao::VolumeGenerator::ClearVolume()
 		return;
 
 	glBindTexture(GL_TEXTURE_3D, this->volumeHandle);checkGLError;
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, volumeRes.Width(), volumeRes.Height(), volumeRes.Depth(), 0, GL_RED, GL_UNSIGNED_BYTE, clearBuffer);checkGLError;
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, static_cast<GLsizei>(volumeRes.Width()), static_cast<GLsizei>(volumeRes.Height()), static_cast<GLsizei>(volumeRes.Depth()), 0, GL_RED, GL_UNSIGNED_BYTE, clearBuffer); checkGLError;
 	glBindTexture(GL_TEXTURE_3D, 0);checkGLError;
 }
 
@@ -235,7 +235,7 @@ void mdao::VolumeGenerator::RecreateMipmap() {
 
 		mipmapShader.SetParameter("inputImage", 0);
 		mipmapShader.SetParameter("outputImage", 1);
-		glDispatchCompute(ceil(res.Width()/64.0f), ceil(res.Height()), ceil(res.Depth()));
+		glDispatchCompute(static_cast<GLuint>(ceil(res.Width()/64.0f)), static_cast<GLuint>(ceil(res.Height())), static_cast<GLuint>(ceil(res.Depth())));
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		level++;

@@ -51,7 +51,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ambocc2\ambocc2.h">
+    <ClInclude Include="include\mdao2\mdao2.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
@@ -60,15 +60,33 @@
     <ClInclude Include="src\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ShaderUtilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SphereRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VolumeGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ambocc2.cpp">
+    <ClCompile Include="src\mdao2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShaderUtilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SphereRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VolumeGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

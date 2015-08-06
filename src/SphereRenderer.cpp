@@ -64,7 +64,8 @@ mdao::SphereRenderer::SphereRenderer(void):
 	this->getClipPlaneSlot.SetCompatibleCall<megamol::core::view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 	
-	this->getTFSlot.SetCompatibleCall<megamol::core::view::CallGetTransferFunctionDescription>();
+	this->getTFSlot.SetCompatibleCall<megamol::core::view::CallGetTransferFunctionDescription>();
+
 	this->MakeSlotAvailable(&getTFSlot);
 	
 	this->enableLightingSlot << (new core::param::BoolParam(false));
@@ -76,16 +77,16 @@ mdao::SphereRenderer::SphereRenderer(void):
 	this->aoVolSizeSlot << (new core::param::IntParam(128, 1, 1024));
 	this->MakeSlotAvailable(&this->aoVolSizeSlot);
 
-	this->aoConeApexSlot << (new core::param::FloatParam(50.0, 1.0, 90.0));
+	this->aoConeApexSlot << (new core::param::FloatParam(50.0f, 1.0f, 90.0f));
 	this->MakeSlotAvailable(&this->aoConeApexSlot);
 	
-	this->aoOffsetSlot << (new core::param::FloatParam(0.01, 0.0, 0.2));
+	this->aoOffsetSlot << (new core::param::FloatParam(0.01f, 0.0f, 0.2f));
 	this->MakeSlotAvailable(&this->aoOffsetSlot);
 	
-	this->aoStrengthSlot << (new core::param::FloatParam(1.0, 0.1, 20.0));
+	this->aoStrengthSlot << (new core::param::FloatParam(1.0f, 0.1f, 20.0f));
 	this->MakeSlotAvailable(&this->aoStrengthSlot);
 	
-	this->aoConeLengthSlot << (new core::param::FloatParam(0.8, 0.01, 1.0));
+	this->aoConeLengthSlot << (new core::param::FloatParam(0.8f, 0.01f, 1.0f));
 	this->MakeSlotAvailable(&this->aoConeLengthSlot);
 	
 	this->useHPTexturesSlot << (new core::param::BoolParam(false));
@@ -257,7 +258,7 @@ bool mdao::SphereRenderer::rebuildShader()
 		float apex = this->aoConeApexSlot.Param<megamol::core::param::FloatParam>()->Value();
 		
 		std::vector<vislib::math::Vector<float, 4> > directions;
-		generate3ConeDirections(directions, apex *M_PI/180.0);
+		generate3ConeDirections(directions, apex *static_cast<float>(M_PI)/180.0f);
 		std::string directionsCode = generateDirectionShaderArrayString(directions, "coneDirs");
 
 		vislib::graphics::gl::ShaderSource::StringSnippet* dirSnippet = new vislib::graphics::gl::ShaderSource::StringSnippet(directionsCode.c_str());
@@ -272,7 +273,7 @@ bool mdao::SphereRenderer::rebuildShader()
 		lightingShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count());
 	} catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-		(std::string("!!!Unable to compile mdao shader: ")+std::string(ce.GetMsg())).c_str());
+			"Unable to compile mdao shader: %s", ce.GetMsg());
 		return false;
 	}
 	
@@ -434,7 +435,7 @@ void mdao::SphereRenderer::renderDeferredPass(megamol::core::view::AbstractCallR
 	glActiveTexture(GL_TEXTURE0); 
 	glBindTexture(GL_TEXTURE_2D, gBuffer.color);
 
-	glPointSize(std::max(vpWidth, vpHeight));
+	glPointSize(static_cast<GLfloat>(std::max(vpWidth, vpHeight)));
 	
 	lightingShader.Enable();
 	lightingShader.SetParameter("inWidth", static_cast<float>(vpWidth));
@@ -615,7 +616,7 @@ void mdao::SphereRenderer::rebuildWorkingData(megamol::core::view::AbstractCallR
 		unsigned int partsCount = dataCall->GetParticleListCount();
 		
 		// Add buffers if neccessary
-		for (unsigned int i=gpuData.size(); i<partsCount; ++i) {
+		for (unsigned int i=static_cast<unsigned int>(gpuData.size()); i<partsCount; ++i) {
 			gpuParticleDataType data;
 
 			glGenVertexArrays(1, &(data.vertexArray));
@@ -673,7 +674,7 @@ void mdao::SphereRenderer::rebuildWorkingData(megamol::core::view::AbstractCallR
 		dims.SetHeight(ceil(dims.GetHeight()));
 		dims.SetDepth(ceil(dims.GetDepth()));
 		ambConeConstants[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
-		ambConeConstants[1] = ceil(std::log2(volSize))-1.0f;
+		ambConeConstants[1] = ceil(std::log2(static_cast<float>(volSize)))-1.0f;
 		
 		// Set resolution accordingly
 		volGen->SetResolution(ceil(dims.GetWidth()), ceil(dims.GetHeight()), ceil(dims.GetDepth()));
@@ -686,7 +687,7 @@ void mdao::SphereRenderer::rebuildWorkingData(megamol::core::view::AbstractCallR
 			float globalRadius = 0.0f;
 			if (dataCall->AccessParticles(i).GetVertexDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
 				globalRadius = dataCall->AccessParticles(i).GetGlobalRadius();
-			volGen->InsertParticles(dataCall->AccessParticles(i).GetCount(), globalRadius, gpuData[i].vertexArray);
+			volGen->InsertParticles(static_cast<unsigned int>(dataCall->AccessParticles(i).GetCount()), globalRadius, gpuData[i].vertexArray);
 		}
 		volGen->EndInsertion();
 		
@@ -707,35 +708,35 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 	glBindVertexArray(gpuData.vertexArray);
 
 	glBindBuffer(GL_ARRAY_BUFFER, gpuData.colorVBO);
+	unsigned int partCount = static_cast<unsigned int>(particles.GetCount());
 	// colour
-	std::cout<<"Color data type "<<particles.GetColourDataType()<<std::endl;
 	switch (particles.GetColourDataType()) {
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-			glBufferData(GL_ARRAY_BUFFER, particles.GetCount()*std::max(particles.GetColourDataStride(), 3u), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), 3u), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, particles.GetColourDataStride(), 0);
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-			glBufferData(GL_ARRAY_BUFFER, particles.GetCount()*std::max(particles.GetColourDataStride(), 4u), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), 4u), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, particles.GetColourDataStride(), 0);
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-			glBufferData(GL_ARRAY_BUFFER, particles.GetCount()*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(3*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(3*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-			glBufferData(GL_ARRAY_BUFFER, particles.GetCount()*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(4*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(4*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
 			break;
 		// Not supported - fall through to the gray version
 		// FIXME: this will probably not work!
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: 
-			glBufferData(GL_ARRAY_BUFFER, particles.GetCount()*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(1*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(1*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
 			std::cout<<"Transfer function"<<std::endl;
@@ -752,13 +753,13 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
 			return;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-			glBufferData(GL_ARRAY_BUFFER, particles.GetCount()*particles.GetVertexDataStride(), particles.GetVertexData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*particles.GetVertexDataStride(), particles.GetVertexData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, particles.GetVertexDataStride(), 0);
 			break;
 
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-			glBufferData(GL_ARRAY_BUFFER, particles.GetCount()*particles.GetVertexDataStride(), particles.GetVertexData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*particles.GetVertexDataStride(), particles.GetVertexData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, particles.GetVertexDataStride(), 0);
 			break;
@@ -775,12 +776,12 @@ void mdao::SphereRenderer::generate3ConeDirections(std::vector< vislib::math::Ve
 {
 	directions.clear();
 
-	float edge_length = 2.0 * tan(0.5*apex);
-	float height = sqrt(1 - edge_length*edge_length/12.0);
-	float radius = sqrt(3)/3.0 * edge_length;		
+	float edge_length = 2.0f * tan(0.5f*apex);
+	float height = sqrt(1.0f - edge_length*edge_length/12.0f);
+	float radius = sqrt(3.0f)/3.0f * edge_length;		
 	
 	for (int i=0; i<3; ++i) {
-		float angle = i/3.0*2.0*M_PI;
+		float angle = static_cast<float>(i)/3.0f*2.0f*static_cast<float>(M_PI);
 
 		vislib::math::Vector<float, 3> center(cos(angle)*radius, height, sin(angle)*radius);
 		center.Normalise();

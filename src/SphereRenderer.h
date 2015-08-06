@@ -3,6 +3,7 @@
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#include "stdafx.h"
 
 #include "vislib/types.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -35,7 +36,7 @@ namespace mdao {
 		}
 		
 		static bool IsAvailable(void) {
-			return ogl_IsVersionGEQ(3, 3);
+			return (ogl_IsVersionGEQ(3, 3) != 0);
 		}
 		
 		SphereRenderer(void);
