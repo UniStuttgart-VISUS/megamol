@@ -31,7 +31,7 @@ The build process is straight forward and described (for another plugin) on the 
 The module MDAO2SphereRenderer exposes the following parameters. The values in brackets indicate the default values:
 * `enable_lighting` (`false`): Shade the spheres using local Phong lighting. If turned off, a constant color is used
 * `enable_ao` (`true`): Actually enable ambient occlusion
-* `ao_volsize` (`128`): Size of the longest edge of the volume that holds the voxelized scene. The actual volume extends correspond to the extent of the scene's clip box.
+* `ao_volsize` (`128`): Size of the longest edge of the volume that holds the voxelized scene. The actual volume extent corresponds to the extent of the scene's clip box.
 * `ao_apex` (`50`): Aperture of the cone (should be renamed) in degrees. 
 * `ao_offset` (`0.01`): Offset of the cones from the surface point in object space units in order not to gather occlusion from the own volume.
 * `ao_strength` (`1.0`): Multiplicator to strengthen or weaken the effect of ambient occlusion
