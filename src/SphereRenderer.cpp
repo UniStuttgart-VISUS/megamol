@@ -367,9 +367,7 @@ bool mdao::SphereRenderer::Render(megamol::core::Call& call)
 	// Try to get the data
 	if (!(*dataCall)(0)) return false;
 	dataCall->AccessBoundingBoxes() = renderCall->AccessBoundingBoxes();
-
-	glGetError();
-	checkGLError;
+	
 	// We need to regenerate the shader if certain settings are changed
 	if (this->enableAOSlot.IsDirty() || 
 		this->enableLightingSlot.IsDirty() || 
@@ -427,7 +425,7 @@ void mdao::SphereRenderer::renderDeferredPass(megamol::core::view::AbstractCallR
 	mvInverse.Invert();
 	mvpInverse = mvp;
 	mvpInverse.Invert();
-
+	
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.depth);
 	glActiveTexture(GL_TEXTURE1);
@@ -488,6 +486,7 @@ void mdao::SphereRenderer::renderDeferredPass(megamol::core::view::AbstractCallR
 void mdao::SphereRenderer::renderParticlesGeometry(megamol::core::view::AbstractCallRender3D* renderCall, megamol::core::moldyn::MultiParticleDataCall* dataCall)
 {
 	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 	
 	float scaling = 10.0f/renderCall->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
