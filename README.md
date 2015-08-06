@@ -3,7 +3,7 @@ This module allows the rendering of particle data with an advanced ambient occlu
 
 ![random sphere data set with purely ambient occlusion shading](https://github.com/jstaib-tud/megamol-mdao2/raw/master/demo.png)
 
-The plugin provides the module `MDAO2SphereRenderer`. It has the following features:
+The plugin provides the module `MDAO2Renderer`. It has the following features:
 * Smooth and great looking ambient occlusion based on voxelization and cone tracing
 * Quite fast through deferred shading and voxelization that is nearly purely evaluated on the GPU
 * Support for multiple particle lists and list types
@@ -28,7 +28,7 @@ To run this plugin, you need:
 The build process is straight forward and described (for another plugin) on the [MegaMol building page](https://svn.vis.uni-stuttgart.de/trac/megamol/wiki/HowToBuild11), secton "Plugins".
 
 ## Parameters
-The module MDAO2SphereRenderer exposes the following parameters. The values in brackets indicate the default values:
+The module MDAO2Renderer exposes the following parameters. The values in brackets indicate the default values:
 * `enable_lighting` (`false`): Shade the spheres using local Phong lighting. If turned off, a constant color is used
 * `enable_ao` (`true`): Actually enable ambient occlusion
 * `ao_volsize` (`128`): Size of the longest edge of the volume that holds the voxelized scene. The actual volume extent corresponds to the extent of the scene's clip box.
