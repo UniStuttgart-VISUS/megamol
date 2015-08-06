@@ -1,5 +1,5 @@
 # MegaMol module for Advanced Ambient Occlusion
-This module allows the rendering of particle data with an advanced ambient occlusion algorithm, based on approximate voxel cone tracing [Original Paper by Crassin](http://maverick.inria.fr/Publications/2011/CNSGE11b/). In case you do not know what MegaMol is, please visit [The MegaMol Website](http://megamol.org).
+This module allows the rendering of particle data with an advanced ambient occlusion algorithm, based on approximate voxel cone tracing ([Original Paper by Crassin](http://maverick.inria.fr/Publications/2011/CNSGE11b/)). In case you do not know what MegaMol is, please visit [The MegaMol Website](http://megamol.org).
 
 ![random sphere data set with purely ambient occlusion shading](https://github.com/jstaib-tud/megamol-mdao2/raw/master/demo.png)
 
