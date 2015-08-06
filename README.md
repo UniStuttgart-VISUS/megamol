@@ -4,8 +4,8 @@ This module allows the rendering of particle data with an advanced ambient occlu
 ![random sphere data set with purely ambient occlusion shading](https://github.com/jstaib-tud/megamol-mdao2/raw/master/demo.png)
 
 The plugin provides the module `MDAO2SphereRenderer`. It has the following features:
-* Smooth and great looking ambient occlusion based on voxelization and cone tracing of the data set
-* Quite fast through deferred shading and fast voxelization that is nearly purely evaluated on the GPU
+* Smooth and great looking ambient occlusion based on voxelization and cone tracing
+* Quite fast through deferred shading and voxelization that is nearly purely evaluated on the GPU
 * Support for multiple particle lists and list types
 * Works together with the clipping plane module and transfer function module
 * Uses modern features of OpenGL 4.5., but can fall back to OpenGL 3.3.
