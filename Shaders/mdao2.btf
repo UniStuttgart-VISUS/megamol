@@ -286,7 +286,7 @@ void main()
 {
 	ivec2 texelCoord = ivec2(gl_FragCoord.xy);
 	
-	float depth = texelFetch(inDepthTex, texelCoord, 0);
+	float depth = texelFetch(inDepthTex, texelCoord, 0).r;
 
 	if (depth == 1.0) {
 		discard;
