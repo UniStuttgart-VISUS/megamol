@@ -12,6 +12,7 @@
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/BoolParam.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;
@@ -24,7 +25,8 @@ moldyn::AbstractSimpleSphereRenderer::AbstractSimpleSphereRenderer(void) : Rende
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
         getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
-        greyTF(0) {
+        greyTF(0),
+        forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.") {
 
     this->getDataSlot.SetCompatibleCall<moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -34,6 +36,9 @@ moldyn::AbstractSimpleSphereRenderer::AbstractSimpleSphereRenderer(void) : Rende
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
+
+    this->forceTimeSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->forceTimeSlot);
 }
 
 
@@ -132,6 +137,7 @@ bool moldyn::AbstractSimpleSphereRenderer::GetExtents(Call& call) {
     if (cr == NULL) return false;
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
+    c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->isTimeForced());
     if ((c2 != NULL) && ((*c2)(1))) {
         cr->SetTimeFramesCount(c2->FrameCount());
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
@@ -169,7 +175,7 @@ moldyn::MultiParticleDataCall *moldyn::AbstractSimpleSphereRenderer::getData(uns
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     outScaling = 1.0f;
     if (c2 != NULL) {
-        c2->SetFrameID(t);
+        c2->SetFrameID(t, this->isTimeForced());
         if (!(*c2)(1)) return NULL;
 
         // calculate scaling
@@ -180,7 +186,7 @@ moldyn::MultiParticleDataCall *moldyn::AbstractSimpleSphereRenderer::getData(uns
             outScaling = 1.0f;
         }
 
-        c2->SetFrameID(t);
+        c2->SetFrameID(t, this->isTimeForced());
         if (!(*c2)(0)) return NULL;
 
         return c2;
@@ -389,3 +395,7 @@ void moldyn::AbstractSimpleSphereRenderer::getClipData(float *clipDat, float *cl
 //
 //    return true;
 //}
+
+bool moldyn::AbstractSimpleSphereRenderer::isTimeForced(void) const {
+    return this->forceTimeSlot.Param<param::BoolParam>()->Value();
+}

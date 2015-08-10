@@ -104,11 +104,21 @@ namespace moldyn {
 
     protected:
 
+        /**
+         * Answer the value of the forceTimeSlot parameter
+         *
+         * @return True if the time value requested from the data source should be forced
+         */
+        bool isTimeForced(void) const;
+
         /** The call for Transfer function */
         CallerSlot getTFSlot;
 
         /** A simple black-to-white transfer function texture as fallback */
         unsigned int greyTF;
+
+        /** Bool parameter slot to force time */
+        param::ParamSlot forceTimeSlot;
 
     };
 
