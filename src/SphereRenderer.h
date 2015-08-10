@@ -100,6 +100,9 @@ namespace mdao {
 		// High precision textures slot
 		megamol::core::param::ParamSlot useHPTexturesSlot;
 
+        // bool parameter to force the time from the data set
+        megamol::core::param::ParamSlot forceTimeSlot;
+
 		virtual bool GetCapabilities(megamol::core::Call& call);
 		virtual bool GetExtents(megamol::core::Call& call);
 		virtual bool Render(megamol::core::Call& call);
@@ -119,6 +122,10 @@ namespace mdao {
 		void getClipData(vislib::math::Vector<float, 4> &clipDat, vislib::math::Vector<float, 4> &clipCol);
 		
 		GLuint getTransferFunctionHandle();
+
+        // simple access to the value of forceTimeSlot
+        bool isTimeForced() const;
+
 	};
 	
 }

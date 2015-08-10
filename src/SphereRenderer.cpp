@@ -55,7 +55,8 @@ mdao::SphereRenderer::SphereRenderer(void):
 	aoOffsetSlot("ao_offset", "AO Offset from Surface"),
 	aoStrengthSlot("ao_strength", "AO Strength"),
 	aoConeLengthSlot("ao_conelen", "AO Cone length"),
-	useHPTexturesSlot("high_prec_tex", "Use high precision textures")
+	useHPTexturesSlot("high_prec_tex", "Use high precision textures"),
+    forceTimeSlot("forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
 {
 	// Make the slot connectable to multi particle data and molecular data
     this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::MultiParticleDataCallDescription>();
@@ -91,6 +92,9 @@ mdao::SphereRenderer::SphereRenderer(void):
 	
 	this->useHPTexturesSlot << (new core::param::BoolParam(false));
 	this->MakeSlotAvailable(&this->useHPTexturesSlot);
+
+    this->forceTimeSlot.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->forceTimeSlot);
 
 	oldHash = -1;	
 	vpWidth = -1;
@@ -325,7 +329,7 @@ bool mdao::SphereRenderer::GetExtents(megamol::core::Call& call)
     megamol::core::moldyn::MultiParticleDataCall *extentsCall = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();	
 	if (extentsCall == NULL) return false;
 	
-	extentsCall->SetFrameID(static_cast<unsigned int>(renderCall->Time()));
+	extentsCall->SetFrameID(static_cast<unsigned int>(renderCall->Time()), this->isTimeForced());
 	
 	// Try to call the data storage with calling function 1 (which delivers the extents)
 	if (!(*extentsCall)(1)) return false;
@@ -362,7 +366,7 @@ bool mdao::SphereRenderer::Render(megamol::core::Call& call)
     megamol::core::moldyn::MultiParticleDataCall *dataCall = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 	if (dataCall == NULL) return false;
 	
-	dataCall->SetFrameID(static_cast<unsigned int>(renderCall->Time()));
+	dataCall->SetFrameID(static_cast<unsigned int>(renderCall->Time()), this->isTimeForced());
 
 	// Try to get the data
 	if (!(*dataCall)(0)) return false;
@@ -811,4 +815,9 @@ std::string mdao::SphereRenderer::generateDirectionShaderArrayString(const std::
 	result<<");"<<std::endl;
 
 	return result.str();
+}
+
+
+bool mdao::SphereRenderer::isTimeForced() const {
+    return this->forceTimeSlot.Param<core::param::BoolParam>()->Value();
 }
