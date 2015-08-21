@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">110</snippet>
+        <snippet type="version">130</snippet>
         <snippet name="common::defines"/>
         <snippet name="attributes" type="string">
             <![CDATA[
@@ -26,22 +26,28 @@ uniform vec4 clipDat;
 uniform vec4 clipCol;
 uniform int instanceOffset;
 
+uniform mat4 MVinv;
+uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
 uniform vec4 inConsts1;
 attribute float colIdx;
 uniform sampler1D colTab;
 
-varying vec4 objPos;
-varying vec4 camPos;
-varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
+out vec4 objPos;
+out vec4 camPos;
+out vec4 lightPos;
+out float squarRad;
+out float rad;
+out vec4 vertColor;
 
 #ifdef DEFERRED_SHADING
-varying float pointSize;
+out float pointSize;
 #endif
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+out vec2 centerFragment;
 #endif // RETICLE
 
 #define CONSTRAD inConsts1.x
@@ -68,7 +74,7 @@ void main(void) {
     //rad = 1.0;
     float cid = MAX_COLV - MIN_COLV;
     if (cid < 0.000001) {
-        gl_FrontColor = theColor;
+        vertColor = theColor;
     } else {
         cid = (theColIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
@@ -76,7 +82,7 @@ void main(void) {
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
         cid += 0.5 / COLTAB_SIZE;
         
-        gl_FrontColor = texture1D(colTab, cid);
+        vertColor = texture1D(colTab, cid);
     }
 
 #ifdef WITH_SCALING
@@ -94,11 +100,11 @@ void main(void) {
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = MVinv[3]; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
+    lightPos = MVinv * gl_LightSource[0].position;
 ]]>
         </snippet>
         <snippet name="clippingPlane" type="string">
@@ -123,9 +129,9 @@ void main(void) {
 
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = MVinv[3] + MVinv[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = MVinv[3] + MVinv[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -164,25 +170,25 @@ void main(void) {
 
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = MVP * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
@@ -210,8 +216,9 @@ void main(void) {
 #ifdef RETICLE
     centerFragment = gl_Position.xy / gl_Position.w;
 #endif // RETICLE
-
-    // gl_PointSize = 32.0;
+    //gl_Position = MVP * vec4(inPos.xyz, 1.0);
+    //gl_Position /= gl_Position.w;
+    //gl_PointSize = 8.0;
 
 }
 ]]>
@@ -219,15 +226,24 @@ void main(void) {
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">110</snippet>
+        <snippet type="version">140</snippet>
         <snippet name="common::defines"/>
         <snippet name="common::lighting::simple"/>
         <snippet name="body1" type="string">
             <![CDATA[
+//#extension GL_ARB_conservative_depth:require
+//layout (depth_less) out float gl_FragDepth;
+#extension GL_ARB_explicit_attrib_location : enable
+
+uniform mat4 MVP;
+uniform mat4 MVPinv;
+uniform mat4 MVPtransp;
+
 #ifdef BACKSIDE_ENABLED
 uniform float hitsideFlag;
 #endif // BACKSIDE_ENABLED
 //#define DISCARD_COLOR_MARKER
+//#undef CLIP
 
 // clipping plane attributes
 uniform vec4 clipDat;
@@ -235,14 +251,17 @@ uniform vec4 clipCol;
 
 uniform vec4 viewAttr;
 
-FLACH varying vec4 objPos;
-FLACH varying vec4 camPos;
-FLACH varying vec4 lightPos;
-FLACH varying float squarRad;
-FLACH varying float rad;
+FLACH in vec4 objPos;
+FLACH in vec4 camPos;
+FLACH in vec4 lightPos;
+FLACH in float squarRad;
+FLACH in float rad;
+FLACH in vec4 vertColor;
+
+out layout(location = 0) vec4 outCol;
 
 #ifdef RETICLE
-FLACH varying vec2 centerFragment;
+FLACH in vec2 centerFragment;
 #endif // RETICLE
 
 void main(void) {
@@ -257,7 +276,8 @@ void main(void) {
     
 
     // transform fragment coordinates from view coordinates to object coordinates.
-    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    //coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord = MVPinv * coord;
     coord /= coord.w;
     coord -= objPos; // ... and to glyph space
     
@@ -266,7 +286,7 @@ void main(void) {
     ray = normalize(coord.xyz - camPos.xyz);
 
     // chose color for lighting
-    vec4 color = gl_Color;
+    vec4 color = vertColor;
     //vec4 color = vec4(uplParams.xyz, 1.0);
 
     // calculate the geometry-ray-intersection
@@ -339,8 +359,8 @@ void main(void) {
 <snippet name="out-lighting" type="string">
             <![CDATA[
     // phong lighting with directional light
-    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color.rgb), color.a);
-    //gl_FragColor = color;
+    outCol = vec4(LocalLighting(ray, normal, lightPos.xyz, color.rgb), color.a);
+    //outCol = color;
 ]]>
   </snippet>
   <snippet name="out-depth" type="string">
@@ -348,18 +368,18 @@ void main(void) {
     // calculate depth
 #ifdef DEPTH
     vec4 Ding = vec4(sphereintersection + objPos.xyz, 1.0);
-    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    float depth = dot(MVPtransp[2], Ding);
+    float depthW = dot(MVPtransp[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #ifndef CLIP
     gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
-    gl_FragColor.rgb = (radicand < 0.0) ? gl_Color.rgb : gl_FragColor.rgb;
+    outCol.rgb = (radicand < 0.0) ? vertColor.rgb : outCol.rgb;
 #endif // CLIP
 
 #ifdef DISCARD_COLOR_MARKER
     Ding = vec4(objPos.xyz, 1.0);
-    depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
-    depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    depth = dot(MVPtransp[2], Ding);
+    depthW = dot(MVPtransp[3], Ding);
     gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
 #endif // DISCARD_COLOR_MARKER
 
@@ -373,11 +393,12 @@ void main(void) {
         * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
         + vec4(-1.0, -1.0, -1.0, 1.0);
     if (min(abs(coord.x - centerFragment.x), abs(coord.y - centerFragment.y)) < 0.002) {
-        //gl_FragColor.rgb = vec3(1.0, 1.0, 0.5);
-        gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
+        //outCol.rgb = vec3(1.0, 1.0, 0.5);
+        outCol.rgb += vec3(0.3, 0.3, 0.5);
     }
 #endif // RETICLE
-//    gl_FragColor.rgb = normal;
+//    outCol.rgb = normal;
+//outCol = vec4(1.0, 0.0, 0.0, 1.0);
 }
 ]]>
         </snippet>

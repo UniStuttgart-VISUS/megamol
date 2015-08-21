@@ -18,6 +18,8 @@
 #include "vislib/math/mathfunctions.h"
 #include <inttypes.h>
 #include <stdint.h>
+#include "vislib/math/Matrix.h"
+#include "vislib/math/ShallowMatrix.h"
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
@@ -174,9 +176,12 @@ bool NGSplatRenderer::makeColorString(MultiParticleDataCall::Particles &parts, s
             //	glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
             //	colTabSize = cgtf->TextureSize();
             //}
+            
             declaration = "    float colorIndex;\n";
-            //code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
-            code = "    theColIdx = theBuffer[5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 4]; \n";
+            code = "    theColIdx = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].colorIndex; \n";
+            // flat float version
+            //code = "    theColIdx = theBuffer[5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 4]; \n";
+            
             //else {
             //	glBindTexture(GL_TEXTURE_1D, this->greyTF);
             //	colTabSize = 2;
@@ -222,15 +227,16 @@ bool NGSplatRenderer::makeVertexString(MultiParticleDataCall::Particles &parts, 
         //glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
         //glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
         declaration = "    vec4 posR;\n";
-        //code = "    inPos = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR; \n"
-        //       "    rad = inPos.w;\n"
-        //       "    inPos.w = 1.0;";
-        code = "    inPos = vec4(theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 0],"
-                                "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 1],"
-                                "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 2],"
-                                "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 3]);\n"
-            "    rad = inPos.w;\n"
-            "    inPos.w = 1.0;";
+        code = "    inPos = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR; \n"
+               "    rad = inPos.w;\n"
+               "    inPos.w = 1.0;";
+        // flat float version
+        //code = "    inPos = vec4(theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 0],"
+        //    "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 1],"
+        //    "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 2],"
+        //    "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 3]);\n"
+        //    "    rad = inPos.w;\n"
+        //    "    inPos.w = 1.0;";
         break;
     default:
         declaration = "";
@@ -305,8 +311,9 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSplatRenderer::generateShade
             decl += "};\n";
 
             decl += "layout(packed, binding = " + std::to_string(SSBObindingPoint) + ") buffer shader_data {\n"
-                //"    SphereParams theBuffer[];\n"
-                "    float theBuffer[];\n"
+                "    SphereParams theBuffer[];\n"
+                // flat float version
+                //"    float theBuffer[];\n"
                 "};\n";
             std::string code = "\n";
             code += colCode;
@@ -510,6 +517,20 @@ bool NGSplatRenderer::Render(Call& call) {
     glScalef(scaling, scaling, scaling);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
+
+    // this is the apex of suck and must die
+    GLfloat modelViewMatrix_column[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    GLfloat projMatrix_column[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    // Compute modelviewprojection matrix
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv = modelViewMatrix;
+    modelViewMatrixInv.Invert();
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
+    // end suck
+
     //currBuf = 0;
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
@@ -529,13 +550,15 @@ bool NGSplatRenderer::Render(Call& call) {
         glUniform1f(newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
         glUniform1i(newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
         glUniform1f(newShader->ParameterLocation("zNear"), cr->GetCameraParameters()->NearClip());
+        glUniformMatrix4fv(newShader->ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+        glUniformMatrix4fv(newShader->ParameterLocation("modelViewInverse"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
         // colour
         switch (parts.GetColourDataType()) {
-        case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-                glEnable(GL_TEXTURE_1D);
+            case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                 view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
+                glEnable(GL_TEXTURE_1D);
                 if ((cgtf != NULL) && ((*cgtf)())) {
                     glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                     colTabSize = cgtf->TextureSize();

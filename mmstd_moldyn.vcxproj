@@ -283,7 +283,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <SubType>Designer</SubType>
     </None>
     <None Include="Shaders\NGsphereBufferArray.btf" />
-    <None Include="Shaders\NGsplat.btf" />
+    <None Include="Shaders\NGsplat.btf">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Shaders\particleWorkerCompute.btf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
