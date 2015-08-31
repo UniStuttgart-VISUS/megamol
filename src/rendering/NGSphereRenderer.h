@@ -111,8 +111,8 @@ namespace rendering {
 		void getBytesAndStride(MultiParticleDataCall::Particles &parts, unsigned int &colBytes, unsigned int &vertBytes,
 			unsigned int &colStride, unsigned int &vertStride);
 
-		void lockSingle(GLsync& syncObj);
-		void waitSingle(GLsync& syncObj);
+        void queueSignal(GLsync& syncObj);
+		void waitSignal(GLsync& syncObj);
 
         /** The sphere shader */
         //vislib::graphics::gl::GLSLShader sphereShader;
@@ -133,6 +133,7 @@ namespace rendering {
 		std::shared_ptr<GLSLShader> newShader;
 		shaderMap theShaders;
 		vislib::SmartPtr<ShaderSource> vert, frag;
+        core::param::ParamSlot scalingParam;
 		//TimeMeasure timer;
 		//megamol::core::utility::ShaderSourceFactory::sh
     };

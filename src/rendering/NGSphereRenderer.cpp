@@ -12,6 +12,7 @@
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/FloatParam.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
@@ -108,6 +109,7 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
 NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
 //sphereShader(),
     fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
+    scalingParam("scaling", "scaling factor for particle radii"),
 //	timer(),
     // this variant should not need the fence
     //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
@@ -117,6 +119,8 @@ NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
     colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE),
     theShaders() {
 
+    this->scalingParam << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->scalingParam);
     fences.resize(numBuffers);
 }
 
@@ -128,14 +132,14 @@ NGSphereRenderer::~NGSphereRenderer(void) {
     this->Release();
 }
 
-void NGSphereRenderer::lockSingle(GLsync& syncObj) {
+void NGSphereRenderer::queueSignal(GLsync& syncObj) {
     if (syncObj) {
         glDeleteSync(syncObj);
     }
     syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 }
 
-void NGSphereRenderer::waitSingle(GLsync& syncObj) {
+void NGSphereRenderer::waitSignal(GLsync& syncObj) {
     if (syncObj) {
         while (1) {
             GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
@@ -281,10 +285,18 @@ bool NGSphereRenderer::makeVertexString(MultiParticleDataCall::Particles &parts,
         //glEnableClientState(GL_VERTEX_ARRAY);
         //glUniform4f(this->sphereShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
         //glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), vertPtr);
-        declaration = "    vec4 posR;\n";
-        code = "    inPos = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR; \n"
-               "    rad = inPos.w;\n"
-               "    inPos.w = 1.0;";
+        // broken
+        //declaration = "    vec4 posR;\n";
+        //code = "    inPos = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR; \n"
+        //       "    rad = inPos.w;\n"
+        //       "    inPos.w = 1.0;";
+
+        declaration = "    float posX; float posY; float posZ; float posR;\n";
+        code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+            "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+            "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+            "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+
         // flat float version
         //code = "    inPos = vec4(theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 0],"
         //    "theBuffer[ 5 * " NGS_THE_INSTANCE " + 5 * instanceOffset + 1],"
@@ -604,6 +616,7 @@ bool NGSphereRenderer::Render(Call& call) {
         glUniformMatrix4fv(newShader->ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
         glUniformMatrix4fv(newShader->ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+        glUniform1f(newShader->ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
         // colour
@@ -659,7 +672,7 @@ bool NGSphereRenderer::Render(Call& call) {
                         //currCol = currCol == 0 ? currVert : currCol;
                         const char *whence = currVert < currCol ? currVert : currCol;
                         UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
-                        this->waitSingle(fences[currBuf]);
+                        this->waitSignal(fences[currBuf]);
                         //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                         memcpy(mem, whence, vertsThisTime * vertStride);
                         glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
@@ -672,7 +685,7 @@ bool NGSphereRenderer::Render(Call& call) {
                         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
                         glDrawArrays(GL_POINTS, 0, vertsThisTime);
                         //glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
-                        this->lockSingle(fences[currBuf]);
+                        this->queueSignal(fences[currBuf]);
 
                         currBuf = (currBuf + 1) % this->numBuffers;
                         vertCounter += vertsThisTime;
