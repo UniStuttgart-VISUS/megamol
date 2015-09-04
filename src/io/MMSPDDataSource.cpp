@@ -403,22 +403,19 @@ void MMSPDDataSource::Frame::loadFrameBinary(char *buffer, UINT64 size, const MM
     for (UINT64 pi = 0; pi < partCnt; pi++) {
 
         // TODO: decide whether to ignore IDs or don't! (current: don't, interleave with pos) [#128]
-        // old:
-        //if (header.HasIDs()) pos += 8;
-        // new:
-        if (header.HasIDs()) {
-            typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos]));
-            pos += 8;
-        }
+        if (header.HasIDs()) pos += 8;
 
         if (typeCnt > 1) {
             type = *reinterpret_cast<UINT32*>(&buffer[pos]);
             if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
-            // old
-            //if (header.HasIDs()) {
-            //    typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
-            //}
+            if (header.HasIDs()) {
+                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            }
             pos += 4;
+        } else {
+            if (header.HasIDs()) {
+                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            }
         }
 
         this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
@@ -488,15 +485,7 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
     for (UINT64 pi = 0; pi < partCnt; pi++) {
 
         // see loadframe
-        //if (header.HasIDs()) pos += 8;
-        if (header.HasIDs()) {
-            vislib::Swap(buffer[pos + 0], buffer[pos + 7]);
-            vislib::Swap(buffer[pos + 1], buffer[pos + 6]);
-            vislib::Swap(buffer[pos + 2], buffer[pos + 5]);
-            vislib::Swap(buffer[pos + 3], buffer[pos + 4]);
-            typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos]));
-            pos += 8;
-        }
+        if (header.HasIDs()) pos += 8;
 
         if (typeCnt > 1) {
             vislib::Swap(buffer[pos + 0], buffer[pos + 3]);
@@ -504,14 +493,22 @@ void MMSPDDataSource::Frame::loadFrameBinaryBE(char *buffer, UINT64 size, const 
             type = *reinterpret_cast<UINT32*>(&buffer[pos]);
             if (type >= typeCnt) throw vislib::Exception("Illegal type encountered", __FILE__, __LINE__);
             // see loadframe
-            //if (header.HasIDs()) {
-            //    vislib::Swap(buffer[pos - 8 + 0], buffer[pos - 8 + 7]);
-            //    vislib::Swap(buffer[pos - 8 + 1], buffer[pos - 8 + 6]);
-            //    vislib::Swap(buffer[pos - 8 + 2], buffer[pos - 8 + 5]);
-            //    vislib::Swap(buffer[pos - 8 + 3], buffer[pos - 8 + 4]);
-            //    typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
-            //}
+            if (header.HasIDs()) {
+                vislib::Swap(buffer[pos - 8 + 0], buffer[pos - 8 + 7]);
+                vislib::Swap(buffer[pos - 8 + 1], buffer[pos - 8 + 6]);
+                vislib::Swap(buffer[pos - 8 + 2], buffer[pos - 8 + 5]);
+                vislib::Swap(buffer[pos - 8 + 3], buffer[pos - 8 + 4]);
+                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            }
             pos += 4;
+        } else {
+            if (header.HasIDs()) {
+                vislib::Swap(buffer[pos - 8 + 0], buffer[pos - 8 + 7]);
+                vislib::Swap(buffer[pos - 8 + 1], buffer[pos - 8 + 6]);
+                vislib::Swap(buffer[pos - 8 + 2], buffer[pos - 8 + 5]);
+                vislib::Swap(buffer[pos - 8 + 3], buffer[pos - 8 + 4]);
+                typeData[type]->Write(*reinterpret_cast<UINT64*>(&buffer[pos - 8]));
+            }
         }
 
         this->addIndexForReconstruction(static_cast<UINT32>(type), idxRecDat,
