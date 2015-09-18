@@ -16,9 +16,6 @@
     <Filter Include="Public Header Files">
       <UniqueIdentifier>{2ffc180e-f9c6-40f5-8e5d-475e1bc70343}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CUDA Files">
-      <UniqueIdentifier>{7e5aa192-4345-4fad-9a29-2b0c79d05017}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\protein\Protein.h">
@@ -87,15 +84,6 @@
     <ClInclude Include="src\ColorModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ComparativeFieldTopologyRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ComparativeMolSurfaceRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\CritPoints.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -103,33 +91,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\CrystalStructureDataSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CrystalStructureVolumeRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cuda_error_check.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cuda_helper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CudaDevArr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CUDAKernels.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CUDAMarchingCubes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CUDAQuickSurf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CUDAStreamlines.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\DataWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\DeformableGPUSurfaceMT.h">
@@ -181,9 +142,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gmx_system_xdr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GPUSurfaceMT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\GridDataStructure.h">
@@ -246,19 +204,10 @@
     <ClInclude Include="src\MoleculeCartoonRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MoleculeCBCudaRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MoleculeCudaSESRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\MoleculeSequenceRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\MoleculeSESRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MoleculeVolumeCudaRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\MultiParticleDataFilter.h">
@@ -288,25 +237,7 @@
     <ClInclude Include="src\PhantomDeviceWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\PotentialCalculator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PotentialVolumeRaycaster.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ProteinVariantMatch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\ProteinVolumeRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\QuickSurfMTRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\QuickSurfRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\QuickSurfRenderer2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Raw3DRelativeMouseInput.h">
@@ -396,12 +327,6 @@
     <ClInclude Include="src\Stride.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\SurfaceMappingTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SurfacePotentialRendererSlave.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -429,9 +354,6 @@
     <ClInclude Include="src\VariantMatchRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\VBODataCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\VecField3f.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -450,9 +372,6 @@
     <ClInclude Include="src\VolumeDirectionRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\VolumeMeshRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\VolumeSliceCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -466,45 +385,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\VTIWriter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ComparativeSurfacePotentialRenderer_inline_device_functions.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\constantGridParams.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CUDACurl.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CUDAFieldTopology.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\filter_cuda.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\particles_kernel.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\particleSystem.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PotentialCalculator.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VolumeMeshRenderer.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sort_triangles.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CUDAGrid.cuh">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\interpol.cuh">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -554,15 +434,6 @@
     <ClCompile Include="src\ColorModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ComparativeMolSurfaceRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ComparativeSurfacePotentialRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\CritPoints.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -570,12 +441,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\CrystalStructureDataSource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CrystalStructureVolumeRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DataWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Diagram2DCall.cpp">
@@ -662,19 +527,10 @@
     <ClCompile Include="src\MoleculeCartoonRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MoleculeCBCudaRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MoleculeCudaSESRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\MoleculeSequenceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MoleculeSESRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MoleculeVolumeCudaRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MultiParticleDataFilter.cpp">
@@ -701,16 +557,7 @@
     <ClCompile Include="src\PhantomDeviceWrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\PotentialCalculator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PotentialVolumeRaycaster.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Protein.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ProteinVariantMatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ProteinVolumeRenderer.cpp">
@@ -806,12 +653,6 @@
     <ClCompile Include="src\Stride.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SurfaceMappingTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SurfacePotentialRendererSlave.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\ToonRendererDeferred.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -830,9 +671,6 @@
     <ClCompile Include="src\VariantMatchRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VBODataCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\VecField3f.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -846,9 +684,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VolumeDirectionRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\VolumeMeshRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VolumeSliceCall.cpp">
@@ -884,73 +719,5 @@
     <ClCompile Include="src\gmx_system_xdr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="src\VolumeMeshRenderer-sort.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_metric.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_generation.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_mapping.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_thrust_stuff.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\CUDACurl.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\CUDAFieldTopology.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\CUDAMarchingCubes.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\CUDAQuickSurf.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\CUDAStreamlines.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\cuenergy.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\DeformableGPUSurfaceMT.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\DiffusionSolver.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\filter_cuda.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\gpu_poisson_solver.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\GPUSurfaceMT.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\particles_kernel.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\particleSystem.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\PotentialCalculator.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\sort_triangles.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\VolumeMeshRenderer.cu">
-      <Filter>CUDA Files</Filter>
-    </CudaCompile>
   </ItemGroup>
 </Project>

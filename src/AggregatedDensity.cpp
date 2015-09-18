@@ -7,7 +7,6 @@
 
 #include "stdafx.h"
 #include "AggregatedDensity.h"
-#include "VolumeMeshRenderer.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include <climits>
 #include <cfloat>

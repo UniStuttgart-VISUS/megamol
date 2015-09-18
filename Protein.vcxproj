@@ -50,9 +50,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.5.props" />
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="vislibVSProps\TargetDebug32.props" />
@@ -113,7 +111,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -135,7 +133,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -164,7 +162,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -190,7 +188,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -220,27 +218,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CoarseGrainDataLoader.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\ColorModule.h" />
-    <ClInclude Include="src\ComparativeFieldTopologyRenderer.h" />
-    <ClInclude Include="src\ComparativeMolSurfaceRenderer.h" />
-    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.cuh" />
-    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.h" />
-    <ClInclude Include="src\ComparativeSurfacePotentialRenderer_inline_device_functions.cuh" />
-    <ClInclude Include="src\constantGridParams.cuh" />
     <ClInclude Include="src\CritPoints.h" />
     <ClInclude Include="src\CrystalStructureDataCall.h" />
     <ClInclude Include="src\CrystalStructureDataSource.h" />
-    <ClInclude Include="src\CrystalStructureVolumeRenderer.h" />
-    <ClInclude Include="src\CUDACurl.cuh" />
-    <ClInclude Include="src\CudaDevArr.h" />
-    <ClInclude Include="src\CUDAFieldTopology.cuh" />
-    <ClInclude Include="src\CUDAGrid.cuh" />
-    <ClInclude Include="src\CUDAKernels.h" />
-    <ClInclude Include="src\CUDAMarchingCubes.h" />
-    <ClInclude Include="src\CUDAQuickSurf.h" />
-    <ClInclude Include="src\CUDAStreamlines.h" />
-    <ClInclude Include="src\cuda_error_check.h" />
-    <ClInclude Include="src\cuda_helper.h" />
-    <ClInclude Include="src\DataWriter.h" />
     <ClInclude Include="src\DeformableGPUSurfaceMT.h" />
     <ClInclude Include="src\DeformableGPUSurfaceMTCall.h" />
     <ClInclude Include="src\Diagram2DCall.h" />
@@ -251,7 +231,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\DofRendererDeferred.h" />
     <ClInclude Include="src\ElectrostaticsRenderer.h" />
     <ClInclude Include="src\Filter.h" />
-    <ClInclude Include="src\filter_cuda.cuh" />
     <ClInclude Include="src\ForceDataCall.h" />
     <ClInclude Include="src\FrodockLoader.h" />
     <ClInclude Include="src\GlButton.h" />
@@ -259,7 +238,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\GlWidget.h" />
     <ClInclude Include="src\GlWidgetLibrary.h" />
     <ClInclude Include="src\gmx_system_xdr.h" />
-    <ClInclude Include="src\GPUSurfaceMT.h" />
     <ClInclude Include="src\GridDataStructure.h" />
     <ClInclude Include="src\GridNeighbourFinder.h" />
     <ClInclude Include="src\gridParams.h" />
@@ -267,7 +245,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\HapticsMoleculeRenderer.h" />
     <ClInclude Include="src\Header.h" />
     <ClInclude Include="src\HostArr.h" />
-    <ClInclude Include="src\interpol.cuh" />
     <ClInclude Include="src\Interpol.h" />
     <ClInclude Include="src\IntSelection.h" />
     <ClInclude Include="src\IntSelectionCall.h" />
@@ -281,30 +258,18 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\MolecularSurfaceFeature.h" />
     <ClInclude Include="src\MoleculeBallifier.h" />
     <ClInclude Include="src\MoleculeCartoonRenderer.h" />
-    <ClInclude Include="src\MoleculeCBCudaRenderer.h" />
-    <ClInclude Include="src\MoleculeCudaSESRenderer.h" />
     <ClInclude Include="src\MoleculeSequenceRenderer.h" />
     <ClInclude Include="src\MoleculeSESRenderer.h" />
-    <ClInclude Include="src\MoleculeVolumeCudaRenderer.h" />
     <ClInclude Include="src\MultiParticleDataFilter.h" />
     <ClInclude Include="src\MultiPDBLoader.h" />
     <ClInclude Include="src\ogl_error_check.h" />
     <ClInclude Include="src\OpenBabelLoader.h" />
     <ClInclude Include="src\ParticleDataCall.h" />
-    <ClInclude Include="src\particleSystem.cuh" />
-    <ClInclude Include="src\particles_kernel.cuh" />
     <ClInclude Include="src\PDBInterpolator.h" />
     <ClInclude Include="src\PDBLoader.h" />
     <ClInclude Include="src\PDBWriter.h" />
     <ClInclude Include="src\PhantomDeviceWrapper.h" />
-    <ClInclude Include="src\PotentialCalculator.cuh" />
-    <ClInclude Include="src\PotentialCalculator.h" />
-    <ClInclude Include="src\PotentialVolumeRaycaster.h" />
-    <ClInclude Include="src\ProteinVariantMatch.h" />
     <ClInclude Include="src\ProteinVolumeRenderer.h" />
-    <ClInclude Include="src\QuickSurfMTRenderer.h" />
-    <ClInclude Include="src\QuickSurfRenderer.h" />
-    <ClInclude Include="src\QuickSurfRenderer2.h" />
     <ClInclude Include="src\Raw3DRelativeMouseInput.h" />
     <ClInclude Include="src\ReducedSurface.h" />
     <ClInclude Include="src\ReducedSurfaceSimplified.h" />
@@ -322,7 +287,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\SolPathRenderer.h" />
     <ClInclude Include="src\SolventDataGenerator.h" />
     <ClInclude Include="src\SolventVolumeRenderer.h" />
-    <ClInclude Include="src\sort_triangles.cuh" />
     <ClInclude Include="src\SphereDataCall.h" />
     <ClInclude Include="src\SphereRenderer.h" />
     <ClInclude Include="src\SphereRendererMouse.h" />
@@ -335,8 +299,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\Streamline.h" />
     <ClInclude Include="src\StreamlineRenderer.h" />
     <ClInclude Include="src\Stride.h" />
-    <ClInclude Include="src\SurfaceMappingTest.h" />
-    <ClInclude Include="src\SurfacePotentialRendererSlave.h" />
     <ClInclude Include="src\tables.h" />
     <ClInclude Include="src\targetver.h" />
     <ClInclude Include="src\ToonRendererDeferred.h" />
@@ -346,15 +308,12 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\utilities.h" />
     <ClInclude Include="src\VariantMatchDataCall.h" />
     <ClInclude Include="src\VariantMatchRenderer.h" />
-    <ClInclude Include="src\VBODataCall.h" />
     <ClInclude Include="src\VecField3f.h" />
     <ClInclude Include="src\View3DMouse.h" />
     <ClInclude Include="src\View3DSpaceMouse.h" />
     <ClInclude Include="src\vislib_vector_typedefs.h" />
     <ClInclude Include="src\VMDDXLoader.h" />
     <ClInclude Include="src\VolumeDirectionRenderer.h" />
-    <ClInclude Include="src\VolumeMeshRenderer.cuh" />
-    <ClInclude Include="src\VolumeMeshRenderer.h" />
     <ClInclude Include="src\VolumeSliceCall.h" />
     <ClInclude Include="src\VolumeSliceRenderer.h" />
     <ClInclude Include="src\VTIDataCall.h" />
@@ -382,19 +341,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\CoarseGrainDataLoader.cpp" />
     <ClCompile Include="src\Color.cpp" />
     <ClCompile Include="src\ColorModule.cpp" />
-    <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp" />
-    <ClCompile Include="src\ComparativeMolSurfaceRenderer.cpp" />
-    <ClCompile Include="src\ComparativeSurfacePotentialRenderer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="src\CritPoints.cpp" />
     <ClCompile Include="src\CrystalStructureDataCall.cpp" />
     <ClCompile Include="src\CrystalStructureDataSource.cpp" />
-    <ClCompile Include="src\CrystalStructureVolumeRenderer.cpp" />
-    <ClCompile Include="src\DataWriter.cpp" />
     <ClCompile Include="src\Diagram2DCall.cpp" />
     <ClCompile Include="src\Diagram2DRenderer.cpp" />
     <ClCompile Include="src\DiagramCall.cpp" />
@@ -433,11 +382,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\MolecularSurfaceFeature.cpp" />
     <ClCompile Include="src\MoleculeBallifier.cpp" />
     <ClCompile Include="src\MoleculeCartoonRenderer.cpp" />
-    <ClCompile Include="src\MoleculeCBCudaRenderer.cpp" />
-    <ClCompile Include="src\MoleculeCudaSESRenderer.cpp" />
     <ClCompile Include="src\MoleculeSequenceRenderer.cpp" />
     <ClCompile Include="src\MoleculeSESRenderer.cpp" />
-    <ClCompile Include="src\MoleculeVolumeCudaRenderer.cpp" />
     <ClCompile Include="src\MultiParticleDataFilter.cpp" />
     <ClCompile Include="src\MultiPDBLoader.cpp" />
     <ClCompile Include="src\OpenBabelLoader.cpp" />
@@ -446,10 +392,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\PDBLoader.cpp" />
     <ClCompile Include="src\PDBWriter.cpp" />
     <ClCompile Include="src\PhantomDeviceWrapper.cpp" />
-    <ClCompile Include="src\PotentialCalculator.cpp" />
-    <ClCompile Include="src\PotentialVolumeRaycaster.cpp" />
     <ClCompile Include="src\Protein.cpp" />
-    <ClCompile Include="src\ProteinVariantMatch.cpp" />
     <ClCompile Include="src\ProteinVolumeRenderer.cpp" />
     <ClCompile Include="src\QuickSurfMTRenderer.cpp" />
     <ClCompile Include="src\QuickSurfRenderer.cpp" />
@@ -486,26 +429,17 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\Streamline.cpp" />
     <ClCompile Include="src\StreamlineRenderer.cpp" />
     <ClCompile Include="src\Stride.cpp" />
-    <ClCompile Include="src\SurfaceMappingTest.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\SurfacePotentialRendererSlave.cpp" />
     <ClCompile Include="src\ToonRendererDeferred.cpp" />
     <ClCompile Include="src\TrajectorySmoothFilter.cpp" />
     <ClCompile Include="src\UniGrid3D.cpp" />
     <ClCompile Include="src\UnstructuredGridRenderer.cpp" />
     <ClCompile Include="src\VariantMatchDataCall.cpp" />
     <ClCompile Include="src\VariantMatchRenderer.cpp" />
-    <ClCompile Include="src\VBODataCall.cpp" />
     <ClCompile Include="src\VecField3f.cpp" />
     <ClCompile Include="src\View3DMouse.cpp" />
     <ClCompile Include="src\View3DSpaceMouse.cpp" />
     <ClCompile Include="src\VMDDXLoader.cpp" />
     <ClCompile Include="src\VolumeDirectionRenderer.cpp" />
-    <ClCompile Include="src\VolumeMeshRenderer.cpp" />
     <ClCompile Include="src\VolumeSliceCall.cpp" />
     <ClCompile Include="src\VolumeSliceRenderer.cpp" />
     <ClCompile Include="src\VTIDataCall.cpp" />
@@ -519,72 +453,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\WKFUtils.cpp" />
     <ClCompile Include="src\XYZLoader.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_metric.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_generation.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_mapping.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_thrust_stuff.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\CUDACurl.cu" />
-    <CudaCompile Include="src\CUDAFieldTopology.cu" />
-    <CudaCompile Include="src\CUDAMarchingCubes.cu" />
-    <CudaCompile Include="src\CUDAQuickSurf.cu" />
-    <CudaCompile Include="src\CUDAStreamlines.cu" />
-    <CudaCompile Include="src\cuenergy.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\DeformableGPUSurfaceMT.cu" />
-    <CudaCompile Include="src\DiffusionSolver.cu" />
-    <CudaCompile Include="src\filter_cuda.cu" />
-    <CudaCompile Include="src\GPUSurfaceMT.cu" />
-    <CudaCompile Include="src\gpu_poisson_solver.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\particleSystem.cu" />
-    <CudaCompile Include="src\particles_kernel.cu">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </CudaCompile>
-    <CudaCompile Include="src\PotentialCalculator.cu" />
-    <CudaCompile Include="src\sort_triangles.cu" />
-    <CudaCompile Include="src\VolumeMeshRenderer-sort.cu" />
-    <CudaCompile Include="src\VolumeMeshRenderer.cu" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.5.targets" />
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

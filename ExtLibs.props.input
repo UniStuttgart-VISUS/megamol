@@ -14,15 +14,12 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>%withHAPTICS%!$(HAPTICSPath)/include;$(HAPTICSPath)/utilities/include;!!%withOPENBABEL%!$(OPENBABELPath)/include;!!%withCURL%!$(CURLPath)\include;!!%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>%withCUDA%!WITH_CUDA;!!%withHAPTICS%!WITH_OPENHAPTICS;!!%withOPENBABEL%!WITH_OPENBABEL;!!%withCURL%!WITH_CURL;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%withHAPTICS%!WITH_OPENHAPTICS;!!%withOPENBABEL%!WITH_OPENBABEL;!!%withCURL%!WITH_CURL;!!%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>%withHAPTICS%!$(HAPTICSPath)\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\utilities\lib\$(Platform)\$(Configuration);$(HAPTICSPath)\lib\$(Platform);!!%withOPENBABEL%!$(OPENBABELPath)\lib\$(Platform)\$(Configuration);!!%withCURL%!$(CURLPath)\lib\$(Platform)\$(Configuration);!!%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>%withCUDA%!cudart.lib;!!%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%withOPENBABEL%!openbabel-2.lib;!!%withCURL%!libcurl.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%withHAPTICS%!hl.lib;hlu.lib;hd.lib;hdu.lib;!!%withOPENBABEL%!openbabel-2.lib;!!%withCURL%!libcurl.lib;!!%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <CudaCompile>
-      <Include>$(VISlibPath)gl\include</Include>
-    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="OutputBin">
