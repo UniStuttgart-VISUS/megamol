@@ -79,7 +79,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     this->MakeSlotAvailable (&this->bsDataCallerSlot);
 
     this->molColorCallerSlot.SetCompatibleCall<CallColorDescription>();
-    this->MakeSlotAvailable(&this->molColorCallerSlot);
+    //this->MakeSlotAvailable(&this->molColorCallerSlot);
 
     // check if geom-shader is supported
     //if( this->cartoonShader.AreExtensionsAvailable())
@@ -135,7 +135,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         rm->SetTypePair(CARTOON, "Cartoon Hybrid");
         rm->SetTypePair(CARTOON_SIMPLE, "Cartoon Hybrid (simple)");
         rm->SetTypePair ( CARTOON_GPU, "Cartoon GPU" );
-        rm->SetTypePair ( CARTOON_TUBE_ONLY, "Tubes only" );
+        //rm->SetTypePair ( CARTOON_TUBE_ONLY, "Tubes only" );
     }
     rm->SetTypePair(CARTOON_CPU, "Cartoon CPU");
     rm->SetTypePair(CARTOON_LINE, "Cartoon Lines");
@@ -833,16 +833,16 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     //this->RecomputeAll();
 
     // recompute colors
-    // TODO Why is this done in every frame anyway?
-//    Color::MakeColorTable(mol,
-//            this->currentColoringMode0,
-//            this->currentColoringMode1,
-//            cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-//            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-//            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-//            this->minGradColorParam.Param<param::StringParam>()->Value(),
-//            this->midGradColorParam.Param<param::StringParam>()->Value(),
-//            this->maxGradColorParam.Param<param::StringParam>()->Value(), false, bs);
+    // TODO Why is this done in every frame?
+    Color::MakeColorTable(mol,
+            this->currentColoringMode0,
+            this->currentColoringMode1,
+            cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
+            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+            this->minGradColorParam.Param<param::StringParam>()->Value(),
+            this->midGradColorParam.Param<param::StringParam>()->Value(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value(), false, bs);
 
     // parameter refresh
     // Note this also recomputes the atom color table using the color call if necessary

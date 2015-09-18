@@ -114,7 +114,7 @@ namespace protein {
 
         /** Set current render mode */
         void SetRenderMode( CartoonRenderMode rm) {
-            currentRenderMode = rm; RecomputeAll();
+            currentRenderMode = rm;
             CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
             if(col != NULL) {
                 col->SetDirty(true);
@@ -123,7 +123,7 @@ namespace protein {
         
         /** Set current coloring mode */
         void SetColoringMode0( Color::ColoringMode cm) {
-            currentColoringMode0 = cm; RecomputeAll();
+            currentColoringMode0 = cm;
             CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
             if(col != NULL) {
                 col->SetDirty(true);
@@ -132,7 +132,7 @@ namespace protein {
 
         /** Set current coloring mode */
         void SetColoringMode1( Color::ColoringMode cm) {
-            currentColoringMode1 = cm; RecomputeAll();
+            currentColoringMode1 = cm;
             CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
             if(col != NULL) {
                 col->SetDirty(true);
@@ -141,7 +141,7 @@ namespace protein {
 
         /** Set radius for cartoon rendering mode */
         inline void SetRadiusCartoon( float rad ) {
-            radiusCartoon = rad; RecomputeAll();
+            radiusCartoon = rad;
             CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
             if(col != NULL) {
                 col->SetDirty(true);
@@ -149,10 +149,10 @@ namespace protein {
         };
 
         /** Set number of spline segments per amino acid for cartoon rendering mode */
-        inline void SetNumberOfSplineSegments( unsigned int numSeg ) { numberOfSplineSeg = numSeg; RecomputeAll(); };
+        inline void SetNumberOfSplineSegments( unsigned int numSeg ) { numberOfSplineSeg = numSeg; };
 
         /** Set number of tube segments per 390 degrees in CPU cartoon rendering mode */
-        inline void SetNumberOfTubeSegments( unsigned int numSeg ) { numberOfTubeSeg = numSeg; RecomputeAll(); };
+        inline void SetNumberOfTubeSegments( unsigned int numSeg ) { numberOfTubeSeg = numSeg; };
 
     protected:
 
