@@ -63,6 +63,7 @@ file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*
 file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 list(REMOVE_ITEM source_files
 	"src/dllmain.cpp"
+	"src/volumetrics/Voxelizer.cpp"
 	)
 # shader files for installation
 file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
