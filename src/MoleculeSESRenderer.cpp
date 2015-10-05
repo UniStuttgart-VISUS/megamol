@@ -87,7 +87,7 @@ MoleculeSESRenderer::MoleculeSESRenderer( void ) : Renderer3DModuleDS (),
     ppm->SetTypePair( NONE, "None");
     ppm->SetTypePair( AMBIENT_OCCLUSION, "Screen Space Ambient Occlusion");
     ppm->SetTypePair( SILHOUETTE, "Silhouette");
-    ppm->SetTypePair( TRANSPARENCY, "Transparency");
+    //ppm->SetTypePair( TRANSPARENCY, "Transparency");
     this->postprocessingParam << ppm;
 
     // ----- choose current render mode -----

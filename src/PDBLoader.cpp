@@ -27,6 +27,7 @@
 #include <fstream>
 
 #define SFB716DEMO
+#define DARKER_COLORS
 
 using namespace megamol;
 using namespace megamol::core;
@@ -1709,6 +1710,7 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
     while( vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }
+#if DARKER_COLORS
     if( name[cnt] == 'H' ) // white or light grey
         return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
     if( name[cnt] == 'C' ) // (dark) grey or green
@@ -1728,6 +1730,18 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
         return vislib::math::Vector<unsigned char, 3>( 255, 128, 64);
     if( name[cnt] == 'M' /*&& name[cnt+1] == 'e'*/ ) // Methanol? -> same as carbon ...
         return vislib::math::Vector<unsigned char, 3>( 90, 90, 90);
+#else
+    if (name[cnt] == 'H') // white or light grey
+        return vislib::math::Vector<unsigned char, 3>(240, 240, 240);
+    if (name[cnt] == 'C') // (dark) grey or green
+        return vislib::math::Vector<unsigned char, 3>(158, 158, 158);
+    if (name[cnt] == 'N') // blue
+        return vislib::math::Vector<unsigned char, 3>(45, 151, 241);
+    if (name[cnt] == 'O') // red
+        return vislib::math::Vector<unsigned char, 3>(229, 82, 48);
+    if (name[cnt] == 'S') // yellow
+        return vislib::math::Vector<unsigned char, 3>(255, 231, 120);
+#endif
     /*
     if( name[cnt] == 'H' ) // white or light grey
         return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
