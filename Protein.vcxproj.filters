@@ -387,6 +387,9 @@
     <ClInclude Include="src\VTIWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\CartoonRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\WKFUtils.cpp">
@@ -717,6 +720,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gmx_system_xdr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CartoonRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

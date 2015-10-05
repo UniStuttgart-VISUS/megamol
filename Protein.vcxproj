@@ -213,6 +213,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CallColor.h" />
     <ClInclude Include="src\CallMouseInput.h" />
     <ClInclude Include="src\CallProteinVolumeData.h" />
+    <ClInclude Include="src\CartoonRenderer.h" />
     <ClInclude Include="src\CCP4VolumeData.h" />
     <ClInclude Include="src\CenterLineGenerator.h" />
     <ClInclude Include="src\CoarseGrainDataLoader.h" />
@@ -336,6 +337,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\BSpline.cpp" />
     <ClCompile Include="src\CallMouseInput.cpp" />
     <ClCompile Include="src\CallProteinVolumeData.cpp" />
+    <ClCompile Include="src\CartoonRenderer.cpp" />
     <ClCompile Include="src\CCP4VolumeData.cpp" />
     <ClCompile Include="src\CenterLineGenerator.cpp" />
     <ClCompile Include="src\CoarseGrainDataLoader.cpp" />

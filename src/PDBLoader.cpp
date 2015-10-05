@@ -1710,7 +1710,7 @@ vislib::math::Vector<unsigned char, 3> PDBLoader::getElementColor( vislib::Strin
     while( vislib::CharTraitsA::IsDigit( name[cnt]) ) {
         cnt++;
     }
-#if DARKER_COLORS
+#ifdef DARKER_COLORS
     if( name[cnt] == 'H' ) // white or light grey
         return vislib::math::Vector<unsigned char, 3>( 240, 240, 240);
     if( name[cnt] == 'C' ) // (dark) grey or green
