@@ -160,6 +160,9 @@ bool CartoonTessellationRenderer::create(void) {
 #endif
     //vislib::graphics::gl::ShaderSource vert, frag;
     vert = new ShaderSource();
+    tessCont = new ShaderSource();
+    tessEval = new ShaderSource();
+    geom = new ShaderSource();
     frag = new ShaderSource();
     if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::vertex", *vert)) {
         return false;
@@ -245,14 +248,51 @@ std::shared_ptr<GLSLShader> CartoonTessellationRenderer::makeShader(vislib::Smar
     return sh;
 }
 
+std::shared_ptr<GLSLTesselationShader> CartoonTessellationRenderer::makeShader(vislib::SmartPtr<ShaderSource> vert, 
+    vislib::SmartPtr<ShaderSource> tessCont, vislib::SmartPtr<ShaderSource> tessEval, 
+    vislib::SmartPtr<ShaderSource> geom, vislib::SmartPtr<ShaderSource> frag) {
+
+    std::shared_ptr<GLSLTesselationShader> sh = std::make_shared<GLSLTesselationShader>(GLSLTesselationShader());
+    try {
+        // compile the shader
+        if (!sh->Compile(vert->Code(), vert->Count(),
+            tessCont->Code(), tessCont->Count(),
+            tessEval->Code(), tessEval->Count(),
+            0, 0,
+            frag->Code(), frag->Count())) {
+            throw vislib::Exception("Could not compile cartoon shader. ", __FILE__, __LINE__);
+        }
+        // link the shader
+        if (!sh->Link()){
+            throw vislib::Exception("Could not link cartoon shader", __FILE__, __LINE__);
+        }
+    }
+    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile tessellation shader (@%s): %s\n",
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+            ce.FailedAction()), ce.GetMsgA());
+        return false;
+    }
+    catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile tessellation shader: %s\n", e.GetMsgA());
+        return false;
+    }
+    catch (...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile tessellation shader: Unknown exception\n");
+        return false;
+    }
+    return sh;
+}
+
 std::shared_ptr<vislib::graphics::gl::GLSLShader> CartoonTessellationRenderer::generateShader(MolecularDataCall &mol) {
     int c = 0;
     int p = 1;
 
     shaderMap::iterator i = theShaders.find({ c, p });
     if (i == theShaders.end()) {
-        //instance()->ShaderSourceFactory().MakeShaderSource()
-
         unsigned int colBytes, vertBytes, colStride, vertStride;
         this->getBytesAndStride(mol, colBytes, vertBytes, colStride, vertStride);
 

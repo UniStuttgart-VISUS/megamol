@@ -13,6 +13,7 @@
 
 #include "mmcore/view/Renderer3DModule.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLTesselationShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/Call.h"
@@ -133,8 +134,11 @@ namespace protein {
         CallerSlot getDataSlot;
 
         void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
-		std::shared_ptr<GLSLShader> generateShader(MolecularDataCall &mol);
-		std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
+        std::shared_ptr<GLSLShader> generateShader(MolecularDataCall &mol);
+        std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
+        std::shared_ptr<GLSLTesselationShader> makeShader(vislib::SmartPtr<ShaderSource> vert,
+            vislib::SmartPtr<ShaderSource> tessCont, vislib::SmartPtr<ShaderSource> tessEval,
+            vislib::SmartPtr<ShaderSource> geom, vislib::SmartPtr<ShaderSource> frag);
 		bool makeColorString(MolecularDataCall &mol, std::string &code, std::string &declaration);
 		bool makeVertexString(MolecularDataCall &mol, std::string &code, std::string &declaration);
 		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
@@ -156,10 +160,10 @@ namespace protein {
 		void *theSingleMappedMem;
 		GLuint singleBufferCreationBits;
         GLuint singleBufferMappingBits;
-		typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
-		std::shared_ptr<GLSLShader> newShader;
+        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
+        std::shared_ptr<GLSLShader> newShader;
 		shaderMap theShaders;
-		vislib::SmartPtr<ShaderSource> vert, frag;
+		vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
         core::param::ParamSlot scalingParam;
 
         vislib::Array<vislib::Array<float> > positions;
