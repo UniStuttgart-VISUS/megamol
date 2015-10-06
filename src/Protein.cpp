@@ -39,6 +39,8 @@
 #include "UnstructuredGridRenderer.h"
 #include "VolumeDirectionRenderer.h"
 #include "LayeredIsosurfaceRenderer.h"
+#include "CartoonRenderer.h"
+#include "CartoonTessellationRenderer.h"
 
 // 2D renderers
 #include "VolumeSliceRenderer.h"
@@ -148,7 +150,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 51;
+    int moduleCount = 53;
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
 #endif // WITH_OPENHAPTICS
@@ -229,6 +231,8 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
         case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 49: return new ModuleAutoDescription<protein::ColorModule>();
         case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 50: return new ModuleAutoDescription<protein::PDBInterpolator>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::CartoonRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 52: return new ModuleAutoDescription<protein::CartoonTessellationRenderer>();
         default: return NULL;
     }
     return NULL;

@@ -43,8 +43,7 @@ void PDBInterpolator::release(void)
 /*
  * PDBInterpolator::getData
  */
-bool PDBInterpolator::getData(core::Call& call) 
-{
+bool PDBInterpolator::getData(core::Call& call)  {
 	MolecularDataCall* mdc_in = dynamic_cast<MolecularDataCall*>(&call);
 	if (mdc_in == NULL) return false;
 	MolecularDataCall* mdc = getDataSlot.CallAs<MolecularDataCall>();

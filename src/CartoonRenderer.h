@@ -21,6 +21,7 @@
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
+#include "vislib/graphics/gl/GLSLTesselationShader.h"
 
 
 namespace megamol {
@@ -83,6 +84,8 @@ namespace protein {
          * Implementation of 'release'.
          */
         virtual void release(void);
+        
+        void CreateIcosahedron();
 
     private:
 
@@ -141,6 +144,12 @@ namespace protein {
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
+
+        /** shader for the cartoon */
+        vislib::graphics::gl::GLSLTesselationShader cartoonShader;
+        GLuint PositionSlot;
+        vislib::Array<vislib::Array<float> > positions;
+
     };
 
 

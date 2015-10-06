@@ -9,8 +9,6 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
-
 #include "CartoonRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "Color.h"
@@ -33,6 +31,8 @@
 #include <GL/glu.h>
 #include <omp.h>
 
+#define RENDER_ATOMS_AS_SPHERES 1
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -44,7 +44,8 @@ using namespace megamol::core::moldyn;
 CartoonRenderer::CartoonRenderer(void)
         : Renderer3DModuleDS(), 
         molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage"), 
-        bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage") {
+        bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage"),
+        PositionSlot(0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
@@ -75,6 +76,8 @@ bool CartoonRenderer::create(void) {
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
         return false;
+    if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
+        return false;
 
     glEnable (GL_DEPTH_TEST);
     glDepthFunc (GL_LEQUAL);
@@ -88,29 +91,72 @@ bool CartoonRenderer::create(void) {
     ShaderSource vertSrc;
     ShaderSource fragSrc;
     ShaderSource geomSrc;
+    ShaderSource tessContSrc;
+    ShaderSource tessEvalSrc;
 
     // Load sphere shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereVertex", vertSrc)) {
+        "protein::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Unable to load vertex shader source for sphere shader");
+            "Unable to load vertex shader source for sphere shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereFragment", fragSrc)) {
+        "protein::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Unable to load vertex shader source for sphere shader");
+            "Unable to load vertex shader source for sphere shader");
         return false;
     }
     try {
         if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(),
-                fragSrc.Code(), fragSrc.Count())) {
+            fragSrc.Code(), fragSrc.Count())) {
             throw vislib::Exception("Generic creation failure", __FILE__,
-                    __LINE__);
+                __LINE__);
         }
-    } catch (vislib::Exception e) {
+    }
+    catch (vislib::Exception e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Unable to create sphere shader: %s\n", e.GetMsgA());
+            "Unable to create sphere shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
+    // Load cartoon shader
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteincartoon::vertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteincartoon::tesscontrol", tessContSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load tessellation control shader source for cartoon shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteincartoon::tesseval", tessEvalSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load tessellation evaluation shader source for cartoon shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteincartoon::geometry", geomSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for cartoon shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("proteincartoon::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        return false;
+    }
+    try {
+        // compile the shader
+        if (!this->cartoonShader.Compile(vertSrc.Code(), vertSrc.Count(),
+            tessContSrc.Code(), tessContSrc.Count(),
+            tessEvalSrc.Code(), tessEvalSrc.Count(),
+            0, 0,
+            fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Could not compile cartoon shader. ", __FILE__, __LINE__);
+        }
+        // link the shader
+        if (!this->cartoonShader.Link()){
+            throw vislib::Exception("Could not link cartoon shader", __FILE__, __LINE__);
+        }
+    }
+    catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create cartoon shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -222,6 +268,98 @@ bool CartoonRenderer::Render(Call& call) {
     this->UpdateParameters(mol, bs);
 
     // TODO: ---------- render ----------
+    if (this->positions.Count() != mol->MoleculeCount()) {
+        this->positions.SetCount(mol->MoleculeCount());
+    }
+    unsigned int firstResIdx = 0;
+    unsigned int lastResIdx = 0;
+    unsigned int firstAtomIdx = 0;
+    unsigned int lastAtomIdx = 0;
+    unsigned int atomTypeIdx = 0;
+    for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++){
+        this->positions[molIdx].Clear();
+        this->positions[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount()*4);
+
+        firstResIdx = mol->Molecules()[molIdx].FirstResidueIndex();
+        lastResIdx = firstResIdx + mol->Molecules()[molIdx].ResidueCount();
+        for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++){
+            firstAtomIdx = mol->Residues()[resIdx]->FirstAtomIndex();
+            lastAtomIdx = firstAtomIdx + mol->Residues()[resIdx]->AtomCount();
+            for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++){
+                unsigned int atomTypeIdx = mol->AtomTypeIndices()[atomIdx];
+                if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")){
+                    this->positions[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+                    this->positions[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+                    this->positions[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+                    this->positions[molIdx].Add(1.0f);
+                }
+            }
+        }
+    }
+
+    this->cartoonShader.Enable();
+    if (PositionSlot == 0) {
+        glBindAttribLocation(this->cartoonShader.ProgramHandle(), PositionSlot, "Position");
+    }
+    glPatchParameteri(GL_PATCH_VERTICES, 4);
+    glBegin(GL_PATCHES);
+    for (unsigned int i = 0; i < this->positions.Count(); i++) {
+        for (unsigned int j = 0; j < this->positions[i].Count() / 4; j++) {
+            glVertex3f(this->positions[i][4 * j], this->positions[i][4 * j + 1], this->positions[i][4 * j + 2]);
+        }
+    }
+    glEnd();
+
+    this->cartoonShader.Disable();
+
+
+#if RENDER_ATOMS_AS_SPHERES
+    glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
+    // get viewpoint parameters for raycasting
+    float viewportStuff[4] = { cameraInfo->TileRect().Left(),
+        cameraInfo->TileRect().Bottom(), cameraInfo->TileRect().Width(),
+        cameraInfo->TileRect().Height() };
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
+
+    // enable sphere shader
+    this->sphereShader.Enable();
+    // set shader variables
+    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    // set vertex and color pointers and draw them
+    //glEnableClientState(GL_VERTEX_ARRAY);
+    glBegin(GL_POINTS);
+    for (unsigned int i = 0; i < this->positions.Count(); i++) {
+        for (unsigned int j = 0; j < this->positions[i].Count()/4; j++) {
+            glColor4f(0.75f, 0.5f, 0.1f, 1.0f);
+            glVertex4f(this->positions[i][4 * j], this->positions[i][4 * j + 1], this->positions[i][4 * j + 2], 0.3f);
+        }
+    }
+    for (unsigned int i = 0; i < mol->AtomCount(); i++) {
+        unsigned int atomTypeIdx = mol->AtomTypeIndices()[i];
+        if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")){
+            glColor4f(0.5f, 0.75f, 0.1f, 0.5f);
+            glVertex4f(mol->AtomPositions()[3 * i], mol->AtomPositions()[3 * i + 1], mol->AtomPositions()[3 * i + 2], 1.0f);
+        } else {
+            glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
+            glVertex4f(mol->AtomPositions()[3 * i], mol->AtomPositions()[3 * i + 1], mol->AtomPositions()[3 * i + 2], 0.5f);
+        }
+
+    }
+    glEnd();
+    //glVertexPointer(3, GL_FLOAT, 0, mol->AtomPositions());
+    //glDrawArrays(GL_POINTS, 0, mol->AtomCount());
+    //glDisableClientState(GL_VERTEX_ARRAY);
+    // disable sphere shader
+    this->sphereShader.Disable();
+#endif
 
     glPopMatrix();
 
@@ -238,4 +376,3 @@ void CartoonRenderer::UpdateParameters(const MolecularDataCall *mol,
     const core::moldyn::BindingSiteCall *bs) {
     // TODO
 }
-
