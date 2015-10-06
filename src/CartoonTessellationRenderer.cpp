@@ -23,6 +23,9 @@
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
 using namespace megamol::protein;
+
+#define RENDER_ATOMS_AS_SPHERES 1
+
 #define MAP_BUFFER_LOCALLY
 #define DEBUG_BLAHBLAH
 
@@ -155,9 +158,16 @@ void CartoonTessellationRenderer::waitSignal(GLsync& syncObj) {
  * moldyn::SimpleSphereRenderer::create
  */
 bool CartoonTessellationRenderer::create(void) {
+    using namespace vislib::sys;
+    using namespace vislib::graphics::gl;
 #ifdef DEBUG_BLAHBLAH
     glDebugMessageCallback(MyFunkyDebugCallback, NULL);
 #endif
+    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
+        return false;
+    if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
+        return false;
+
     //vislib::graphics::gl::ShaderSource vert, frag;
     vert = new ShaderSource();
     tessCont = new ShaderSource();
@@ -167,10 +177,42 @@ bool CartoonTessellationRenderer::create(void) {
     if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::vertex", *vert)) {
         return false;
     }
+    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::tesscontrol", *tessCont)) {
+        return false;
+    }
+    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::tesseval", *tessEval)) {
+        return false;
+    }
+    if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::geometry", *geom)) {
+        return false;
+    }
     if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellation::fragment", *frag)) {
         return false;
     }
-    
+
+    // Load sphere shader
+    ShaderSource vertSrc;
+    ShaderSource fragSrc;
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+        "protein::std::sphereVertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
+        return false;
+    }
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
+        "protein::std::sphereFragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
+        return false;
+    }
+    try {
+        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    }
+    catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere shader: %s\n", e.GetMsgA());
+        return false;
+    }
+
     glGenVertexArrays(1, &this->vertArray);
     glBindVertexArray(this->vertArray);
     glGenBuffers(1, &this->theSingleBuffer);
@@ -179,20 +221,6 @@ bool CartoonTessellationRenderer::create(void) {
     this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
-
-    // transfer function
-    glEnable(GL_TEXTURE_1D);
-    glGenTextures(1, &this->greyTF);
-    unsigned char tex[6] = {
-        0, 0, 0, 255, 255, 255
-    };
-    glBindTexture(GL_TEXTURE_1D, this->greyTF);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glBindTexture(GL_TEXTURE_1D, 0);
-    glDisable(GL_TEXTURE_1D);
 
     return true;
 }
@@ -258,7 +286,7 @@ std::shared_ptr<GLSLTesselationShader> CartoonTessellationRenderer::makeShader(v
         if (!sh->Compile(vert->Code(), vert->Count(),
             tessCont->Code(), tessCont->Count(),
             tessEval->Code(), tessEval->Count(),
-            0, 0,
+            geom->Code(), geom->Count(),
             frag->Code(), frag->Count())) {
             throw vislib::Exception("Could not compile cartoon shader. ", __FILE__, __LINE__);
         }
@@ -319,7 +347,7 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> CartoonTessellationRenderer::g
         std::string s(v2->WholeCode());
 
         vislib::SmartPtr<ShaderSource> vss(v2);
-        theShaders.emplace(std::make_pair(std::make_pair(c, p), makeShader(v2, frag)));
+        theShaders.emplace(std::make_pair(std::make_pair(c, p), makeShader(v2, tessCont, tessEval, geom, frag)));
         i = theShaders.find({ c, p });
 
     }
@@ -492,6 +520,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     // copy data
     if (this->positions.Count() != mol->MoleculeCount()) {
         this->positions.SetCount(mol->MoleculeCount());
+        this->splinePoints.SetCount(mol->MoleculeCount());
     }
     unsigned int firstResIdx = 0;
     unsigned int lastResIdx = 0;
@@ -517,14 +546,35 @@ bool CartoonTessellationRenderer::Render(Call& call) {
                 }
             }
         }
+
+        this->splinePoints[molIdx].Clear();
+        this->splinePoints[molIdx].AssertCapacity(this->positions[molIdx].Count() * 3);
+        for (unsigned int i = 0; i < (this->positions[molIdx].Count() / 4) - 3; i++) {
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 0]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 1]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 2]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 3]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 0]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 1]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 2]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 3]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 0]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 1]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 2]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 3]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 0]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 1]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 2]);
+            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 3]);
+        }
     }
 
     //currBuf = 0;
-    for (unsigned int i = 0; i < this->positions.Count(); i++) {
+    for (unsigned int i = 0; i < this->splinePoints.Count(); i++) {
         newShader = this->generateShader(*mol);
 
         newShader->Enable();
-        glColor4f(1.0f / this->positions.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
+        glColor4f(1.0f / this->splinePoints.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
         colIdxAttribLoc = glGetAttribLocationARB(*this->newShader, "colIdx");
         glUniform4fv(newShader->ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(newShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
@@ -546,20 +596,21 @@ bool CartoonTessellationRenderer::Render(Call& call) {
         
         UINT64 numVerts, vertCounter;
         numVerts = this->bufSize / vertStride;
-        const char *currVert = (const char *)(this->positions[i].PeekElements());
+        const char *currVert = (const char *)(this->splinePoints[i].PeekElements());
         const char *currCol = 0;
         vertCounter = 0;
-        while (vertCounter < this->positions[i].Count()/4) {
+        while (vertCounter < this->splinePoints[i].Count() / 4) {
             void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
             const char *whence = currVert;
-            UINT64 vertsThisTime = vislib::math::Min(this->positions[i].Count() / 4 - vertCounter, numVerts);
+            UINT64 vertsThisTime = vislib::math::Min(this->splinePoints[i].Count() / 4 - vertCounter, numVerts);
             this->waitSignal(fences[currBuf]);
             memcpy(mem, whence, vertsThisTime * vertStride);
             glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
             glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
 
             glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
-            glDrawArrays(GL_POINTS, 0, vertsThisTime);
+            glPatchParameteri(GL_PATCH_VERTICES, 4);
+            glDrawArrays(GL_PATCHES, 0, vertsThisTime);
             this->queueSignal(fences[currBuf]);
 
             currBuf = (currBuf + 1) % this->numBuffers;
@@ -574,6 +625,41 @@ bool CartoonTessellationRenderer::Render(Call& call) {
         glDisable(GL_TEXTURE_1D);
         newShader->Disable();
     }
+
+#if RENDER_ATOMS_AS_SPHERES
+    glEnable(GL_BLEND);
+    glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
+    // enable sphere shader
+    this->sphereShader.Enable();
+    // set shader variables
+    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    // set vertex and color pointers and draw them
+    glBegin(GL_POINTS);
+    for (unsigned int i = 0; i < this->positions.Count(); i++) {
+        for (unsigned int j = 0; j < this->positions[i].Count() / 4; j++) {
+            glColor4f(0.75f, 0.5f, 0.1f, 1.0f);
+            glVertex4f(this->positions[i][4 * j], this->positions[i][4 * j + 1], this->positions[i][4 * j + 2], 0.3f);
+        }
+    }
+    for (unsigned int i = 0; i < mol->AtomCount(); i++) {
+        unsigned int atomTypeIdx = mol->AtomTypeIndices()[i];
+        if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")){
+            glColor4f(0.5f, 0.75f, 0.1f, 0.5f);
+            glVertex4f(mol->AtomPositions()[3 * i], mol->AtomPositions()[3 * i + 1], mol->AtomPositions()[3 * i + 2], 1.0f);
+        }
+        else {
+            glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
+            glVertex4f(mol->AtomPositions()[3 * i], mol->AtomPositions()[3 * i + 1], mol->AtomPositions()[3 * i + 2], 0.5f);
+        }
+
+    }
+    glEnd();
+    // disable sphere shader
+    this->sphereShader.Disable();
+#endif
 
     mol->Unlock();
 

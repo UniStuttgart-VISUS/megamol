@@ -69,6 +69,7 @@ namespace protein {
 #endif // DEBUG || _DEBUG
 #endif // _WIN32
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
+                && vislib::graphics::gl::GLSLTesselationShader::AreExtensionsAvailable()
                 && isExtAvailable("GL_ARB_buffer_storage")
                 && ogl_IsVersionGEQ(4,4);
         }
@@ -167,9 +168,11 @@ namespace protein {
         core::param::ParamSlot scalingParam;
 
         vislib::Array<vislib::Array<float> > positions;
+        vislib::Array<vislib::Array<float> > splinePoints;
 
-        /** A simple black-to-white transfer function texture as fallback */
-        unsigned int greyTF;
+        /** shader for the spheres (raycasting view) */
+        vislib::graphics::gl::GLSLShader sphereShader;
+
     };
 
 } /* end namespace protein */
