@@ -238,10 +238,10 @@ bool CartoonTessellationRenderer::makeColorString(MolecularDataCall &mol, std::s
 bool CartoonTessellationRenderer::makeVertexString(MolecularDataCall &mol, std::string &code, std::string &declaration)  {
     declaration = "    float posX; float posY; float posZ; float posR;\n";
     //declaration = "    float posX; float posY; float posZ;\n";
-    code = "    inPos = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
-            "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
-            "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-            "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
+    code = "    gl_Position = vec4(theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posX,\n"
+           "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posY,\n"
+           "                 theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posZ, 1.0); \n"
+           "    rad = theBuffer[" NGS_THE_INSTANCE " + instanceOffset].posR;";
             //"    rad = CONSTRAD;";
     return true;
 }
@@ -342,8 +342,8 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> CartoonTessellationRenderer::g
         code += vertCode;
         declarationSnip = new ShaderSource::StringSnippet(decl.c_str());
         codeSnip = new ShaderSource::StringSnippet(code.c_str());
-        v2->Insert(3, declarationSnip);
-        v2->Insert(5, codeSnip);
+        //v2->Insert(3, declarationSnip);
+        //v2->Insert(5, codeSnip);
         std::string s(v2->WholeCode());
 
         vislib::SmartPtr<ShaderSource> vss(v2);
@@ -555,18 +555,18 @@ bool CartoonTessellationRenderer::Render(Call& call) {
             this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 1]);
             this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 2]);
             this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 3]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 0]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 1]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 2]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 3]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 0]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 1]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 2]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 3]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 0]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 1]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 2]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 3]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 0]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 1]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 2]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 3]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 0]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 1]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 2]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 3]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 0]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 1]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 2]);
+            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 3]);
         }
     }
 
@@ -610,7 +610,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
             glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
 
             glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
-            glPatchParameteri(GL_PATCH_VERTICES, 4);
+            glPatchParameteri(GL_PATCH_VERTICES, 1);
             glDrawArrays(GL_PATCHES, 0, vertsThisTime);
             this->queueSignal(fences[currBuf]);
 
