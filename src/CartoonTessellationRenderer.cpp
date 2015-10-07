@@ -549,6 +549,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 
         this->splinePoints[molIdx].Clear();
         this->splinePoints[molIdx].AssertCapacity(this->positions[molIdx].Count() * 3);
+
         for (unsigned int i = 0; i < (this->positions[molIdx].Count() / 4) - 3; i++) {
             this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 0]);
             this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 1]);
