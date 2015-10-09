@@ -500,7 +500,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
 
-    // this is the apex of suck and must die
+    // matrices
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
@@ -515,12 +515,10 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     modelViewProjMatrixInv.Invert();
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixTransp = modelViewProjMatrix;
     modelViewProjMatrixTransp.Transpose();
-    // end suck
 
     // copy data
-    if (this->positions.Count() != mol->MoleculeCount()) {
-        this->positions.SetCount(mol->MoleculeCount());
-        this->splinePoints.SetCount(mol->MoleculeCount());
+    if (this->positionsCa.Count() != mol->MoleculeCount()) {
+        this->positionsCa.SetCount(mol->MoleculeCount());
     }
     unsigned int firstResIdx = 0;
     unsigned int lastResIdx = 0;
@@ -528,9 +526,10 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     unsigned int lastAtomIdx = 0;
     unsigned int atomTypeIdx = 0;
     for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++){
-        this->positions[molIdx].Clear();
-        this->positions[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4);
+        this->positionsCa[molIdx].Clear();
+        this->positionsCa[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
 
+        bool first;
         firstResIdx = mol->Molecules()[molIdx].FirstResidueIndex();
         lastResIdx = firstResIdx + mol->Molecules()[molIdx].ResidueCount();
         for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++){
@@ -539,43 +538,32 @@ bool CartoonTessellationRenderer::Render(Call& call) {
             for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++){
                 unsigned int atomTypeIdx = mol->AtomTypeIndices()[atomIdx];
                 if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")){
-                    this->positions[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                    this->positions[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                    this->positions[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                    this->positions[molIdx].Add(1.0f);
+                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+                    this->positionsCa[molIdx].Add(1.0f);
+                    // write first and last Ca position three times
+                    if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))){
+                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+                        this->positionsCa[molIdx].Add(1.0f);
+                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+                        this->positionsCa[molIdx].Add(1.0f);
+                    }
                 }
             }
-        }
-
-        this->splinePoints[molIdx].Clear();
-        this->splinePoints[molIdx].AssertCapacity(this->positions[molIdx].Count() * 3);
-
-        for (unsigned int i = 0; i < (this->positions[molIdx].Count() / 4) - 3; i++) {
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 0]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 1]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 2]);
-            this->splinePoints[molIdx].Add(this->positions[molIdx][4 * i + 3]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 0]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 1]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 2]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 1) + 3]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 0]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 1]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 2]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 2) + 3]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 0]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 1]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 2]);
-            //this->splinePoints[molIdx].Add(this->positions[molIdx][4 * (i + 3) + 3]);
         }
     }
 
     //currBuf = 0;
-    for (unsigned int i = 0; i < this->splinePoints.Count(); i++) {
+    for (unsigned int i = 0; i < this->positionsCa.Count(); i++) {
         newShader = this->generateShader(*mol);
 
         newShader->Enable();
-        glColor4f(1.0f / this->splinePoints.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
+        glColor4f(1.0f / this->positionsCa.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
         colIdxAttribLoc = glGetAttribLocationARB(*this->newShader, "colIdx");
         glUniform4fv(newShader->ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(newShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
@@ -597,13 +585,13 @@ bool CartoonTessellationRenderer::Render(Call& call) {
         
         UINT64 numVerts, vertCounter;
         numVerts = this->bufSize / vertStride;
-        const char *currVert = (const char *)(this->splinePoints[i].PeekElements());
+        const char *currVert = (const char *)(this->positionsCa[i].PeekElements());
         const char *currCol = 0;
         vertCounter = 0;
-        while (vertCounter < this->splinePoints[i].Count() / 4) {
+        while (vertCounter < this->positionsCa[i].Count() / 4) {
             void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
             const char *whence = currVert;
-            UINT64 vertsThisTime = vislib::math::Min(this->splinePoints[i].Count() / 4 - vertCounter, numVerts);
+            UINT64 vertsThisTime = vislib::math::Min(this->positionsCa[i].Count() / 4 - vertCounter, numVerts);
             this->waitSignal(fences[currBuf]);
             memcpy(mem, whence, vertsThisTime * vertStride);
             glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
@@ -611,7 +599,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 
             glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
             glPatchParameteri(GL_PATCH_VERTICES, 1);
-            glDrawArrays(GL_PATCHES, 0, vertsThisTime);
+            glDrawArrays(GL_PATCHES, 0, vertsThisTime - 3);
             this->queueSignal(fences[currBuf]);
 
             currBuf = (currBuf + 1) % this->numBuffers;
@@ -627,6 +615,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
         newShader->Disable();
     }
 
+    // DEBUGGING CODE
 #if RENDER_ATOMS_AS_SPHERES
     glEnable(GL_BLEND);
     glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
@@ -639,10 +628,10 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
     // set vertex and color pointers and draw them
     glBegin(GL_POINTS);
-    for (unsigned int i = 0; i < this->positions.Count(); i++) {
-        for (unsigned int j = 0; j < this->positions[i].Count() / 4; j++) {
+    for (unsigned int i = 0; i < this->positionsCa.Count(); i++) {
+        for (unsigned int j = 0; j < this->positionsCa[i].Count() / 4; j++) {
             glColor4f(0.75f, 0.5f, 0.1f, 1.0f);
-            glVertex4f(this->positions[i][4 * j], this->positions[i][4 * j + 1], this->positions[i][4 * j + 2], 0.3f);
+            glVertex4f(this->positionsCa[i][4 * j], this->positionsCa[i][4 * j + 1], this->positionsCa[i][4 * j + 2], 0.3f);
         }
     }
     for (unsigned int i = 0; i < mol->AtomCount(); i++) {

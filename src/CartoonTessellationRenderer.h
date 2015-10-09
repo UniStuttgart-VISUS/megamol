@@ -167,8 +167,7 @@ namespace protein {
 		vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
         core::param::ParamSlot scalingParam;
 
-        vislib::Array<vislib::Array<float> > positions;
-        vislib::Array<vislib::Array<float> > splinePoints;
+        vislib::Array<vislib::Array<float> > positionsCa;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
