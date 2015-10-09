@@ -135,13 +135,6 @@ namespace protein {
         CallerSlot getDataSlot;
 
         void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
-        std::shared_ptr<GLSLShader> generateShader(MolecularDataCall &mol);
-        std::shared_ptr<GLSLShader> makeShader(vislib::SmartPtr<ShaderSource> vert, vislib::SmartPtr<ShaderSource> frag);
-        std::shared_ptr<GLSLTesselationShader> makeShader(vislib::SmartPtr<ShaderSource> vert,
-            vislib::SmartPtr<ShaderSource> tessCont, vislib::SmartPtr<ShaderSource> tessEval,
-            vislib::SmartPtr<ShaderSource> geom, vislib::SmartPtr<ShaderSource> frag);
-		bool makeColorString(MolecularDataCall &mol, std::string &code, std::string &declaration);
-		bool makeVertexString(MolecularDataCall &mol, std::string &code, std::string &declaration);
 		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
 			unsigned int &colStride, unsigned int &vertStride);
 
@@ -162,15 +155,16 @@ namespace protein {
 		GLuint singleBufferCreationBits;
         GLuint singleBufferMappingBits;
         typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
-        std::shared_ptr<GLSLShader> newShader;
-		shaderMap theShaders;
 		vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
         core::param::ParamSlot scalingParam;
 
         vislib::Array<vislib::Array<float> > positionsCa;
+        vislib::Array<vislib::Array<float> > positionsO;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;
+        /** shader for spline rendering */
+        vislib::graphics::gl::GLSLTesselationShader splineShader;
 
     };
 
