@@ -316,6 +316,7 @@
     <None Include="src\view\special\MegaMolLogoData.inl">
       <Filter>view\special\Source Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="config.bat">

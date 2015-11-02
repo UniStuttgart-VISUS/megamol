@@ -4,8 +4,6 @@
         <OutputBin>%outbin%</OutputBin>
         <VISlibPath>%vislib%</VISlibPath>
         <ExpatPath>%expatPath%</ExpatPath>
-        <PngPath>%pngPath%</PngPath>
-        <ZlibPath>%zlibPath%</ZlibPath>
     </PropertyGroup>
     <PropertyGroup>
         <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -19,12 +17,6 @@
         </BuildMacro>
         <BuildMacro Include="ExpatPath">
             <Value>$(ExpatPath)</Value>
-        </BuildMacro>
-        <BuildMacro Include="PngPath">
-            <Value>$(PngPath)</Value>
-        </BuildMacro>
-        <BuildMacro Include="ZlibPath">
-            <Value>$(ZlibPath)</Value>
         </BuildMacro>
     </ItemGroup>
 </Project>
