@@ -667,6 +667,54 @@ namespace console {
 
             };
 
+            /**
+             * Vector3f parameter
+             */
+            class Vec3fParameter : public ValueParameter {
+            public:
+
+                /**
+                 * Ctor
+                 *
+                 * @param bar The bar handle
+                 * @param hParam The parameter core handle
+                 * @param name The name of the parameter as zero-terminated ANSI string
+                 * @param desc The parameter description
+                 * @param len The length of the description in bytes
+                 */
+                Vec3fParameter(TwBar *bar, vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+                        const char *name, unsigned char *desc, unsigned int len);
+
+                /**
+                 * Dtor.
+                 */
+                virtual ~Vec3fParameter(void);
+
+            protected:
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Set(const void *value);
+
+                /**
+                 * The parameter set callback
+                 *
+                 * @param value The value
+                 * @param clientData The client data
+                 */
+                virtual void Get(void *value);
+
+            private:
+
+                static TwType makeMyStructType();
+                static void TW_CALL mySummaryCallback(char *summaryString, size_t summaryMaxLength, const void *value, void *summaryClientData);
+
+            };
+
             /** the only instance of the gui layer */
             static GUILayer* layer;
 

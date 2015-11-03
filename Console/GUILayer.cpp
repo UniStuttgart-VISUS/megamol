@@ -14,6 +14,7 @@
 #include "vislib/memutils.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/KeyCode.h"
+#include <algorithm>
 
 
 using namespace megamol::console;
@@ -55,6 +56,9 @@ GUILayer::GUIClient::Parameter *GUILayer::GUIClient::ParameterFactory(
     }
     if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMINTR", 6) == 0)) {
         return new IntParameter(bar, hParam, name, desc, len);
+    }
+    if ((len >= 6) && (strncmp(reinterpret_cast<char *>(desc), "MMVC3F", 6) == 0)) {
+        return new Vec3fParameter(bar, hParam, name, desc, len);
     }
 
     // Implement selection of further parameter types here!
@@ -641,13 +645,15 @@ void GUILayer::GUIClient::EnumParameter::parseEnumDesc(
 /****************************************************************************/
 
 
+#define MY_ATB_FLOAT_STEPS "step='0.001'"
+
 /*
  * GUILayer::GUIClient::FloatParameter::FloatParameter
  */
 GUILayer::GUIClient::FloatParameter::FloatParameter(TwBar *bar,
         vislib::SmartPtr<megamol::console::CoreHandle> hParam,
         const char *name, unsigned char *desc, unsigned int len) 
-        : ValueParameter(bar, hParam, TW_TYPE_FLOAT, name, desc, len, "step='0.001'") {
+        : ValueParameter(bar, hParam, TW_TYPE_FLOAT, name, desc, len, MY_ATB_FLOAT_STEPS) {
     if (len == 14) {
         float minVal = *reinterpret_cast<float*>(desc + 6);
         float maxVal = *reinterpret_cast<float*>(desc + 10);
@@ -848,6 +854,74 @@ GUILayer::~GUILayer(void) {
     TW_VERIFY(::TwTerminate(), __LINE__);
     vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
         "GUI Layer shutdown");
+}
+
+/****************************************************************************/
+
+
+/*
+ * GUILayer::GUIClient::Vec3fParameter::Vec3fParameter
+ */
+GUILayer::GUIClient::Vec3fParameter::Vec3fParameter(TwBar *bar,
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam,
+        const char *name, unsigned char *desc, unsigned int len) 
+        : ValueParameter(bar, hParam, makeMyStructType(), name, desc, len, "") {
+    // TODO: Min/Max or Normalized not supported atm
+}
+
+
+/*
+ * GUILayer::GUIClient::Vec3fParameter::~Vec3fParameter
+ */
+GUILayer::GUIClient::Vec3fParameter::~Vec3fParameter() {
+}
+
+
+/*
+ * GUILayer::GUIClient::Vec3fParameter::Set
+ */
+void GUILayer::GUIClient::Vec3fParameter::Set(const void *value) {
+    vislib::StringA s;
+    const float* f = static_cast<const float*>(value);
+    s.Format("%f;%f;%f", f[0], f[1], f[2]);
+    ::mmcSetParameterValueA(this->Handle(), s.PeekBuffer());
+}
+
+
+/*
+ * GUILayer::GUIClient::Vec3fParameter::Get
+ */
+void GUILayer::GUIClient::Vec3fParameter::Get(void *value) {
+    float f[3];
+    const char *dat = ::mmcGetParameterValueA(this->Handle());
+#ifdef _WIN32
+    sscanf_s
+#else
+    sscanf
+#endif
+        (dat, "%f;%f;%f", &f[0], &f[1], &f[2]);
+    ::memcpy(value, f, 3 * sizeof(float));
+}
+
+TwType GUILayer::GUIClient::Vec3fParameter::makeMyStructType() {
+    static TwType t = TW_TYPE_UNDEF;
+    if (t == TW_TYPE_UNDEF) {
+        TwStructMember vec3fmembers[] = {
+            { "x", TW_TYPE_FLOAT, 0, MY_ATB_FLOAT_STEPS },
+            { "y", TW_TYPE_FLOAT, sizeof(float), MY_ATB_FLOAT_STEPS },
+            { "z", TW_TYPE_FLOAT, 2 * sizeof(float), MY_ATB_FLOAT_STEPS }
+        };
+
+        t = TwDefineStruct("vec3f", vec3fmembers, 3, 3 * sizeof(float), &GUILayer::GUIClient::Vec3fParameter::mySummaryCallback, nullptr);
+    }
+    return t;
+}
+
+void TW_CALL GUILayer::GUIClient::Vec3fParameter::mySummaryCallback(char *summaryString, size_t summaryMaxLength, const void *value, void *summaryClientData) {
+    vislib::StringA s;
+    const float* f = static_cast<const float*>(value);
+    s.Format("%f;%f;%f", f[0], f[1], f[2]);
+    memcpy(summaryString, s.PeekBuffer(), std::max<size_t>(summaryMaxLength, s.Length()));
 }
 
 #endif /* HAS_ANTTWEAKBAR */
