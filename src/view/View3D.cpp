@@ -415,6 +415,13 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
     }
     this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+    // This is painfully wrong in the vislib camera, and is fixed here as sort of hotfix
+    float fc = this->camParams->FarClip();
+    float nc = this->camParams->NearClip();
+    float fnc = fc * 0.001f;
+    if (fnc > nc) {
+        this->camParams->SetClip(fnc, fc);
+    }
 
     if (this->bboxColSlot.IsDirty()) {
         float r, g, b;
