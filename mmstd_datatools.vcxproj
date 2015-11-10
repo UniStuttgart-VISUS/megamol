@@ -280,6 +280,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\ParticleColorSignedDistance.cpp" />
     <ClCompile Include="src\ParticleColorSignThreshold.cpp" />
     <ClCompile Include="src\ParticleDataSequenceConcatenate.cpp" />
+    <ClCompile Include="src\ParticleIColFilter.cpp" />
     <ClCompile Include="src\ParticleSortFixHack.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -305,6 +306,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ParticleColorSignedDistance.h" />
     <ClInclude Include="src\ParticleColorSignThreshold.h" />
     <ClInclude Include="src\ParticleDataSequenceConcatenate.h" />
+    <ClInclude Include="src\ParticleIColFilter.h" />
     <ClInclude Include="src\ParticleSortFixHack.h" />
   </ItemGroup>
   <ItemGroup>

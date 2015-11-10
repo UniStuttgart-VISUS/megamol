@@ -33,6 +33,7 @@
 #include "EnforceSymmetricParticleColorRanges.h"
 #include "ParticleSortFixHack.h"
 #include "ParticleDataSequenceConcatenate.h"
+#include "ParticleIColFilter.h"
 
 
 /*
@@ -133,6 +134,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::EnforceSymmetricParticleColorRanges>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSortFixHack>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleDataSequenceConcatenate>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColFilter>();
             // register calls here:
             // ...
         }
