@@ -15,6 +15,7 @@ using namespace megamol::stdplugin;
 datatools::ParticleIColFilter::ParticleIColFilter() : AbstractParticleManipulator("outData", "inData"),
         minValSlot("minVal", "The minimal color value of particles to be passed on"),
         maxValSlot("maxVal", "The maximal color value of particles to be passed on"),
+        staifHackDistSlot("staifHackDist", "Distance to the bounding box to include particles"),
         dataHash(0), frameId(0), parts(), data() {
     minValSlot.SetParameter(new core::param::FloatParam(0.0f));
     minValSlot.SetUpdateCallback(&ParticleIColFilter::reset);
@@ -22,6 +23,9 @@ datatools::ParticleIColFilter::ParticleIColFilter() : AbstractParticleManipulato
     maxValSlot.SetParameter(new core::param::FloatParam(1.0f));
     maxValSlot.SetUpdateCallback(&ParticleIColFilter::reset);
     MakeSlotAvailable(&maxValSlot);
+    staifHackDistSlot.SetParameter(new core::param::FloatParam(0.0f, 0.0f));
+    staifHackDistSlot.SetUpdateCallback(&ParticleIColFilter::reset);
+    MakeSlotAvailable(&staifHackDistSlot);
 }
 
 datatools::ParticleIColFilter::~ParticleIColFilter() {
@@ -59,12 +63,21 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall&
     data.resize(cnt);
 
     for (unsigned int i = 0; i < cnt; ++i) {
-        setData(parts[i], data[i], inDat.AccessParticles(i));
+        setData(parts[i], data[i], inDat.AccessParticles(i), inDat.AccessBoundingBoxes().ObjectSpaceBBox());
     }
 
 }
 
-void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s) {
+//namespace {
+//
+//    inline bool partTest(const float *ci, const float *vi, float minC, float maxC, float d, const vislib::math::Cuboid<float>& bbox) {
+//        return ((minC <= *ci) && (*ci <= maxC))
+//            && ((d < minStaifDist)
+//            || ())
+//    }
+//}
+
+void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox) {
     using core::moldyn::MultiParticleDataCall;
     using core::moldyn::SimpleSphericalParticles;
     using vislib::RawStorage;
@@ -98,11 +111,22 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     float maxVal = maxValSlot.Param<core::param::FloatParam>()->Value();
     if (maxVal < minVal) std::swap(minVal, maxVal);
 
+    const float minStaifDist = 0.0001f;
+    float staifDist = staifHackDistSlot.Param<core::param::FloatParam>()->Value();
+    if (staifDist > minStaifDist) {
+        bbox.Grow(-staifDist);
+    } else {
+        bbox.Set(-1000.0f, -1000.0f, -1000.0f, -1000.0f, -1000.0f, -1000.0f);
+    }
+
     // now count particles surviving
     size_t r_cnt = 0;
     for (size_t i = 0; i < cnt; ++i) {
-        const float &c = *reinterpret_cast<const float*>(cp + c_step * i);
-        if ((minVal <= c) && (c <= maxVal)) r_cnt++;
+        const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
+        const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
+        if (((minVal <= *ci) && (*ci <= maxVal)) || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
+            r_cnt++;
+        }
     }
 
     // now copying particles
@@ -116,8 +140,8 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     r_cnt = 0;
     for (size_t i = 0; i < cnt; ++i) {
         const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
-        const void *vi = static_cast<const void*>(vp + v_step * i);
-        if ((minVal <= *ci) && (*ci <= maxVal)) {
+        const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
+        if (((minVal <= *ci) && (*ci <= maxVal)) || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
             ::memcpy(d.At(r_cnt * v_size), vi, v_size);
             ::memcpy(d.At(c_off + r_cnt * c_size), ci, c_size);
             r_cnt++;

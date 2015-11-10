@@ -51,10 +51,11 @@ namespace datatools {
 
         bool reset(core::param::ParamSlot&);
         void setData(core::moldyn::MultiParticleDataCall& inDat);
-        void setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s);
+        void setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox);
 
         core::param::ParamSlot minValSlot;
         core::param::ParamSlot maxValSlot;
+        core::param::ParamSlot staifHackDistSlot;
         size_t dataHash;
         unsigned int frameId;
         std::vector<core::moldyn::MultiParticleDataCall::Particles> parts;
