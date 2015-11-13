@@ -36,8 +36,8 @@ namespace io {
     class XYZLoader : public core::Module {
     public:
 
-        static const char *ClassName(void) { return "XYZLoader"; }
-        static const char *Description(void) { return "Data loader of the simple xyz file format"; }
+        static const char *ClassName(void) { return "XYZDataSource"; }
+        static const char *Description(void) { return "Data source for the simple xyz file format"; }
         static bool IsAvailable(void) { return true; }
         static float FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize);
         static const char *FilenameExtensions() { return ".XYZ"; }
