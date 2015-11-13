@@ -103,6 +103,9 @@
     <ClCompile Include="src\rendering\NGSplatRenderer.cpp">
       <Filter>rendering\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\io\XYZLoader.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -155,6 +158,9 @@
     </ClInclude>
     <ClInclude Include="src\rendering\NGSplatRenderer.h">
       <Filter>rendering\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\XYZLoader.h">
+      <Filter>io\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

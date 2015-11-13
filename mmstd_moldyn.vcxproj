@@ -251,6 +251,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\io\VisIttDataSource.cpp" />
     <ClCompile Include="src\io\VTFDataSource.cpp" />
     <ClCompile Include="src\io\VTFResDataSource.cpp" />
+    <ClCompile Include="src\io\XYZLoader.cpp" />
     <ClCompile Include="src\misc\ParticleWorker.cpp" />
     <ClCompile Include="src\rendering\NGSphereBufferArrayRenderer.cpp" />
     <ClCompile Include="src\rendering\NGSphereRenderer.cpp" />
@@ -270,6 +271,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\io\VisIttDataSource.h" />
     <ClInclude Include="src\io\VTFDataSource.h" />
     <ClInclude Include="src\io\VTFResDataSource.h" />
+    <ClInclude Include="src\io\XYZLoader.h" />
     <ClInclude Include="src\misc\ParticleWorker.h" />
     <ClInclude Include="src\rendering\NGSphereBufferArrayRenderer.h" />
     <ClInclude Include="src\rendering\NGSphereRenderer.h" />
