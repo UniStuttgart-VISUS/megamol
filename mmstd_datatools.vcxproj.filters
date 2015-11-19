@@ -97,6 +97,12 @@
     <ClCompile Include="src\ParticleIColFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MultiParticleRelister.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OverrideMultiParticleListGlobalColors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
@@ -169,6 +175,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ParticleIColFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MultiParticleRelister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OverrideMultiParticleListGlobalColors.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

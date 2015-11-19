@@ -34,6 +34,8 @@
 #include "ParticleSortFixHack.h"
 #include "ParticleDataSequenceConcatenate.h"
 #include "ParticleIColFilter.h"
+#include "MultiParticleRelister.h"
+#include "OverrideMultiParticleListGlobalColors.h"
 
 
 /*
@@ -135,6 +137,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSortFixHack>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleDataSequenceConcatenate>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColFilter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiParticleRelister>();
+            this->module_descriptions.RegisterAutoDescription< megamol::stdplugin::datatools::OverrideMultiParticleListGlobalColors >();
             // register calls here:
             // ...
         }
