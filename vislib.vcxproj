@@ -224,6 +224,7 @@
     <ClInclude Include="include\vislib\graphics\CameraRotate2DLookAt.h" />
     <ClInclude Include="include\vislib\graphics\CameraZoom2DAngle.h" />
     <ClInclude Include="include\vislib\graphics\CameraZoom2DMove.h" />
+    <ClInclude Include="include\vislib\graphics\ColourHSVf.h" />
     <ClInclude Include="include\vislib\graphics\ColourParser.h" />
     <ClInclude Include="include\vislib\graphics\ColourRGBAu8.h" />
     <ClInclude Include="include\vislib\graphics\Cursor2D.h" />
@@ -595,6 +596,7 @@
     <ClCompile Include="src\graphics\CameraRotate2DLookAt.cpp" />
     <ClCompile Include="src\graphics\CameraZoom2DAngle.cpp" />
     <ClCompile Include="src\graphics\CameraZoom2DMove.cpp" />
+    <ClCompile Include="src\graphics\ColourHSVf.cpp" />
     <ClCompile Include="src\graphics\ColourParser.cpp" />
     <ClCompile Include="src\graphics\ColourRGBAu8.cpp" />
     <ClCompile Include="src\graphics\Cursor2D.cpp" />

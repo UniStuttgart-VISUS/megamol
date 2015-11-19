@@ -990,6 +990,9 @@
     <ClInclude Include="include\vislib\sys\FastFile.h">
       <Filter>Header Files\sys</Filter>
     </ClInclude>
+    <ClInclude Include="include\vislib\graphics\ColourHSVf.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Map.cpp">
@@ -1876,6 +1879,9 @@
     </ClCompile>
     <ClCompile Include="src\graphics\d3d\D3DMatrix.cpp">
       <Filter>Source Files\graphics\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\ColourHSVf.cpp">
+      <Filter>Source Files\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
