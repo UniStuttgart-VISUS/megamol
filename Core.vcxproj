@@ -495,6 +495,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\moldyn\OracleSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\ParticleGridDataCall.cpp" />
     <ClCompile Include="src\moldyn\ParticleListFilter.cpp" />
+    <ClCompile Include="src\moldyn\ParticleRelistCall.cpp" />
     <ClCompile Include="src\moldyn\SimpleGeoSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\SimpleSphereRenderer.cpp" />
     <ClCompile Include="src\moldyn\SphereOutlineRenderer.cpp" />
@@ -738,6 +739,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\moldyn\OracleSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\ParticleGridDataCall.h" />
     <ClInclude Include="include\mmcore\moldyn\ParticleListFilter.h" />
+    <ClInclude Include="include\mmcore\moldyn\ParticleRelistCall.h" />
     <ClInclude Include="include\mmcore\moldyn\SimpleGeoSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\SimpleSphereRenderer.h" />
     <ClInclude Include="include\mmcore\moldyn\SphereOutlineRenderer.h" />
