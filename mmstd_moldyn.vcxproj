@@ -247,6 +247,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\io\MMSPDHeader.cpp" />
     <ClCompile Include="src\io\SIFFDataSource.cpp" />
     <ClCompile Include="src\io\SIFFWriter.cpp" />
+    <ClCompile Include="src\io\TclMolSelectionLoader.cpp" />
     <ClCompile Include="src\io\VIMDataSource.cpp" />
     <ClCompile Include="src\io\VisIttDataSource.cpp" />
     <ClCompile Include="src\io\VTFDataSource.cpp" />
@@ -267,6 +268,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\io\MMSPDHeader.h" />
     <ClInclude Include="src\io\SIFFDataSource.h" />
     <ClInclude Include="src\io\SIFFWriter.h" />
+    <ClInclude Include="src\io\TclMolSelectionLoader.h" />
     <ClInclude Include="src\io\VIMDataSource.h" />
     <ClInclude Include="src\io\VisIttDataSource.h" />
     <ClInclude Include="src\io\VTFDataSource.h" />

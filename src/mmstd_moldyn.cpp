@@ -29,6 +29,7 @@
 #include "io/VTFResDataSource.h"
 #include "misc/ParticleWorker.h"
 #include "io/XYZLoader.h"
+#include "io/TclMolSelectionLoader.h"
 
 
 /*
@@ -123,6 +124,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::VTFResDataSource>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::misc::ParticleWorker>();
             this->module_descriptions.RegisterDescription< ::megamol::core::factories::LoaderADModuleAutoDescription< ::megamol::stdplugin::moldyn::io::XYZLoader> >();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
             // register calls here:
             // ...
         }
