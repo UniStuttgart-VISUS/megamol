@@ -146,14 +146,19 @@ bool stdplugin::datatools::DataFileSequence::getDataCallback(core::Call& caller)
         }
 
         // TODO: WTF?????? all modules behind me think time is only ever 0 and "does not move"
-        //ggdc->SetFrameID(0);
-        ggdc->SetFrameID(frameID);
+        //
+        // YES. This is the way it should be. Because this module is ment to "concatenate" files containing single frames only.
+        // A better module could be written and should be written, but this is the way it is.
+        //
+        ggdc->SetFrameID(0);
+        //ggdc->SetFrameID(frameID);
         if (!(*ggdc)(0)) {
             return false; // unable to get data
         }
         this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
+        ggdc->SetUnlocker(nullptr, false);
 
-        pgdc->SetFrameID(frameID);
+        pgdc->SetFrameID(frameID, true);
         pgdc->SetDataHash(this->datahash);
     }
 
