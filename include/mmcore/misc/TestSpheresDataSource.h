@@ -11,10 +11,14 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#define MMCORE_TEST_DYN_PARAM_SLOTS 1
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/memutils.h"
-
+#ifdef MMCORE_TEST_DYN_PARAM_SLOTS
+#include "mmcore/param/ParamSlot.h"
+#endif
 
 namespace megamol {
 namespace core {
@@ -157,6 +161,11 @@ namespace misc {
 
         /** The slot for requesting data */
         CalleeSlot getDataSlot;
+
+#ifdef MMCORE_TEST_DYN_PARAM_SLOTS
+        param::ParamSlot p1;
+        param::ParamSlot p2;
+#endif
 
     };
 

@@ -190,6 +190,26 @@ void Module::MakeSlotAvailable(AbstractSlot *slot) {
     slot->MakeAvailable();
 }
 
+void Module::SetSlotUnavailable(AbstractSlot *slot) {
+    if (slot == NULL) {
+        throw vislib::IllegalParamException("slot", __FILE__, __LINE__);
+    }
+    if (slot->GetStatus() == AbstractSlot::STATUS_CONNECTED) {
+        throw vislib::IllegalStateException("slot", __FILE__, __LINE__);
+    }
+    if (slot->GetStatus() == AbstractSlot::STATUS_UNAVAILABLE) return;
+
+    if (!this->FindSlot(slot->Name()))  {
+        throw vislib::IllegalParamException("A slot with this name is not registered", __FILE__, __LINE__);
+    }
+
+    this->removeChild(::std::shared_ptr<AbstractNamedObject>(slot, [](AbstractNamedObject* d){}));
+    slot->SetOwner(nullptr);
+    slot->MakeUnavailable();
+
+}
+
+
 
 /*
  * Module::setModuleName

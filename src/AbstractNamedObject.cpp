@@ -182,8 +182,12 @@ AbstractNamedObject::AbstractNamedObject(void) : enable_shared_from_this(), name
  * AbstractNamedObject::SetOwner
  */
 void AbstractNamedObject::SetOwner(void *owner) {
-    ASSERT(this->owner == nullptr);
-    this->owner = owner;
+    if (owner == nullptr) {
+        this->owner = nullptr;
+    } else {
+        ASSERT(this->owner == nullptr);
+        this->owner = owner;
+    }
 }
 
 

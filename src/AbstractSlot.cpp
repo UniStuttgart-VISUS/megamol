@@ -34,6 +34,19 @@ void AbstractSlot::MakeAvailable(void) {
 
 
 /*
+ * AbstractSlot::MakeUnavailable
+ */
+void AbstractSlot::MakeUnavailable(void) {
+    if (this->status != STATUS_ENABLED) {
+        throw vislib::IllegalStateException(
+            "Status of slot is illegal for this operation",
+            __FILE__, __LINE__);
+    }
+    this->status = STATUS_UNAVAILABLE;
+}
+
+
+/*
  * AbstractSlot::IsParamRelevant
  */
 bool AbstractSlot::IsParamRelevant(

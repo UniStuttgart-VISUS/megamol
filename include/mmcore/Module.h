@@ -193,6 +193,7 @@ namespace core {
          * @param slot Slot to be made available.
          */
         void MakeSlotAvailable(AbstractSlot *slot);
+        void SetSlotUnavailable(AbstractSlot *slot);
 
     private:
 

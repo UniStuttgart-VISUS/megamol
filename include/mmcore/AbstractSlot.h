@@ -105,6 +105,7 @@ namespace core {
          * settings of the slot can no longer be changed.
          */
         virtual void MakeAvailable(void);
+        virtual void MakeUnavailable(void);
 
         /**
          * Answers whether the given parameter is relevant for this view.

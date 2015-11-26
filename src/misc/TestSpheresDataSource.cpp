@@ -13,6 +13,8 @@
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Quaternion.h"
 #include "cmath"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/StringParam.h"
 
 using namespace megamol::core;
 
@@ -32,11 +34,24 @@ const unsigned int misc::TestSpheresDataSource::sphereCount = 15;
 /*
  * misc::TestSpheresDataSource::TestSpheresDataSource
  */
-misc::TestSpheresDataSource::TestSpheresDataSource(void) : view::AnimDataModule(), getDataSlot("getData", "Gets the data from the data source") {
+misc::TestSpheresDataSource::TestSpheresDataSource(void) : view::AnimDataModule(), getDataSlot("getData", "Gets the data from the data source")
+#ifdef MMCORE_TEST_DYN_PARAM_SLOTS
+    , p1("p1", "Test slot for dynamic parameter slots")
+    , p2("p2", "Test slot for dynamic parameter slots")
+#endif
+        {
 
     this->getDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(), moldyn::MultiParticleDataCall::FunctionName(0), &TestSpheresDataSource::getDataCallback);
     this->getDataSlot.SetCallback(moldyn::MultiParticleDataCall::ClassName(), moldyn::MultiParticleDataCall::FunctionName(1), &TestSpheresDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
+
+#ifdef MMCORE_TEST_DYN_PARAM_SLOTS
+    p1.SetParameter(new param::BoolParam(false));
+    MakeSlotAvailable(&p1);
+    p1.ForceSetDirty();
+
+    p2.SetParameter(new param::StringParam("Hugo"));
+#endif
 
 }
 
@@ -154,6 +169,21 @@ bool misc::TestSpheresDataSource::getDataCallback(Call& caller) {
     f->Unlock(); // because I know that this data source is simple enough that no locking is required
     Frame *frm = dynamic_cast<Frame*>(f);
     if (frm == NULL) return false;
+
+#ifdef MMCORE_TEST_DYN_PARAM_SLOTS
+    if (p1.IsDirty()) {
+        p1.ResetDirty();
+        if (p1.Param<param::BoolParam>()->Value()) {
+            if (p2.GetStatus() == AbstractSlot::STATUS_UNAVAILABLE) {
+                MakeSlotAvailable(&p2);
+            }
+        } else {
+            if (p2.GetStatus() != AbstractSlot::STATUS_UNAVAILABLE) {
+                SetSlotUnavailable(&p2);
+            }
+        }
+    }
+#endif
 
     mpdc->SetFrameID(f->FrameNumber());
     mpdc->SetDataHash(1);
