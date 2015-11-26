@@ -41,6 +41,8 @@
 #if (MEGAMOL_CORE_MAJOR_VER == 1)
 #if (MEGAMOL_CORE_MINOR_VER == 1) // v1.1
 #define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Post-Orphan)"
+#elif (MEGAMOL_CORE_MINOR_VER == 2) // v1.2
+#define MEGAMOL_CORE_NAME MEGAMOL_PRODUCT_NAME " Core (Evolution Chamber)"
 #endif
 
 #elif (MEGAMOL_CORE_MAJOR_VER == 0)
