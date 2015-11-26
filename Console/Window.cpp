@@ -14,6 +14,9 @@
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 #include "WindowManager.h"
+#include <chrono>
+#include <vector>
+#include <algorithm>
 
 /****************************************************************************/
 
@@ -298,39 +301,95 @@ void megamol::console::Window::RegisterHotKeyAction(
 
 
 #ifdef HAS_ANTTWEAKBAR
+
+namespace {
+    void MEGAMOLCORE_CALLBACK collectParams(const char *paramName, void *contextPtr) {
+        std::vector<vislib::StringA> *paramNames = static_cast<std::vector<vislib::StringA>* >(contextPtr);
+        assert(paramNames != nullptr);
+        paramNames->push_back(paramName);
+    }
+}
+
 /*
  * megamol::console::Window::InitGUI
  */
 void megamol::console::Window::InitGUI(CoreHandle& hCore) {
-    ParamEnumContext peContext;
-    peContext.wnd = this;
-    peContext.hCore = &hCore;
     this->gui.BeginInitialisation();
-    ::mmcEnumParametersA(hCore, &Window::initGUI, &peContext);
+
+    std::vector<vislib::StringA> params;
+    ::mmcEnumParametersA(hCore, &collectParams, &params);
+
+    for (const vislib::StringA& paramName : params) {
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam = new megamol::console::CoreHandle();
+        vislib::RawStorage desc;
+        if (!::mmcGetParameterA(hCore, paramName, *hParam)) continue;
+
+        unsigned int len = 0;
+        ::mmcGetParameterTypeDescription(*hParam, NULL, &len);
+        desc.AssertSize(len);
+        ::mmcGetParameterTypeDescription(*hParam, desc.As<unsigned char>(), &len);
+
+        this->gui.AddParameter(hParam, paramName, desc.As<unsigned char>(), len);
+    }
+
     this->gui.EndInitialisation();
 }
 
 
-/*
- * megamol::console::Window::initGUI
- */
-void MEGAMOLCORE_CALLBACK megamol::console::Window::initGUI(const char *paramName, void *contextPtr) {
-    ParamEnumContext *context = reinterpret_cast<ParamEnumContext *>(contextPtr);
-    vislib::SmartPtr<megamol::console::CoreHandle> hParam = new megamol::console::CoreHandle();
-    vislib::RawStorage desc;
+void megamol::console::Window::UpdateGUI(CoreHandle& hCore) {
+    std::vector<vislib::StringA> params;
+    std::vector<vislib::StringA> deadParams = gui.ParametersNames();
 
-    if (context == NULL) { return; }
-    if (!::mmcGetParameterA(*context->hCore, paramName, *hParam)) { return; }
-    //if (!::mmcIsParameterRelevant(context->wnd->HView(), *hParam)) { return; }
+    ::mmcEnumParametersA(hCore, &collectParams, &params);
 
-    unsigned int len = 0;
-    ::mmcGetParameterTypeDescription(*hParam, NULL, &len);
-    desc.AssertSize(len);
-    ::mmcGetParameterTypeDescription(*hParam, desc.As<unsigned char>(), &len);
+    for (const vislib::StringA& paramName : params) {
 
-    context->wnd->gui.AddParameter(hParam, paramName, desc.As<unsigned char>(), len);
+        // search if param already exist
+        auto dpi = std::find(deadParams.begin(), deadParams.end(), vislib::StringA(paramName));
+        if (dpi != deadParams.end()) {
+            deadParams.erase(dpi); // this gui parameter is in use and will not be deleted
+            continue;
+        }
+
+        // parameter does not yet exist
+        vislib::SmartPtr<megamol::console::CoreHandle> hParam = new megamol::console::CoreHandle();
+        vislib::RawStorage desc;
+        if (!::mmcGetParameterA(hCore, paramName, *hParam)) continue;
+
+        unsigned int len = 0;
+        ::mmcGetParameterTypeDescription(*hParam, NULL, &len);
+        desc.AssertSize(len);
+        ::mmcGetParameterTypeDescription(*hParam, desc.As<unsigned char>(), &len);
+
+        this->gui.AddParameter(hParam, paramName, desc.As<unsigned char>(), len);
+
+    }
+
+    // now we delete all the orphaned gui parameters
+    for (const vislib::StringA& paramName : deadParams) {
+        this->gui.RemoveParameter(paramName);
+    }
+
 }
 #endif /* HAS_ANTTWEAKBAR */
+
+/*
+ * megamol::console::Window::Update
+ */
+void megamol::console::Window::Update(CoreHandle& hCore) {
+#ifdef HAS_ANTTWEAKBAR
+    // update GUI once a second
+    static std::chrono::system_clock::time_point last = std::chrono::system_clock::now();
+    if (gui.IsActive()) {
+        std::chrono::system_clock::time_point n = std::chrono::system_clock::now();
+        if (std::chrono::duration_cast<std::chrono::seconds>(n - last).count() > 0) {
+            last = n;
+            UpdateGUI(hCore);
+        }
+    }
+#endif /* HAS_ANTTWEAKBAR */
+
+}
 
 
 /*

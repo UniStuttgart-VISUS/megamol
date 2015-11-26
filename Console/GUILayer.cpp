@@ -169,6 +169,11 @@ void GUILayer::GUIClient::Deactivate(void) {
 }
 
 
+bool GUILayer::GUIClient::IsActive(void) const {
+    return activeClient == this;
+}
+
+
 /*
  * GUILayer::GUIClient::SetWindowSize
  */
@@ -194,6 +199,33 @@ void GUILayer::GUIClient::AddParameter(
     if (param != NULL) {
         this->params.Add(param);
     }
+}
+
+
+void GUILayer::GUIClient::RemoveParameter(const char *name) {
+    Parameter *param = nullptr;
+
+    auto it = params.GetConstIterator();
+    while (it.HasNext()) {
+        Parameter *p = it.Next();
+        if (p->Name() == name) {
+            param = p;
+            break;
+        }
+    }
+    if (param == nullptr) return; // parameter not found
+
+    this->params.Remove(param);
+    delete param;
+}
+
+
+std::vector<vislib::StringA> GUILayer::GUIClient::ParametersNames(void) const {
+    std::vector<vislib::StringA> pns;
+    pns.reserve(params.Count());
+    auto it = params.GetConstIterator();
+    while (it.HasNext()) pns.push_back(it.Next()->Name());
+    return pns;
 }
 
 

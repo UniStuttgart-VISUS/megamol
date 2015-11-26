@@ -85,6 +85,8 @@ namespace console {
             return windows.GetIterator();
         }
 
+        void UpdateAll(CoreHandle& hCore);
+
     private:
 
         /** Private ctor. */

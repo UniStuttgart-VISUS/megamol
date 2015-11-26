@@ -89,3 +89,12 @@ void megamol::console::WindowManager::MarkAllForClosure(void) {
     }
     viewerRequestsAppExitCallback(NULL, NULL);
 }
+
+void megamol::console::WindowManager::UpdateAll(CoreHandle& hCore) {
+    vislib::SingleLinkedList<vislib::SmartPtr<
+        megamol::console::Window> >::Iterator iter
+        = this->windows.GetIterator();
+    while (iter.HasNext()) {
+        iter.Next()->Update(hCore);
+    }
+}

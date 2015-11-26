@@ -17,6 +17,7 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
+#include <vector>
 
 
 /**
@@ -90,6 +91,8 @@ namespace console {
              */
             void Deactivate(void);
 
+            bool IsActive(void) const;
+
             /**
              * Tells the gui client the window size
              *
@@ -108,6 +111,10 @@ namespace console {
              */
             void AddParameter(vislib::SmartPtr<megamol::console::CoreHandle> hParam,
                 const char *name, unsigned char *desc, unsigned int len);
+
+            void RemoveParameter(const char *name);
+            std::vector<vislib::StringA> ParametersNames(void) const;
+
 
             /** Draws the GUI */
             void Draw(void);

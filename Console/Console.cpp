@@ -1653,6 +1653,7 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
         if (hView.IsValid()) {
             if (::mmvProcessEvents(hView)) {
                 running = true;
+                megamol::console::WindowManager::Instance()->UpdateAll(hCore);
             }
         }
 

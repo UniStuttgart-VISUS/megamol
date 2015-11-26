@@ -196,7 +196,13 @@ namespace console {
          * @param hCore The core handle
          */
         void InitGUI(CoreHandle& hCore);
+
+        void UpdateGUI(CoreHandle& hCore);
+
 #endif /* HAS_ANTTWEAKBAR */
+
+        /** generic update for internal states */
+        void Update(CoreHandle& hCore);
 
     private:
 
@@ -236,16 +242,6 @@ namespace console {
 
         /** global flag if any window has been closed */
         static bool hasClosed;
-
-#ifdef HAS_ANTTWEAKBAR
-        /**
-         * Initialises the GUI client
-         *
-         * @param paramName The name of the parameter
-         * @param contextPtr Pointer to the context structure
-         */
-        static void MEGAMOLCORE_CALLBACK initGUI(const char *paramName, void *contextPtr);
-#endif /* HAS_ANTTWEAKBAR */
 
         /**
          * Enumeration method for the core parameters
