@@ -67,7 +67,7 @@ list(REMOVE_ITEM source_files
 # shader files for installation
 file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
-include_directories("include" "src")
+include_directories(BEFORE "include" "src")
 
 # Target definition
 add_library(${CMAKE_PROJECT_NAME} SHARED ${header_files} ${source_files})
