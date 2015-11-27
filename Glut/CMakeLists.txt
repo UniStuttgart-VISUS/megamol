@@ -33,7 +33,7 @@ list(REMOVE_ITEM source_files
 # additional set up
 add_definitions(-DMEGAMOLVIEWER_EXPORTS -DMEGAMOLVIEWER_USESTATIC)
 #message(STATUS "Viewer_DIR == ${MegaMolCon_Viewer_DIR}")
-include_directories(${MegaMolCon_Viewer_DIR}/include)
+include_directories(BEFORE ${MegaMolCon_Viewer_DIR}/include)
 add_definitions(${MegaMolCon_common_definitions})
 # Set CXX flags
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -ggdb")

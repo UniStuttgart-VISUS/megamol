@@ -35,7 +35,7 @@ file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp")
 
 # additional set up
 #message(STATUS "Viewer_DIR == ${MegaMolCon_Viewer_DIR}")
-include_directories(${MegaMolCon_Viewer_DIR}/include)
+include_directories(BEFORE ${MegaMolCon_Viewer_DIR}/include)
 add_definitions(${MegaMolCon_common_definitions})
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0")
