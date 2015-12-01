@@ -287,84 +287,84 @@ namespace moldyn {
          */
         bool operator==(const SimpleSphericalParticles& rhs) const;
 
-		/**
+        /**
          * Disable NULL-checks in case we have an OpenGL-VAO
          * @param disable flag to disable/enable the checks
          */
-		void disableNullChecksForVAOs(bool disable = true)
-		{
-			disabledNullChecks = disable;
-		}
-		
-		/**
-		* Defines wether we transport VAOs instead of real data
-		* @param vao flag to disable/enable the checks
-		*/
-		void SetIsVAO(bool vao)
-		{
-			this->isVAO = vao;
-		}
+        void disableNullChecksForVAOs(bool disable = true)
+        {
+            disabledNullChecks = disable;
+        }
+        
+        /**
+        * Defines wether we transport VAOs instead of real data
+        * @param vao flag to disable/enable the checks
+        */
+        void SetIsVAO(bool vao)
+        {
+            this->isVAO = vao;
+        }
 
-		/**
-		* Disable NULL-checks in case we have an OpenGL-VAO
-		* @param disable flag to disable/enable the checks
-		*/
-		bool IsVAO()
-		{
-			return this->isVAO;
-		}
+        /**
+        * Disable NULL-checks in case we have an OpenGL-VAO
+        * @param disable flag to disable/enable the checks
+        */
+        bool IsVAO()
+        {
+            return this->isVAO;
+        }
 
-		/**
-		* If we handle clusters this could be useful
-		*/
-		struct ClusterInfos
-		{
-			/** a map with clusterid to particleids relation*/
-			vislib::Map<int, vislib::Array<int>> data;
-			/** the map in plain data for upload to gpu */
-			unsigned int *plainData;
-			/** size of the plain data*/
-			size_t sizeofPlainData;
-			/** number of clusters*/
-			unsigned int numClusters;
-			ClusterInfos() : data(), plainData(0), sizeofPlainData(0), numClusters(0) {};
-		};
-		
-		/**
-		* Sets the local ClusterInfos-struct
-		*/
-		void SetClusterInfos(ClusterInfos *infos)
-		{
-			this->clusterInfos = infos;
-		}
+        /**
+        * If we handle clusters this could be useful
+        */
+        struct ClusterInfos
+        {
+            /** a map with clusterid to particleids relation*/
+            vislib::Map<int, vislib::Array<int>> data;
+            /** the map in plain data for upload to gpu */
+            unsigned int *plainData;
+            /** size of the plain data*/
+            size_t sizeofPlainData;
+            /** number of clusters*/
+            unsigned int numClusters;
+            ClusterInfos() : data(), plainData(0), sizeofPlainData(0), numClusters(0) {};
+        };
+        
+        /**
+        * Sets the local ClusterInfos-struct
+        */
+        void SetClusterInfos(ClusterInfos *infos)
+        {
+            this->clusterInfos = infos;
+        }
 
-		/**
-		* gets the local ClusterInfos-struct
-		*/
-		ClusterInfos *GetClusterInfos()
-		{
-			return this->clusterInfos;
-		}
+        /**
+        * gets the local ClusterInfos-struct
+        */
+        ClusterInfos *GetClusterInfos()
+        {
+            return this->clusterInfos;
+        }
 
-		/**
-		* Sets the VertexArrayObject, VertexBuffer and ColorBuffer used
-		*/
-		void SetVAOs(unsigned int vao, unsigned int vb, unsigned int cb)
-		{
-			this->glVAO = vao;
-			this->glVB = vb;
-			this->glCB = cb;
-		}
+        /**
+        * Sets the VertexArrayObject, VertexBuffer and ColorBuffer used
+        */
+        void SetVAOs(unsigned int vao, unsigned int vb, unsigned int cb)
+        {
+            this->glVAO = vao;
+            this->glVB = vb;
+            this->glCB = cb;
+        }
 
-		/**
-		* Gets the VertexArrayObject, VertexBuffer and ColorBuffer used
-		*/
-		void GetVAOs(unsigned int &vao, unsigned int &vb, unsigned int &cb)
-		{
-			vao = this->glVAO;
-			vb = this->glVB;
-			cb = this->glCB;
-		}
+        /**
+        * Gets the VertexArrayObject, VertexBuffer and ColorBuffer used
+        */
+        void GetVAOs(unsigned int &vao, unsigned int &vb, unsigned int &cb)
+        {
+            vao = this->glVAO;
+            vb = this->glVB;
+            cb = this->glCB;
+        }
 
     private:
 
@@ -403,22 +403,22 @@ namespace moldyn {
 
         /** The vertex data stride */
         unsigned int vertStride;
-		
-		/** disable NULL-checks if used with OpenGL-VAO */
-		bool disabledNullChecks;
+        
+        /** disable NULL-checks if used with OpenGL-VAO */
+        bool disabledNullChecks;
 
-		/** do we use a VertexArrayObject? */
-		bool isVAO;
+        /** do we use a VertexArrayObject? */
+        bool isVAO;
 
-		/** Vertex Array Object to transport */
-		unsigned int glVAO;
-		/** Vertex Buffer to transport */
-		unsigned int glVB;
-		/** Color Buffer to transport */
-		unsigned int glCB;
+        /** Vertex Array Object to transport */
+        unsigned int glVAO;
+        /** Vertex Buffer to transport */
+        unsigned int glVB;
+        /** Color Buffer to transport */
+        unsigned int glCB;
 
-		/** local Cluster Infos*/
-		ClusterInfos *clusterInfos;
+        /** local Cluster Infos*/
+        ClusterInfos *clusterInfos;
     };
 
 

@@ -116,10 +116,47 @@ namespace misc {
     private:
 
         /**
-         * TODO: Document
+         * Splits a line at the semicolon into a left and right part. If there
+         * is no semicolon, defaultEye governs which one of the strings is set,
+         * the other one is emptied.
+         */
+        void interpretLine(const vislib::TString source, vislib::TString& left,
+                           vislib::TString& right);
+
+        /**
+         * Callback invoked when the user pastes a line containing 
+         * <leftimg>[;<rightimg>]. The text is split using interpretLine
+         * and assigned to (left|right)FilenameSlot.
          */
         bool onFilesPasted(param::ParamSlot &slot);
 
+        /**
+        * Callback invoked when the user pastes a text containing multiple
+        * lines containing <leftimg>[;<rightimg>]. Splits text into single
+        * lines and then behaves like onFilesPasted for each line.
+        */
+        bool onSlideshowPasted(param::ParamSlot &slot);
+
+        /** Callback for going back to slide 0 */
+        bool onFirstPressed(param::ParamSlot &slot);
+
+        /** Callback for going back one slide */
+        bool onPreviousPressed(param::ParamSlot &slot);
+
+        /** Callback for going forward one slide */
+        bool onNextPressed(param::ParamSlot &slot);
+
+        /** Callback for going forward to the last slide */
+        bool onLastPressed(param::ParamSlot &slot);
+
+        /**
+         * Callback that occurs on slide change. Copies file names from
+         * leftFiles and rightFiles to leftFilenameSlot and 
+         * rightFilenameSlot respectively based on currentSlot.
+         */
+        bool onCurrentSet(param::ParamSlot &slot);
+
+        /** makes sure the image for the respective eye is loaded. */
         void assertImage(bool rightEye);
 
         /** The image file path slot */
@@ -131,6 +168,26 @@ namespace misc {
         /** Slot to receive both file names at once */
         param::ParamSlot pasteFilenamesSlot;
 
+        /** Slot to receive a whole slideshow at once */
+        param::ParamSlot pasteSlideshowSlot;
+
+        /** slot for going back to slide 0 */
+        param::ParamSlot firstSlot;
+
+        /** slot for going back one slide */
+        param::ParamSlot previousSlot;
+
+        /** slide for setting the current slide index */
+        param::ParamSlot currentSlot;
+
+        /** slot for going forward one slide */
+        param::ParamSlot nextSlot;
+
+        /** slot for going forward to the last slide */
+        param::ParamSlot lastSlot;
+
+        param::ParamSlot defaultEye;
+
         /** The width of the image */
         unsigned int width;
 
@@ -138,8 +195,14 @@ namespace misc {
         unsigned int height;
 
         /** The image tiles */
-        vislib::Array<vislib::Pair<vislib::math::Rectangle<float>, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > > tiles;
+        vislib::Array<vislib::Pair<vislib::math::Rectangle<float>,
+            vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > > tiles;
 
+        /** the slide show files for the left eye */
+        vislib::Array<vislib::TString> leftFiles;
+
+        /** the slide show files for the right eye */
+        vislib::Array<vislib::TString> rightFiles;
     };
 
 } /* end namespace misc */
