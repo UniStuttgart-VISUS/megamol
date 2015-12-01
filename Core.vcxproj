@@ -123,16 +123,16 @@
     <NuGetPackageImportStamp>aa8f6fce</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir>$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir>$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir>$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir>$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -163,12 +163,11 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
-xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)zlib*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)libpng*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
 xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
@@ -209,12 +208,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
-xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)zlib*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)libpng*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
 xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
@@ -251,12 +249,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
-xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)zlib*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)libpng*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
 xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
@@ -296,12 +293,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
       <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
-xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)zlib*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
-xcopy "$(TargetDir)libpng*.dll" "$(OutputBin)\$(PlatformName)\$(Configuration)\" /Y /F /V /G /K
 xcopy "$(VISlibPath)3rd\glload\lib\glload$(BitsD).dll" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
