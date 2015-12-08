@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MegaMol MegaMolPlugin
+# MegaMol imageviewer2
 # building utilty script
 # Copyright 2015 by MegaMol Team
 # All rights reserved
@@ -28,7 +28,7 @@ register_build_trees=0
 
 # be proud of yourself
 echo
-echo "  MegaMol(TM) MegaMolPlugin"
+echo "  MegaMol(TM) imageviewer2"
 echo "  cmake_build.sh utilty script"
 echo "  Copyright 2015, by MegaMol Team"
 echo "  All rights reserved"

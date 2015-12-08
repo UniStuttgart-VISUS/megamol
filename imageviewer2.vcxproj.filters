@@ -51,7 +51,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\MegaMolPlugin\MegaMolPlugin.h">
+    <ClInclude Include="include\imageviewer2\imageviewer2.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
@@ -62,7 +62,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\MegaMolPlugin.cpp">
+    <ClCompile Include="src\imageviewer2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
