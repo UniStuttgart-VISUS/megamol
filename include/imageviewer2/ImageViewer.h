@@ -123,6 +123,13 @@ namespace imageviewer2 {
                            vislib::TString& right);
 
         /**
+        * Callback invoked when the user pastes a line containing
+        * <machine>[;<machine>]*. Sets blankMachines to machines that
+        * should not try loading the images (for performance reasons).
+        */
+        bool onBlankMachineSet(param::ParamSlot &slot);
+        
+        /**
          * Callback invoked when the user pastes a line containing 
          * <leftimg>[;<rightimg>]. The text is split using interpretLine
          * and assigned to (left|right)FilenameSlot.
@@ -185,6 +192,10 @@ namespace imageviewer2 {
         /** slot for going forward to the last slide */
         param::ParamSlot lastSlot;
 
+        /** slot for inserting machine names that will not load the images */
+        param::ParamSlot blankMachine;
+
+        /** if only one image per pair is defined: where it should go */
         param::ParamSlot defaultEye;
 
         /** The width of the image */
@@ -202,6 +213,12 @@ namespace imageviewer2 {
 
         /** the slide show files for the right eye */
         vislib::Array<vislib::TString> rightFiles;
+
+        /** semicolon-separated machines that should not try to load images */
+        vislib::Array<vislib::TString> blankMachines;
+
+        /** cache for the local machine name */
+        vislib::TString machineName;
     };
 
 } /* end namespace imageviewer2 */

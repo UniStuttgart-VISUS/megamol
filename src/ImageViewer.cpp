@@ -22,6 +22,7 @@
 #include "vislib/sys/Log.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/AbstractView3D.h"
+#include "vislib/sys/SystemInformation.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -41,6 +42,7 @@ imageviewer2::ImageViewer::ImageViewer(void) : Renderer3DModule(),
         nextSlot("next", "go to next image in slideshow"),
         lastSlot("last", "go to last image in slideshow"),
         defaultEye("defaultEye", "where the image goes if the slideshow only has one image per line"),
+        blankMachine("blankMachine", "semicolon-separated list of machines that do not load image"),
         width(1), height(1), tiles(), leftFiles(), rightFiles() {
 
     this->leftFilenameSlot << new param::FilePathParam("");
@@ -86,6 +88,12 @@ imageviewer2::ImageViewer::ImageViewer(void) : Renderer3DModule(),
     this->leftFiles.SetCapacityIncrement(20);
     this->rightFiles.SetCapacityIncrement(20);
 
+    this->blankMachine << new param::StringParam("");
+    this->blankMachine.SetUpdateCallback(&ImageViewer::onBlankMachineSet);
+    this->MakeSlotAvailable(&this->blankMachine);
+
+    vislib::sys::SystemInformation::ComputerName(this->machineName);
+    this->machineName.ToLowerCase();
 }
 
 
@@ -155,6 +163,9 @@ void imageviewer2::ImageViewer::release(void) {
 }
 
 
+/*
+* imageviewer2::ImageViewer::assertImage
+*/
 void imageviewer2::ImageViewer::assertImage(bool rightEye) {
     param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     if (filenameSlot->IsDirty()) {
@@ -167,34 +178,36 @@ void imageviewer2::ImageViewer::assertImage(bool rightEye) {
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
             //if (codec.Load(filename)) {
-            if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(img, filename)) {
-                img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
-                this->width = img.Width();
-                this->height = img.Height();
-                this->tiles.Clear();
-                BYTE *buf = new BYTE[TILE_SIZE * TILE_SIZE * 3];
-                for (unsigned int y = 0; y < this->height; y += TILE_SIZE) {
-                    unsigned int h = vislib::math::Min(TILE_SIZE, this->height - y);
-                    for (unsigned int x = 0; x < this->width; x += TILE_SIZE) {
-                        unsigned int w = vislib::math::Min(TILE_SIZE, this->width - x);
-                        for (unsigned int l = 0; l < h; l++) {
-                            ::memcpy(buf + (l * w * 3), img.PeekDataAs<BYTE>() + ((y + l) * this->width * 3 + x * 3), w * 3);
-                        }
-                        this->tiles.Add(vislib::Pair<vislib::math::Rectangle<float>, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> >());
-                        this->tiles.Last().First().Set(static_cast<float>(x), static_cast<float>(this->height - y), static_cast<float>(x + w), static_cast<float>(this->height - (y + h)));
-                        this->tiles.Last().SetSecond(new vislib::graphics::gl::OpenGLTexture2D());
-                        if (this->tiles.Last().Second()->Create(w, h, false, buf, GL_RGB) != GL_NO_ERROR) {
-                            this->tiles.RemoveLast();
-                        } else {
-                            this->tiles.Last().Second()->SetFilter(GL_LINEAR, GL_LINEAR);
-                            this->tiles.Last().Second()->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+            if (!this->blankMachines.Contains(this->machineName)) {
+                if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(img, filename)) {
+                    img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
+                    this->width = img.Width();
+                    this->height = img.Height();
+                    this->tiles.Clear();
+                    BYTE *buf = new BYTE[TILE_SIZE * TILE_SIZE * 3];
+                    for (unsigned int y = 0; y < this->height; y += TILE_SIZE) {
+                        unsigned int h = vislib::math::Min(TILE_SIZE, this->height - y);
+                        for (unsigned int x = 0; x < this->width; x += TILE_SIZE) {
+                            unsigned int w = vislib::math::Min(TILE_SIZE, this->width - x);
+                            for (unsigned int l = 0; l < h; l++) {
+                                ::memcpy(buf + (l * w * 3), img.PeekDataAs<BYTE>() + ((y + l) * this->width * 3 + x * 3), w * 3);
+                            }
+                            this->tiles.Add(vislib::Pair<vislib::math::Rectangle<float>, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> >());
+                            this->tiles.Last().First().Set(static_cast<float>(x), static_cast<float>(this->height - y), static_cast<float>(x + w), static_cast<float>(this->height - (y + h)));
+                            this->tiles.Last().SetSecond(new vislib::graphics::gl::OpenGLTexture2D());
+                            if (this->tiles.Last().Second()->Create(w, h, false, buf, GL_RGB) != GL_NO_ERROR) {
+                                this->tiles.RemoveLast();
+                            } else {
+                                this->tiles.Last().Second()->SetFilter(GL_LINEAR, GL_LINEAR);
+                                this->tiles.Last().Second()->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+                            }
                         }
                     }
+                    delete[] buf;
+                    img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
+                } else {
+                    printf("Failed: Load\n");
                 }
-                delete[] buf;
-                img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
-            } else {
-                printf("Failed: Load\n");
             }
         } catch(vislib::Exception ex) {
             printf("Failed: %s (%s;%d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
@@ -255,6 +268,9 @@ bool imageviewer2::ImageViewer::onFilesPasted(param::ParamSlot &slot) {
 }
 
 
+/*
+* imageviewer2::ImageViewer::interpretLine
+*/
 void imageviewer2::ImageViewer::interpretLine(const vislib::TString source, vislib::TString& left, vislib::TString& right) {
     vislib::TString line(source);
     line.Replace(_T("\n"), _T(""));
@@ -271,20 +287,6 @@ void imageviewer2::ImageViewer::interpretLine(const vislib::TString source, visl
             right = line;
         }
     }
-    //line.Replace(_T("\n"), _T(""));
-    //vislib::TString::Size scp = line.Find(_T(";"));
-    //if (scp != vislib::TString::INVALID_POS) {
-    //    this->leftFiles.Append(line.Substring(0, scp));
-    //    this->rightFiles.Append(line.Substring(scp + 1));
-    //} else {
-    //    if (this->defaultEye.Param<param::EnumParam>()->Value() == 0) {
-    //        this->leftFiles.Append(line);
-    //        this->rightFiles.Append(_T(""));
-    //    } else {
-    //        this->rightFiles.Append(line);
-    //        this->leftFiles.Append(_T(""));
-    //    }
-    //}
 }
 
 /*
@@ -299,7 +301,7 @@ bool imageviewer2::ImageViewer::onSlideshowPasted(param::ParamSlot &slot) {
     vislib::TString::Size startPos = 0;
     vislib::TString::Size pos = str.Find(_T("\n"), startPos);
     while (pos != vislib::TString::INVALID_POS) {
-        vislib::TString line = str.Substring(startPos, pos - startPos + 1);
+        vislib::TString line = str.Substring(startPos, pos - startPos);
         this->interpretLine(line, left, right);
         this->leftFiles.Append(left);
         this->rightFiles.Append(right);
@@ -361,23 +363,28 @@ bool imageviewer2::ImageViewer::onCurrentSet(param::ParamSlot &slot) {
         this->rightFilenameSlot.Param<param::FilePathParam>()->SetValue(rightFiles[s]);
 
         // use ResetViewOnBBoxChange of your View! 
-
-        //vislib::Stack<AbstractNamedObjectContainer::const_ptr_type> stack;
-        //stack.Push(this->GetCoreInstance()->ModuleGraphRoot());
-        //while (!stack.IsEmpty()) {
-        //    AbstractNamedObjectContainer::const_ptr_type node = stack.Pop();
-        //    AbstractNamedObjectContainer::child_list_type::const_iterator children, childrenend;
-        //    childrenend = node->ChildList_End();
-        //    for (children = node->ChildList_Begin(); children != childrenend; ++children) {
-        //        AbstractNamedObject::const_ptr_type child = *children;
-        //        AbstractNamedObjectContainer::const_ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(child);
-        //        if (anoc) stack.Push(anoc); // continue
-        //        const megamol::core::view::AbstractView3D::const_ptr_type vi = std::dynamic_pointer_cast<const megamol::core::view::AbstractView3D>(child);
-        //        if (vi) {
-        //            printf("found a view to guess");
-        //        }
-        //    }
-        //}
     }
+    return true;
+}
+
+
+/*
+* imageviewer2::ImageViewer::onBlankMachineSet
+*/
+bool imageviewer2::ImageViewer::onBlankMachineSet(param::ParamSlot &slot) {
+    vislib::TString str(this->blankMachine.Param<param::StringParam>()->Value());
+    vislib::TString::Size startPos = 0;
+    vislib::TString::Size pos = str.Find(_T(";"), startPos);
+    blankMachines.Clear();
+    while (pos != vislib::TString::INVALID_POS) {
+        vislib::TString machine = str.Substring(startPos, pos - startPos);
+        machine.ToLowerCase();
+        this->blankMachines.Append(machine);
+        startPos = pos + 1;
+        pos = str.Find(_T(";"), startPos);
+    }
+    vislib::TString machine = str.Substring(startPos);
+    machine.ToLowerCase();
+    this->blankMachines.Append(machine);
     return true;
 }
