@@ -49,6 +49,7 @@
     <None Include="cmake\ConfigLocal.cmake.in">
       <Filter>Config and Make Files\cmake</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\imageviewer2\imageviewer2.h">
@@ -60,6 +61,12 @@
     <ClInclude Include="src\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\imageviewer2\ImageViewer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\imageviewer2\JpegBitmapCodec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\imageviewer2.cpp">
@@ -69,6 +76,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImageViewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\JpegBitmapCodec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

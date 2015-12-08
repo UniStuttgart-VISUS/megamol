@@ -12,6 +12,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "imageviewer2\ImageViewer.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -39,6 +41,7 @@ namespace {
 
             // register modules here:
 
+            this->module_descriptions.RegisterAutoDescription<megamol::imageviewer2::ImageViewer>();
             //
             // TODO: Register your plugin's modules here
             // like:
