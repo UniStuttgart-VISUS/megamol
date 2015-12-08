@@ -31,7 +31,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating productversion.gen.h"
-				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(SolutionDir)\.&quot;"
+				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -115,7 +115,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating productversion.gen.h"
-				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(SolutionDir)\.&quot;"
+				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -201,7 +201,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating productversion.gen.h"
-				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(SolutionDir)\.&quot;"
+				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -285,7 +285,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Generating productversion.gen.h"
-				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(SolutionDir)\.&quot;"
+				CommandLine="perl &quot;$(InputDir)\VersionInfo.pl&quot; &quot;$(ProjectDir)\.&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"

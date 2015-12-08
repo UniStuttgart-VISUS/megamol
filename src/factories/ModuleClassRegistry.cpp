@@ -21,7 +21,6 @@
 #include "mmcore/cluster/simple/Heartbeat.h"
 #include "mmcore/cluster/simple/Server.h"
 #include "mmcore/cluster/simple/View.h"
-#include "mmcore/misc/ImageViewer.h"
 #include "mmcore/misc/LinesRenderer.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
@@ -94,7 +93,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<cluster::simple::View>();
     instance.RegisterAutoDescription<cluster::mpi::MpiProvider>();
     instance.RegisterAutoDescription<cluster::mpi::View>();
-    instance.RegisterAutoDescription<misc::ImageViewer>();
     instance.RegisterAutoDescription<misc::LinesRenderer>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();

@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <NvApiDir>$(SolutionDir)nvapi\R313-developer\</NvApiDir>
+    <NvApiDir>$(ProjectDir)nvapi\R313-developer\</NvApiDir>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>

@@ -507,9 +507,6 @@
     <ClCompile Include="src\misc\CalloutImageCall.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\misc\ImageViewer.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\misc\LinesDataCall.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
@@ -1131,9 +1128,6 @@
       <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\CalloutImageCall.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\misc\ImageViewer.h">
       <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\LinesDataCall.h">

@@ -137,7 +137,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
       <Message>Generating productversion.gen.h</Message>
-      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -179,7 +179,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
       <Message>Generating productversion.gen.h</Message>
-      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."</Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -224,7 +224,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
       <Message>Generating productversion.gen.h</Message>
-      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."</Command>
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ExpatPath)\include;$(MpiIncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -265,7 +265,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
       <Message>Generating productversion.gen.h</Message>
-      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(SolutionDir)\."</Command>
+      <Command>perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."</Command>
     </PreBuildEvent>
     <Midl>
       <TargetEnvironment>X64</TargetEnvironment>
@@ -454,7 +454,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="src\misc\CalloutImageCall.cpp" />
     <ClCompile Include="src\misc\CallTriMeshData.cpp" />
-    <ClCompile Include="src\misc\ImageViewer.cpp" />
     <ClCompile Include="src\misc\LinesDataCall.cpp" />
     <ClCompile Include="src\misc\LinesRenderer.cpp" />
     <ClCompile Include="src\misc\PngBitmapCodec.cpp" />
@@ -695,7 +694,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\misc\BezierCurvesListDataCall.h" />
     <ClInclude Include="include\mmcore\misc\CalloutImageCall.h" />
     <ClInclude Include="include\mmcore\misc\CallTriMeshData.h" />
-    <ClInclude Include="include\mmcore\misc\ImageViewer.h" />
     <ClInclude Include="include\mmcore\misc\LinesDataCall.h" />
     <ClInclude Include="include\mmcore\misc\LinesRenderer.h" />
     <ClInclude Include="include\mmcore\misc\PngBitmapCodec.h" />
