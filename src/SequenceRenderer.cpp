@@ -14,7 +14,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 #include <math.h>
-#include "mmcore/misc/ImageViewer.h"
+#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "Color.h"
 
