@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -131,7 +131,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -214,7 +214,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -226,7 +226,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -298,7 +298,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(SolutionDir)&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;;&quot;$(MegaMolCorePath)\api&quot;;&quot;$(VisGlutPath)\include&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(VISlibPath)\graphics\include&quot;;&quot;$(VISlibPath)\gl\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MEGAMOLVIEWER_EXPORTS;MEGAMOLVIEWER_USESTATIC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -310,7 +310,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(SolutionDir)&quot;;&quot;$(SolutionDir)\Viewer\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(MegaMolCorePath)/api&quot;;&quot;$(ProjectDir)..&quot;;&quot;$(ProjectDir)..\Viewer\include&quot;"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"

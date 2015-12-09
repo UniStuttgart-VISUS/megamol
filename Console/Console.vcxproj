@@ -115,7 +115,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(ProjectDir)..\Viewer\include;$(ProjectDir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -138,8 +138,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <ProgramDatabaseFile>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
-      <ProfileGuidedDatabase>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ProgramDatabaseFile>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
@@ -155,7 +155,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(ProjectDir)..\Viewer\include;$(ProjectDir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -178,8 +178,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
-      <ProgramDatabaseFile>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
-      <ProfileGuidedDatabase>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ProgramDatabaseFile>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
@@ -191,7 +191,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
 </Command>
     </PreBuildEvent>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(ProjectDir)..\Viewer\include;$(ProjectDir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -214,8 +214,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <ProgramDatabaseFile>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
-      <ProfileGuidedDatabase>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ProgramDatabaseFile>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
@@ -230,7 +230,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <TargetEnvironment>X64</TargetEnvironment>
     </Midl>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(SolutionDir)\Viewer\include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)\include\;$(ProjectDir)..\Viewer\include;$(ProjectDir)..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;HAS_ANTTWEAKBAR;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -253,8 +253,8 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
-      <ProgramDatabaseFile>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
-      <ProfileGuidedDatabase>$(SolutionDir)bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ProgramDatabaseFile>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)..\bin\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>
@@ -295,10 +295,10 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icons.rc">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(MegaMolCorePath)/api;$(SolutionDir)/Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(MegaMolCorePath)/api;$(SolutionDir)/Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(MegaMolCorePath)/api;$(SolutionDir)/Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(MegaMolCorePath)/api;$(SolutionDir)/Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(MegaMolCorePath)/api;$(ProjectDir)../Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(MegaMolCorePath)/api;$(ProjectDir)../Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(MegaMolCorePath)/api;$(ProjectDir)../Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(MegaMolCorePath)/api;$(ProjectDir)../Viewer/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
