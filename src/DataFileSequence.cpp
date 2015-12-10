@@ -25,7 +25,11 @@ using namespace megamol;
  * moldyn::DataFileSequence::DataFileSequence
  */
 stdplugin::datatools::DataFileSequence::DataFileSequence(void) : core::Module(),
-        fileNameTemplateSlot("fileNameTemplate", "The file name template"),
+        fileNameTemplateSlot("fileNameTemplate", "The file name template"
+        " example: D:\\data\\Kohler\\nial\\nialout50_*5{0..599+2}*.crist "
+        " Syntax: *[[DIG][{MIN..MAX[+STEP]}]*] "
+        " Currently MIN, MAX, and STEP work globally!!! "
+        " Currently only ONE '*'-Sequence is allowed!!!"),
         fileNumberMinSlot("fileNumberMin", "Slot for the minimum file number"),
         fileNumberMaxSlot("fileNumberMax", "Slot for the maximum file number"),
         fileNumberStepSlot("fileNumberStep", "Slot for the file number increase step"),
