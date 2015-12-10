@@ -32,7 +32,7 @@ namespace core {
      *          AbstractGetData3DCall(!) or must expose similar call functions
      * @param D The call description of T
      */
-    template<class T, class D = CallAutoDescription<T> >
+    template<class T, class D = factories::CallAutoDescription<T> >
     class AbstractDataWriterBase : public AbstractDataWriter {
     public:
 
