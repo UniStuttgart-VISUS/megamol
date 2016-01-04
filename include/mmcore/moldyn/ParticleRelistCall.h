@@ -8,7 +8,7 @@
 #define MEGAMOLCORE_MOLDYN_PARTICLERELISTCALL_H_INCLUDED
 #pragma once
 
-#include "mmcore/AbstractGetDataCall.h"
+#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include <cstdint>
 
@@ -18,16 +18,26 @@ namespace moldyn {
 
     /**
      * Class for binding site calls and data interfaces.
+     *
+     * @remarks: class derives from "AbstractGetData3DCall" and uses that 
+     *           interface to be compatible with meta-modules, like
+     *           "DataFileSequence". "GetExtent" does not transport meaningful
+     *           data!
      */
-
-    class MEGAMOLCORE_API ParticleRelistCall : public AbstractGetDataCall {
+    class MEGAMOLCORE_API ParticleRelistCall : public AbstractGetData3DCall {
     public:
         typedef uint16_t ListIDType;
 
         static const char *ClassName(void) { return "ParticleRelistCall"; }
         static const char *Description(void) { return "Call to get relist information for MultiParticleDataCall reorganization"; }
-        static unsigned int FunctionCount(void) { return 1; }
-        static const char* FunctionName(unsigned int) { return "get"; }
+        static unsigned int FunctionCount(void) { return 2; }
+        static const char* FunctionName(unsigned int idx) { 
+            switch (idx) {
+                case 0: return "GetData";
+                case 1: return "GetExtent";
+            }
+            return nullptr;
+        }
 
         ParticleRelistCall(void);
         virtual ~ParticleRelistCall(void);

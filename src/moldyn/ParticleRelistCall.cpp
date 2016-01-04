@@ -11,7 +11,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
 
-ParticleRelistCall::ParticleRelistCall(void) : AbstractGetDataCall(), tarListCount(0), srcPartCount(0), srcParticleTarLists(nullptr) {
+ParticleRelistCall::ParticleRelistCall(void) : AbstractGetData3DCall(), tarListCount(0), srcPartCount(0), srcParticleTarLists(nullptr) {
     // intentionally empty
 }
 
