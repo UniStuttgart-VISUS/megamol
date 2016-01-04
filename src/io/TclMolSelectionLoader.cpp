@@ -21,7 +21,8 @@ io::TclMolSelectionLoader::TclMolSelectionLoader() : core::Module(),
         filenameSlot("filename", "Path to the Tcl file to load"),
         hash(0), cnt(0), data() {
 
-    getDataSlot.SetCallback(core::moldyn::ParticleRelistCall::ClassName(), "get", &TclMolSelectionLoader::getDataCallback);
+    getDataSlot.SetCallback(core::moldyn::ParticleRelistCall::ClassName(), "GetData", &TclMolSelectionLoader::getDataCallback);
+    getDataSlot.SetCallback(core::moldyn::ParticleRelistCall::ClassName(), "GetExtent", &TclMolSelectionLoader::getDataCallback);
     MakeSlotAvailable(&getDataSlot);
 
     filenameSlot.SetParameter(new core::param::FilePathParam(""));
@@ -49,6 +50,8 @@ bool io::TclMolSelectionLoader::getDataCallback(core::Call& caller) {
 
     prc->SetDataHash(hash);
     prc->Set(cnt, data.size(), data.data());
+    prc->SetExtent(1, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    prc->SetFrameID(0, true);
     prc->SetUnlocker(nullptr);
 
     return true;
