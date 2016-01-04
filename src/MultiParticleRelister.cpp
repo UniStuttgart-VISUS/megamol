@@ -37,7 +37,7 @@ bool MultiParticleRelister::manipulateData(megamol::core::moldyn::MultiParticleD
                                             // original data will be unlocked through outData
         return true;
     }
-
+    prc->SetFrameID(inData.FrameID(), inData.IsFrameForced());
     if (!(*prc)()) {
         outData = inData; // also transfers the unlocker to 'outData'
         inData.SetUnlocker(nullptr, false); // keep original data locked
