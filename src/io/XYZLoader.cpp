@@ -201,7 +201,7 @@ void io::XYZLoader::assertData(void) {
         if (parts.Count() > (hasEl ? 4 : 3)) {
             GetCoreInstance()->Log().WriteWarn("Line %u has too many tokens; trailing tokens will be ignored", lineNum);
         }
-        std::string el = (hasEl && grpEl) ? parts[0] : "";
+        std::string el = (hasEl && grpEl) ? parts[0].PeekBuffer() : "";
         int o = hasEl ? 1 : 0;
 
         float x = NAN, y = NAN, z = NAN;
