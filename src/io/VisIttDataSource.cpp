@@ -31,7 +31,7 @@ using namespace megamol::stdplugin::moldyn::io;
 // minimum number of frames in the cache (2 for interpolation; 1 for loading)
 #define CACHE_SIZE_MIN 3
 // maximum number of frames in the cache (just a nice number)
-#define CACHE_SIZE_MAX 1000
+#define CACHE_SIZE_MAX 100000
 // factor multiplied to the frame size for estimating the overhead to the pure data.
 #define CACHE_FRAME_FACTOR 1.15f
 
