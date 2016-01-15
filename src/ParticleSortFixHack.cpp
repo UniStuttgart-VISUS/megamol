@@ -84,7 +84,7 @@ namespace {
 
     class prev_part_info {
     public:
-        bool operator<(const prev_part_info& rhs) {
+        bool operator<(const prev_part_info& rhs) const {
             return dist < rhs.dist;
         }
 
