@@ -100,6 +100,7 @@ vec3 calcIllum(vec3 illumPos, vec3 normal, vec3 dir, vec3 srcColor) {
 
 
 void main(void) {
+
     vec4 dest = vec4(0.0);
     vec4 src;
     float w;
@@ -211,7 +212,7 @@ void main(void) {
                 vec3 gradient;
                 // TODO: schrittweite skalieren (halbe voxel-laenge)
                 //float gradOffset = 0.05; // 0.0038
-                float gradOffset = 0.075;
+                float gradOffset = stepSize * 10.0;
                 // 0.015 ==> huebsch.dat
 
                 gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).r
