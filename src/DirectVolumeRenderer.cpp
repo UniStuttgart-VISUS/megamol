@@ -41,13 +41,14 @@ using namespace megamol::stdplugin;
  */
 volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
         volDataCallerSlot ("getData", "Connects the volume rendering with data storage"),
-        //protRendererCallerSlot ("renderProtein", "Connects the volume rendering with a protein renderer"),
+        secRenCallerSlot ("secRen", "Connects the volume rendering with a secondary renderer"),
         volIsoValueParam("volIsoValue", "Isovalue for isosurface rendering"),
         volIsoOpacityParam("volIsoOpacity", "Opacity of isosurface"),
         volClipPlaneFlagParam("volClipPlane", "Enable volume clipping"),
         volClipPlane0NormParam("clipPlane0Norm", "Volume clipping plane 0 normal"),
         volClipPlane0DistParam("clipPlane0Dist", "Volume clipping plane 0 distance"),
         volClipPlaneOpacityParam("clipPlaneOpacity", "Volume clipping plane opacity"),
+        opaqRenWorldScaleParam("opaqRenWorldScale", "World space scaling for opaque renderer"),
         volumeTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue(0.5f), 
@@ -58,9 +59,8 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
     this->MakeSlotAvailable (&this->volDataCallerSlot);
 
     // set renderer caller slot
-    // TODO
-    //this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
-    //this->MakeSlotAvailable(&this->protRendererCallerSlot);
+    this->secRenCallerSlot.SetCompatibleCall<core::view::CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->secRenCallerSlot);
 
     // --- set up parameters for isovalues ---
     this->volIsoValueParam.SetParameter(new core::param::FloatParam(this->isoValue));
@@ -94,7 +94,10 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
     // --- set up parameter for clipping plane opacity ---
     this->volClipPlaneOpacityParam.SetParameter(new core::param::FloatParam(this->volClipPlaneOpacity, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->volClipPlaneOpacityParam);
-    
+
+    // --- set up parameter for opaque renderer world scale factor ---
+    this->opaqRenWorldScaleParam.SetParameter(new core::param::FloatParam(2.0f, 1.0f));
+    this->MakeSlotAvailable(&this->opaqRenWorldScaleParam);    
 }
 
 
@@ -235,7 +238,7 @@ bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
 
     core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
 
-    float scale, xoff, yoff, zoff;
+    float xoff, yoff, zoff;
     vislib::math::Cuboid<float> boundingBox;
     vislib::math::Point<float, 3> bbc;
 
@@ -243,49 +246,40 @@ bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
     if (!(*volume)(core::moldyn::VolumeDataCall::CallForGetExtent)) return false;
     // get bounding box
     boundingBox = volume->BoundingBox();
+    // get the pointer to CallRender3D for the secondary renderer 
+    core::view::CallRender3D *cr3dSec = this->secRenCallerSlot.CallAs<core::view::CallRender3D>();
+    if (cr3dSec) {
+        (*cr3dSec)(1); // GetExtents
+        core::BoundingBoxes &secRenBbox = cr3dSec->AccessBoundingBoxes();
+        boundingBox.Union(secRenBbox.ObjectSpaceBBox());
+    }
 
+    this->unionBBox = boundingBox;
     bbc = boundingBox.CalcCenter();
+    this->bboxCenter = bbc;
     xoff = -bbc.X();
     yoff = -bbc.Y();
     zoff = -bbc.Z();
     if (!vislib::math::IsEqual(boundingBox.LongestEdge(), 0.0f)) { 
-        scale = 2.0f / boundingBox.LongestEdge();
+        this->scale = 2.0f / boundingBox.LongestEdge();
     } else {
-        scale = 1.0f;
+        this->scale = 1.0f;
     }
 
     core::BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(boundingBox);
     bbox.SetWorldSpaceBBox(
-        (boundingBox.Left() + xoff) * scale,
-        (boundingBox.Bottom() + yoff) * scale,
-        (boundingBox.Back() + zoff) * scale,
-        (boundingBox.Right() + xoff) * scale,
-        (boundingBox.Top() + yoff) * scale,
-        (boundingBox.Front() + zoff) * scale);
+        (boundingBox.Left() + xoff) * this->scale,
+        (boundingBox.Bottom() + yoff) * this->scale,
+        (boundingBox.Back() + zoff) * this->scale,
+        (boundingBox.Right() + xoff) * this->scale,
+        (boundingBox.Top() + yoff) * this->scale,
+        (boundingBox.Front() + zoff) * this->scale);
     bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
 
-    // get the pointer to CallRender3D (protein renderer)
-    // TODO
-    //view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
-    //vislib::math::Point<float, 3> protrenbbc;
-    //if (protrencr3d) {
-    //    (*protrencr3d)(1); // GetExtents
-    //    BoundingBoxes &protrenbb = protrencr3d->AccessBoundingBoxes();
-    //    this->protrenScale =  protrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
-    //    //this->protrenTranslate = (protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
-    //    if (mol) {
-    //        this->protrenTranslate.Set(xoff, yoff, zoff);
-    //        this->protrenTranslate *= scale;
-    //    } else {
-    //        this->protrenTranslate = (protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
-    //    }
-    //}
-
     return true;
 }
-
 
 /*
  * DirectVolumeRenderer::Render
@@ -321,32 +315,56 @@ bool volume::DirectVolumeRenderer::Render(core::Call& call) {
 
     // create the fbo, if necessary
     if (!this->opaqueFBO.IsValid()) {
-        this->opaqueFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->opaqueFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, 
+            vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
     // resize the fbo, if necessary
     if (this->opaqueFBO.GetWidth() != this->width || this->opaqueFBO.GetHeight() != this->height) {
-        this->opaqueFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+        this->opaqueFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, 
+            vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
 
-    // =============== Protein Rendering ===============
+  
     // disable the output buffer
     cr3d->DisableOutputBuffer();
-    // start rendering to the FBO for protein rendering
+    // start rendering to the FBO
     this->opaqueFBO.Enable();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // TODO
-    //if (protrencr3d) {
-    //    // setup and call protein renderer
-    //    glPushMatrix();
-    //    glTranslatef(this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
-    //    //glScalef(this->protrenScale, this->protrenScale, this->protrenScale);
-    //    *protrencr3d = *cr3d;
-    //    protrencr3d->SetOutputBuffer(&this->opaqueFBO); // TODO: Handle incoming buffers!
-    //    (*protrencr3d)();
-    //    glPopMatrix();
-    //}
-    // stop rendering to the FBO for protein rendering
+    core::view::CallRender3D *cr3dSec = this->secRenCallerSlot.CallAs<core::view::CallRender3D>();
+    if (cr3dSec) {
+
+        // Determine revert scale factor
+        float scaleRevert;
+        if (!vislib::math::IsEqual(cr3dSec->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+            scaleRevert = this->opaqRenWorldScaleParam.Param<core::param::FloatParam>()->Value()/
+                cr3dSec->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        } else {
+            scaleRevert = 1.0f;
+        }
+        scaleRevert = 1.0f / scaleRevert;
+
+        // Setup and call secondary renderer
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+
+        vislib::math::Vector<float, 3> trans(this->unionBBox.Width(), this->unionBBox.Height(), 
+            this->unionBBox.Depth());
+        trans *= -this->scale*0.5f;
+
+        glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+        glScalef(this->scale, this->scale, this->scale);
+    
+        *cr3dSec = *cr3d;
+
+        // Revert scaling done by external renderer in advance
+        glScalef(scaleRevert, scaleRevert, scaleRevert);
+
+        (*cr3dSec)(0);
+
+        glPopMatrix();
+    }
+    // stop rendering to the FBO
     this->opaqueFBO.Disable();
     // re-enable the output buffer
     cr3d->EnableOutputBuffer();
@@ -408,7 +426,7 @@ bool volume::DirectVolumeRenderer::RenderVolumeData(core::view::CallRender3D *ca
     }
 
     // reenable second renderer
-    //this->opaqueFBO.DrawColourTexture();
+    this->opaqueFBO.DrawColourTexture();
     CHECK_FOR_OGL_ERROR();
     
     unsigned int cpCnt;
@@ -549,6 +567,7 @@ void volume::DirectVolumeRenderer::UpdateVolumeTexture(const core::moldyn::Volum
         volume->VolumeDimension().GetHeight(), 
         volume->VolumeDimension().GetDepth(), 0, GL_LUMINANCE, GL_FLOAT, 
         volume->VoxelMap());
+
     GLint param = GL_LINEAR;
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
@@ -606,15 +625,10 @@ void volume::DirectVolumeRenderer::RenderVolume(vislib::math::Cuboid<float> boun
 
     glUniform4fv(this->volumeShader.ParameterLocation("scaleVol"), 1, this->volScale);
     glUniform4fv(this->volumeShader.ParameterLocation("scaleVolInv"), 1, this->volScaleInv);
-    //glUniform1f(_app->shader->paramsCvolume.stepSize, stepWidth);
     glUniform1f(this->volumeShader.ParameterLocation("stepSize"), stepWidth);
-
-    //glUniform1f(_app->shader->paramsCvolume.alphaCorrection, _app->volStepSize/512.0f);
-    // TODO: what is the correct value for volStepSize??
     glUniform1f(this->volumeShader.ParameterLocation("alphaCorrection"), this->volumeSize/256.0f);
     glUniform1i(this->volumeShader.ParameterLocation("numIterations"), 255);
     glUniform2f(this->volumeShader.ParameterLocation("screenResInv"), 1.0f/ float(this->width), 1.0f/ float(this->height));
-
     // bind depth texture
     glUniform1i(this->volumeShader.ParameterLocation("volumeSampler"), 0);
     glUniform1i(this->volumeShader.ParameterLocation("transferRGBASampler"), 1);
@@ -788,8 +802,6 @@ void volume::DirectVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float> 
     // draw nearest backfaces
     glCullFace(GL_FRONT);
 
-    //enableClipPlanesVolume();
-
     // draw bBox
     this->DrawBoundingBox(boundingbox);
 
@@ -841,8 +853,8 @@ void volume::DirectVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float> 
         this->scale);
 
     glActiveTexture(GL_TEXTURE1);
-    // TODO reenable second renderer
     this->opaqueFBO.BindDepthTexture();
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->volRayStartTex);
 
@@ -862,25 +874,6 @@ void volume::DirectVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float> 
     glDepthFunc(GL_LESS);
     glCullFace(GL_BACK);
     glDisable(GL_CULL_FACE);
-
-    //disableClipPlanes();
-    
-    // DEBUG check texture values
-    /*
-    float *texdata = new float[this->width*this->height];
-    float max = 0.0f;
-    memset(texdata, 0, sizeof(float)*(this->width*this->height));
-    glBindTexture(GL_TEXTURE_2D, this->volRayLengthTex);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_ALPHA, GL_FLOAT, texdata);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    for (unsigned int z = 1; z <= this->width*this->height; ++z) {
-        std::cout << texdata[z-1] << " ";
-        max = max < texdata[z-1] ? texdata[z-1] : max;
-        if (z%this->width == 0)
-            std::cout << std::endl;
-    }
-    delete[] texdata;
-    */
 }
 
 /*

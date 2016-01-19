@@ -19,6 +19,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/math/Vector.h"
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
@@ -163,15 +164,10 @@ namespace volume {
          */
         void drawClippedPolygon(vislib::math::Cuboid<float> boundingbox);
         
-        /**********************************************************************
-         * variables
-         **********************************************************************/
-        
         /** caller slot */
         megamol::core::CallerSlot volDataCallerSlot;
-        /** caller slot */
-        // TODO
-        //megamol::core::CallerSlot protRendererCallerSlot;
+        /** caller slot for additional renderer */
+        megamol::core::CallerSlot secRenCallerSlot;
 
         // camera information
         vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
@@ -179,6 +175,8 @@ namespace volume {
         float scale;
         // translation of the scene
         vislib::math::Vector<float, 3> translation;
+        vislib::math::Vector<float, 3> bboxCenter;
+        vislib::math::Cuboid<float> unionBBox;
         
         // parameters for the volume rendering
         megamol::core::param::ParamSlot volIsoValueParam;
@@ -187,6 +185,8 @@ namespace volume {
         megamol::core::param::ParamSlot volClipPlane0NormParam;
         megamol::core::param::ParamSlot volClipPlane0DistParam;
         megamol::core::param::ParamSlot volClipPlaneOpacityParam;
+        megamol::core::param::ParamSlot opaqRenWorldScaleParam;
+
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;
         vislib::graphics::gl::GLSLShader volRayStartShader;
@@ -223,9 +223,6 @@ namespace volume {
         float isoValue;
         // the opacity of the isosurface
         float volIsoOpacity;
-
-        //vislib::math::Vector<float, 3> protrenTranslate;
-        //float protrenScale;
 
         // flag wether clipping planes are enabled
         bool volClipPlaneFlag;
