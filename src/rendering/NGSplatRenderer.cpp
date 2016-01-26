@@ -44,7 +44,7 @@ NGSplatRenderer::NGSplatRenderer(void) : AbstractSimpleSphereRenderer(),
     // this variant should not need the fence
     //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
     //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
+    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE),
     theShaders(),

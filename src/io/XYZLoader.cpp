@@ -186,6 +186,7 @@ void io::XYZLoader::assertData(void) {
 
     while (reader.ReadLine(l)) {
         lineNum++;
+        l.Replace('\t', ' ');
         vislib::Array<vislib::StringA> parts(vislib::StringTokeniserA::Split(l, ' ', true));
         if (parts.Count() != (hasEl ? 4 : 3)) {
             if (warning) {

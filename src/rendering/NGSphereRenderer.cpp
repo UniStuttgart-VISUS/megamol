@@ -114,7 +114,7 @@ NGSphereRenderer::NGSphereRenderer(void) : AbstractSimpleSphereRenderer(),
     // this variant should not need the fence
     //singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
     //singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_COHERENT_BIT),
-    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
+    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     colType(SimpleSphericalParticles::COLDATA_NONE), vertType(SimpleSphericalParticles::VERTDATA_NONE),
     theShaders() {
@@ -368,6 +368,19 @@ std::shared_ptr<vislib::graphics::gl::GLSLShader> NGSphereRenderer::generateShad
             makeVertexString(parts, vertCode, vertDecl);
             makeColorString(parts, colCode, colDecl);
             std::string decl = "\nstruct SphereParams {\n";
+
+            if (vertStride > vertBytes) {
+                unsigned int rest = (vertStride - vertBytes);
+                if (rest % 4 == 0) {
+                    char heinz[128];
+                    while (rest > 0) {
+                        sprintf(heinz, "    float padding%u;\n", rest);
+                        decl += heinz;
+                        rest -= 4;
+                    }
+                }
+            }
+
             if (parts.GetColourData() < parts.GetVertexData()) {
                 decl += colDecl;
                 decl += vertDecl;
