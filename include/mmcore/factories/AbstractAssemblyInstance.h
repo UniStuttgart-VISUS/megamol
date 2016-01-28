@@ -49,6 +49,56 @@ namespace factories {
          */
         virtual const ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
 
+        /**
+         * Gets the assembly file name
+         *
+         * @return The assembly file name
+         */
+        inline std::string GetAssemblyFileNameA(void) const {
+            std::string s;
+            GetAssemblyFileName(s);
+            return s;
+        }
+
+        /**
+         * Gets the assembly file name
+         *
+         * @return The assembly file name
+         */
+        inline std::wstring GetAssemblyFileNameW(void) const {
+            std::wstring s;
+            GetAssemblyFileName(s);
+            return s;
+        }
+
+        /**
+         * Gets the assembly file name
+         *
+         * @param out_filename String variable to receive the file name
+         */
+        void GetAssemblyFileName(std::string& out_filename) const;
+
+        /**
+         * Gets the assembly file name
+         *
+         * @param out_filename String variable to receive the file name
+         */
+        void GetAssemblyFileName(std::wstring& out_filename) const;
+
+        /**
+         * Sets the assembly file name
+         *
+         * @param filename The assembly file name
+         */
+        void SetAssemblyFileName(const std::string& filename);
+
+        /**
+         * Sets the assembly file name
+         *
+         * @param filename The assembly file name
+         */
+        void SetAssemblyFileName(const std::wstring& filename);
+
     protected:
 
         /** Ctor. */
@@ -70,6 +120,9 @@ namespace factories {
 
         /** deleted assignment operatior */
         AbstractAssemblyInstance& operator=(const AbstractAssemblyInstance& rhs) = delete;
+
+        /** The assembly file name in utf8 */
+        char* filename;
 
     };
 

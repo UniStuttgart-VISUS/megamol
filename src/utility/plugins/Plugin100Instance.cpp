@@ -77,6 +77,7 @@ PluginManager::collection_type Plugin100Instance::ContinueLoad(
     // (except for unexpected errors)
 
     Plugin100Instance *lp100i = new Plugin100Instance(plgName.PeekBuffer(), plgDesc.PeekBuffer(), lib);
+    lp100i->SetAssemblyFileName(path);
     PluginManager::collection_type rv;
     rv.push_back(PluginManager::plugin_ptr_type(lp100i));
 
