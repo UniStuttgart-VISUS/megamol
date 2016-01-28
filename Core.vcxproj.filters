@@ -930,6 +930,9 @@
     <ClCompile Include="src\moldyn\ParticleRelistCall.cpp">
       <Filter>moldyn\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\job\PluginsStateFileGeneratorJob.cpp">
+      <Filter>job\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1573,6 +1576,9 @@
     </ClInclude>
     <ClInclude Include="include\mmcore\moldyn\ParticleRelistCall.h">
       <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\job\PluginsStateFileGeneratorJob.h">
+      <Filter>job\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

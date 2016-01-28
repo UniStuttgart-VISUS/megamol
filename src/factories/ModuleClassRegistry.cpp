@@ -70,6 +70,7 @@
 #include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/moldyn/AddClusterColours.h"
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
+#include "job/PluginsStateFileGeneratorJob.h"
 
 
 using namespace megamol::core;
@@ -145,5 +146,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::ViewDirect3D>();
     instance.RegisterAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
+    instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
 
 }

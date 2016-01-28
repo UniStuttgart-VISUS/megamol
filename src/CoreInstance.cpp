@@ -32,6 +32,7 @@
 #include "mmcore/utility/ProjectParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "mmcore/job/JobThread.h"
+#include "job/PluginsStateFileGeneratorJob.h"
 #include "vislib/net/AbstractSimpleMessage.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Log.h"
@@ -91,6 +92,9 @@ megamol::core::CoreInstance::PreInit::PreInit() : cfgFileSet(false),
 
 /*****************************************************************************/
 
+#ifdef _WIN32
+extern HMODULE mmCoreModuleHandle;
+#endif
 
 /*
  * megamol::core::CoreInstance::ViewJobHandleDalloc
@@ -125,6 +129,14 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
     this->plugins = new utility::plugins::PluginManager();
+
+#ifdef _WIN32
+    WCHAR dll_path[MAX_PATH] = { 0 };
+    GetModuleFileNameW(mmCoreModuleHandle, dll_path, _countof(dll_path));
+    this->SetAssemblyFileName(dll_path);
+#else
+    this->SetAssemblyFileName("Core <TODO: Fix implementation>");
+#endif
 
     this->namespaceRoot = std::make_shared<RootModuleNamespace>();
 
@@ -451,6 +463,12 @@ void megamol::core::CoreInstance::Initialise(void) {
     jd = std::make_shared<JobDescription>("DEBUGjob");
     jd->AddModule(this->GetModuleDescriptionManager().Find("JobThread"), "ctrl");
     jd->SetJobModuleID("ctrl");
+    this->builtinJobDescs.Register(jd);
+
+    // Generate PluginsStateFile for MegaMol Configurator:
+    jd = std::make_shared<JobDescription>("GenStateFile");
+    jd->AddModule(this->GetModuleDescriptionManager().Find("PluginsStateFileGeneratorJob"), "gen");
+    jd->SetJobModuleID("gen");
     this->builtinJobDescs.Register(jd);
 
     //////////////////////////////////////////////////////////////////////

@@ -449,6 +449,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\job\AbstractThreadedJob.cpp" />
     <ClCompile Include="src\job\DataWriterJob.cpp" />
     <ClCompile Include="src\job\JobThread.cpp" />
+    <ClCompile Include="src\job\PluginsStateFileGeneratorJob.cpp" />
     <ClCompile Include="src\MegaMolCore.cpp" />
     <ClCompile Include="src\MegaMolCoreConfiguratorBackdoor.cpp" />
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
@@ -844,6 +845,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\vismol2\Mol2Data.h" />
     <ClInclude Include="src\factories\CallClassRegistry.h" />
     <ClInclude Include="src\factories\ModuleClassRegistry.h" />
+    <ClInclude Include="src\job\PluginsStateFileGeneratorJob.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\utility\plugins\Plugin100Instance.h" />
     <ClInclude Include="src\utility\plugins\PluginManager.h" />

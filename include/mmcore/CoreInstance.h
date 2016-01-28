@@ -486,6 +486,16 @@ namespace plugins {
          */
         bool WriteStateToXML(const char *outFilename);
 
+        /**
+         * Access to the plugin manager
+         *
+         * @return The plugin manager
+         */
+        inline const utility::plugins::PluginManager& Plugins() const {
+            return *plugins;
+        }
+
+
     private:
 
         /**
