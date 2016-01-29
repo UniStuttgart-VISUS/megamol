@@ -132,12 +132,6 @@
     <Filter Include="cluster\simple\Header Files">
       <UniqueIdentifier>{6fd88a7c-ba35-4101-a29a-8a7e5de0b598}</UniqueIdentifier>
     </Filter>
-    <Filter Include="vismol2">
-      <UniqueIdentifier>{e91e3a62-93b8-403c-bd06-d97d1d7f590b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vismol2\Header Files">
-      <UniqueIdentifier>{35afb7e9-1bca-487f-b836-19e1a19183bb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="cluster\mpi\Source Files">
       <UniqueIdentifier>{de740d2f-82b5-4b3c-af06-10d608298507}</UniqueIdentifier>
     </Filter>
@@ -164,9 +158,6 @@
     </Filter>
     <Filter Include="special\Source Files">
       <UniqueIdentifier>{9d7dfa2b-d3e8-4a3a-9b67-bf8288b972d5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="vismol2\Source Files">
-      <UniqueIdentifier>{2df01365-f486-4089-aa34-85c0194b6eeb}</UniqueIdentifier>
     </Filter>
     <Filter Include="view\special\Source Files">
       <UniqueIdentifier>{4cee824c-b24d-4850-b5ed-0ab34ffe0c6f}</UniqueIdentifier>
@@ -861,18 +852,6 @@
     <ClCompile Include="src\view\special\ScreenShooter.cpp">
       <Filter>view\special\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vismol2\Mol20DataCall.cpp">
-      <Filter>vismol2\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\vismol2\Mol20DataSource.cpp">
-      <Filter>vismol2\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\vismol2\Mol20Renderer.cpp">
-      <Filter>vismol2\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\vismol2\Mol2Data.cpp">
-      <Filter>vismol2\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1489,18 +1468,6 @@
     </ClInclude>
     <ClInclude Include="include\mmcore\view\special\DemoRenderer2D.h">
       <Filter>view\special\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\vismol2\Mol20DataSource.h">
-      <Filter>vismol2\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\vismol2\Mol20Renderer.h">
-      <Filter>vismol2\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\vismol2\Mol2Data.h">
-      <Filter>vismol2\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\vismol2\Mol20DataCall.h">
-      <Filter>vismol2\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
       <Filter>Header Files</Filter>

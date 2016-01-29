@@ -65,8 +65,6 @@
 #include "mmcore/view/LinkedView3D.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
-//#include "mmcore/vismol2/Mol20DataSource.h"
-//#include "mmcore/vismol2/Mol20Renderer.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/moldyn/AddClusterColours.h"
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
@@ -136,8 +134,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::SharedCameraParameters>();
     instance.RegisterAutoDescription<view::LinkedView3D>();
-    //instance.RegisterAutoDescription<vismol2::Mol20Renderer>();
-    //instance.RegisterAutoDescription<vismol2::Mol20DataSource>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();
