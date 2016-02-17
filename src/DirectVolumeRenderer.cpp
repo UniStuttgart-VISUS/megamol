@@ -49,7 +49,10 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
         volClipPlane0DistParam("clipPlane0Dist", "Volume clipping plane 0 distance"),
         volClipPlaneOpacityParam("clipPlaneOpacity", "Volume clipping plane opacity"),
         opaqRenWorldScaleParam("opaqRenWorldScale", "World space scaling for opaque renderer"),
-        toggleVolBBoxParam("toggleVolBBox", "..."),        
+        toggleVolBBoxParam("toggleVolBBox", "..."),
+        togglePbcXParam("togglePbcX", "..."), 
+        togglePbcYParam("togglePbcY", "..."), 
+        togglePbcZParam("togglePbcZ", "..."),
         volumeTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue(0.5f), 
@@ -103,6 +106,14 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
     // Set up parameter for volume clipping
     this->toggleVolBBoxParam.SetParameter(new core::param::BoolParam(false));
     this->MakeSlotAvailable(&this->toggleVolBBoxParam);
+
+
+    this->togglePbcXParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->togglePbcXParam);
+    this->togglePbcYParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->togglePbcYParam);
+    this->togglePbcZParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->togglePbcZParam);    
 }
 
 
@@ -448,11 +459,18 @@ bool volume::DirectVolumeRenderer::RenderVolumeData(core::view::CallRender3D *ca
     // --- update & render the volume                           ---
     // ------------------------------------------------------------
     if ((static_cast<int>(volume->FrameID()) != this->currentFrameId) ||
-            (this->hashValVol != volume->DataHash())) 
+            (this->hashValVol != volume->DataHash()) ||
+            this->togglePbcXParam.IsDirty() ||
+            this->togglePbcYParam.IsDirty() ||
+            this->togglePbcZParam.IsDirty()) 
     {
         this->currentFrameId = static_cast<int>(volume->FrameID());
         this->UpdateVolumeTexture(volume);
         CHECK_FOR_OGL_ERROR();
+
+        this->togglePbcXParam.ResetDirty();
+        this->togglePbcYParam.ResetDirty();
+        this->togglePbcZParam.ResetDirty();
     }
 
     // reenable second renderer
@@ -600,11 +618,35 @@ void volume::DirectVolumeRenderer::UpdateVolumeTexture(const core::moldyn::Volum
     GLint param = GL_LINEAR;
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
-    GLint mode = GL_CLAMP_TO_EDGE;
-    //GLint mode = GL_REPEAT;
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
+//    GLint mode = GL_CLAMP_TO_EDGE;
+//    GLint mode = GL_REPEAT;
+
+    if (this->togglePbcXParam.Param<core::param::BoolParam>()->Value())
+    {
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    }
+    else
+    {
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    }
+        
+    if (this->togglePbcYParam.Param<core::param::BoolParam>()->Value())
+    {
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+    else
+    {
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
+
+    if (this->togglePbcZParam.Param<core::param::BoolParam>()->Value())
+    {
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    }
+    else
+    {
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    }    
     glBindTexture(GL_TEXTURE_3D, 0);
     CHECK_FOR_OGL_ERROR();
 
