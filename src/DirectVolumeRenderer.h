@@ -232,6 +232,9 @@ namespace volume {
         ViewSlicing slices;
         // the opacity of the clipping plane
         float volClipPlaneOpacity;
+
+        // Hash value of the volume data
+        size_t hashValVol;
     
     };
 

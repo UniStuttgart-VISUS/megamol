@@ -52,7 +52,7 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
         volumeTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue(0.5f), 
-        volIsoOpacity(0.4f), volClipPlaneFlag(false), volClipPlaneOpacity(0.4f)
+        volIsoOpacity(0.4f), volClipPlaneFlag(false), volClipPlaneOpacity(0.4f), hashValVol(-1)
 {
     // set caller slot for different data calls
     this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VolumeDataCallDescription>();
@@ -260,21 +260,22 @@ bool volume::DirectVolumeRenderer::GetExtents(core::Call& call) {
     xoff = -bbc.X();
     yoff = -bbc.Y();
     zoff = -bbc.Z();
-    if (!vislib::math::IsEqual(boundingBox.LongestEdge(), 0.0f)) { 
-        this->scale = 2.0f / boundingBox.LongestEdge();
+    if (!vislib::math::IsEqual(this->unionBBox.LongestEdge(), 0.0f)) { 
+        this->scale = 2.0f / this->unionBBox.LongestEdge();
     } else {
         this->scale = 1.0f;
     }
 
     core::BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
-    bbox.SetObjectSpaceBBox(boundingBox);
-    bbox.SetWorldSpaceBBox(
-        (boundingBox.Left() + xoff) * this->scale,
-        (boundingBox.Bottom() + yoff) * this->scale,
-        (boundingBox.Back() + zoff) * this->scale,
-        (boundingBox.Right() + xoff) * this->scale,
-        (boundingBox.Top() + yoff) * this->scale,
-        (boundingBox.Front() + zoff) * this->scale);
+    bbox.SetObjectSpaceBBox(this->unionBBox);
+    bbox.MakeScaledWorld(this->scale);
+//    bbox.SetWorldSpaceBBox(
+//        (boundingBox.Left() + xoff) * this->scale,
+//        (boundingBox.Bottom() + yoff) * this->scale,
+//        (boundingBox.Back() + zoff) * this->scale,
+//        (boundingBox.Right() + xoff) * this->scale,
+//        (boundingBox.Top() + yoff) * this->scale,
+//        (boundingBox.Front() + zoff) * this->scale);
     bbox.SetObjectSpaceClipBox(bbox.ObjectSpaceBBox());
     bbox.SetWorldSpaceClipBox(bbox.WorldSpaceBBox());
 
@@ -350,9 +351,11 @@ bool volume::DirectVolumeRenderer::Render(core::Call& call) {
 
         vislib::math::Vector<float, 3> trans(this->unionBBox.Width(), this->unionBBox.Height(), 
             this->unionBBox.Depth());
-        trans *= -this->scale*0.5f;
+//        trans *= -this->scale*0.5f;
+        glTranslatef(cr3dSec->AccessBoundingBoxes().ObjectSpaceBBox().Left(), 
+                cr3dSec->AccessBoundingBoxes().ObjectSpaceBBox().Bottom(), 
+                cr3dSec->AccessBoundingBoxes().ObjectSpaceBBox().Back());
 
-        glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
         glScalef(this->scale, this->scale, this->scale);
     
         *cr3dSec = *cr3d;
@@ -412,14 +415,20 @@ bool volume::DirectVolumeRenderer::RenderVolumeData(core::view::CallRender3D *ca
         volume->BoundingBox().Width(),volume->BoundingBox().Height()),
         volume->BoundingBox().Depth());
     vislib::math::Vector<float, 3> trans(volume->BoundingBox().GetSize().PeekDimension());
-    trans *= -this->scale*0.5f;
-    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+    
+//    trans *= -this->scale*0.5f;
+//    glTranslatef(trans.GetX(), trans.GetY(), trans.GetZ());
+        glTranslatef(volume->BoundingBox().Left()*this->scale, 
+                volume->BoundingBox().Bottom()*this->scale, 
+                volume->BoundingBox().Back()*this->scale);
 
     // ------------------------------------------------------------
     // --- Volume Rendering                                     ---
     // --- update & render the volume                           ---
     // ------------------------------------------------------------
-    if (static_cast<int>(volume->FrameID()) != this->currentFrameId) {
+    if ((static_cast<int>(volume->FrameID()) != this->currentFrameId) ||
+            (this->hashValVol != volume->DataHash())) 
+    {
         this->currentFrameId = static_cast<int>(volume->FrameID());
         this->UpdateVolumeTexture(volume);
         CHECK_FOR_OGL_ERROR();
@@ -446,7 +455,6 @@ bool volume::DirectVolumeRenderer::RenderVolumeData(core::view::CallRender3D *ca
     }
 
     glDisable (GL_VERTEX_PROGRAM_POINT_SIZE);
-
     glDisable (GL_DEPTH_TEST);
     
     glPopMatrix();
@@ -571,8 +579,8 @@ void volume::DirectVolumeRenderer::UpdateVolumeTexture(const core::moldyn::Volum
     GLint param = GL_LINEAR;
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
-    //GLint mode = GL_CLAMP_TO_EDGE;
-    GLint mode = GL_REPEAT;
+    GLint mode = GL_CLAMP_TO_EDGE;
+    //GLint mode = GL_REPEAT;
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, mode);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, mode);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, mode);
@@ -604,7 +612,16 @@ void volume::DirectVolumeRenderer::UpdateVolumeTexture(const core::moldyn::Volum
  * draw the volume
  */
 void volume::DirectVolumeRenderer::RenderVolume(vislib::math::Cuboid<float> boundingbox) {
+
+//    printf("bbox %f %f %f -- %f %f %f\n", 
+//            boundingbox.Left(),
+//            boundingbox.Bottom(),
+//            boundingbox.Back(),
+//            boundingbox.Right(),
+//            boundingbox.Top(),
+//            boundingbox.Front());
     const float stepWidth = 1.0f/ (2.0f * float(this->volumeSize));
+
     glDisable(GL_BLEND);
 
     GLint prevFBO;
@@ -883,6 +900,7 @@ void volume::DirectVolumeRenderer::DrawBoundingBox(vislib::math::Cuboid<float> b
 
     vislib::math::Vector<float, 3> position(boundingbox.GetSize().PeekDimension());
     position *= this->scale;
+
 
     glBegin(GL_QUADS);
     {
