@@ -186,6 +186,7 @@ namespace volume {
         megamol::core::param::ParamSlot volClipPlane0DistParam;
         megamol::core::param::ParamSlot volClipPlaneOpacityParam;
         megamol::core::param::ParamSlot opaqRenWorldScaleParam;
+        megamol::core::param::ParamSlot toggleVolBBoxParam;        
 
         // shader for volume rendering
         vislib::graphics::gl::GLSLShader volumeShader;

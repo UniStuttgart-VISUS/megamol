@@ -49,6 +49,7 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
         volClipPlane0DistParam("clipPlane0Dist", "Volume clipping plane 0 distance"),
         volClipPlaneOpacityParam("clipPlaneOpacity", "Volume clipping plane opacity"),
         opaqRenWorldScaleParam("opaqRenWorldScale", "World space scaling for opaque renderer"),
+        toggleVolBBoxParam("toggleVolBBox", "..."),        
         volumeTex(0), currentFrameId(-1), volFBO(0), width(0), height(0), volRayTexWidth(0), 
         volRayTexHeight(0), volRayStartTex(0), volRayLengthTex(0), volRayDistTex(0),
         renderIsometric(true), meanDensityValue(0.0f), isoValue(0.5f), 
@@ -98,6 +99,10 @@ volume::DirectVolumeRenderer::DirectVolumeRenderer (void) : Renderer3DModule (),
     // --- set up parameter for opaque renderer world scale factor ---
     this->opaqRenWorldScaleParam.SetParameter(new core::param::FloatParam(2.0f, 1.0f));
     this->MakeSlotAvailable(&this->opaqRenWorldScaleParam);    
+
+    // Set up parameter for volume clipping
+    this->toggleVolBBoxParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->toggleVolBBoxParam);
 }
 
 
@@ -324,7 +329,6 @@ bool volume::DirectVolumeRenderer::Render(core::Call& call) {
         this->opaqueFBO.Create(this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, 
             vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
-
   
     // disable the output buffer
     cr3d->DisableOutputBuffer();
@@ -391,6 +395,23 @@ bool volume::DirectVolumeRenderer::Render(core::Call& call) {
     // unlock the current frame
     if (volume) {
         volume->Unlock();
+    }
+
+    // Render volume bbox
+    if (this->toggleVolBBoxParam.Param<core::param::BoolParam>()->Value())
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColor3f(1,1,1);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_BLEND);
+        //glEnable(GL_DEPTH_TEST);
+        glLineWidth(1);
+        glPushMatrix();
+        glTranslatef(volume->BoundingBox().Left()*this->scale, 
+                volume->BoundingBox().Bottom()*this->scale, 
+                volume->BoundingBox().Back()*this->scale);
+        this->DrawBoundingBox(volume->BoundingBox());
+        glPopMatrix();
     }
     
     return retval;
