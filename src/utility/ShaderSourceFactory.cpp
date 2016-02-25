@@ -63,7 +63,7 @@ utility::ShaderSourceFactory::~ShaderSourceFactory(void) {
 /*
  * utility::ShaderSourceFactory::LoadBTF
  */
-bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name) {
+bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name, bool forceReload) {
     using vislib::sys::Log;
     if (name.Find("::") != vislib::StringA::INVALID_POS) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -71,10 +71,17 @@ bool utility::ShaderSourceFactory::LoadBTF(const vislib::StringA & name) {
             name.PeekBuffer());
         return false;
     }
-    if (!this->root.FindChild(name).IsNull()) {
-        //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 750,
-        //    "BTF \"%s\" already loaded.", name.PeekBuffer());
-        return true;
+    if (forceReload) {
+        vislib::SmartPtr<utility::BTFParser::BTFElement> ptr = this->root.FindChild(name);
+        if (!ptr.IsNull()) {
+            this->root.Children().Remove(ptr);
+        }
+    } else {
+        if (!this->root.FindChild(name).IsNull()) {
+            //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 750,
+            //    "BTF \"%s\" already loaded.", name.PeekBuffer());
+            return true;
+        }
     }
 
     vislib::StringW filename;

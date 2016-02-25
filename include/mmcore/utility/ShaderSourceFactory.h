@@ -64,11 +64,12 @@ namespace utility {
          * Loads a btf based on its root-namespace name.
          *
          * @param name The root-namespace name of the btf file to load.
+         * @param forceReload Force the reloading of the btf file.
          *
          * @return 'true' on success, 'false' on failure (an error message
          *         will be logged).
          */
-        bool LoadBTF(const vislib::StringA & name);
+        bool LoadBTF(const vislib::StringA & name, bool forceReload = false);
 
         /**
          * Makes the requested shader snippet.
