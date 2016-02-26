@@ -21,11 +21,11 @@ View3DSpaceMouse::View3DSpaceMouse(void) : view::View3D(),
     cameraControlModeSlot("cameraControlMode", "Sets the way in whcih to space mouse manipulates the camera")
 {
 
-    this->translateSpeed3DSlot << new param::FloatParam(10.0f, 1.0f, 100.0f);
+    this->translateSpeed3DSlot << new param::FloatParam(10.0f, 1.0f);
     this->translateSpeed3DSlot.SetUpdateCallback(&View3DSpaceMouse::update3DSpeed);
     this->MakeSlotAvailable(&this->translateSpeed3DSlot);
 
-    this->rotateSpeed3DSlot << new param::FloatParam(10.0f, 1.0f, 100.0f);
+    this->rotateSpeed3DSlot << new param::FloatParam(10.0f, 1.0f);
     this->rotateSpeed3DSlot.SetUpdateCallback(&View3DSpaceMouse::update3DSpeed);
     this->MakeSlotAvailable(&this->rotateSpeed3DSlot);
 
