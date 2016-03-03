@@ -376,12 +376,12 @@ namespace math {
         Point<T, 3> apex = this->GetApex();             // Cache apex.
         Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
-        up.ScaleToLength(this->values[IDX_TOP]);
         Vector<T, 3> down = up;                         // Compute down.
-        down.ScaleToLength(this->values[IDX_BOTTOM]);
         Vector<T, 3> right = normal.Cross(up);          // Compute right.
-        right.ScaleToLength(this->values[IDX_RIGHT]);
         Vector<T, 3> left = right;                      // Compute left.
+        up.ScaleToLength(this->values[IDX_TOP]);
+        down.ScaleToLength(this->values[IDX_BOTTOM]);
+        right.ScaleToLength(this->values[IDX_RIGHT]);
         left.ScaleToLength(this->values[IDX_LEFT]);
 
         // Use intercept theorem to extend from near to far plane.
@@ -393,13 +393,13 @@ namespace math {
         Point<T, 3> center = apex + normal;
 
         outPoints.SetCount(4);
-        outPoints[Super::IDX_LEFT_BOTTOM_POINT] = center
+        outPoints[Super::IDX_LEFT_BOTTOM_POINT] = apex
             + scale * (normal + left + down);
-        outPoints[Super::IDX_RIGHT_BOTTOM_POINT] = center
+        outPoints[Super::IDX_RIGHT_BOTTOM_POINT] = apex
             + scale * (normal + right + down);
-        outPoints[Super::IDX_RIGHT_TOP_POINT] = center 
+        outPoints[Super::IDX_RIGHT_TOP_POINT] = apex
             + scale * (normal + right + up);
-        outPoints[Super::IDX_LEFT_TOP_POINT] = center 
+        outPoints[Super::IDX_LEFT_TOP_POINT] = apex
             + scale * (normal + left + up);
     }
 
@@ -415,12 +415,12 @@ namespace math {
         Point<T, 3> apex = this->GetApex();             // Cache apex.
         Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
-        up.ScaleToLength(this->values[IDX_TOP]);
         Vector<T, 3> down = up;                         // Compute down.
-        down.ScaleToLength(this->values[IDX_BOTTOM]);
         Vector<T, 3> right = normal.Cross(up);          // Compute right.
-        right.ScaleToLength(this->values[IDX_RIGHT]);
         Vector<T, 3> left = right;                      // Compute left.
+        up.ScaleToLength(this->values[IDX_TOP]);
+        down.ScaleToLength(this->values[IDX_BOTTOM]);
+        right.ScaleToLength(this->values[IDX_RIGHT]);
         left.ScaleToLength(this->values[IDX_LEFT]);
 
         ASSERT(normal.IsNormalised());
@@ -680,7 +680,7 @@ namespace math {
         Point<T, 3> apex = this->GetApex();             // Cache apex.
         Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
-        Vector<T, 3> right = up.Cross(normal);          // Compute right.
+        Vector<T, 3> right = normal.Cross(up);          // Compute right.
         right.Normalise();
         Point<T, 3> planePoint;                         // Point on plane.
         Vector<T, 3> planeNormal;                       // Normal of plane.
