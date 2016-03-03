@@ -396,7 +396,7 @@ namespace math {
         outPoints[Super::IDX_LEFT_BOTTOM_POINT] = center
             + scale * (normal + left + down);
         outPoints[Super::IDX_RIGHT_BOTTOM_POINT] = center
-            + scale * (normal + right + up);
+            + scale * (normal + right + down);
         outPoints[Super::IDX_RIGHT_TOP_POINT] = center 
             + scale * (normal + right + up);
         outPoints[Super::IDX_LEFT_TOP_POINT] = center 
@@ -428,7 +428,7 @@ namespace math {
 
         outPoints.SetCount(4);
         outPoints[Super::IDX_LEFT_BOTTOM_POINT] = center + left + down;
-        outPoints[Super::IDX_RIGHT_BOTTOM_POINT] = center + right + up;
+        outPoints[Super::IDX_RIGHT_BOTTOM_POINT] = center + right + down;
         outPoints[Super::IDX_RIGHT_TOP_POINT] = center + right + up;
         outPoints[Super::IDX_LEFT_TOP_POINT] = center + left + up;
     }
