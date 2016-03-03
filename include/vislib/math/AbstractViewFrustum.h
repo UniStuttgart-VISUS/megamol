@@ -31,7 +31,8 @@ namespace math {
      * This is the abstract superclass for shallow storage and deep storage
      * rectangular eye-space view frustums. This frustum class is intended to 
      * represent a view frustum and has accessors using the respective naming 
-     * conventions.
+     * conventions. A view frustum has an apex that is always the origin of the
+     * coordinate system.
      */
     template<class T, class S> 
     class AbstractViewFrustum : public AbstractPyramidalFrustum<T> {
@@ -344,25 +345,24 @@ namespace math {
     template<class T, class S> 
     void AbstractViewFrustum<T, S>::GetBottomBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        VLSTACKTRACE("AbstractViewFrustum::GetBottomBasePoints", __FILE__, 
-            __LINE__);
+        // Compute bottom plane using intercept theorem.
+        T scale = (this->offsets[IDX_NEAR] != static_cast<T>(0))
+            ? this->offsets[IDX_FAR] / this->offsets[IDX_NEAR]
+            : static_cast<T>(0);
+        T l = this->offsets[IDX_LEFT] * scale;
+        T r = this->offsets[IDX_RIGHT] * scale;
+        T t = this->offsets[IDX_TOP] * scale;
+        T b = this->offsets[IDX_BOTTOM] * scale;
+
         outPoints.Clear();
         outPoints.SetCount(4);
-        outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(
-            this->offsets[IDX_LEFT], 
-            this->offsets[IDX_BOTTOM], 
+        outPoints[Super::IDX_LEFT_BOTTOM_POINT].Set(l, b,
             this->offsets[IDX_FAR]);
-        outPoints[Super::IDX_RIGHT_BOTTOM_POINT].Set(
-            this->offsets[IDX_RIGHT], 
-            this->offsets[IDX_BOTTOM], 
+        outPoints[Super::IDX_RIGHT_BOTTOM_POINT].Set(r, b,
             this->offsets[IDX_FAR]);
-        outPoints[Super::IDX_RIGHT_TOP_POINT].Set(
-            this->offsets[IDX_RIGHT],
-            this->offsets[IDX_TOP], 
+        outPoints[Super::IDX_RIGHT_TOP_POINT].Set(r, t,
             this->offsets[IDX_FAR]);
-        outPoints[Super::IDX_LEFT_TOP_POINT].Set(
-            this->offsets[IDX_LEFT], 
-            this->offsets[IDX_TOP], 
+        outPoints[Super::IDX_LEFT_TOP_POINT].Set(l, t,
             this->offsets[IDX_FAR]);
     }
 
