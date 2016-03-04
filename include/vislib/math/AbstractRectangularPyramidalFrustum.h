@@ -354,9 +354,9 @@ namespace math {
         for (SIZE_T i = 0; i < 6; i++) {
             T d = planes[i].Distance(point);
 
-            if (onIsIn && (d > static_cast<T>(0))) {
+            if (onIsIn && (d < static_cast<T>(0))) {
                 return false;
-            } else if (!onIsIn && (d >= static_cast<T>(0))) {
+            } else if (!onIsIn && (d <= static_cast<T>(0))) {
                 return false;
             }
         }
@@ -695,8 +695,8 @@ namespace math {
         Point<T, 3> farIntersect = apex + this->values[IDX_FAR] * normal;
         
         /* Near and far plane (top and bottom base of the frustum) are easy. */
-        this->cachePlanes[IDX_NEAR].Set(nearIntersect, -normal);
-        this->cachePlanes[IDX_FAR].Set(farIntersect, normal);
+        this->cachePlanes[IDX_NEAR].Set(nearIntersect, normal);
+        this->cachePlanes[IDX_FAR].Set(farIntersect, -normal);
 
         // Use bottom/left point on near plane for bottom and left plane.
         planePoint = nearIntersect + (this->values[IDX_LEFT] * right) 
