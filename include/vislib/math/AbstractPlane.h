@@ -176,6 +176,11 @@ namespace math {
         //template<class Tp, class Sp1, class Sp2>
         //IntersectionCount Intersect(const Line3D<Tp, Sp1>& line, AbstractPoint3D<T, Sp2>& outWhere) const;
 
+        template<class Tp, class Sp1, class Sp2>
+        IntersectionCount Intersect(AbstractPoint<T, 3, Sp1>& outWhere,
+            const AbstractPoint<Tp, 3, Sp2>& p1,
+            const AbstractPoint<Tp, 3, Sp2>& p2) const;
+
         /**
          * Answer the normal of the plane. The vector returned is guaranteed to
          * be normalised.
@@ -506,6 +511,37 @@ namespace math {
     //        return ONE;
     //    }
     //}
+
+
+    /*
+     * AbstractPlane<T, S>::Intersect
+     */
+    template<class T, class S>
+    template<class Tp, class Sp1, class Sp2>
+    typename AbstractPlane<T, S>::IntersectionCount AbstractPlane<T, S>::Intersect(
+            AbstractPoint<T, 3, Sp1>& outWhere,
+            const AbstractPoint<Tp, 3, Sp2>& p1,
+            const AbstractPoint<Tp, 3, Sp2>& p2) const {
+        T dp1 = this->parameters[IDX_A] * p1.X()
+            + this->parameters[IDX_B] * p1.Y()
+            + this->parameters[IDX_C] * p1.Z();
+        T dp2 = this->parameters[IDX_A] * p2.X()
+            + this->parameters[IDX_B] * p2.Y()
+            + this->parameters[IDX_C] * p2.Z();
+        T d = this->parameters[IDX_D];
+        
+        if (IsEqual(dp1, -d) && IsEqual(dp2, -d)) {
+            outWhere = p1;
+            return ALL;
+
+        } else if (IsEqual(dp1, dp2)) {
+            return NONE;
+
+        } else {
+            outWhere = p1 + (((dp1 + d) / (dp1 - dp2)) * (p2 - p1));
+            return ONE;
+        }
+    }
 
 
     /*

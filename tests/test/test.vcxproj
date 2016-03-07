@@ -246,6 +246,7 @@
     <ClCompile Include="testmultisz.cpp" />
     <ClCompile Include="testnamedpipe.cpp" />
     <ClCompile Include="testnetinfo.cpp" />
+    <ClCompile Include="testplane.cpp" />
     <ClCompile Include="testpoint.cpp" />
     <ClCompile Include="testpointers.cpp" />
     <ClCompile Include="testpolynom.cpp" />
@@ -299,6 +300,7 @@
     <ClInclude Include="testmultisz.h" />
     <ClInclude Include="testnamedpipe.h" />
     <ClInclude Include="testnetinfo.h" />
+    <ClInclude Include="testplane.h" />
     <ClInclude Include="testpoint.h" />
     <ClInclude Include="testpointers.h" />
     <ClInclude Include="testpolynom.h" />

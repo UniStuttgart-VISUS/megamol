@@ -126,6 +126,14 @@ namespace math {
         }
 
         /**
+         * Tests whether the line segment between 'pointA' and 'pointB'
+         * intersects the frustum.
+         */
+        template<class Tp, class Sp>
+        bool IntersectsSegment(const AbstractPoint<Tp, 3, Sp>& pointA,
+            const AbstractPoint<Tp, 3, Sp>& pointB, const bool onIsIn = true);
+
+        /**
          * TODO: Documentation
          */
         void Set(const T left, const T right, 
@@ -435,9 +443,45 @@ namespace math {
 
 
     /*
+     * AbstractRectangularPyramidalFrustum<T, S>::IntersectsSegment
+     */
+    template<class T, class S>
+    template<class Tp, class Sp>
+    bool AbstractRectangularPyramidalFrustum<T, S>::IntersectsSegment(
+            const AbstractPoint<Tp, 3, Sp>& pointA,
+            const AbstractPoint<Tp, 3, Sp>& pointB,
+            const bool onIsIn) {
+        int cntOK = 0;
+        Point<T, 3> intersection;
+        Plane<T> *planes = this->fillPlaneCache();
+        ASSERT(planes != NULL);
+
+        for (SIZE_T i = 0; i < 6; ++i) {
+            auto res = planes[i].Intersect(intersection, pointA, pointB);
+            if ((res == Plane<T>::ALL) && onIsIn) {
+                return true;
+
+            } else if (res == Plane<T>::ONE) {
+                cntOK = 0;
+                for (SIZE_T j = 0; j < 6; ++j) {
+                    auto hs = planes[j].Halfspace(intersection);
+                    if ((onIsIn && (hs == Plane<T>::IN_PLANE))
+                            || (hs == Plane<T>::POSITIVE_HALFSPACE)) {
+                        ++cntOK;
+                    }
+                }
+                return (cntOK == 6);
+            }
+        }
+
+        return false;
+    }
+
+
+    /*
      * AbstractRectangularPyramidalFrustum<T, S>::SetBaseNormal
      */
-    template<class T, class S> 
+    template<class T, class S>
     void AbstractRectangularPyramidalFrustum<T, S>::SetBaseNormal(
             const T x, const T y, const T z) {
         VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseNormal",

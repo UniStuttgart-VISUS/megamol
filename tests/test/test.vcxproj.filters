@@ -168,6 +168,9 @@
     <ClCompile Include="testReaderWriterLock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="testplane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -321,6 +324,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testReaderWriterLock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="testplane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

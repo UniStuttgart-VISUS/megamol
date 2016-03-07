@@ -61,6 +61,7 @@
 #include "testBitmapImage.h"
 #include "testReaderWriterLock.h"
 #include "testmultisz.h"
+#include "testplane.h"
 #ifdef _WIN32
 #include "testwinreg.h"
 #endif /* _WIN32 */
@@ -117,6 +118,7 @@ VislibTest tests[] = {
     {_T("Bezier"), ::TestBezier, "Tests vislib::math::BezierCurve"},
     {_T("Triangle"), ::TestTriangle, "Tests vislib::math::Triangle and ShallowTriangle"},
     {_T("CovarianceMatrix"), ::TestCovarianceMatrix, "Tests CalcCovarianceMatrix"},
+    { _T("Plane"), ::TestPlane, "Tests *Plane*" },
     // net
     {_T("ClusterDiscovery"), ::TestClusterDiscoveryService, "Tests vislib::net::ClusterDiscoveryService and utility classes"},
     {_T("ClusterDiscovery2"), ::TestClusterDiscoveryObserver, "Tests vislib::net::ClusterDiscoveryService in observer mode"},
