@@ -82,6 +82,32 @@ namespace math {
         template<class Tp, class Sp>
         Plane(const AbstractPlane<Tp, Sp>& rhs);
 
+		/**
+		 * Create plane from three different and not colinear points.
+		 *
+		 * @param point1 An arbitrary point in the plane.
+		 * @param point2 An arbitrary point in the plane.
+		 * @param point2 An arbitrary point in the plane.
+		 */
+		template<class Tp, class Sp>
+		inline Plane(const AbstractPoint<Tp, 3, Sp>& point1,
+			const AbstractPoint<Tp, 3, Sp>& point2,
+			const AbstractPoint<Tp, 3, Sp>& point3) {
+
+			auto v1 = point2 - point1;
+			auto v2 = point3 - point1;
+			auto cross = v1.Cross(v2);
+			if (cross.IsNull())
+				throw IllegalParamException("point1", __FILE__, __LINE__);
+			T d = -(cross.Dot(point1));
+			this->parameters[IDX_A] = cross.X();
+			this->parameters[IDX_B] = cross.Y();
+			this->parameters[IDX_C] = cross.Z();
+			this->parameters[IDX_D] = d;
+
+			this->Normalise();
+		}
+
         /** Dtor. */
         ~Plane(void);
 
