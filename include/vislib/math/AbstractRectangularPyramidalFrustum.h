@@ -89,8 +89,6 @@ namespace math {
          * TODO: Documentation
          */
         inline const Plane<T>& GetBottomBase(void) const {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBottomBase",
-                __FILE__, __LINE__);
             // Note: This is NOT a bug: The bottom base of the frustum is the
             // far clipping plane as seen from the apex.
             return this->fillPlaneCache(false)[IDX_FAR];
@@ -100,12 +98,52 @@ namespace math {
          * TODO: Documentation
          */
         inline const Plane<T>& GetTopBase(void) const {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetTopBase",
-                __FILE__, __LINE__);
             // Note: This is NOT a bug: The bottom base of the frustum is the
             // near clipping plane as seen from the apex.
             return this->fillPlaneCache(false)[IDX_NEAR];
         }
+
+		/**
+		* TODO: Documentation
+		*/
+		inline const Plane<T>& GetLeftPlane(void) const {
+			return this->fillPlaneCache(false)[IDX_LEFT];
+		}
+
+		/**
+		* TODO: Documentation
+		*/
+		inline const Plane<T>& GetRightPlane(void) const {
+			return this->fillPlaneCache(false)[IDX_RIGHT];
+		}
+
+		/**
+		* TODO: Documentation
+		*/
+		inline const Plane<T>& GetTopPlane(void) const {
+			return this->fillPlaneCache(false)[IDX_TOP];
+		}
+
+		/**
+		* TODO: Documentation
+		*/
+		inline const Plane<T>& GetBottomPlane(void) const {
+			return this->fillPlaneCache(false)[IDX_BOTTOM];
+		}
+
+		/**
+		* TODO: Documentation
+		*/
+		inline const Plane<T>& GetNearPlane(void) const {
+			return this->fillPlaneCache(false)[IDX_NEAR];
+		}
+
+		/**
+		* TODO: Documentation
+		*/
+		inline const Plane<T>& GetFarPlane(void) const {
+			return this->fillPlaneCache(false)[IDX_FAR];
+		}
 
         /**
          * Answer the points that form the top base of the frustum.

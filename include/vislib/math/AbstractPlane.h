@@ -471,10 +471,10 @@ namespace math {
         if (IsEqual(dist, static_cast<T>(0))) {
             return IN_PLANE;
 
-        } else if (dist > static_cast<T>(0)) {
+        } else if (dist < static_cast<T>(0)) {
             return NEGATIVE_HALFSPACE;
 
-        } else if (dist < static_cast<T>(0)) {
+        } else if (dist > static_cast<T>(0)) {
             return POSITIVE_HALFSPACE;
     
         } else {
