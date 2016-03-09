@@ -57,7 +57,7 @@ namespace math {
          */
         template<class Tp, class Sp>
         bool Contains(const AbstractPoint<Tp, 3, Sp>& point, 
-            const bool onIsIn = true);
+            const bool onIsIn = true) const;
 
         /**
          * TODO: Documentation
@@ -397,7 +397,7 @@ namespace math {
     template<class T, class S> 
     template<class Tp, class Sp>
     bool AbstractRectangularPyramidalFrustum<T, S>::Contains(
-            const AbstractPoint<Tp, 3, Sp>& point, const bool onIsIn) {
+            const AbstractPoint<Tp, 3, Sp>& point, const bool onIsIn) const {
         VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Contains",
             __FILE__, __LINE__);
         Plane<T> *planes = this->fillPlaneCache();
