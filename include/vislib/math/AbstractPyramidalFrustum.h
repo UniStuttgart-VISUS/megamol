@@ -201,32 +201,20 @@ namespace math {
         this->GetBottomBasePoints(bottom);
         this->GetTopBasePoints(top);
 
-        *oit++ = PairType(top[FrustumType::IDX_LEFT_BOTTOM_POINT],
-            top[FrustumType::IDX_LEFT_TOP_POINT]);
-        *oit++ = PairType(top[FrustumType::IDX_LEFT_TOP_POINT],
-            top[FrustumType::IDX_RIGHT_TOP_POINT]);
-        *oit++ = PairType(top[FrustumType::IDX_RIGHT_TOP_POINT],
-            top[FrustumType::IDX_RIGHT_BOTTOM_POINT]);
-        *oit++ = PairType(top[FrustumType::IDX_RIGHT_BOTTOM_POINT],
-            top[FrustumType::IDX_LEFT_BOTTOM_POINT]);
+        *oit++ = PairType(top[IDX_LEFT_BOTTOM_POINT], top[IDX_LEFT_TOP_POINT]);
+        *oit++ = PairType(top[IDX_LEFT_TOP_POINT], top[IDX_RIGHT_TOP_POINT]);
+        *oit++ = PairType(top[IDX_RIGHT_TOP_POINT], top[IDX_RIGHT_BOTTOM_POINT]);
+        *oit++ = PairType(top[IDX_RIGHT_BOTTOM_POINT], top[IDX_LEFT_BOTTOM_POINT]);
 
-        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_BOTTOM_POINT],
-            bottom[FrustumType::IDX_LEFT_TOP_POINT]);
-        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_TOP_POINT],
-            bottom[FrustumType::IDX_RIGHT_TOP_POINT]);
-        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_TOP_POINT],
-            bottom[FrustumType::IDX_RIGHT_BOTTOM_POINT]);
-        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_BOTTOM_POINT],
-            bottom[FrustumType::IDX_LEFT_BOTTOM_POINT]);
+        *oit++ = PairType(bottom[IDX_LEFT_BOTTOM_POINT], bottom[IDX_LEFT_TOP_POINT]);
+        *oit++ = PairType(bottom[IDX_LEFT_TOP_POINT], bottom[IDX_RIGHT_TOP_POINT]);
+        *oit++ = PairType(bottom[IDX_RIGHT_TOP_POINT], bottom[IDX_RIGHT_BOTTOM_POINT]);
+        *oit++ = PairType(bottom[IDX_RIGHT_BOTTOM_POINT], bottom[IDX_LEFT_BOTTOM_POINT]);
 
-        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_BOTTOM_POINT],
-            top[FrustumType::IDX_LEFT_BOTTOM_POINT]);
-        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_BOTTOM_POINT],
-            top[FrustumType::IDX_RIGHT_BOTTOM_POINT]);
-        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_TOP_POINT],
-            top[FrustumType::IDX_LEFT_TOP_POINT]);
-        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_TOP_POINT],
-            top[FrustumType::IDX_RIGHT_TOP_POINT]);
+        *oit++ = PairType(bottom[IDX_LEFT_BOTTOM_POINT], top[IDX_LEFT_BOTTOM_POINT]);
+        *oit++ = PairType(bottom[IDX_RIGHT_BOTTOM_POINT], top[IDX_RIGHT_BOTTOM_POINT]);
+        *oit++ = PairType(bottom[IDX_LEFT_TOP_POINT], top[IDX_LEFT_TOP_POINT]);
+        *oit++ = PairType(bottom[IDX_RIGHT_TOP_POINT], top[IDX_RIGHT_TOP_POINT]);
     }
 
 
