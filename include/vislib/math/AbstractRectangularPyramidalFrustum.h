@@ -15,10 +15,11 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/math/AbstractPyramidalFrustum.h"
-#include "vislib/math/AbstractViewFrustum.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/memutils.h"
+
+#include "vislib/math/AbstractPyramidalFrustum.h"
+#include "vislib/math/AbstractViewFrustum.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowVector.h"
@@ -62,8 +63,6 @@ namespace math {
          * TODO: Documentation
          */
         inline Point<T, 3> GetApex(void) const {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetApex", 
-                __FILE__, __LINE__);
             return Point<T, 3>(this->values + IDX_APEX_X);
         }
 
@@ -80,9 +79,14 @@ namespace math {
          * TODO: Documentation
          */
         inline Vector<T, 3> GetBaseNormal(void) const {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBaseNormal",
-                __FILE__, __LINE__);
             return Vector<T, 3>(this->values + IDX_NORMAL_X);
+        }
+
+        /**
+         * TODO: Documentation
+         */
+        inline Vector<T, 3> GetBaseUp(void) const {
+            return Vector<T, 3>(this->values + IDX_UP_X);
         }
 
         /**
@@ -97,58 +101,72 @@ namespace math {
         /**
          * TODO: Documentation
          */
+        inline const Plane<T>& GetBottomPlane(void) const {
+            return this->fillPlaneCache(false)[IDX_BOTTOM];
+        }
+
+        /**
+         * Answer six clip planes with inward facing normals that can be used to
+         * clip geometry against this frustum. The planes are ordered
+         * left, front (top base), right, back (bottom base), top and bottom.
+         *
+         * @tparam I An output iterator for Plane<T>.
+         *
+         * @param oit An output iterator which can recieve at least six elements of
+         *            type Plane<T>.
+         */
+        template<class I> inline void GetClipPlanes(I oit) const {
+            *oit++ = this->GetLeftPlane();
+            *oit++ = this->GetNearPlane();
+            *oit++ = this->GetRightPlane();
+            *oit++ = this->GetFarPlane();
+            *oit++ = this->GetTopPlane();
+            *oit++ = this->GetBottomPlane();
+        }
+
+        /**
+         * TODO: Documentation
+         */
+        inline const Plane<T>& GetFarPlane(void) const {
+            return this->fillPlaneCache(false)[IDX_FAR];
+        }
+
+        /**
+         * TODO: Documentation
+         */
+        inline const Plane<T>& GetLeftPlane(void) const {
+            return this->fillPlaneCache(false)[IDX_LEFT];
+        }
+
+        /**
+         * TODO: Documentation
+         */
+        inline const Plane<T>& GetNearPlane(void) const {
+            return this->fillPlaneCache(false)[IDX_NEAR];
+        }
+
+        /**
+         * TODO: Documentation
+         */
+        inline const Plane<T>& GetRightPlane(void) const {
+            return this->fillPlaneCache(false)[IDX_RIGHT];
+        }
+
+        /**
+         * Answer the plane that is on top of the frustum next to the apex.
+         *
+         * @return The plane on top of the frustum.
+         */
         inline const Plane<T>& GetTopBase(void) const {
             // Note: This is NOT a bug: The bottom base of the frustum is the
             // near clipping plane as seen from the apex.
             return this->fillPlaneCache(false)[IDX_NEAR];
         }
 
-		/**
-		* TODO: Documentation
-		*/
-		inline const Plane<T>& GetLeftPlane(void) const {
-			return this->fillPlaneCache(false)[IDX_LEFT];
-		}
-
-		/**
-		* TODO: Documentation
-		*/
-		inline const Plane<T>& GetRightPlane(void) const {
-			return this->fillPlaneCache(false)[IDX_RIGHT];
-		}
-
-		/**
-		* TODO: Documentation
-		*/
-		inline const Plane<T>& GetTopPlane(void) const {
-			return this->fillPlaneCache(false)[IDX_TOP];
-		}
-
-		/**
-		* TODO: Documentation
-		*/
-		inline const Plane<T>& GetBottomPlane(void) const {
-			return this->fillPlaneCache(false)[IDX_BOTTOM];
-		}
-
-		/**
-		* TODO: Documentation
-		*/
-		inline const Plane<T>& GetNearPlane(void) const {
-			return this->fillPlaneCache(false)[IDX_NEAR];
-		}
-
-		/**
-		* TODO: Documentation
-		*/
-		inline const Plane<T>& GetFarPlane(void) const {
-			return this->fillPlaneCache(false)[IDX_FAR];
-		}
-
         /**
          * Answer the points that form the top base of the frustum.
          *
-         * @param outPoints An array that will receive the points. All existing 
+         * @param outPoints An array that will receive the points. All existing
          *                  content will be replaced.
          */
         virtual void GetTopBasePoints(
@@ -157,10 +175,8 @@ namespace math {
         /**
          * TODO: Documentation
          */
-        inline Vector<T, 3> GetBaseUp(void) const {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBaseUp", 
-                __FILE__, __LINE__);
-            return Vector<T, 3>(this->values + IDX_UP_X);
+        inline const Plane<T>& GetTopPlane(void) const {
+            return this->fillPlaneCache(false)[IDX_TOP];
         }
 
         /**
@@ -199,8 +215,6 @@ namespace math {
                 const AbstractVector<T, 3, Sp3>& baseUp,
                 const T width, const T height,
                 const T zNear, const T zFar) {
-           VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Set", 
-                __FILE__, __LINE__);
            this->Set(-width, width, -height, height, zNear, zFar, 
                apex.X(), apex.Y(), apex.Z(),
                baseNormal.X(), baseNormal.Y(), baseNormal.Z(),
@@ -212,8 +226,6 @@ namespace math {
          */
         template<class Sp>
         inline void SetApex(const AbstractPoint<T, 3, Sp>& apex) {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetApex", 
-                __FILE__, __LINE__);
             this->SetApex(apex.X(), apex.Y(), apex.Z());
         }
 
@@ -221,8 +233,6 @@ namespace math {
          * TODO: Documentation
          */
         inline void SetApex(const T x, const T y, const T z) {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetApex", 
-                __FILE__, __LINE__);
             this->values[IDX_APEX_X] = x;
             this->values[IDX_APEX_Y] = y;
             this->values[IDX_APEX_Z] = z;
@@ -244,8 +254,6 @@ namespace math {
          */
         template<class Sp>
         inline void SetBaseNormal(const AbstractVector<T, 3, Sp>& normal) {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseNormal",
-                __FILE__, __LINE__);
             this->SetBaseNormal(normal.X(), normal.Y(), normal.Z());
         }
 
@@ -264,8 +272,6 @@ namespace math {
          */
         template<class Sp>
         inline void SetBaseUp(const AbstractVector<T, 3, Sp>& up) {
-            VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseUp",
-                __FILE__, __LINE__);
             this->SetBaseUp(up.X(), up.Y(), up.Z());
         }
 

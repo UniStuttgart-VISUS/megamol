@@ -17,10 +17,12 @@
 
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/math/mathfunctions.h"
-#include "vislib/math/Point.h"
+#include "vislib/Pair.h"
 #include "vislib/StackTrace.h"
 #include "vislib/types.h"
+
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Point.h"
 
 #include "vislib/MissingImplementationException.h"
 
@@ -75,6 +77,42 @@ namespace math {
          */
         virtual void GetBottomBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const = 0;
+
+        /**
+         * Answer the eight border points of the frustum. The points are ordered
+         * as returned by GetTopBasePoints() followed by GetBottomBasePoints(),
+         * ie the left/bottom/front point is at IDX_LEFT_BOTTOM_POINT and the
+         * left/bottom/back point is at (4 + IDX_LEFT_BOTTOM_POINT).
+         *
+         * @tparam I An output iterator for Point<T, 3>.
+         *
+         * @param oit An output iterator which can recieve at least eight 
+         *            elements of type Point<T, 3>.
+         */
+        template<class I> inline void GetPoints(I oit) const {
+            Array<Point<T, 3>> points(4);
+            this->GetTopBasePoints(points);
+            *oit++ = points[0];
+            *oit++ = points[1];
+            *oit++ = points[2];
+            *oit++ = points[3];
+            points.Clear();
+            this->GetBottomBasePoints(points);
+            *oit++ = points[0];
+            *oit++ = points[1];
+            *oit++ = points[2];
+            *oit++ = points[3];
+        }
+
+        /**
+         * Answer the line segments between the points forming the frustum.
+         *
+         * @tparam I An output iterator for Pair<Point<T, 3>, Point<T, 3>>.
+         *
+         * @param oit An output iterator which can recieve at least twelve
+         *            pairs of points.
+         */
+        template<class I> void GetLineSegments(I oit) const;
 
         /**
          * Answer the points that form the top base of the frustum.
@@ -146,10 +184,49 @@ namespace math {
     /*
      * vislib::math::AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum
      */
-    template<class T> 
-    AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum(void) {
-        VLSTACKTRACE("AbstractPyramidalFrustum::AbstractPyramidalFrustum", 
-            __FILE__, __LINE__);
+    template<class T>
+    AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum(void) { }
+
+
+    /*
+     * AbstractPyramidalFrustum<T>::GetLineSegments
+     */
+    template<class T>
+    template<class I>
+    void AbstractPyramidalFrustum<T>::GetLineSegments(I oit) const {
+        typedef Pair<Point<T, 3>, Point<T, 3>> PairType;
+        Array<Point<T, 3>> bottom(4);
+        Array<Point<T, 3>> top(4);
+
+        this->GetBottomBasePoints(bottom);
+        this->GetTopBasePoints(top);
+
+        *oit++ = PairType(top[FrustumType::IDX_LEFT_BOTTOM_POINT],
+            top[FrustumType::IDX_LEFT_TOP_POINT]);
+        *oit++ = PairType(top[FrustumType::IDX_LEFT_TOP_POINT],
+            top[FrustumType::IDX_RIGHT_TOP_POINT]);
+        *oit++ = PairType(top[FrustumType::IDX_RIGHT_TOP_POINT],
+            top[FrustumType::IDX_RIGHT_BOTTOM_POINT]);
+        *oit++ = PairType(top[FrustumType::IDX_RIGHT_BOTTOM_POINT],
+            top[FrustumType::IDX_LEFT_BOTTOM_POINT]);
+
+        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_BOTTOM_POINT],
+            bottom[FrustumType::IDX_LEFT_TOP_POINT]);
+        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_TOP_POINT],
+            bottom[FrustumType::IDX_RIGHT_TOP_POINT]);
+        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_TOP_POINT],
+            bottom[FrustumType::IDX_RIGHT_BOTTOM_POINT]);
+        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_BOTTOM_POINT],
+            bottom[FrustumType::IDX_LEFT_BOTTOM_POINT]);
+
+        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_BOTTOM_POINT],
+            top[FrustumType::IDX_LEFT_BOTTOM_POINT]);
+        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_BOTTOM_POINT],
+            top[FrustumType::IDX_RIGHT_BOTTOM_POINT]);
+        *oit++ = PairType(bottom[FrustumType::IDX_LEFT_TOP_POINT],
+            top[FrustumType::IDX_LEFT_TOP_POINT]);
+        *oit++ = PairType(bottom[FrustumType::IDX_RIGHT_TOP_POINT],
+            top[FrustumType::IDX_RIGHT_TOP_POINT]);
     }
 
 
@@ -160,9 +237,6 @@ namespace math {
     bool AbstractPyramidalFrustum<T>::checkSanity(
             const vislib::Array<Point<T, 3> >& bottomBasePoints,
             const vislib::Array<Point<T, 3> >& topBasePoints) const {
-        VLSTACKTRACE("AbstractPyramidalFrustum::checkSanity", __FILE__, 
-            __LINE__);
-
         /* 
          * Bottom and top base must be at least triangles and have the same 
          * shape. 

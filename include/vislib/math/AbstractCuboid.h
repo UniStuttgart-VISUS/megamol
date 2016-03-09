@@ -15,10 +15,12 @@
 
 
 #include "vislib/assert.h"
-#include "vislib/math/Dimension.h"
-#include "vislib/math/Point.h"
 #include "vislib/types.h"
+
+#include "vislib/math/Dimension.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/math/Plane.h"
+#include "vislib/math/Point.h"
 
 
 namespace vislib {
@@ -141,6 +143,19 @@ namespace math {
         inline const T& GetBack(void) const {
             return this->bounds[IDX_BACK];
         }
+
+        /**
+         * Answer six clip planes with inward facing normals that can be used to
+         * clip geometry against this cuboid. The planes are ordered
+         * left, front, right, back, top and bottom.
+         *
+         * @tparam I An output iterator for Plane<T>.
+         *
+         * @param oit An output iterator which can recieve at least six elements of
+         *            type Plane<T>.
+         */
+        template<class I> void GetClipPlanes(I oit) const;
+
         /**
          * Answer the y-coordinate of the left/bottom/back point.
          *
@@ -209,6 +224,37 @@ namespace math {
         }
 
         /**
+         * Answer the line segments between the points forming the cuboid.
+         *
+         * @tparam I An output iterator for Pair<Point<T, 3>, Point<T, 3>>.
+         *
+         * @param oit An output iterator which can recieve at least twelve
+         *            pairs of points.
+         */
+        template<class I> void GetLineSegments(I oit) const;
+
+        /**
+         * Answer the eight border points of the frustum. The points are ordered
+         * left/bottom/front, right/bottom/front, right/top/front, left/top/front,
+         * left/bottom/back, right/bottom/back, right/top/back, left/top/back.
+         *
+         * @tparam I An output iterator for Point<T, 3>.
+         *
+         * @param oit An output iterator which can recieve at least eight
+         *            elements of type Point<T, 3>.
+         */
+        template<class I> inline void GetPoints(I oit) const {
+            *oit++ = this->GetLeftBottomFront();
+            *oit++ = this->GetRightBottomFront();
+            *oit++ = this->GetRightTopFront();
+            *oit++ = this->GetLeftTopFront();
+            *oit++ = this->GetLeftBottomBack();
+            *oit++ = this->GetRightBottomBack();
+            *oit++ = this->GetRightTopBack();
+            *oit++ = this->GetLeftTopBack();
+        }
+
+        /**
          * Increases the size of the cuboid to include the given point. 
          * Implicitly calls 'EnforcePositiveSize'.
          *
@@ -236,7 +282,7 @@ namespace math {
          * @return The height of the cuboid.
          */
         inline T Height(void) const {
-            return (this->bounds[IDX_TOP] > this->bounds[IDX_BOTTOM]) 
+            return (this->bounds[IDX_TOP] > this->bounds[IDX_BOTTOM])
                 ? (this->bounds[IDX_TOP] - this->bounds[IDX_BOTTOM])
                 : (this->bounds[IDX_BOTTOM]- this->bounds[IDX_TOP]);
         }
@@ -266,7 +312,7 @@ namespace math {
          * @return The right/bottom/back point of the cuboid.
          */
         inline Point<T, 3> GetRightBottomBack(void) const {
-            return Point<T, 3>(this->bounds[IDX_RIGHT], 
+            return Point<T, 3>(this->bounds[IDX_RIGHT],
                 this->bounds[IDX_BOTTOM], this->bounds[IDX_BACK]);
         }
 
@@ -276,7 +322,7 @@ namespace math {
          * @return The right/bottom/front point of the cuboid.
          */
         inline Point<T, 3> GetRightBottomFront(void) const {
-            return Point<T, 3>(this->bounds[IDX_RIGHT], 
+            return Point<T, 3>(this->bounds[IDX_RIGHT],
                 this->bounds[IDX_BOTTOM], this->bounds[IDX_FRONT]);
         }
 
@@ -286,7 +332,7 @@ namespace math {
          * @return The right/top/back point.
          */
         inline Point<T, 3> GetRightTopBack(void) const {
-            return Point<T, 3>(this->bounds[IDX_RIGHT], 
+            return Point<T, 3>(this->bounds[IDX_RIGHT],
                 this->bounds[IDX_TOP], this->bounds[IDX_BACK]);
         }
 
@@ -296,7 +342,7 @@ namespace math {
          * @return The right/top/front point.
          */
         inline Point<T, 3> GetRightTopFront(void) const {
-           return Point<T, 3>(this->bounds[IDX_RIGHT], 
+           return Point<T, 3>(this->bounds[IDX_RIGHT],
                 this->bounds[IDX_TOP], this->bounds[IDX_FRONT]);
         }
 
@@ -853,7 +899,7 @@ namespace math {
     /*
      * vislib::math::AbstractCuboid<T>::EnforcePositiveSize
      */
-    template<class T, class S> 
+    template<class T, class S>
     void vislib::math::AbstractCuboid<T, S>::EnforcePositiveSize(void) {
         if (this->bounds[IDX_BOTTOM] > this->bounds[IDX_TOP]) {
             Swap(this->bounds[IDX_TOP], this->bounds[IDX_BOTTOM]);
@@ -866,6 +912,62 @@ namespace math {
         if (this->bounds[IDX_BACK] > this->bounds[IDX_FRONT]) {
             Swap(this->bounds[IDX_FRONT], this->bounds[IDX_BACK]);
         }
+    }
+
+
+    /*
+     * AbstractCuboid<T, S>::GetClipPlanes
+     */
+    template<class T, class S>
+    template<class I> void AbstractCuboid<T, S>::GetClipPlanes(I oit) const {
+        auto ltf = this->GetLeftTopFront();
+        auto rtf = this->GetRightTopFront();
+        auto lbf = this->GetLeftBottomFront();
+        auto rbf = this->GetRightBottomFront();
+        auto ltb = this->GetLeftTopBack();
+        auto rtb = this->GetRightTopBack();
+        auto lbb = this->GetLeftBottomBack();
+        auto rbb = this->GetRightBottomBack();
+
+        *oit++ = Plane<T>(ltf, lbf, ltb);   // left
+        *oit++ = Plane<T>(ltb, lbb, rtb);   // front
+        *oit++ = Plane<T>(rtf, rtb, rbf);   // right
+        *oit++ = Plane<T>(ltf, rtf, lbf);   // back
+        *oit++ = Plane<T>(ltf, ltb, rtf);   // top
+        *oit++ = Plane<T>(lbf, rbf, lbb);   // bottom
+    }
+
+
+    /*
+     * AbstractCuboid<T, S>::GetLineSegments
+     */
+    template<class T, class S>
+    template<class I>
+    void AbstractCuboid<T, S>::GetLineSegments(I oit) const {
+        typedef Pair<Point<T, 3>, Point<T, 3>> PairType;
+        auto ltf = this->GetLeftTopFront();
+        auto rtf = this->GetRightTopFront();
+        auto lbf = this->GetLeftBottomFront();
+        auto rbf = this->GetRightBottomFront();
+        auto ltb = this->GetLeftTopBack();
+        auto rtb = this->GetRightTopBack();
+        auto lbb = this->GetLeftBottomBack();
+        auto rbb = this->GetRightBottomBack();
+
+        *oit++ = PairType(lbf, ltf);
+        *oit++ = PairType(ltf, rtf);
+        *oit++ = PairType(rtf, rbf);
+        *oit++ = PairType(rbf, lbf);
+
+        *oit++ = PairType(lbb, ltb);
+        *oit++ = PairType(ltb, rtb);
+        *oit++ = PairType(rtb, rbb);
+        *oit++ = PairType(rbb, lbb);
+
+        *oit++ = PairType(lbb, lbf);
+        *oit++ = PairType(rbb, rbf);
+        *oit++ = PairType(ltb, ltf);
+        *oit++ = PairType(rtb, rtf);
     }
 
 
