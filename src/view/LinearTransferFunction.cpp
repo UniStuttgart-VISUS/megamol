@@ -327,7 +327,7 @@ bool view::LinearTransferFunction::storeTFPressed(param::ParamSlot& param) {
         Module::child_list_type::iterator ano_end = this->ChildList_End();
         for (Module::child_list_type::iterator ano_i = this->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
             std::shared_ptr<param::ParamSlot> p = std::dynamic_pointer_cast<param::ParamSlot>(*ano_i);
-            if (p) {
+            if (p && !p->Name().Equals("filepath")) {
                 writeParameterFileParameter(*p, outFile);
             }
         }
