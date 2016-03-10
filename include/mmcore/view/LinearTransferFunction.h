@@ -16,6 +16,8 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "vislib/sys/BufferedFile.h"
+
 
 
 namespace megamol {
@@ -107,6 +109,28 @@ namespace view {
          */
         bool requestTF(Call& call);
 
+        /**
+         * Callback called when the TFload button is pressed.
+         *
+         * @param slot The slot causing it
+         *
+         * @return 'true' on success
+         */
+        bool loadTFPressed(param::ParamSlot& slot);
+
+        /**
+         * Callback called when the TFstore button is pressed.
+         *
+         * @param slot The slot causing it
+         *
+         * @return 'true' on success
+         */
+        bool storeTFPressed(param::ParamSlot& slot);
+
+        /** convenience for serializing a ParamSlot */
+        void writeParameterFileParameter(param::ParamSlot& param,
+            vislib::sys::BufferedFile &outFile);
+
         /** The callee slot called on request of a transfer function */
         CalleeSlot getTFSlot;
 
@@ -118,6 +142,15 @@ namespace view {
 
         /** The slot defining the texture size to generate */
         param::ParamSlot texSizeSlot;
+
+        /** The slot containing a path for (de)serializing the current TF */
+        param::ParamSlot pathSlot;
+
+        /** Button for loading the TF from the pathSlot file */
+        param::ParamSlot loadTFSlot;
+
+        /** Button for storing the TF in the pathSlot file */
+        param::ParamSlot storeTFSlot;
 
         /** The OpenGL texture object id */
         unsigned int texID;

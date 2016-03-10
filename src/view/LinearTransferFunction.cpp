@@ -15,10 +15,14 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/sysfunctions.h"
+#include "vislib/sys/Log.h"
 
 
 namespace megamol {
@@ -58,6 +62,9 @@ view::LinearTransferFunction::LinearTransferFunction(void) : Module(),
         minColSlot("mincolour", "The colour for the minimum value"),
         maxColSlot("maxcolour", "The colour for the maximum value"),
         texSizeSlot("texsize", "The size of the texture to generate"),
+        pathSlot("filepath", "path for serializing the TF"),
+        loadTFSlot("loadTF", "trigger loading from file"),
+        storeTFSlot("storeTF", "trigger saving to file"),
         texID(0), texSize(1),
         texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB) {
 
@@ -99,6 +106,16 @@ view::LinearTransferFunction::LinearTransferFunction(void) : Module(),
     this->texSizeSlot << new param::IntParam(128, 2, 1024);
     this->MakeSlotAvailable(&this->texSizeSlot);
 
+    this->pathSlot << new param::FilePathParam("");
+    this->MakeSlotAvailable(&this->pathSlot);
+
+    this->loadTFSlot << new param::ButtonParam();
+    this->loadTFSlot.SetUpdateCallback(&LinearTransferFunction::loadTFPressed);
+    this->MakeSlotAvailable(&this->loadTFSlot);
+
+    this->storeTFSlot << new param::ButtonParam();
+    this->storeTFSlot.SetUpdateCallback(&LinearTransferFunction::storeTFPressed);
+    this->MakeSlotAvailable(&this->storeTFSlot);
 }
 
 
@@ -125,6 +142,47 @@ bool view::LinearTransferFunction::create(void) {
 void view::LinearTransferFunction::release(void) {
     ::glDeleteTextures(1, &this->texID);
     this->texID = 0;
+}
+
+
+/*
+ * view::LinearTransferFunction::loadTFPressed
+ */
+bool view::LinearTransferFunction::loadTFPressed(param::ParamSlot& param) {
+    try {
+        vislib::sys::BufferedFile inFile;
+        if (!inFile.Open(pathSlot.Param<param::FilePathParam>()->Value(),
+            vislib::sys::File::AccessMode::READ_ONLY,
+            vislib::sys::File::ShareMode::SHARE_READ,
+            vislib::sys::File::CreationMode::OPEN_ONLY)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_WARN,
+                "Unable to open TF file.");
+            return false;
+        }
+
+        while (!inFile.IsEOF()) {
+            vislib::StringA line = vislib::sys::ReadLineFromFileA(inFile);
+            line.TrimSpaces();
+            if (line.IsEmpty()) continue;
+            if (line[0] == '#') continue;
+            vislib::StringA::Size pos = line.Find('=');
+            vislib::StringA name = line.Substring(0, pos);
+            vislib::StringA value = line.Substring(pos + 1);
+            Module::child_list_type::iterator ano_end = this->ChildList_End();
+            for (Module::child_list_type::iterator ano_i = this->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
+                std::shared_ptr<param::ParamSlot> p = std::dynamic_pointer_cast<param::ParamSlot>(*ano_i);
+                if (p && p->Name().Equals(name)) {
+                    p->Parameter()->ParseValue(value);
+                }
+            }
+        }
+        inFile.Close();
+    } catch (...) {
+
+    }
+
+    return true;
 }
 
 
@@ -247,4 +305,56 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
     cgtf->SetTexture(this->texID, this->texSize, this->texFormat);
 
     return true;
+}
+
+
+/*
+* view::LinearTransferFunction::storeTFPressed
+*/
+bool view::LinearTransferFunction::storeTFPressed(param::ParamSlot& param) {
+
+    try {
+        vislib::sys::BufferedFile outFile;
+        if (!outFile.Open(pathSlot.Param<param::FilePathParam>()->Value(),
+            vislib::sys::File::AccessMode::WRITE_ONLY,
+            vislib::sys::File::ShareMode::SHARE_EXCLUSIVE,
+            vislib::sys::File::CreationMode::CREATE_OVERWRITE)) {
+            vislib::sys::Log::DefaultLog.WriteMsg(
+                vislib::sys::Log::LEVEL_WARN,
+                "Unable to create TF file.");
+        }
+
+        Module::child_list_type::iterator ano_end = this->ChildList_End();
+        for (Module::child_list_type::iterator ano_i = this->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
+            std::shared_ptr<param::ParamSlot> p = std::dynamic_pointer_cast<param::ParamSlot>(*ano_i);
+            if (p) {
+                writeParameterFileParameter(*p, outFile);
+            }
+        }
+        outFile.Close();
+    } catch (...) {
+
+    }
+
+    return true;
+}
+
+
+/*
+* view::LinearTransferFunction::writeParameterFileParameter
+*/
+void view::LinearTransferFunction::writeParameterFileParameter(
+    param::ParamSlot& param,
+    vislib::sys::BufferedFile &outFile) {
+
+    unsigned int len = 0;
+    vislib::RawStorage store;
+    param.Parameter()->Definition(store);
+
+    if (::memcmp(store, "MMBUTN", 6) == 0) {
+        outFile.Write("# ", 2);
+    }
+
+    vislib::sys::WriteFormattedLineToFile(outFile,
+        "%s=%s\n", param.Name(), vislib::StringA(param.Parameter()->ValueString()));
 }
