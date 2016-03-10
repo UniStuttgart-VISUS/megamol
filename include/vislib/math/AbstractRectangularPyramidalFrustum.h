@@ -342,9 +342,9 @@ namespace math {
          * Clear all cached data.
          */
         inline void invalidateCaches(void) {
-            ARY_SAFE_DELETE(this->cachePoints);
+//            ARY_SAFE_DELETE(this->cachePoints);
             ARY_SAFE_DELETE(this->cachePlanes);
-            ASSERT(this->cachePoints == NULL);
+//            ASSERT(this->cachePoints == NULL);
             ASSERT(this->cachePlanes == NULL);
         }
 
@@ -369,8 +369,8 @@ namespace math {
 
     private:
 
-        /** An array for caching the corner points of the frustum. */
-        mutable Point<T, 3> *cachePoints;
+        ///** An array for caching the corner points of the frustum. */
+        //mutable Point<T, 3> *cachePoints;
 
         /** An array for caching the planes of the frustum. */
         mutable Plane<T> *cachePlanes;
@@ -386,7 +386,7 @@ namespace math {
         VLSTACKTRACE("AbstractRectangularPyramidalFrustum::"
             "AbstractRectangularPyramidalFrustum", __FILE__, __LINE__);
         // Must not do anything about 'values' due to the Crowbar pattern(TM).
-        ARY_SAFE_DELETE(this->cachePoints);
+        //ARY_SAFE_DELETE(this->cachePoints);
         ARY_SAFE_DELETE(this->cachePlanes);
     }
 
@@ -674,11 +674,8 @@ namespace math {
      */
     template<class T, class S> 
     AbstractRectangularPyramidalFrustum<T, S>
-            ::AbstractRectangularPyramidalFrustum(void) 
-            : Super(), cachePoints(NULL), cachePlanes(NULL) {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::"
-            "AbstractRectangularPyramidalFrustum", __FILE__, __LINE__);
-    }
+        ::AbstractRectangularPyramidalFrustum(void) 
+        : Super(), /*cachePoints(NULL), */cachePlanes(NULL) { }
 
 
     /*
