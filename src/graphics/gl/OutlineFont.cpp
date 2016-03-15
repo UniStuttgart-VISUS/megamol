@@ -222,11 +222,11 @@ void OutlineFont::DrawString(float x, float y, float size, bool flipY,
 
     if ((this->renderType == RENDERTYPE_FILL)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawFilled(run, x, y, size, flipY, align);
+        this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
     if ((this->renderType == RENDERTYPE_OUTLINE)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawOutline(run, x, y, size, flipY, align);
+        this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
     delete[] run;
@@ -285,11 +285,11 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
 
     if ((this->renderType == RENDERTYPE_FILL)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawFilled(run, x, y, size, flipY, align);
+        this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
     if ((this->renderType == RENDERTYPE_OUTLINE)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawOutline(run, x, y, size, flipY, align);
+        this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
     delete[] run;
@@ -317,11 +317,11 @@ void OutlineFont::DrawString(float x, float y, float size, bool flipY,
 
     if ((this->renderType == RENDERTYPE_FILL)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawFilled(run, x, y, size, flipY, align);
+        this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
     if ((this->renderType == RENDERTYPE_OUTLINE)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawOutline(run, x, y, size, flipY, align);
+        this->drawOutline(run, x, y, 0.0f, size, flipY, align);
     }
 
     delete[] run;
@@ -380,11 +380,43 @@ void OutlineFont::DrawString(float x, float y, float w, float h, float size,
 
     if ((this->renderType == RENDERTYPE_FILL)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawFilled(run, x, y, size, flipY, align);
+        this->drawFilled(run, x, y, 0.0f, size, flipY, align);
     }
     if ((this->renderType == RENDERTYPE_OUTLINE)
             || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
-        this->drawOutline(run, x, y, size, flipY, align);
+        this->drawOutline(run, x, y, 0.0f, size, flipY, align);
+    }
+
+    delete[] run;
+}
+
+/*
+* OutlineFont::DrawString
+*/
+void vislib::graphics::gl::OutlineFont::DrawString(float x, float y, float z, float size, bool flipY, const char * txt, Alignment align) const
+{
+    int *run = this->buildGlyphRun(txt, FLT_MAX);
+
+    if ((align == ALIGN_CENTER_MIDDLE) || (align == ALIGN_LEFT_MIDDLE)
+        || (align == ALIGN_RIGHT_MIDDLE)) {
+        y += static_cast<float>(this->lineCount(run, false)) * 0.5f * size
+            * (flipY ? 1.0f : -1.0f);
+
+    }
+    else if ((align == ALIGN_CENTER_BOTTOM) || (align == ALIGN_LEFT_BOTTOM)
+             || (align == ALIGN_RIGHT_BOTTOM)) {
+        y += static_cast<float>(this->lineCount(run, false)) * size
+            * (flipY ? 1.0f : -1.0f);
+
+    }
+
+    if ((this->renderType == RENDERTYPE_FILL)
+        || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+        this->drawFilled(run, x, y, z, size, flipY, align);
+    }
+    if ((this->renderType == RENDERTYPE_OUTLINE)
+        || (this->renderType == RENDERTYPE_FILL_AND_OUTLINE)) {
+        this->drawOutline(run, x, y, z, size, flipY, align);
     }
 
     delete[] run;
@@ -576,7 +608,7 @@ int *OutlineFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 /*
  * OutlineFont::drawFilled
  */
-void OutlineFont::drawFilled(int *run, float x, float y, float size,
+void OutlineFont::drawFilled(int *run, float x, float y, float z, float size,
         bool flipY, Alignment align) const {
     float gx = x;
     float gy = y;
@@ -616,7 +648,7 @@ void OutlineFont::drawFilled(int *run, float x, float y, float size,
         }
 
         ::glPushMatrix();
-        ::glTranslatef(gx, gy, 0.0f);
+        ::glTranslatef(gx, gy, z);
         ::glScalef(size, sy, 1.0f);
         ::glVertexPointer(2, GL_FLOAT, 0, glyph.points);
         ::glDrawElements(GL_TRIANGLES, glyph.triCount, GL_UNSIGNED_SHORT, glyph.tris);
@@ -634,7 +666,7 @@ void OutlineFont::drawFilled(int *run, float x, float y, float size,
 /*
  * OutlineFont::drawOutline
  */
-void OutlineFont::drawOutline(int *run, float x, float y, float size,
+void OutlineFont::drawOutline(int *run, float x, float y, float z, float size,
         bool flipY, Alignment align) const {
     float gx = x;
     float gy = y;
@@ -673,7 +705,7 @@ void OutlineFont::drawOutline(int *run, float x, float y, float size,
         }
 
         ::glPushMatrix();
-        ::glTranslatef(gx, gy, 0.0f);
+        ::glTranslatef(gx, gy, z);
         ::glScalef(size, sy, 1.0f);
         ::glVertexPointer(2, GL_FLOAT, 0, glyph.points);
         unsigned int off = 0;

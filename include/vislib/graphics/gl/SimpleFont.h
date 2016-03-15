@@ -125,6 +125,20 @@ namespace gl {
             const;
 
         /**
+        * Draws a text at the specified position.
+        *
+        * @param x The x coordinate of the position.
+        * @param y The y coordinate of the position.
+        * @param z The z coordinate of the position.
+        * @param size The size to use.
+        * @param flipY The flag controlling the direction of the y-axis.
+        * @param txt The zero-terminated string to draw.
+        * @param align The alignment of the text.
+        */
+        virtual void DrawString(float x, float y, float z, float size, bool flipY,
+                                const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+
+        /**
          * Answers the width of the line 'txt' in logical units.
          *
          * @param size The font size to use.
@@ -185,13 +199,14 @@ namespace gl {
          *
          * @param x The x coordinate (see 'halign')
          * @param y The y coordinate (minimum; top)
+         * @param y The z coordinate
          * @param lines The text lines
          * @param lineCnt The number of text lines
          * @param size The font size
          * @param flipY Flag controlling the direction of the y-axis
          * @param halign The horizontal alignment
          */
-        void drawText(float x, float y, TextLine *lines, unsigned int lineCnt,
+        void drawText(float x, float y, float z, TextLine *lines, unsigned int lineCnt,
             float size, bool flipY, Alignment halign) const;
 
         /**

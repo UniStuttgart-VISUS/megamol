@@ -307,6 +307,20 @@ namespace gl {
             const;
 
         /**
+        * Draws a text at the specified position.
+        *
+        * @param x The x coordinate of the position.
+        * @param y The y coordinate of the position.
+        * @param z The z coordinate of the position.
+        * @param size The size to use.
+        * @param flipY The flag controlling the direction of the y-axis.
+        * @param txt The zero-terminated string to draw.
+        * @param align The alignment of the text.
+        */
+        virtual void DrawString(float x, float y, float z, float size, bool flipY,
+                                const char *txt, Alignment align = ALIGN_LEFT_TOP) const;
+
+        /**
          * Answers the render type of the font
          *
          * @return The render type of the font
@@ -402,11 +416,12 @@ namespace gl {
          * @param run The glyph run
          * @param x The reference x coordinate
          * @param y The reference y coordinate
+         * @param z The reference z coordinate
          * @param size The size
          * @param flipY The flag controlling the direction of the y-axis
          * @param align The alignment
          */
-        void drawFilled(int *run, float x, float y, float size, bool flipY,
+        void drawFilled(int *run, float x, float y, float z, float size, bool flipY,
             Alignment align) const;
 
         /**
@@ -415,11 +430,12 @@ namespace gl {
          * @param run The glyph run
          * @param x The reference x coordinate
          * @param y The reference y coordinate
+         * @param z The reference z coordinate
          * @param size The size
          * @param flipY The flag controlling the direction of the y-axis
          * @param align The alignment
          */
-        void drawOutline(int *run, float x, float y, float size, bool flipY,
+        void drawOutline(int *run, float x, float y, float z, float size, bool flipY,
             Alignment align) const;
 
         /**
