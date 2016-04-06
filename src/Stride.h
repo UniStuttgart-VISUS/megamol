@@ -24,7 +24,7 @@
 #include "mmcore/moldyn/MolecularDataCall.h"
 
 namespace megamol {
-namespace protein {	
+namespace protein_cuda {	
 
 #define Pi                        M_PI
 #define Eps                       0.000001
@@ -389,7 +389,7 @@ private:
 	bool Successful;
 };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_STRIDE_H_INCLUDED */

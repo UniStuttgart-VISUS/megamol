@@ -25,7 +25,7 @@
 
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 #define VERBOSE
 #define SWAP_BYTES

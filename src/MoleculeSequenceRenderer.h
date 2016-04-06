@@ -13,7 +13,7 @@ namespace core {
 	class CallerSlot;
 }
 
-namespace protein {
+namespace protein_cuda {
 class MoleculeSequenceRenderer :
 	public megamol::core::view::Renderer2DModule
 {

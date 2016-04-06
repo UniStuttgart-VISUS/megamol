@@ -10,8 +10,8 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#ifndef MMPROTEINPLUGIN_STREAMLINERENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_STREAMLINERENDERER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -31,7 +31,7 @@ typedef vislib::math::Vector<int, 3> Vec3i;
 typedef unsigned int uint;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class StreamlineRenderer : public core::view::Renderer3DModuleDS {
 
@@ -241,8 +241,8 @@ private:
 };
 
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_STREAMLINERENDERER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))

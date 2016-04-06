@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
-#define MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -26,7 +26,7 @@
 typedef unsigned int uint;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /// Filter module that computes a smoothed version of a given trajectory by
 /// calculating the average.
@@ -160,7 +160,7 @@ private:
 };
 
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED

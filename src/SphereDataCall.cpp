@@ -13,23 +13,23 @@
 #include "vislib/OutOfRangeException.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * SphereDataCall::CallForGetData
  */
-const unsigned int protein::SphereDataCall::CallForGetData = 0;
+const unsigned int protein_cuda::SphereDataCall::CallForGetData = 0;
 
 
 /*
  * SphereDataCall::CallForGetExtent
  */
-const unsigned int protein::SphereDataCall::CallForGetExtent = 1;
+const unsigned int protein_cuda::SphereDataCall::CallForGetExtent = 1;
 
 /*
- * protein::SphereDataCall::SphereDataCall
+ * protein_cuda::SphereDataCall::SphereDataCall
  */
-protein::SphereDataCall::SphereDataCall(void) : AbstractGetData3DCall(),
+protein_cuda::SphereDataCall::SphereDataCall(void) : AbstractGetData3DCall(),
         sphereCount( 0), spheres( 0), colors( 0), charges( 0), 
         minCharge( 0.0f), maxCharge( 0.0f), types( 0) {
     // intentionally empty
@@ -37,9 +37,9 @@ protein::SphereDataCall::SphereDataCall(void) : AbstractGetData3DCall(),
 
 
 /*
- * protein::SphereDataCall::~SphereDataCall
+ * protein_cuda::SphereDataCall::~SphereDataCall
  */
-protein::SphereDataCall::~SphereDataCall(void) {
+protein_cuda::SphereDataCall::~SphereDataCall(void) {
 }
 
 /*

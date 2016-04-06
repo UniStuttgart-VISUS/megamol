@@ -32,10 +32,10 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
- * protein::XYZLoader::XYZLoader
+ * protein_cuda::XYZLoader::XYZLoader
  */
 XYZLoader::XYZLoader(void) : megamol::core::Module(),
         filenameSlot( "filename", "The path to the XYZ data file to be loaded"),
@@ -56,7 +56,7 @@ XYZLoader::XYZLoader(void) : megamol::core::Module(),
 }
 
 /*
- * protein::XYZLoader::~XYZLoader
+ * protein_cuda::XYZLoader::~XYZLoader
  */
 XYZLoader::~XYZLoader(void) {
     this->Release ();

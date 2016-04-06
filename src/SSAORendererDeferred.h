@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINPLUGIN_SSAORENDERERDEFERRED_H_INCLUDED
-#define MMPROTEINPLUGIN_SSAORENDERERDEFERRED_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_SSAORENDERERDEFERRED_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_SSAORENDERERDEFERRED_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -16,7 +16,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Render module which implements screen space ambient occlusion
@@ -209,8 +209,8 @@ namespace protein {
     };
 
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_SSAORENDERERDEFERRED_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_SSAORENDERERDEFERRED_H_INCLUDED
 

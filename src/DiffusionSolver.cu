@@ -20,7 +20,7 @@
 #include "vislib/sys/Log.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 //#define USE_CUDA_TIMER
 

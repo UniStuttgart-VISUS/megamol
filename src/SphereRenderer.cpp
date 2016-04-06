@@ -26,13 +26,13 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
- * protein::SphereRenderer::SphereRenderer (CTOR)
+ * protein_cuda::SphereRenderer::SphereRenderer (CTOR)
  */
-protein::SphereRenderer::SphereRenderer(void) : Renderer3DModule (), 
+protein_cuda::SphereRenderer::SphereRenderer(void) : Renderer3DModule (), 
     sphereDataCallerSlot( "getData", "Connects the sphere rendering with data storage"),
     coloringModeParam( "coloringMode", "Coloring Mode"),
     minValueParam( "minValue", "Minimum vlue for gradient coloring"),
@@ -58,25 +58,25 @@ protein::SphereRenderer::SphereRenderer(void) : Renderer3DModule (),
 
 
 /*
- * protein::SphereRenderer::~SphereRenderer (DTOR)
+ * protein_cuda::SphereRenderer::~SphereRenderer (DTOR)
  */
-protein::SphereRenderer::~SphereRenderer(void)  {
+protein_cuda::SphereRenderer::~SphereRenderer(void)  {
     this->Release ();
 }
 
 
 /*
- * protein::SphereRenderer::release
+ * protein_cuda::SphereRenderer::release
  */
-void protein::SphereRenderer::release(void) {
+void protein_cuda::SphereRenderer::release(void) {
 
 }
 
 
 /*
- * protein::SphereRenderer::create
+ * protein_cuda::SphereRenderer::create
  */
-bool protein::SphereRenderer::create(void)
+bool protein_cuda::SphereRenderer::create(void)
 {
     if (!isExtAvailable( "GL_ARB_vertex_program") ) {
         return false;
@@ -98,11 +98,11 @@ bool protein::SphereRenderer::create(void)
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
@@ -116,11 +116,11 @@ bool protein::SphereRenderer::create(void)
     }
 
     // Load cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
@@ -138,9 +138,9 @@ bool protein::SphereRenderer::create(void)
 
 
 /*
- * protein::SphereRenderer::GetCapabilities
+ * protein_cuda::SphereRenderer::GetCapabilities
  */
-bool protein::SphereRenderer::GetCapabilities(Call& call) {
+bool protein_cuda::SphereRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -153,9 +153,9 @@ bool protein::SphereRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * protein::SphereRenderer::GetExtents
+ * protein_cuda::SphereRenderer::GetExtents
  */
-bool protein::SphereRenderer::GetExtents(Call& call) {
+bool protein_cuda::SphereRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;
 
@@ -183,9 +183,9 @@ bool protein::SphereRenderer::GetExtents(Call& call) {
  **********************************************************************/
 
 /*
- * protein::SphereRenderer::Render
+ * protein_cuda::SphereRenderer::Render
  */
-bool protein::SphereRenderer::Render(Call& call)
+bool protein_cuda::SphereRenderer::Render(Call& call)
 {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);

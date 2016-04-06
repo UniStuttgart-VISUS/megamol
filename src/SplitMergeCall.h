@@ -24,7 +24,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Base class for graph calls and data interfaces.
@@ -606,7 +606,7 @@ namespace protein {
     /** Description class typedef */
     typedef megamol::core::CallAutoDescription<SplitMergeCall> SplitMergeCallDescription;
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_PROTEIN_SPLITMERGECALL_H_INCLUDED */

@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTIDATACALL_H_INCLUDED
-#define MMPROTEINPLUGIN_VTIDATACALL_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VTIDATACALL_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VTIDATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -23,7 +23,7 @@
 typedef vislib::math::Vector<int, 3> Vec3i;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class VTIDataCall : public core::AbstractGetData3DCall {
 
@@ -392,8 +392,8 @@ private:
 /// Description class typedef
 typedef core::CallAutoDescription<VTIDataCall> VTIDataCallDescription;
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VTIDATACALL_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VTIDATACALL_H_INCLUDED
 

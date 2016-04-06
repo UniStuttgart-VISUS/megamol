@@ -16,7 +16,7 @@
 #include "SplitMergeCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class MappableFloatPair : public DiagramCall::DiagramMappable {
 public:
@@ -55,7 +55,7 @@ private:
     int holePos;
 };
 
-} /* namespace protein */
+} /* namespace protein_cuda */
 } /* namespace megamol */
 
 #endif /* MEGAMOLCORE_MAPPABLEFLOATPAIR_H_INCLUDED */

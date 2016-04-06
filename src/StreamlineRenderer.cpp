@@ -37,7 +37,7 @@
 #include <cstdlib>
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core;
 
 typedef vislib::math::Vector<float, 3> Vec3f;

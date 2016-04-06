@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VTILOADER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VTILOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -36,7 +36,7 @@ typedef vislib::math::Cuboid<float> Cubef;
 typedef unsigned int uint;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /**
  * Class to load the *.vti data format used in the Visualization Toolkit.
@@ -528,7 +528,7 @@ private:
 };
 
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VTILOADER_H_INCLUDED

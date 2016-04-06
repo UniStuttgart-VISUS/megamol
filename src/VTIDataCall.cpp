@@ -12,7 +12,7 @@
 #include "VTIDataCall.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 const unsigned int VTIDataCall::CallForGetData = 0;
 const unsigned int VTIDataCall::CallForGetExtent = 1;

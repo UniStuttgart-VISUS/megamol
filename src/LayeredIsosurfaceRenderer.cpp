@@ -36,7 +36,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (CTOR)
@@ -945,7 +945,7 @@ void LayeredIsosurfaceRenderer::RenderVolume(vislib::math::Cuboid<float> boundin
 }
 
 /*
- *  protein::CrystalStructureVolumeRenderer::initLIC
+ *  protein_cuda::CrystalStructureVolumeRenderer::initLIC
  */
 void LayeredIsosurfaceRenderer::InitLIC(unsigned int licRandBuffSize) {
     using namespace vislib::sys;

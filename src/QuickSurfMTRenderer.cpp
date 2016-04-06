@@ -38,11 +38,11 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
- * protein::QuickSurfMTRenderer::QuickSurfMTRenderer (CTOR)
+ * protein_cuda::QuickSurfMTRenderer::QuickSurfMTRenderer (CTOR)
  */
 QuickSurfMTRenderer::QuickSurfMTRenderer(void) : Renderer3DModuleDS (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
@@ -150,7 +150,7 @@ QuickSurfMTRenderer::QuickSurfMTRenderer(void) : Renderer3DModuleDS (),
 
 
 /*
- * protein::QuickSurfMTRenderer::~QuickSurfMTRenderer (DTOR)
+ * protein_cuda::QuickSurfMTRenderer::~QuickSurfMTRenderer (DTOR)
  */
 QuickSurfMTRenderer::~QuickSurfMTRenderer(void)  {
     if (cudaqsurf) {
@@ -178,7 +178,7 @@ QuickSurfMTRenderer::~QuickSurfMTRenderer(void)  {
 
 
 /*
- * protein::QuickSurfMTRenderer::release
+ * protein_cuda::QuickSurfMTRenderer::release
  */
 void QuickSurfMTRenderer::release(void) {
 
@@ -186,7 +186,7 @@ void QuickSurfMTRenderer::release(void) {
 
 
 /*
- * protein::QuickSurfMTRenderer::create
+ * protein_cuda::QuickSurfMTRenderer::create
  */
 bool QuickSurfMTRenderer::create(void) {
     if( !isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
@@ -214,11 +214,11 @@ bool QuickSurfMTRenderer::create(void) {
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::vertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::fragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -229,7 +229,7 @@ bool QuickSurfMTRenderer::create(void) {
 
 
 /*
- * protein::QuickSurfMTRenderer::GetCapabilities
+ * protein_cuda::QuickSurfMTRenderer::GetCapabilities
  */
 bool QuickSurfMTRenderer::GetCapabilities(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -244,7 +244,7 @@ bool QuickSurfMTRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * protein::QuickSurfMTRenderer::GetExtents
+ * protein_cuda::QuickSurfMTRenderer::GetExtents
  */
 bool QuickSurfMTRenderer::GetExtents(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -274,7 +274,7 @@ bool QuickSurfMTRenderer::GetExtents(Call& call) {
  **********************************************************************/
 
 /*
- * protein::QuickSurfMTRenderer::Render
+ * protein_cuda::QuickSurfMTRenderer::Render
  */
 bool QuickSurfMTRenderer::Render(Call& call) {
 

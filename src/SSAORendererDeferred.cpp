@@ -20,7 +20,7 @@
 
 #include "SSAORendererDeferred.h"
 
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * SSAORendererDeferred::SSAORendererDeferred

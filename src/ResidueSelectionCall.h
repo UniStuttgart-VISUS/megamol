@@ -19,7 +19,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Base class for graph calls and data interfaces.
@@ -110,7 +110,7 @@ namespace protein {
     /** Description class typedef */
     typedef megamol::core::CallAutoDescription<ResidueSelectionCall> ResidueSelectionCallDescription;
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_PROTEIN_RESIDUE_SELECTIONCALL_H_INCLUDED */

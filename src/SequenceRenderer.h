@@ -31,7 +31,7 @@
 #include "ResidueSelectionCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     class SequenceRenderer : public megamol::core::view::Renderer2DModule {
     public:
@@ -222,7 +222,7 @@ namespace protein {
         ResidueSelectionCall *resSelectionCall;
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED

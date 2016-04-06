@@ -51,9 +51,9 @@
 using namespace megamol;
 
 /*
- *  protein::Normalize
+ *  protein_cuda::Normalize
  */
-void protein::Normalize(double a[3])
+void protein_cuda::Normalize(double a[3])
 {
     double b;
 
@@ -65,9 +65,9 @@ void protein::Normalize(double a[3])
 
 
 /*
- *  protein::DiagEsort
+ *  protein_cuda::DiagEsort
  */
-int protein::DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenvalue)
+int protein_cuda::DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenvalue)
 {
     int njrot;
     int i, j, k, i3;
@@ -107,9 +107,9 @@ int protein::DiagEsort(double *mat, double *Emat, double *Evec[], double *Eigenv
 
 
 /*
- *  protein::Jacobi3
+ *  protein_cuda::Jacobi3
  */
-int protein::Jacobi3(double *a, double *d, double *v, int *nrot)
+int protein_cuda::Jacobi3(double *a, double *d, double *v, int *nrot)
 {
     int  i, j, ip, iq, p3, j3;
     double  tresh, theta, tau, t, sm, s, h, g, c, b[3], z[3];
@@ -206,9 +206,9 @@ int protein::Jacobi3(double *a, double *d, double *v, int *nrot)
 
 
 /*
- *  protein::CalculateRMS
+ *  protein_cuda::CalculateRMS
  */
-float protein::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *mass, int *mask, 
+float protein_cuda::CalculateRMS(unsigned int n, bool fit, unsigned int mode, float *mass, int *mask, 
 	               float *toFitVec, float *Vec, float rotation[3][3], float translation[3])
 {
     int ierr=0;

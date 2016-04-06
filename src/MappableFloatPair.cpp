@@ -2,7 +2,7 @@
 #include "MappableFloatPair.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 MappableFloatPair::MappableFloatPair(float offsetX, float offsetY, bool flipX, int holePos) : DiagramCall::DiagramMappable(),
     offsetX(offsetX), offsetY(offsetY), flipX(flipX), holePos(holePos) {
@@ -99,5 +99,5 @@ vislib::Pair<float, float> MappableWibble::GetOrdinateRange() const {
 }
 
 
-} /* namespace protein */
+} /* namespace protein_cuda */
 } /* namespace megamol */

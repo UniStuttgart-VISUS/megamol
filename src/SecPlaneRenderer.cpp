@@ -25,7 +25,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
@@ -159,12 +159,12 @@ bool SecPlaneRenderer::create(void) {
     if(!ci) return false;
 
     // Load slice shader
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::slice::vertex", vertSrc)) {
+    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::slice::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to load vertex shader source: slice shader", this->ClassName());
         return false;
     }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("protein::slice::fragment", fragSrc)) {
+    if (!ci->ShaderSourceFactory().MakeShaderSource("protein_cuda::slice::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to load fragment shader source:  slice shader", this->ClassName());
         return false;

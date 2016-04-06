@@ -46,7 +46,7 @@
 #include "vislib/math/mathtypes.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core;
 
 #if defined(USE_DISTANCE_FIELD)
@@ -64,7 +64,7 @@ const float SurfaceMappingTest::qsIsoVal = 0.5f;
 const float SurfaceMappingTest::minDispl = SurfaceMappingTest::qsGridSpacing/1000.0;
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 // Toggle performance measurement and the respective messages
 #define USE_TIMER

@@ -6,8 +6,8 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_PROTEIN_CCP4VOLUMEDATA_H_INCLUDED
-#define MEGAMOL_PROTEIN_CCP4VOLUMEDATA_H_INCLUDED
+#ifndef MEGAMOL_PROTEINCUDA_CCP4VOLUMEDATA_H_INCLUDED
+#define MEGAMOL_PROTEINCUDA_CCP4VOLUMEDATA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -26,7 +26,7 @@
 #include "Stride.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Data source for CCP4 files
@@ -197,7 +197,7 @@ namespace protein {
     };
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif //MEGAMOL_PROTEIN_CCP4VOLUMEDATA_H_INCLUDED

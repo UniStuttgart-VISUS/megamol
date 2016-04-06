@@ -8,8 +8,8 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
-#define MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -22,7 +22,7 @@
 #include "VTKLegacyDataUnstructuredGrid.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class VTKLegacyDataCallUnstructuredGrid : public core::AbstractGetData3DCall {
 
@@ -294,7 +294,7 @@ private:
 /// Description class typedef
 typedef core::CallAutoDescription<VTKLegacyDataCallUnstructuredGrid> VTKLegacyDataCallUnstructuredGridDescription;
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED

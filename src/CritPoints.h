@@ -7,8 +7,8 @@
  * $Id$
  */
 
-#ifndef MMPROTEINPLUGIN_CRITPOINTS_H
-#define MMPROTEINPLUGIN_CRITPOINTS_H
+#ifndef MMPROTEINCUDAPLUGIN_CRITPOINTS_H
+#define MMPROTEINCUDAPLUGIN_CRITPOINTS_H
 
 #include "CrystalStructureDataCall.h"
 #include "UniGrid3D.h"
@@ -17,7 +17,7 @@
 #include "vislib/Array.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
     
 #ifdef WITH_CUDA
 
@@ -110,7 +110,7 @@ private:
 
 #endif // WITH_CUDA
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif /* MMPROTEINPLUGIN_CRITPOINTS_H */
+#endif /* MMPROTEINCUDAPLUGIN_CRITPOINTS_H */

@@ -20,9 +20,9 @@
 
 #define _USE_MATH_DEFINES 1
 /*
- * megamol::protein::AggregatedDensity::AggregatedDensity
+ * megamol::protein_cuda::AggregatedDensity::AggregatedDensity
  */
-megamol::protein::AggregatedDensity::AggregatedDensity(void) : 
+megamol::protein_cuda::AggregatedDensity::AggregatedDensity(void) : 
    getDensitySlot("sendAggregatedDensity", "Sends the aggrated density data"), 
    getZvelocitySlot("sendAggregatedZvelocity", "Sends the aggrated velocity data"), 
    is_aggregated(false),
@@ -69,32 +69,32 @@ megamol::protein::AggregatedDensity::AggregatedDensity(void) :
 
 
 /*
- * megamol::protein::AggregatedDensity::~AggregatedDensity
+ * megamol::protein_cuda::AggregatedDensity::~AggregatedDensity
  */
-megamol::protein::AggregatedDensity::~AggregatedDensity(void) {
+megamol::protein_cuda::AggregatedDensity::~AggregatedDensity(void) {
 }
 
 
 /*
- * megamol::protein::AggregatedDensity::create
+ * megamol::protein_cuda::AggregatedDensity::create
  */
-bool megamol::protein::AggregatedDensity::create(void) {
+bool megamol::protein_cuda::AggregatedDensity::create(void) {
    return true;
 }
 
 
 /*
- * megamol::protein::AggregatedDensity::release
+ * megamol::protein_cuda::AggregatedDensity::release
  */
-void megamol::protein::AggregatedDensity::release(void) {
+void megamol::protein_cuda::AggregatedDensity::release(void) {
     ARY_SAFE_DELETE(this->vol);
 }
 
 
 /*
- * megamol::protein::AggregatedDensity::getDataCallback
+ * megamol::protein_cuda::AggregatedDensity::getDataCallback
  */
-bool megamol::protein::AggregatedDensity::getDensityCallback(megamol::core::Call& caller) {
+bool megamol::protein_cuda::AggregatedDensity::getDensityCallback(megamol::core::Call& caller) {
     megamol::core::CallVolumeData *cvd = dynamic_cast<megamol::core::CallVolumeData*>(&caller);
     if (cvd == NULL) return false;
     
@@ -117,9 +117,9 @@ bool megamol::protein::AggregatedDensity::getDensityCallback(megamol::core::Call
 }
 
 /*
- * megamol::protein::AggregatedDensity::getDataCallback
+ * megamol::protein_cuda::AggregatedDensity::getDataCallback
  */
-bool megamol::protein::AggregatedDensity::getZvelocityCallback(megamol::core::Call& caller) {
+bool megamol::protein_cuda::AggregatedDensity::getZvelocityCallback(megamol::core::Call& caller) {
     megamol::core::CallVolumeData *cvd = dynamic_cast<megamol::core::CallVolumeData*>(&caller);
     if (cvd == NULL) return false;
     
@@ -142,9 +142,9 @@ bool megamol::protein::AggregatedDensity::getZvelocityCallback(megamol::core::Ca
 }
 
 /*
- * megamol::protein::AggregatedDensity::getExtentCallback
+ * megamol::protein_cuda::AggregatedDensity::getExtentCallback
  */
-bool megamol::protein::AggregatedDensity::getExtentCallback(megamol::core::Call& caller) {
+bool megamol::protein_cuda::AggregatedDensity::getExtentCallback(megamol::core::Call& caller) {
     megamol::core::CallVolumeData *cvd = dynamic_cast<megamol::core::CallVolumeData*>(&caller);
     if (cvd == NULL) return false;
 
@@ -156,7 +156,7 @@ bool megamol::protein::AggregatedDensity::getExtentCallback(megamol::core::Call&
     return true;
 }
 
-bool megamol::protein::AggregatedDensity::aggregate() {
+bool megamol::protein_cuda::AggregatedDensity::aggregate() {
 	megamol::core::moldyn::MolecularDataCall *mol = this->molDataCallerSlot.CallAs<megamol::core::moldyn::MolecularDataCall>();
     if(!mol) {
         return false;
@@ -216,7 +216,7 @@ bool megamol::protein::AggregatedDensity::aggregate() {
     return true;
 }
 
-bool megamol::protein::AggregatedDensity::aggregate_frame(float* pos, float* vel, unsigned int n_atoms) {
+bool megamol::protein_cuda::AggregatedDensity::aggregate_frame(float* pos, float* vel, unsigned int n_atoms) {
 	float x, y, z, dx, dy, dz;
 	unsigned int X,Y,Z;
 	float weight;

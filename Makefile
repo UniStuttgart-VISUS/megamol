@@ -1,6 +1,6 @@
 #
 # Makefile
-# Protein (MegaMol)
+# Protein_CUDA (MegaMol)
 #
 # Copyright (C) 2008-2010 by VISUS (Universitaet Stuttgart).
 # Alle Rechte vorbehalten.
@@ -12,7 +12,7 @@ include ExtLibs.mk
 
 # Target name
 # TODO: Change the name "Template" to the name of your plugin
-TargetName := Protein
+TargetName := Protein_CUDA
 # subdirectories below $(InputRootDir)
 InputRootDir := $(InputDir)
 InputDirs := .

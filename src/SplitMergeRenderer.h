@@ -22,7 +22,7 @@
 #include "vislib/math/Rectangle.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     class SplitMergeRenderer : public megamol::core::view::Renderer2DModule {
     public:
@@ -188,7 +188,7 @@ namespace protein {
 
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED

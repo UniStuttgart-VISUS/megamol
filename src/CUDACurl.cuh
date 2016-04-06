@@ -7,8 +7,8 @@
  * $Id$
  */
 
-#ifndef MMPROTEINPLUGIN_CUDACURL_CUH
-#define MMPROTEINPLUGIN_CUDACURL_CUH
+#ifndef MMPROTEINCUDAPLUGIN_CUDACURL_CUH
+#define MMPROTEINCUDAPLUGIN_CUDACURL_CUH
 
 #include <vector_types.h>
 
@@ -23,7 +23,7 @@ struct CurlGridParams {
 };
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /**
  * Device function to map thread index to 3D grid position
@@ -171,7 +171,7 @@ cudaError_t CudaGetGradZ(float *gridVecFieldD,
 
 }
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif /* MMPROTEINPLUGIN_CUDACURL_CUH */
+#endif /* MMPROTEINCUDAPLUGIN_CUDACURL_CUH */

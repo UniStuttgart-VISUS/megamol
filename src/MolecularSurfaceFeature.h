@@ -17,7 +17,7 @@
 #include "vislib/math/Vector.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Molecular Surface Feature
@@ -113,7 +113,7 @@ namespace protein {
     };
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLPROTEIN_MOLSURFFEATURE_H_INCLUDED

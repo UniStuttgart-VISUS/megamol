@@ -8,11 +8,11 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
-#define MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 template<class T>
 class HostArr {
@@ -113,7 +113,7 @@ private:
     T *pt;
 };
 
-} // namespace protein
+} // namespace protein_cuda
 } // namespace megamol
 
-#endif // MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED

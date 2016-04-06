@@ -21,7 +21,7 @@
 #include "ToonRendererDeferred.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * ToonRendererDeferred::ToonRendererDeferred

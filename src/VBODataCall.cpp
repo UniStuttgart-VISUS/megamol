@@ -13,7 +13,7 @@
 #include "VBODataCall.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 const unsigned int VBODataCall::CallForGetExtent = 0;

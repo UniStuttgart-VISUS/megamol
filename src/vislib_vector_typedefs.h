@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED
-#define MMPROTEINPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED
 
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
@@ -18,7 +18,7 @@
 // TODO rename to vislib_math_typedefs
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 typedef vislib::math::Vector<char, 2> Vec2c;
 typedef vislib::math::Vector<int, 2> Vec2i;
@@ -66,7 +66,7 @@ typedef vislib::math::Cuboid<unsigned int> Cubeu;
 typedef vislib::math::Cuboid<int> Cubei;
 typedef vislib::math::Cuboid<float> Cubef;
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VISLIB_VECTOR_TYPEDEFS_H_INCLUDED

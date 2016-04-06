@@ -2,12 +2,12 @@
 #include "DiagramCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /*
  * MolecularDataCall::CallForGetData
  */
-const unsigned int protein::DiagramCall::CallForGetData = 0;
+const unsigned int protein_cuda::DiagramCall::CallForGetData = 0;
 
 /*
  * Diagram2DCall::Diagram2DCall
@@ -24,5 +24,5 @@ DiagramCall::~DiagramCall(void) {
 
 }
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */

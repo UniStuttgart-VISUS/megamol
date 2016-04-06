@@ -12,7 +12,7 @@
 #include "VariantMatchDataCall.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 const unsigned int VariantMatchDataCall::CallForGetData = 0;
 

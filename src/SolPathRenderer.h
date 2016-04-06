@@ -19,7 +19,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Renderer for solvent path raw data
@@ -117,7 +117,7 @@ namespace protein {
 
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /*  MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED */

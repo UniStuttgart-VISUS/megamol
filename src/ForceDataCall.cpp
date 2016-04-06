@@ -9,12 +9,12 @@
 #include "ForceDataCall.h"
 
 using namespace megamol;
-using namespace protein;
+using namespace protein_cuda;
 
 /*
  * ForceDataCall::CallForGetForceData
  */
-const unsigned int protein::ForceDataCall::CallForGetForceData = 0;
+const unsigned int protein_cuda::ForceDataCall::CallForGetForceData = 0;
 
 
 /*

@@ -35,7 +35,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 /*
@@ -274,7 +274,7 @@ MoleculeSESRenderer::~MoleculeSESRenderer(void) {
 
 
 /*
- * protein::MoleculeSESRenderer::release
+ * protein_cuda::MoleculeSESRenderer::release
  */
 void MoleculeSESRenderer::release( void ) {
 
@@ -371,12 +371,12 @@ bool MoleculeSESRenderer::create( void ) {
 		//////////////////////////////////
 		// puxel reduced surface shader //
 		//////////////////////////////////
-	    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::puxelsReducedSurfaceRenderVertex", vertSrc ) )
+	    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::puxelsReducedSurfaceRenderVertex", vertSrc ) )
 		{
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for puxel render reduced surface shader", this->ClassName() );
 			return false;
 		}
-		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::puxelsReducedSurfaceRenderFragment", fragSrc ) )
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::puxelsReducedSurfaceRenderFragment", fragSrc ) )
 		{
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for puxel render reduced surface shader", this->ClassName() );
 			return false;
@@ -425,12 +425,12 @@ bool MoleculeSESRenderer::create( void ) {
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphereVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphereVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphereFragment", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphereFragment", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
         return false;
@@ -465,7 +465,7 @@ bool MoleculeSESRenderer::create( void ) {
         return false;
     }
     // Sphere shader for offscreen rendering
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphereFragmentOR", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphereFragmentOR", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
         return false;
@@ -486,14 +486,14 @@ bool MoleculeSESRenderer::create( void ) {
     ///////////////////////////////////////////////////
     // load the shader source for the torus renderer //
     ///////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::torusVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName() );
         return false;
     }
 	if(allowPuxels)
 	{
-		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragmentPuxels", fragSrc ) )
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::torusFragmentPuxels", fragSrc ) )
 		{
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
 			return false;
@@ -501,7 +501,7 @@ bool MoleculeSESRenderer::create( void ) {
 	}
 	else
 	{
-		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragment", fragSrc ) )
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::torusFragment", fragSrc ) )
 		{
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
 			return false;
@@ -536,7 +536,7 @@ bool MoleculeSESRenderer::create( void ) {
         return false;
     }
     // Tirus shader for offscreen rendering
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragmentOR", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::torusFragmentOR", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
         return false;
@@ -557,14 +557,14 @@ bool MoleculeSESRenderer::create( void ) {
     ////////////////////////////////////////////////////////////////
     // load the shader source for the spherical triangle renderer //
     ////////////////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphericaltriangleVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName() );
         return false;
     }
 	if(allowPuxels)
 	{
-		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragmentPuxels", fragSrc ) )
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphericaltriangleFragmentPuxels", fragSrc ) )
 		{
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
 			return false;
@@ -572,7 +572,7 @@ bool MoleculeSESRenderer::create( void ) {
 	}
 	else
 	{
-		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragment", fragSrc ) )
+		if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphericaltriangleFragment", fragSrc ) )
 		{
 			Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
 		   return false;
@@ -608,7 +608,7 @@ bool MoleculeSESRenderer::create( void ) {
     }
 
     // Spherical triangle shader for offscreenrendering
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragmentOR", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphericaltriangleFragmentOR", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
         return false;
@@ -654,12 +654,12 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
     //////////////////////////////////////////////////////
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::perpixellightVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::perpixellightVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::perpixellightFragment", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::perpixellightFragment", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for per pixel lighting shader", this->ClassName() );
         return false;
@@ -680,12 +680,12 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
     /////////////////////////////////////////////////////////////////
     // load the shader files for horizontal 1D gaussian filtering  //
     /////////////////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::hfilterVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::hfilterVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for horizontal 1D gaussian filter shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::hfilterFragment", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::hfilterFragment", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for horizontal 1D gaussian filter shader", this->ClassName() );
         return false;
@@ -706,12 +706,12 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
     ///////////////////////////////////////////////////////////////
     // load the shader files for vertical 1D gaussian filtering  //
     ///////////////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::vfilterVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::vfilterVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for vertical 1D gaussian filter shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::vfilterFragment", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::vfilterFragment", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for vertical 1D gaussian filter shader", this->ClassName() );
         return false;
@@ -732,12 +732,12 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
     //////////////////////////////////////////////////////
     // load the shader files for silhouette drawing     //
     //////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::silhouetteVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::silhouetteVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for silhouette drawing shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::silhouetteFragment", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::silhouetteFragment", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for silhouette drawing shader", this->ClassName() );
         return false;
@@ -778,12 +778,12 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
     //////////////////////////////////////////////////////
     // load the shader source for the cylinder renderer //
     //////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::cylinderVertex", vertSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::cylinderVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::std::cylinderFragment", fragSrc ) )
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::std::cylinderFragment", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for cylinder shader", this->ClassName() );
         return false;
@@ -848,7 +848,7 @@ bool MoleculeSESRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    protein::CallProteinData *protein = this->molDataCallerSlot.CallAs<protein::CallProteinData>();
+    protein_cuda::CallProteinData *protein = this->molDataCallerSlot.CallAs<protein_cuda::CallProteinData>();
     if (protein == NULL) return false;
     if (!(*protein)()) return false;
 

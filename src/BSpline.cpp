@@ -11,9 +11,9 @@
 using namespace megamol;
 
 /*
- * protein::BSpline::BSpline
+ * protein_cuda::BSpline::BSpline
  */
-protein::BSpline::BSpline(void)
+protein_cuda::BSpline::BSpline(void)
 {
 	this->N = 0;
 
@@ -37,17 +37,17 @@ protein::BSpline::BSpline(void)
 }
 
 /*
- * protein::BSpline::~BSpline
+ * protein_cuda::BSpline::~BSpline
  */
-protein::BSpline::~BSpline(void)
+protein_cuda::BSpline::~BSpline(void)
 {
 }
 
 /*
- * protein::BSpline::setG
+ * protein_cuda::BSpline::setG
  * set the coordinates for the geometry matrix G
  */
-void protein::BSpline::setG(vislib::math::Vector<float, 3> v1, vislib::math::Vector<float, 3> v2, vislib::math::Vector<float, 3> v3, vislib::math::Vector<float, 3> v4)
+void protein_cuda::BSpline::setG(vislib::math::Vector<float, 3> v1, vislib::math::Vector<float, 3> v2, vislib::math::Vector<float, 3> v3, vislib::math::Vector<float, 3> v4)
 {
 	this->G.SetAt( 0, 0, v1[0]);
 	this->G.SetAt( 0, 1, v1[1]);
@@ -68,10 +68,10 @@ void protein::BSpline::setG(vislib::math::Vector<float, 3> v1, vislib::math::Vec
 }
 
 /*
- * protein::BSpline::setN
+ * protein_cuda::BSpline::setN
  * set the number of segments to create --> this function also sets matrix S!
  */
-void protein::BSpline::setN(unsigned int n)
+void protein_cuda::BSpline::setN(unsigned int n)
 {
 	this->N = n;
 
@@ -94,10 +94,10 @@ void protein::BSpline::setN(unsigned int n)
 }
 
 /*
- * protein::BSpline::computeSpline
+ * protein_cuda::BSpline::computeSpline
  * compute the spline from the given backbone coordinates
  */
-bool protein::BSpline::computeSpline(void)
+bool protein_cuda::BSpline::computeSpline(void)
 {
 	vislib::math::Vector<float, 3> tmpVec;
 

@@ -23,7 +23,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 
 class VariantMatchRenderer : public megamol::core::view::Renderer2DModule {
@@ -140,7 +140,7 @@ private:
 
 };
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
 #endif // MEGAMOLCORE_VARIANTMATCHRENDERER_H_INCLUDED

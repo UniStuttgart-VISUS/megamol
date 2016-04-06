@@ -20,7 +20,7 @@
 
 
 
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 typedef unsigned int uint;
 

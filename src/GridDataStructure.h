@@ -28,7 +28,7 @@
  * Simple nearest-neighbour-search implementation which uses a regular grid to speed up search queries.
  */
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 	template<class T>
 	class GridDataStructure {
 		typedef vislib::math::Point<T,3> Point;
@@ -140,6 +140,6 @@ namespace protein {
 		unsigned int gridSize;
 	};
 } //namespace megamol
-} //namespace protein
+} //namespace protein_cuda
 
 #endif // MEGAMOLPROTEIN_GRIDDATASTRUCTURE_H_INCLUDED

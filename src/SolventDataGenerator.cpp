@@ -31,11 +31,11 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 
-megamol::protein::SolventDataGenerator::SolventDataGenerator() :
+megamol::protein_cuda::SolventDataGenerator::SolventDataGenerator() :
 		dataOutSlot( "dataout", "The slot providing the generated solvent data"),
 		molDataInputCallerSlot( "getInputData", "molecular data source (usually the PDB loader)"),
 		//hBondDataFile( "hBondDataFile", "file to store hydrogen bond data"),
@@ -77,17 +77,17 @@ megamol::protein::SolventDataGenerator::SolventDataGenerator() :
 	//this->neighbHydrogenIndices = new vislib::Array<unsigned int>[this->maxOMPThreads];
 }
 
-megamol::protein::SolventDataGenerator::~SolventDataGenerator() {
+megamol::protein_cuda::SolventDataGenerator::~SolventDataGenerator() {
 	delete [] this->neighbourIndices;
 	this->Release();
 }
 
-bool megamol::protein::SolventDataGenerator::create(void) {
+bool megamol::protein_cuda::SolventDataGenerator::create(void) {
 	// hier alle initialisierungen rein, die fehlschlagen können
 	return true;
 }
 
-void megamol::protein::SolventDataGenerator::release(void) {
+void megamol::protein_cuda::SolventDataGenerator::release(void) {
 	// hier alles freigeben was in create() initialisiert wird!
 }
 
@@ -98,7 +98,7 @@ void megamol::protein::SolventDataGenerator::release(void) {
  * berechnen & als Farbe auf statische Molekueloberflueche mappen) *
  * -> das geht so net! das laeuft auf ne volumen-akkumulation hinaus ...
  */
-void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst) {
+void megamol::protein_cuda::SolventDataGenerator::calcSpatialProbabilities(MolecularDataCall *src, MolecularDataCall *dst) {
 	int nFrames = src->FrameCount();
 	int nAtoms = src->AtomCount();
 
@@ -136,7 +136,7 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
 /*
  *
  *
-void megamol::protein::SolventDataGenerator::findDonors(MolecularDataCall *data) {
+void megamol::protein_cuda::SolventDataGenerator::findDonors(MolecularDataCall *data) {
 	for( int i = 0; i < data->ResidueCount(; i++ ) {
 		MolecularDataCall::Residue *residue = data->Residues()[i];
 	}
@@ -225,7 +225,7 @@ public:
 #endif
 
 
-void megamol::protein::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr) {
+void megamol::protein_cuda::SolventDataGenerator::calcHydroBondsForCurFrame(MolecularDataCall *data, const float *atomPositions, int *atomHydroBondsIndicesPtr) {
 	//const float *atomPositions = data->AtomPositions();
 	const MolecularDataCall::AtomType *atomTypes = data->AtomTypes();
 	const unsigned int *atomTypeIndices = data->AtomTypeIndices();
@@ -436,7 +436,7 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 
 
 #if 1
-bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
+bool megamol::protein_cuda::SolventDataGenerator::calcHydrogenBondStatistics(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
 	int savedSrcFrameId = dataSource->FrameID();
 	int savedTargetFrameId = dataTarget->FrameID();
 
@@ -532,7 +532,7 @@ bool megamol::protein::SolventDataGenerator::calcHydrogenBondStatistics(Molecula
 }
 #endif
 
-bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
+bool megamol::protein_cuda::SolventDataGenerator::getHBonds(MolecularDataCall *dataTarget, MolecularDataCall *dataSource) {
 	int reqFrame = dataTarget->FrameID();
 	int cacheIndex = reqFrame % HYDROGEN_BOND_IN_CORE;
 	float hbondDist = hBondDistance.Param<param::FloatParam>()->Value();
@@ -611,7 +611,7 @@ bool megamol::protein::SolventDataGenerator::getHBonds(MolecularDataCall *dataTa
 	return true;
 }
 
-bool megamol::protein::SolventDataGenerator::getExtent(core::Call& call) {
+bool megamol::protein_cuda::SolventDataGenerator::getExtent(core::Call& call) {
 	MolecularDataCall *molDest = dynamic_cast<MolecularDataCall*>( &call); // dataOutSlot ??
 	MolecularDataCall *molSource = this->molDataInputCallerSlot.CallAs<MolecularDataCall>();
 
@@ -630,7 +630,7 @@ bool megamol::protein::SolventDataGenerator::getExtent(core::Call& call) {
 	return true;
 }
 
-bool megamol::protein::SolventDataGenerator::getData(core::Call& call) {
+bool megamol::protein_cuda::SolventDataGenerator::getData(core::Call& call) {
 	MolecularDataCall *molDest = dynamic_cast<MolecularDataCall*>( &call); // dataOutSlot ??
 	MolecularDataCall *molSource = this->molDataInputCallerSlot.CallAs<MolecularDataCall>();
 

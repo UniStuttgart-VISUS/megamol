@@ -2,12 +2,12 @@
 #include "SplitMergeCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /*
  * SplitMergeCall::CallForGetData
  */
-const unsigned int protein::SplitMergeCall::CallForGetData = 0;
+const unsigned int protein_cuda::SplitMergeCall::CallForGetData = 0;
 
 /*
  * SplitMergeCall::SplitMergeCall
@@ -56,5 +56,5 @@ SplitMergeCall::SplitMergeTransition::SplitMergeTransition(
     }
 }
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */

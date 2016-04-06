@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTIWRITER_H_INCLUDED
-#define MMPROTEINPLUGIN_VTIWRITER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VTIWRITER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VTIWRITER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -22,7 +22,7 @@
 #include "HostArr.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class VTIWriter : public core::job::AbstractJob, public core::Module {
 
@@ -197,7 +197,7 @@ protected:
     HostArr<char> buffDec; ///> Temp buffer used to hold decoded data
 };
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VTIWRITER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VTIWRITER_H_INCLUDED

@@ -20,7 +20,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Data source for solvent path data
@@ -184,7 +184,7 @@ namespace protein {
 
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /*  MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED */

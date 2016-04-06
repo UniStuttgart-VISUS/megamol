@@ -14,7 +14,7 @@
 
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * BindingSiteDataSource::BindingSiteDataSource (CTOR)

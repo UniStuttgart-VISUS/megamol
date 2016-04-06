@@ -2,7 +2,7 @@
 #include "MolecularSurfaceFeature.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 MolecularSurfaceFeature::MolecularSurfaceFeature( float maxT, vislib::math::Vector<float, 3> pos) : DiagramCall::DiagramMappable(),
         data(), maxTime( maxT), maxSurfaceArea( 0.0f), position( pos) {
@@ -65,5 +65,5 @@ void MolecularSurfaceFeature::AppendValue( vislib::Pair<float, float> p) {
 }
 
 
-} /* namespace protein */
+} /* namespace protein_cuda */
 } /* namespace megamol */

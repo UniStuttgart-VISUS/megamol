@@ -8,8 +8,8 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
-#define MMPROTEINPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -25,7 +25,7 @@
 typedef vislib::math::Cuboid<float> Cubef;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /*
  * A class for loading VTK legacy unstructured grid data from *.vtk files
@@ -478,8 +478,8 @@ private:
 
 };
 
-} // namespace protein
+} // namespace protein_cuda
 } // namespace megamol
 
-#endif // MMPROTEINPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED
 

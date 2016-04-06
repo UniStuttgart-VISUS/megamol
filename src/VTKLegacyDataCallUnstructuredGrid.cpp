@@ -12,7 +12,7 @@
 #include "VTKLegacyDataCallUnstructuredGrid.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 const unsigned int VTKLegacyDataCallUnstructuredGrid::CallForGetData = 0;
 const unsigned int VTKLegacyDataCallUnstructuredGrid::CallForGetExtent = 1;

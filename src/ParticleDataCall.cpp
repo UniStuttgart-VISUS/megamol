@@ -13,30 +13,30 @@
 #include "vislib/OutOfRangeException.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
  * ParticleDataCall::CallForGetData
  */
-const unsigned int protein::ParticleDataCall::CallForGetData = 0;
+const unsigned int protein_cuda::ParticleDataCall::CallForGetData = 0;
 
 /*
  * ParticleDataCall::CallForGetExtent
  */
-const unsigned int protein::ParticleDataCall::CallForGetExtent = 1;
+const unsigned int protein_cuda::ParticleDataCall::CallForGetExtent = 1;
 
 /*
- * protein::ParticleDataCall::ParticleDataCall
+ * protein_cuda::ParticleDataCall::ParticleDataCall
  */
-protein::ParticleDataCall::ParticleDataCall(void) : AbstractGetData3DCall(),
+protein_cuda::ParticleDataCall::ParticleDataCall(void) : AbstractGetData3DCall(),
         particleCount( 0), particles( 0) {
     // intentionally empty
 }
 
 
 /*
- * protein::ParticleDataCall::~ParticleDataCall
+ * protein_cuda::ParticleDataCall::~ParticleDataCall
  */
-protein::ParticleDataCall::~ParticleDataCall(void) {
+protein_cuda::ParticleDataCall::~ParticleDataCall(void) {
 }

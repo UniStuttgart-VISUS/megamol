@@ -38,7 +38,7 @@
 //#define USE_TIMER
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /**

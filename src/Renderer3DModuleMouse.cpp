@@ -13,7 +13,7 @@
 using namespace megamol;
 
 
-protein::Renderer3DModuleMouse::Renderer3DModuleMouse(void)
+protein_cuda::Renderer3DModuleMouse::Renderer3DModuleMouse(void)
 		: core::view::Renderer3DModuleDS(),
         mouseSlot("mouse", "Enables the view to send mouse information to the renderer.") {
 
@@ -28,6 +28,6 @@ protein::Renderer3DModuleMouse::Renderer3DModuleMouse(void)
 }
 
 
-protein::Renderer3DModuleMouse::~Renderer3DModuleMouse(void) {
+protein_cuda::Renderer3DModuleMouse::~Renderer3DModuleMouse(void) {
 
 }

@@ -18,7 +18,7 @@
 #include "mmcore/CallAutoDescription.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Base class for transferring force data between renderer and loader.
@@ -133,7 +133,7 @@ namespace protein {
     /** Description class typedef */
     typedef megamol::core::CallAutoDescription<ForceDataCall> ForceDataCallDescription;
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #if defined(_WIN32) && defined(_MANAGED)

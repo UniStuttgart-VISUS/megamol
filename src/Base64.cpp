@@ -11,7 +11,7 @@
 #include "stdafx.h"
 #include "Base64.h"
 
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 typedef unsigned int uint;
 

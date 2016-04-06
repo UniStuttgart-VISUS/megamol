@@ -41,12 +41,12 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 
 /*
- * protein::QuickSurfRenderer2::QuickSurfRenderer2 (CTOR)
+ * protein_cuda::QuickSurfRenderer2::QuickSurfRenderer2 (CTOR)
  */
 QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
@@ -148,7 +148,7 @@ QuickSurfRenderer2::QuickSurfRenderer2(void) : Renderer3DModuleDS (),
 
 
 /*
- * protein::QuickSurfRenderer2::~QuickSurfRenderer2 (DTOR)
+ * protein_cuda::QuickSurfRenderer2::~QuickSurfRenderer2 (DTOR)
  */
 QuickSurfRenderer2::~QuickSurfRenderer2(void)  {
     if (cudaqsurf) {
@@ -176,7 +176,7 @@ QuickSurfRenderer2::~QuickSurfRenderer2(void)  {
 
 
 /*
- * protein::QuickSurfRenderer2::release
+ * protein_cuda::QuickSurfRenderer2::release
  */
 void QuickSurfRenderer2::release(void) {
 
@@ -184,7 +184,7 @@ void QuickSurfRenderer2::release(void) {
 
 
 /*
- * protein::QuickSurfRenderer2::create
+ * protein_cuda::QuickSurfRenderer2::create
  */
 bool QuickSurfRenderer2::create(void) {
 	if( !isExtAvailable( "GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2,0) )
@@ -227,7 +227,7 @@ bool QuickSurfRenderer2::create(void) {
 
 
 /*
- * protein::QuickSurfRenderer2::GetCapabilities
+ * protein_cuda::QuickSurfRenderer2::GetCapabilities
  */
 bool QuickSurfRenderer2::GetCapabilities(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -242,7 +242,7 @@ bool QuickSurfRenderer2::GetCapabilities(Call& call) {
 
 
 /*
- * protein::QuickSurfRenderer2::GetExtents
+ * protein_cuda::QuickSurfRenderer2::GetExtents
  */
 bool QuickSurfRenderer2::GetExtents(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -272,7 +272,7 @@ bool QuickSurfRenderer2::GetExtents(Call& call) {
  **********************************************************************/
 
 /*
- * protein::QuickSurfRenderer2::Render
+ * protein_cuda::QuickSurfRenderer2::Render
  */
 bool QuickSurfRenderer2::Render(Call& call) {
 

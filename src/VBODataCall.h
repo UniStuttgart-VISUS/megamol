@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VBODATACALL_H_INCLUDED
-#define MMPROTEINPLUGIN_VBODATACALL_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -21,7 +21,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class VBODataCall : public core::Call {
 
@@ -367,7 +367,7 @@ private:
 typedef core::CallAutoDescription<VBODataCall> VBODataCallDescription;
 
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VBODATACALL_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED

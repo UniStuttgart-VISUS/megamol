@@ -7,8 +7,8 @@
  * $Id$
  */
 
-#ifndef MMPROTEINPLUGIN_UNIGRID3D_H
-#define MMPROTEINPLUGIN_UNIGRID3D_H
+#ifndef MMPROTEINCUDAPLUGIN_UNIGRID3D_H
+#define MMPROTEINCUDAPLUGIN_UNIGRID3D_H
 
 #include "vislib/math/Vector.h"
 #include "vislib/OutOfRangeException.h"
@@ -18,7 +18,7 @@
 #endif  // WITH_CUDA
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /**
  * Class representing a 3D uniform grid containing data of type T.
@@ -281,8 +281,8 @@ T UniGrid3D<T>::SampleNearest(float x, float y, float z) {
     return this->GetAt(posX, posY, posZ);
 }
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 
-#endif /* MMPROTEINPLUGIN_UNIGRID3D_H */
+#endif /* MMPROTEINCUDAPLUGIN_UNIGRID3D_H */

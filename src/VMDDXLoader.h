@@ -18,8 +18,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VMDDXLOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_VMDDXLOADER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VMDDXLOADER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VMDDXLOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -41,7 +41,7 @@
 typedef unsigned int uint;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class VMDDXLoader : public megamol::core::Module {
 public:
@@ -183,7 +183,7 @@ private:
 };
 
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VMDDXLOADER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VMDDXLOADER_H_INCLUDED

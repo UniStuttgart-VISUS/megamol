@@ -7,8 +7,8 @@
 
 #ifdef WITH_CUDA
 
-#ifndef MMPROTEINPLUGIN_QUICKSURFRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_QUICKSURFRENDERER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_QUICKSURFRENDERER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_QUICKSURFRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -32,7 +32,7 @@
 #include <cuda_gl_interop.h>
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /*
      * Simple Molecular Renderer class
@@ -259,9 +259,9 @@ namespace protein {
     };
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif // MMPROTEINPLUGIN_QUICKSURFRENDERER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_QUICKSURFRENDERER_H_INCLUDED
 
 #endif // WITH_CUDA

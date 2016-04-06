@@ -31,11 +31,11 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 /*
- * protein::FrodockLoader::FrodockLoader
+ * protein_cuda::FrodockLoader::FrodockLoader
  */
 FrodockLoader::FrodockLoader(void) : Module(),
         filenameSlot( "filename", "The path to the PDB data file to be loaded"),
@@ -82,7 +82,7 @@ FrodockLoader::FrodockLoader(void) : Module(),
 
 
 /*
- * protein::FrodockLoader::~FrodockLoader
+ * protein_cuda::FrodockLoader::~FrodockLoader
  */
 FrodockLoader::~FrodockLoader(void) {
     this->Release ();

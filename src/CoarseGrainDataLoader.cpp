@@ -24,10 +24,10 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
- * protein::CoarseGrainDataLoader::CoarseGrainDataLoader
+ * protein_cuda::CoarseGrainDataLoader::CoarseGrainDataLoader
  */
 CoarseGrainDataLoader::CoarseGrainDataLoader(void) : Module(),
 		filenameSlot( "filename", "The path to the PDB data file to be loaded"),
@@ -43,7 +43,7 @@ CoarseGrainDataLoader::CoarseGrainDataLoader(void) : Module(),
 
 
 /*
- * protein::CoarseGrainDataLoader::~CoarseGrainDataLoader
+ * protein_cuda::CoarseGrainDataLoader::~CoarseGrainDataLoader
  */
 CoarseGrainDataLoader::~CoarseGrainDataLoader(void) {
     this->Release ();

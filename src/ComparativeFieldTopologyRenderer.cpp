@@ -38,7 +38,7 @@ bool myisnan(double x) { return x != x; } // uses Nan != Nan
 bool myisinf(double x) { return !myisnan(x) && myisnan(x - x); } // uses inf-inf=NaN
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core;
 
 
@@ -371,15 +371,15 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     if(!ci) return false;
 
     // Load arrow shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowVertexGeom", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowGeom", geomSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowFragmentGeom", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
         return false;
     }
@@ -387,15 +387,15 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     this->arrowShader.Link();
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
         return false;
     }
@@ -489,10 +489,10 @@ bool ComparativeFieldTopologyRenderer::GetExtents(core::Call& call) {
 //    vislib::math::Cuboid<float> bbox0, bbox1;
 //
 //    // Get bounding box of first data set
-//    protein::VTIDataCall *cmd0 =
-//                this->dataCallerSlot0.CallAs<protein::VTIDataCall>();
+//    protein_cuda::VTIDataCall *cmd0 =
+//                this->dataCallerSlot0.CallAs<protein_cuda::VTIDataCall>();
 //    if(cmd0 == NULL) return false;
-//    if(!(*cmd0)(protein::VTIDataCall::CallForGetExtent)) return false;
+//    if(!(*cmd0)(protein_cuda::VTIDataCall::CallForGetExtent)) return false;
 //    bbox0.Set(cmd0->GetOrigin().X(),
 //            cmd0->GetOrigin().Y(),
 //            cmd0->GetOrigin().Z(),
@@ -501,10 +501,10 @@ bool ComparativeFieldTopologyRenderer::GetExtents(core::Call& call) {
 //            cmd0->GetOrigin().Z() + (cmd0->GetGridsize().Z()-1)*cmd0->GetSpacing().Z());
 //
 //    // Get bounding box of first data set
-//    protein::VTIDataCall *cmd1 =
-//                this->dataCallerSlot1.CallAs<protein::VTIDataCall>();
+//    protein_cuda::VTIDataCall *cmd1 =
+//                this->dataCallerSlot1.CallAs<protein_cuda::VTIDataCall>();
 //    if(cmd1 == NULL) return false;
-//    if(!(*cmd1)(protein::VTIDataCall::CallForGetExtent)) return false;
+//    if(!(*cmd1)(protein_cuda::VTIDataCall::CallForGetExtent)) return false;
 //    bbox1.Set(cmd0->GetOrigin().X(),
 //            cmd1->GetOrigin().Y(),
 //            cmd1->GetOrigin().Z(),

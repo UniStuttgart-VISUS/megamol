@@ -22,7 +22,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Base class of rendering graph calls and data interfaces for volume data.
@@ -203,7 +203,7 @@ namespace protein {
     typedef megamol::core::CallAutoDescription<Diagram2DCall> Diagram2DCallDescription;
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_PROTEIN_DIAGRAM2DCALL_H_INCLUDED */

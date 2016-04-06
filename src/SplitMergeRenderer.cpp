@@ -13,7 +13,6 @@
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include <math.h>
-#include "mmcore/misc/ImageViewer.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <float.h>
@@ -21,7 +20,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace vislib::graphics::gl;
 using vislib::sys::Log;
 

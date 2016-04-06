@@ -30,7 +30,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 #define SOLVENT_CHAIN_IDENTIFIER 127
@@ -745,7 +745,7 @@ bool PDBLoader::Frame::SetAtomOccupancy( unsigned int idx, float val) {
 // ======================================================================
 
 /*
- * protein::PDBLoader::PDBLoader
+ * protein_cuda::PDBLoader::PDBLoader
  */
 PDBLoader::PDBLoader(void) : AnimDataModule(),
         pdbFilenameSlot( "pdbFilename", "The path to the PDB data file to be loaded"),
@@ -794,7 +794,7 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
 }
 
 /*
- * protein::PDBLoader::~PDBLoader
+ * protein_cuda::PDBLoader::~PDBLoader
  */
 PDBLoader::~PDBLoader(void) {
     if (mdd != NULL) {

@@ -15,7 +15,7 @@
 #include "DiagramCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
     
 class MappableCategoryFloat : public DiagramCall::DiagramMappable {
 public:
@@ -35,7 +35,7 @@ private:
     int instance;
 };
 
-} /* namespace protein */
+} /* namespace protein_cuda */
 } /* namespace megamol */
 
 #endif /* MEGAMOLCORE_MAPPABLECATEGORYFLOAT_H_INCLUDED */

@@ -27,9 +27,9 @@ using namespace megamol::core;
 
 
 /*
- * protein::CCP4VolumeData::CCP4VolumeData
+ * protein_cuda::CCP4VolumeData::CCP4VolumeData
  */
-protein::CCP4VolumeData::CCP4VolumeData(void) : Module (),
+protein_cuda::CCP4VolumeData::CCP4VolumeData(void) : Module (),
         volumeDataCalleeSlot( "providedata", "Connects the rendering with volume data storage"),
 		filename( "filename", "The path to the CCP4 volume data file to load."),
         symmetry( 0), map( 0)
@@ -44,19 +44,19 @@ protein::CCP4VolumeData::CCP4VolumeData(void) : Module (),
 
 
 /*
- * protein::CCP4VolumeData::~CCP4VolumeData
+ * protein_cuda::CCP4VolumeData::~CCP4VolumeData
  */
-protein::CCP4VolumeData::~CCP4VolumeData(void) {
+protein_cuda::CCP4VolumeData::~CCP4VolumeData(void) {
     this->Release ();
 }
 
 
 /*
- * protein::CCP4VolumeData::VolumeDataCallback
+ * protein_cuda::CCP4VolumeData::VolumeDataCallback
  */
-bool protein::CCP4VolumeData::VolumeDataCallback(Call& call) {
+bool protein_cuda::CCP4VolumeData::VolumeDataCallback(Call& call) {
     // cast call
-    protein::CallProteinVolumeData *volcall = dynamic_cast<protein::CallProteinVolumeData*>(&call);
+    protein_cuda::CallProteinVolumeData *volcall = dynamic_cast<protein_cuda::CallProteinVolumeData*>(&call);
 
     if( this->filename.IsDirty())  {
 		// load the data.
@@ -94,9 +94,9 @@ bool protein::CCP4VolumeData::VolumeDataCallback(Call& call) {
 }
 
 /*
- *protein::CCP4VolumeData::create
+ *protein_cuda::CCP4VolumeData::create
  */
-bool protein::CCP4VolumeData::create(void) {
+bool protein_cuda::CCP4VolumeData::create(void) {
     this->tryLoadFile();
     this->filename.ResetDirty();
     return true;
@@ -104,9 +104,9 @@ bool protein::CCP4VolumeData::create(void) {
 
 
 /*
- *protein::CCP4VolumeData::tryLoadFile
+ *protein_cuda::CCP4VolumeData::tryLoadFile
  */
-bool protein::CCP4VolumeData::tryLoadFile(void) {
+bool protein_cuda::CCP4VolumeData::tryLoadFile(void) {
     using vislib::sys::Log;
 
 	// clear all containers
@@ -188,9 +188,9 @@ bool protein::CCP4VolumeData::tryLoadFile(void) {
 
 
 /*
- *protein::CCP4VolumeData::ClearData
+ *protein_cuda::CCP4VolumeData::ClearData
  */
-void protein::CCP4VolumeData::ClearData() {
+void protein_cuda::CCP4VolumeData::ClearData() {
     // set header values to default
     this->header.volDim[0] = this->header.volDim[1] = this->header.volDim[2] = 1;
     // data type

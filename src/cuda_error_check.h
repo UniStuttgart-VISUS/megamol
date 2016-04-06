@@ -10,8 +10,8 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#ifndef MMPROTEINPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
-#define MMPROTEINPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 
 #include "vislib/sys/Log.h"
 #include <cuda_runtime.h>
@@ -82,5 +82,5 @@ inline bool cudaSafeCall(cudaError err, const char *file, const int line ) {
     return true;
 }
 
-#endif // MMPROTEINPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))

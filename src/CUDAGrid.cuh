@@ -8,8 +8,8 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_CUDAGRID_CUH_INCLUDED
-#define MMPROTEINPLUGIN_CUDAGRID_CUH_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_CUDAGRID_CUH_INCLUDED
+#define MMPROTEINCUDAPLUGIN_CUDAGRID_CUH_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -418,4 +418,4 @@ inline __device__ bool IsValidGridpos(float3 pos) {
     return true;
 }
 
-#endif // MMPROTEINPLUGIN_CUDAGRID_CUH_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_CUDAGRID_CUH_INCLUDED

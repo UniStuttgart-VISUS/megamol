@@ -46,7 +46,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 /*
@@ -263,11 +263,11 @@ bool ProteinVolumeRenderer::create ( void ) {
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereVertex", vertSrc ) ) {
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::sphereVertex", vertSrc ) ) {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
         return false;
     }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereFragment", fragSrc ) ) {
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::sphereFragment", fragSrc ) ) {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
         return false;
     }
@@ -281,11 +281,11 @@ bool ProteinVolumeRenderer::create ( void ) {
     }
 
     // Load clipped sphere shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereClipPlaneVertex", vertSrc ) ) {
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::sphereClipPlaneVertex", vertSrc ) ) {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName() );
         return false;
     }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereClipPlaneFragment", fragSrc ) ) {
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::sphereClipPlaneFragment", fragSrc ) ) {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName() );
         return false;
     }
@@ -299,11 +299,11 @@ bool ProteinVolumeRenderer::create ( void ) {
     }
 
     // Load cylinder shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::cylinderVertex", vertSrc ) ) {
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::cylinderVertex", vertSrc ) ) {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName() );
         return false;
     }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::cylinderFragment", fragSrc ) ) {
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::cylinderFragment", fragSrc ) ) {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for cylinder shader", this->ClassName() );
         return false;
     }

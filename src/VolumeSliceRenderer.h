@@ -18,7 +18,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 	/**
 	 * Protein Renderer class
 	 */

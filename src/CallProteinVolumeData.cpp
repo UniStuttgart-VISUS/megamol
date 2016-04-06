@@ -19,9 +19,9 @@ using namespace megamol;
 /****************************************************************************/
 
 /*
- * protein::CallProteinVolumeData::CallProteinVolumeData
+ * protein_cuda::CallProteinVolumeData::CallProteinVolumeData
  */
-protein::CallProteinVolumeData::CallProteinVolumeData(void) : Call(),
+protein_cuda::CallProteinVolumeData::CallProteinVolumeData(void) : Call(),
     map( NULL), mapMemory( false), volDim( 0, 0, 0),
     minDensity( 0.0f), maxDensity( 0.0f), meanDensity( 0.0f)
 {
@@ -30,9 +30,9 @@ protein::CallProteinVolumeData::CallProteinVolumeData(void) : Call(),
 
 
 /*
- * protein::CallProteinVolumeData::~CallProteinVolumeData
+ * protein_cuda::CallProteinVolumeData::~CallProteinVolumeData
  */
-protein::CallProteinVolumeData::~CallProteinVolumeData(void) {
+protein_cuda::CallProteinVolumeData::~CallProteinVolumeData(void) {
 
 }
 
@@ -40,7 +40,7 @@ protein::CallProteinVolumeData::~CallProteinVolumeData(void) {
 /*
  * Sets a pointer to the voxel map array.
  */
-void protein::CallProteinVolumeData::SetVoxelMapPointer( float *voxelMap) {
+void protein_cuda::CallProteinVolumeData::SetVoxelMapPointer( float *voxelMap) {
     if( this->mapMemory ) delete[] this->map;
     this->map = voxelMap;
     this->mapMemory = false;

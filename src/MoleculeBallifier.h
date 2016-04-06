@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -17,7 +17,7 @@
 #include "vislib/RawStorage.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     class MoleculeBallifier : public megamol::core::Module {
     public:
@@ -47,7 +47,7 @@ namespace protein {
         int frameOld;
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif /* MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED */
+#endif /* MMPROTEINCUDAPLUGIN_MOLECULEBALLIFIER_H_INCLUDED */

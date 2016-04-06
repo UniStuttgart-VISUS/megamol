@@ -2,7 +2,7 @@
 #include "ResidueSelectionCall.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * ResidueSelectionCall::CallForGetSelection

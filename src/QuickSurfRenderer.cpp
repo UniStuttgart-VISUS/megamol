@@ -38,11 +38,11 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
- * protein::QuickSurfRenderer::QuickSurfRenderer (CTOR)
+ * protein_cuda::QuickSurfRenderer::QuickSurfRenderer (CTOR)
  */
 QuickSurfRenderer::QuickSurfRenderer(void) : Renderer3DModuleDS (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
@@ -155,7 +155,7 @@ QuickSurfRenderer::QuickSurfRenderer(void) : Renderer3DModuleDS (),
 
 
 /*
- * protein::QuickSurfRenderer::~QuickSurfRenderer (DTOR)
+ * protein_cuda::QuickSurfRenderer::~QuickSurfRenderer (DTOR)
  */
 QuickSurfRenderer::~QuickSurfRenderer(void)  {
     if (cudaqsurf) {
@@ -183,7 +183,7 @@ QuickSurfRenderer::~QuickSurfRenderer(void)  {
 
 
 /*
- * protein::QuickSurfRenderer::release
+ * protein_cuda::QuickSurfRenderer::release
  */
 void QuickSurfRenderer::release(void) {
 
@@ -191,7 +191,7 @@ void QuickSurfRenderer::release(void) {
 
 
 /*
- * protein::QuickSurfRenderer::create
+ * protein_cuda::QuickSurfRenderer::create
  */
 bool QuickSurfRenderer::create(void) {
     if( !isExtAvailable( "GL_ARB_vertex_program") || !ogl_IsVersionGEQ(2,0) )
@@ -219,11 +219,11 @@ bool QuickSurfRenderer::create(void) {
     // load the shader files for the per pixel lighting //
     //////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::vertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::cartoon::perpixellight::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::fragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::cartoon::perpixellight::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
         return false;
     }
@@ -233,11 +233,11 @@ bool QuickSurfRenderer::create(void) {
     // load the shader files for the per pixel lighting (OFFSCREEN/PASSTHROUGH RENDERER) //
     ///////////////////////////////////////////////////////////////////////////////////////
     // vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::vertexOR", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::cartoon::perpixellight::vertexOR", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight OR shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::cartoon::perpixellight::fragmentOR", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::cartoon::perpixellight::fragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight OR shader");
         return false;
     }
@@ -248,7 +248,7 @@ bool QuickSurfRenderer::create(void) {
 
 
 /*
- * protein::QuickSurfRenderer::GetCapabilities
+ * protein_cuda::QuickSurfRenderer::GetCapabilities
  */
 bool QuickSurfRenderer::GetCapabilities(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -263,7 +263,7 @@ bool QuickSurfRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * protein::QuickSurfRenderer::GetExtents
+ * protein_cuda::QuickSurfRenderer::GetExtents
  */
 bool QuickSurfRenderer::GetExtents(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -293,7 +293,7 @@ bool QuickSurfRenderer::GetExtents(Call& call) {
  **********************************************************************/
 
 /*
- * protein::QuickSurfRenderer::Render
+ * protein_cuda::QuickSurfRenderer::Render
  */
 bool QuickSurfRenderer::Render(Call& call) {
 

@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_GRIDPARAMS_H_INCLUDED
-#define MMPROTEINPLUGIN_GRIDPARAMS_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_GRIDPARAMS_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_GRIDPARAMS_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -21,4 +21,4 @@ struct gridParams {
     unsigned int size[3];
 };
 
-#endif // MMPROTEINPLUGIN_GRIDPARAMS_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_GRIDPARAMS_H_INCLUDED

@@ -20,7 +20,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 
 
@@ -107,7 +107,7 @@ namespace protein {
 
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_PROTEIN_SELECTION_H_INCLUDED */

@@ -30,13 +30,13 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
- * protein::UnstructuredGridRenderer::UnstructuredGridRenderer (CTOR)
+ * protein_cuda::UnstructuredGridRenderer::UnstructuredGridRenderer (CTOR)
  */
-protein::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DModule (),
+protein_cuda::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DModule (),
     dataCallerSlot( "getData", "Connects the rendering with the data storage"),
     sphereRadSlot("sphereRad", "The sphere radius scale factor") {
 
@@ -49,25 +49,25 @@ protein::UnstructuredGridRenderer::UnstructuredGridRenderer(void) : Renderer3DMo
 
 
 /*
- * protein::UnstructuredGridRenderer::~UnstructuredGridRenderer (DTOR)
+ * protein_cuda::UnstructuredGridRenderer::~UnstructuredGridRenderer (DTOR)
  */
-protein::UnstructuredGridRenderer::~UnstructuredGridRenderer(void)  {
+protein_cuda::UnstructuredGridRenderer::~UnstructuredGridRenderer(void)  {
     this->Release ();
 }
 
 
 /*
- * protein::UnstructuredGridRenderer::release
+ * protein_cuda::UnstructuredGridRenderer::release
  */
-void protein::UnstructuredGridRenderer::release(void) {
+void protein_cuda::UnstructuredGridRenderer::release(void) {
 
 }
 
 
 /*
- * protein::UnstructuredGridRenderer::create
+ * protein_cuda::UnstructuredGridRenderer::create
  */
-bool protein::UnstructuredGridRenderer::create(void)
+bool protein_cuda::UnstructuredGridRenderer::create(void)
 {
     if (isExtAvailable("GL_ARB_vertex_program") == 0) {
         return false;
@@ -89,11 +89,11 @@ bool protein::UnstructuredGridRenderer::create(void)
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
@@ -107,11 +107,11 @@ bool protein::UnstructuredGridRenderer::create(void)
     }
 
     // Load cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
@@ -129,9 +129,9 @@ bool protein::UnstructuredGridRenderer::create(void)
 
 
 /*
- * protein::UnstructuredGridRenderer::GetCapabilities
+ * protein_cuda::UnstructuredGridRenderer::GetCapabilities
  */
-bool protein::UnstructuredGridRenderer::GetCapabilities(Call& call) {
+bool protein_cuda::UnstructuredGridRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -144,9 +144,9 @@ bool protein::UnstructuredGridRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * protein::UnstructuredGridRenderer::GetExtents
+ * protein_cuda::UnstructuredGridRenderer::GetExtents
  */
-bool protein::UnstructuredGridRenderer::GetExtents(Call& call) {
+bool protein_cuda::UnstructuredGridRenderer::GetExtents(Call& call) {
 
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) {
@@ -177,9 +177,9 @@ bool protein::UnstructuredGridRenderer::GetExtents(Call& call) {
 }
 
 /*
- * protein::UnstructuredGridRenderer::Render
+ * protein_cuda::UnstructuredGridRenderer::Render
  */
-bool protein::UnstructuredGridRenderer::Render(Call& call) {
+bool protein_cuda::UnstructuredGridRenderer::Render(Call& call) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if( cr3d == NULL ) return false;

@@ -2,8 +2,8 @@
  * CUDA helper functions for MegaMol (partially derived from cutil and cutilmath)
  */
 
-#ifndef MMPROTEINPLUGIN_CUDAHELPER_H_INCLUDED
-#define MMPROTEINPLUGIN_CUDAHELPER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_CUDAHELPER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_CUDAHELPER_H_INCLUDED
 
 // only use this header if CUDA is enabled
 #ifdef WITH_CUDA
@@ -1212,4 +1212,4 @@ inline dim3 Grid(const unsigned int size, const int threadsPerBlock) {
 }
 
 #endif // WITH_CUDA
-#endif // MMPROTEINPLUGIN_CUDAHELPER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_CUDAHELPER_H_INCLUDED

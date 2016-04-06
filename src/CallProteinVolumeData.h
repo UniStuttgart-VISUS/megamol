@@ -7,8 +7,8 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CallProteinVolumeData_H_INCLUDED
-#define MEGAMOL_PROTEIN_CallProteinVolumeData_H_INCLUDED
+#ifndef MEGAMOL_PROTEINCUDA_CallProteinVolumeData_H_INCLUDED
+#define MEGAMOL_PROTEINCUDA_CallProteinVolumeData_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -30,7 +30,7 @@
 #endif /* _WIN32 */
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Base class of rendering graph calls and data interfaces for volume data.
@@ -249,7 +249,7 @@ namespace protein {
     typedef megamol::core::CallAutoDescription<CallProteinVolumeData> CallProteinVolumeDataDescription;
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_PROTEIN_CallProteinVolumeData_H_INCLUDED */

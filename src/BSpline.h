@@ -17,7 +17,7 @@
 #include <vector>
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 	class BSpline
 	{

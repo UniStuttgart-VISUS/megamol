@@ -29,7 +29,7 @@
 #define NUM 10000
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Protein Renderer class
@@ -321,7 +321,7 @@ namespace protein {
     };
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLPROTEIN_MOLVOLCUDARENDERER_H_INCLUDED

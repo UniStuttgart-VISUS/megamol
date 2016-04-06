@@ -31,9 +31,9 @@ using namespace megamol;
 using namespace megamol::core::moldyn;
 
 /*
- * protein::special::SphereRendererMouse::SphereRendererMouse
+ * protein_cuda::special::SphereRendererMouse::SphereRendererMouse
  */
-protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
+protein_cuda::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
         molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage."),
         sphereRadSclParam("sphereRadScl", "Scale factor for the sphere radius."),
         atomColParam("atomColor", "The color of unselected atoms." ),
@@ -79,17 +79,17 @@ protein::SphereRendererMouse::SphereRendererMouse() : Renderer3DModuleMouse(),
 
 
 /*
- * protein::SphereRendererMouse::~SphereRendererMouse
+ * protein_cuda::SphereRendererMouse::~SphereRendererMouse
  */
-protein::SphereRendererMouse::~SphereRendererMouse() {
+protein_cuda::SphereRendererMouse::~SphereRendererMouse() {
     this->Release();
 }
 
 
 /*
- * protein::SphereRendererMouse::create
+ * protein_cuda::SphereRendererMouse::create
  */
-bool protein::SphereRendererMouse::create(void) {
+bool protein_cuda::SphereRendererMouse::create(void) {
     if (!areExtsAvailable( "GL_EXT_gpu_shader4 GL_EXT_geometry_shader4 GL_EXT_bindable_uniform")
         || !ogl_IsVersionGEQ(2,0)
         || !areExtsAvailable( "GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects")
@@ -109,11 +109,11 @@ bool protein::SphereRendererMouse::create(void) {
     ShaderSource vertSrc, geomSrc, fragSrc;
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
@@ -127,15 +127,15 @@ bool protein::SphereRendererMouse::create(void) {
     }
 
     // Load alternative sphere shader (uses geometry shader)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
         return false;
     }
@@ -154,9 +154,9 @@ bool protein::SphereRendererMouse::create(void) {
 
 
 /*
- * protein::SphereRendererMouse::GetCapabilities
+ * protein_cuda::SphereRendererMouse::GetCapabilities
  */
-bool protein::SphereRendererMouse::GetCapabilities(core::Call& call) {
+bool protein_cuda::SphereRendererMouse::GetCapabilities(core::Call& call) {
     core::view::AbstractCallRender3D *cr3d = dynamic_cast<core::view::AbstractCallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -170,9 +170,9 @@ bool protein::SphereRendererMouse::GetCapabilities(core::Call& call) {
 
 
 /*
- * protein::SphereRendererMouse::GetExtents
+ * protein_cuda::SphereRendererMouse::GetExtents
  */
-bool protein::SphereRendererMouse::GetExtents(core::Call& call) {
+bool protein_cuda::SphereRendererMouse::GetExtents(core::Call& call) {
 
     core::view::AbstractCallRender3D *cr3d = dynamic_cast<core::view::AbstractCallRender3D *>(&call);
     if( cr3d == NULL ) return false;
@@ -199,9 +199,9 @@ bool protein::SphereRendererMouse::GetExtents(core::Call& call) {
 
 
 /*
- * protein::SphereRendererMouse::Render
+ * protein_cuda::SphereRendererMouse::Render
  */
-bool protein::SphereRendererMouse::Render(core::Call& call) {
+bool protein_cuda::SphereRendererMouse::Render(core::Call& call) {
     using namespace vislib::math;
 
     // Update parameters
@@ -566,17 +566,17 @@ bool protein::SphereRendererMouse::Render(core::Call& call) {
 
 
 /*
- * protein::SphereRendererMouse::release
+ * protein_cuda::SphereRendererMouse::release
  */
-void protein::SphereRendererMouse::release(void) {
+void protein_cuda::SphereRendererMouse::release(void) {
     // intentionally empty
 }
 
 
 /*
- * protein::SphereRendererMouse::MouseEvent
+ * protein_cuda::SphereRendererMouse::MouseEvent
  */
-bool protein::SphereRendererMouse::MouseEvent(int x, int y, core::view::MouseFlags flags) {
+bool protein_cuda::SphereRendererMouse::MouseEvent(int x, int y, core::view::MouseFlags flags) {
 
     this->mouseX = x;
     this->mouseY = y;

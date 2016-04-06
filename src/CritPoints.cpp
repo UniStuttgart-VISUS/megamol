@@ -29,7 +29,7 @@ using namespace vislib::math;
 /*
  * protein:CritPoints::GetCritPoints
  */
-vislib::Array<float> protein::CritPoints::GetCritPoints(UniGrid3D<float3> &uniGrid,
+vislib::Array<float> protein_cuda::CritPoints::GetCritPoints(UniGrid3D<float3> &uniGrid,
         vislib::math::Vector<float, 3> minCoord,
         vislib::math::Vector<float, 3> maxCoord) {
 
@@ -103,7 +103,7 @@ vislib::Array<float> protein::CritPoints::GetCritPoints(UniGrid3D<float3> &uniGr
 
 
 
-vislib::Array<float> protein::CritPoints::GetCritPointsGreene(
+vislib::Array<float> protein_cuda::CritPoints::GetCritPointsGreene(
         UniGrid3D<float3> &uniGrid,
         vislib::math::Vector<float, 3> minGridCoord,
         vislib::math::Vector<float, 3> maxGridCoord,
@@ -142,7 +142,7 @@ vislib::Array<float> protein::CritPoints::GetCritPointsGreene(
 }
 
 
-/*vislib::Array<float> protein::CritPoints::GetCritPoints(UniGrid3D<float3> &uniGrid,
+/*vislib::Array<float> protein_cuda::CritPoints::GetCritPoints(UniGrid3D<float3> &uniGrid,
         vislib::math::Vector<float, 3> minCoord,
         vislib::math::Vector<float, 3> maxCoord) {
 
@@ -267,9 +267,9 @@ vislib::Array<float> protein::CritPoints::GetCritPointsGreene(
 
 
 /*
- * protein::CritPoints::calcDegreeOfCell
+ * protein_cuda::CritPoints::calcDegreeOfCell
  */
-int protein::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
+int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
         vislib::math::Vector<float, 3> minCoord,
         vislib::math::Vector<float, 3> maxCoord) {
 
@@ -422,9 +422,9 @@ int protein::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
 
 
 /*
- * protein::CritPoints::calcSolidAngleOfTriangle
+ * protein_cuda::CritPoints::calcSolidAngleOfTriangle
  */
-float protein::CritPoints::calcSolidAngleOfTriangle(UniGrid3D<float3> &uniGrid,
+float protein_cuda::CritPoints::calcSolidAngleOfTriangle(UniGrid3D<float3> &uniGrid,
         vislib::Array<vislib::math::Vector<float, 3> > points) {
 
     float angleSolid = 0.0f, result;
@@ -493,7 +493,7 @@ float protein::CritPoints::calcSolidAngleOfTriangle(UniGrid3D<float3> &uniGrid,
 }
 
 
-float protein::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &uniGrid,
+float protein_cuda::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &uniGrid,
         vislib::Array<vislib::math::Vector<float, 3> > points) {
 
     vislib::Array<vislib::math::Vector<float, 3> > triVecs;
@@ -548,9 +548,9 @@ float protein::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &uniGri
 
 
 /*
- * protein::CritPoints::sampleUniGridNearestNeighbour
+ * protein_cuda::CritPoints::sampleUniGridNearestNeighbour
  */
-vislib::math::Vector<float, 3> protein::CritPoints::sampleUniGridNearestNeighbour(
+vislib::math::Vector<float, 3> protein_cuda::CritPoints::sampleUniGridNearestNeighbour(
         UniGrid3D<float3> &uniGrid,
         vislib::math::Vector<float, 3> pos) {
 

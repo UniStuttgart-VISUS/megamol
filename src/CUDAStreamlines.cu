@@ -20,7 +20,7 @@
 #include <cuda_gl_interop.h>
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 // Offset in output VBO for positions
 const int CUDAStreamlines::vboOffsPos = 0;

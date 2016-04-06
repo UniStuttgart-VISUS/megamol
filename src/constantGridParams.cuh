@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_CONSTANTGRIDPARAMS_CUH_INCLUDED
-#define MMPROTEINPLUGIN_CONSTANTGRIDPARAMS_CUH_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_CONSTANTGRIDPARAMS_CUH_INCLUDED
+#define MMPROTEINCUDAPLUGIN_CONSTANTGRIDPARAMS_CUH_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -18,4 +18,4 @@ __constant__ __device__ uint3 gridSize_D;     // The size of the volume texture
 __constant__ __device__ float3 gridOrg_D;     // The origin of the volume texture
 __constant__ __device__ float3 gridDelta_D;   // The spacing of the volume texture
 
-#endif // MMPROTEINPLUGIN_CONSTANTGRIDPARAMS_CUH_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_CONSTANTGRIDPARAMS_CUH_INCLUDED

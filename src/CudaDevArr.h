@@ -10,14 +10,14 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#ifndef MMPROTEINPLUGIN_CUDADEVARR_H_INCLUDED
-#define MMPROTEINPLUGIN_CUDADEVARR_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
 
 #include "cuda_runtime.h"
 #include "cuda_error_check.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 template<class T>
 class CudaDevArr {
@@ -145,8 +145,8 @@ private:
     T *pt_D;
 };
 
-} // namespace protein
+} // namespace protein_cuda
 } // namespace megamol
 
-#endif // MMPROTEINPLUGIN_CUDADEVARR_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_CUDADEVARR_H_INCLUDED
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))

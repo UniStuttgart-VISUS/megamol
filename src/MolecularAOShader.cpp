@@ -14,7 +14,7 @@
 
 #undef max
 
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * MolecularAOShader::SphereRenderer

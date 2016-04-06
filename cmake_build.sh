@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MegaMol protein
+# MegaMol protein_cuda
 # building utilty script
 # Copyright 2015 by MegaMol Team
 # All rights reserved
@@ -29,7 +29,7 @@ vislib_DIR=
 
 # be proud of yourself
 echo
-echo "  MegaMol(TM) protein"
+echo "  MegaMol(TM) protein_cuda"
 echo "  cmake_build.sh utility script"
 echo "  Copyright 2015, by MegaMol Team"
 echo "  All rights reserved"

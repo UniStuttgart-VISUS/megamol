@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_COARSEGRAINDATALOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_COARSEGRAINDATALOADER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_COARSEGRAINDATALOADER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_COARSEGRAINDATALOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -21,7 +21,7 @@
 #include "SphereDataCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
 	 * Data source for PDB files
@@ -152,7 +152,7 @@ namespace protein {
 	};
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif // MMPROTEINPLUGIN_COARSEGRAINDATALOADER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_COARSEGRAINDATALOADER_H_INCLUDED

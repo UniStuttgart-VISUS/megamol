@@ -6,8 +6,8 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLPROTEIN_BSITEDATA_H_INCLUDED
-#define MEGAMOLPROTEIN_BSITEDATA_H_INCLUDED
+#ifndef MEGAMOLPROTEINCUDA_BSITEDATA_H_INCLUDED
+#define MEGAMOLPROTEINCUDA_BSITEDATA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -22,7 +22,7 @@
 		
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     class BindingSiteDataSource : public megamol::core::Module {
     public:
@@ -120,7 +120,7 @@ namespace protein {
 
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLPROTEIN_BSITEDATA_H_INCLUDED

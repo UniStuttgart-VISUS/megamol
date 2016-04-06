@@ -5,15 +5,15 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_CALLMOUSEINPUT_H_INCLUDED
-#define MMPROTEINPLUGIN_CALLMOUSEINPUT_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_CALLMOUSEINPUT_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_CALLMOUSEINPUT_H_INCLUDED
 
 #include "mmcore/Call.h"
 #include "mmcore/CallAutoDescription.h"
 #include "mmcore/view/MouseFlags.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /**
  * TODO
@@ -112,7 +112,7 @@ private:
     core::view::MouseFlags mouseFlags;
 };
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_CALLMOUSEINPUT_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_CALLMOUSEINPUT_H_INCLUDED

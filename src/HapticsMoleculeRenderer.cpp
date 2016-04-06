@@ -36,11 +36,11 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
- * protein::HapticsMoleculeRenderer::HapticsMoleculeRenderer (CTOR)
+ * protein_cuda::HapticsMoleculeRenderer::HapticsMoleculeRenderer (CTOR)
  */
 HapticsMoleculeRenderer::HapticsMoleculeRenderer(void) : Renderer3DModule (),
     molDataCallerSlot( "getData", "Connects the molecule rendering with molecule data storage"),
@@ -140,7 +140,7 @@ HapticsMoleculeRenderer::HapticsMoleculeRenderer(void) : Renderer3DModule (),
 
 
 /*
- * protein::HapticsMoleculeRenderer::~HapticsMoleculeRenderer (DTOR)
+ * protein_cuda::HapticsMoleculeRenderer::~HapticsMoleculeRenderer (DTOR)
  */
 HapticsMoleculeRenderer::~HapticsMoleculeRenderer(void)  {
     this->Release();
@@ -148,7 +148,7 @@ HapticsMoleculeRenderer::~HapticsMoleculeRenderer(void)  {
 
 
 /*
- * protein::HapticsMoleculeRenderer::release
+ * protein_cuda::HapticsMoleculeRenderer::release
  */
 void HapticsMoleculeRenderer::release(void) {
     hlDeleteShapes(this->shaderID, 1);
@@ -156,7 +156,7 @@ void HapticsMoleculeRenderer::release(void) {
 
 
 /*
- * protein::HapticsMoleculeRenderer::create
+ * protein_cuda::HapticsMoleculeRenderer::create
  */
 bool HapticsMoleculeRenderer::create(void) {
     if (ogl_IsVersionGEQ(2,0) == 0) {
@@ -182,11 +182,11 @@ bool HapticsMoleculeRenderer::create(void) {
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
     }
@@ -200,11 +200,11 @@ bool HapticsMoleculeRenderer::create(void) {
     }
 
     // Load cylinder shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
@@ -218,12 +218,12 @@ bool HapticsMoleculeRenderer::create(void) {
     }
     
     // Load arrow shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::arrowVertex", vertSrc ) )
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::arrowVertex", vertSrc ) )
     {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for arrow shader", this->ClassName() );
         return false;
     }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::arrowFragment", fragSrc ) )
+    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein_cuda::std::arrowFragment", fragSrc ) )
     {
         Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for arrow shader", this->ClassName() );
         return false;
@@ -288,7 +288,7 @@ bool HapticsMoleculeRenderer::create(void) {
 
 
 /*
- * protein::HapticsMoleculeRenderer::GetCapabilities
+ * protein_cuda::HapticsMoleculeRenderer::GetCapabilities
  */
 bool HapticsMoleculeRenderer::GetCapabilities(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
@@ -303,7 +303,7 @@ bool HapticsMoleculeRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * protein::HapticsMoleculeRenderer::GetExtents
+ * protein_cuda::HapticsMoleculeRenderer::GetExtents
  */
 bool HapticsMoleculeRenderer::GetExtents(Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
@@ -333,7 +333,7 @@ bool HapticsMoleculeRenderer::GetExtents(Call& call) {
  **********************************************************************/
 
 /*
- * protein::HapticsMoleculeRenderer::Render
+ * protein_cuda::HapticsMoleculeRenderer::Render
  */
 bool HapticsMoleculeRenderer::Render(Call& call) {
     

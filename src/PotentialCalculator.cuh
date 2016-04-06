@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_POTENTIALCALCULATOR_CUH_INCLUDED
-#define MMPROTEINPLUGIN_POTENTIALCALCULATOR_CUH_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_POTENTIALCALCULATOR_CUH_INCLUDED
+#define MMPROTEINCUDAPLUGIN_POTENTIALCALCULATOR_CUH_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -26,4 +26,4 @@ cudaError_t DirectCoulombSummation(float *atomData, uint atomCount,
         float *potential, uint3 gridSize, float gridspacing);
 
 
-#endif // MMPROTEINPLUGIN_POTENTIALCALCULATOR_CUH_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_POTENTIALCALCULATOR_CUH_INCLUDED

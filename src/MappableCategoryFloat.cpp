@@ -2,7 +2,7 @@
 #include "MappableCategoryFloat.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 MappableCategoryFloat::MappableCategoryFloat(int instance) : instance(instance) {
 }
@@ -87,5 +87,5 @@ vislib::Pair<float, float> MappableCategoryFloat::GetOrdinateRange() const {
     return vislib::Pair<float, float>(-1.0f, 10.0f);;
 }
 
-} /* namespace protein */
+} /* namespace protein_cuda */
 } /* namespace megamol */

@@ -28,9 +28,9 @@ using namespace vislib;
 
 
 /*
- * protein::DofRendererDeferred::protein::DofRendererDeferred
+ * protein_cuda::DofRendererDeferred::protein_cuda::DofRendererDeferred
  */
-protein::DofRendererDeferred::DofRendererDeferred(void)
+protein_cuda::DofRendererDeferred::DofRendererDeferred(void)
 	: core::view::Renderer3DModuleDS(),
 	  rendererSlot("renderer", "..."),
 	  rModeParam("rMode", "The render mode"),
@@ -95,9 +95,9 @@ protein::DofRendererDeferred::DofRendererDeferred(void)
 
 
 /*
- * protein::DofRendererDeferred::create
+ * protein_cuda::DofRendererDeferred::create
  */
-bool protein::DofRendererDeferred::create(void) {
+bool protein_cuda::DofRendererDeferred::create(void) {
 
 	graphics::gl::ShaderSource vertSrc;
 	graphics::gl::ShaderSource fragSrc;
@@ -268,9 +268,9 @@ bool protein::DofRendererDeferred::create(void) {
 
 
 /*
- * protein::DofRendererDeferred::release
+ * protein_cuda::DofRendererDeferred::release
  */
-void protein::DofRendererDeferred::release(void) {
+void protein_cuda::DofRendererDeferred::release(void) {
 	glDeleteTextures(1, &this->depthBuffer);
 	glDeleteTextures(1, &this->sourceBuffer);
 	glDeleteTextures(1, &this->fboMipMapTexId[0]);
@@ -282,17 +282,17 @@ void protein::DofRendererDeferred::release(void) {
 
 
 /*
- * protein::DofRendererDeferred::~DofRendererDeferred
+ * protein_cuda::DofRendererDeferred::~DofRendererDeferred
  */
-protein::DofRendererDeferred::~DofRendererDeferred(void) {
+protein_cuda::DofRendererDeferred::~DofRendererDeferred(void) {
 	this->Release();
 }
 
 
 /*
- * protein::DofRendererDeferred::GetCapabilities
+ * protein_cuda::DofRendererDeferred::GetCapabilities
  */
-bool protein::DofRendererDeferred::GetCapabilities(megamol::core::Call& call) {
+bool protein_cuda::DofRendererDeferred::GetCapabilities(megamol::core::Call& call) {
 
 	megamol::core::view::CallRender3D *crIn =
 			dynamic_cast< megamol::core::view::CallRender3D*>(&call);
@@ -313,9 +313,9 @@ bool protein::DofRendererDeferred::GetCapabilities(megamol::core::Call& call) {
 
 
 /*
- * protein::DofRendererDeferred::GetExtents
+ * protein_cuda::DofRendererDeferred::GetExtents
  */
-bool protein::DofRendererDeferred::GetExtents(megamol::core::Call& call) {
+bool protein_cuda::DofRendererDeferred::GetExtents(megamol::core::Call& call) {
 
 	megamol::core::view::CallRender3D *crIn =
 			dynamic_cast< megamol::core::view::CallRender3D*>(&call);
@@ -337,9 +337,9 @@ bool protein::DofRendererDeferred::GetExtents(megamol::core::Call& call) {
 
 
 /*
- * protein::DofRendererDeferred::Render
+ * protein_cuda::DofRendererDeferred::Render
  */
-bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
+bool protein_cuda::DofRendererDeferred::Render(megamol::core::Call& call) {
 
 	if(!updateParams()) return false;
 
@@ -454,9 +454,9 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 
 
 /*
- * protein::DofRendererDeferred::calcCocSlope
+ * protein_cuda::DofRendererDeferred::calcCocSlope
  */
-float protein::DofRendererDeferred::calcCocSlope(float d_focus, float a, float f) {
+float protein_cuda::DofRendererDeferred::calcCocSlope(float d_focus, float a, float f) {
 	// radius of the circle of confusion
 	// according to coc = abs( fd / (d - f) - f d_focus / (d_focus - f) )
 	//                    * (d - f) / (a d)
@@ -473,9 +473,9 @@ float protein::DofRendererDeferred::calcCocSlope(float d_focus, float a, float f
 
 
 /*
- * protein::DofRendererDeferred::createFbo
+ * protein_cuda::DofRendererDeferred::createFbo
  */
-bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
+bool protein_cuda::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 
 	// Delete textures + fbo if necessary
 	if(glIsFramebufferEXT(this->fbo)) {
@@ -565,9 +565,9 @@ bool protein::DofRendererDeferred::createFbo(GLuint width, GLuint height) {
 
 
 /*
- * protein::DofRendererDeferred::filterShaderX
+ * protein_cuda::DofRendererDeferred::filterShaderX
  */
-void protein::DofRendererDeferred::filterShaderX() {
+void protein_cuda::DofRendererDeferred::filterShaderX() {
 
 	// Filter horizontal
 
@@ -605,9 +605,9 @@ void protein::DofRendererDeferred::filterShaderX() {
 
 
 /*
- * protein::DofRendererDeferred::filterMipmap
+ * protein_cuda::DofRendererDeferred::filterMipmap
  */
-void protein::DofRendererDeferred::filterMipmap() {
+void protein_cuda::DofRendererDeferred::filterMipmap() {
 
 	int maxMipMaps = (int)floor(log((double) std::max(this->width,
 			this->height))/log(2.0)) + 1;
@@ -684,9 +684,9 @@ void protein::DofRendererDeferred::filterMipmap() {
 
 
 /*
- * protein::DofRendererDeferred::filterLee
+ * protein_cuda::DofRendererDeferred::filterLee
  */
-void protein::DofRendererDeferred::filterLee() {
+void protein_cuda::DofRendererDeferred::filterLee() {
 
 	int maxMipMaps = (int)floor(log((double) std::max(this->width,
 			this->height))/log(2.0)) + 1;
@@ -726,9 +726,9 @@ void protein::DofRendererDeferred::filterLee() {
 
 
 /*
- * protein::DofRendererDeferred::recalcShaderXParams
+ * protein_cuda::DofRendererDeferred::recalcShaderXParams
  */
-void protein::DofRendererDeferred::recalcShaderXParams() {
+void protein_cuda::DofRendererDeferred::recalcShaderXParams() {
 	const float coc_max = 10.0f; // 10 pixel coc_max (diameter) in shaderX
 	const float focalLen = this->focalLength/this->filmWidth*this->width;
 	const float d_focus = this->focalDist/this->filmWidth*this->width;
@@ -757,9 +757,9 @@ void protein::DofRendererDeferred::recalcShaderXParams() {
 
 
 /*
- * protein::DofRendererDeferred::createReducedTexShaderX
+ * protein_cuda::DofRendererDeferred::createReducedTexShaderX
  */
-void protein::DofRendererDeferred::createReducedTexShaderX() {
+void protein_cuda::DofRendererDeferred::createReducedTexShaderX() {
 
     // Create blurred low-res image
 
@@ -802,9 +802,9 @@ void protein::DofRendererDeferred::createReducedTexShaderX() {
 
 
 /*
- * protein::DofRendererDeferred::setupReduceMipmap
+ * protein_cuda::DofRendererDeferred::setupReduceMipmap
  */
-void protein::DofRendererDeferred::createReducedTexMipmap() {
+void protein_cuda::DofRendererDeferred::createReducedTexMipmap() {
 
 	//glViewport(0, 0, this->width/4, this->height/4);
 
@@ -846,9 +846,9 @@ void protein::DofRendererDeferred::createReducedTexMipmap() {
 
 
 /*
- * protein::DofRendererDeferred::drawBlurShaderX
+ * protein_cuda::DofRendererDeferred::drawBlurShaderX
  */
-void protein::DofRendererDeferred::drawBlurShaderX() {
+void protein_cuda::DofRendererDeferred::drawBlurShaderX() {
 
 	float cocSlope = this->calcCocSlope(this->focalDist, this->aperture,
 			this->focalLength);
@@ -897,9 +897,9 @@ void protein::DofRendererDeferred::drawBlurShaderX() {
 
 
 /*
- * protein::DofRendererDeferred::setupBlurMipmap
+ * protein_cuda::DofRendererDeferred::setupBlurMipmap
  */
-void protein::DofRendererDeferred::drawBlurMipmap() {
+void protein_cuda::DofRendererDeferred::drawBlurMipmap() {
 
 	// compute circle of confusion slope
 	float cocSlope = calcCocSlope(this->focalDist, this->aperture,
@@ -945,9 +945,9 @@ void protein::DofRendererDeferred::drawBlurMipmap() {
 
 
 /*
- * protein::DofRendererDeferred::updateParams
+ * protein_cuda::DofRendererDeferred::updateParams
  */
-bool protein::DofRendererDeferred::updateParams() {
+bool protein_cuda::DofRendererDeferred::updateParams() {
 
 	// Render mode
 	if (this->rModeParam.IsDirty()) {

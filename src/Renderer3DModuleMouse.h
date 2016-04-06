@@ -5,8 +5,8 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED
-#define MMPROTEINPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED
 
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/CalleeSlot.h"
@@ -14,7 +14,7 @@
 #include "CallMouseInput.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /**
  * TODO
@@ -90,6 +90,6 @@ private:
     core::CalleeSlot mouseSlot;
 };
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
-#endif // MMPROTEINPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_RENDERER3DMODULEMOUSE_H_INCLUDED

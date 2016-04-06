@@ -38,9 +38,9 @@ using namespace megamol;
 
 
 /*
- * protein::DataWriter::DataWriter
+ * protein_cuda::DataWriter::DataWriter
  */
-protein::DataWriter::DataWriter() :
+protein_cuda::DataWriter::DataWriter() :
         AbstractJob(),
         Module(),
         dataCallerSlot("getdata", "Connects the module with the data source."),
@@ -79,25 +79,25 @@ protein::DataWriter::DataWriter() :
 
 
 /*
- * protein::DataWriter::~DataWriter
+ * protein_cuda::DataWriter::~DataWriter
  */
-protein::DataWriter::~DataWriter() {
+protein_cuda::DataWriter::~DataWriter() {
     this->Release();
 }
 
 
 /*
- * protein::DataWriter::IsRunning
+ * protein_cuda::DataWriter::IsRunning
  */
-bool protein::DataWriter::IsRunning(void) const {
+bool protein_cuda::DataWriter::IsRunning(void) const {
     return (!(this->jobDone));
 }
 
 
 /*
- * protein::DataWriter::Start
+ * protein_cuda::DataWriter::Start
  */
-bool protein::DataWriter::Start(void) {
+bool protein_cuda::DataWriter::Start(void) {
     using namespace vislib::sys;
 
     CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<CrystalStructureDataCall>();
@@ -126,9 +126,9 @@ bool protein::DataWriter::Start(void) {
 
 
 /*
- * protein::DataWriter::PutStatistics
+ * protein_cuda::DataWriter::PutStatistics
  */
-bool protein::DataWriter::PutStatistics(unsigned int frameIdx0,
+bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
 
     using namespace vislib::sys;
@@ -253,17 +253,17 @@ bool protein::DataWriter::PutStatistics(unsigned int frameIdx0,
 
 
 /*
- * protein::DataWriter::Terminate
+ * protein_cuda::DataWriter::Terminate
  */
-bool protein::DataWriter::Terminate(void) {
+bool protein_cuda::DataWriter::Terminate(void) {
     return true;
 }
 
 
 /*
- * protein::DataWriter::WriteFrame2VTI
+ * protein_cuda::DataWriter::WriteFrame2VTI
  */
-bool protein::DataWriter::WriteFrame2VTI(std::string filePrefix,
+bool protein_cuda::DataWriter::WriteFrame2VTI(std::string filePrefix,
                                          vislib::TString dataIdentifier,
                                          float org[3],
                                          float step[3],
@@ -352,9 +352,9 @@ bool protein::DataWriter::WriteFrame2VTI(std::string filePrefix,
 
 
 /*
- * protein::DataWriter::WriteDipoleToVTI
+ * protein_cuda::DataWriter::WriteDipoleToVTI
  */
-bool protein::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0,
+bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
     using namespace vislib::sys;
 
@@ -455,9 +455,9 @@ bool protein::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0,
 
 
 /*
- * protein::DataWriter::WriteDipoleToVTI
+ * protein_cuda::DataWriter::WriteDipoleToVTI
  */
-bool protein::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0,
+bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
     using namespace vislib::sys;
 
@@ -553,9 +553,9 @@ bool protein::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0,
 
 
 /*
- * protein::DataWriter::calcMapDisplacement
+ * protein_cuda::DataWriter::calcMapDisplacement
  */
-bool protein::DataWriter::CalcMapDipoleAvg(CrystalStructureDataCall *dc,
+bool protein_cuda::DataWriter::CalcMapDipoleAvg(CrystalStructureDataCall *dc,
         int offset,
         int quality,
         float radscale,
@@ -717,9 +717,9 @@ bool protein::DataWriter::CalcMapDipoleAvg(CrystalStructureDataCall *dc,
 
 
 /*
- * protein::DataWriter::CalcMapTiDisplAvg
+ * protein_cuda::DataWriter::CalcMapTiDisplAvg
  */
-bool protein::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
+bool protein_cuda::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
         int offset,
         int quality,
         float radscale,
@@ -840,9 +840,9 @@ bool protein::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
 
 
 /*
- * protein::DataWriter::GetNearestDistTi
+ * protein_cuda::DataWriter::GetNearestDistTi
  */
-float protein::DataWriter::GetNearestDistTi(CrystalStructureDataCall *dc,
+float protein_cuda::DataWriter::GetNearestDistTi(CrystalStructureDataCall *dc,
         int idx) {
 
     float *ti = new float[dc->GetCellCnt()*3];
@@ -881,9 +881,9 @@ float protein::DataWriter::GetNearestDistTi(CrystalStructureDataCall *dc,
 
 
 /*
- * protein::DataWriter::create
+ * protein_cuda::DataWriter::create
  */
-bool protein::DataWriter::create(void) {
+bool protein_cuda::DataWriter::create(void) {
     using namespace vislib::sys;
     // Create OpenGL interoperable CUDA device.
     //cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
@@ -902,9 +902,9 @@ bool protein::DataWriter::create(void) {
 
 
 /*
- * protein::DataWriter::release
+ * protein_cuda::DataWriter::release
  */
-void protein::DataWriter::release(void) {
+void protein_cuda::DataWriter::release(void) {
     if(this->frameData0 != NULL) delete[] this->frameData0;
     if(this->frameData1 != NULL) delete[] this->frameData1;
     if(this->frameDataDispl != NULL) delete[] this->frameDataDispl;
@@ -917,9 +917,9 @@ void protein::DataWriter::release(void) {
 
 
 /*
- * protein::DataWriter::writeFrame2VTKLegacy
+ * protein_cuda::DataWriter::writeFrame2VTKLegacy
  */
-bool protein::DataWriter::writeFrame2VTKLegacy(unsigned int frameIdx,
+bool protein_cuda::DataWriter::writeFrame2VTKLegacy(unsigned int frameIdx,
         float gridspacing,
         vislib::TString fileName) {
 
@@ -987,9 +987,9 @@ bool protein::DataWriter::writeFrame2VTKLegacy(unsigned int frameIdx,
 
 
 /*
- * protein::DataWriter::PutAvgCellLength
+ * protein_cuda::DataWriter::PutAvgCellLength
  */
-bool protein::DataWriter::PutAvgCellLengthAlt(unsigned int idxStart, unsigned int idxEnd,
+bool protein_cuda::DataWriter::PutAvgCellLengthAlt(unsigned int idxStart, unsigned int idxEnd,
         CrystalStructureDataCall *dc) {
     using namespace vislib;
     using namespace vislib::math;
@@ -1189,9 +1189,9 @@ bool protein::DataWriter::PutAvgCellLengthAlt(unsigned int idxStart, unsigned in
 
 
 /*
- * protein::DataWriter::PutAvgCellLength
+ * protein_cuda::DataWriter::PutAvgCellLength
  */
-bool protein::DataWriter::PutAvgCellLength(unsigned int idxStart, unsigned int offs,
+bool protein_cuda::DataWriter::PutAvgCellLength(unsigned int idxStart, unsigned int offs,
         CrystalStructureDataCall *dc) {
     using namespace vislib;
     using namespace vislib::math;
@@ -1292,9 +1292,9 @@ bool protein::DataWriter::PutAvgCellLength(unsigned int idxStart, unsigned int o
 
 
 /*
- * protein::DataWriter::CalcCellVolume
+ * protein_cuda::DataWriter::CalcCellVolume
  */
-float protein::DataWriter::CalcVolTetrahedron(
+float protein_cuda::DataWriter::CalcVolTetrahedron(
         vislib::math::Vector<float, 3> A,
         vislib::math::Vector<float, 3> B,
         vislib::math::Vector<float, 3> C,
@@ -1313,9 +1313,9 @@ float protein::DataWriter::CalcVolTetrahedron(
 }
 
 /*
- * protein::DataWriter::CalcCellVolume
+ * protein_cuda::DataWriter::CalcCellVolume
  */
-float protein::DataWriter::CalcCellVolume(
+float protein_cuda::DataWriter::CalcCellVolume(
         vislib::math::Vector<float, 3> A,
         vislib::math::Vector<float, 3> B,
         vislib::math::Vector<float, 3> C,
@@ -1338,9 +1338,9 @@ float protein::DataWriter::CalcCellVolume(
 
 
 /*
- * protein::DataWriter::WriteFrameFileBinAvg
+ * protein_cuda::DataWriter::WriteFrameFileBinAvg
  */
-bool protein::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc) {
+bool protein_cuda::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc) {
 
     const unsigned int NATOMS = 625000;
 
@@ -1438,9 +1438,9 @@ bool protein::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc) {
 
 
 /*
- * protein::DataWriter::PutCubeSize
+ * protein_cuda::DataWriter::PutCubeSize
  */
-bool protein::DataWriter::PutCubeSize(unsigned int frIdx0, unsigned int frIdx1,
+bool protein_cuda::DataWriter::PutCubeSize(unsigned int frIdx0, unsigned int frIdx1,
         CrystalStructureDataCall *dc) {
 
     using namespace vislib::math;
@@ -1496,9 +1496,9 @@ bool protein::DataWriter::PutCubeSize(unsigned int frIdx0, unsigned int frIdx1,
 
 
 /*
- * protein::DataWriter::WriteTiDispl
+ * protein_cuda::DataWriter::WriteTiDispl
  */
-bool protein::DataWriter::ReadTiDispl(
+bool protein_cuda::DataWriter::ReadTiDispl(
         CrystalStructureDataCall *dc) {
 
     std::fstream inStr;
@@ -1535,9 +1535,9 @@ bool protein::DataWriter::ReadTiDispl(
 
 
 /*
- * protein::DataWriter::ReadDipole
+ * protein_cuda::DataWriter::ReadDipole
  */
-bool protein::DataWriter::ReadTiODipole(
+bool protein_cuda::DataWriter::ReadTiODipole(
         CrystalStructureDataCall *dc) {
 
     std::fstream inStr;
@@ -1574,9 +1574,9 @@ bool protein::DataWriter::ReadTiODipole(
 
 
 /*
- * protein::DataWriter::WriteTiDispl
+ * protein_cuda::DataWriter::WriteTiDispl
  */
-bool protein::DataWriter::WriteTiDispl(
+bool protein_cuda::DataWriter::WriteTiDispl(
         CrystalStructureDataCall *dc) {
 
 
@@ -1724,9 +1724,9 @@ bool protein::DataWriter::WriteTiDispl(
 
 
 /*
- * protein::DataWriter::WriteTiODipole
+ * protein_cuda::DataWriter::WriteTiODipole
  */
-bool protein::DataWriter::WriteTiODipole(
+bool protein_cuda::DataWriter::WriteTiODipole(
         CrystalStructureDataCall *dc) {
 
 
@@ -1934,13 +1934,13 @@ bool protein::DataWriter::WriteTiODipole(
 
 
 /*
- * protein::DataWriter::sortByKey
+ * protein_cuda::DataWriter::sortByKey
  */
-void protein::DataWriter::sortByKey(unsigned int *idx, unsigned int n, float *pos) {
+void protein_cuda::DataWriter::sortByKey(unsigned int *idx, unsigned int n, float *pos) {
 
 }
 
-void protein::DataWriter::PutVelocity() {
+void protein_cuda::DataWriter::PutVelocity() {
 
     printf("Put velocity\n");
 
@@ -2013,7 +2013,7 @@ void protein::DataWriter::PutVelocity() {
 }
 
 
-void protein::DataWriter::PutDisplacement(CrystalStructureDataCall *dc) {
+void protein_cuda::DataWriter::PutDisplacement(CrystalStructureDataCall *dc) {
     using namespace vislib::math;
 
     unsigned int frameWin = 0;
@@ -2060,7 +2060,7 @@ void protein::DataWriter::PutDisplacement(CrystalStructureDataCall *dc) {
 }
 
 
-bool protein::DataWriter::GetMaxCoords(CrystalStructureDataCall *dc) {
+bool protein_cuda::DataWriter::GetMaxCoords(CrystalStructureDataCall *dc) {
 
     using namespace vislib::sys;
 
@@ -2103,7 +2103,7 @@ bool protein::DataWriter::GetMaxCoords(CrystalStructureDataCall *dc) {
 }
 
 
-bool protein::DataWriter::PutCubeVol(CrystalStructureDataCall *dc) {
+bool protein_cuda::DataWriter::PutCubeVol(CrystalStructureDataCall *dc) {
 
     using namespace vislib::sys;
 

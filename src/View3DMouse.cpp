@@ -17,7 +17,7 @@
 using namespace megamol;
 
 
-protein::View3DMouse::View3DMouse(void) : core::view::View3D(),
+protein_cuda::View3DMouse::View3DMouse(void) : core::view::View3D(),
          mouseSlot("mouse", "Slot to send mouse information to the renderer."),
          enableSelectingSlot("enableSelecting", "Enable selecting and picking with the mouse."),
          toggleSelect(false) {
@@ -33,7 +33,7 @@ protein::View3DMouse::View3DMouse(void) : core::view::View3D(),
 }
 
 
-void protein::View3DMouse::SetCursor2DButtonState(unsigned int btn, bool down) {
+void protein_cuda::View3DMouse::SetCursor2DButtonState(unsigned int btn, bool down) {
 
     //if(!this->toggleSelect) {
         View3D::SetCursor2DButtonState(btn, down); // Keep camera movement functional
@@ -57,7 +57,7 @@ void protein::View3DMouse::SetCursor2DButtonState(unsigned int btn, bool down) {
 }
 
 
-void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
+void protein_cuda::View3DMouse::SetCursor2DPosition(float x, float y) {
 
     if(!this->toggleSelect) {
         View3D::SetCursor2DPosition(x, y); // Keep camera movement functional
@@ -80,11 +80,11 @@ void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
 }
 
 
-protein::View3DMouse::~View3DMouse() {
+protein_cuda::View3DMouse::~View3DMouse() {
 }
 
 
-bool protein::View3DMouse::OnButtonEvent(core::param::ParamSlot& p) {
+bool protein_cuda::View3DMouse::OnButtonEvent(core::param::ParamSlot& p) {
     printf("TAB pressed\n"); // DEBUG
     this->toggleSelect = !this->toggleSelect;
     return true;

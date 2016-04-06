@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_ELECTRORENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_ELECTRORENDERER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_ELECTRORENDERER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_ELECTRORENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -20,7 +20,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 	/*
      * Electrostatics Renderer class
@@ -154,7 +154,7 @@ namespace protein {
 	};
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif // MMPROTEINPLUGIN_ELECTRORENDERER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_ELECTRORENDERER_H_INCLUDED

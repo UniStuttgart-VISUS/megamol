@@ -22,7 +22,7 @@
 #include "IntSelectionCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     class DiagramRenderer : public megamol::core::view::Renderer2DModule {
     public:
@@ -281,7 +281,7 @@ namespace protein {
         void dump();
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLCORE_DIAGRAMRENDERER_H_INCLUDED

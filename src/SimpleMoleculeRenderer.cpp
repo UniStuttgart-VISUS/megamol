@@ -35,11 +35,11 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 /*
- * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
+ * protein_cuda::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         : Renderer3DModuleDS(), molDataCallerSlot("getData",
@@ -188,21 +188,21 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
 }
 
 /*
- * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
+ * protein_cuda::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
 SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
     this->Release();
 }
 
 /*
- * protein::SimpleMoleculeRenderer::release
+ * protein_cuda::SimpleMoleculeRenderer::release
  */
 void SimpleMoleculeRenderer::release(void) {
 
 }
 
 /*
- * protein::SimpleMoleculeRenderer::create
+ * protein_cuda::SimpleMoleculeRenderer::create
  */
 bool SimpleMoleculeRenderer::create(void) {
     if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
@@ -226,13 +226,13 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load sphere shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereVertex", vertSrc)) {
+            "protein_cuda::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for sphere shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereFragment", fragSrc)) {
+            "protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for sphere shader");
         return false;
@@ -251,7 +251,7 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load sphere shader for offscreen rendering
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereFragmentOR", fragSrc)) {
+            "protein_cuda::std::sphereFragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for offscreen rendering sphere shader");
         return false;
@@ -270,13 +270,13 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load filter sphere shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::filterSphereVertex", vertSrc)) {
+            "protein_cuda::std::filterSphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for filter sphere shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereFragment", fragSrc)) {
+            "protein_cuda::std::sphereFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for filter sphere shader");
         return false;
@@ -294,7 +294,7 @@ bool SimpleMoleculeRenderer::create(void) {
     }
     // Load filter sphere shader for offscreen rendering
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereFragmentOR", fragSrc)) {
+            "protein_cuda::std::sphereFragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for offscreen filter sphere shader (OR)");
         return false;
@@ -314,13 +314,13 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load clip plane sphere shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereClipPlaneVertex", vertSrc)) {
+            "protein_cuda::std::sphereClipPlaneVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for clip plane sphere shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereClipPlaneFragment", fragSrc)) {
+            "protein_cuda::std::sphereClipPlaneFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for filter sphere shader");
         return false;
@@ -339,19 +339,19 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load alternative sphere shader (uses geometry shader)
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereVertexGeom", vertSrc)) {
+            "protein_cuda::std::sphereVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for geometry sphere shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereGeom", geomSrc)) {
+            "protein_cuda::std::sphereGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load geometry shader source for geometry sphere shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::sphereFragmentGeom", fragSrc)) {
+            "protein_cuda::std::sphereFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load fragment shader source for geometry sphere shader");
         return false;
@@ -371,13 +371,13 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load cylinder shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderVertex", vertSrc)) {
+            "protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for cylinder shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderFragment", fragSrc)) {
+            "protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for cylinder shader");
         return false;
@@ -397,7 +397,7 @@ bool SimpleMoleculeRenderer::create(void) {
     // Load cylinder shader for offscreen rendering
     fragSrc.Clear(); vertSrc.Clear(); geomSrc.Clear();
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-        "protein::std::cylinderVertex", vertSrc)) {
+        "protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
             "Unable to load vertex shader source for offscreen cylinder shader");
         return false;
@@ -405,8 +405,8 @@ bool SimpleMoleculeRenderer::create(void) {
     ///
 
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderFragmentOR", fragSrc)) {
-//        "protein::std::cylinderFragment", fragSrc)) {
+            "protein_cuda::std::cylinderFragmentOR", fragSrc)) {
+//        "protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load fragment shader source for offscreen cylinder shader");
         return false;
@@ -425,13 +425,13 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load filter cylinder shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::filterCylinderVertex", vertSrc)) {
+            "protein_cuda::std::filterCylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for filter cylinder shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderFragment", fragSrc)) {
+            "protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for filter cylinder shader");
         return false;
@@ -449,7 +449,7 @@ bool SimpleMoleculeRenderer::create(void) {
     }
     // Load filter cylinder shader offscreen rendering
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderFragmentOR", fragSrc)) {
+            "protein_cuda::std::cylinderFragmentOR", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for filter cylinder shader (OR)");
         return false;
@@ -468,19 +468,19 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load alternative cylinder shader (uses geometry shader)
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderVertexGeom", vertSrc)) {
+            "protein_cuda::std::cylinderVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for geometry cylinder shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderGeom", geomSrc)) {
+            "protein_cuda::std::cylinderGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load geometry shader source for geometry cylinder shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderFragmentGeom", fragSrc)) {
+            "protein_cuda::std::cylinderFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load fragment shader source for geometry cylinder shader");
         return false;
@@ -500,13 +500,13 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // Load clip plane sphere shader
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderVertex", vertSrc)) {
+            "protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for clip plane cylinder shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "protein::std::cylinderClipPlaneFragment", fragSrc)) {
+            "protein_cuda::std::cylinderClipPlaneFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "Unable to load vertex shader source for clip plane cylinder shader");
         return false;
@@ -528,7 +528,7 @@ bool SimpleMoleculeRenderer::create(void) {
 }
 
 /*
- * protein::SimpleMoleculeRenderer::GetCapabilities
+ * protein_cuda::SimpleMoleculeRenderer::GetCapabilities
  */
 bool SimpleMoleculeRenderer::GetCapabilities(Call& call) {
     view::AbstractCallRender3D *cr3d =
@@ -545,7 +545,7 @@ bool SimpleMoleculeRenderer::GetCapabilities(Call& call) {
 }
 
 /*
- * protein::SimpleMoleculeRenderer::GetExtents
+ * protein_cuda::SimpleMoleculeRenderer::GetExtents
  */
 bool SimpleMoleculeRenderer::GetExtents(Call& call) {
     view::AbstractCallRender3D *cr3d =
@@ -581,7 +581,7 @@ bool SimpleMoleculeRenderer::GetExtents(Call& call) {
  **********************************************************************/
 
 /*
- * protein::SimpleMoleculeRenderer::Render
+ * protein_cuda::SimpleMoleculeRenderer::Render
  */
 bool SimpleMoleculeRenderer::Render(Call& call) {
     // cast the call to Render3D

@@ -7,7 +7,7 @@
 #include "stdafx.h"
 #include "SolPathDataCall.h"
 
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*

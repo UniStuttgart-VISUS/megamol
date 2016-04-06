@@ -2,7 +2,7 @@
 #include "SplitMergeFeature.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 SplitMergeFeature::SplitMergeFeature( float maxT, vislib::math::Vector<float, 3> pos) : SplitMergeCall::SplitMergeMappable(),
         data(), maxTime( maxT), maxSurfaceArea( 0.0f), position( pos) {
@@ -49,5 +49,5 @@ void SplitMergeFeature::AppendValue( vislib::Pair<float, float> p) {
 }
 
 
-} /* namespace protein */
+} /* namespace protein_cuda */
 } /* namespace megamol */

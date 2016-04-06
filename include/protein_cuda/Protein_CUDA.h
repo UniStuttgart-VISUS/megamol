@@ -4,8 +4,8 @@
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef PROTEIN_H_INCLUDED
-#define PROTEIN_H_INCLUDED
+#ifndef PROTEIN_CUDA_H_INCLUDED
+#define PROTEIN_CUDA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -18,7 +18,7 @@
 // that uses this DLL. This way any other project whose source files include this file see 
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef PROTEIN_EXPORTS
+#ifdef PROTEIN_CUDA_EXPORTS
 #define PROTEIN_API __declspec(dllexport)
 #else
 #define PROTEIN_API __declspec(dllimport)

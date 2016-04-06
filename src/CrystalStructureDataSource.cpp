@@ -29,9 +29,9 @@ using namespace megamol;
 
 
 /*
- * protein::CrystalStructureDataSource::CrystalStructureDataSource
+ * protein_cuda::CrystalStructureDataSource::CrystalStructureDataSource
  */
-protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimDataModule(),
+protein_cuda::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimDataModule(),
         dataOutSlot("dataout", "The slot providing the loaded data"),
         dataChkptCallerSlot("chkptData", "The caller slot to connect a chkpt-source."),
         fileFramesSlot("fileFrames", "The path to the frame file."),
@@ -147,26 +147,26 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
 
 
 /*
- * protein::CrystalStructureDataSource::~CrystalStructureDataSource
+ * protein_cuda::CrystalStructureDataSource::~CrystalStructureDataSource
  */
-protein::CrystalStructureDataSource::~CrystalStructureDataSource(void) {
+protein_cuda::CrystalStructureDataSource::~CrystalStructureDataSource(void) {
     this->Release();
 }
 
 
 /*
- * protein::CrystalStructureDataSource::create
+ * protein_cuda::CrystalStructureDataSource::create
  */
-bool protein::CrystalStructureDataSource::create(void) {
+bool protein_cuda::CrystalStructureDataSource::create(void) {
     // intentionally empty
     return true;
 }
 
 
 /*
- * protein::CrystalStructureDataSource::getData
+ * protein_cuda::CrystalStructureDataSource::getData
  */
-bool protein::CrystalStructureDataSource::getData(core::Call& call) {
+bool protein_cuda::CrystalStructureDataSource::getData(core::Call& call) {
     using vislib::sys::Log;
 
     CrystalStructureDataCall *dc =
@@ -239,9 +239,9 @@ bool protein::CrystalStructureDataSource::getData(core::Call& call) {
 
 
 /*
- * protein::CrystalStructureDataSource::getExtend
+ * protein_cuda::CrystalStructureDataSource::getExtend
  */
-bool protein::CrystalStructureDataSource::getExtent(core::Call& call) {
+bool protein_cuda::CrystalStructureDataSource::getExtent(core::Call& call) {
     using vislib::sys::Log;
 
     // Update parameters
@@ -302,18 +302,18 @@ bool protein::CrystalStructureDataSource::getExtent(core::Call& call) {
 
 
 /*
- * protein::CrystalStructureDataSource::release
+ * protein_cuda::CrystalStructureDataSource::release
  */
-void protein::CrystalStructureDataSource::release(void) {
+void protein_cuda::CrystalStructureDataSource::release(void) {
     // Stop frame-loading thread
     this->resetFrameCache();
 }
 
 
 /*
- * protein::CrystalStructureDataSource::loadFiles
+ * protein_cuda::CrystalStructureDataSource::loadFiles
  */
-bool protein::CrystalStructureDataSource::loadFiles() {
+bool protein_cuda::CrystalStructureDataSource::loadFiles() {
 
     //printf("Start loading files...\n"); // DEBUG
 
@@ -452,10 +452,10 @@ bool protein::CrystalStructureDataSource::loadFiles() {
 
 
 /*
- * protein::CrystalStructureDataSource::convertStrTo
+ * protein_cuda::CrystalStructureDataSource::convertStrTo
  */
 template<class T>
-T protein::CrystalStructureDataSource::convertStrTo(std::string str) {
+T protein_cuda::CrystalStructureDataSource::convertStrTo(std::string str) {
      std::istringstream stream(str);
      T var;
      stream >> var;
@@ -464,9 +464,9 @@ T protein::CrystalStructureDataSource::convertStrTo(std::string str) {
 
 
 /*
- * protein::CrystalStructureDataSource::constructFrame
+ * protein_cuda::CrystalStructureDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* protein::CrystalStructureDataSource::constructFrame (void) const {
+core::view::AnimDataModule::Frame* protein_cuda::CrystalStructureDataSource::constructFrame (void) const {
     Frame *f = new Frame (*const_cast<CrystalStructureDataSource*>(this));
     f->AllocBufs(this->atomCnt, this->dipoleCnt);
     return f;
@@ -474,9 +474,9 @@ core::view::AnimDataModule::Frame* protein::CrystalStructureDataSource::construc
 
 
 /*
- * protein::CrystalStructureDataSource::loadFrame
+ * protein_cuda::CrystalStructureDataSource::loadFrame
  */
-void protein::CrystalStructureDataSource::loadFrame (core::view::AnimDataModule::Frame *frame, unsigned int idx) {
+void protein_cuda::CrystalStructureDataSource::loadFrame (core::view::AnimDataModule::Frame *frame, unsigned int idx) {
     using namespace vislib::sys;
 
     CrystalStructureDataSource::Frame *fr = dynamic_cast<CrystalStructureDataSource::Frame*>(frame);
@@ -489,9 +489,9 @@ void protein::CrystalStructureDataSource::loadFrame (core::view::AnimDataModule:
 
 
 /*
- * protein::CrystalStructureDataSource::updateParams
+ * protein_cuda::CrystalStructureDataSource::updateParams
  */
-void protein::CrystalStructureDataSource::updateParams () {
+void protein_cuda::CrystalStructureDataSource::updateParams () {
 
     //printf("Updating params ...\n"); // DEBUG
 
@@ -612,9 +612,9 @@ void protein::CrystalStructureDataSource::updateParams () {
 
 
 /*
- * protein::CrystalStructureDataSource::Frame::WriteFrameData
+ * protein_cuda::CrystalStructureDataSource::Frame::WriteFrameData
  */
-bool protein::CrystalStructureDataSource::WriteFrameData(
+bool protein_cuda::CrystalStructureDataSource::WriteFrameData(
         CrystalStructureDataSource::Frame *fr) {
 
     using namespace vislib::sys;
@@ -1083,9 +1083,9 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
 
 
 /*
- * protein::CrystalStructureDataSource::Frame::Frame
+ * protein_cuda::CrystalStructureDataSource::Frame::Frame
  */
-protein::CrystalStructureDataSource::Frame::Frame(core::view::AnimDataModule& owner)
+protein_cuda::CrystalStructureDataSource::Frame::Frame(core::view::AnimDataModule& owner)
         : core::view::AnimDataModule::Frame(owner),
           atomPos(NULL), dipolePos(NULL), dipole(NULL),
           atomCnt(0), dipoleCnt(0) {
@@ -1093,9 +1093,9 @@ protein::CrystalStructureDataSource::Frame::Frame(core::view::AnimDataModule& ow
 
 
 /*
- * protein::CrystalStructureDataSource::Frame::~Frame
+ * protein_cuda::CrystalStructureDataSource::Frame::~Frame
  */
-protein::CrystalStructureDataSource::Frame::~Frame(void) {
+protein_cuda::CrystalStructureDataSource::Frame::~Frame(void) {
     if(this->atomPos != NULL) delete[] this->atomPos;
     if(this->dipole != NULL) delete[] this->dipole;
     if(this->dipolePos != NULL) delete[] this->dipolePos;

@@ -17,7 +17,7 @@
 #include "Raw3DRelativeMouseInput.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 
     class View3DSpaceMouse : public megamol::core::view::View3D {
@@ -161,7 +161,7 @@ namespace protein {
 
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_VIEW3DSPACEMOUSE_H_INCLUDED */

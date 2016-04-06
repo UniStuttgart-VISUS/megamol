@@ -14,12 +14,12 @@
 #include "vislib/OutOfRangeException.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * MolecularDataCall::CallForGetData
  */
-const unsigned int protein::Diagram2DCall::CallForGetData = 0;
+const unsigned int protein_cuda::Diagram2DCall::CallForGetData = 0;
 
 /*
  * Diagram2DCall::Diagram2DCall

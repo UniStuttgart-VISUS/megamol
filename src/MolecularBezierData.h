@@ -22,7 +22,7 @@
 
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Mesh-based renderer for bézier curve tubes
@@ -144,7 +144,7 @@ namespace protein {
 
     };
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_PROTEIN_MOLECULARBEZIERDATA_H_INCLUDED */

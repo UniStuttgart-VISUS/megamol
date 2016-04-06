@@ -5,8 +5,8 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_VECFIELD3D_H_INCLUDED
-#define MMPROTEINPLUGIN_VECFIELD3D_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
 
 #ifdef WITH_CUDA
 #undef min
@@ -29,7 +29,7 @@ typedef vislib::math::Vector<unsigned int, 3> Vec3u;
 #include "vislib/Array.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class VecField3f {
 
@@ -360,7 +360,7 @@ private:
     vislib::Array<CritPoint> critPoints;
 };
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_VECFIELD3D_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED

@@ -27,7 +27,7 @@
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 	/**
 	 * Protein Renderer class
@@ -442,7 +442,7 @@ namespace protein {
 	};
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLCORE_PROTEINVOLRENDERER_H_INCLUDED

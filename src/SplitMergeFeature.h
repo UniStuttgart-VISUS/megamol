@@ -17,7 +17,7 @@
 #include "vislib/math/Vector.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Split-Merge Feature
@@ -95,7 +95,7 @@ namespace protein {
     };
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // MEGAMOLPROTEIN_SPLITMERGEFEATURE_H_INCLUDED

@@ -32,7 +32,7 @@
 //#include "cudpp/cudpp.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 	/**
 	 * Molecular Surface Renderer class.
@@ -329,7 +329,7 @@ namespace protein {
         bool setCUDAGLDevice;
 	};
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_MOLSURFACERENDERERCONTOURBUILDUP_CUDA_H_INCLUDED */

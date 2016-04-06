@@ -28,7 +28,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 #define SOLVENT_CHAIN_IDENTIFIER 127
@@ -737,7 +737,7 @@ bool GROLoader::Frame::SetAtomOccupancy( unsigned int idx, float val) {
 // ======================================================================
 
 /*
- * protein::GROLoader::GROLoader
+ * protein_cuda::GROLoader::GROLoader
  */
 GROLoader::GROLoader(void) : AnimDataModule(),
         groFilenameSlot( "groFilename", "The path to the GRO data file to be loaded"),
@@ -794,7 +794,7 @@ GROLoader::GROLoader(void) : AnimDataModule(),
 }
 
 /*
- * protein::GROLoader::~GROLoader
+ * protein_cuda::GROLoader::~GROLoader
  */
 GROLoader::~GROLoader(void) {
     if (mdd != NULL) {

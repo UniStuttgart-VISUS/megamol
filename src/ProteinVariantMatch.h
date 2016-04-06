@@ -9,8 +9,8 @@
 
 #if defined(WITH_CUDA)
 
-#ifndef MMPROTEINPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
-#define MMPROTEINPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -40,7 +40,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 typedef unsigned int uint;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 
 class ProteinVariantMatch : public core::Module {
@@ -480,8 +480,8 @@ private:
 
 };
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_PROTEINVARIANTMATCH_H_INCLUDED
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))

@@ -48,11 +48,11 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::PotentialVolumeRaycaster
+ * megamol::protein_cuda::PotentialVolumeRaycaster::PotentialVolumeRaycaster
  */
 PotentialVolumeRaycaster::PotentialVolumeRaycaster(void):
                 Renderer3DModuleDS(),
@@ -321,7 +321,7 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void):
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::~PotentialVolumeRaycaster
+ * megamol::protein_cuda::PotentialVolumeRaycaster::~PotentialVolumeRaycaster
  */
 PotentialVolumeRaycaster::~PotentialVolumeRaycaster(void) {
     this->Release();
@@ -329,7 +329,7 @@ PotentialVolumeRaycaster::~PotentialVolumeRaycaster(void) {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::release
+ * megamol::protein_cuda::PotentialVolumeRaycaster::release
  */
 void PotentialVolumeRaycaster::release(void) {
 
@@ -350,7 +350,7 @@ void PotentialVolumeRaycaster::release(void) {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::computeVolumeTex
+ * megamol::protein_cuda::PotentialVolumeRaycaster::computeVolumeTex
  */
 bool PotentialVolumeRaycaster::computeDensityMap(
         const MolecularDataCall *mol) {
@@ -522,7 +522,7 @@ bool PotentialVolumeRaycaster::computeDensityMap(
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::create
+ * megamol::protein_cuda::PotentialVolumeRaycaster::create
  */
 bool PotentialVolumeRaycaster::create() {
     using namespace vislib::sys;
@@ -621,7 +621,7 @@ bool PotentialVolumeRaycaster::create() {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::createFbos
+ * megamol::protein_cuda::PotentialVolumeRaycaster::createFbos
  */
 bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 
@@ -677,7 +677,7 @@ bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::GetCapabilities
+ * megamol::protein_cuda::PotentialVolumeRaycaster::GetCapabilities
  */
 bool PotentialVolumeRaycaster::GetCapabilities(core::Call& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
@@ -692,7 +692,7 @@ bool PotentialVolumeRaycaster::GetCapabilities(core::Call& call) {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::GetExtents
+ * megamol::protein_cuda::PotentialVolumeRaycaster::GetExtents
  */
 bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
 
@@ -702,8 +702,8 @@ bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
     if (cr3d == NULL) return false;
 
     // Get pointer to potential map data call
-    protein::VTIDataCall *cmd =
-            this->potentialDataCallerSlot.CallAs<protein::VTIDataCall>();
+    protein_cuda::VTIDataCall *cmd =
+            this->potentialDataCallerSlot.CallAs<protein_cuda::VTIDataCall>();
     if (cmd == NULL) return false;
     if (!(*cmd)(VTIDataCall::CallForGetExtent)) return false;
 
@@ -775,7 +775,7 @@ bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::freeBuffers
+ * megamol::protein_cuda::PotentialVolumeRaycaster::freeBuffers
  */
 void PotentialVolumeRaycaster::freeBuffers() {
     if(this->volume != NULL) { delete[] this->volume; this->volume = NULL; }
@@ -783,7 +783,7 @@ void PotentialVolumeRaycaster::freeBuffers() {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::initPotential
+ * megamol::protein_cuda::PotentialVolumeRaycaster::initPotential
  */
 bool PotentialVolumeRaycaster::initPotential(VTIDataCall *cmd) {
     using namespace vislib::sys;
@@ -836,7 +836,7 @@ bool PotentialVolumeRaycaster::initPotential(VTIDataCall *cmd) {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::Render
+ * megamol::protein_cuda::PotentialVolumeRaycaster::Render
  */
 bool PotentialVolumeRaycaster::Render(core::Call& call) {
 
@@ -863,8 +863,8 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     ren->SetTimeFramesCount(frameIdx);
 
     // Get the potential data
-    protein::VTIDataCall *cmd =
-            this->potentialDataCallerSlot.CallAs<protein::VTIDataCall>();
+    protein_cuda::VTIDataCall *cmd =
+            this->potentialDataCallerSlot.CallAs<protein_cuda::VTIDataCall>();
     if (cmd == NULL) {
         return false;
     }
@@ -1242,7 +1242,7 @@ bool PotentialVolumeRaycaster::renderSlices(GLuint densityTex,
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::RenderVolCube
+ * megamol::protein_cuda::PotentialVolumeRaycaster::RenderVolCube
  */
 bool PotentialVolumeRaycaster::RenderVolCube() {
 
@@ -1417,7 +1417,7 @@ bool PotentialVolumeRaycaster::RenderVolCube() {
 
 
 /*
- * megamol::protein::PotentialVolumeRaycaster::PotentialVolumeRaycaster
+ * megamol::protein_cuda::PotentialVolumeRaycaster::PotentialVolumeRaycaster
  */
 bool PotentialVolumeRaycaster::updateParams() {
 

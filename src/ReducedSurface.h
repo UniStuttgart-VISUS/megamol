@@ -18,7 +18,7 @@
 #include <list>
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 	/**
 	 * Molecular Surface Renderer class.
@@ -449,7 +449,7 @@ namespace protein {
 		
 	};
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif /* MEGAMOL_REDUCEDSURFACE_H_INCLUDED */

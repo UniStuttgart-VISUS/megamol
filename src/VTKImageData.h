@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTKIMAGEDATA_H_INCLUDED
-#define MMPROTEINPLUGIN_VTKIMAGEDATA_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VTKIMAGEDATA_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VTKIMAGEDATA_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -27,7 +27,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 typedef unsigned int uint;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class VTKImageData {
 
@@ -1334,7 +1334,7 @@ private:
     vislib::Array<Piece> pieces; ///> The array of pieces of this data set
 };
 
-} // namespace protein
+} // namespace protein_cuda
 } // namespace megamol
 
-#endif // MMPROTEINPLUGIN_VTKIMAGEDATA_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VTKIMAGEDATA_H_INCLUDED

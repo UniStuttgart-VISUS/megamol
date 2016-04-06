@@ -43,7 +43,7 @@
 
 using namespace megamol;
 using namespace megamol::core::moldyn;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 // 99 75 0
 Vec3f dark_brown = Vec3f(0.388235294, 0.294117647, 0.0);
@@ -1462,16 +1462,16 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     }
 
     // Get pointer to potential map data call
-    protein::VTIDataCall *cmd0 =
-            this->volDataSlot1.CallAs<protein::VTIDataCall>();
+    protein_cuda::VTIDataCall *cmd0 =
+            this->volDataSlot1.CallAs<protein_cuda::VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
     if (!(*cmd0)(VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    protein::VTIDataCall *cmd1 =
-            this->volDataSlot2.CallAs<protein::VTIDataCall>();
+    protein_cuda::VTIDataCall *cmd1 =
+            this->volDataSlot2.CallAs<protein_cuda::VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }
@@ -1654,16 +1654,16 @@ bool ComparativeMolSurfaceRenderer::getVBOExtent(core::Call& call) {
     c->SetBBox(this->bbox);
 
     // Get pointer to potential map data call
-    protein::VTIDataCall *cmd0 =
-            this->volDataSlot1.CallAs<protein::VTIDataCall>();
+    protein_cuda::VTIDataCall *cmd0 =
+            this->volDataSlot1.CallAs<protein_cuda::VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
     if (!(*cmd0)(VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    protein::VTIDataCall *cmd1 =
-            this->volDataSlot2.CallAs<protein::VTIDataCall>();
+    protein_cuda::VTIDataCall *cmd1 =
+            this->volDataSlot2.CallAs<protein_cuda::VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }

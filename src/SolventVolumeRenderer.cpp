@@ -43,16 +43,16 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 using namespace megamol::core::moldyn;
 
 
 #define USE_VERTEX_SKIP_SHADER
 
 /*
- * protein::SolventVolumeRenderer::SolventVolumeRenderer (CTOR)
+ * protein_cuda::SolventVolumeRenderer::SolventVolumeRenderer (CTOR)
  */
-protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModule (),
+protein_cuda::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModule (),
         protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
         protRendererCallerSlot ( "renderMolecule", "Connects the volume rendering with a molecule renderer" ),
         dataOutSlot ( "volumeout", "Connects the volume rendering with a volume slice renderer" ),
@@ -244,22 +244,22 @@ protein::SolventVolumeRenderer::SolventVolumeRenderer ( void ) : Renderer3DModul
 
 
 /*
- * protein::SolventVolumeRenderer::~SolventVolumeRenderer (DTOR)
+ * protein_cuda::SolventVolumeRenderer::~SolventVolumeRenderer (DTOR)
  */
-protein::SolventVolumeRenderer::~SolventVolumeRenderer ( void ) {
+protein_cuda::SolventVolumeRenderer::~SolventVolumeRenderer ( void ) {
     this->Release ();
 }
 
 
 /*
- * protein::SolventVolumeRenderer::release
+ * protein_cuda::SolventVolumeRenderer::release
  */
-void protein::SolventVolumeRenderer::release ( void ) {
+void protein_cuda::SolventVolumeRenderer::release ( void ) {
 
 }
 
 
-bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
+bool protein_cuda::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader& shader, const vislib::StringA& vert, const vislib::StringA& frag) {
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
     ShaderSource vertSrc;
@@ -286,9 +286,9 @@ bool protein::SolventVolumeRenderer::loadShader(vislib::graphics::gl::GLSLShader
 }
 
 /*
- * protein::SolventVolumeRenderer::create
+ * protein_cuda::SolventVolumeRenderer::create
  */
-bool protein::SolventVolumeRenderer::create ( void ) {
+bool protein_cuda::SolventVolumeRenderer::create ( void ) {
     if( !areExtsAvailable( "GL_EXT_framebuffer_object GL_ARB_texture_float GL_EXT_gpu_shader4 GL_EXT_bindable_uniform") )
         return false;
     if (!isExtAvailable( "GL_ARB_vertex_program")  || !ogl_IsVersionGEQ(2,0))
@@ -311,23 +311,23 @@ bool protein::SolventVolumeRenderer::create ( void ) {
     ShaderSource fragSrc;
 
     // Load sphere shader
-    if( !loadShader( this->sphereShader, "protein::std::sphereVertex", "protein::std::sphereFragment" ) )
+    if( !loadShader( this->sphereShader, "protein_cuda::std::sphereVertex", "protein_cuda::std::sphereFragment" ) )
         return false;
 
     // Load sphere shader
-    if( !loadShader( this->sphereSolventShader, "protein::std::sphereSolventVertex", "protein::std::sphereFragment" ) )
+    if( !loadShader( this->sphereSolventShader, "protein_cuda::std::sphereSolventVertex", "protein_cuda::std::sphereFragment" ) )
         return false;
 
     // Load clipped sphere shader -> TODO: solvent version?
-    if( !loadShader( this->clippedSphereShader, "protein::std::sphereClipPlaneVertex", "protein::std::sphereClipPlaneFragment" ) )
+    if( !loadShader( this->clippedSphereShader, "protein_cuda::std::sphereClipPlaneVertex", "protein_cuda::std::sphereClipPlaneFragment" ) )
         return false;
 
     // Load cylinder shader
-    if( !loadShader( this->cylinderSolventShader, "protein::std::cylinderSolventVertex", "protein::std::cylinderFragment" ) )
+    if( !loadShader( this->cylinderSolventShader, "protein_cuda::std::cylinderSolventVertex", "protein_cuda::std::cylinderFragment" ) )
         return false;
 
     // Load shader for hydrogen bonds
-//    if( !loadShader( this->hbondLineSolventShader, "protein::std::hbondLineSolventVertex", "protein::std::hbondLineSolventFragment" ) )
+//    if( !loadShader( this->hbondLineSolventShader, "protein_cuda::std::hbondLineSolventVertex", "protein_cuda::std::hbondLineSolventFragment" ) )
 //        return false;
 
     // Load volume texture generation shader
@@ -367,11 +367,11 @@ bool protein::SolventVolumeRenderer::create ( void ) {
         return false;
 
     // Load visible solvent molecule shader
-    if( !loadShader( this->visMolShader, "protein::std::visibleSolventMoleculeVertex", "protein::std::visibleSolventMoleculeFragment" ) )
+    if( !loadShader( this->visMolShader, "protein_cuda::std::visibleSolventMoleculeVertex", "protein_cuda::std::visibleSolventMoleculeFragment" ) )
         return false;
 
     // Load solvent type counting shader
-    if( !loadShader( this->solTypeCountShader, "protein::std::solventTypeCountVertex", "protein::std::visibleSolventMoleculeFragment" ) )
+    if( !loadShader( this->solTypeCountShader, "protein_cuda::std::solventTypeCountVertex", "protein_cuda::std::visibleSolventMoleculeFragment" ) )
         return false;
 
     return true;
@@ -383,9 +383,9 @@ bool protein::SolventVolumeRenderer::create ( void ) {
  **********************************************************************/
 
 /*
- * protein::ProteinRenderer::GetCapabilities
+ * protein_cuda::ProteinRenderer::GetCapabilities
  */
-bool protein::SolventVolumeRenderer::GetCapabilities( Call& call) {
+bool protein_cuda::SolventVolumeRenderer::GetCapabilities( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -398,9 +398,9 @@ bool protein::SolventVolumeRenderer::GetCapabilities( Call& call) {
 
 
 /*
- * protein::ProteinRenderer::GetExtents
+ * protein_cuda::ProteinRenderer::GetExtents
  */
-bool protein::SolventVolumeRenderer::GetExtents( Call& call) {
+bool protein_cuda::SolventVolumeRenderer::GetExtents( Call& call) {
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -499,7 +499,7 @@ bool SolventVolumeRenderer::getVolumeData( core::Call& call) {
 }
 
 
-void protein::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCall *mol, int colorMode, int atomIdx, int residueIdx ) {
+void protein_cuda::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCall *mol, int colorMode, int atomIdx, int residueIdx ) {
     switch(colorMode) {
     default:
     case Color::ELEMENT: {
@@ -555,7 +555,7 @@ void protein::SolventVolumeRenderer::ColorAtom(float *atomColor, MolecularDataCa
     }
 }
 
-void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
+void protein_cuda::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
     if (!forceUpdateColoringMode && this->atomColorTable.Count() == mol->AtomCount()*3)
         return;
 
@@ -607,9 +607,9 @@ void protein::SolventVolumeRenderer::UpdateColorTable(MolecularDataCall *mol) {
 
 
 /*
- * protein::SolventVolumeRenderer::Render
+ * protein_cuda::SolventVolumeRenderer::Render
  */
-bool protein::SolventVolumeRenderer::Render( Call& call ) {
+bool protein_cuda::SolventVolumeRenderer::Render( Call& call ) {
     // cast the call to Render3D
     view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>( &call );
     if( !cr3d ) return false;
@@ -952,7 +952,7 @@ bool protein::SolventVolumeRenderer::Render( Call& call ) {
 /*
  * count visible solvent molecules
  */
-void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataCall *mol) {
+void protein_cuda::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataCall *mol) {
     // TODO: write list of solvent atoms and residue indices only once, update atom positions for each frame
 
     // atom counter
@@ -1189,7 +1189,7 @@ void protein::SolventVolumeRenderer::FindVisibleSolventMolecules( MolecularDataC
 /*
  * boese dreckig hingerotzt ...
  */
-void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos) {
+void protein_cuda::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol, const float *atomPos) {
     const int *hydrogenConnections = this->hBondInterPtr;
 
     if (!hydrogenConnections)
@@ -1335,7 +1335,7 @@ void protein::SolventVolumeRenderer::RenderHydrogenBounds(MolecularDataCall *mol
 /*
  * Render the molecular data in stick mode. Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
  */
-void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall *mol, const float *atomPos) {
+void protein_cuda::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall *mol, const float *atomPos) {
     // ----- prepare stick raycasting -----
     if (this->vertSpheres.Count() <= mol->AtomCount() * 4) {
         this->vertSpheres.SetCount( mol->AtomCount() * 4 );
@@ -1524,7 +1524,7 @@ void protein::SolventVolumeRenderer::RenderMolecules(/*const*/ MolecularDataCall
 /*
  * Volume rendering using molecular data.
  */
-bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
+bool protein_cuda::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
 
     // decide to use already loaded frame request from CallFrame or 'normal' rendering
     if( !(*mol)() )
@@ -1606,7 +1606,7 @@ bool protein::SolventVolumeRenderer::RenderMolecularData( view::CallRender3D *ca
 /*
  * refresh parameters
  */
-void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call, MolecularDataCall *mol) {
+void protein_cuda::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call, MolecularDataCall *mol) {
     
     // parameter refresh
     if( this->coloringModeSolventParam.IsDirty() || this->coloringModePolymerParam.IsDirty() || this->coloringModeVolSurfParam.IsDirty() ) {
@@ -1772,7 +1772,7 @@ void protein::SolventVolumeRenderer::ParameterRefresh( view::CallRender3D *call,
 
 
 #if 0
-void protein::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( MolecularDataCall *mol) {
+void protein_cuda::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( MolecularDataCall *mol) {
     // generate volume, if necessary
     if( !glIsTexture( this->spatialProbVolumeTex) ) {
         // from CellVis: cellVis.cpp, initGL
@@ -1963,7 +1963,7 @@ void protein::SolventVolumeRenderer::CreateSpatialProbabilitiesTexture( Molecula
 /*
  * Create a volume containing all molecule atoms
  */
-void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
+void protein_cuda::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol) {
     bool firstVolumeUpdate = false;
 
     // generate volume, if necessary
@@ -2314,7 +2314,7 @@ void protein::SolventVolumeRenderer::UpdateVolumeTexture( MolecularDataCall *mol
 /*
  * draw the volume
  */
-void protein::SolventVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
+void protein_cuda::SolventVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> boundingbox) {
     const float stepWidth = 1.0f/ ( 2.0f * float( this->volumeSize));
     glDisable( GL_BLEND);
 
@@ -2395,7 +2395,7 @@ void protein::SolventVolumeRenderer::RenderVolume( vislib::math::Cuboid<float> b
 /*
  * write the parameters of the ray to the textures
  */
-void protein::SolventVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
+void protein_cuda::SolventVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> boundingbox) {
 
     GLint param = GL_NEAREST;
     GLint mode = GL_CLAMP_TO_EDGE;
@@ -2624,7 +2624,7 @@ void protein::SolventVolumeRenderer::RayParamTextures( vislib::math::Cuboid<floa
 /*
  * Draw the bounding box.
  */
-void protein::SolventVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cuboid<float> boundingbox) {
+void protein_cuda::SolventVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cuboid<float> boundingbox) {
 
     vislib::math::Vector<float, 3> position;
     glBegin(GL_QUADS);
@@ -2803,7 +2803,7 @@ void protein::SolventVolumeRenderer::DrawBoundingBoxTranslated( vislib::math::Cu
 /*
  * Draw the bounding box.
  */
-void protein::SolventVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
+void protein_cuda::SolventVolumeRenderer::DrawBoundingBox( vislib::math::Cuboid<float> boundingbox) {
 
     vislib::math::Vector<float, 3> position( boundingbox.GetSize().PeekDimension() );
     position *= this->scale;

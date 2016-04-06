@@ -10,8 +10,8 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#ifndef MMPROTEINPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -44,7 +44,7 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 #include "HostArr.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class ComparativeMolSurfaceRenderer : public core::view::Renderer3DModuleDS {
 
@@ -814,8 +814,8 @@ private:
 
 };
 
-} // namespace protein
+} // namespace protein_cuda
 } // namespace megamol
 
-#endif // MMPROTEINPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))

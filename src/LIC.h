@@ -7,15 +7,15 @@
  * $Id$
  */
 
-#ifndef MMPROTEINPLUGIN_LIC_H
-#define MMPROTEINPLUGIN_LIC_H
+#ifndef MMPROTEINCUDAPLUGIN_LIC_H
+#define MMPROTEINCUDAPLUGIN_LIC_H
 
 #include "vislib/math/Vector.h"
 
 #include "UniGrid3D.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 
 #ifdef WITH_CUDA
@@ -158,7 +158,7 @@ private:
 
 #endif // WITH_CUDA
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif /* MMPROTEINPLUGIN_LIC_H */
+#endif /* MMPROTEINCUDAPLUGIN_LIC_H */

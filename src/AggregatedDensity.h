@@ -17,7 +17,7 @@
 #include "mmcore/Module.h"
 
 namespace megamol { 
-	namespace protein {
+	namespace protein_cuda {
 
 		
     /**

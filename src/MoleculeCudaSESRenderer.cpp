@@ -43,7 +43,7 @@ extern "C" void copyArrayFromDevice(void* host, const void* device, unsigned int
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
         
 /*
  * MoleculeCudaSESRenderer::MoleculeCudaSESRenderer
@@ -100,7 +100,7 @@ MoleculeCudaSESRenderer::~MoleculeCudaSESRenderer(void) {
 /*
  * MoleculeCudaSESRenderer::release
  */
-void protein::MoleculeCudaSESRenderer::release( void ) {
+void protein_cuda::MoleculeCudaSESRenderer::release( void ) {
     this->drawPointShader.Release();
     this->writeSphereIdShader.Release();
     this->sphereShader.Release();
@@ -200,11 +200,11 @@ bool MoleculeCudaSESRenderer::create( void ) {
     ////////////////////////////////////////////////////
     // load the shader source for the sphere renderer //
     ////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphereVertex", vertSrc ) ) {
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphereVertex", vertSrc ) ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphereFragment", fragSrc ) ) {
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphereFragment", fragSrc ) ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName() );
         return false;
     }
@@ -299,11 +299,11 @@ bool MoleculeCudaSESRenderer::create( void ) {
     ///////////////////////////////////////////////////
     // load the shader source for the torus renderer //
     ///////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusVertex", vertSrc ) ) {
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::torusVertex", vertSrc ) ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for torus shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::torusFragment", fragSrc ) ) {
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::torusFragment", fragSrc ) ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for torus shader", this->ClassName() );
         return false;
     }
@@ -319,11 +319,11 @@ bool MoleculeCudaSESRenderer::create( void ) {
     ////////////////////////////////////////////////////////////////
     // load the shader source for the spherical triangle renderer //
     ////////////////////////////////////////////////////////////////
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleVertex", vertSrc ) ) {
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphericaltriangleVertex", vertSrc ) ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for spherical triangle shader", this->ClassName() );
         return false;
     }
-    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein::ses::sphericaltriangleFragment", fragSrc ) ) {
+    if( !ci->ShaderSourceFactory().MakeShaderSource( "protein_cuda::ses::sphericaltriangleFragment", fragSrc ) ) {
         Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for spherical triangle shader", this->ClassName() );
         return false;
     }

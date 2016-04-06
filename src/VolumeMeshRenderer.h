@@ -34,7 +34,7 @@
 #include "mmcore\moldyn\MolecularDataCall.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * Volume Mesh Renderer class
@@ -533,7 +533,7 @@ namespace protein {
 	};
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
 #endif // WITH_CUDA

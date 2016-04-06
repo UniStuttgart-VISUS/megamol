@@ -8,13 +8,13 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_INTERPOL_H_INCLUDED
-#define MMPROTEINPLUGIN_INTERPOL_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_INTERPOL_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_INTERPOL_H_INCLUDED
 
 #include "vislib/math/Matrix.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class Interpol {
 public:
@@ -225,7 +225,7 @@ inline T SampleFieldAtPosTrilin(
            f[1], f[2]);
 }
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
 
-#endif // MMPROTEINPLUGIN_INTERPOL_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_INTERPOL_H_INCLUDED

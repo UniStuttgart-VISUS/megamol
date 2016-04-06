@@ -14,7 +14,7 @@
 #include "ogl_error_check.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 // Offsets and stride for vbos holding surface data

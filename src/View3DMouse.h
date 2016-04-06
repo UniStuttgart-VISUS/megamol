@@ -5,15 +5,15 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_VIEW3DMOUSE_H_INCLUDED
-#define MMPROTEINPLUGIN_VIEW3DMOUSE_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_VIEW3DMOUSE_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_VIEW3DMOUSE_H_INCLUDED
 
 #include "mmcore/view/View3D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/CallerSlot.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /**
  * TODO
@@ -90,6 +90,6 @@ public:
 
 };
 
-} // end namespace protein
+} // end namespace protein_cuda
 } // end namespace megamol
-#endif // MMPROTEINPLUGIN_VIEW3DMOUSE_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_VIEW3DMOUSE_H_INCLUDED

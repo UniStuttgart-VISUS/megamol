@@ -30,14 +30,14 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 
 #define CHECK_FOR_OGL_ERROR() do { GLenum err; err = glGetError();if (err != GL_NO_ERROR) { fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); } } while(0)
 
 
 /*
- * protein::VolumeDirectionRenderer::VolumeDirectionRenderer (CTOR)
+ * protein_cuda::VolumeDirectionRenderer::VolumeDirectionRenderer (CTOR)
  */
 VolumeDirectionRenderer::VolumeDirectionRenderer(void) : Renderer3DModuleDS (),
     vtiDataCallerSlot("getData", "Connects the arrow rendering with volume data storage"),
@@ -66,7 +66,7 @@ VolumeDirectionRenderer::VolumeDirectionRenderer(void) : Renderer3DModuleDS (),
 
 
 /*
- * protein::VolumeDirectionRenderer::~VolumeDirectionRenderer (DTOR)
+ * protein_cuda::VolumeDirectionRenderer::~VolumeDirectionRenderer (DTOR)
  */
 VolumeDirectionRenderer::~VolumeDirectionRenderer(void)  {
     this->Release();
@@ -74,7 +74,7 @@ VolumeDirectionRenderer::~VolumeDirectionRenderer(void)  {
 
 
 /*
- * protein::VolumeDirectionRenderer::release
+ * protein_cuda::VolumeDirectionRenderer::release
  */
 void VolumeDirectionRenderer::release(void) {
     this->arrowShader.Release();
@@ -83,7 +83,7 @@ void VolumeDirectionRenderer::release(void) {
 
 
 /*
- * protein::VolumeDirectionRenderer::create
+ * protein_cuda::VolumeDirectionRenderer::create
  */
 bool VolumeDirectionRenderer::create(void) {
     if( !ogl_IsVersionGEQ(2,0) )
@@ -134,7 +134,7 @@ bool VolumeDirectionRenderer::create(void) {
 
 
 /*
- * protein::VolumeDirectionRenderer::GetCapabilities
+ * protein_cuda::VolumeDirectionRenderer::GetCapabilities
  */
 bool VolumeDirectionRenderer::GetCapabilities(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -149,7 +149,7 @@ bool VolumeDirectionRenderer::GetCapabilities(Call& call) {
 
 
 /*
- * protein::VolumeDirectionRenderer::GetExtents
+ * protein_cuda::VolumeDirectionRenderer::GetExtents
  */
 bool VolumeDirectionRenderer::GetExtents(Call& call) {
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -186,7 +186,7 @@ bool VolumeDirectionRenderer::GetExtents(Call& call) {
  **********************************************************************/
 
 /*
- * protein::VolumeDirectionRenderer::Render
+ * protein_cuda::VolumeDirectionRenderer::Render
  */
 bool VolumeDirectionRenderer::Render(Call& call) {
     // cast the call to Render3D

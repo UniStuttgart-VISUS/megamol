@@ -9,8 +9,8 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#ifndef MMPROTEINPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
-#define MMPROTEINPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
+#ifndef MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
+#define MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
 
 #include "CrystalStructureDataCall.h"
 #include "CUDACurl.cuh"
@@ -28,7 +28,7 @@
 #include "mmcore/BoundingBoxes.h"
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 /**
  * Renderer class combining volume rendering and raycasting.
@@ -891,9 +891,9 @@ private:
 };
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif /* MMPROTEINPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H */
+#endif /* MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H */
 
 #endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

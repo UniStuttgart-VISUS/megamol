@@ -13,21 +13,21 @@
 using namespace megamol;
 
 /*
- * protein::CrystalStructureDataCallCallForGetData
+ * protein_cuda::CrystalStructureDataCallCallForGetData
  */
-const unsigned int protein::CrystalStructureDataCall::CallForGetData = 0;
+const unsigned int protein_cuda::CrystalStructureDataCall::CallForGetData = 0;
 
 
 /*
- * protein::CrystalStructureDataCall:CallForGetExtent
+ * protein_cuda::CrystalStructureDataCall:CallForGetExtent
  */
-const unsigned int protein::CrystalStructureDataCall::CallForGetExtent = 1;
+const unsigned int protein_cuda::CrystalStructureDataCall::CallForGetExtent = 1;
 
 
 /*
  * CrystalStructureDataCall::CrystalStructureDataCall
  */
-protein::CrystalStructureDataCall::CrystalStructureDataCall(void) :
+protein_cuda::CrystalStructureDataCall::CrystalStructureDataCall(void) :
         AbstractGetData3DCall(), atomCnt(0), dipoleCnt(0), conCnt(0),
         cellCnt(0), calltime(0.0f),
         atomPos(NULL), atomCon(NULL), cells(NULL), dipolePos(NULL),
@@ -37,8 +37,8 @@ protein::CrystalStructureDataCall::CrystalStructureDataCall(void) :
 
 
 /*
- * protein::CrystalStructureDataCall::~protein::CrystalStructureDataCall::
+ * protein_cuda::CrystalStructureDataCall::~protein_cuda::CrystalStructureDataCall::
  */
-protein::CrystalStructureDataCall::~CrystalStructureDataCall(void) {
+protein_cuda::CrystalStructureDataCall::~CrystalStructureDataCall(void) {
 }
 

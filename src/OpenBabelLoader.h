@@ -1,7 +1,7 @@
 #ifdef WITH_OPENBABEL
 
-#ifndef MMPROTEINPLUGIN_OPENBABELLOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_OPENBABELLOADER_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_OPENBABELLOADER_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_OPENBABELLOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -27,7 +27,7 @@
 using namespace megamol::core::moldyn;
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
 class OpenBabelLoader : public megamol::core::Module
 {
@@ -133,9 +133,9 @@ private:
 	vislib::Array<megamol::core::moldyn::MolecularDataCall::Chain> chain;
 };
 
-} // namespace protein
+} // namespace protein_cuda
 } // namespace megamol
 
-#endif // MMPROTEINPLUGIN_OPENBABELLOADER_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_OPENBABELLOADER_H_INCLUDED
 
 #endif

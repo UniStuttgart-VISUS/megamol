@@ -58,9 +58,9 @@ using namespace megamol;
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer
+ * protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer
  */
-protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
+protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
         Renderer3DModuleDS(),
         dataCallerSlot("getData", "Connects the rendering with data storage"),
         // Atom/edge rendering
@@ -569,17 +569,17 @@ protein::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::~CrystalStructureRenderer
+ * protein_cuda::CrystalStructureVolumeRenderer::~CrystalStructureRenderer
  */
-protein::CrystalStructureVolumeRenderer::~CrystalStructureVolumeRenderer (void) {
+protein_cuda::CrystalStructureVolumeRenderer::~CrystalStructureVolumeRenderer (void) {
     this->Release();
 }
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::CalcDensityTex
+ * protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex
  */
-bool protein::CrystalStructureVolumeRenderer::CalcDensityTex(
+bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         const CrystalStructureDataCall *dc,
         const float *atomPos) {
 
@@ -844,9 +844,9 @@ bool protein::CrystalStructureVolumeRenderer::CalcDensityTex(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::CalcMagCurlTex
+ * protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex
  */
-bool protein::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
+bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     using namespace vislib::sys;
     using namespace vislib::math;
 
@@ -926,7 +926,7 @@ bool protein::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     this->params.gridZAxis.y = gridZAxis.Y();
     this->params.gridZAxis.z = gridZAxis.Z();
 
-    cudaErr = protein::CUDASetCurlParams(&this->params);
+    cudaErr = protein_cuda::CUDASetCurlParams(&this->params);
     if(cudaErr != cudaSuccess) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s::CalcMagCurlTex: unable to copy grid params to device memory (%s)\n",
@@ -938,7 +938,7 @@ bool protein::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
     CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
 
-    cudaErr = protein::CudaGetCurlMagnitude(cqs->getColorMap(),
+    cudaErr = protein_cuda::CudaGetCurlMagnitude(cqs->getColorMap(),
                                             this->gridCurlD,
                                             this->gridCurlMagD,
                                             nVoxels,
@@ -996,9 +996,9 @@ bool protein::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::CalcUniGrid
+ * protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid
  */
-bool protein::CrystalStructureVolumeRenderer::CalcUniGrid (
+bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
         const CrystalStructureDataCall *dc,
         const float *atomPos,
         const float *col) {
@@ -1180,9 +1180,9 @@ bool protein::CrystalStructureVolumeRenderer::CalcUniGrid (
 
 
 /*
- * protein::CrystalStructureRenderer::ApplyPosFilter
+ * protein_cuda::CrystalStructureRenderer::ApplyPosFilter
  */
-void protein::CrystalStructureVolumeRenderer::ApplyPosFilter(
+void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
         const CrystalStructureDataCall *dc) {
 
     using namespace vislib::sys;
@@ -1273,9 +1273,9 @@ void protein::CrystalStructureVolumeRenderer::ApplyPosFilter(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::create
+ * protein_cuda::CrystalStructureVolumeRenderer::create
  */
-bool protein::CrystalStructureVolumeRenderer::create (void) {
+bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
@@ -1321,7 +1321,7 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
 
     // Load sphere vertex shader
     if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
+            MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to load vertex shader source for sphere shader",
@@ -1330,8 +1330,8 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
     }
     // Load sphere fragment shader
     if(!this->GetCoreInstance()->ShaderSourceFactory().
-            //MakeShaderSource("protein::std::sphereFragmentFog", fragSrc)) {
-            MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
+            //MakeShaderSource("protein_cuda::std::sphereFragmentFog", fragSrc)) {
+            MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to load vertex shader source for sphere shader",
@@ -1391,15 +1391,15 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
     }
 
     // Load alternative arrow shader (uses geometry shader)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowVertexGeom", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowGeom", geomSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::arrowFragmentGeom", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
         return false;
     }
@@ -1407,12 +1407,12 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
     this->arrowShader.Link();
 
     // Load cylinder vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
     // Load cylinder fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
+    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
         return false;
     }
@@ -1427,7 +1427,7 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
 
     // Load per pixel lighting shader
     if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("protein::std::perpixellightVertex", vertSrc)) {
+            MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to load vertex shader source for per pixel lighting",
@@ -1436,7 +1436,7 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
     }
 
     if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("protein::std::perpixellightFragment", fragSrc)) {
+            MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to load vertex shader source for per pixel lighting",
@@ -1491,9 +1491,9 @@ bool protein::CrystalStructureVolumeRenderer::create (void) {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::createFbo
+ * protein_cuda::CrystalStructureVolumeRenderer::createFbo
  */
-bool protein::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT height) {
+bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT height) {
 
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
@@ -1527,9 +1527,9 @@ bool protein::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT height)
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::createSrcFbo
+ * protein_cuda::CrystalStructureVolumeRenderer::createSrcFbo
  */
-bool protein::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, size_t height) {
+bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, size_t height) {
 
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
@@ -1557,9 +1557,9 @@ bool protein::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, size_t 
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::FreeBuffs
+ * protein_cuda::CrystalStructureVolumeRenderer::FreeBuffs
  */
-void protein::CrystalStructureVolumeRenderer::FreeBuffs() {
+void protein_cuda::CrystalStructureVolumeRenderer::FreeBuffs() {
 
     if(this->frame0 != NULL) { delete[] this->frame0; this->frame0 = NULL; }
     if(this->frame1 != NULL){ delete[] this->frame1; this->frame1 = NULL; }
@@ -1585,9 +1585,9 @@ void protein::CrystalStructureVolumeRenderer::FreeBuffs() {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::FilterVecField
+ * protein_cuda::CrystalStructureVolumeRenderer::FilterVecField
  */
-void protein::CrystalStructureVolumeRenderer::FilterVecField(
+void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
         const CrystalStructureDataCall *dc,
         const float *atomPos) {
 
@@ -1724,9 +1724,9 @@ void protein::CrystalStructureVolumeRenderer::FilterVecField(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::GetCapabilities
+ * protein_cuda::CrystalStructureVolumeRenderer::GetCapabilities
  */
-bool protein::CrystalStructureVolumeRenderer::GetCapabilities(core::Call& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::GetCapabilities(core::Call& call) {
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
@@ -1739,15 +1739,15 @@ bool protein::CrystalStructureVolumeRenderer::GetCapabilities(core::Call& call) 
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::GetExtents
+ * protein_cuda::CrystalStructureVolumeRenderer::GetExtents
  */
-bool protein::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) {
 
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    protein::CrystalStructureDataCall *dc =
-            this->dataCallerSlot.CallAs<protein::CrystalStructureDataCall>();
+    protein_cuda::CrystalStructureDataCall *dc =
+            this->dataCallerSlot.CallAs<protein_cuda::CrystalStructureDataCall>();
     if(dc == NULL) return false;
     if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) return false;
 
@@ -1771,9 +1771,9 @@ bool protein::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) {
 
 
 /*
- *  protein::CrystalStructureVolumeRenderer::initLIC
+ *  protein_cuda::CrystalStructureVolumeRenderer::initLIC
  */
-bool protein::CrystalStructureVolumeRenderer::InitLIC() {
+bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
     using namespace vislib::sys;
 
     // Create randbuffer
@@ -1834,9 +1834,9 @@ bool protein::CrystalStructureVolumeRenderer::InitLIC() {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::release
+ * protein_cuda::CrystalStructureVolumeRenderer::release
  */
-void protein::CrystalStructureVolumeRenderer::release(void) {
+void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
     this->FreeBuffs();
     this->vrShader.Release();
     this->sphereShader.Release();
@@ -1853,9 +1853,9 @@ void protein::CrystalStructureVolumeRenderer::release(void) {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::Render
+ * protein_cuda::CrystalStructureVolumeRenderer::Render
  */
-bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     using namespace vislib::sys;
     using namespace vislib::math;
 
@@ -1880,8 +1880,8 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     }
 #endif
 
-    protein::CrystalStructureDataCall *dc =
-            this->dataCallerSlot.CallAs<protein::CrystalStructureDataCall>();
+    protein_cuda::CrystalStructureDataCall *dc =
+            this->dataCallerSlot.CallAs<protein_cuda::CrystalStructureDataCall>();
     if (dc == NULL) {
         return false;
     }
@@ -2410,9 +2410,9 @@ bool protein::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderVecFieldArrows
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows
  */
-bool protein::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
+bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
         const CrystalStructureDataCall *dc,
         const float *atomPos,
         const float *col) {
@@ -2609,9 +2609,9 @@ bool protein::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderAtomsSpheres
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres
  */
-void protein::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
+void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
         const CrystalStructureDataCall *dc) {
 
     float viewportStuff[4] = {
@@ -2655,9 +2655,9 @@ void protein::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderCritPointsSpheres
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres
  */
-void protein::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
+void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
         const CrystalStructureDataCall *dc) {
     using namespace vislib::math;
 
@@ -2749,9 +2749,9 @@ void protein::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderEdgesBaLines
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines
  */
-void protein::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
+void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
         const CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
@@ -2773,9 +2773,9 @@ void protein::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderEdgesBaStick
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick
  */
-void protein::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
+void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
         const CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
@@ -2902,9 +2902,9 @@ void protein::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderEdgesTiLines
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines
  */
-void protein::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
+void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
         const CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
@@ -2926,9 +2926,9 @@ void protein::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderEdgesTiStick
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick
  */
-void protein::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
+void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
         const CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
@@ -3046,9 +3046,9 @@ void protein::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::renderIsoSurfMC
+ * protein_cuda::CrystalStructureVolumeRenderer::renderIsoSurfMC
  */
-bool protein::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
+bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     using namespace vislib::sys;
     using namespace vislib::math;
 
@@ -3229,9 +3229,9 @@ bool protein::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderVolCube
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderVolCube
  */
-void protein::CrystalStructureVolumeRenderer::RenderVolCube() {
+void protein_cuda::CrystalStructureVolumeRenderer::RenderVolCube() {
 
     using namespace vislib::math;
     Vector<float, 3> gridMinCoord, gridMaxCoord;
@@ -3389,9 +3389,9 @@ void protein::CrystalStructureVolumeRenderer::RenderVolCube() {
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::RenderVolume
+ * protein_cuda::CrystalStructureVolumeRenderer::RenderVolume
  */
-bool protein::CrystalStructureVolumeRenderer::RenderVolume() {
+bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     using namespace vislib::sys;
     GLenum err;
 
@@ -3516,7 +3516,7 @@ bool protein::CrystalStructureVolumeRenderer::RenderVolume() {
 }
 
 
-bool protein::CrystalStructureVolumeRenderer::SetupAtomColors(
+bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(
         const CrystalStructureDataCall *dc) {
 
     this->atomColor.SetCount(dc->GetAtomCnt()*3);
@@ -3549,9 +3549,9 @@ bool protein::CrystalStructureVolumeRenderer::SetupAtomColors(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::updateParams
+ * protein_cuda::CrystalStructureVolumeRenderer::updateParams
  */
-bool protein::CrystalStructureVolumeRenderer::UpdateParams(
+bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
         const CrystalStructureDataCall *dc) {
 
     // General params
@@ -4033,9 +4033,9 @@ bool protein::CrystalStructureVolumeRenderer::UpdateParams(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::calcCellVolume
+ * protein_cuda::CrystalStructureVolumeRenderer::calcCellVolume
  */
-float protein::CrystalStructureVolumeRenderer::calcCellVolume(
+float protein_cuda::CrystalStructureVolumeRenderer::calcCellVolume(
         vislib::math::Vector<float, 3> A,
         vislib::math::Vector<float, 3> B,
         vislib::math::Vector<float, 3> C,
@@ -4058,9 +4058,9 @@ float protein::CrystalStructureVolumeRenderer::calcCellVolume(
 
 
 /*
- * protein::CrystalStructureVolumeRenderer::calcCellTetrahedron
+ * protein_cuda::CrystalStructureVolumeRenderer::calcCellTetrahedron
  */
-float protein::CrystalStructureVolumeRenderer::calcVolTetrahedron(
+float protein_cuda::CrystalStructureVolumeRenderer::calcVolTetrahedron(
         vislib::math::Vector<float, 3> A,
         vislib::math::Vector<float, 3> B,
         vislib::math::Vector<float, 3> C,
@@ -4079,9 +4079,9 @@ float protein::CrystalStructureVolumeRenderer::calcVolTetrahedron(
 }
 
 /*
- * protein::CrystalStructureVolumeRenderer::getColorGrad
+ * protein_cuda::CrystalStructureVolumeRenderer::getColorGrad
  */
-vislib::math::Vector<float, 3> protein::CrystalStructureVolumeRenderer::getColorGrad(float val) {
+vislib::math::Vector<float, 3> protein_cuda::CrystalStructureVolumeRenderer::getColorGrad(float val) {
     using namespace vislib::math;
 
     Vector<float, 3> colBlue(0.23f, 0.29f, 0.75f); // blue
@@ -4112,7 +4112,7 @@ vislib::math::Vector<float, 3> protein::CrystalStructureVolumeRenderer::getColor
     return colRes;
 }
 
-bool protein::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA filename ) {
+bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA filename ) {
     // double colR, double colG, double colB, bool flipNormals, bool smoothNormals)
     //
     // reads VTK format, from Sadlo's read_geom_VTK()

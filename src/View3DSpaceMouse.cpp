@@ -7,7 +7,7 @@
 #include "mmcore/param/EnumParam.h"
 
 using namespace megamol::core;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 /*
  * View3DSpaceMouse::View3DSpaceMouse

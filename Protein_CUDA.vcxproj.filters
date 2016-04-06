@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\protein\Protein.h">
-      <Filter>Public Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\VTKImageData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -506,6 +503,9 @@
     </ClInclude>
     <ClInclude Include="src\interpol.cuh">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\protein\Protein_CUDA.h">
+      <Filter>Public Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

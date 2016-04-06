@@ -15,7 +15,7 @@
 #include "vislib/sys/Thread.h"
 
 using namespace megamol;
-using namespace megamol::protein;
+using namespace megamol::protein_cuda;
 
 #define TIMEOUT 10000 // normally can use vislib::net::Socket::TIMEOUT_INFINITE
 #define RESET_ATTEMPTS 1 // how many times MDDriver will be reset before deciding that it has failed

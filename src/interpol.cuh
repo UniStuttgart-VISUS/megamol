@@ -10,8 +10,8 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_INTERPOL_CUH_INCLUDED
-#define MMPROTEINPLUGIN_INTERPOL_CUH_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_INTERPOL_CUH_INCLUDED
+#define MMPROTEINCUDAPLUGIN_INTERPOL_CUH_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -101,4 +101,4 @@ inline __device__ T InterpFieldTricubic_D(T n[4][4][4], float alpha, float beta,
     return InterpFieldCubic_D(arr, alpha);
 }
 
-#endif // MMPROTEINPLUGIN_INTERPOL_CUH_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_INTERPOL_CUH_INCLUDED

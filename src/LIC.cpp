@@ -19,9 +19,9 @@ using namespace megamol;
 #ifdef WITH_CUDA
 
 /*
- * protein::LIC::CalcLicX
+ * protein_cuda::LIC::CalcLicX
  */
-bool protein::LIC::CalcLicX(UniGrid3D<float3> &grid,
+bool protein_cuda::LIC::CalcLicX(UniGrid3D<float3> &grid,
         UniGrid3D<float> &randBuff,
         unsigned int streamLen,
         float minStreamCnt,
@@ -230,9 +230,9 @@ bool protein::LIC::CalcLicX(UniGrid3D<float3> &grid,
 
 
 /*
- * protein::LIC::CalcLicY
+ * protein_cuda::LIC::CalcLicY
  */
-bool protein::LIC::CalcLicY(UniGrid3D<float3> &grid,
+bool protein_cuda::LIC::CalcLicY(UniGrid3D<float3> &grid,
         UniGrid3D<float> &randBuff,
         unsigned int streamLen,
         float minStreamCnt,
@@ -442,9 +442,9 @@ bool protein::LIC::CalcLicY(UniGrid3D<float3> &grid,
 
 
 /*
- * protein::LIC::CalcLicZ
+ * protein_cuda::LIC::CalcLicZ
  */
-bool protein::LIC::CalcLicZ(UniGrid3D<float3> &grid,
+bool protein_cuda::LIC::CalcLicZ(UniGrid3D<float3> &grid,
         UniGrid3D<float> &randBuff,
         unsigned int streamLen,
         float minStreamCnt,
@@ -654,9 +654,9 @@ bool protein::LIC::CalcLicZ(UniGrid3D<float3> &grid,
 
 
 /*
- * protein::LIC::sampleUniGrid
+ * protein_cuda::LIC::sampleUniGrid
  */
-vislib::math::Vector<float, 3> protein::LIC::sampleUniGrid(
+vislib::math::Vector<float, 3> protein_cuda::LIC::sampleUniGrid(
         vislib::math::Vector<float, 3> pos,
         UniGrid3D<float3> &grid,
         vislib::math::Vector<float, 3> licDim) {
@@ -676,9 +676,9 @@ vislib::math::Vector<float, 3> protein::LIC::sampleUniGrid(
 
 
 /*
- * protein::LIC::sampleRandBuffWrap
+ * protein_cuda::LIC::sampleRandBuffWrap
  */
-float protein::LIC::sampleRandBuffWrap(UniGrid3D<float> &randBuff,
+float protein_cuda::LIC::sampleRandBuffWrap(UniGrid3D<float> &randBuff,
         vislib::math::Vector<float, 3> pos) {
 
     vislib::math::Vector<unsigned int, 3> p(
@@ -691,9 +691,9 @@ float protein::LIC::sampleRandBuffWrap(UniGrid3D<float> &randBuff,
 
 
 /*
- * protein::LIC::clampVec
+ * protein_cuda::LIC::clampVec
  */
-void protein::LIC::clampVec(vislib::math::Vector<float, 3> &vec,
+void protein_cuda::LIC::clampVec(vislib::math::Vector<float, 3> &vec,
         vislib::math::Vector<float, 3> min, vislib::math::Vector<float, 3> max) {
     //printf("===== vec %f %f %f\n", vec.X(), vec.Y(), vec.Z()); // DEBUG
     //printf("===== min %f %f %f\n", min.X(), min.Y(), min.Z()); // DEBUG

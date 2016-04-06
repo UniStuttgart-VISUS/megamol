@@ -7,8 +7,8 @@
  * $Id$
  */
 
-#ifndef MMPROTEINPLUGIN_CRYSTALSTRUCTUREDATASOURCE_H_INCLUDED
-#define MMPROTEINPLUGIN_CRYSTALSTRUCTUREDATASOURCE_H_INCLUDED
+#ifndef MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREDATASOURCE_H_INCLUDED
+#define MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREDATASOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -23,7 +23,7 @@
 #include <fstream>
 
 namespace megamol {
-namespace protein {
+namespace protein_cuda {
 
     /**
      * TODO
@@ -380,7 +380,7 @@ namespace protein {
     };
 
 
-} /* end namespace protein */
+} /* end namespace protein_cuda */
 } /* end namespace megamol */
 
-#endif // MMPROTEINPLUGIN_CRYSTALSTRUCTUREDATASOURCE_H_INCLUDED
+#endif // MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREDATASOURCE_H_INCLUDED
