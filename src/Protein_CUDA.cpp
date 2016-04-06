@@ -135,7 +135,7 @@ PROTEIN_API int mmplgPluginAPIVersion(void) {
  * mmplgPluginName
  */
 PROTEIN_API const char * mmplgPluginName(void) {
-    return "Protein";
+    return "Protein_CUDA";
 }
 
 
@@ -143,7 +143,7 @@ PROTEIN_API const char * mmplgPluginName(void) {
  * mmplgPluginDescription
  */
 PROTEIN_API const char * mmplgPluginDescription(void) {
-    return "Plugin for protein rendering (SFB716 D4)";
+    return "Plugin for protein rendering using CUDA for accelleration (SFB716 D4)";
 }
 
 
