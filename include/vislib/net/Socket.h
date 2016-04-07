@@ -33,6 +33,7 @@
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/SocketAddress.h"
 #include "vislib/types.h"
+#include "vislib/macro_utils.h"
 
 
 namespace vislib {
@@ -1022,7 +1023,8 @@ namespace net {
          * @throws SocketException If the operation fails.
          */
         inline void SetLinger(const bool enable, const SHORT lingerTime) {
-            struct linger l = { enable, lingerTime };
+			VISLIB_MSVC_SUPPRESS_WARNING(4838)
+			struct linger l = { enable, lingerTime };
             this->SetOption(SOL_SOCKET, SO_LINGER, &l, sizeof(struct linger));
         }
 
