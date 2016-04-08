@@ -912,6 +912,30 @@
     <ClCompile Include="src\job\PluginsStateFileGeneratorJob.cpp">
       <Filter>job\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\moldyn\CrystalStructureDataCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moldyn\DiagramCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moldyn\IntSelectionCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moldyn\ResidueSelectionCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moldyn\SplitMergeCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moldyn\VTIDataCall.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moldyn\Interpol.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\moldyn\VTKImageData.cpp">
+      <Filter>moldyn\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1546,6 +1570,30 @@
     </ClInclude>
     <ClInclude Include="src\job\PluginsStateFileGeneratorJob.h">
       <Filter>job\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\CrystalStructureDataCall.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\DiagramCall.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\IntSelectionCall.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\ResidueSelectionCall.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\SplitMergeCall.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\VTIDataCall.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\Interpol.h">
+      <Filter>moldyn\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\moldyn\VTKImageData.h">
+      <Filter>moldyn\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
