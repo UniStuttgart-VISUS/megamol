@@ -361,14 +361,14 @@ utility::ColourParser::ColourParser(void) {
  * utility::ColourParser::~ColourParser
  */
 #ifdef _WIN32
-#pragma warning(disable:4722)
+#pragma warning(disable:4722 4297)
 #endif
 utility::ColourParser::~ColourParser(void) {
     throw vislib::UnsupportedOperationException("ColourParser::Dtor",
         __FILE__, __LINE__);
 }
 #ifdef _WIN32
-#pragma warning(default:4722)
+#pragma warning(default:4722 4297)
 #endif
 
 

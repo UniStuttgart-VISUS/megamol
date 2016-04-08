@@ -236,11 +236,12 @@ namespace view {
 
         /** The frame number requested the last time 'requestLockedFrame' was called */
         unsigned int lastRequested;
+
+		/** TODO: The Mueller shalt document his stuff */
+		std::atomic_bool isRunning;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
-
-        std::atomic_bool isRunning;
 
     };
 

@@ -15,27 +15,13 @@
 #include "mmcore/AbstractNamedObject.h"
 #include <list>
 #include <memory>
+#include "vislib/macro_utils.h"
 
 
 namespace megamol {
 namespace core {
 
     class AbstractNamedObjectContainer;
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-namespace std {
-
-    // dll-export of std-type instantiations
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API list < ::megamol::core::AbstractNamedObject::ptr_type >;
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < ::megamol::core::AbstractNamedObjectContainer >;
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < const ::megamol::core::AbstractNamedObjectContainer >;
-
-}
-
-namespace megamol {
-namespace core {
 
 
     /**
@@ -227,6 +213,7 @@ namespace core {
     private:
 
         /** The children of the container */
+VISLIB_MSVC_SUPPRESS_WARNING(4251)
         child_list_type children;
 
     };

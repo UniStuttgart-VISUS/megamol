@@ -174,7 +174,7 @@ bool moldyn::MMPLDWriter::run(void) {
                         "Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
                 }
                 ++missCnt;
-                vislib::sys::Thread::Sleep(static_cast<DWORD>(1 + std::max(missCnt, 0) * 100));
+                vislib::sys::Thread::Sleep(static_cast<DWORD>(1 + std::max<int>(missCnt, 0) * 100));
             }
         } while(mpdc->FrameID() != i);
 
