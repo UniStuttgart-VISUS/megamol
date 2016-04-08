@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModuleDS.h"
@@ -120,7 +120,7 @@ namespace protein {
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters(const VTIDataCall *vti = 0);
+		void UpdateParameters(const core::moldyn::VTIDataCall *vti = 0);
 
 
         /**********************************************************************

@@ -13,7 +13,7 @@
 
 #include "slicing.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -122,7 +122,7 @@ namespace protein {
         /**
          * Volume rendering using volume data.
         */
-        bool RenderVolumeData(megamol::core::view::CallRender3D *call, VTIDataCall *volume);
+		bool RenderVolumeData(megamol::core::view::CallRender3D *call, core::moldyn::VTIDataCall *volume);
         
         /**
          * Initialize parameters for the LIC calculation and setup random texture.
@@ -162,7 +162,7 @@ namespace protein {
          *
          * @param volume The data interface.
          */
-        void UpdateVolumeTexture(const VTIDataCall *volume);
+		void UpdateVolumeTexture(const core::moldyn::VTIDataCall *volume);
 
         /**
          * Draw the bounding box of the protein around the origin.

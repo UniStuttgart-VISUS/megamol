@@ -11,7 +11,7 @@
 #include "stdafx.h"
 
 #include "SecPlaneRenderer.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "ogl_error_check.h"
 //#include "vislib_vector_typedefs.h"
 
@@ -51,7 +51,7 @@ SecPlaneRenderer::SecPlaneRenderer(void) : view::Renderer3DModule(),
     toggleZPlaneSlot("showZPlane", "Change the position of the z-Plane") {
 
     // Make texture slot available
-    this->textureSlot.SetCompatibleCall<VTIDataCallDescription>();
+	this->textureSlot.SetCompatibleCall<core::moldyn::VTIDataCallDescription>();
     this->MakeSlotAvailable(&this->textureSlot);
 
 
@@ -218,11 +218,11 @@ bool SecPlaneRenderer::GetExtents(megamol::core::Call& call) {
     }
 
     // Get extent of texture
-    VTIDataCall *vti = this->textureSlot.CallAs<VTIDataCall>();
+	core::moldyn::VTIDataCall *vti = this->textureSlot.CallAs<core::moldyn::VTIDataCall>();
     if (vti == NULL) {
         return false;
     }
-    if (!(*vti)(VTIDataCall::CallForGetExtent)) {
+	if (!(*vti)(core::moldyn::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -313,7 +313,7 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
         return false;
     }
 
-    VTIDataCall *vti = this->textureSlot.CallAs<VTIDataCall>();
+	core::moldyn::VTIDataCall *vti = this->textureSlot.CallAs<core::moldyn::VTIDataCall>();
     if (vti == NULL) {
         return false;
     }
@@ -323,7 +323,7 @@ bool SecPlaneRenderer::Render(megamol::core::Call& call) {
     vti->SetFrameID(static_cast<int>(cr3d->Time()), true);
 
     // Get data for this frame
-    if (!(*vti)(VTIDataCall::CallForGetData)) {
+	if (!(*vti)(core::moldyn::VTIDataCall::CallForGetData)) {
         return false;
     }
 

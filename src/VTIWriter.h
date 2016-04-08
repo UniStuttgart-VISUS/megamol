@@ -18,7 +18,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "HostArr.h"
 
 namespace megamol {
@@ -124,24 +124,24 @@ protected:
     /**
      * TODO
      */
-    vislib::TString getFormatStr(VTKImageData::DataFormat f);
+	vislib::TString getFormatStr(core::moldyn::VTKImageData::DataFormat f);
 
     /**
      * TODO
      */
-    vislib::TString getTypeStr(VTKImageData::DataArray::DataType t);
+	vislib::TString getTypeStr(core::moldyn::VTKImageData::DataArray::DataType t);
 
     /**
      * TODO
      */
     bool writeDataAscii(const void *data, size_t size, std::ofstream &outfile,
-            VTKImageData::DataArray::DataType t);
+			core::moldyn::VTKImageData::DataArray::DataType t);
 
     /**
      * TODO
      */
     bool writeDataBinary(const void *data, size_t size, std::ofstream &outfile,
-            VTKImageData::DataArray::DataType t);
+			core::moldyn::VTKImageData::DataArray::DataType t);
 
     /**
      * TODO
@@ -156,18 +156,18 @@ protected:
     /**
      * TODO
      */
-    bool writeDataArray(const VTIDataCall *dc, bool isPointData,
+	bool writeDataArray(const core::moldyn::VTIDataCall *dc, bool isPointData,
             unsigned int dataIdx, unsigned int pieceIdx, std::ofstream &outfile);
 
     /**
      * TODO
      */
-    bool writeFile(VTIDataCall *dc);
+	bool writeFile(core::moldyn::VTIDataCall *dc);
 
     /**
      * TODO
      */
-    bool writePiece(const VTIDataCall *dc, uint idx, std::ofstream &outfile);
+	bool writePiece(const core::moldyn::VTIDataCall *dc, uint idx, std::ofstream &outfile);
 
     /// Data caller slot
     core::CallerSlot dataCallerSlot;

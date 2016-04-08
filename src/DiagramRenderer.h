@@ -15,11 +15,11 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "DiagramCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "IntSelectionCall.h"
+#include "mmcore/moldyn/IntSelectionCall.h"
 
 namespace megamol {
 namespace protein {
@@ -140,7 +140,7 @@ namespace protein {
          */
         virtual bool GetExtents(megamol::core::view::CallRender2D& call);
 
-        VISLIB_FORCEINLINE bool isCategoricalMappable(const DiagramCall::DiagramMappable *dm) const {
+        VISLIB_FORCEINLINE bool isCategoricalMappable(const core::moldyn::DiagramCall::DiagramMappable *dm) const {
             return (dm->IsCategoricalAbscissa(0));
         }
 
@@ -217,7 +217,7 @@ namespace protein {
         // warning: Z encodes the previous y-coordinate, Y the actual value (draw + click ranges between values!)
         vislib::PtrArray<vislib::PtrArray<vislib::math::Point<float, 3> > > *preparedData;
 
-        vislib::Array<DiagramCall::DiagramSeries *> preparedSeries;
+        vislib::Array<core::moldyn::DiagramCall::DiagramSeries *> preparedSeries;
 
         vislib::Array<vislib::StringA> categories;
 
@@ -247,17 +247,17 @@ namespace protein {
 
         const float barWidthRatio;
 
-        DiagramCall::DiagramSeries *selectedSeries;
+		megamol::core::moldyn::DiagramCall::DiagramSeries *selectedSeries;
 
         //vislib::Array<int> selectedSeriesIndices;
 
-        DiagramCall *diagram;
+		megamol::core::moldyn::DiagramCall *diagram;
 
-        IntSelectionCall *selectionCall;
+		megamol::core::moldyn::IntSelectionCall *selectionCall;
         
-        IntSelectionCall *hiddenCall;
+		megamol::core::moldyn::IntSelectionCall *hiddenCall;
 
-        const DiagramCall::DiagramMarker *hoveredMarker;
+		const megamol::core::moldyn::DiagramCall::DiagramMarker *hoveredMarker;
 
         int hoveredSeries;
 

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "IntSelection.h"
-#include "IntSelectionCall.h"
+#include "mmcore/moldyn/IntSelectionCall.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -10,8 +10,8 @@ IntSelection::IntSelection(void) :
     getSelectionSlot("getSelection", "Provides selection data to clients."),
     selection() {
 
-    this->getSelectionSlot.SetCallback( IntSelectionCall::ClassName(), IntSelectionCall::FunctionName(IntSelectionCall::CallForGetSelection), &IntSelection::getSelectionCallback);
-    this->getSelectionSlot.SetCallback( IntSelectionCall::ClassName(), IntSelectionCall::FunctionName(IntSelectionCall::CallForSetSelection), &IntSelection::setSelectionCallback);
+	this->getSelectionSlot.SetCallback(core::moldyn::IntSelectionCall::ClassName(), core::moldyn::IntSelectionCall::FunctionName(core::moldyn::IntSelectionCall::CallForGetSelection), &IntSelection::getSelectionCallback);
+	this->getSelectionSlot.SetCallback(core::moldyn::IntSelectionCall::ClassName(), core::moldyn::IntSelectionCall::FunctionName(core::moldyn::IntSelectionCall::CallForSetSelection), &IntSelection::setSelectionCallback);
     this->MakeSlotAvailable(&this->getSelectionSlot);
 }
 
@@ -32,7 +32,7 @@ void IntSelection::release(void) {
 
 
 bool IntSelection::getSelectionCallback(core::Call& caller) {
-    IntSelectionCall *sc = dynamic_cast<IntSelectionCall*>(&caller);
+	core::moldyn::IntSelectionCall *sc = dynamic_cast<core::moldyn::IntSelectionCall*>(&caller);
     if (sc == NULL) return false;
 
     sc->SetSelectionPointer(&this->selection);
@@ -42,7 +42,7 @@ bool IntSelection::getSelectionCallback(core::Call& caller) {
 
 
 bool IntSelection::setSelectionCallback(core::Call& caller) {
-    IntSelectionCall *sc = dynamic_cast<IntSelectionCall*>(&caller);
+	core::moldyn::IntSelectionCall *sc = dynamic_cast<core::moldyn::IntSelectionCall*>(&caller);
     if (sc == NULL) return false;
     
     this->selection = *sc->GetSelectionPointer();

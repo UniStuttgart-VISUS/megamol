@@ -21,9 +21,6 @@
     <ClInclude Include="include\protein\Protein.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\VTKImageData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\VTKLegacyDataCallUnstructuredGrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -33,16 +30,7 @@
     <ClInclude Include="src\VTKLegacyDataUnstructuredGrid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\WKFThreads.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\WKFUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\XYZLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AbstractGPUSurface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\AbstractVTKLegacyData.h">
@@ -84,19 +72,7 @@
     <ClInclude Include="src\ColorModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CritPoints.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CrystalStructureDataCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\CrystalStructureDataSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\DeformableGPUSurfaceMT.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\DeformableGPUSurfaceMTCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Diagram2DCall.h">
@@ -105,22 +81,13 @@
     <ClInclude Include="src\Diagram2DRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\DiagramCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\DiagramRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\DiffusionSolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\DofRendererDeferred.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ElectrostaticsRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ForceDataCall.h">
@@ -165,37 +132,16 @@
     <ClInclude Include="src\HostArr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Interpol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\IntSelection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\IntSelectionCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\LayeredIsosurfaceRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\LIC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MappableCategoryFloat.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MappableFloatPair.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\MDDriverConnector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MolecularAOShader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\MolecularBezierData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MolecularSurfaceFeature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\MoleculeBallifier.h">
@@ -255,9 +201,6 @@
     <ClInclude Include="src\ResidueSelection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ResidueSelectionCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\RMS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -300,9 +243,6 @@
     <ClInclude Include="src\SphereRendererMouse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\SplitMergeCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\SplitMergeFeature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -316,12 +256,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Streamline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\StreamlineRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Stride.h">
@@ -339,9 +273,6 @@
     <ClInclude Include="src\TrajectorySmoothFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\UniGrid3D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\UnstructuredGridRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -352,9 +283,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\VariantMatchRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VecField3f.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\View3DMouse.h">
@@ -378,9 +306,6 @@
     <ClInclude Include="src\VolumeSliceRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\VTIDataCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\VTILoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -395,13 +320,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\WKFUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\XYZLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AbstractGPUSurface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\AbstractVTKLegacyData.cpp">
@@ -440,12 +359,6 @@
     <ClCompile Include="src\ColorModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CritPoints.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CrystalStructureDataCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\CrystalStructureDataSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -453,9 +366,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Diagram2DRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DiagramCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\DiagramRenderer.cpp">
@@ -468,9 +378,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ElectrostaticsRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ForceDataCall.cpp">
@@ -494,37 +401,13 @@
     <ClCompile Include="src\HapticsMoleculeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Interpol.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\IntSelection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\IntSelectionCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\LayeredIsosurfaceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\LIC.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MappableCategoryFloat.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MappableFloatPair.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MDDriverConnector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MolecularAOShader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\MolecularBezierData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MolecularSurfaceFeature.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MoleculeBallifier.cpp">
@@ -569,15 +452,6 @@
     <ClCompile Include="src\ProteinVolumeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\QuickSurfMTRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\QuickSurfRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\QuickSurfRenderer2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Raw3DRelativeMouseInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -591,9 +465,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ResidueSelection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ResidueSelectionCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\RMS.cpp">
@@ -635,9 +506,6 @@
     <ClCompile Include="src\SphereRendererMouse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SplitMergeCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\SplitMergeFeature.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -650,12 +518,6 @@
     <ClCompile Include="src\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Streamline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StreamlineRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Stride.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -665,9 +527,6 @@
     <ClCompile Include="src\TrajectorySmoothFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\UniGrid3D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\UnstructuredGridRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -675,9 +534,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VariantMatchRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\VecField3f.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\View3DMouse.cpp">
@@ -698,16 +554,10 @@
     <ClCompile Include="src\VolumeSliceRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VTIDataCall.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\VTILoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VTIWriter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\VTKImageData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VTKLegacyDataCallUnstructuredGrid.cpp">
@@ -719,9 +569,6 @@
     <ClCompile Include="src\VTKLegacyDataUnstructuredGrid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\WKFThreads.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\gmx_system_xdr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -729,6 +576,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\CartoonTessellationRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MDDriverConnector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

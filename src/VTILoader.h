@@ -22,8 +22,8 @@
 #include "vislib/Map.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore/view/AnimDataModule.h"
-#include "VTIDataCall.h"
-#include "VTKImageData.h"
+#include "mmcore/moldyn/VTIDataCall.h"
+#include "mmcore/moldyn/VTKImageData.h"
 
 #include <fstream>
 #include <map>
@@ -182,7 +182,7 @@ private:
          *
          * @return A pointer to the data.
          */
-        const VTKImageData *GetData() const {
+		const core::moldyn::VTKImageData *GetData() const {
             return &this->data;
         }
 
@@ -371,7 +371,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-        const VTKImageData::DataArray* PeekPointData(vislib::StringA id, unsigned int idx) {
+		const core::moldyn::VTKImageData::DataArray* PeekPointData(vislib::StringA id, unsigned int idx) {
             return this->data.PeekPointData(id, idx);
         }
 
@@ -383,7 +383,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-        const VTKImageData::DataArray* PeekCellData(vislib::StringA id, unsigned int idx) {
+		const core::moldyn::VTKImageData::DataArray* PeekCellData(vislib::StringA id, unsigned int idx) {
             return this->data.PeekCellData(id, idx);
         }
 
@@ -399,7 +399,7 @@ private:
          * @param pieceIdx    The index of the piece.
          */
         void SetPointData(const char *data, double min, double max,
-                VTKImageData::DataArray::DataType t, vislib::StringA id,
+				core::moldyn::VTKImageData::DataArray::DataType t, vislib::StringA id,
                 size_t nComponents, unsigned int pieceIdx) {
             this->data.SetPointData(data, min, max, t, id, nComponents, pieceIdx);
         }
@@ -416,14 +416,14 @@ private:
          * @param pieceIdx    The index of the piece.
          */
         void SetCellData(const char *data, double min, double max,
-                VTKImageData::DataArray::DataType t, vislib::StringA id,
+				core::moldyn::VTKImageData::DataArray::DataType t, vislib::StringA id,
                 size_t nComponents, unsigned int pieceIdx) {
             this->data.SetCellData(data, min, max, t, id, nComponents, pieceIdx);
         }
 
     private:
 
-        VTKImageData data;
+		core::moldyn::VTKImageData data;
 
     };
 
@@ -431,7 +431,7 @@ private:
      * Helper class to unlock frame data when 'CallSimpleSphereData' is
      * used.
      */
-    class Unlocker : public VTIDataCall::Unlocker {
+	class Unlocker : public core::moldyn::VTIDataCall::Unlocker {
     public:
 
         /**
@@ -439,7 +439,7 @@ private:
          *
          * @param frame The frame to unlock
          */
-        Unlocker(Frame& frame) : VTIDataCall::Unlocker(),
+		Unlocker(Frame& frame) : core::moldyn::VTIDataCall::Unlocker(),
                 frame(&frame) {
             // intentionally empty
         }
@@ -508,7 +508,7 @@ private:
     SIZE_T hash;
 
     /// The byte order of the stored data (if binary)
-    VTKImageData::ByteOrder byteOrder;
+	core::moldyn::VTKImageData::ByteOrder byteOrder;
 
     /// The version (major, minor)
     Vec2i version;

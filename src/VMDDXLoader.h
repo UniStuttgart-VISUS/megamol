@@ -31,8 +31,8 @@
 #include "vislib/String.h"
 #include "vislib/Map.h"
 #include "vislib/math/Cuboid.h"
-#include "VTIDataCall.h"
-#include "VTKImageData.h"
+#include "mmcore/moldyn/VTIDataCall.h"
+#include "mmcore/moldyn/VTKImageData.h"
 #include "HostArr.h"
 
 #include <fstream>
@@ -167,7 +167,7 @@ private:
 //    Cubei extent;    ///> The data sets number of elements in each direction
 //    Vec3f origin;    ///> The data sets origin in world space coordinates
 //    Vec3f spacing;   ///> The data sets spacing in each direction
-    VTKImageData imgdata; ///> The image data object
+	core::moldyn::VTKImageData imgdata; ///> The image data object
 
     vislib::TString filenamesPrefix; ///> Prefix for the data files
     vislib::TString filenamesSuffix; ///> Suffix for the data files

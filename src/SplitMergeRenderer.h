@@ -15,8 +15,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "SplitMergeCall.h"
-#include "IntSelectionCall.h"
+#include "mmcore/moldyn/SplitMergeCall.h"
+#include "mmcore/moldyn/IntSelectionCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/math/Rectangle.h"
@@ -92,7 +92,7 @@ namespace protein {
 
         void calcExtents();
 
-        void closePath(SplitMergeCall::SplitMergeMappable *smm, int seriesIdx,
+		void closePath(core::moldyn::SplitMergeCall::SplitMergeMappable *smm, int seriesIdx,
             vislib::Array<GLubyte> &cmds, vislib::Array<float> &coords, int idx, int start);
 
         /**
@@ -127,11 +127,11 @@ namespace protein {
         /** caller slot */
         core::CallerSlot hiddenCallerSlot;
 
-        SplitMergeCall *diagram;
+		core::moldyn::SplitMergeCall *diagram;
         
-        IntSelectionCall *selectionCall;
+		core::moldyn::IntSelectionCall *selectionCall;
 
-        IntSelectionCall *hiddenCall;
+		core::moldyn::IntSelectionCall *hiddenCall;
 
         ///** clear diagram parameter */
         //megamol::core::param::ParamSlot clearDiagramParam;
@@ -158,7 +158,7 @@ namespace protein {
         vislib::Array<int> sortedSeries;
         //vislib::Array<int> sortedSeriesInverse;
         vislib::math::Rectangle<float> bounds;
-        SplitMergeCall::SplitMergeSeries *selectedSeries;
+		core::moldyn::SplitMergeCall::SplitMergeSeries *selectedSeries;
         vislib::Array<bool> seriesVisible;
         vislib::Array<int> selectionLevel;
 
@@ -166,14 +166,14 @@ namespace protein {
         public:
             int index;
             static vislib::Array<int> *sortedSeries;
-            static SplitMergeCall *diagram;
+			static core::moldyn::SplitMergeCall *diagram;
 
             float Distance(FastMapWrapper &other) {
                 int s1 = (*sortedSeries)[this->index];
                 int s2 = (*sortedSeries)[other.index];
                 int sameCount = 0;
                 for(int i = 0; i < diagram->GetTransitionCount(); i++) {
-                    SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(i);
+					core::moldyn::SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(i);
                     if ((smt->DestinationSeries() == s1 && smt->SourceSeries() == s2)
                         || (smt->DestinationSeries() == s2 && smt->SourceSeries() == s1)) {
                             sameCount++;

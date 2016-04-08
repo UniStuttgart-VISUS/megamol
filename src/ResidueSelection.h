@@ -18,7 +18,7 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/RawStorage.h"
 #include "vislib/Array.h"
-#include "ResidueSelectionCall.h"
+#include "mmcore/moldyn/ResidueSelectionCall.h"
 
 
 namespace megamol {
@@ -100,7 +100,7 @@ namespace protein {
         core::CalleeSlot getSelectionSlot;
 
         /** The data */
-        vislib::Array<ResidueSelectionCall::Residue> selection;
+        vislib::Array<core::moldyn::ResidueSelectionCall::Residue> selection;
 
         /** The data hash */
         SIZE_T datahash;

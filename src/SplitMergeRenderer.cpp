@@ -26,7 +26,7 @@ using namespace vislib::graphics::gl;
 using vislib::sys::Log;
 
 vislib::Array<int> *SplitMergeRenderer::FastMapWrapper::sortedSeries;
-SplitMergeCall *SplitMergeRenderer::FastMapWrapper::diagram;
+core::moldyn::SplitMergeCall *SplitMergeRenderer::FastMapWrapper::diagram;
 
 /*
  * SplitMergeRenderer::SplitMergeRenderer (CTOR)
@@ -48,13 +48,13 @@ SplitMergeRenderer::SplitMergeRenderer( void ) : Renderer2DModule (),
         {
 
     // segmentation data caller slot
-    this->dataCallerSlot.SetCompatibleCall<SplitMergeCallDescription>();
+	this->dataCallerSlot.SetCompatibleCall<core::moldyn::SplitMergeCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
     
-    this->selectionCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
+	this->selectionCallerSlot.SetCompatibleCall<core::moldyn::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->selectionCallerSlot);
 
-    this->hiddenCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
+	this->hiddenCallerSlot.SetCompatibleCall<core::moldyn::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->hiddenCallerSlot);
 
     this->foregroundColorParam.SetParameter(new param::StringParam("white"));
@@ -130,7 +130,7 @@ void SplitMergeRenderer::calcExtents() {
     float minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
     
     for (int i = 0; i < sortedSeries.Count(); i++) {
-        SplitMergeCall::SplitMergeMappable *smm = diagram->GetSeries(sortedSeries[i])->GetMappable();
+		core::moldyn::SplitMergeCall::SplitMergeMappable *smm = diagram->GetSeries(sortedSeries[i])->GetMappable();
         vislib::Pair<float, float> p = smm->GetAbscissaRange();
         if (p.First() < minX) {
             minX = p.First();
@@ -196,7 +196,7 @@ bool SplitMergeRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                         }
                     }
                     selectionCall->SetSelectionPointer(&selectedSeriesIndices);
-                    (*selectionCall)(IntSelectionCall::CallForSetSelection);
+					(*selectionCall)(core::moldyn::IntSelectionCall::CallForSetSelection);
                 }
             }
         }
@@ -206,7 +206,7 @@ bool SplitMergeRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 }
 
 
-void SplitMergeRenderer::closePath(SplitMergeCall::SplitMergeMappable *smm, int seriesIdx,
+void SplitMergeRenderer::closePath(core::moldyn::SplitMergeCall::SplitMergeMappable *smm, int seriesIdx,
         vislib::Array<GLubyte> &cmds, vislib::Array<float> &coords, int idx, int start) {
     float x, y;
     int lastPt = static_cast<int>(coords.Count() - 2);
@@ -234,14 +234,14 @@ void SplitMergeRenderer::closePath(SplitMergeCall::SplitMergeMappable *smm, int 
  */
 bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     // get pointer to Diagram2DCall
-    diagram = this->dataCallerSlot.CallAs<SplitMergeCall>();
+	diagram = this->dataCallerSlot.CallAs<core::moldyn::SplitMergeCall>();
     if( diagram == NULL ) return false;
     // execute the call
-    if( !(*diagram)(SplitMergeCall::CallForGetData) ) return false;
+	if (!(*diagram)(core::moldyn::SplitMergeCall::CallForGetData)) return false;
 
-    selectionCall = this->selectionCallerSlot.CallAs<IntSelectionCall>();
+	selectionCall = this->selectionCallerSlot.CallAs<core::moldyn::IntSelectionCall>();
     if (selectionCall != NULL) {
-        (*selectionCall)(IntSelectionCall::CallForGetSelection);
+		(*selectionCall)(core::moldyn::IntSelectionCall::CallForGetSelection);
         if (selectionCall->GetSelectionPointer() != NULL
                 && selectionCall->GetSelectionPointer()->Count() > 0) {
             selectedSeries = diagram->GetSeries((*selectionCall->GetSelectionPointer())[0]);
@@ -255,9 +255,9 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     }
     
     // do we have visibility information propagated from outside?
-    hiddenCall = this->hiddenCallerSlot.CallAs<IntSelectionCall>();
+	hiddenCall = this->hiddenCallerSlot.CallAs<core::moldyn::IntSelectionCall>();
     if (hiddenCall != NULL) {
-        (*hiddenCall)(IntSelectionCall::CallForGetSelection);
+		(*hiddenCall)(core::moldyn::IntSelectionCall::CallForGetSelection);
         if (hiddenCall->GetSelectionPointer() != NULL) {
             for (SIZE_T x = 0; x < seriesVisible.Count(); x++) {
                 seriesVisible[x] = true;
@@ -324,7 +324,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         // WARNING PROPAGATION SLIPS! YOU NEED DOUBLE BUFFERING (selectionLevel) FOR THIS TO WORK!!!
         for (int i = 0; i < this->numVisibilityPropagationRounds.Param<param::IntParam>()->Value(); i++) {
             for(int t = 0; t < diagram->GetTransitionCount(); t++) {
-                SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(t);
+				core::moldyn::SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(t);
                 if (selectionLevel[smt->SourceSeries()] > 0) {
                     selectionLevel[smt->DestinationSeries()]++;
                 }
@@ -349,7 +349,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
                 }
             }
             hiddenCall->SetSelectionPointer(&hiddenSeriesIndices);
-            (*hiddenCall)(IntSelectionCall::CallForSetSelection);
+			(*hiddenCall)(core::moldyn::IntSelectionCall::CallForSetSelection);
         }
     } 
     for (int i = sortedSeries.Count() - 1; i >= 0; i--) {
@@ -373,8 +373,8 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
 
     GLuint pathBase = glGenPathsNV(sortedSeries.Count());
     for (int i = 0; i < sortedSeries.Count(); i++) {
-        SplitMergeCall::SplitMergeSeries *sms = diagram->GetSeries(sortedSeries[i]);
-        SplitMergeCall::SplitMergeMappable *smm = sms->GetMappable();
+		core::moldyn::SplitMergeCall::SplitMergeSeries *sms = diagram->GetSeries(sortedSeries[i]);
+		core::moldyn::SplitMergeCall::SplitMergeMappable *smm = sms->GetMappable();
         int increment = 50;
         vislib::Array<GLubyte> cmds;
         cmds.SetCapacityIncrement(increment);
@@ -479,7 +479,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
 
     for(int i = 0; i < diagram->GetTransitionCount(); i++) {
         //coords.Clear();
-        SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(i);
+		core::moldyn::SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(i);
         if (!seriesVisible[smt->SourceSeries()] || !seriesVisible[smt->DestinationSeries()]) {
             continue;
         }
@@ -487,8 +487,8 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         // COORDS
 
         unsigned int srcSeriesIdx = smt->SourceSeries();
-        SplitMergeCall::SplitMergeSeries *srcSeries = this->diagram->GetSeries( srcSeriesIdx);
-        SplitMergeCall::SplitMergeMappable *srcSMM = srcSeries->GetMappable();
+		core::moldyn::SplitMergeCall::SplitMergeSeries *srcSeries = this->diagram->GetSeries(srcSeriesIdx);
+		core::moldyn::SplitMergeCall::SplitMergeMappable *srcSMM = srcSeries->GetMappable();
         unsigned int srcDataIdx = smt->SourceSeriesDataIndex();
         srcSMM->GetAbscissaValue(srcDataIdx, &srcX);
         visibleSeriesIdx = srcSeriesIdx - invisibleCounter[srcSeriesIdx];
@@ -496,8 +496,8 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         srcYBottom = (-srcSMM->GetOrdinateValue(srcDataIdx) / maxY) - visibleSeriesIdx * seriesSpacing;
 
         unsigned int dstSeriesIdx = smt->DestinationSeries();
-        SplitMergeCall::SplitMergeSeries *dstSeries = this->diagram->GetSeries( dstSeriesIdx);
-        SplitMergeCall::SplitMergeMappable *dstSMM = dstSeries->GetMappable();
+		core::moldyn::SplitMergeCall::SplitMergeSeries *dstSeries = this->diagram->GetSeries(dstSeriesIdx);
+		core::moldyn::SplitMergeCall::SplitMergeMappable *dstSMM = dstSeries->GetMappable();
         unsigned int dstDataIdx = smt->DestinationSeriesDataIndex();
         dstSMM->GetAbscissaValue(dstDataIdx, &dstX);
         visibleSeriesIdx = dstSeriesIdx - invisibleCounter[dstSeriesIdx];
@@ -660,7 +660,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     float decorationDepth = 0.0f;
     if (this->showGuidesParam.Param<param::BoolParam>()->Value()) {
         for (int i = 0; i < diagram->GetGuideCount(); i++) {
-            SplitMergeCall::SplitMergeGuide *g = diagram->GetGuide(i);
+			core::moldyn::SplitMergeCall::SplitMergeGuide *g = diagram->GetGuide(i);
             ::glDisable(GL_BLEND);
             ::glDisable(GL_DEPTH_TEST);
             vislib::StringA tmpString;
@@ -671,7 +671,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
             ::glColor4fv(this->fgColor.PeekComponents());
             float pos;
             switch(g->GetType()) {
-                case SplitMergeCall::SPLITMERGE_GUIDE_HORIZONTAL:
+				case core::moldyn::SplitMergeCall::SPLITMERGE_GUIDE_HORIZONTAL:
                     /*pos = g->GetPosition() - yRange.First();
                     pos /= yRange.GetSecond() - yRange.GetFirst();*/
                     pos = g->GetPosition();
@@ -682,7 +682,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
                     //theFont.DrawString(aspect, pos, fontSize * 0.5f, true,
                     //    tmpString.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
                     break;
-                case SplitMergeCall::SPLITMERGE_GUIDE_VERTICAL:
+				case core::moldyn::SplitMergeCall::SPLITMERGE_GUIDE_VERTICAL:
                     //pos = g->GetPosition() - xRange.First();
                     //pos /= xRange.GetSecond() - xRange.GetFirst();
                     //pos *= aspect;

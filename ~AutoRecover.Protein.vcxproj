@@ -219,9 +219,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CoarseGrainDataLoader.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\ColorModule.h" />
+    <ClInclude Include="src\CrystalStructureDataCall.h" />
     <ClInclude Include="src\CrystalStructureDataSource.h" />
     <ClInclude Include="src\Diagram2DCall.h" />
     <ClInclude Include="src\Diagram2DRenderer.h" />
+    <ClInclude Include="src\DiagramCall.h" />
     <ClInclude Include="src\DiagramRenderer.h" />
     <ClInclude Include="src\DofRendererDeferred.h" />
     <ClInclude Include="src\ElectrostaticsRenderer.h" />
@@ -240,6 +242,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\Header.h" />
     <ClInclude Include="src\HostArr.h" />
     <ClInclude Include="src\IntSelection.h" />
+    <ClInclude Include="src\IntSelectionCall.h" />
     <ClInclude Include="src\LayeredIsosurfaceRenderer.h" />
     <ClInclude Include="src\MDDriverConnector.h" />
     <ClInclude Include="src\MolecularBezierData.h" />
@@ -262,6 +265,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ReducedSurfaceSimplified.h" />
     <ClInclude Include="src\Renderer3DModuleMouse.h" />
     <ClInclude Include="src\ResidueSelection.h" />
+    <ClInclude Include="src\ResidueSelectionCall.h" />
     <ClInclude Include="src\RMS.h" />
     <ClInclude Include="src\SecPlaneRenderer.h" />
     <ClInclude Include="src\SequenceRenderer.h" />
@@ -276,11 +280,13 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\SphereDataCall.h" />
     <ClInclude Include="src\SphereRenderer.h" />
     <ClInclude Include="src\SphereRendererMouse.h" />
+    <ClInclude Include="src\SplitMergeCall.h" />
     <ClInclude Include="src\SplitMergeFeature.h" />
     <ClInclude Include="src\SplitMergeRenderer.h" />
     <ClInclude Include="src\SSAORendererDeferred.h" />
     <ClInclude Include="src\state.h" />
     <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\Streamline.h" />
     <ClInclude Include="src\Stride.h" />
     <ClInclude Include="src\tables.h" />
     <ClInclude Include="src\targetver.h" />
@@ -297,8 +303,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\VolumeDirectionRenderer.h" />
     <ClInclude Include="src\VolumeSliceCall.h" />
     <ClInclude Include="src\VolumeSliceRenderer.h" />
+    <ClInclude Include="src\VTIDataCall.h" />
     <ClInclude Include="src\VTILoader.h" />
     <ClInclude Include="src\VTIWriter.h" />
+    <ClInclude Include="src\VTKImageData.h" />
     <ClInclude Include="src\VTKLegacyDataCallUnstructuredGrid.h" />
     <ClInclude Include="src\VTKLegacyDataLoaderUnstructuredGrid.h" />
     <ClInclude Include="src\VTKLegacyDataUnstructuredGrid.h" />
@@ -319,9 +327,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\CoarseGrainDataLoader.cpp" />
     <ClCompile Include="src\Color.cpp" />
     <ClCompile Include="src\ColorModule.cpp" />
+    <ClCompile Include="src\CrystalStructureDataCall.cpp" />
     <ClCompile Include="src\CrystalStructureDataSource.cpp" />
     <ClCompile Include="src\Diagram2DCall.cpp" />
     <ClCompile Include="src\Diagram2DRenderer.cpp" />
+    <ClCompile Include="src\DiagramCall.cpp" />
     <ClCompile Include="src\DiagramRenderer.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
     <ClCompile Include="src\DofRendererDeferred.cpp" />
@@ -343,9 +353,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="src\GROLoader.cpp" />
     <ClCompile Include="src\HapticsMoleculeRenderer.cpp" />
+    <ClCompile Include="src\Interpol.cpp" />
     <ClCompile Include="src\IntSelection.cpp" />
+    <ClCompile Include="src\IntSelectionCall.cpp" />
     <ClCompile Include="src\LayeredIsosurfaceRenderer.cpp" />
-    <ClCompile Include="src\MDDriverConnector.cpp" />
     <ClCompile Include="src\MolecularBezierData.cpp" />
     <ClCompile Include="src\MoleculeBallifier.cpp" />
     <ClCompile Include="src\MoleculeCartoonRenderer.cpp" />
@@ -366,6 +377,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\ReducedSurfaceSimplified.cpp" />
     <ClCompile Include="src\Renderer3DModuleMouse.cpp" />
     <ClCompile Include="src\ResidueSelection.cpp" />
+    <ClCompile Include="src\ResidueSelectionCall.cpp" />
     <ClCompile Include="src\RMS.cpp" />
     <ClCompile Include="src\SecPlaneRenderer.cpp" />
     <ClCompile Include="src\SequenceRenderer.cpp" />
@@ -379,6 +391,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\SphereDataCall.cpp" />
     <ClCompile Include="src\SphereRenderer.cpp" />
     <ClCompile Include="src\SphereRendererMouse.cpp" />
+    <ClCompile Include="src\SplitMergeCall.cpp" />
     <ClCompile Include="src\SplitMergeFeature.cpp" />
     <ClCompile Include="src\SplitMergeRenderer.cpp" />
     <ClCompile Include="src\SSAORendererDeferred.cpp" />
@@ -388,6 +401,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\Streamline.cpp" />
     <ClCompile Include="src\Stride.cpp" />
     <ClCompile Include="src\ToonRendererDeferred.cpp" />
     <ClCompile Include="src\TrajectorySmoothFilter.cpp" />

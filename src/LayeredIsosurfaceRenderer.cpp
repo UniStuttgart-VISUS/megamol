@@ -66,7 +66,7 @@ LayeredIsosurfaceRenderer::LayeredIsosurfaceRenderer (void) : Renderer3DModule (
 {
     // set caller slot for different data calls
     this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VolumeDataCallDescription>();
-    this->volDataCallerSlot.SetCompatibleCall<VTIDataCallDescription>();
+	this->volDataCallerSlot.SetCompatibleCall<core::moldyn::VTIDataCallDescription>();
     this->MakeSlotAvailable (&this->volDataCallerSlot);
 
     // set renderer caller slot
@@ -317,7 +317,7 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         cr3d->SetTimeFramesCount( vislib::math::Max( volume->FrameCount(), rencr3dFrames));
         
     } else {
-        VTIDataCall *vti = this->volDataCallerSlot.CallAs<VTIDataCall>();
+		core::moldyn::VTIDataCall *vti = this->volDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
         if( vti == NULL ) return false;
         // set call time
         // SFB-DEMO
@@ -325,9 +325,9 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         vti->SetCalltime(callTime);
         vti->SetFrameID(static_cast<int>(callTime));
         // try to call for extent
-        if (!(*vti)(VTIDataCall::CallForGetExtent)) return false;
+		if (!(*vti)(core::moldyn::VTIDataCall::CallForGetExtent)) return false;
         // try to call for data
-        if (!(*vti)(VTIDataCall::CallForGetData)) return false;
+		if (!(*vti)(core::moldyn::VTIDataCall::CallForGetData)) return false;
         
         // get bounding box
         boundingBox = vti->AccessBoundingBoxes().ObjectSpaceBBox();
@@ -371,7 +371,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
     // get pointer to core::moldyn::VolumeDataCall
     core::moldyn::VolumeDataCall *volume = this->volDataCallerSlot.CallAs<core::moldyn::VolumeDataCall>();
     // get pointer to core::moldyn::VolumeDataCall
-    VTIDataCall *vti = this->volDataCallerSlot.CallAs<VTIDataCall>();
+	core::moldyn::VTIDataCall *vti = this->volDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
     
     // set frame ID and call data
     if (volume) {
@@ -389,7 +389,7 @@ bool LayeredIsosurfaceRenderer::Render(Call& call) {
         vti->SetCalltime(callTime);
         vti->SetFrameID(static_cast<int>(callTime));
         // try to call for data
-        if (!(*vti)(VTIDataCall::CallForGetData)) return false;
+		if (!(*vti)(core::moldyn::VTIDataCall::CallForGetData)) return false;
     } else {
         return false;
     }
@@ -570,7 +570,7 @@ bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core:
 /*
  * Volume rendering using volume data.
  */
-bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, VTIDataCall *volume) {
+bool LayeredIsosurfaceRenderer::RenderVolumeData(view::CallRender3D *call, core::moldyn::VTIDataCall *volume) {
     glEnable (GL_DEPTH_TEST);
     glEnable (GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -754,7 +754,7 @@ void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VolumeDa
 /*
  * Create a volume containing the voxel map
  */
-void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const VTIDataCall *volume) {
+void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VTIDataCall *volume) {
     // generate volume, if necessary
     if (!glIsTexture(this->volumeTex)) {
         glGenTextures(1, &this->volumeTex);

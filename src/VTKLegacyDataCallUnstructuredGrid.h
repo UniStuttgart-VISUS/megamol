@@ -18,7 +18,7 @@
 #include "mmcore/CallAutoDescription.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
-#include "Interpol.h"
+#include "mmcore/moldyn/Interpol.h"
 #include "VTKLegacyDataUnstructuredGrid.h"
 
 namespace megamol {

@@ -80,13 +80,7 @@
 #include "Diagram2DCall.h"
 #include "ParticleDataCall.h"
 #include "ForceDataCall.h"
-#include "CrystalStructureDataCall.h"
 #include "CallMouseInput.h"
-#include "DiagramCall.h"
-#include "SplitMergeCall.h"
-#include "IntSelectionCall.h"
-#include "ResidueSelectionCall.h"
-#include "VTIDataCall.h"
 #include "VariantMatchDataCall.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
 
@@ -150,7 +144,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 53;
+    int moduleCount = 52;
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
 #endif // WITH_OPENHAPTICS
@@ -198,41 +192,40 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
         case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 15 : return new ModuleAutoDescription<protein::XYZLoader>();
         case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 16 : return new ModuleAutoDescription<protein::ElectrostaticsRenderer>();
         case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 17 : return new ModuleAutoDescription<protein::SolventVolumeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 18 : return new ModuleAutoDescription<protein::Filter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 19 : return new ModuleAutoDescription<protein::SolventDataGenerator>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 20 : return new ModuleAutoDescription<protein::View3DSpaceMouse>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 21 : return new ModuleAutoDescription<protein::GROLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 22 : return new ModuleAutoDescription<protein::SSAORendererDeferred>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 23 : return new ModuleAutoDescription<protein::ToonRendererDeferred>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 24 : return new ModuleAutoDescription<protein::DofRendererDeferred>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 25 : return new ModuleAutoDescription<protein::SphereRendererMouse>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 26 : return new ModuleAutoDescription<protein::View3DMouse>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 27 : return new ModuleAutoDescription<protein::GLSLVolumeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 28 : return new ModuleAutoDescription<protein::DiagramRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 29 : return new ModuleAutoDescription<protein::SplitMergeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 30 : return new ModuleAutoDescription<protein::IntSelection>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 31 : return new ModuleAutoDescription<protein::CrystalStructureDataSource>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 32 : return new ModuleAutoDescription<protein::VTILoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 33 : return new ModuleAutoDescription<protein::PDBWriter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 34 : return new ModuleAutoDescription<protein::VTIWriter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::VMDDXLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::ResidueSelection>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::AggregatedDensity>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::MolecularBezierData>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 48 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 49: return new ModuleAutoDescription<protein::ColorModule>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 50: return new ModuleAutoDescription<protein::PDBInterpolator>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::CartoonRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 52: return new ModuleAutoDescription<protein::CartoonTessellationRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 18 : return new ModuleAutoDescription<protein::SolventDataGenerator>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 19 : return new ModuleAutoDescription<protein::View3DSpaceMouse>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 20 : return new ModuleAutoDescription<protein::GROLoader>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 21 : return new ModuleAutoDescription<protein::SSAORendererDeferred>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 22 : return new ModuleAutoDescription<protein::ToonRendererDeferred>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 23 : return new ModuleAutoDescription<protein::DofRendererDeferred>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 24 : return new ModuleAutoDescription<protein::SphereRendererMouse>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 25 : return new ModuleAutoDescription<protein::View3DMouse>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 26 : return new ModuleAutoDescription<protein::GLSLVolumeRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 27 : return new ModuleAutoDescription<protein::DiagramRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 28 : return new ModuleAutoDescription<protein::SplitMergeRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 29 : return new ModuleAutoDescription<protein::IntSelection>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 30 : return new ModuleAutoDescription<protein::CrystalStructureDataSource>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 31 : return new ModuleAutoDescription<protein::VTILoader>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 32 : return new ModuleAutoDescription<protein::PDBWriter>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 33 : return new ModuleAutoDescription<protein::VTIWriter>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 34 : return new ModuleAutoDescription<protein::VMDDXLoader>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 35 : return new ModuleAutoDescription<protein::TrajectorySmoothFilter>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 36 : return new ModuleAutoDescription<protein::VariantMatchRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 37 : return new ModuleAutoDescription<protein::MoleculeBallifier>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 38 : return new ModuleAutoDescription<protein::ResidueSelection>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 39 : return new ModuleAutoDescription<protein::SecPlaneRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 40 : return new ModuleAutoDescription<protein::AggregatedDensity>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 41 : return new ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 42 : return new ModuleAutoDescription<protein::UnstructuredGridRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 43 : return new ModuleAutoDescription<protein::MolecularBezierData>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 44 : return new ModuleAutoDescription<protein::MultiParticleDataFilter>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 45 : return new ModuleAutoDescription<protein::VolumeDirectionRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 46 : return new ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 47 : return new ModuleAutoDescription<protein::MultiPDBLoader>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 48: return new ModuleAutoDescription<protein::ColorModule>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 49: return new ModuleAutoDescription<protein::PDBInterpolator>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 50: return new ModuleAutoDescription<protein::CartoonRenderer>();
+        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 51: return new ModuleAutoDescription<protein::CartoonTessellationRenderer>();
         default: return NULL;
     }
     return NULL;
@@ -243,7 +236,7 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_API int mmplgCallCount(void) {
-    return 17;
+    return 11;
 }
 
 
@@ -260,15 +253,9 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
         case 5: return new megamol::core::CallAutoDescription<megamol::protein::ParticleDataCall>();
         case 6: return new megamol::core::CallAutoDescription<megamol::protein::ForceDataCall>();
         case 7: return new megamol::core::CallAutoDescription<megamol::protein::CallMouseInput>();
-        case 8: return new megamol::core::CallAutoDescription<megamol::protein::DiagramCall>();
-        case 9: return new megamol::core::CallAutoDescription<megamol::protein::SplitMergeCall>();
-        case 10: return new megamol::core::CallAutoDescription<megamol::protein::IntSelectionCall>();
-        case 11: return new megamol::core::CallAutoDescription<megamol::protein::ResidueSelectionCall>();
-        case 12: return new megamol::core::CallAutoDescription<megamol::protein::CrystalStructureDataCall>();
-        case 13: return new megamol::core::CallAutoDescription<megamol::protein::VTIDataCall>();
-        case 14: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
-        case 15: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
-        case 16: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
+        case 8: return new megamol::core::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
+        case 9: return new megamol::core::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
+        case 10: return new megamol::core::CallAutoDescription<megamol::protein::CallColor>();
         default: return NULL;
     }
     return NULL;

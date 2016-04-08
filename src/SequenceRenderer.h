@@ -28,7 +28,7 @@
 #include "vislib/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "ResidueSelectionCall.h"
+#include "mmcore/moldyn/ResidueSelectionCall.h"
 
 namespace megamol {
 namespace protein {
@@ -219,7 +219,7 @@ namespace protein {
         bool initialClickSelection;
         // selection 
         vislib::Array<bool> selection;
-        ResidueSelectionCall *resSelectionCall;
+		core::moldyn::ResidueSelectionCall *resSelectionCall;
     };
 
 } /* end namespace protein */

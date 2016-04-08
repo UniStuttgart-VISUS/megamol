@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 #include "VMDDXLoader.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -51,12 +51,12 @@ VMDDXLoader::VMDDXLoader(void) : Module(),
 {
 
     this->dataOutSlot.SetCallback(
-            VTIDataCall::ClassName(),
-            VTIDataCall::FunctionName(VTIDataCall::CallForGetData),
+			core::moldyn::VTIDataCall::ClassName(),
+			core::moldyn::VTIDataCall::FunctionName(core::moldyn::VTIDataCall::CallForGetData),
             &VMDDXLoader::getData);
     this->dataOutSlot.SetCallback(
-            VTIDataCall::ClassName(),
-            VTIDataCall::FunctionName(VTIDataCall::CallForGetExtent),
+			core::moldyn::VTIDataCall::ClassName(),
+			core::moldyn::VTIDataCall::FunctionName(core::moldyn::VTIDataCall::CallForGetExtent),
             &VMDDXLoader::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
@@ -97,7 +97,7 @@ bool VMDDXLoader::getData(core::Call& call) {
     using namespace vislib::sys;
 
     // Get data call
-    VTIDataCall *dc = dynamic_cast<VTIDataCall*>(&call);
+	core::moldyn::VTIDataCall *dc = dynamic_cast<core::moldyn::VTIDataCall*>(&call);
     if(dc == NULL) return false;
 
 //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Frame requested: %u",
@@ -163,7 +163,7 @@ bool VMDDXLoader::getExtent(core::Call& call) {
     }
 
     // Get data call
-    VTIDataCall *dc = dynamic_cast<VTIDataCall*>(&call);
+	core::moldyn::VTIDataCall *dc = dynamic_cast<core::moldyn::VTIDataCall*>(&call);
     if(dc == NULL) return false;
 
     // Set frame count
@@ -296,7 +296,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
     // Setup data array
     this->imgdata.SetNumberOfPieces(1);
     this->imgdata.SetPointData((const char*)this->data.Peek(), min, max,
-            VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
+			core::moldyn::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... done (%f s)",
             this->ClassName(),

@@ -62,13 +62,13 @@ DiagramRenderer::DiagramRenderer( void ) : Renderer2DModule (),
         hoverPoint(), seriesVisible() {
 
     // segmentation data caller slot
-    this->dataCallerSlot.SetCompatibleCall<DiagramCallDescription>();
+    this->dataCallerSlot.SetCompatibleCall<core::moldyn::DiagramCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
-    this->selectionCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
+	this->selectionCallerSlot.SetCompatibleCall<core::moldyn::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->selectionCallerSlot);
     
-    this->hiddenCallerSlot.SetCompatibleCall<IntSelectionCallDescription>();
+	this->hiddenCallerSlot.SetCompatibleCall<core::moldyn::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->hiddenCallerSlot);
 
     param::EnumParam *dt = new param::EnumParam(0);
@@ -148,11 +148,11 @@ DiagramRenderer::~DiagramRenderer( void ) {
  */
 bool DiagramRenderer::create() {
 
-    this->LoadIcon("plop.png", DiagramCall::DIAGRAM_MARKER_DISAPPEAR);
-    this->LoadIcon("bookmark.png", DiagramCall::DIAGRAM_MARKER_BOOKMARK);
-    this->LoadIcon("merge.png", DiagramCall::DIAGRAM_MARKER_MERGE);
-    this->LoadIcon("split.png", DiagramCall::DIAGRAM_MARKER_SPLIT);
-    this->LoadIcon("exit2.png", DiagramCall::DIAGRAM_MARKER_EXIT);
+	this->LoadIcon("plop.png", core::moldyn::DiagramCall::DIAGRAM_MARKER_DISAPPEAR);
+	this->LoadIcon("bookmark.png", core::moldyn::DiagramCall::DIAGRAM_MARKER_BOOKMARK);
+	this->LoadIcon("merge.png", core::moldyn::DiagramCall::DIAGRAM_MARKER_MERGE);
+	this->LoadIcon("split.png", core::moldyn::DiagramCall::DIAGRAM_MARKER_SPLIT);
+	this->LoadIcon("exit2.png", core::moldyn::DiagramCall::DIAGRAM_MARKER_EXIT);
 
     return true;
 }
@@ -167,10 +167,10 @@ bool DiagramRenderer::CalcExtents() {
 
     // TODO dirty checking and shit
 
-    DiagramCall *diagram = this->dataCallerSlot.CallAs<DiagramCall>();
+	core::moldyn::DiagramCall *diagram = this->dataCallerSlot.CallAs<core::moldyn::DiagramCall>();
     if( diagram == NULL ) return false;
     // execute the call
-    if( !(*diagram)(DiagramCall::CallForGetData) ) return false;
+	if (!(*diagram)(core::moldyn::DiagramCall::CallForGetData)) return false;
 
     int type = this->diagramTypeParam.Param<param::EnumParam>()->Value();
 
@@ -183,8 +183,8 @@ bool DiagramRenderer::CalcExtents() {
     bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
     if (autoFit) {
         for (int s = 0; s < diagram->GetSeriesCount(); s++) {
-            DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-            const DiagramCall::DiagramMappable *dm = ds->GetMappable();
+			core::moldyn::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+			const core::moldyn::DiagramCall::DiagramMappable *dm = ds->GetMappable();
             if (seriesVisible[s] && isCategoricalMappable(dm) == drawCategorical) {
                 vislib::Pair<float, float> xR = dm->GetAbscissaRange(0);
                 vislib::Pair<float, float> yR = dm->GetOrdinateRange();
@@ -310,7 +310,7 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                     }
                 }
                 if (series < visibleSeries.Count()) {
-                    DiagramCall::DiagramSeries *ds = diagram->GetSeries(visibleSeries[static_cast<int>(series)]);
+					core::moldyn::DiagramCall::DiagramSeries *ds = diagram->GetSeries(visibleSeries[static_cast<int>(series)]);
                     float legendLeft = -legendOffset - legendWidth;
                     if (legendLeft + legendMargin < x &&
                             x < legendLeft + legendMargin + 0.6 * fontSize) {
@@ -407,7 +407,7 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
             }
         }
         selectionCall->SetSelectionPointer(&selectedSeriesIndices);
-        (*selectionCall)(IntSelectionCall::CallForSetSelection);
+		(*selectionCall)(core::moldyn::IntSelectionCall::CallForSetSelection);
     }
 
     // propagate visibility to hidden module
@@ -419,7 +419,7 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
             }
         }
         hiddenCall->SetSelectionPointer(&hiddenSeriesIndices);
-        (*hiddenCall)(IntSelectionCall::CallForSetSelection);
+		(*hiddenCall)(core::moldyn::IntSelectionCall::CallForSetSelection);
     }
 
     // hovering
@@ -428,7 +428,7 @@ bool DiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
         for (int s = 0; s < preparedData->Count(); s++) {
             float markerSize = fontSize;
             for (int i = 0; i < preparedSeries[s]->GetMarkerCount(); i++) {
-                const DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
+				const core::moldyn::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
                 for (int j = 0; j < this->markerTextures.Count(); j++) {
                     if (markerTextures[j].First() == m->GetType()) {
                         markerTextures[j].Second()->Bind();
@@ -501,14 +501,14 @@ bool DiagramRenderer::onHideAllButton(param::ParamSlot& p) {
  */
 bool DiagramRenderer::Render(view::CallRender2D &call) {
     // get pointer to Diagram2DCall
-    diagram = this->dataCallerSlot.CallAs<DiagramCall>();
+	diagram = this->dataCallerSlot.CallAs<core::moldyn::DiagramCall>();
     if( diagram == NULL ) return false;
     // execute the call
-    if( !(*diagram)(DiagramCall::CallForGetData) ) return false;
+	if (!(*diagram)(core::moldyn::DiagramCall::CallForGetData)) return false;
 
-    selectionCall = this->selectionCallerSlot.CallAs<IntSelectionCall>();
+	selectionCall = this->selectionCallerSlot.CallAs<core::moldyn::IntSelectionCall>();
     if (selectionCall != NULL) {
-        (*selectionCall)(IntSelectionCall::CallForGetSelection);
+		(*selectionCall)(core::moldyn::IntSelectionCall::CallForGetSelection);
         if (selectionCall->GetSelectionPointer() != NULL
                 && selectionCall->GetSelectionPointer()->Count() > 0) {
             selectedSeries = diagram->GetSeries((*selectionCall->GetSelectionPointer())[0]);
@@ -522,9 +522,9 @@ bool DiagramRenderer::Render(view::CallRender2D &call) {
     }
     
     // do we have visibility information propagated from outside?
-    hiddenCall = this->hiddenCallerSlot.CallAs<IntSelectionCall>();
+	hiddenCall = this->hiddenCallerSlot.CallAs<core::moldyn::IntSelectionCall>();
     if (hiddenCall != NULL) {
-        (*hiddenCall)(IntSelectionCall::CallForGetSelection);
+		(*hiddenCall)(core::moldyn::IntSelectionCall::CallForGetSelection);
         if (hiddenCall->GetSelectionPointer() != NULL) {
             for (SIZE_T x = 0; x < seriesVisible.Count(); x++) {
                 seriesVisible[x] = true;
@@ -603,7 +603,7 @@ bool DiagramRenderer::Render(view::CallRender2D &call) {
 
     if (this->showGuidesParam.Param<param::BoolParam>()->Value()) {
         for (int i = 0; i < diagram->GetGuideCount(); i++) {
-            DiagramCall::DiagramGuide *g = diagram->GetGuide(i);
+			core::moldyn::DiagramCall::DiagramGuide *g = diagram->GetGuide(i);
             ::glDisable(GL_BLEND);
             ::glDisable(GL_DEPTH_TEST);
             vislib::StringA tmpString;
@@ -614,7 +614,7 @@ bool DiagramRenderer::Render(view::CallRender2D &call) {
             ::glColor4fv(this->fgColor.PeekComponents());
             float pos;
             switch(g->GetType()) {
-                case DiagramCall::DIAGRAM_GUIDE_HORIZONTAL:
+				case core::moldyn::DiagramCall::DIAGRAM_GUIDE_HORIZONTAL:
                     pos = g->GetPosition() - yRange.First();
                     pos /= yRange.GetSecond() - yRange.GetFirst();
                     ::glVertex3f(0.0f, pos, decorationDepth);
@@ -624,7 +624,7 @@ bool DiagramRenderer::Render(view::CallRender2D &call) {
                     theFont.DrawString(aspect, pos, fontSize * 0.5f, true,
                         tmpString.PeekBuffer(), vislib::graphics::AbstractFont::ALIGN_LEFT_BOTTOM);
                     break;
-                case DiagramCall::DIAGRAM_GUIDE_VERTICAL:
+				case core::moldyn::DiagramCall::DIAGRAM_GUIDE_VERTICAL:
                     pos = g->GetPosition() - xRange.First();
                     pos /= xRange.GetSecond() - xRange.GetFirst();
                     pos *= aspect;
@@ -860,7 +860,7 @@ void DiagramRenderer::drawLegend() {
     bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
     int cnt = 0;
     for (int s = 0; s < diagram->GetSeriesCount(); s++) {
-        DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+		core::moldyn::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
         if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
             float w = theFont.LineWidth(fontSize, ds->GetName());
             if (w > legendWidth) {
@@ -883,7 +883,7 @@ void DiagramRenderer::drawLegend() {
     ::glEnd();
     cnt = 0;
     for (int s = 0; s < diagram->GetSeriesCount(); s++) {
-        DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+		core::moldyn::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
         if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
             if (selectedSeries == NULL || *selectedSeries == *ds) {
                 ::glColor4fv(ds->GetColor().PeekComponents());
@@ -957,8 +957,8 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
     float x, y, z, tempX;
     // find "broadest" series as well as all distinct abscissa values (for stacking)
     for (int s = 0; s < diagram->GetSeriesCount(); s++) {
-        DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-        const DiagramCall::DiagramMappable *dm = ds->GetMappable();
+		core::moldyn::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+		const core::moldyn::DiagramCall::DiagramMappable *dm = ds->GetMappable();
         if (dm->GetDataCount() > maxCount) {
             maxCount = dm->GetDataCount();
         }
@@ -997,8 +997,8 @@ void DiagramRenderer::prepareData(bool stack, bool normalize, bool drawCategoric
 #if 1
     int cntSeries = 0;
     for (int s = 0; s < diagram->GetSeriesCount(); s++) {
-        DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-        const DiagramCall::DiagramMappable *dm = ds->GetMappable();
+		core::moldyn::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+		const core::moldyn::DiagramCall::DiagramMappable *dm = ds->GetMappable();
         if (!seriesVisible[s] || isCategoricalMappable(dm) != drawCategorical) {
             continue;
         }
@@ -1196,14 +1196,14 @@ void DiagramRenderer::dump() {
         for (int i = 0; i < preparedSeries[s]->GetMarkerCount(); i++) {
             // WARNING s is synchronized to global series counter since no series that cannot be drawn are added for proteins
             // For the rest of the universe THIS IS WRONG
-            const DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
-            if (m->GetType() == DiagramCall::DIAGRAM_MARKER_MERGE && m->GetUserData() != NULL) {
+			const core::moldyn::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
+			if (m->GetType() == core::moldyn::DiagramCall::DIAGRAM_MARKER_MERGE && m->GetUserData() != NULL) {
                 vislib::Array<int> *partners = reinterpret_cast<vislib::Array<int> *>(m->GetUserData());
                 for (int p = 0; p < partners->Count(); p++) {
                     int idx = localXIndexToGlobal[s][m->GetIndex()];
                     vislib::sys::WriteFormattedLineToFile(bf, "#F %u[%u]=>%u[%u] %u\n", (*partners)[p] + 1, idx - 1, s + 1, idx, 3);
                 }
-            } else if (m->GetType() == DiagramCall::DIAGRAM_MARKER_SPLIT && m->GetUserData() != NULL) {
+            } else if (m->GetType() == core::moldyn::DiagramCall::DIAGRAM_MARKER_SPLIT && m->GetUserData() != NULL) {
                 vislib::Array<int> *partners = reinterpret_cast<vislib::Array<int> *>(m->GetUserData());
                 for (int p = 0; p < partners->Count(); p++) {
                     //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "#F %u[%u]=>%u[%u] %u", s + 1, m->GetIndex(), (*partners)[p] + 1, m->GetIndex() + 1, 3);
@@ -1293,7 +1293,7 @@ void DiagramRenderer::drawLineDiagram() {
             if (showMarkers == DIAGRAM_MARKERS_SHOW_ALL || preparedSeries[s] == selectedSeries) {
                 float markerSize = fontSize;
                 for (int i = 0; i < preparedSeries[s]->GetMarkerCount(); i++) {
-                    const DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
+					const core::moldyn::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
                     for (int j = 0; j < this->markerTextures.Count(); j++) {
                         if (markerTextures[j].First() == m->GetType()) {
                             int idx = localXIndexToGlobal[s][m->GetIndex()];
