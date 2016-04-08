@@ -3521,7 +3521,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(
 
     this->atomColor.SetCount(dc->GetAtomCnt()*3);
 #pragma omp parallel for
-    for(int at = 0; at < dc->GetAtomCnt(); at++) {
+	for (int at = 0; at < (int)dc->GetAtomCnt(); at++) {
 		if (dc->GetAtomType()[at] == core::moldyn::CrystalStructureDataCall::BA) { // Green
             this->atomColor[at*3+0] = 0.0f;
             this->atomColor[at*3+1] = 0.6f;

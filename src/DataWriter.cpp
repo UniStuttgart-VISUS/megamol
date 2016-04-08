@@ -1700,7 +1700,7 @@ bool protein_cuda::DataWriter::WriteTiDispl(
             break;
         }
 
-        for(int cnt = 0; cnt < dc->GetCellCnt(); cnt++) {
+		for (int cnt = 0; cnt < (int)dc->GetCellCnt(); cnt++) {
             buff[cnt*6+0] = dc->GetAtomPos()[3*dc->GetCells()[idxSorted[cnt]]+0];
             buff[cnt*6+1] = dc->GetAtomPos()[3*dc->GetCells()[idxSorted[cnt]]+1];
             buff[cnt*6+2] = dc->GetAtomPos()[3*dc->GetCells()[idxSorted[cnt]]+2];
@@ -1909,7 +1909,7 @@ bool protein_cuda::DataWriter::WriteTiODipole(
         }
 
 #pragma omp parallel for
-        for(int cnt = 0; cnt < dc->GetCellCnt(); cnt++) {
+		for (int cnt = 0; cnt < (int)dc->GetCellCnt(); cnt++) {
             buff[cnt*6+0] = dc->GetAtomPos()[3*dc->GetCells()[15*idxSorted[cnt]+14]+0];
             buff[cnt*6+1] = dc->GetAtomPos()[3*dc->GetCells()[15*idxSorted[cnt]+14]+1];
             buff[cnt*6+2] = dc->GetAtomPos()[3*dc->GetCells()[15*idxSorted[cnt]+14]+2];

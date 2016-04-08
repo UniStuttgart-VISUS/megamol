@@ -106,7 +106,7 @@ float* MolecularAOShader::createVolume(class megamol::core::moldyn::MolecularDat
 
     // Compute AO Factors for ech atom.
 #pragma omp parallel for
-    for (i = 0; i < mol.AtomCount(); i++ ) {
+	for (i = 0; i < (int)mol.AtomCount(); i++) {
         int x = static_cast<int>(((mol.AtomPositions()[i*3+0] - minOSx) / rangeOSx) * static_cast<float>(sx));
         if (x < 0) x = 0; else if (x >= sx) x = sx - 1;
         int y = static_cast<int>(((mol.AtomPositions()[i*3+1] - minOSy) / rangeOSy) * static_cast<float>(sy));
@@ -166,7 +166,7 @@ float* MolecularAOShader::createVolumeDebug(class megamol::core::moldyn::Molecul
         * (rangeOSz / static_cast<float>(sz));
 
     // Compute AO Factors for ech atom.
-    for (i = 0; i < mol.AtomCount(); i++ ) {
+	for (i = 0; i < (int)mol.AtomCount(); i++) {
         int x = static_cast<int>(((mol.AtomPositions()[i*3+0] - minOSx) / rangeOSx) * static_cast<float>(sx));
         if (x < 0) x = 0; else if (x >= sx) x = sx - 1;
         int y = static_cast<int>(((mol.AtomPositions()[i*3+1] - minOSy) / rangeOSy) * static_cast<float>(sy));

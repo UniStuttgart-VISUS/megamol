@@ -1695,8 +1695,8 @@ __global__ void DeformableGPUSurfaceMT_ComputeTriangleAreas_D(
         uint triangleCnt) {
 
     const int vertexDataOffsPos = 0;
-    const int vertexDataOffsNormal = 3;
-    const int vertexDataOffsTexCoord = 6;
+    //const int vertexDataOffsNormal = 3;
+    //const int vertexDataOffsTexCoord = 6;
     const int vertexDataStride = 9;
 
     const uint idx = ::getThreadIdx();
@@ -1852,8 +1852,8 @@ __global__ void DeformableGPUSurfaceMT_ComputeValidTriangleAreas_D(
         uint triangleCnt) {
 
     const int vertexDataOffsPos = 0;
-    const int vertexDataOffsNormal = 3;
-    const int vertexDataOffsTexCoord = 6;
+    //const int vertexDataOffsNormal = 3;
+    //const int vertexDataOffsTexCoord = 6;
     const int vertexDataStride = 9;
 
     const uint idx = ::getThreadIdx();
@@ -3295,7 +3295,7 @@ float DeformableGPUSurfaceMT::IntUncertaintyOverCorruptAreaRec(
     int cellIdx = (dim[0]-1)*((dim[1]-1)*coords.z + coords.y) + coords.x;
     uint cellState = targetActiveCells[cellIdx];
 
-    if ((cellState == 1)||(depth >= maxLevel)) {
+	if ((cellState == 1) || (depth >= (int)maxLevel)) {
 
         triArr.Add(newPos1.x);
         triArr.Add(newPos1.y);
@@ -5068,7 +5068,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeTriEdgeList_D (
                            triangleIdx_D[3*triIdx+1],
                            triangleIdx_D[3*triIdx+2]);
 
-    uint offs = triangleEdgeOffs_D[triIdx];
+    //uint offs = triangleEdgeOffs_D[triIdx];
 
     // Get first edge
     uint n0 = triangleNeighbors_D[3*triIdx+0];
@@ -7732,7 +7732,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
     }
 
 //#ifdef USE_TIMER
-    float dt_ms;
+    //float dt_ms;
     cudaEvent_t event1, event2;
     cudaEventCreate(&event1);
     cudaEventCreate(&event2);
@@ -7975,7 +7975,7 @@ __global__ void DeformableGPUSurfaceMT_ComputeVtxDiffValue1Fitted_D(
     const int vertexDataStride = 9; // TODO
     const int vertexDataOffsPos = 0;
 
-    float valFirst = diff_D[idx];
+    //float valFirst = diff_D[idx];
     float3 pos;
     pos.x = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +0];
     pos.y = vtxData1_D[vertexDataStride*idx + vertexDataOffsPos +1];
@@ -8849,7 +8849,7 @@ __global__ void TrackPathSubdivVertices_D(
 
     // Get initial scale factor for external forces
     float externalForcesScl = vertexExternalForcesScl_D[idx];
-    float externalForcesSclOld = externalForcesScl;
+    //float externalForcesSclOld = externalForcesScl;
 
 
     /* Update position */
@@ -10081,8 +10081,8 @@ bool DeformableGPUSurfaceMT::ComputeMeshLaplacian() {
         Vec3f pos(vertexData.Peek()[9*v+0],
                   vertexData.Peek()[9*v+1],
                   vertexData.Peek()[9*v+2]);
-        float minAngle = 1000.0f;
-        float maxAngle = 0.0f;
+        //float minAngle = 1000.0f;
+        //float maxAngle = 0.0f;
         Vec3f currNPos;
         Vec3f nextNPos;
         for (size_t n = 0; n < vtxNeighbors[v].Count(); ++n) {

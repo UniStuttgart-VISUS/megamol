@@ -2063,7 +2063,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
     using namespace vislib::sys;
 
     const uint blockSize = 256;
-    const uint cellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
+    //const uint cellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
 
     /* Init grid parameters for all files */
 

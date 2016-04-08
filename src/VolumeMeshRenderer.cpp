@@ -2474,7 +2474,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
     cudaMemcpy( this->vertexColors, colors, this->vertexCount * 4 * sizeof(float), cudaMemcpyDeviceToHost);
     float ifac = this->cmWeightParam.Param<param::FloatParam>()->Value();
 #pragma omp parallel for
-    for( int i = 0; i < this->vertexCount; i++ ) {
+	for (int i = 0; i < (int)this->vertexCount; i++) {
         int atomIdx = this->neighborAtomOfVertex[i];
         if( atomIdx < 0 ) {
             // ERROR no nearest atom found (color magenta)

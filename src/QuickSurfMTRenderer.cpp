@@ -491,7 +491,7 @@ int QuickSurfMTRenderer::calcMap(MolecularDataCall *mol, float *posInter,
     miny = maxy = posInter[1];
     minz = maxz = posInter[2];
     minrad = maxrad = mol->AtomTypes()[mol->AtomTypeIndices()[0]].Radius();
-    for ( i = 0; i < mol->AtomCount(); i++) {
+	for (i = 0; i < (int)mol->AtomCount(); i++) {
 #ifdef COMPUTE_BBOX
         int ind = i * 3;
         float tmpx = posInter[ind  ];
@@ -588,7 +588,7 @@ int QuickSurfMTRenderer::calcMap(MolecularDataCall *mol, float *posInter,
         colors = (float *) malloc( mol->AtomCount() * sizeof(float) * 4);
 
         // build compacted lists of atom coordinates, radii, and colors
-        for (i = 0; i < mol->AtomCount(); i++) {
+		for (i = 0; i < (int)mol->AtomCount(); i++) {
             const float *fp = posInter + ind;
             xyzr[ind4    ] = fp[0]-origin[0];
             xyzr[ind4 + 1] = fp[1]-origin[1];
@@ -607,7 +607,7 @@ int QuickSurfMTRenderer::calcMap(MolecularDataCall *mol, float *posInter,
         }
     } else {
         // build compacted lists of atom coordinates and radii only
-        for (i = 0; i < mol->AtomCount(); i++) {
+		for (i = 0; i < (int)mol->AtomCount(); i++) {
             const float *fp = posInter + ind;
             xyzr[ind4    ] = fp[0]-origin[0];
             xyzr[ind4 + 1] = fp[1]-origin[1];

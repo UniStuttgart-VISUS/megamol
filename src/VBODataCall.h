@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -364,7 +364,7 @@ private:
 };
 
 /// Description class typedef
-typedef core::CallAutoDescription<VBODataCall> VBODataCallDescription;
+typedef core::factories::CallAutoDescription<VBODataCall> VBODataCallDescription;
 
 
 } // end namespace protein_cuda

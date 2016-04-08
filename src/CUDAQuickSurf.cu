@@ -2675,9 +2675,9 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
     }
   } else {
     uint3 mcmaxgridsize = gpuh->mc->GetMaxGridSize();
-    if (slabsz.x <= mcmaxgridsize.x &&
-        slabsz.y <= mcmaxgridsize.y &&
-        slabsz.z <= mcmaxgridsize.z) {
+	if (slabsz.x <= (int)mcmaxgridsize.x &&
+		slabsz.y <= (int)mcmaxgridsize.y &&
+		slabsz.z <= (int)mcmaxgridsize.z) {
 #if VERBOSE
       printf("Reusing MC object...\n");
 #endif
@@ -2761,7 +2761,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
         texslab_d = gpuh->devvoltexmap + (4 * 3 * slabplanesz);
     }
 
-    for (int lz=0; lz<Gsz.z; lz+=Gszslice.z) {
+    for (int lz=0; (int)lz<Gsz.z; lz+=Gszslice.z) {
       int lzinc = lz * lzplane;
       float *volslice_d = volslab_d + lzinc * slabplanesz;
 
@@ -2931,10 +2931,10 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
     cudaThreadSynchronize(); 
     mckerneltime = wkf_timer_timenow(globaltimer);
 
-    int l;
-    int vertstart = 3 * numverts;
-    int vertbufsz = 3 * (numverts + chunknumverts) * sizeof(float);
-    int facebufsz = (numverts + chunknumverts) * sizeof(int);
+    //int l;
+    //int vertstart = 3 * numverts;
+    //int vertbufsz = 3 * (numverts + chunknumverts) * sizeof(float);
+    //int facebufsz = (numverts + chunknumverts) * sizeof(int);
     int chunkvertsz = 3 * chunknumverts * sizeof(float);
 
 //#ifdef CUDA_ARRAY
@@ -2960,7 +2960,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //#else
 #if 1
     // map VBOs for writing
-    size_t num_bytes;
+    //size_t num_bytes;
     float *v3f, *n3f, *c3f;
     //cudaGraphicsMapResources(1, &gpuh->v3f_res, 0);
     //cudaGraphicsResourceGetMappedPointer((void**)&v3f, &num_bytes, gpuh->v3f_res);
@@ -3396,7 +3396,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
         texslab_d = gpuh->devvoltexmap + (4 * 3 * slabplanesz);
     }
 
-    for (int lz=0; lz<Gsz.z; lz+=Gszslice.z) {
+	for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
       int lzinc = lz * lzplane;
       float *volslice_d = volslab_d + lzinc * slabplanesz;
 
@@ -3559,9 +3559,9 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
     cudaThreadSynchronize(); 
     mckerneltime = wkf_timer_timenow(globaltimer);
 
-    int l;
-    int vertstart = 3 * numverts;
-    int vertbufsz = 3 * (numverts + chunknumverts) * sizeof(float);
+    //int l;
+    //int vertstart = 3 * numverts;
+    //int vertbufsz = 3 * (numverts + chunknumverts) * sizeof(float);
     int facebufsz = (numverts + chunknumverts) * sizeof(int);
     int chunkvertsz = 3 * chunknumverts * sizeof(float);
 
@@ -3588,7 +3588,7 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //#else
 #if 1
     // map VBOs for writing
-    size_t num_bytes;
+    //size_t num_bytes;
     float *v3f, *n3f, *c3f;
     //cudaGraphicsMapResources(1, &gpuh->v3f_res, 0);
     //cudaGraphicsResourceGetMappedPointer((void**)&v3f, &num_bytes, gpuh->v3f_res);
@@ -3901,9 +3901,9 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
   double lastlooptime = sorttime;
 
   double densitykerneltime = 0.0f;
-  double densitytime = 0.0f;
-  double copycalltime = 0.0f;
-  double copytime = 0.0f;
+  //double densitytime = 0.0f;
+  //double copycalltime = 0.0f;
+  //double copytime = 0.0f;
 
   float *volslab_d = NULL;
   float *texslab_d = NULL;
@@ -3965,7 +3965,7 @@ int CUDAQuickSurf::calc_map(long int natoms, const float *xyzr_f,
         texslab_d = gpuh->devvoltexmap + (4 * 3 * slabplanesz);
     }
 
-    for (int lz=0; lz<Gsz.z; lz+=Gszslice.z) {
+	for (int lz = 0; lz<(int)Gsz.z; lz += Gszslice.z) {
       int lzinc = lz * lzplane;
       float *volslice_d = volslab_d + lzinc * slabplanesz;
 

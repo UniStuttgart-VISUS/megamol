@@ -396,7 +396,7 @@ bool PotentialVolumeRaycaster::computeDensityMap(
 
     float *gridDataPos = new float[mol->AtomCount()*4]; // TODO Do not allocate every in frame
 
-    if(volSizeOld < gridDensMap.size[0]*gridDensMap.size[1]*gridDensMap.size[2]) { // TODO Do not allocate every time
+	if (volSizeOld < (int)gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2]) { // TODO Do not allocate every time
         if(this->volume != NULL) {
             delete[] this->volume;
         }

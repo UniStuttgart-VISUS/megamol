@@ -84,9 +84,9 @@ cudaError_t SolvePoissonEq(float gridSpacing, uint3 gridSize, float *charges,
     /* charge density */
     printf("Writing charge density in host memory\n");
 
-    for (int z = 0; z < Nz; ++z) {
-        for (int y = 0; y < Ny; ++y) {
-            for (int x = 0; x < Nx; ++x) {
+	for (int z = 0; z < (int)Nz; ++z) {
+		for (int y = 0; y < (int)Ny; ++y) {
+			for (int x = 0; x < (int)Nx; ++x) {
 //                if((x-Nx/2)*(x-Nx/2) + (y-Ny/2)*(y-Ny/2) + (z-Nz/2)*(z-Nz/2) <= 5*5/(h*h)) //homogeneously chargeed sphere of radius 5
 //                    data_real_host[Ny*Nx*z+Nx*y+x] = h*h*h;
 //                else
@@ -203,9 +203,9 @@ cudaError_t SolvePoissonEq(float gridSpacing, uint3 gridSize, float *charges,
 
     /* Output result to the according host array */
 
-    for(int z = 0; z < Nz; z++) {
-        for(int y = 0; y < Ny; y++)
-            for(int x = 0; x < Nx; x++)
+	for (int z = 0; z < (int)Nz; z++) {
+		for (int y = 0; y < (int)Ny; y++)
+			for (int x = 0; x < (int)Nx; x++)
                potential[Ny*Nx*z+Nx*y+x]  = data_real_host[Ny*Nx*z+Nx*y+x]/(Nx*Ny*Nz);
     }
 
@@ -236,7 +236,7 @@ cudaError_t DirectCoulombSummation(float *atomData, uint atomCount,
 
     float *doutput = NULL;
     dim3 volsize, Gsz, Bsz;
-    float copytotal, runtotal, mastertotal, hostcopytotal;
+    //float copytotal, runtotal, mastertotal, hostcopytotal;
     const char *statestr = "|/-\\.";
     int state=0;
 
