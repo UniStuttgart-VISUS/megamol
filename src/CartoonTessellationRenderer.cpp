@@ -432,7 +432,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
         this->positionsO[molIdx].Clear();
         this->positionsO[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
 
-        bool first;
+        //bool first;
         firstResIdx = mol->Molecules()[molIdx].FirstResidueIndex();
         lastResIdx = firstResIdx + mol->Molecules()[molIdx].ResidueCount();
         for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++){
@@ -511,13 +511,13 @@ bool CartoonTessellationRenderer::Render(Call& call) {
             const char *whence = currVert;
             UINT64 vertsThisTime = vislib::math::Min(this->positionsCa[i].Count() / 4 - vertCounter, numVerts);
             this->waitSignal(fences[currBuf]);
-            memcpy(mem, whence, vertsThisTime * vertStride);
-            glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
+            memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
+            glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
             glUniform1i(this->splineShader.ParameterLocation("instanceOffset"), 0);
 
             glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
             glPatchParameteri(GL_PATCH_VERTICES, 1);
-            glDrawArrays(GL_PATCHES, 0, vertsThisTime - 3);
+            glDrawArrays(GL_PATCHES, 0, (GLsizei)vertsThisTime - 3);
             this->queueSignal(fences[currBuf]);
 
             currBuf = (currBuf + 1) % this->numBuffers;

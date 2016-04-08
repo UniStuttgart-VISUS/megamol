@@ -102,7 +102,7 @@ void megamol::protein::SolventDataGenerator::calcSpatialProbabilities(MolecularD
 	int nFrames = src->FrameCount();
 	int nAtoms = src->AtomCount();
 
-	if (this->middleAtomPos.Count() < nAtoms*3) {
+	if ((int)this->middleAtomPos.Count() < nAtoms * 3) {
 		this->middleAtomPos.SetCount(nAtoms*3);
 	}
 	memset(&this->middleAtomPos[0], 0, this->middleAtomPos.Count()*sizeof(float));
@@ -382,7 +382,7 @@ Wasserstoffbruecken bilden und dabei als Donor und Aktzeptor dienen koenne. Dabe
 				privateNeighbourIndices.SetCapacityIncrement( 100); // set capacity increment
 				neighbourFinder.FindNeighboursInRange(&atomPositions[atomIndex*3], hbondDonorAcceptorDist, privateNeighbourIndices);
 
-				for(int nIdx = 0; nIdx < privateNeighbourIndices.Count(); nIdx++) {
+				for (int nIdx = 0; nIdx < (int)privateNeighbourIndices.Count(); nIdx++) {
 					int neighbIndex = privateNeighbourIndices[nIdx];
 					//char elementNeighb = atomTypes[atomTypeIndices[neighbIndex]].Name()[0];
 

@@ -225,14 +225,14 @@ bool VolumeDirectionRenderer::Render(Call& call) {
     // trigger computation if another data set was loaded
     if (this->datahash != vti->DataHash()) {
         this->triggerArrowComputation = true;
-        this->datahash = vti->DataHash();
+        this->datahash = (int)vti->DataHash();
     }
 
     // ---------- prepare data ---------- 
     if (this->triggerArrowComputation) {
         vislib::math::Vector<float, 3> gridSize = vti->GetGridsize();
         //this->arrowCount = xRes * yRes * zRes;
-        this->arrowCount = gridSize.X() * gridSize.Y() * gridSize.Z();
+        this->arrowCount = (unsigned int)(gridSize.X() * gridSize.Y() * gridSize.Z());
         this->vertexArray.SetCount(arrowCount * 4);
         this->colorArray.SetCount(arrowCount);
         this->dirArray.SetCount(arrowCount * 3);
@@ -251,8 +251,8 @@ bool VolumeDirectionRenderer::Render(Call& call) {
         // TODO check for errors!!! (wrong data etc.)
         const float *densityData = (const float*)(vti->GetPointDataByIdx(0, 0));
         
-        float minDensity = vti->GetPointDataArrayMin( 0, 0);
-        float maxDensity = vti->GetPointDataArrayMax( 0, 0);
+        float minDensity = (float)vti->GetPointDataArrayMin( 0, 0);
+        float maxDensity = (float)vti->GetPointDataArrayMax( 0, 0);
 
         const float *dirData = (const float*)(vti->GetPointDataByIdx(1, 0));
         

@@ -129,7 +129,7 @@ void SplitMergeRenderer::calcExtents() {
 
     float minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
     
-    for (int i = 0; i < sortedSeries.Count(); i++) {
+	for (int i = 0; i < (int)sortedSeries.Count(); i++) {
 		core::moldyn::SplitMergeCall::SplitMergeMappable *smm = diagram->GetSeries(sortedSeries[i])->GetMappable();
         vislib::Pair<float, float> p = smm->GetAbscissaRange();
         if (p.First() < minX) {
@@ -177,7 +177,7 @@ bool SplitMergeRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                 if (x > bounds.Left() && x < bounds.Right() && y > bounds.Bottom() && y < bounds.Top()) {
                     float tmp = (y - 1) / -seriesSpacing;
                     int series = static_cast<int>(tmp);
-                    if (series >= 0 && series < sortedSeries.Count() && (tmp-static_cast<int>(tmp)) < 0.5f) {
+					if (series >= 0 && series < (int)sortedSeries.Count() && (tmp - static_cast<int>(tmp)) < 0.5f) {
                         //Log::DefaultLog.WriteInfo(0, "I hit series %s", diagram->GetSeries(sortedSeries[series])->GetName());
                         consumeEvent = true;
                         selectedSeries = diagram->GetSeries(sortedSeries[series]);
@@ -189,7 +189,7 @@ bool SplitMergeRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                 // propagate selection to selection module
                 if (selectionCall != NULL) {
                     vislib::Array<int> selectedSeriesIndices;
-                    for (int x = 0; x < this->diagram->GetSeriesCount(); x++) {
+					for (int x = 0; x < (int)this->diagram->GetSeriesCount(); x++) {
                         if (this->diagram->GetSeries(x) == this->selectedSeries) {
                             selectedSeriesIndices.Add(x);
                             break;
@@ -296,7 +296,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     sortedSeries.Clear();
     //sortedSeriesInverse.SetCount(diagram->GetSeriesCount());
 
-    for (int i = 0; i < diagram->GetSeriesCount(); i++) {
+	for (int i = 0; i < (int)diagram->GetSeriesCount(); i++) {
         sortedSeries.Add(i);
         //sortedSeriesInverse[i] = i;
         selectionLevel[i] = 0;
@@ -308,14 +308,14 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     FastMapWrapper::diagram = diagram;
     fmps.AssertCapacity(diagram->GetSeriesCount());
     fmps.SetCount(diagram->GetSeriesCount());
-    for (int i = 0; i < diagram->GetSeriesCount(); i++) {
+	for (int i = 0; i < (int)diagram->GetSeriesCount(); i++) {
         fmps[i].index = i;
     }
     vislib::math::Fastmap<FastMapWrapper, int, 1> fm;
 #endif
 
     if (this->visibilityFromSelection.Param<param::BoolParam>()->Value()) {
-        for (int i = 0; i < sortedSeries.Count(); i++) {
+		for (int i = 0; i < (int)sortedSeries.Count(); i++) {
             if (diagram->GetSeries(sortedSeries[i]) == selectedSeries) {
                 selectionLevel[sortedSeries[i]]++;
             }
@@ -323,7 +323,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         // BUG TODO FIXME WTF
         // WARNING PROPAGATION SLIPS! YOU NEED DOUBLE BUFFERING (selectionLevel) FOR THIS TO WORK!!!
         for (int i = 0; i < this->numVisibilityPropagationRounds.Param<param::IntParam>()->Value(); i++) {
-            for(int t = 0; t < diagram->GetTransitionCount(); t++) {
+			for (int t = 0; t < (int)diagram->GetTransitionCount(); t++) {
 				core::moldyn::SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(t);
                 if (selectionLevel[smt->SourceSeries()] > 0) {
                     selectionLevel[smt->DestinationSeries()]++;
@@ -333,7 +333,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
                 }
             }
         }
-        for (int i = sortedSeries.Count() - 1; i >= 0; i--) {
+        for (int i = (int)sortedSeries.Count() - 1; i >= 0; i--) {
             if (selectionLevel[sortedSeries[i]] == 0) {
                 seriesVisible[sortedSeries[i]] = false;
             } else {
@@ -343,7 +343,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         // propagate visibility to hidden module
         if (hiddenCall != NULL) {
             vislib::Array<int> hiddenSeriesIndices;
-            for (int x = 0; x < this->diagram->GetSeriesCount(); x++) {
+			for (int x = 0; x < (int)this->diagram->GetSeriesCount(); x++) {
                 if (!seriesVisible[x]) {
                     hiddenSeriesIndices.Add(x);
                 }
@@ -352,7 +352,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
 			(*hiddenCall)(core::moldyn::IntSelectionCall::CallForSetSelection);
         }
     } 
-    for (int i = sortedSeries.Count() - 1; i >= 0; i--) {
+    for (int i = (int)sortedSeries.Count() - 1; i >= 0; i--) {
         if (!seriesVisible[sortedSeries[i]]) {
             //sortedSeriesInverse[sortedSeries[i]] = -1;
             sortedSeries.RemoveAt(i);
@@ -364,15 +364,15 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     this->calcExtents();
 
     maxY = -FLT_MAX;
-    for (int i = 0; i < sortedSeries.Count(); i++) {
+	for (int i = 0; i < (int)sortedSeries.Count(); i++) {
         float tmpY = diagram->GetSeries(sortedSeries[i])->GetMappable()->GetOrdinateRange().GetSecond();
         if (tmpY > maxY) {
             maxY = tmpY;
         }
     }
 
-    GLuint pathBase = glGenPathsNV(sortedSeries.Count());
-    for (int i = 0; i < sortedSeries.Count(); i++) {
+    GLuint pathBase = glGenPathsNV((GLsizei)sortedSeries.Count());
+	for (int i = 0; i < (int)sortedSeries.Count(); i++) {
 		core::moldyn::SplitMergeCall::SplitMergeSeries *sms = diagram->GetSeries(sortedSeries[i]);
 		core::moldyn::SplitMergeCall::SplitMergeMappable *smm = sms->GetMappable();
         int increment = 50;
@@ -416,7 +416,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
             closePath(smm, i, cmds, coords, idx, start);
         }
 
-        glPathCommandsNV(pathBase + i, cmds.Count(), cmds.PeekElements(), coords.Count(), GL_FLOAT, coords.PeekElements());
+        glPathCommandsNV(pathBase + i, (GLsizei)cmds.Count(), cmds.PeekElements(), (GLsizei)coords.Count(), GL_FLOAT, coords.PeekElements());
         
         glStencilFillPathNV(pathBase + i, GL_COUNT_UP_NV, 0x1F);
     }
@@ -425,7 +425,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     glStencilFunc(GL_NOTEQUAL, 0, 0x1F);
     glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
 
-    for (int i = 0; i < sortedSeries.Count(); i++) {
+	for (int i = 0; i < (int)sortedSeries.Count(); i++) {
         if (selectedSeries == NULL || *selectedSeries == *diagram->GetSeries(sortedSeries[i])) {
             ::glColor3fv(diagram->GetSeries(sortedSeries[i])->GetColorRGB().PeekComponents());
         } else {
@@ -435,7 +435,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         //glColor3fv(diagram->GetSeries(sortedSeries[i])->GetColorRGB().PeekComponents());
         glCoverFillPathNV(pathBase + i, GL_BOUNDING_BOX_NV);
     }
-    glDeletePathsNV(pathBase, sortedSeries.Count());
+    glDeletePathsNV(pathBase, (GLsizei)sortedSeries.Count());
 
     //glDisable(GL_STENCIL_TEST);
 
@@ -447,7 +447,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
 
     // TODO: selection with transitive affection (selected, repeat {affect connected})
 
-    pathBase = glGenPathsNV(diagram->GetTransitionCount());
+	pathBase = glGenPathsNV((GLsizei)diagram->GetTransitionCount());
     vislib::Array<GLubyte> cmds;
     cmds.AssertCapacity(5);
     cmds.Append(GL_MOVE_TO_NV);
@@ -477,7 +477,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         {0.0f, 0.0f, 0.0f}
     };
 
-    for(int i = 0; i < diagram->GetTransitionCount(); i++) {
+	for (int i = 0; i < (int)diagram->GetTransitionCount(); i++) {
         //coords.Clear();
 		core::moldyn::SplitMergeCall::SplitMergeTransition *smt = diagram->GetTransition(i);
         if (!seriesVisible[smt->SourceSeries()] || !seriesVisible[smt->DestinationSeries()]) {
@@ -527,7 +527,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
         coords[14] = srcX;
         coords[15] = srcYBottom;
 
-        glPathCommandsNV(pathBase + counter, cmds.Count(), cmds.PeekElements(), coords.Count(), GL_FLOAT, coords.PeekElements());
+		glPathCommandsNV(pathBase + counter, (GLsizei)cmds.Count(), cmds.PeekElements(), (GLsizei)coords.Count(), GL_FLOAT, coords.PeekElements());
         glStencilFillPathNV(pathBase + counter, GL_COUNT_UP_NV, 0x1F);
 
         const float *topCol;
@@ -615,7 +615,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     //    glCoverFillPathNV(pathBase + counter, GL_BOUNDING_BOX_NV);
     //    counter++;
     //}
-    glDeletePathsNV(pathBase, diagram->GetTransitionCount());
+	glDeletePathsNV(pathBase, (GLsizei)diagram->GetTransitionCount());
 
     glPathColorGenNV(GL_PRIMARY_COLOR, GL_NONE, GL_NONE, NULL);
 
@@ -623,7 +623,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
     glStencilOp(GL_KEEP, GL_KEEP, GL_ZERO);
     glColor3fv(this->fgColor.PeekComponents());
 
-    for (int i = 0; i < sortedSeries.Count(); i++) {
+	for (int i = 0; i < (int)sortedSeries.Count(); i++) {
         vislib::StringA theName = diagram->GetSeries(sortedSeries[i])->GetName();
         theName.Append("x");
         GLfloat *kerning = new GLfloat[theName.Length()];
@@ -659,7 +659,7 @@ bool SplitMergeRenderer::Render(view::CallRender2D &call) {
 
     float decorationDepth = 0.0f;
     if (this->showGuidesParam.Param<param::BoolParam>()->Value()) {
-        for (int i = 0; i < diagram->GetGuideCount(); i++) {
+		for (int i = 0; i < (int)diagram->GetGuideCount(); i++) {
 			core::moldyn::SplitMergeCall::SplitMergeGuide *g = diagram->GetGuide(i);
             ::glDisable(GL_BLEND);
             ::glDisable(GL_DEPTH_TEST);

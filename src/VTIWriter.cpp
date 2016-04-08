@@ -514,7 +514,7 @@ bool VTIWriter::writePiece(const core::moldyn::VTIDataCall *dc, uint idx, std::o
     // Loop through all data arrays in this pieces point data to write the
     for (size_t p = 0; p < dc->GetArrayCntOfPiecePointData(idx); ++p) {
         // Write either scalar, vector, or tensor data
-        size_t nComponents = dc->GetPointDataArrayNumberOfComponents(p, idx);
+        size_t nComponents = dc->GetPointDataArrayNumberOfComponents((unsigned int)p, idx);
         if (nComponents == 1) {
             outfile << " Scalars=\"";
         } else if (nComponents == 3) {
@@ -522,15 +522,15 @@ bool VTIWriter::writePiece(const core::moldyn::VTIDataCall *dc, uint idx, std::o
         } else {
             outfile << " Tensors=\"";
         }
-        printf("ID: %s\n", dc->GetPointDataArrayId(p, idx).PeekBuffer());
-        outfile << dc->GetPointDataArrayId(p, idx);
+		printf("ID: %s\n", dc->GetPointDataArrayId((unsigned int)p, idx).PeekBuffer());
+		outfile << dc->GetPointDataArrayId((unsigned int)p, idx);
         outfile << "\"";
     }
     outfile << ">" << std::endl;
     // Actual data
     for (size_t p = 0; p < dc->GetArrayCntOfPiecePointData(idx); ++p) {
         // Write data
-        this->writeDataArray(dc, true, p, idx, outfile);
+		this->writeDataArray(dc, true, (unsigned int)p, idx, outfile);
     }
     // End point data
     outfile << "      </PointData>" << std::endl;
@@ -542,7 +542,7 @@ bool VTIWriter::writePiece(const core::moldyn::VTIDataCall *dc, uint idx, std::o
     // Loop through all data arrays in this pieces point data to write the
     for (size_t p = 0; p < dc->GetArrayCntOfPieceCellData(idx); ++p) {
         // Write either scalar, vector, or tensor data
-        size_t nComponents = dc->GetCellDataArrayNumberOfComponents(p, idx);
+        size_t nComponents = dc->GetCellDataArrayNumberOfComponents((unsigned int)p, idx);
         if (nComponents == 1) {
             outfile << " Scalars=\"";
         } else if (nComponents == 3) {
@@ -550,14 +550,14 @@ bool VTIWriter::writePiece(const core::moldyn::VTIDataCall *dc, uint idx, std::o
         } else {
             outfile << " Tensors=\"";
         }
-        outfile << dc->GetCellDataArrayId(p, idx);
+		outfile << dc->GetCellDataArrayId((unsigned int)p, idx);
         outfile << "\"";
     }
     outfile << ">" << std::endl;
     // Actual data
     for (size_t p = 0; p < dc->GetArrayCntOfPieceCellData(idx); ++p) {
         // Write data
-        this->writeDataArray(dc, true, p, idx, outfile);
+		this->writeDataArray(dc, true, (unsigned int)p, idx, outfile);
     }
     // End cell data
     outfile << "      </CellData>" << std::endl;

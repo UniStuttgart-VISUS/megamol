@@ -1136,10 +1136,10 @@ void ColorModule::MakeComparisonColorTable(megamol::core::moldyn::MolecularDataC
 	int rmsValue;
 
 	if(cAlphas1.size() >= cAlphas2.size()) {
-		rmsValue = CalculateRMS( (unsigned int)cAlphas1.size(), true, 2, &mass[0], 
+		rmsValue = (int)CalculateRMS( (unsigned int)cAlphas1.size(), true, 2, &mass[0], 
 			&mask[0], &pos2[0], &pos1[0], rotation, translation);
 	} else {
-		rmsValue = CalculateRMS( (unsigned int)cAlphas2.size(), true, 2, &mass[0], 
+		rmsValue = (int)CalculateRMS( (unsigned int)cAlphas2.size(), true, 2, &mass[0], 
 			&mask[0], &pos2[0], &pos1[0], rotation, translation);
 	}
 

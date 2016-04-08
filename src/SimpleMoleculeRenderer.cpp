@@ -696,7 +696,7 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
         Color::MakeColorTable(mol, this->currentColoringMode0,
                 this->currentColoringMode1,
                 cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorLookupTable,
                 this->rainbowColors,
                 this->minGradColorParam.Param<param::StringParam>()->Value(),
@@ -2630,7 +2630,7 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall *mol,
         Color::MakeColorTable(mol, this->currentColoringMode0,
                 this->currentColoringMode1,
                 cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
-                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorLookupTable,
                 this->rainbowColors,
                 this->minGradColorParam.Param<param::StringParam>()->Value(),

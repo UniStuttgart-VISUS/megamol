@@ -156,7 +156,7 @@ void VariantMatchRenderer::release(void) {
  */
 bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
 
-    float gridHalfStep;
+    //float gridHalfStep;
 
     if (!this->thefont.Initialise()) {
         return false;
@@ -249,16 +249,16 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
     float gridStep = 2.0f/static_cast<float>(vmc->GetVariantCnt());
     ::glBegin(GL_LINES);
         for (int i = 0; i < static_cast<int>(vmc->GetVariantCnt()); ++i) {
-            ::glVertex2f(gridStep*i-1.0, -1.0);
-            ::glVertex2f(gridStep*i-1.0,  1.0);
+            ::glVertex2f(gridStep*i-1.0f, -1.0f);
+            ::glVertex2f(gridStep*i-1.0f,  1.0f);
         }
     ::glEnd();
 
     // Draw horizontal lines
     ::glBegin(GL_LINES);
         for (int i = 1; i <= static_cast<int>(vmc->GetVariantCnt()); ++i) {
-            ::glVertex2f(-1.0, gridStep*i-1.0);
-            ::glVertex2f( 1.0, gridStep*i-1.0);
+            ::glVertex2f(-1.0, gridStep*i-1.0f);
+            ::glVertex2f( 1.0, gridStep*i-1.0f);
         }
     ::glEnd();
 
@@ -281,8 +281,8 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
         str.Format("%3i : ", i);
         str.Append(vmc->GetLabels()[i].PeekBuffer());
         this->thefont.DrawString(
-                -1.0 - maxLineWidth, // Left coordinate of the rectangle
-                1.0 - lineHeight*(i+1),     // Upper coordinate of the rectangle
+                -1.0f - maxLineWidth, // Left coordinate of the rectangle
+                1.0f - lineHeight*(i+1),     // Upper coordinate of the rectangle
                 maxLineWidth,        // The width of the rectangle
                 lineHeight,                       // The height of the rectangle
                 fontSize,                       // The font size
@@ -304,8 +304,8 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
         str.Format("%3i : ", i);
         str.Append(vmc->GetLabels()[i].PeekBuffer());
         this->thefont.DrawString(
-                1.0, // Left coordinate of the rectangle
-                1.0 - lineHeight*(i+1),     // Upper coordinate of the rectangle
+                1.0f, // Left coordinate of the rectangle
+                1.0f - lineHeight*(i+1),     // Upper coordinate of the rectangle
                 maxLineWidth,        // The width of the rectangle
                 lineHeight,                       // The height of the rectangle
                 fontSize,                       // The font size
@@ -358,8 +358,8 @@ bool VariantMatchRenderer::drawColorMap() {
     vislib::StringA str;
     str.Format("%.3f", this->minCol);
     this->thefont.DrawString(
-            -1.0, // Left coordinate of the rectangle
-            -1.32,     // Upper coordinate of the rectangle
+            -1.0f, // Left coordinate of the rectangle
+            -1.32f,     // Upper coordinate of the rectangle
             this->fontSize,                       // The font size
             true,                    // Flip y
             str.PeekBuffer(),
@@ -367,8 +367,8 @@ bool VariantMatchRenderer::drawColorMap() {
 
     str.Format("%.3f", this->maxCol);
     this->thefont.DrawString(
-            1.0, // Left coordinate of the rectangle
-            -1.32,     // Upper coordinate of the rectangle
+            1.0f, // Left coordinate of the rectangle
+            -1.32f,     // Upper coordinate of the rectangle
             this->fontSize,                       // The font size
             true,                    // Flip y
             str.PeekBuffer(),

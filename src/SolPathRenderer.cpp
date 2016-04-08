@@ -7,7 +7,7 @@
 #include "stdafx.h"
 
 #include "SolPathRenderer.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/CoreInstance.h"
 #include "SolPathDataCall.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
@@ -26,7 +26,7 @@ using namespace megamol::protein;
 SolPathRenderer::SolPathRenderer(void) : core::view::Renderer3DModule(),
         getdataslot("getdata", "Fetches data"), pathlineShader() {
 
-    this->getdataslot.SetCompatibleCall<core::CallAutoDescription<SolPathDataCall> >();
+    this->getdataslot.SetCompatibleCall<core::factories::CallAutoDescription<SolPathDataCall> >();
     this->MakeSlotAvailable(&this->getdataslot);
 }
 

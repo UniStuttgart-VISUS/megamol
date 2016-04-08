@@ -296,11 +296,11 @@ bool Stride::WriteToInterface( MolecularDataCall *mol) {
                 sec.back().SetType( MolecularDataCall::SecStructure::TYPE_SHEET);
             else
                 sec.back().SetType( MolecularDataCall::SecStructure::TYPE_COIL);
-            mol->SetMoleculeSecondaryStructure( Cn, idx, sec.size() - idx);
-            idx = sec.size();
+            mol->SetMoleculeSecondaryStructure( Cn, idx, (unsigned int)sec.size() - idx);
+            idx = (int)sec.size();
         }
         // handled all residues of current chain, copy sec struct to interface
-        mol->SetSecondaryStructureCount( sec.size());
+		mol->SetSecondaryStructureCount((unsigned int)sec.size());
         for( i = 0; i < (int)sec.size(); ++i ) {
             mol->SetSecondaryStructure( i, sec[i]);
         }

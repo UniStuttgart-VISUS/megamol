@@ -2343,7 +2343,7 @@ void ProteinVolumeRenderer::drawClippedPolygon( vislib::math::Cuboid<float> boun
 
     // check for each clip plane
     float vcpd;
-    for( int i = 0; i < this->volClipPlane.Count(); ++i ) {
+	for (int i = 0; i < (int)this->volClipPlane.Count(); ++i) {
         slices.setupSingleSlice( this->volClipPlane[i].PeekComponents(), position.PeekComponents());
         float d = 0.0f;
         vcpd = static_cast<float>(this->volClipPlane[i].PeekComponents()[3]);

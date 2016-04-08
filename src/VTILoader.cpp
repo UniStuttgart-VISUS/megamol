@@ -397,7 +397,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
 #endif
 
     // Read data file to char buffer
-    char *buffer = new char[fileSize];
+    char *buffer = new char[(unsigned int)fileSize];
     if(!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value(),
             File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY)) return false;
     file.Read(buffer, fileSize);
@@ -418,7 +418,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
         while(*pt_end != '>') {
             pt_end++;
         }
-        entity = vislib::StringA(pt+1, pt_end-pt);
+        entity = vislib::StringA(pt+1, (int)(pt_end-pt));
 
         // Parse and store relevant attributes
         if(entity.StartsWith("VTKFile")) {
@@ -649,7 +649,7 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-    char *buffer = new char[fileSize];
+	char *buffer = new char[(unsigned int)fileSize];
     file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();

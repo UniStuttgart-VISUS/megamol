@@ -94,9 +94,9 @@ bool MultiParticleDataFilter::getData(core::Call& call) {
         for(unsigned int i = 0; i < data->GetParticleListCount(); i++) {
             MultiParticleDataCall::Particles &parts = data->AccessParticles(i);
             this->vertexData[i].Clear();
-            this->vertexData[i].AssertCapacity( parts.GetCount() * 3);
+            this->vertexData[i].AssertCapacity( (size_t)parts.GetCount() * 3);
             this->colorData[i].Clear();
-            this->colorData[i].AssertCapacity( parts.GetCount());
+            this->colorData[i].AssertCapacity( (size_t)parts.GetCount());
             // only handle COLDATA_FLOAT_I
             // TODO extend
             if( parts.GetColourDataType() != MultiParticleDataCall::Particles::COLDATA_FLOAT_I )

@@ -2813,7 +2813,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
         // --- START store the vertices, colors and parameters ---
         this->totalCountTube = 0;
         for( unsigned int i = 0; i < bSplineCoords.size(); i++ ) {
-             this->totalCountTube += bSplineCoords[i].size();
+             this->totalCountTube += (unsigned int)bSplineCoords[i].size();
         }
 
         if( this->vertTube )

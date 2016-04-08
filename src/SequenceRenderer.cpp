@@ -132,7 +132,7 @@ bool SequenceRenderer::GetExtents(view::CallRender2D& call) {
 
     // prepare the data
     if( !this->dataPrepared ) {
-        unsigned int oldRowHeight = this->rowHeight;
+        unsigned int oldRowHeight = (unsigned int)this->rowHeight;
         this->dataPrepared = this->PrepareData( mol, bs);
         if( oldRowHeight != this->rowHeight ) {
             this->dataPrepared = this->PrepareData( mol, bs);
@@ -284,14 +284,14 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
         glColor3fv( fgColor);
         glEnable( GL_VERTEX_ARRAY);
         glVertexPointer( 2, GL_FLOAT, 0, this->chainSeparatorVertices.PeekElements());
-        glDrawArrays( GL_LINES, 0, this->chainSeparatorVertices.Count() / 2 - 2);
+        glDrawArrays( GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.Count() / 2 - 2);
         glDisable( GL_VERTEX_ARRAY);
 
         // labeling
         glColor3fv( fgColor);
         if( theFont.Initialise() ) {
             for( unsigned int i = 0; i < this->aminoAcidStrings.Count(); i++ ) {
-                for( unsigned int j = 0; j < this->aminoAcidStrings[i].Length(); j++ ) {
+                for( unsigned int j = 0; j < (unsigned int)this->aminoAcidStrings[i].Length(); j++ ) {
                     // draw the one-letter amino acid code
                     theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight), 1.0f, -1.0f,
                         1.0f, true, this->aminoAcidStrings[i].Substring(j, 1), vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
@@ -414,7 +414,7 @@ bool SequenceRenderer::Render(view::CallRender2D &call) {
         // render mouse hover
         if( this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
             this->mousePos.Y() >  0.0f && this->mousePos.Y() < static_cast<float>(this->resRows+1) &&
-            this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount)
+            this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount)
         {
             glColor3f( 1.0f, 0.75f, 0.0f);
             glBegin( GL_LINE_STRIP);
@@ -456,7 +456,7 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
             this->selection[this->mousePosResIdx] = this->initialClickSelection;
             consumeEvent = true;
         } else {
-            if( this->mousePosResIdx > -1 && this->mousePosResIdx < this->resCount) {
+            if( this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
                 this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
             }
         }

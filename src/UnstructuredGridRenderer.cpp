@@ -287,7 +287,7 @@ bool protein::UnstructuredGridRenderer::Render(Call& call) {
     glVertexPointer(4, GL_FLOAT, 0, posInter);
     //glColorPointer( 3, GL_UNSIGNED_BYTE, 0, sphere->SphereColors() );
     //glColorPointer( 3, GL_FLOAT, 0, this->colors.PeekElements() );
-    glDrawArrays(GL_POINTS, 0, dc->GetNumberOfPoints());
+    glDrawArrays(GL_POINTS, 0, (GLsizei)dc->GetNumberOfPoints());
     // disable sphere shader
     //glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);

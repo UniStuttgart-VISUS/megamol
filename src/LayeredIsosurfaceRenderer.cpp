@@ -765,9 +765,9 @@ void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VTIDataC
     // set voxel map to volume texture
     glBindTexture(GL_TEXTURE_3D, this->volumeTex);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE32F_ARB, 
-        gridSize.X(), 
-        gridSize.Y(), 
-        gridSize.Z(), 0, GL_LUMINANCE, GL_FLOAT, 
+        (GLsizei)gridSize.X(), 
+        (GLsizei)gridSize.Y(), 
+        (GLsizei)gridSize.Z(), 0, GL_LUMINANCE, GL_FLOAT, 
         densityData);
     GLint param = GL_LINEAR;
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
@@ -797,9 +797,9 @@ void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VTIDataC
     // set voxel map to volume texture
     glBindTexture(GL_TEXTURE_3D, this->vectorfieldTex);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
-        gridSize.X(), 
-        gridSize.Y(), 
-        gridSize.Z(), 0, GL_RGB, GL_FLOAT, 
+        (GLsizei)gridSize.X(), 
+        (GLsizei)gridSize.Y(), 
+        (GLsizei)gridSize.Z(), 0, GL_RGB, GL_FLOAT, 
         vectorData);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, param);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, param);
@@ -826,8 +826,8 @@ void LayeredIsosurfaceRenderer::UpdateVolumeTexture(const core::moldyn::VTIDataC
     this->volScaleInv[2] = 1.0f / this->volScale[2];
 
     // set volume size
-    this->volumeSize = vislib::math::Max<unsigned int>(gridSize.Z(),
-        vislib::math::Max<unsigned int>(gridSize.Y(), gridSize.X()));
+    this->volumeSize = vislib::math::Max<unsigned int>((unsigned int)gridSize.Z(),
+        vislib::math::Max<unsigned int>((unsigned int)gridSize.Y(), (unsigned int)gridSize.X()));
 }
 
 /*

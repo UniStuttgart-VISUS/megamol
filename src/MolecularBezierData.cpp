@@ -222,7 +222,7 @@ void MolecularBezierData::update(MolecularDataCall& dat) {
         static_cast<Color::ColoringMode>(this->color1Slot.Param<core::param::EnumParam>()->Value()),
         static_cast<Color::ColoringMode>(this->color2Slot.Param<core::param::EnumParam>()->Value()),
         col_mix,       // blending factor between both color maps
-        1.0 - col_mix, // 
+        1.0f - col_mix, // 
         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
         this->minGradColorSlot.Param<core::param::StringParam>()->Value(),
         this->mixGradColorSlot.Param<core::param::StringParam>()->Value(),

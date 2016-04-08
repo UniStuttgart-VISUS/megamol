@@ -269,10 +269,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
          this->resetFrameCache();
          if (this->nFrames > 0) {
              // Set number of frames
-             this->setFrameCount(std::min(
+			 this->setFrameCount((unsigned int)std::min(
                      static_cast<size_t>(
                              this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-                             this->nFrames));
+							 this->nFrames));
              // Start the loading thread
              this->initFrameCache(this->maxCacheSizeSlot.Param<core::param::IntParam>()->Value());
          }
@@ -287,10 +287,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
          this->maxCacheSizeSlot.ResetDirty();
          this->resetFrameCache();
          // Set number of frames
-         this->setFrameCount(std::min(
+		 this->setFrameCount((unsigned int)std::min(
                  static_cast<size_t>(
                          this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-                         this->nFrames));
+						 this->nFrames));
 
          // Start the loading thread
          this->initFrameCache(this->maxCacheSizeSlot.Param<core::param::IntParam>()->Value());
@@ -301,10 +301,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
      if (dc != NULL) {
 
          // Set frame count
-         dc->SetFrameCount(std::min(
+         dc->SetFrameCount((unsigned int)std::min(
                  static_cast<size_t>(
                          this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-                         this->nFrames));
+						 this->nFrames));
 
          dc->AccessBoundingBoxes().Clear();
          dc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
@@ -315,10 +315,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getExtent(core::Call& call) {
                  dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
          if (mpdc != NULL) {
              // Set frame count
-             mpdc->SetFrameCount(std::min(
+			 mpdc->SetFrameCount((unsigned int)std::min(
                      static_cast<size_t>(
                              this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-                             this->nFrames));
+							 this->nFrames));
 
              mpdc->AccessBoundingBoxes().Clear();
              mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
@@ -360,9 +360,9 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
         this->filenamesDigits = b-a+1;
 
         this->filenamesPrefix.Clear();
-        this->filenamesPrefix = filename.Substring(0, a);
+        this->filenamesPrefix = filename.Substring(0, (int)a);
         this->filenamesSuffix.Clear();
-        this->filenamesSuffix = filename.Substring(b+2);
+        this->filenamesSuffix = filename.Substring((int)b+2);
 
 //        printf("DIGITS %i\n", this->filenamesDigits);
 //        printf("PREFIX %s\n", this->filenamesPrefix.PeekBuffer());
@@ -410,10 +410,10 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
             this->nFrames); // DEBUG
 
     // Set number of frames
-    this->setFrameCount(std::min(
+	this->setFrameCount((unsigned int)std::min(
             static_cast<size_t>(
                     this->maxFramesSlot.Param<core::param::IntParam>()->Value()),
-                    this->nFrames));
+					this->nFrames));
 
 
     /* Start the loading thread */
@@ -444,7 +444,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-    char *buffer = new char[fileSize];
+	char *buffer = new char[(unsigned int)fileSize];
     file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
@@ -664,7 +664,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(
 #endif // defined(VERBOSE)
 
     // Read data file to char buffer
-    char *buffer = new char[fileSize];
+	char *buffer = new char[(unsigned int)fileSize];
     file.Open(frameFile, File::READ_ONLY, File::SHARE_EXCLUSIVE, File::OPEN_ONLY);
     file.Read(buffer, fileSize);
     file.Close();
@@ -785,7 +785,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readASCIIFloats(char*& buffPt,
         token = this->readNextToken(buffPt);
 //        if (i%1000==0) printf("Token %i: %f\n", i, atof(token.PeekBuffer()));
 //        printf("Token %i: %f\n", i, atof(token.PeekBuffer()));
-        out[i] = atof(token.PeekBuffer());
+        out[i] = (float)atof(token.PeekBuffer());
         this->seekNextToken(buffPt);
     }
 }

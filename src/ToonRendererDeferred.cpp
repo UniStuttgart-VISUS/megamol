@@ -37,11 +37,11 @@ ToonRendererDeferred::ToonRendererDeferred(void)
     widthFBO(-1), heightFBO(-1) {
 
     // Threshold for fine lines
-    this->threshFineLinesParam << new megamol::core::param::FloatParam(9.5, 0.0, 9.95);
+    this->threshFineLinesParam << new megamol::core::param::FloatParam(9.5f, 0.0f, 9.95f);
     this->MakeSlotAvailable(&this->threshFineLinesParam);
 
     // Threshold for coarse lines
-    this->threshCoarseLinesParam << new megamol::core::param::FloatParam(7.9, 0.0, 9.95);
+    this->threshCoarseLinesParam << new megamol::core::param::FloatParam(7.9f, 0.0f, 9.95f);
     this->MakeSlotAvailable(&this->threshCoarseLinesParam);
 
     // Toggle SSAO
@@ -280,8 +280,8 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
         if(!this->createFBO(static_cast<UINT>(curVP[2]), static_cast<UINT>(curVP[3]))) {
             return false;
         }
-        this->widthFBO = curVP[2];
-        this->heightFBO = curVP[3];
+        this->widthFBO = (int)curVP[2];
+        this->heightFBO = (int)curVP[3];
     }
 
     /// 1. Offscreen rendering ///
@@ -406,9 +406,9 @@ bool ToonRendererDeferred::Render(megamol::core::Call& call) {
     glUniform1i(this->toonShader.ParameterLocation("ssaoBuffer"), 4);
 
     glUniform1f(this->toonShader.ParameterLocation("threshFine"),
-        (10.0 - this->threshFineLinesParam.Param<core::param::FloatParam>()->Value())*0.1);
+        (10.0f - this->threshFineLinesParam.Param<core::param::FloatParam>()->Value())*0.1f);
     glUniform1f(this->toonShader.ParameterLocation("threshCoarse"),
-        (10.0 - this->threshCoarseLinesParam.Param<core::param::FloatParam>()->Value())*0.1);
+        (10.0f - this->threshCoarseLinesParam.Param<core::param::FloatParam>()->Value())*0.1f);
     glUniform1i(this->toonShader.ParameterLocation("ssao"),
         this->ssaoParam.Param<core::param::BoolParam>()->Value());
     glUniform1i(this->toonShader.ParameterLocation("lighting"),
@@ -606,7 +606,7 @@ float ToonRendererDeferred::getRandomFloat(float min, float max, unsigned int pr
     // Note: RAND_MAX is only guaranteed to be at least 32767, so prec should not be more than 4
     float base = 10.0;
     float precision = pow(base, (int)prec);
-    int range = max*precision - min*precision + 1;
+    int range = (int)(max*precision - min*precision + 1);
     return static_cast<float>(rand()%range + min*precision) / precision;
 }
 
@@ -623,7 +623,7 @@ bool ToonRendererDeferred::createRandomKernel(UINT size) {
 
        float scale = float(s) / float(size);
        scale *= scale;
-       scale = 0.1*(1.0 - scale) + scale; // Interpolate between 0.1 ... 1.0
+       scale = 0.1f*(1.0f - scale) + scale; // Interpolate between 0.1 ... 1.0
 
        kernel[s*3 + 0] = getRandomFloat(-1.0, 1.0, 3);
        kernel[s*3 + 1] = getRandomFloat(-1.0, 1.0, 3);

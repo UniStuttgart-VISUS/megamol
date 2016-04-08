@@ -370,8 +370,8 @@ bool protein::DofRendererDeferred::Render(megamol::core::Call& call) {
 		}
 		this->width = curVP[2];
 		this->height = curVP[3];
-		this->widthInv = 1.0/curVP[2];
-		this->heightInv = 1.0/curVP[3];
+		this->widthInv = 1.0f/curVP[2];
+		this->heightInv = 1.0f/curVP[3];
 	}
 
 	// 1. Render scene

@@ -126,8 +126,8 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
      case CHKPT_SOURCE :
          (*dirc)(1); // Call for get extend
          (*dirc)(0); // Call for get data
-         this->atomCnt = dirc->AccessParticles(0).GetCount();
-         this->dipoleCnt = dirc->AccessParticles(0).GetCount();
+         this->atomCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
+         this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
          this->cellCnt = 0;
          this->frameCnt = 1;
          break;
@@ -568,8 +568,8 @@ void protein::CrystalStructureDataSource::updateParams () {
         case CHKPT_SOURCE :
             (*dirc)(1); // Call for get extend
             (*dirc)(0); // Call for get data
-            this->atomCnt = dirc->AccessParticles(0).GetCount();
-            this->dipoleCnt = dirc->AccessParticles(0).GetCount();
+            this->atomCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
+            this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
             this->cellCnt = 0;
             this->frameCnt = 1;
             break;
@@ -807,17 +807,17 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
              // Calculate spacial center of cations (= titanium and barium atoms)
              float cationCenter[] = {0.0f, 0.0f, 0.0f};
              for(int at = 0; at < 8; at++) {
-                 cationCenter[0] += 2.0*fr->atomPos[3 * this->cells[15*di+at] + 0];
-                 cationCenter[1] += 2.0*fr->atomPos[3 * this->cells[15*di+at] + 1];
-                 cationCenter[2] += 2.0*fr->atomPos[3 * this->cells[15*di+at] + 2];
+                 cationCenter[0] += 2.0f*fr->atomPos[3 * this->cells[15*di+at] + 0];
+                 cationCenter[1] += 2.0f*fr->atomPos[3 * this->cells[15*di+at] + 1];
+                 cationCenter[2] += 2.0f*fr->atomPos[3 * this->cells[15*di+at] + 2];
              }
              cationCenter[0] /= 8.0f;
              cationCenter[1] /= 8.0f;
              cationCenter[2] /= 8.0f;
 
-             cationCenter[0] += 4.0*fr->atomPos[3 * idxTiAtom + 0];
-             cationCenter[1] += 4.0*fr->atomPos[3 * idxTiAtom + 1];
-             cationCenter[2] += 4.0*fr->atomPos[3 * idxTiAtom + 2];
+             cationCenter[0] += 4.0f*fr->atomPos[3 * idxTiAtom + 0];
+             cationCenter[1] += 4.0f*fr->atomPos[3 * idxTiAtom + 1];
+             cationCenter[2] += 4.0f*fr->atomPos[3 * idxTiAtom + 2];
 
              tmpVec2.Set(cationCenter[0], cationCenter[1], cationCenter[2]);
 
@@ -845,7 +845,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(
         }
         if (!(*dirc)(1)) return false;
 
-        this->dipoleCnt = dirc->AccessParticles(0).GetCount();
+        this->dipoleCnt = (unsigned int)dirc->AccessParticles(0).GetCount();
 
         // Note: we only have one particle list in this case
         core::moldyn::DirectionalParticleDataCall::Particles &parts = dirc->AccessParticles(0);

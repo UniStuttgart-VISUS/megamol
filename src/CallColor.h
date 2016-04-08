@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/moldyn/BindingSiteCall.h"
 
@@ -331,7 +331,7 @@ private:
 };
 
 	/** Description class typedef */
-	typedef megamol::core::CallAutoDescription<CallColor> CallColorDescription;
+	typedef megamol::core::factories::CallAutoDescription<CallColor> CallColorDescription;
 
 } // end namespace protein
 } // end namespace megamol

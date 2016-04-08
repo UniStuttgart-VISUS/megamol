@@ -198,9 +198,9 @@ bool megamol::protein::AggregatedDensity::aggregate() {
     float minvelocity=FLT_MAX;
     float maxvelocity=FLT_MIN;
     for (unsigned int i = 0; i<xbins*ybins*zbins; i++) {
-        density[i]*=1./framecounter/res/res/res*1000;
+        density[i]*=1.0f/framecounter/res/res/res*1000.0f;
         if (density[i] > 0) {
-            velocity[i]*=1./density[i]/framecounter;
+            velocity[i]*=1.0f/density[i]/framecounter;
         } else {
             velocity[i]=0;
         }

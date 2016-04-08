@@ -9,7 +9,7 @@
 #define _USE_MATH_DEFINES
 
 #include "View3DMouse.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "CallMouseInput.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/view/MouseFlags.h"
@@ -23,7 +23,7 @@ protein::View3DMouse::View3DMouse(void) : core::view::View3D(),
          toggleSelect(false) {
 
     // Slot for mouse input call
-    this->mouseSlot.SetCompatibleCall<core::CallAutoDescription<CallMouseInput> >();
+    this->mouseSlot.SetCompatibleCall<core::factories::CallAutoDescription<CallMouseInput> >();
     this->MakeSlotAvailable(&this->mouseSlot);
 
     // Slot for key modifier
@@ -68,8 +68,8 @@ void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
         if (cm) {
             cm->SetMouseInfo(static_cast<int>(x), static_cast<int>(y), this->mouseFlags);
             if ((*cm)(0)) {
-                this->mouseX = static_cast<int>(x);
-                this->mouseY = static_cast<int>(y);
+                this->mouseX = (float)static_cast<int>(x);
+                this->mouseY = (float)static_cast<int>(y);
                 megamol::core::view::MouseFlagsResetAllChanged(this->mouseFlags);
                 // mouse event consumed
                 return;

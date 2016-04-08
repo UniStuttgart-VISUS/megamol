@@ -14,7 +14,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/Pair.h"
 #include "vislib/math/Cuboid.h"
@@ -246,7 +246,7 @@ namespace protein {
     };
 
     /** Description class typedef */
-    typedef megamol::core::CallAutoDescription<CallProteinVolumeData> CallProteinVolumeDataDescription;
+    typedef megamol::core::factories::CallAutoDescription<CallProteinVolumeData> CallProteinVolumeDataDescription;
 
 
 } /* end namespace protein */

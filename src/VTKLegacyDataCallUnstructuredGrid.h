@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "mmcore/moldyn/Interpol.h"
@@ -292,7 +292,7 @@ private:
 };
 
 /// Description class typedef
-typedef core::CallAutoDescription<VTKLegacyDataCallUnstructuredGrid> VTKLegacyDataCallUnstructuredGridDescription;
+typedef core::factories::CallAutoDescription<VTKLegacyDataCallUnstructuredGrid> VTKLegacyDataCallUnstructuredGridDescription;
 
 } // end namespace protein
 } // end namespace megamol

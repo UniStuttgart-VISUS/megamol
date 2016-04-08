@@ -1112,11 +1112,11 @@ void GROLoader::release(void) {
     // stop frame-loading thread before clearing data array
     resetFrameCache();
 
-    for(int i = 0; i < this->data.Count(); i++)
+	for (int i = 0; i < (int)this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
 
-    for(int i = 0; i < this->residue.Count(); i++)
+	for (int i = 0; i < (int)this->residue.Count(); i++)
         delete residue[i];
     this->residue.Clear();
 
@@ -1183,7 +1183,7 @@ void GROLoader::loadFile( const vislib::TString& filename) {
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-    for(int i = 0; i < this->data.Count(); i++)
+	for (int i = 0; i < (int)this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
 

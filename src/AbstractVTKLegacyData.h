@@ -118,7 +118,7 @@ public:
                 case DOUBLE :         nBitsPerElement = 64; break;
                 default :             nBitsPerElement = 8; break;
             }
-            size_t memSize = ceil(nElements * nComponents * nBitsPerElement / 8);
+            size_t memSize = (size_t)ceil(nElements * nComponents * nBitsPerElement / 8);
 
             // (Re)allocate memory if necessary
             if (this->allocated < memSize) {
@@ -192,6 +192,7 @@ public:
         if (dataTypeStr == "long") return LONG;
         if (dataTypeStr == "float") return FLOAT;
         if (dataTypeStr == "double") return DOUBLE;
+		return BIT; // TODO dirty hack to remove warnings, might change behaviour
     }
 
     /**

@@ -51,10 +51,10 @@ SSAORendererDeferred::SSAORendererDeferred(void)
     this->renderModeParam << rm;
     this->MakeSlotAvailable(&renderModeParam);
 
-    this->aoRadiusParam << new megamol::core::param::FloatParam(5.0, 0.0);
+    this->aoRadiusParam << new megamol::core::param::FloatParam(5.0f, 0.0f);
     this->MakeSlotAvailable(&this->aoRadiusParam);
 
-    this->depthThresholdParam << new megamol::core::param::FloatParam(0.14, 0.0);
+    this->depthThresholdParam << new megamol::core::param::FloatParam(0.14f, 0.0f);
     this->MakeSlotAvailable(&this->depthThresholdParam);
 
     this->aoSamplesParam << new megamol::core::param::IntParam(16, 1);
@@ -305,8 +305,8 @@ bool SSAORendererDeferred::Render(megamol::core::Call& call) {
         if(!this->createFBO(static_cast<UINT>(curVP[2]), static_cast<UINT>(curVP[3]))) {
             return false;
         }
-        this->widthFBO = curVP[2];
-        this->heightFBO = curVP[3];
+        this->widthFBO = (int)curVP[2];
+        this->heightFBO = (int)curVP[3];
     }
 
     /// Render scene ///
@@ -694,11 +694,11 @@ bool SSAORendererDeferred::createRandomKernel(UINT size) {
 
         float scale = float(s) / float(size);
         scale *= scale;
-        scale = 0.1*(1.0 - scale) + scale; // Interpolate between 0.1 ... 1.0
+        scale = 0.1f*(1.0f - scale) + scale; // Interpolate between 0.1 ... 1.0
 
-        kernel[s*3 + 0] = getRandomFloat(-1.0, 1.0, 3);
-        kernel[s*3 + 1] = getRandomFloat(-1.0, 1.0, 3);
-        kernel[s*3 + 2] = getRandomFloat( 0.0, 1.0, 3);
+        kernel[s*3 + 0] = getRandomFloat(-1.0f, 1.0f, 3);
+        kernel[s*3 + 1] = getRandomFloat(-1.0f, 1.0f, 3);
+        kernel[s*3 + 2] = getRandomFloat( 0.0f, 1.0f, 3);
 
         // Compute magnitude
         float mag = sqrt(kernel[s*3 + 0]*kernel[s*3 + 0] +
@@ -744,7 +744,7 @@ float SSAORendererDeferred::getRandomFloat(float min, float max, unsigned int pr
     // Note: RAND_MAX is only guaranteed to be at least 32767, so prec should not be more than 4
     float base = 10.0;
     float precision = pow(base, (int)prec);
-    int range = max*precision - min*precision + 1;
+    int range = (int)(max*precision - min*precision + 1);
     return static_cast<float>(rand()%range + min*precision) / precision;
 }
 

@@ -242,7 +242,7 @@ bool CartoonRenderer::Render(Call& call) {
         (*bs)(BindingSiteCall::CallForGetData);
     }
 
-    int cnt;
+    //int cnt;
 
     // set call time
     mol->SetCalltime(callTime);

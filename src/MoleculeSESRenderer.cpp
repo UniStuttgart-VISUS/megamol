@@ -1016,7 +1016,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
             this->currentColoringMode0,
             this->currentColoringMode1,
             this->cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-            1.0 - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable,
             this->rainbowColors,
             this->minGradColorParam.Param<param::StringParam>()->Value(),
@@ -1173,7 +1173,7 @@ void MoleculeSESRenderer::UpdateParameters( const MolecularDataCall *mol, const 
             this->currentColoringMode0,
             this->currentColoringMode1,
             this->cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-            1.0 - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            1.0f - this->cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
             this->atomColorTable, this->colorLookupTable,
             this->rainbowColors,
             this->minGradColorParam.Param<param::StringParam>()->Value(),
@@ -3249,12 +3249,12 @@ void MoleculeSESRenderer::puxelsCreateBuffers()
 void MoleculeSESRenderer::puxelsClear()
 {
 	puxelClearShader.Enable();
-	glUniform1ui(this->puxelClearShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-	glUniform1ui(this->puxelClearShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
+	glUniform1ui(this->puxelClearShader.ParameterLocation("width"), (GLuint)this->cameraInfo->TileRect().Width());
+	glUniform1ui(this->puxelClearShader.ParameterLocation("height"), (GLuint)this->cameraInfo->TileRect().Height());
 	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 
-	puxelClearShader.Dispatch(this->cameraInfo->TileRect().Width()/16, this->cameraInfo->TileRect().Height()/16, 1);
+	puxelClearShader.Dispatch((unsigned int)this->cameraInfo->TileRect().Width()/16, (unsigned int)this->cameraInfo->TileRect().Height()/16, 1);
 	
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -3274,8 +3274,8 @@ void MoleculeSESRenderer::puxelsClear()
 void MoleculeSESRenderer::puxelsReorder()
 {
 	puxelOrderShader.Enable();
-	glUniform1ui(this->puxelOrderShader.ParameterLocation("width"), this->cameraInfo->TileRect().Width());
-	glUniform1ui(this->puxelOrderShader.ParameterLocation("height"), this->cameraInfo->TileRect().Height());
+	glUniform1ui(this->puxelOrderShader.ParameterLocation("width"), (GLuint)this->cameraInfo->TileRect().Width());
+	glUniform1ui(this->puxelOrderShader.ParameterLocation("height"), (GLuint)this->cameraInfo->TileRect().Height());
 	
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, puxelsBufferHeader);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, puxelsBufferData);

@@ -15,7 +15,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol {
 namespace protein {
@@ -131,7 +131,7 @@ namespace protein {
     };
 
     /** Description class typedef */
-    typedef megamol::core::CallAutoDescription<ForceDataCall> ForceDataCallDescription;
+    typedef megamol::core::factories::CallAutoDescription<ForceDataCall> ForceDataCallDescription;
 
 } /* end namespace protein */
 } /* end namespace megamol */

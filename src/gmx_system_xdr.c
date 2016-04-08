@@ -379,8 +379,10 @@ xdr_opaque (XDR *xdrs, char *cp, unsigned int cnt)
     }
       if (rndup == 0)
     return TRUE;
+#pragma warning(push)
+#pragma warning(disable: 4090)
       return xdr_putbytes (xdrs, xdr_zero, rndup);
-
+#pragma warning(pop)
     case XDR_FREE:
       return TRUE;
     }

@@ -1019,11 +1019,11 @@ void PDBLoader::release(void) {
     // stop frame-loading thread before clearing data array
     resetFrameCache();
 
-    for(int i = 0; i < this->data.Count(); i++)
+	for (int i = 0; i < (int)this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
 
-    for(int i = 0; i < this->residue.Count(); i++)
+	for (int i = 0; i < (int)this->residue.Count(); i++)
         delete residue[i];
     this->residue.Clear();
 
@@ -1090,7 +1090,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-    for(int i = 0; i < this->data.Count(); i++)
+	for (int i = 0; i < (int)this->data.Count(); i++)
         delete data[i];
     this->data.Clear();
 
@@ -1300,7 +1300,7 @@ void PDBLoader::loadFile( const vislib::TString& filename) {
 			MolecularDataCall::Chain::ChainType chainType = MolecularDataCall::Chain::ChainType::UNSPECIFIC;
 			MolecularDataCall::Chain new_chain = MolecularDataCall::Chain(firstMolIdx, molCnt, name, chainType);
 			this->chain.Add(new_chain);
-			this->molecule.Add(MolecularDataCall::Molecule(0, this->residue.Count(), 0));
+			this->molecule.Add(MolecularDataCall::Molecule(0, (unsigned int)this->residue.Count(), 0));
 		}
 
         // search for CA, C, O and N in amino acids
@@ -2061,7 +2061,7 @@ bool PDBLoader::readNumXTCFrames() {
 
     // get length of file:
     xtcFile.seekg(0, xtcFile.end);
-    int xtcFileLength = xtcFile.tellg();
+    int xtcFileLength = (int)xtcFile.tellg();
     xtcFile.seekg (0, xtcFile.beg);
 
     // read until eof

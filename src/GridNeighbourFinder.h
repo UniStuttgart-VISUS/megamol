@@ -137,7 +137,7 @@ namespace protein {
 		}
 
 		VISLIB_FORCEINLINE void findNeighboursInCell(const vislib::Array<const T *>& cell, const T* point, T distance, vislib::Array<unsigned int>& resIdx) const {
-			for(int i = 0; i < cell.Count(); i++)
+			for (int i = 0; i < (int)cell.Count(); i++)
 				if ( dist(cell[i],point) <= distance )
 					resIdx.Add((unsigned int)((cell[i]-elementPositions)/3)); // store atom index
 		}

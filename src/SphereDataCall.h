@@ -13,7 +13,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/math/Vector.h"
 #include "vislib/Array.h"
@@ -183,7 +183,7 @@ namespace protein {
     };
 
     /** Description class typedef */
-	typedef megamol::core::CallAutoDescription<SphereDataCall> SphereDataCallDescription;
+	typedef megamol::core::factories::CallAutoDescription<SphereDataCall> SphereDataCallDescription;
 
 
 } /* end namespace protein */

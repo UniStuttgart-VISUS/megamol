@@ -76,7 +76,7 @@ bool MultiPDBLoader::getExtent(core::Call& call) {
     unsigned int i = frame % this->pdb.Count();
     
     dc->SetFrameID(frame);
-    dc->SetFrameCount(this->pdb.Count());
+    dc->SetFrameCount((unsigned int)this->pdb.Count());
     dc->AccessBoundingBoxes() = this->datacall[i]->AccessBoundingBoxes();
 	dc->SetDataHash(this->dataHash);
 
@@ -98,7 +98,7 @@ bool MultiPDBLoader::getData(core::Call& caller) {
     // copy call
     *dc = *this->datacall[i];
     dc->SetFrameID(frame);
-    dc->SetFrameCount(this->pdb.Count());
+    dc->SetFrameCount((unsigned int)this->pdb.Count());
     dc->SetDataHash(this->dataHash);
 
     return true;
