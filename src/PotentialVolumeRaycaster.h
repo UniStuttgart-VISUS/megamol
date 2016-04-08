@@ -20,7 +20,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/view/CallRender3D.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "CUDAMarchingCubes.h"
 #include "slicing.h"
@@ -133,7 +133,7 @@ protected:
      * @param cmd The data call with the potential map
      * @return 'True' on success, 'false' otherwise
      */
-    bool initPotential(VTIDataCall *cmd);
+	bool initPotential(core::moldyn::VTIDataCall *cmd);
 
     /**
      * Implementation of 'release'.

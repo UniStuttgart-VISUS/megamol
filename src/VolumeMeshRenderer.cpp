@@ -14,7 +14,7 @@
 #undef min
 #undef max
 #include "VolumeMeshRenderer.h"
-#include "IntSelectionCall.h"
+#include "mmcore/moldyn/IntSelectionCall.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
@@ -1768,7 +1768,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                         this->featureCounter++;
                         vislib::Array<int> *partners = new vislib::Array<int>();
                         partners->Append(this->featureListIdx[j]);
-                        ds->AddMarker(new DiagramCall::DiagramMarker( ms->GetDataCount() - 1, DiagramCall::DIAGRAM_MARKER_SPLIT, NULL, partners));
+                        ds->AddMarker(new DiagramCall::DiagramMarker( ms->GetDataCount() - 1, DiagramCall::DIAGRAM_MARKER_SPLIT, partners));
                         // SplitMerge
                         sms = new SplitMergeCall::SplitMergeSeries( featureName, 
                             new SplitMergeFeature( static_cast<float>(mol->FrameCount()), vislib::math::Vector<float, 3>( 
@@ -1843,7 +1843,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                 tmpFeatureListIdx[i] = this->featureListIdx[bestJ];
                 centroidColorsHost[i] = centroidColorsLast[bestJ];
                 // add merge marker to best fit
-                ds->AddMarker(new DiagramCall::DiagramMarker( ms->GetDataCount() - 1, DiagramCall::DIAGRAM_MARKER_MERGE, NULL, partners));
+                ds->AddMarker(new DiagramCall::DiagramMarker( ms->GetDataCount() - 1, DiagramCall::DIAGRAM_MARKER_MERGE, partners));
                 // SplitMerge
                 sms = this->splitMergeList[this->featureListIdx[bestJ]];
                 smf = static_cast<SplitMergeFeature*>(sms->GetMappable());

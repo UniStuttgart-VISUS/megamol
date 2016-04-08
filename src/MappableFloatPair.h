@@ -12,13 +12,13 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/Pair.h"
-#include "DiagramCall.h"
-#include "SplitMergeCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
+#include "mmcore/moldyn/SplitMergeCall.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class MappableFloatPair : public DiagramCall::DiagramMappable {
+class MappableFloatPair : public core::moldyn::DiagramCall::DiagramMappable {
 public:
     MappableFloatPair(float offsetX = 0.0f, float offsetY = 0.0f, bool flipX = false, int holePos = -1);
     ~MappableFloatPair(void);
@@ -39,7 +39,7 @@ private:
     int holePos;
 };
 
-class MappableWibble : public SplitMergeCall::SplitMergeMappable {
+class MappableWibble : public core::moldyn::SplitMergeCall::SplitMergeMappable {
 public:
 
     MappableWibble(int holePos = -1);

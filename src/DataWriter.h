@@ -20,7 +20,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
 
-#include "CrystalStructureDataCall.h"
+#include "mmcore/moldyn/CrystalStructureDataCall.h"
 
 
 namespace megamol {
@@ -113,7 +113,7 @@ public:
      * @param isoval      Isovalue for the extracted surface.
      * @return True, if the calculation was successful.
      */
-    bool CalcMapDipoleAvg(CrystalStructureDataCall *dc,
+	bool CalcMapDipoleAvg(core::moldyn::CrystalStructureDataCall *dc,
             int offset,
             int quality,
             float radscale,
@@ -132,7 +132,7 @@ public:
      * @param isoval      Isovalue for the extracted surface.
      * @return True, if the calculation was successful.
      */
-    bool CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
+	bool CalcMapTiDisplAvg(core::moldyn::CrystalStructureDataCall *dc,
             int offset,
             int quality,
             float radscale,
@@ -165,7 +165,7 @@ public:
     bool WriteTiDisplVTI(unsigned int frameIdx0, unsigned int frameIdx1,
             unsigned int avgOffs);
 
-    float GetNearestDistTi(CrystalStructureDataCall *dc, int idx);
+	float GetNearestDistTi(core::moldyn::CrystalStructureDataCall *dc, int idx);
 
     /**
      * Print cell length averaged over 'offs' frames.
@@ -177,10 +177,10 @@ public:
      * @return 'True' on success, 'false' otherwise
      */
     bool PutAvgCellLength(unsigned int idxStart, unsigned int offs,
-            CrystalStructureDataCall *dc);
+			core::moldyn::CrystalStructureDataCall *dc);
 
     bool PutAvgCellLengthAlt(unsigned int idxStart, unsigned int idxEnd,
-            CrystalStructureDataCall *dc);
+			core::moldyn::CrystalStructureDataCall *dc);
 
     /**
      * Print the sidelength/Volume of the data set.
@@ -191,10 +191,10 @@ public:
      * @return 'True' on success, 'false' otherwise.
      */
     bool PutCubeSize(unsigned int frIdx0, unsigned int frIdx1,
-            CrystalStructureDataCall *dc);
+			core::moldyn::CrystalStructureDataCall *dc);
 
-    bool WriteTiDispl(CrystalStructureDataCall *dc);
-    bool ReadTiDispl(CrystalStructureDataCall *dc);
+	bool WriteTiDispl(core::moldyn::CrystalStructureDataCall *dc);
+	bool ReadTiDispl(core::moldyn::CrystalStructureDataCall *dc);
 
     /**
      * Determine the maximum (absolute) values for x, y and z values of the
@@ -203,9 +203,9 @@ public:
      * @param[in] dc The data call
      * @return 'True' on success, 'false' otherwise.
      */
-    bool GetMaxCoords(CrystalStructureDataCall *dc);
+	bool GetMaxCoords(core::moldyn::CrystalStructureDataCall *dc);
 
-    bool PutCubeVol(CrystalStructureDataCall *dc);
+	bool PutCubeVol(core::moldyn::CrystalStructureDataCall *dc);
 
 protected:
 
@@ -255,17 +255,17 @@ protected:
             float gridspacing,
             vislib::TString fileName);
 
-    bool WriteFrameFileBinAvg(CrystalStructureDataCall *dc);
+	bool WriteFrameFileBinAvg(core::moldyn::CrystalStructureDataCall *dc);
 
     void sortByKey(unsigned int *idx, unsigned int n, float *pos);
 
-    bool WriteTiODipole(CrystalStructureDataCall *dc);
+	bool WriteTiODipole(core::moldyn::CrystalStructureDataCall *dc);
 
-    bool ReadTiODipole(CrystalStructureDataCall *dc);
+	bool ReadTiODipole(core::moldyn::CrystalStructureDataCall *dc);
 
     void PutVelocity();
 
-    void PutDisplacement(CrystalStructureDataCall *dc);
+	void PutDisplacement(core::moldyn::CrystalStructureDataCall *dc);
 
 private:
 

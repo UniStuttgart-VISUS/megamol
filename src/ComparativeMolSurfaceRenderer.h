@@ -38,7 +38,7 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 #include "CudaDevArr.h"
 #include "HostArr.h"
 #include "gridParams.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "DeformableGPUSurfaceMT.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "HostArr.h"
@@ -246,7 +246,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool initPotentialMap(VTIDataCall *cmd, gridParams &gridPotentialMap,
+    bool initPotentialMap(core::moldyn::VTIDataCall *cmd, gridParams &gridPotentialMap,
                     GLuint &potentialTex, CudaDevArr<float> &tex_D,
                     int3 &dim, float3 &org, float3 &delta);
 

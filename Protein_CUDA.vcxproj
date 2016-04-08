@@ -108,7 +108,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -130,7 +130,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -157,7 +157,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -183,7 +183,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -208,19 +208,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemGroup>
     <ClInclude Include="include\protein_cuda\Protein_CUDA.h" />
     <ClInclude Include="src\AbstractGPUSurface.h" />
-    <ClInclude Include="src\AbstractVTKLegacyData.h" />
-    <ClInclude Include="src\AggregatedDensity.h" />
-    <ClInclude Include="src\Base64.h" />
-    <ClInclude Include="src\BindingSiteDataSource.h" />
-    <ClInclude Include="src\BSpline.h" />
-    <ClInclude Include="src\CallColor.h" />
-    <ClInclude Include="src\CallMouseInput.h" />
-    <ClInclude Include="src\CallProteinVolumeData.h" />
-    <ClInclude Include="src\CCP4VolumeData.h" />
     <ClInclude Include="src\CenterLineGenerator.h" />
-    <ClInclude Include="src\CoarseGrainDataLoader.h" />
     <ClInclude Include="src\Color.h" />
-    <ClInclude Include="src\ColorModule.h" />
     <ClInclude Include="src\ComparativeFieldTopologyRenderer.h" />
     <ClInclude Include="src\ComparativeMolSurfaceRenderer.h" />
     <ClInclude Include="src\ComparativeSurfacePotentialRenderer.cuh" />
@@ -228,8 +217,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ComparativeSurfacePotentialRenderer_inline_device_functions.cuh" />
     <ClInclude Include="src\constantGridParams.cuh" />
     <ClInclude Include="src\CritPoints.h" />
-    <ClInclude Include="src\CrystalStructureDataCall.h" />
-    <ClInclude Include="src\CrystalStructureDataSource.h" />
     <ClInclude Include="src\CrystalStructureVolumeRenderer.h" />
     <ClInclude Include="src\CUDACurl.cuh" />
     <ClInclude Include="src\CudaDevArr.h" />
@@ -244,145 +231,52 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\DataWriter.h" />
     <ClInclude Include="src\DeformableGPUSurfaceMT.h" />
     <ClInclude Include="src\DeformableGPUSurfaceMTCall.h" />
-    <ClInclude Include="src\Diagram2DCall.h" />
-    <ClInclude Include="src\Diagram2DRenderer.h" />
-    <ClInclude Include="src\DiagramCall.h" />
-    <ClInclude Include="src\DiagramRenderer.h" />
     <ClInclude Include="src\DiffusionSolver.h" />
-    <ClInclude Include="src\DofRendererDeferred.h" />
-    <ClInclude Include="src\ElectrostaticsRenderer.h" />
     <ClInclude Include="src\Filter.h" />
-    <ClInclude Include="src\filter_cuda.cuh" />
-    <ClInclude Include="src\ForceDataCall.h" />
-    <ClInclude Include="src\FrodockLoader.h" />
-    <ClInclude Include="src\GlButton.h" />
-    <ClInclude Include="src\GLSLVolumeRenderer.h" />
-    <ClInclude Include="src\GlWidget.h" />
-    <ClInclude Include="src\GlWidgetLibrary.h" />
-    <ClInclude Include="src\gmx_system_xdr.h" />
     <ClInclude Include="src\GPUSurfaceMT.h" />
-    <ClInclude Include="src\GridDataStructure.h" />
-    <ClInclude Include="src\GridNeighbourFinder.h" />
     <ClInclude Include="src\gridParams.h" />
-    <ClInclude Include="src\GROLoader.h" />
-    <ClInclude Include="src\HapticsMoleculeRenderer.h" />
-    <ClInclude Include="src\Header.h" />
     <ClInclude Include="src\HostArr.h" />
-    <ClInclude Include="src\interpol.cuh" />
-    <ClInclude Include="src\Interpol.h" />
-    <ClInclude Include="src\IntSelection.h" />
-    <ClInclude Include="src\IntSelectionCall.h" />
-    <ClInclude Include="src\LayeredIsosurfaceRenderer.h" />
     <ClInclude Include="src\LIC.h" />
     <ClInclude Include="src\MappableCategoryFloat.h" />
     <ClInclude Include="src\MappableFloatPair.h" />
-    <ClInclude Include="src\MDDriverConnector.h" />
     <ClInclude Include="src\MolecularAOShader.h" />
-    <ClInclude Include="src\MolecularBezierData.h" />
     <ClInclude Include="src\MolecularSurfaceFeature.h" />
-    <ClInclude Include="src\MoleculeBallifier.h" />
-    <ClInclude Include="src\MoleculeCartoonRenderer.h" />
     <ClInclude Include="src\MoleculeCBCudaRenderer.h" />
     <ClInclude Include="src\MoleculeCudaSESRenderer.h" />
-    <ClInclude Include="src\MoleculeSequenceRenderer.h" />
-    <ClInclude Include="src\MoleculeSESRenderer.h" />
     <ClInclude Include="src\MoleculeVolumeCudaRenderer.h" />
-    <ClInclude Include="src\MultiParticleDataFilter.h" />
-    <ClInclude Include="src\MultiPDBLoader.h" />
     <ClInclude Include="src\ogl_error_check.h" />
-    <ClInclude Include="src\OpenBabelLoader.h" />
-    <ClInclude Include="src\ParticleDataCall.h" />
-    <ClInclude Include="src\particleSystem.cuh" />
-    <ClInclude Include="src\particles_kernel.cuh" />
-    <ClInclude Include="src\PDBInterpolator.h" />
-    <ClInclude Include="src\PDBLoader.h" />
-    <ClInclude Include="src\PDBWriter.h" />
-    <ClInclude Include="src\PhantomDeviceWrapper.h" />
     <ClInclude Include="src\PotentialCalculator.cuh" />
     <ClInclude Include="src\PotentialCalculator.h" />
     <ClInclude Include="src\PotentialVolumeRaycaster.h" />
     <ClInclude Include="src\ProteinVariantMatch.h" />
-    <ClInclude Include="src\ProteinVolumeRenderer.h" />
     <ClInclude Include="src\QuickSurfMTRenderer.h" />
     <ClInclude Include="src\QuickSurfRenderer.h" />
     <ClInclude Include="src\QuickSurfRenderer2.h" />
-    <ClInclude Include="src\Raw3DRelativeMouseInput.h" />
-    <ClInclude Include="src\ReducedSurface.h" />
-    <ClInclude Include="src\ReducedSurfaceSimplified.h" />
-    <ClInclude Include="src\Renderer3DModuleMouse.h" />
-    <ClInclude Include="src\ResidueSelection.h" />
-    <ClInclude Include="src\ResidueSelectionCall.h" />
     <ClInclude Include="src\RMS.h" />
-    <ClInclude Include="src\SecPlaneRenderer.h" />
-    <ClInclude Include="src\SequenceRenderer.h" />
-    <ClInclude Include="src\simple.h" />
-    <ClInclude Include="src\SimpleMoleculeRenderer.h" />
     <ClInclude Include="src\slicing.h" />
-    <ClInclude Include="src\SolPathDataCall.h" />
-    <ClInclude Include="src\SolPathDataSource.h" />
-    <ClInclude Include="src\SolPathRenderer.h" />
-    <ClInclude Include="src\SolventDataGenerator.h" />
-    <ClInclude Include="src\SolventVolumeRenderer.h" />
     <ClInclude Include="src\sort_triangles.cuh" />
-    <ClInclude Include="src\SphereDataCall.h" />
-    <ClInclude Include="src\SphereRenderer.h" />
-    <ClInclude Include="src\SphereRendererMouse.h" />
-    <ClInclude Include="src\SplitMergeCall.h" />
     <ClInclude Include="src\SplitMergeFeature.h" />
-    <ClInclude Include="src\SplitMergeRenderer.h" />
-    <ClInclude Include="src\SSAORendererDeferred.h" />
-    <ClInclude Include="src\state.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\Streamline.h" />
     <ClInclude Include="src\StreamlineRenderer.h" />
-    <ClInclude Include="src\Stride.h" />
     <ClInclude Include="src\SurfaceMappingTest.h" />
     <ClInclude Include="src\SurfacePotentialRendererSlave.h" />
     <ClInclude Include="src\tables.h" />
     <ClInclude Include="src\targetver.h" />
-    <ClInclude Include="src\ToonRendererDeferred.h" />
-    <ClInclude Include="src\TrajectorySmoothFilter.h" />
     <ClInclude Include="src\UniGrid3D.h" />
-    <ClInclude Include="src\UnstructuredGridRenderer.h" />
     <ClInclude Include="src\utilities.h" />
     <ClInclude Include="src\VariantMatchDataCall.h" />
-    <ClInclude Include="src\VariantMatchRenderer.h" />
     <ClInclude Include="src\VBODataCall.h" />
     <ClInclude Include="src\VecField3f.h" />
-    <ClInclude Include="src\View3DMouse.h" />
-    <ClInclude Include="src\View3DSpaceMouse.h" />
-    <ClInclude Include="src\vislib_vector_typedefs.h" />
-    <ClInclude Include="src\VMDDXLoader.h" />
-    <ClInclude Include="src\VolumeDirectionRenderer.h" />
     <ClInclude Include="src\VolumeMeshRenderer.cuh" />
     <ClInclude Include="src\VolumeMeshRenderer.h" />
-    <ClInclude Include="src\VolumeSliceCall.h" />
-    <ClInclude Include="src\VolumeSliceRenderer.h" />
-    <ClInclude Include="src\VTIDataCall.h" />
-    <ClInclude Include="src\VTILoader.h" />
-    <ClInclude Include="src\VTIWriter.h" />
-    <ClInclude Include="src\VTKImageData.h" />
-    <ClInclude Include="src\VTKLegacyDataCallUnstructuredGrid.h" />
-    <ClInclude Include="src\VTKLegacyDataLoaderUnstructuredGrid.h" />
-    <ClInclude Include="src\VTKLegacyDataUnstructuredGrid.h" />
     <ClInclude Include="src\WKFThreads.h" />
     <ClInclude Include="src\WKFUtils.h" />
-    <ClInclude Include="src\XYZLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AbstractGPUSurface.cpp" />
-    <ClCompile Include="src\AbstractVTKLegacyData.cpp" />
-    <ClCompile Include="src\AggregatedDensity.cpp" />
-    <ClCompile Include="src\Base64.cpp" />
-    <ClCompile Include="src\BindingSiteDataSource.cpp" />
-    <ClCompile Include="src\BSpline.cpp" />
-    <ClCompile Include="src\CallMouseInput.cpp" />
-    <ClCompile Include="src\CallProteinVolumeData.cpp" />
-    <ClCompile Include="src\CCP4VolumeData.cpp" />
     <ClCompile Include="src\CenterLineGenerator.cpp" />
-    <ClCompile Include="src\CoarseGrainDataLoader.cpp" />
     <ClCompile Include="src\Color.cpp" />
-    <ClCompile Include="src\ColorModule.cpp" />
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp" />
     <ClCompile Include="src\ComparativeMolSurfaceRenderer.cpp" />
     <ClCompile Include="src\ComparativeSurfacePotentialRenderer.cpp">
@@ -392,101 +286,31 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\CritPoints.cpp" />
-    <ClCompile Include="src\CrystalStructureDataCall.cpp" />
-    <ClCompile Include="src\CrystalStructureDataSource.cpp" />
     <ClCompile Include="src\CrystalStructureVolumeRenderer.cpp" />
     <ClCompile Include="src\DataWriter.cpp" />
-    <ClCompile Include="src\Diagram2DCall.cpp" />
-    <ClCompile Include="src\Diagram2DRenderer.cpp" />
-    <ClCompile Include="src\DiagramCall.cpp" />
-    <ClCompile Include="src\DiagramRenderer.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
-    <ClCompile Include="src\DofRendererDeferred.cpp" />
-    <ClCompile Include="src\ElectrostaticsRenderer.cpp" />
     <ClCompile Include="src\Filter.cpp" />
-    <ClCompile Include="src\ForceDataCall.cpp" />
-    <ClCompile Include="src\FrodockLoader.cpp" />
-    <ClCompile Include="src\GlButton.cpp" />
-    <ClCompile Include="src\GLSLVolumeRenderer.cpp" />
-    <ClCompile Include="src\GlWidgetLibrary.cpp" />
-    <ClCompile Include="src\gmx_system_xdr.c">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Default</CompileAs>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="src\GROLoader.cpp" />
-    <ClCompile Include="src\HapticsMoleculeRenderer.cpp" />
-    <ClCompile Include="src\Interpol.cpp" />
-    <ClCompile Include="src\IntSelection.cpp" />
-    <ClCompile Include="src\IntSelectionCall.cpp" />
-    <ClCompile Include="src\LayeredIsosurfaceRenderer.cpp" />
     <ClCompile Include="src\LIC.cpp" />
     <ClCompile Include="src\MappableCategoryFloat.cpp" />
     <ClCompile Include="src\MappableFloatPair.cpp" />
-    <ClCompile Include="src\MDDriverConnector.cpp" />
     <ClCompile Include="src\MolecularAOShader.cpp" />
-    <ClCompile Include="src\MolecularBezierData.cpp" />
     <ClCompile Include="src\MolecularSurfaceFeature.cpp" />
-    <ClCompile Include="src\MoleculeBallifier.cpp" />
-    <ClCompile Include="src\MoleculeCartoonRenderer.cpp" />
     <ClCompile Include="src\MoleculeCBCudaRenderer.cpp" />
     <ClCompile Include="src\MoleculeCudaSESRenderer.cpp" />
-    <ClCompile Include="src\MoleculeSequenceRenderer.cpp" />
-    <ClCompile Include="src\MoleculeSESRenderer.cpp" />
     <ClCompile Include="src\MoleculeVolumeCudaRenderer.cpp" />
-    <ClCompile Include="src\MultiParticleDataFilter.cpp" />
-    <ClCompile Include="src\MultiPDBLoader.cpp" />
-    <ClCompile Include="src\OpenBabelLoader.cpp" />
-    <ClCompile Include="src\ParticleDataCall.cpp" />
-    <ClCompile Include="src\PDBInterpolator.cpp" />
-    <ClCompile Include="src\PDBLoader.cpp" />
-    <ClCompile Include="src\PDBWriter.cpp" />
-    <ClCompile Include="src\PhantomDeviceWrapper.cpp" />
     <ClCompile Include="src\PotentialCalculator.cpp" />
     <ClCompile Include="src\PotentialVolumeRaycaster.cpp" />
     <ClCompile Include="src\Protein_CUDA.cpp" />
     <ClCompile Include="src\ProteinVariantMatch.cpp" />
-    <ClCompile Include="src\ProteinVolumeRenderer.cpp" />
     <ClCompile Include="src\QuickSurfMTRenderer.cpp" />
     <ClCompile Include="src\QuickSurfRenderer.cpp" />
     <ClCompile Include="src\QuickSurfRenderer2.cpp" />
-    <ClCompile Include="src\Raw3DRelativeMouseInput.cpp" />
-    <ClCompile Include="src\ReducedSurface.cpp" />
-    <ClCompile Include="src\ReducedSurfaceSimplified.cpp" />
-    <ClCompile Include="src\Renderer3DModuleMouse.cpp" />
-    <ClCompile Include="src\ResidueSelection.cpp" />
-    <ClCompile Include="src\ResidueSelectionCall.cpp" />
     <ClCompile Include="src\RMS.cpp" />
-    <ClCompile Include="src\SecPlaneRenderer.cpp" />
-    <ClCompile Include="src\SequenceRenderer.cpp" />
-    <ClCompile Include="src\SimpleMoleculeRenderer.cpp" />
     <ClCompile Include="src\slicing.cpp" />
-    <ClCompile Include="src\SolPathDataCall.cpp" />
-    <ClCompile Include="src\SolPathDataSource.cpp" />
-    <ClCompile Include="src\SolPathRenderer.cpp" />
-    <ClCompile Include="src\SolventDataGenerator.cpp" />
-    <ClCompile Include="src\SolventVolumeRenderer.cpp" />
-    <ClCompile Include="src\SphereDataCall.cpp" />
-    <ClCompile Include="src\SphereRenderer.cpp" />
-    <ClCompile Include="src\SphereRendererMouse.cpp" />
-    <ClCompile Include="src\SplitMergeCall.cpp" />
     <ClCompile Include="src\SplitMergeFeature.cpp" />
-    <ClCompile Include="src\SplitMergeRenderer.cpp" />
-    <ClCompile Include="src\SSAORendererDeferred.cpp" />
-    <ClCompile Include="src\stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="src\stdafx.cpp" />
     <ClCompile Include="src\Streamline.cpp" />
     <ClCompile Include="src\StreamlineRenderer.cpp" />
-    <ClCompile Include="src\Stride.cpp" />
     <ClCompile Include="src\SurfaceMappingTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -494,31 +318,13 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\SurfacePotentialRendererSlave.cpp" />
-    <ClCompile Include="src\ToonRendererDeferred.cpp" />
-    <ClCompile Include="src\TrajectorySmoothFilter.cpp" />
     <ClCompile Include="src\UniGrid3D.cpp" />
-    <ClCompile Include="src\UnstructuredGridRenderer.cpp" />
     <ClCompile Include="src\VariantMatchDataCall.cpp" />
-    <ClCompile Include="src\VariantMatchRenderer.cpp" />
     <ClCompile Include="src\VBODataCall.cpp" />
     <ClCompile Include="src\VecField3f.cpp" />
-    <ClCompile Include="src\View3DMouse.cpp" />
-    <ClCompile Include="src\View3DSpaceMouse.cpp" />
-    <ClCompile Include="src\VMDDXLoader.cpp" />
-    <ClCompile Include="src\VolumeDirectionRenderer.cpp" />
     <ClCompile Include="src\VolumeMeshRenderer.cpp" />
-    <ClCompile Include="src\VolumeSliceCall.cpp" />
-    <ClCompile Include="src\VolumeSliceRenderer.cpp" />
-    <ClCompile Include="src\VTIDataCall.cpp" />
-    <ClCompile Include="src\VTILoader.cpp" />
-    <ClCompile Include="src\VTIWriter.cpp" />
-    <ClCompile Include="src\VTKImageData.cpp" />
-    <ClCompile Include="src\VTKLegacyDataCallUnstructuredGrid.cpp" />
-    <ClCompile Include="src\VTKLegacyDataLoaderUnstructuredGrid.cpp" />
-    <ClCompile Include="src\VTKLegacyDataUnstructuredGrid.cpp" />
     <ClCompile Include="src\WKFThreads.cpp" />
     <ClCompile Include="src\WKFUtils.cpp" />
-    <ClCompile Include="src\XYZLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\ComparativeSurfacePotentialRenderer.cu">

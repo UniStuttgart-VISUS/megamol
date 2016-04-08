@@ -4,7 +4,7 @@
 namespace megamol {
 namespace protein_cuda {
 
-SplitMergeFeature::SplitMergeFeature( float maxT, vislib::math::Vector<float, 3> pos) : SplitMergeCall::SplitMergeMappable(),
+SplitMergeFeature::SplitMergeFeature(float maxT, vislib::math::Vector<float, 3> pos) : core::moldyn::SplitMergeCall::SplitMergeMappable(),
         data(), maxTime( maxT), maxSurfaceArea( 0.0f), position( pos) {
     data.AssertCapacity( 1000);
     data.SetCapacityIncrement( 100);

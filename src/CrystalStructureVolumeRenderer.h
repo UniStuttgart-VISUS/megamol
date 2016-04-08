@@ -12,7 +12,7 @@
 #ifndef MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
 #define MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
 
-#include "CrystalStructureDataCall.h"
+#include "mmcore/moldyn/CrystalStructureDataCall.h"
 #include "CUDACurl.cuh"
 #include "UniGrid3D.h"
 #include "CUDAMarchingCubes.h"
@@ -106,7 +106,7 @@ protected:
      *
      * @param[in] dc The data call
      */
-    void ApplyPosFilter(const CrystalStructureDataCall *dc);
+    void ApplyPosFilter(const core::moldyn::CrystalStructureDataCall *dc);
 
     /**
      * Calculate density map after filtering dipole vectors and setup density
@@ -116,7 +116,7 @@ protected:
      * @param[in] atomPos The atom positions
      * @return 'True' on success, 'false' otherwise
      */
-    bool CalcDensityTex(const CrystalStructureDataCall *dc,
+    bool CalcDensityTex(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos);
 
     /**
@@ -134,7 +134,7 @@ protected:
      * @param[in] atomCol The atom colors (may be NULL)
      * @return True, if the displacement map could be calculated.
      */
-    bool CalcUniGrid(const CrystalStructureDataCall *dc,
+    bool CalcUniGrid(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos, const float *col);
 
     /**
@@ -175,7 +175,7 @@ protected:
      * @param[in] dc      The data call
      * @param[in] atomPos The atom positions
      */
-    void FilterVecField(const CrystalStructureDataCall *dc,
+    void FilterVecField(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos);
 
     /**
@@ -226,7 +226,7 @@ protected:
      * @param[in] atomCol The atom colors (may be NULL)
      * @return 'True' on success, 'false' otherwise
      */
-    bool RenderVecFieldArrows(const CrystalStructureDataCall *dc,
+    bool RenderVecFieldArrows(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos, const float *col);
 
     /**
@@ -234,14 +234,14 @@ protected:
      *
      * @param[in] dc The data call
      */
-    void RenderAtomsSpheres (const CrystalStructureDataCall *dc);
+	void RenderAtomsSpheres(const core::moldyn::CrystalStructureDataCall *dc);
 
     /**
      * Render critical points as spheres.
      *
      * @param[in] dc The data call
      */
-    void RenderCritPointsSpheres(const CrystalStructureDataCall *dc);
+	void RenderCritPointsSpheres(const core::moldyn::CrystalStructureDataCall *dc);
 
     /**
      * Render edges between Ba atoms as lines.
@@ -250,7 +250,7 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors (may be NULL)
      */
-    void RenderEdgesBaLines(const CrystalStructureDataCall *dc,
+	void RenderEdgesBaLines(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos, const float *atomCol);
 
     /**
@@ -261,7 +261,7 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors
      */
-    void RenderEdgesBaStick(const CrystalStructureDataCall *dc,
+	void RenderEdgesBaStick(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos, const float *atomCol);
 
     /**
@@ -271,7 +271,7 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors
      */
-    void RenderEdgesTiLines(const CrystalStructureDataCall *dc,
+	void RenderEdgesTiLines(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos, const float *atomCol);
 
     /**
@@ -282,7 +282,7 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors
      */
-    void RenderEdgesTiStick(const CrystalStructureDataCall *dc,
+	void RenderEdgesTiStick(const core::moldyn::CrystalStructureDataCall *dc,
             const float *atomPos, const float *atomCol);
 
     /**
@@ -310,7 +310,7 @@ protected:
      * @param[in] dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-    bool SetupAtomColors(const CrystalStructureDataCall *dc);
+	bool SetupAtomColors(const core::moldyn::CrystalStructureDataCall *dc);
 
     /**
      * Update all parameters if necessary.
@@ -318,7 +318,7 @@ protected:
      * @param[in] dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-    bool UpdateParams(const CrystalStructureDataCall *dc);
+	bool UpdateParams(const core::moldyn::CrystalStructureDataCall *dc);
 
 private:
 

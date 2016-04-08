@@ -17,7 +17,7 @@
 //#define VERBOSE
 
 #include "VBODataCall.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "RMS.h"
 #include "ogl_error_check.h"
@@ -1462,20 +1462,20 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     }
 
     // Get pointer to potential map data call
-    protein_cuda::VTIDataCall *cmd0 =
-            this->volDataSlot1.CallAs<protein_cuda::VTIDataCall>();
+    core::moldyn::VTIDataCall *cmd0 =
+            this->volDataSlot1.CallAs<core::moldyn::VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
-    if (!(*cmd0)(VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd0)(core::moldyn::VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    protein_cuda::VTIDataCall *cmd1 =
-            this->volDataSlot2.CallAs<protein_cuda::VTIDataCall>();
+    core::moldyn::VTIDataCall *cmd1 =
+            this->volDataSlot2.CallAs<core::moldyn::VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }
-    if (!(*cmd1)(VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd1)(core::moldyn::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -1654,20 +1654,20 @@ bool ComparativeMolSurfaceRenderer::getVBOExtent(core::Call& call) {
     c->SetBBox(this->bbox);
 
     // Get pointer to potential map data call
-    protein_cuda::VTIDataCall *cmd0 =
-            this->volDataSlot1.CallAs<protein_cuda::VTIDataCall>();
+    core::moldyn::VTIDataCall *cmd0 =
+            this->volDataSlot1.CallAs<core::moldyn::VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
-    if (!(*cmd0)(VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd0)(core::moldyn::VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    protein_cuda::VTIDataCall *cmd1 =
-            this->volDataSlot2.CallAs<protein_cuda::VTIDataCall>();
+    core::moldyn::VTIDataCall *cmd1 =
+            this->volDataSlot2.CallAs<core::moldyn::VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }
-    if (!(*cmd1)(VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd1)(core::moldyn::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 

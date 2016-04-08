@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "DiagramCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/math/Vector.h"
@@ -22,7 +22,7 @@ namespace protein_cuda {
     /**
      * Molecular Surface Feature
      */
-    class MolecularSurfaceFeature : public DiagramCall::DiagramMappable
+    class MolecularSurfaceFeature : public core::moldyn::DiagramCall::DiagramMappable
     {
     public:
         MolecularSurfaceFeature( float maxT, vislib::math::Vector<float, 3> pos = vislib::math::Vector<float, 3>(0, 0, 0));

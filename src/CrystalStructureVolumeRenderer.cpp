@@ -157,7 +157,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
 
     // Data caller slot
-    this->dataCallerSlot.SetCompatibleCall<CrystalStructureDataCallDescription>();
+	this->dataCallerSlot.SetCompatibleCall<core::moldyn::CrystalStructureDataCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
     // General params
@@ -580,7 +580,7 @@ protein_cuda::CrystalStructureVolumeRenderer::~CrystalStructureVolumeRenderer (v
  * protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
-        const CrystalStructureDataCall *dc,
+		const core::moldyn::CrystalStructureDataCall *dc,
         const float *atomPos) {
 
 #if (defined(CALC_GRID) && (CALC_GRID))
@@ -999,7 +999,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
  * protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
-        const CrystalStructureDataCall *dc,
+		const core::moldyn::CrystalStructureDataCall *dc,
         const float *atomPos,
         const float *col) {
 
@@ -1183,7 +1183,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
  * protein_cuda::CrystalStructureRenderer::ApplyPosFilter
  */
 void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
-        const CrystalStructureDataCall *dc) {
+		const core::moldyn::CrystalStructureDataCall *dc) {
 
     using namespace vislib::sys;
 
@@ -1246,11 +1246,11 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
         for(int n = 0; n < 6; n++) { // Examine all six potential edges
             if(dc->GetAtomCon()[cnt*6+n] != -1) {
                 if(this->visAtom[dc->GetAtomCon()[cnt*6+n]]) {
-                    if(dc->GetAtomType()[cnt] == CrystalStructureDataCall::BA) {
+					if(dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::BA) {
                         this->edgeIdxBa.Add(cnt);
                         this->edgeIdxBa.Add(dc->GetAtomCon()[cnt*6+n]);
                     }
-                    if(dc->GetAtomType()[cnt] == CrystalStructureDataCall::TI) {
+					if(dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::TI) {
                         this->edgeIdxTi.Add(cnt);
                         this->edgeIdxTi.Add(dc->GetAtomCon()[cnt*6+n]);
                     }
@@ -1588,7 +1588,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::FreeBuffs() {
  * protein_cuda::CrystalStructureVolumeRenderer::FilterVecField
  */
 void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
-        const CrystalStructureDataCall *dc,
+		const core::moldyn::CrystalStructureDataCall *dc,
         const float *atomPos) {
 
     using namespace vislib::math;
@@ -1703,15 +1703,15 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
 #endif
 
             if(dc->GetDipoleCnt() == 625000) { // Filter by atom type
-            	if((!this->showBaAtoms)&&(dc->GetAtomType()[cnt] == CrystalStructureDataCall::BA)) {
+				if ((!this->showBaAtoms) && (dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::BA)) {
                     this->arrowVis[cnt] = false;
                     continue;
             	}
-            	if((!this->showOAtoms)&&(dc->GetAtomType()[cnt] == CrystalStructureDataCall::O)) {
+				if ((!this->showOAtoms) && (dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::O)) {
                     this->arrowVis[cnt] = false;
                     continue;
             	}
-            	if((!this->showTiAtoms)&&(dc->GetAtomType()[cnt] == CrystalStructureDataCall::TI)) {
+				if ((!this->showTiAtoms) && (dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::TI)) {
                     this->arrowVis[cnt] = false;
                     continue;
             	}
@@ -1746,10 +1746,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) 
     core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
     if (cr3d == NULL) return false;
 
-    protein_cuda::CrystalStructureDataCall *dc =
-            this->dataCallerSlot.CallAs<protein_cuda::CrystalStructureDataCall>();
+	core::moldyn::CrystalStructureDataCall *dc =
+			this->dataCallerSlot.CallAs<core::moldyn::CrystalStructureDataCall>();
     if(dc == NULL) return false;
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) return false;
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) return false;
 
     float scale;
     if(!vislib::math::IsEqual(dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
@@ -1880,8 +1880,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     }
 #endif
 
-    protein_cuda::CrystalStructureDataCall *dc =
-            this->dataCallerSlot.CallAs<protein_cuda::CrystalStructureDataCall>();
+	core::moldyn::CrystalStructureDataCall *dc =
+			this->dataCallerSlot.CallAs<core::moldyn::CrystalStructureDataCall>();
     if (dc == NULL) {
         return false;
     }
@@ -1914,7 +1914,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     dc->SetFrameID(static_cast<int>(callTime), true);      // Set frame ID and force flag
 
     // Don't remove this !!
-    if (!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -1932,7 +1932,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     this->callTimeOld = callTime;
 
     // Current frame
-    if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
         return false;
     }
 
@@ -1958,7 +1958,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
                 dc->SetCalltime(static_cast<float>(dc->FrameID()));
             }
             // Current frame
-            if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+			if(!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
                 return false;
             }
             memcpy(this->frame1, dc->GetAtomPos(), dc->GetAtomCnt()*3*sizeof(float));
@@ -2002,11 +2002,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
             }
 
             // Van der waals radii
-            if(dc->GetAtomType()[cnt] == CrystalStructureDataCall::BA)
+			if(dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::BA)
                 this->posInter[4*cnt+3] = 2.68f*this->sphereRad;
-            else if(dc->GetAtomType()[cnt] == CrystalStructureDataCall::O)
+			else if(dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::O)
                 this->posInter[4*cnt+3] = 1.20f*this->sphereRad;
-            else if(dc->GetAtomType()[cnt] == CrystalStructureDataCall::TI)
+			else if(dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::TI)
                 this->posInter[4*cnt+3] = 1.47f*this->sphereRad;
         }
         this->recalcPosInter = false;
@@ -2413,7 +2413,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
  * protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
-        const CrystalStructureDataCall *dc,
+		const core::moldyn::CrystalStructureDataCall *dc,
         const float *atomPos,
         const float *col) {
 
@@ -2612,7 +2612,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
-        const CrystalStructureDataCall *dc) {
+		const core::moldyn::CrystalStructureDataCall *dc) {
 
     float viewportStuff[4] = {
             cameraInfo->TileRect().Left(),
@@ -2658,7 +2658,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
  * protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
-        const CrystalStructureDataCall *dc) {
+		const core::moldyn::CrystalStructureDataCall *dc) {
     using namespace vislib::math;
 
     glDisable(GL_BLEND);
@@ -2752,7 +2752,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
-        const CrystalStructureDataCall *dc, const float *atomPos,
+		const core::moldyn::CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
     glDisable(GL_BLEND);
@@ -2776,7 +2776,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
-        const CrystalStructureDataCall *dc, const float *atomPos,
+		const core::moldyn::CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
     int cnt, idx0, idx1;
@@ -2905,7 +2905,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
-        const CrystalStructureDataCall *dc, const float *atomPos,
+		const core::moldyn::CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
     glDisable(GL_BLEND);
@@ -2929,7 +2929,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
-        const CrystalStructureDataCall *dc, const float *atomPos,
+		const core::moldyn::CrystalStructureDataCall *dc, const float *atomPos,
         const float *atomCol) {
 
     int cnt, idx0, idx1;
@@ -3517,22 +3517,22 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
 
 
 bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(
-        const CrystalStructureDataCall *dc) {
+		const core::moldyn::CrystalStructureDataCall *dc) {
 
     this->atomColor.SetCount(dc->GetAtomCnt()*3);
 #pragma omp parallel for
     for(int at = 0; at < dc->GetAtomCnt(); at++) {
-        if(dc->GetAtomType()[at] == CrystalStructureDataCall::BA) { // Green
+		if (dc->GetAtomType()[at] == core::moldyn::CrystalStructureDataCall::BA) { // Green
             this->atomColor[at*3+0] = 0.0f;
             this->atomColor[at*3+1] = 0.6f;
             this->atomColor[at*3+2] = 0.4f;
         }
-        else if(dc->GetAtomType()[at] == CrystalStructureDataCall::TI) { // Light grey
+		else if (dc->GetAtomType()[at] == core::moldyn::CrystalStructureDataCall::TI) { // Light grey
             this->atomColor[at*3+0] = 0.8f;
             this->atomColor[at*3+1] = 0.8f;
             this->atomColor[at*3+2] = 0.8f;
         }
-        else if(dc->GetAtomType()[at] == CrystalStructureDataCall::O) { // Red
+		else if (dc->GetAtomType()[at] == core::moldyn::CrystalStructureDataCall::O) { // Red
             this->atomColor[at*3+0] = 1.0f;
             this->atomColor[at*3+1] = 0.0f;
             this->atomColor[at*3+2] = 0.0f;
@@ -3552,7 +3552,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(
  * protein_cuda::CrystalStructureVolumeRenderer::updateParams
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
-        const CrystalStructureDataCall *dc) {
+		const core::moldyn::CrystalStructureDataCall *dc) {
 
     // General params
 

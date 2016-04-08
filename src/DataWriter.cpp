@@ -51,7 +51,7 @@ protein_cuda::DataWriter::DataWriter() :
         addedPos(NULL),
         addedTiDispl(NULL){
 
-    this->dataCallerSlot.SetCompatibleCall<CrystalStructureDataCallDescription>();
+	this->dataCallerSlot.SetCompatibleCall<core::moldyn::CrystalStructureDataCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
     this->numvoxels[0] = 128;
@@ -100,7 +100,7 @@ bool protein_cuda::DataWriter::IsRunning(void) const {
 bool protein_cuda::DataWriter::Start(void) {
     using namespace vislib::sys;
 
-    CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<CrystalStructureDataCall>();
+	core::moldyn::CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<core::moldyn::CrystalStructureDataCall>();
     if(dc == NULL) {
         this->jobDone = true;
         return false;
@@ -134,14 +134,14 @@ bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0,
     using namespace vislib::sys;
     float gridspacing = 1.0f;
 
-    CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<CrystalStructureDataCall>();
+	core::moldyn::CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<core::moldyn::CrystalStructureDataCall>();
     if(dc == NULL) {
         this->jobDone = true;
         return false;
     }
 
     // Get extend
-    if (!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -183,7 +183,7 @@ bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0,
         // Get data from data source
         dc->SetFrameID(fr, true);
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             this->jobDone = true;
             return false;
         }
@@ -358,14 +358,14 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
     using namespace vislib::sys;
 
-    CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<CrystalStructureDataCall>();
+	core::moldyn::CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<core::moldyn::CrystalStructureDataCall>();
     if(dc == NULL) {
         this->jobDone = true;
         return false;
     }
 
     // Get extend
-    if (!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -461,14 +461,14 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0,
         unsigned int frameIdx1, unsigned int avgOffs) {
     using namespace vislib::sys;
 
-    CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<CrystalStructureDataCall>();
+	core::moldyn::CrystalStructureDataCall *dc = this->dataCallerSlot.CallAs<core::moldyn::CrystalStructureDataCall>();
     if(dc == NULL) {
         this->jobDone = true;
         return false;
     }
 
     // Get extend
-    if (!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -555,7 +555,7 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0,
 /*
  * protein_cuda::DataWriter::calcMapDisplacement
  */
-bool protein_cuda::DataWriter::CalcMapDipoleAvg(CrystalStructureDataCall *dc,
+bool protein_cuda::DataWriter::CalcMapDipoleAvg(core::moldyn::CrystalStructureDataCall *dc,
         int offset,
         int quality,
         float radscale,
@@ -604,7 +604,7 @@ bool protein_cuda::DataWriter::CalcMapDipoleAvg(CrystalStructureDataCall *dc,
         // Get data from data source
         dc->SetFrameID(fr, true);
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             this->jobDone = true;
             return false;
         }
@@ -719,7 +719,7 @@ bool protein_cuda::DataWriter::CalcMapDipoleAvg(CrystalStructureDataCall *dc,
 /*
  * protein_cuda::DataWriter::CalcMapTiDisplAvg
  */
-bool protein_cuda::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
+bool protein_cuda::DataWriter::CalcMapTiDisplAvg(core::moldyn::CrystalStructureDataCall *dc,
         int offset,
         int quality,
         float radscale,
@@ -740,7 +740,7 @@ bool protein_cuda::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
 
 
     // Get data from data source
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -756,7 +756,7 @@ bool protein_cuda::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
 
 
     // Get data from data source
-    if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
         this->jobDone = true;
         return false;
     }
@@ -768,7 +768,7 @@ bool protein_cuda::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
         dc->SetFrameID(dc->FrameID()-offset, true);
     }
     dc->SetCalltime(static_cast<float>(dc->FrameID()));
-    if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
         this->jobDone = true;
         return false;
     }
@@ -842,7 +842,7 @@ bool protein_cuda::DataWriter::CalcMapTiDisplAvg(CrystalStructureDataCall *dc,
 /*
  * protein_cuda::DataWriter::GetNearestDistTi
  */
-float protein_cuda::DataWriter::GetNearestDistTi(CrystalStructureDataCall *dc,
+float protein_cuda::DataWriter::GetNearestDistTi(core::moldyn::CrystalStructureDataCall *dc,
         int idx) {
 
     float *ti = new float[dc->GetCellCnt()*3];
@@ -990,13 +990,13 @@ bool protein_cuda::DataWriter::writeFrame2VTKLegacy(unsigned int frameIdx,
  * protein_cuda::DataWriter::PutAvgCellLength
  */
 bool protein_cuda::DataWriter::PutAvgCellLengthAlt(unsigned int idxStart, unsigned int idxEnd,
-        CrystalStructureDataCall *dc) {
+		core::moldyn::CrystalStructureDataCall *dc) {
     using namespace vislib;
     using namespace vislib::math;
     std::ofstream outputStr;
     std::ofstream outputStr1;
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -1030,7 +1030,7 @@ bool protein_cuda::DataWriter::PutAvgCellLengthAlt(unsigned int idxStart, unsign
         // Get data from data source
         dc->SetFrameID(cnt, true);
         dc->SetCalltime(static_cast<float>(cnt));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             this->jobDone = true;
             return false;
         }
@@ -1192,7 +1192,7 @@ bool protein_cuda::DataWriter::PutAvgCellLengthAlt(unsigned int idxStart, unsign
  * protein_cuda::DataWriter::PutAvgCellLength
  */
 bool protein_cuda::DataWriter::PutAvgCellLength(unsigned int idxStart, unsigned int offs,
-        CrystalStructureDataCall *dc) {
+		core::moldyn::CrystalStructureDataCall *dc) {
     using namespace vislib;
     using namespace vislib::math;
 
@@ -1204,7 +1204,7 @@ bool protein_cuda::DataWriter::PutAvgCellLength(unsigned int idxStart, unsigned 
     unsigned int atmIdx[15]; // Atom indices of the cell
 
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -1230,7 +1230,7 @@ bool protein_cuda::DataWriter::PutAvgCellLength(unsigned int idxStart, unsigned 
             // Get data from data source
             dc->SetFrameID(fr, true);                         // Set 'force' flag
             dc->SetCalltime(static_cast<float>(fr));
-            if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+			if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
                 return false;
             }
 
@@ -1340,12 +1340,12 @@ float protein_cuda::DataWriter::CalcCellVolume(
 /*
  * protein_cuda::DataWriter::WriteFrameFileBinAvg
  */
-bool protein_cuda::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc) {
+bool protein_cuda::DataWriter::WriteFrameFileBinAvg(core::moldyn::CrystalStructureDataCall *dc) {
 
     const unsigned int NATOMS = 625000;
 
     // Get data from data source
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -1381,7 +1381,7 @@ bool protein_cuda::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc
         // Get data from data source
         dc->SetFrameID(fr, true);                         // Set 'force' flag
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             return false;
         }
 
@@ -1402,7 +1402,7 @@ bool protein_cuda::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc
         // Subtract last frame
         dc->SetFrameID(w-1, true);                         // Set 'force' flag
         dc->SetCalltime(static_cast<float>(w-1));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             return false;
         }
 #pragma omp parallel for
@@ -1416,7 +1416,7 @@ bool protein_cuda::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc
         // Add new frame
         dc->SetFrameID(w+avgOffset-1, true);                         // Set 'force' flag
         dc->SetCalltime(static_cast<float>(w+avgOffset-1));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             return false;
         }
 #pragma omp parallel for
@@ -1441,11 +1441,11 @@ bool protein_cuda::DataWriter::WriteFrameFileBinAvg(CrystalStructureDataCall *dc
  * protein_cuda::DataWriter::PutCubeSize
  */
 bool protein_cuda::DataWriter::PutCubeSize(unsigned int frIdx0, unsigned int frIdx1,
-        CrystalStructureDataCall *dc) {
+		core::moldyn::CrystalStructureDataCall *dc) {
 
     using namespace vislib::math;
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -1454,7 +1454,7 @@ bool protein_cuda::DataWriter::PutCubeSize(unsigned int frIdx0, unsigned int frI
         // Get data of the frame
         dc->SetFrameID(fr, true);                         // Set 'force' flag
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             return false;
         }
         // Find Min and Max coords
@@ -1499,12 +1499,12 @@ bool protein_cuda::DataWriter::PutCubeSize(unsigned int frIdx0, unsigned int frI
  * protein_cuda::DataWriter::WriteTiDispl
  */
 bool protein_cuda::DataWriter::ReadTiDispl(
-        CrystalStructureDataCall *dc) {
+		core::moldyn::CrystalStructureDataCall *dc) {
 
     std::fstream inStr;
     std::string inFile = "avg25TiDispl.bin";
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -1538,12 +1538,12 @@ bool protein_cuda::DataWriter::ReadTiDispl(
  * protein_cuda::DataWriter::ReadDipole
  */
 bool protein_cuda::DataWriter::ReadTiODipole(
-        CrystalStructureDataCall *dc) {
+		core::moldyn::CrystalStructureDataCall *dc) {
 
     std::fstream inStr;
     std::string inFile = "TiODipole_avg25.bin";
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -1577,13 +1577,13 @@ bool protein_cuda::DataWriter::ReadTiODipole(
  * protein_cuda::DataWriter::WriteTiDispl
  */
 bool protein_cuda::DataWriter::WriteTiDispl(
-        CrystalStructureDataCall *dc) {
+		core::moldyn::CrystalStructureDataCall *dc) {
 
 
     using namespace vislib::math;
 
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -1612,7 +1612,7 @@ bool protein_cuda::DataWriter::WriteTiDispl(
     // Get data of the first frame
     dc->SetFrameID(0, true);  // Set 'force' flag
     dc->SetCalltime(0.0f);
-    if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
         return false;
     }
 
@@ -1696,7 +1696,7 @@ bool protein_cuda::DataWriter::WriteTiDispl(
         // Get data of the first frame
         dc->SetFrameID(fr, true);  // Set 'force' flag
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             break;
         }
 
@@ -1727,13 +1727,13 @@ bool protein_cuda::DataWriter::WriteTiDispl(
  * protein_cuda::DataWriter::WriteTiODipole
  */
 bool protein_cuda::DataWriter::WriteTiODipole(
-        CrystalStructureDataCall *dc) {
+		core::moldyn::CrystalStructureDataCall *dc) {
 
 
     using namespace vislib::math;
 
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -1762,7 +1762,7 @@ bool protein_cuda::DataWriter::WriteTiODipole(
     // Get data of the first frame
     dc->SetFrameID(0, true);  // Set 'force' flag
     dc->SetCalltime(0.0f);
-    if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
         return false;
     }
 
@@ -1847,7 +1847,7 @@ bool protein_cuda::DataWriter::WriteTiODipole(
         // Get data of the first frame
         dc->SetFrameID(fr, true);  // Set 'force' flag
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             break;
         }
 
@@ -2013,12 +2013,12 @@ void protein_cuda::DataWriter::PutVelocity() {
 }
 
 
-void protein_cuda::DataWriter::PutDisplacement(CrystalStructureDataCall *dc) {
+void protein_cuda::DataWriter::PutDisplacement(core::moldyn::CrystalStructureDataCall *dc) {
     using namespace vislib::math;
 
     unsigned int frameWin = 0;
 
-    if(!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
     }
 
@@ -2030,7 +2030,7 @@ void protein_cuda::DataWriter::PutDisplacement(CrystalStructureDataCall *dc) {
         // Get data of the first frame
         dc->SetFrameID(fr, true);  // Set 'force' flag
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             return;
         }
 
@@ -2041,7 +2041,7 @@ void protein_cuda::DataWriter::PutDisplacement(CrystalStructureDataCall *dc) {
                                dc->GetDipole()[3*cnt+2]*dc->GetDipole()[3*cnt+2]);
                 avgCnt++;
             //}*/
-            if(dc->GetAtomType()[cnt] == CrystalStructureDataCall::TI) {
+			if (dc->GetAtomType()[cnt] == core::moldyn::CrystalStructureDataCall::TI) {
                 mag = sqrt(dc->GetDipole()[3*cnt+0]*dc->GetDipole()[3*cnt+0] +
                                dc->GetDipole()[3*cnt+1]*dc->GetDipole()[3*cnt+1] +
                                dc->GetDipole()[3*cnt+2]*dc->GetDipole()[3*cnt+2]);
@@ -2060,7 +2060,7 @@ void protein_cuda::DataWriter::PutDisplacement(CrystalStructureDataCall *dc) {
 }
 
 
-bool protein_cuda::DataWriter::GetMaxCoords(CrystalStructureDataCall *dc) {
+bool protein_cuda::DataWriter::GetMaxCoords(core::moldyn::CrystalStructureDataCall *dc) {
 
     using namespace vislib::sys;
 
@@ -2070,7 +2070,7 @@ bool protein_cuda::DataWriter::GetMaxCoords(CrystalStructureDataCall *dc) {
     }
 
     // Get extend
-    if (!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -2084,7 +2084,7 @@ bool protein_cuda::DataWriter::GetMaxCoords(CrystalStructureDataCall *dc) {
         // Get data from data source
         dc->SetFrameID(fr, true);
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             this->jobDone = true;
             return false;
         }
@@ -2103,7 +2103,7 @@ bool protein_cuda::DataWriter::GetMaxCoords(CrystalStructureDataCall *dc) {
 }
 
 
-bool protein_cuda::DataWriter::PutCubeVol(CrystalStructureDataCall *dc) {
+bool protein_cuda::DataWriter::PutCubeVol(core::moldyn::CrystalStructureDataCall *dc) {
 
     using namespace vislib::sys;
 
@@ -2113,7 +2113,7 @@ bool protein_cuda::DataWriter::PutCubeVol(CrystalStructureDataCall *dc) {
     }
 
     // Get extend
-    if (!(*dc)(CrystalStructureDataCall::CallForGetExtent)) {
+	if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetExtent)) {
         this->jobDone = true;
         return false;
     }
@@ -2132,7 +2132,7 @@ bool protein_cuda::DataWriter::PutCubeVol(CrystalStructureDataCall *dc) {
         // Get data from data source
         dc->SetFrameID(fr, true);
         dc->SetCalltime(static_cast<float>(fr));
-        if(!(*dc)(CrystalStructureDataCall::CallForGetData)) {
+		if (!(*dc)(core::moldyn::CrystalStructureDataCall::CallForGetData)) {
             this->jobDone = true;
             return false;
         }

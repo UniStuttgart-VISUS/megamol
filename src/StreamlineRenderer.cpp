@@ -14,11 +14,11 @@
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
 #include "VBODataCall.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "cuda_error_check.h"
 #include "ogl_error_check.h"
 #include "CUDAFieldTopology.cuh"
-#include "Interpol.h"
+#include "mmcore/moldyn/Interpol.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/math/Cuboid.h"
@@ -64,7 +64,7 @@ StreamlineRenderer::StreamlineRenderer(void) : Renderer3DModuleDS(),
         triggerComputeGradientField(true), triggerComputeStreamlines(true) {
 
     // Data caller for volume data
-    this->fieldDataCallerSlot.SetCompatibleCall<VTIDataCallDescription>();
+    this->fieldDataCallerSlot.SetCompatibleCall<core::moldyn::VTIDataCallDescription>();
     this->MakeSlotAvailable(&this->fieldDataCallerSlot);
 
     // Data caller for clipping plane
@@ -258,14 +258,14 @@ bool StreamlineRenderer::GetExtents(core::Call& call) {
 
     // Extent of volume data
 
-    VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<VTIDataCall>();
-    if (!(*vtiCall)(VTIDataCall::CallForGetExtent)) {
+	core::moldyn::VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
+	if (!(*vtiCall)(core::moldyn::VTIDataCall::CallForGetExtent)) {
          return false;
     }
 
     vtiCall->SetCalltime(cr3d->Time());
     vtiCall->SetFrameID(static_cast<int>(cr3d->Time()));
-    if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
+	if (!(*vtiCall)(core::moldyn::VTIDataCall::CallForGetData)) {
          return false;
     }
 
@@ -299,14 +299,14 @@ bool StreamlineRenderer::Render(core::Call& call) {
         return false;
     }
 
-    VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<VTIDataCall>();
+	core::moldyn::VTIDataCall *vtiCall = this->fieldDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
     if (vtiCall == NULL) {
         return false;
     }
 
     // Get volume data
     vtiCall->SetCalltime(cr3d->Time());
-    if (!(*vtiCall)(VTIDataCall::CallForGetData)) {
+	if (!(*vtiCall)(core::moldyn::VTIDataCall::CallForGetData)) {
          return false;
     }
 
@@ -430,7 +430,7 @@ bool StreamlineRenderer::Render(core::Call& call) {
  * StreamlineRenderer::genSeedPoints
  */
 void StreamlineRenderer::genSeedPoints(
-        VTIDataCall *vti, float zClip, float isoval) {
+		core::moldyn::VTIDataCall *vti, float zClip, float isoval) {
 
 
     float posZ= vti->GetOrigin().GetZ() + zClip; // Start above the lower boundary
@@ -471,7 +471,7 @@ void StreamlineRenderer::genSeedPoints(
 /*
  * StreamlineRenderer::sampleFieldAtPosTrilin
  */
-float StreamlineRenderer::sampleFieldAtPosTrilin(VTIDataCall *vtiCall, float3 pos, float *field_D) {
+float StreamlineRenderer::sampleFieldAtPosTrilin(core::moldyn::VTIDataCall *vtiCall, float3 pos, float *field_D) {
 
     int3 c;
     float3 f;
@@ -514,7 +514,7 @@ float StreamlineRenderer::sampleFieldAtPosTrilin(VTIDataCall *vtiCall, float3 po
     s[7] = field_D[gridSize_D.x*(gridSize_D.y*(c.z+1) + (c.y+1))+c.x+1];
 
     // Use trilinear interpolation to sample the volume
-   return Interpol::Trilin(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], f.x, f.y, f.z);
+	return core::moldyn::Interpol::Trilin(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], f.x, f.y, f.z);
 }
 
 

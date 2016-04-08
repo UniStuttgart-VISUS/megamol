@@ -10,7 +10,7 @@
 #ifndef MMPROTEINCUDAPLUGIN_CRITPOINTS_H
 #define MMPROTEINCUDAPLUGIN_CRITPOINTS_H
 
-#include "CrystalStructureDataCall.h"
+#include "mmcore/moldyn/CrystalStructureDataCall.h"
 #include "UniGrid3D.h"
 
 #include "vislib/math/Vector.h"

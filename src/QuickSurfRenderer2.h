@@ -14,7 +14,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "DiagramCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -277,7 +277,7 @@ namespace protein_cuda {
         bool recomputeAreaDiagram;
         float callTime;
         /** array for surface area */
-        DiagramCall::DiagramSeries *areaDiagramData;
+		core::moldyn::DiagramCall::DiagramSeries *areaDiagramData;
         
         bool setCUDAGLDevice;
 

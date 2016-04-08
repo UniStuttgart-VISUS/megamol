@@ -18,7 +18,7 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
 #include "slicing.h"
@@ -702,8 +702,8 @@ bool PotentialVolumeRaycaster::GetExtents(core::Call& call) {
     if (cr3d == NULL) return false;
 
     // Get pointer to potential map data call
-    protein_cuda::VTIDataCall *cmd =
-            this->potentialDataCallerSlot.CallAs<protein_cuda::VTIDataCall>();
+	core::moldyn::VTIDataCall *cmd =
+			this->potentialDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
     if (cmd == NULL) return false;
     if (!(*cmd)(VTIDataCall::CallForGetExtent)) return false;
 
@@ -863,8 +863,8 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     ren->SetTimeFramesCount(frameIdx);
 
     // Get the potential data
-    protein_cuda::VTIDataCall *cmd =
-            this->potentialDataCallerSlot.CallAs<protein_cuda::VTIDataCall>();
+	core::moldyn::VTIDataCall *cmd =
+		this->potentialDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
     if (cmd == NULL) {
         return false;
     }

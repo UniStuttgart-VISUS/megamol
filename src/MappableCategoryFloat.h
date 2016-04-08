@@ -12,12 +12,12 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/Pair.h"
-#include "DiagramCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
 
 namespace megamol {
 namespace protein_cuda {
     
-class MappableCategoryFloat : public DiagramCall::DiagramMappable {
+class MappableCategoryFloat : public core::moldyn::DiagramCall::DiagramMappable {
 public:
     MappableCategoryFloat(int instance = 0);
     ~MappableCategoryFloat(void);

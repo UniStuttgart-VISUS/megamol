@@ -21,7 +21,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/Array.h"
 #include "HostArr.h"
-#include "DiagramCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
@@ -402,7 +402,7 @@ private:
     /* Diagram data */
 
     /// Diagram series that contains data series for DiagramCall
-    vislib::PtrArray<DiagramCall::DiagramSeries> featureList;
+	vislib::PtrArray<core::moldyn::DiagramCall::DiagramSeries> featureList;
 
 
     /* RMS fitting */

@@ -25,10 +25,10 @@
 // Toggle benchmarking of the mapping
 #define BENCHMARK
 
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "mmcore/moldyn/MolecularDataCall.h"
 #include "mmcore/Module.h"
-#include "DiagramCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
 #include "VariantMatchDataCall.h"
 #include "MolecularSurfaceFeature.h"
 #include "mmcore/param/EnumParam.h"

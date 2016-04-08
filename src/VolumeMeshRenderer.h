@@ -15,8 +15,8 @@
 
 #include "VolumeMeshRenderer.cuh"
 #include "mmcore/view/Renderer3DModuleDS.h"
-#include "DiagramCall.h"
-#include "SplitMergeCall.h"
+#include "mmcore/moldyn/DiagramCall.h"
+#include "mmcore/moldyn/SplitMergeCall.h"
 #include "mmcore/moldyn/BindingSiteCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
@@ -30,7 +30,7 @@
 #include "CenterLineGenerator.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "ResidueSelectionCall.h"
+#include "mmcore/moldyn/ResidueSelectionCall.h"
 #include "mmcore\moldyn\MolecularDataCall.h"
 
 namespace megamol {
@@ -461,16 +461,16 @@ namespace protein_cuda {
         vislib::Array<bool> featureVisibility;
 
         /** array for surface features */
-        vislib::PtrArray<DiagramCall::DiagramSeries> featureList;
+        vislib::PtrArray<core::moldyn::DiagramCall::DiagramSeries> featureList;
         
         /** array for splitmerge series */
-        vislib::PtrArray<SplitMergeCall::SplitMergeSeries> splitMergeList;
+		vislib::PtrArray<core::moldyn::SplitMergeCall::SplitMergeSeries> splitMergeList;
         
         /** array for feature transitions */
-        vislib::PtrArray<SplitMergeCall::SplitMergeTransition> transitionList;
+		vislib::PtrArray<core::moldyn::SplitMergeCall::SplitMergeTransition> transitionList;
         
         /** array for surface feature center lines */
-        vislib::PtrArray<DiagramCall::DiagramSeries> featureCenterLines;
+		vislib::PtrArray<core::moldyn::DiagramCall::DiagramSeries> featureCenterLines;
 
         /** data bounding box */
         vislib::math::Cuboid<float> dataBBox;
@@ -509,7 +509,7 @@ namespace protein_cuda {
         float time;                 // TIMING
 
         /** call ptr for residue selection */
-        ResidueSelectionCall *resSelectionCall;
+		core::moldyn::ResidueSelectionCall *resSelectionCall;
         bool *atomSelection;
         unsigned int atomSelectionCnt;
 

@@ -20,7 +20,7 @@
 #include "mmcore/CallerSlot.h"
 #include "CudaDevArr.h"
 #include "mmcore/view/CallRender3D.h"
-#include "VTIDataCall.h"
+#include "mmcore/moldyn/VTIDataCall.h"
 #include "VBODataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "CUDAStreamlines.h"
@@ -136,7 +136,7 @@ private:
      * @param zClip   The clipping plane z values
      * @param isoval  The iso values
      */
-    void genSeedPoints(VTIDataCall *vti, float zClip, float isoval);
+	void genSeedPoints(core::moldyn::VTIDataCall *vti, float zClip, float isoval);
 
     /**
      * Samples the field at a given position using linear interpolation.
@@ -145,7 +145,7 @@ private:
      * @param pos The position
      * @return The sampled value of the field
      */
-    float sampleFieldAtPosTrilin(VTIDataCall *vtiCall, float3 pos, float *field_D);
+	float sampleFieldAtPosTrilin(core::moldyn::VTIDataCall *vtiCall, float3 pos, float *field_D);
 
     /**
      * Update all parameters and set boolean flags accordingly.

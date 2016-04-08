@@ -28,8 +28,8 @@
 #include "vislib/math/mathfunctions.h"
 
 
-#include "VTIDataCall.h"
-#include "Interpol.h"
+#include "mmcore/moldyn/VTIDataCall.h"
+#include "mmcore/moldyn/Interpol.h"
 #include "VecField3f.h"
 #include "CUDAFieldTopology.cuh"
 #include <GL/glu.h>
@@ -107,11 +107,11 @@ ComparativeFieldTopologyRenderer::ComparativeFieldTopologyRenderer(void) : view:
     /* Data caller slots */
 
     // The slot for the first data call
-    this->dataCallerSlot0.SetCompatibleCall<VTIDataCallDescription>();
+    this->dataCallerSlot0.SetCompatibleCall<core::moldyn::VTIDataCallDescription>();
     this->MakeSlotAvailable (&this->dataCallerSlot0);
 
     // The slot for the second data call
-    this->dataCallerSlot1.SetCompatibleCall<VTIDataCallDescription>();
+    this->dataCallerSlot1.SetCompatibleCall<core::moldyn::VTIDataCallDescription>();
     this->MakeSlotAvailable (&this->dataCallerSlot1);
 
 
@@ -551,20 +551,20 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
     float callTime = cr3d->Time();
 
     // Get data calls
-    VTIDataCall *cmd0 = this->dataCallerSlot0.CallAs<VTIDataCall>();
+    core::moldyn::VTIDataCall *cmd0 = this->dataCallerSlot0.CallAs<core::moldyn::VTIDataCall>();
     if(cmd0 == NULL) return false;
-    VTIDataCall *cmd1 = this->dataCallerSlot1.CallAs<VTIDataCall>();
+    core::moldyn::VTIDataCall *cmd1 = this->dataCallerSlot1.CallAs<core::moldyn::VTIDataCall>();
     if(cmd1 == NULL) return false;
 
     // Get extents
-    if(!(*cmd0)(VTIDataCall::CallForGetExtent)) return false;
+    if(!(*cmd0)(core::moldyn::VTIDataCall::CallForGetExtent)) return false;
     cmd0->SetCalltime(callTime); // Set call time
-    if(!(*cmd1)(VTIDataCall::CallForGetExtent)) return false;
+    if(!(*cmd1)(core::moldyn::VTIDataCall::CallForGetExtent)) return false;
     cmd1->SetCalltime(callTime); // Set call time
 
     // Load data containing potential maps
-    if(!(*cmd0)(VTIDataCall::CallForGetData)) return false;
-    if(!(*cmd1)(VTIDataCall::CallForGetData)) return false;
+    if(!(*cmd0)(core::moldyn::VTIDataCall::CallForGetData)) return false;
+    if(!(*cmd1)(core::moldyn::VTIDataCall::CallForGetData)) return false;
 
 
 
@@ -874,7 +874,7 @@ bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
 /*
  * ComparativeFieldTopologyRenderer::calcElectrostaticField
  */
-void ComparativeFieldTopologyRenderer::calcElectrostaticField(VTIDataCall *cmd,
+void ComparativeFieldTopologyRenderer::calcElectrostaticField(core::moldyn::VTIDataCall *cmd,
         VecField3f &efield, VecField3f &egradfield) {
 
     float *efieldBuff = new float[cmd->GetGridsize().X()*
@@ -1448,7 +1448,7 @@ bool ComparativeFieldTopologyRenderer::renderCritPointsSpheres() {
 /*
  * ComparativeFieldTopologyRenderer::renderFieldArrows
  */
-bool ComparativeFieldTopologyRenderer::renderFieldArrows(const VTIDataCall *cmd) {
+bool ComparativeFieldTopologyRenderer::renderFieldArrows(const core::moldyn::VTIDataCall *cmd) {
     using namespace vislib;
     using namespace vislib::math;
     using namespace vislib::sys;
@@ -1812,8 +1812,8 @@ bool ComparativeFieldTopologyRenderer::renderStreamlineBundleManual() {
  * ComparativeFieldTopologyRenderer::renderStreamlinesRoi
  */
 bool ComparativeFieldTopologyRenderer::renderStreamlinesRoi(
-        const VTIDataCall *cmd0,
-        const VTIDataCall *cmd1) {
+        const core::moldyn::VTIDataCall *cmd0,
+        const core::moldyn::VTIDataCall *cmd1) {
     using namespace vislib;
     using namespace vislib::sys;
     using namespace vislib::math;
