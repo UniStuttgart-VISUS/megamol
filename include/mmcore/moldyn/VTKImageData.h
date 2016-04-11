@@ -55,10 +55,10 @@ public:
                 type(VTI_UNKNOWN),
                 name(""),
                 nComponents(0),
-                min(0.0f),
-                max(0.0f),
                 data(NULL),
                 allocated(0) {
+			this->min = 0.0f;
+			this->max = 0.0f;
         }
 
         /** DTor */
