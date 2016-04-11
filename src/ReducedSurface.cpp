@@ -21,6 +21,11 @@ using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::core::moldyn;
 
+#pragma push_macro("min")
+#undef min
+#pragma push_macro("max")
+#undef max
+
 /*
  * ReducedSurface::ReducedSurface
  */

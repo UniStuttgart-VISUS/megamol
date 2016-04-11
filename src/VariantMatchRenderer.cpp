@@ -25,6 +25,10 @@
 using namespace megamol;
 using namespace megamol::protein;
 
+#pragma push_macro("min")
+#undef min
+#pragma push_macro("max")
+#undef max
 
 /*
  * VariantMatchRenderer::VariantMatchRenderer

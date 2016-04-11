@@ -31,6 +31,11 @@ using namespace megamol::protein;
 #define SWAP_BYTES
 //#define NORMALIZE_RADIUS
 
+#pragma push_macro("min")
+#undef min
+#pragma push_macro("max")
+#undef max
+
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::VTKLegacyDataLoaderUnstructuredGrid
  */
