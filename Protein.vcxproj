@@ -215,7 +215,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CartoonRenderer.h" />
     <ClInclude Include="src\CartoonTessellationRenderer.h" />
     <ClInclude Include="src\CCP4VolumeData.h" />
-    <ClInclude Include="src\CenterLineGenerator.h" />
     <ClInclude Include="src\CoarseGrainDataLoader.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\ColorModule.h" />
@@ -276,7 +275,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\SphereDataCall.h" />
     <ClInclude Include="src\SphereRenderer.h" />
     <ClInclude Include="src\SphereRendererMouse.h" />
-    <ClInclude Include="src\SplitMergeFeature.h" />
     <ClInclude Include="src\SplitMergeRenderer.h" />
     <ClInclude Include="src\SSAORendererDeferred.h" />
     <ClInclude Include="src\state.h" />
@@ -287,7 +285,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ToonRendererDeferred.h" />
     <ClInclude Include="src\TrajectorySmoothFilter.h" />
     <ClInclude Include="src\UnstructuredGridRenderer.h" />
-    <ClInclude Include="src\utilities.h" />
     <ClInclude Include="src\VariantMatchDataCall.h" />
     <ClInclude Include="src\VariantMatchRenderer.h" />
     <ClInclude Include="src\View3DMouse.h" />
@@ -315,7 +312,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\CartoonRenderer.cpp" />
     <ClCompile Include="src\CartoonTessellationRenderer.cpp" />
     <ClCompile Include="src\CCP4VolumeData.cpp" />
-    <ClCompile Include="src\CenterLineGenerator.cpp" />
     <ClCompile Include="src\CoarseGrainDataLoader.cpp" />
     <ClCompile Include="src\Color.cpp" />
     <ClCompile Include="src\ColorModule.cpp" />
@@ -379,7 +375,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\SphereDataCall.cpp" />
     <ClCompile Include="src\SphereRenderer.cpp" />
     <ClCompile Include="src\SphereRendererMouse.cpp" />
-    <ClCompile Include="src\SplitMergeFeature.cpp" />
     <ClCompile Include="src\SplitMergeRenderer.cpp" />
     <ClCompile Include="src\SSAORendererDeferred.cpp" />
     <ClCompile Include="src\stdafx.cpp">

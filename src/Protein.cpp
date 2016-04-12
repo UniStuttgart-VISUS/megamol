@@ -33,7 +33,6 @@
 #include "DofRendererDeferred.h"
 #include "SphereRendererMouse.h"
 #include "GLSLVolumeRenderer.h"
-#include "StreamlineRenderer.h"
 #include "VariantMatchRenderer.h"
 #include "SecPlaneRenderer.h"
 #include "UnstructuredGridRenderer.h"
