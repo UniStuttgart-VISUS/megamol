@@ -23,6 +23,8 @@
 #include <map>
 #include <utility>
 
+//#define FIRSTFRAME_CHECK
+
 namespace megamol {
 namespace protein {
 
@@ -131,15 +133,28 @@ namespace protein {
 
     private:
 
+		struct CAlpha
+		{
+			float pos[4];
+			float dir[3];
+			int type;
+		};
+
         /** The call for data */
         CallerSlot getDataSlot;
 
         void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
 			unsigned int &colStride, unsigned int &vertStride);
+		void getBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
+			unsigned int &colStride, unsigned int &vertStride);
 
         void queueSignal(GLsync& syncObj);
 		void waitSignal(GLsync& syncObj);
+
+#ifdef FIRSTFRAME_CHECK
+		bool firstFrame;
+#endif
 
         /** The sphere shader */
         //vislib::graphics::gl::GLSLShader sphereShader;
@@ -156,7 +171,11 @@ namespace protein {
         GLuint singleBufferMappingBits;
         typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
 		vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
+		vislib::SmartPtr<ShaderSource> tubeVert, tubeTessCont, tubeTessEval, tubeGeom, tubeFrag;
         core::param::ParamSlot scalingParam;
+		core::param::ParamSlot sphereParam;
+		core::param::ParamSlot lineParam;
+		core::param::ParamSlot backboneParam;
 
         vislib::Array<vislib::Array<float> > positionsCa;
         vislib::Array<vislib::Array<float> > positionsO;
@@ -165,7 +184,10 @@ namespace protein {
         vislib::graphics::gl::GLSLShader sphereShader;
         /** shader for spline rendering */
         vislib::graphics::gl::GLSLTesselationShader splineShader;
+		/** shader for the tubes */
+		vislib::graphics::gl::GLSLTesselationShader tubeShader;
 
+		std::vector<CAlpha> mainchain;
     };
 
 } /* end namespace protein */
