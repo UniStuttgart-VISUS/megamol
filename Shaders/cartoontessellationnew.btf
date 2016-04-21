@@ -23,6 +23,7 @@ uniform vec4 clipCol;
 uniform int instanceOffset;
 
 uniform mat4 MVinv;
+uniform mat4 MVinvtrans;
 uniform mat4 MVP;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
@@ -86,20 +87,18 @@ void main(void) {
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_EXT_gpu_shader4 : require
 
-uniform int uOuter0 = 1;
-uniform int uOuter1 = 16;
+uniform int uOuter0 = 5;
+uniform int uOuter1 = 5;
 
 uniform int minInner = 2;
 uniform int maxInner = 12;
 uniform int minOuter = 2;
 uniform int maxOuter = 12;
 
-uniform float minDistance;
-uniform float maxDistance;
-
 uniform int instanceOffset;
 
 layout( vertices = 4 ) out;
+//layout(vertices = 4) out;
 
 in vec4 camPos[];
 out int id[];
@@ -116,12 +115,42 @@ layout(std430, binding = 2) buffer shader_data {
 };
 
 void main() {
-    gl_out[gl_InvocationID].gl_Position = atoms[gl_PrimitiveID + gl_InvocationID].pos;
-    id[gl_InvocationID] = gl_PrimitiveID + gl_InvocationID;
-    gl_TessLevelOuter[0] = float( uOuter0);
-    gl_TessLevelOuter[1] = float( uOuter1);
+    /*
+        12 vertices per line segment side, always 2 vertices per quad representing one line vertex, 
+        all inner vertices have 4 representatives per side
     
+        1/13   2/14  5/17   6    9      10
+         o         oo         oo        o
+        
+         0          1          2        3
+
+        
+         o         oo         oo        o
+        0/12  3/15   4/16   7    8      11
+        
+        Modulus of 12 makes the side irrelevant.
+        Addition of 2 eliminates the neccessity to care about the too small numbers at the start vertex.
+        Modulus of 4 determines the index of the final of the 4 vertices.
+    */
     
+    int atomPos = gl_PrimitiveID + (gl_InvocationID % 2);
+    //int atomPos = gl_PrimitiveID + gl_InvocationID;
+    gl_out[gl_InvocationID].gl_Position = atoms[atomPos].pos;
+    id[gl_InvocationID] = atomPos;
+    
+    vec4 cp = camPos[0];
+    
+    if(gl_InvocationID == 0)
+    {
+        // TODO changes tesslevels
+        gl_TessLevelOuter[0] = float( uOuter0);
+        gl_TessLevelOuter[1] = 2.0 * float( uOuter1);
+        gl_TessLevelOuter[2] = float( uOuter0);
+        gl_TessLevelOuter[3] = 2.0 * float( uOuter1);
+        
+        gl_TessLevelInner[0] = float( uOuter0);
+        gl_TessLevelInner[1] = 2.0 * float( uOuter1);
+    }
 }
 -->
       </snippet>
@@ -134,10 +163,19 @@ void main() {
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_EXT_gpu_shader4 : require
         
-layout(isolines, equal_spacing) in;
+layout(quads, equal_spacing, cw) in;
+//layout(isolines, equal_spacing) in;
+
+uniform float minDistance = 1.0;
+uniform float maxDistance = 1.0;
+
+uniform float pipeWidth = 1.0;
+
+#define M_PI 3.1415926535897932384626433832795
 
 in int id[];
 out vec4 color;
+out vec3 n;
 
 struct CAlpha
 {
@@ -151,18 +189,22 @@ layout(std430, binding = 2) buffer shader_data {
 };
 
 void main() {
-    vec4 p0 = gl_in[0].gl_Position;
-    vec4 p1 = gl_in[1].gl_Position;
-    vec4 p2 = gl_in[2].gl_Position;
-    vec4 p3 = gl_in[3].gl_Position;
-   
+    // see comment of tesscontrol shader to see why we use these 4 points  
+    CAlpha alph0 = atoms[id[0] - 1];
+    CAlpha alph1 = atoms[id[0]];
+    CAlpha alph2 = atoms[id[1]];
+    CAlpha alph3 = atoms[id[1] + 1];
+    
+    vec4 p0 = alph0.pos;
+    vec4 p1 = alph1.pos;
+    vec4 p2 = alph2.pos;
+    vec4 p3 = alph3.pos;
     
     vec4 colors[4];
     
     for(int i = 0; i < 4; i++)
     {
-        int myid = id[i];
-        int mytype = atoms[myid].type;
+        int mytype = atoms[id[0] + i - 1].type;
         
         if(mytype == 1) // beta sheet
         {
@@ -183,6 +225,7 @@ void main() {
     }
     
     float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
     
     // Catmull-Rom Spline
     //gl_Position = 0.5 *( (2.0 * p1) + (-p0 + p2) * u + ( 2.0 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1- 3 * p2 + p3) * u*u*u);
@@ -202,6 +245,7 @@ void main() {
     vec4 d21 = d11 * ( 1.0 - q4) + d12 * q4;
     
     float q5 = ( u - 3.0); 
+    vec4 mypos = d20 * (1.0 - q5) + d21 * q5;
     gl_Position =  d20 * ( 1.0 - q5) + d21 * q5;
     
     // interpolate colors, too
@@ -213,6 +257,38 @@ void main() {
     vec4 c21 = c11 * (1.0 - q4) + c12 * q4;
     
     color = c20 * (1.0 - q5) + c21 * q5;
+    
+    // interpolate directions
+    // TODO is this correct?
+    vec3 dir10 = mix(alph0.dir, alph1.dir, q);
+    vec3 dir11 = mix(alph1.dir, alph2.dir, q1);
+    vec3 dir12 = mix(alph2.dir, alph3.dir, q2);
+    
+    vec3 dir20 = mix(dir10, dir11, q3);
+    vec3 dir21 = mix(dir11, dir12, q4);
+    
+    vec3 dir = normalize(mix(dir20, dir21, q5));
+    
+    vec3 tangent = normalize(d21.xyz - d20.xyz);
+    vec3 normal = normalize(cross(tangent, dir));
+    
+    // compute corrected direction that is truly orthogonal to the tangent vector
+    vec3 nDir = dir;
+    float beta = acos(dot(tangent, nDir));
+    float factor = pipeWidth / sin(beta);
+    
+    nDir = normalize(nDir) * factor - (pipeWidth / tan(beta)) * normalize(tangent);
+    nDir = -nDir;
+    
+    // rotate negative dir vector around tangent vector
+    float a = v * 2.0 * M_PI;
+    vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
+    vrot = normalize(vrot);
+    
+    mypos.xyz += pipeWidth * vrot;
+    n = vrot;
+    
+    gl_Position = mypos;
 }
 -->
       </snippet>
@@ -223,17 +299,22 @@ void main() {
       <snippet type="string">
         <!--
 uniform mat4 MVP;
+uniform mat4 MVinvtrans;
 
-layout(lines) in;
-layout(line_strip, max_vertices = 4) out;
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 4) out;
 
 in vec4 color[];
+in vec3 n[];
 out vec4 mycol;
+out vec3 normal;
 
 void main() {
   for(int i = 0; i < gl_in.length(); i++) {
     gl_Position = MVP * gl_in[i].gl_Position;
     mycol = color[i];
+    vec4 normal4 = MVinvtrans * vec4(n[i], 0);
+    normal = normalize(normal4.xyz);
     EmitVertex();
   }
   EndPrimitive();
@@ -256,6 +337,7 @@ layout (depth_greater) out float gl_FragDepth; // we think this is right
 uniform mat4 MVP;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
+uniform mat4 ProjInv;
 
 uniform vec4 viewAttr;
 
@@ -267,12 +349,16 @@ FLACH in float rad;
 FLACH in vec4 vertColor;
 
 in vec4 mycol;
+in vec3 normal;
 
 out layout(location = 0) vec4 outCol;
 
 void main(void) {
-    //outCol = vec4( 1.0, 0.75, 0.2, 1.0);
     outCol = mycol;
+    
+    /*vec4 lightPos = gl_LightSource[0].position;
+    
+    outCol = vec4(gl_LightSource[0].position);*/
 }
 -->
 </snippet>

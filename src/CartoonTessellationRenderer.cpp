@@ -118,6 +118,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 	sphereParam("spheres", "render atoms as spheres"),
 	lineParam("lines", "render backbone as GL_LINE"),
 	backboneParam("backbone", "render backbone as tubes"),
+	backboneWidthParam("backbone width", "the width of the backbone"),
     // this variant should not need the fence
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
@@ -125,7 +126,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
     this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-	this->sphereParam << new core::param::BoolParam(true);
+	this->sphereParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->sphereParam);
 
 	this->lineParam << new core::param::BoolParam(true);
@@ -136,7 +137,11 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 
     this->scalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->scalingParam);
-    fences.resize(numBuffers);
+    
+	this->backboneWidthParam << new core::param::FloatParam(0.25f);
+	this->MakeSlotAvailable(&this->backboneWidthParam);
+	
+	fences.resize(numBuffers);
 
 #ifdef FIRSTFRAME_CHECK
 	firstFrame = true;
@@ -497,6 +502,10 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     modelViewProjMatrixInv.Invert();
     vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrixTransp = modelViewProjMatrix;
     modelViewProjMatrixTransp.Transpose();
+	vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInvTrans = modelViewMatrixInv;
+	modelViewMatrixInvTrans.Transpose();
+	vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projectionMatrixInv = projMatrix;
+	projectionMatrixInv.Invert();
 
     // copy data
     if (this->positionsCa.Count() != mol->MoleculeCount()) {
@@ -665,7 +674,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     }
 	//std::cout << "cIndex " << cIndex << " oIndex " << oIndex << " molCount " << mol->MoleculeCount() << std::endl;
 
-#if 0
+#if 1
 	if (lineParam.Param<param::BoolParam>()->Value())
 	{
 		//currBuf = 0;
@@ -726,6 +735,9 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 #endif
 
 #if 1
+	glDisable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 	if (backboneParam.Param<param::BoolParam>()->Value()) {
 		//currBuf = 0;
 		unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -734,17 +746,20 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		this->tubeShader.Enable();
 		glColor4f(1.0f / mainchain.size(), 0.75f, 0.25f, 1.0f);
 		colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
-		glUniform4fv(this->splineShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fv(this->splineShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-		glUniform3fv(this->splineShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-		glUniform3fv(this->splineShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
-		glUniform4fv(this->splineShader.ParameterLocation("clipDat"), 1, clipDat);
-		glUniform4fv(this->splineShader.ParameterLocation("clipCol"), 1, clipCol);
-		glUniformMatrix4fv(this->splineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-		glUniformMatrix4fv(this->splineShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-		glUniformMatrix4fv(this->splineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-		glUniformMatrix4fv(this->splineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-		glUniform1f(this->splineShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+		glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
+		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
 		float minC = 0.0f, maxC = 0.0f;
 		unsigned int colTabSize = 0;
 		glUniform4f(this->splineShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
