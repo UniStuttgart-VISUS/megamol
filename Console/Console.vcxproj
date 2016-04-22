@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -28,28 +28,26 @@
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>NotSet</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>NotSet</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>NotSet</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>NotSet</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="..\packages\AntTweakBar.redist.1.16.2\build\native\AntTweakBar.redist.targets" Condition="Exists('..\packages\AntTweakBar.redist.1.16.2\build\native\AntTweakBar.redist.targets')" />
-    <Import Project="..\packages\AntTweakBar.1.16.2\build\native\AntTweakBar.targets" Condition="Exists('..\packages\AntTweakBar.1.16.2\build\native\AntTweakBar.targets')" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -106,6 +104,7 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MegaMolCon</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MegaMolCon</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MegaMolCon</TargetName>
+    <NuGetPackageImportStamp>1414ba6f</NuGetPackageImportStamp>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -328,9 +327,13 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\AntTweakBar.redist.1.16.2\build\native\AntTweakBar.redist.targets" Condition="Exists('..\packages\AntTweakBar.redist.1.16.2\build\native\AntTweakBar.redist.targets')" />
+    <Import Project="..\packages\AntTweakBar.1.16.2\build\native\AntTweakBar.targets" Condition="Exists('..\packages\AntTweakBar.1.16.2\build\native\AntTweakBar.targets')" />
+  </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\AntTweakBar.redist.1.16.2\build\native\AntTweakBar.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AntTweakBar.redist.1.16.2\build\native\AntTweakBar.redist.targets'))" />
     <Error Condition="!Exists('..\packages\AntTweakBar.1.16.2\build\native\AntTweakBar.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AntTweakBar.1.16.2\build\native\AntTweakBar.targets'))" />
