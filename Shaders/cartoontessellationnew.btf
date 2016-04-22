@@ -87,8 +87,8 @@ void main(void) {
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_EXT_gpu_shader4 : require
 
-uniform int uOuter0 = 5;
-uniform int uOuter1 = 5;
+uniform int uOuter0 = 10;
+uniform int uOuter1 = 10;
 
 uniform int minInner = 2;
 uniform int maxInner = 12;
@@ -274,19 +274,55 @@ void main() {
     
     // compute corrected direction that is truly orthogonal to the tangent vector
     vec3 nDir = dir;
-    float beta = acos(dot(tangent, nDir));
-    float factor = pipeWidth / sin(beta);
+    nDir = dir -  dot(dir, tangent) * tangent;
+    nDir = -normalize(nDir);
     
-    nDir = normalize(nDir) * factor - (pipeWidth / tan(beta)) * normalize(tangent);
-    nDir = -nDir;
+    int mytype = atoms[id[0]].type;
     
-    // rotate negative dir vector around tangent vector
-    float a = v * 2.0 * M_PI;
-    vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
-    vrot = normalize(vrot);
-    
-    mypos.xyz += pipeWidth * vrot;
-    n = vrot;
+    if(mytype != 1 && mytype != 2)
+    {
+        // rotate negative dir vector around tangent vector
+        float a = v * 2.0 * M_PI;
+        vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
+        vrot = normalize(vrot);
+        
+        mypos.xyz += pipeWidth * vrot;
+        n = vrot;
+    } 
+    else
+    {
+        vec3 curPos = mypos.xyz + nDir * pipeWidth; // point <width> under the backbone
+        vec3 normalDown = nDir;
+        vec3 normalLeft = normalize(cross(tangent, -nDir));
+        
+        float val = 1.0 / 24.0;
+        
+        if(v < val)
+        {
+            mypos.xyz += nDir * pipeWidth * 5.0 + normalLeft * mix(0, pipeWidth, v / val);
+            n = normalDown;
+        }
+        else if( v >= val && v < 0.5 - val)
+        {
+            mypos.xyz += nDir * pipeWidth * 5.0 + normalLeft * pipeWidth - nDir * mix(0, pipeWidth * 5.0, (v - val)/(0.5 - 2 * val) );
+            n = normalLeft;
+        }
+        else if(v >= 0.5 - val && v < 0.5 + val)
+        {
+            mypos.xyz += -nDir * pipeWidth * 5.0 + pipeWidth * normalLeft - normalLeft * mix(0, 2 * pipeWidth, (v - (0.5 - val))/(2 * val));
+            n = -normalDown;
+        }
+        else if(v >= 0.5 + val && v < 1.0 - val)
+        {
+            mypos.xyz += -nDir * pipeWidth * 5.0 - pipeWidth * normalLeft + nDir * mix(0, pipeWidth * 5.0, (v- (0.5 + val))/(0.5 - 2 * val));
+            n = -normalLeft;
+        }
+        else
+        {
+            mypos.xyz += nDir * pipeWidth * 5.0 - normalLeft * mix(pipeWidth, 0, ((v - (1.0 - val))/ val));
+            n = normalDown;
+        }
+    }
     
     gl_Position = mypos;
 }
@@ -335,18 +371,18 @@ layout (depth_greater) out float gl_FragDepth; // we think this is right
 #extension GL_ARB_explicit_attrib_location : enable
 
 uniform mat4 MVP;
+uniform mat4 MV;
 uniform mat4 MVPinv;
 uniform mat4 MVPtransp;
 uniform mat4 ProjInv;
 
 uniform vec4 viewAttr;
 
-FLACH in vec4 objPos;
-FLACH in vec4 camPos;
-FLACH in vec4 lightPos;
-FLACH in float squarRad;
-FLACH in float rad;
-FLACH in vec4 vertColor;
+uniform vec4 lightPos;
+uniform vec4 phong = vec4(0.4, 0.8, 0.4, 10.0);
+uniform vec4 diffuseColor = vec4(1);
+uniform vec4 ambientColor = vec4(1); 
+uniform vec4 specularColor = vec4(1);
 
 in vec4 mycol;
 in vec3 normal;
@@ -355,10 +391,26 @@ out layout(location = 0) vec4 outCol;
 
 void main(void) {
     outCol = mycol;
+    vec4 pos = ProjInv * gl_FragCoord.xyzw;
+    vec4 light = MV * lightPos;
+    vec3 lightDir = normalize(light.xyz - pos.xyz);
     
-    /*vec4 lightPos = gl_LightSource[0].position;
+    vec3 n = normal;
+    vec3 e = pos.xyz;
+    vec3 h = normalize(lightDir + e);
+    float d = dot(n, lightDir);
+    vec3 r = normalize(2.0 * d * n - lightDir);
+    vec3 c = phong.x * mycol.xyz +
+        phong.y * mycol.xyz * max(d, 0.0);
+        
+    vec4 eyenew = vec4(0.0, 0.0, 0.0, 1.0);
     
-    outCol = vec4(gl_LightSource[0].position);*/
+    if(dot(lightDir, n) < 0.0)
+        c += vec3(0.0);
+    else
+        c += phong.z * vec3(pow(max(dot(r, normalize(eyenew.xyz - e)), 0.0), phong.w));
+        
+    outCol = vec4(c, 1);
 }
 -->
 </snippet>

@@ -14,6 +14,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/Vector4fParam.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
@@ -119,6 +120,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 	lineParam("lines", "render backbone as GL_LINE"),
 	backboneParam("backbone", "render backbone as tubes"),
 	backboneWidthParam("backbone width", "the width of the backbone"),
+	materialParam("material", "ambient, diffuse, specular components + exponent"),
     // this variant should not need the fence
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
@@ -140,6 +142,11 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
     
 	this->backboneWidthParam << new core::param::FloatParam(0.25f);
 	this->MakeSlotAvailable(&this->backboneWidthParam);
+
+	/*float components[4] = { 0.2f, 0.8f, 0.4f, 10.0f };
+	vislib::math::Vector<float, 4U> myvec(components);
+	this->materialParam << new core::param::Vector4fParam(myvec);
+	this->MakeSlotAvailable(&this->materialParam);*/
 	
 	fences.resize(numBuffers);
 
@@ -507,6 +514,20 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 	vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projectionMatrixInv = projMatrix;
 	projectionMatrixInv.Invert();
 
+	GLfloat lightPos[4];
+	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+	GLfloat lightAmbient[4];
+	glGetLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+	GLfloat lightDiffuse[4];
+	glGetLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+	GLfloat lightSpecular[4];
+	glGetLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
+
+
+	/*std::cout << lightAmbient[0] << " " << lightAmbient[1] << " " << lightAmbient[2] << " " << lightAmbient[3] << std::endl;
+	std::cout << lightDiffuse[0] << " " << lightDiffuse[1] << " " << lightDiffuse[2] << " " << lightDiffuse[3] << std::endl;
+	std::cout << lightSpecular[0] << " " << lightSpecular[1] << " " << lightSpecular[2] << " " << lightSpecular[3] << std::endl;*/
+
     // copy data
     if (this->positionsCa.Count() != mol->MoleculeCount()) {
         this->positionsCa.SetCount(mol->MoleculeCount());
@@ -752,6 +773,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
 		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
 		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
@@ -762,7 +784,11 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
 		float minC = 0.0f, maxC = 0.0f;
 		unsigned int colTabSize = 0;
-		glUniform4f(this->splineShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+		glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+		auto v = this->materialParam.Param<param::Vector4fParam>()->Value();
+		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
+		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
+		glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
 
 		UINT64 numVerts;
 		numVerts = this->bufSize / vertStride;
