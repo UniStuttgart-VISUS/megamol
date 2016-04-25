@@ -356,5 +356,5 @@ void view::LinearTransferFunction::writeParameterFileParameter(
     }
 
     vislib::sys::WriteFormattedLineToFile(outFile,
-        "%s=%s\n", param.Name(), vislib::StringA(param.Parameter()->ValueString()));
+        "%s=%s\n", param.Name().PeekBuffer(), vislib::StringA(param.Parameter()->ValueString()).PeekBuffer());
 }
