@@ -100,10 +100,10 @@ namespace math {
 			if (cross.IsNull())
 				throw IllegalParamException("point1", __FILE__, __LINE__);
 			T d = -(cross.Dot(point1));
-			this->parameters[IDX_A] = cross.X();
-			this->parameters[IDX_B] = cross.Y();
-			this->parameters[IDX_C] = cross.Z();
-			this->parameters[IDX_D] = d;
+			this->parameters[Super::IDX_A] = cross.X();
+			this->parameters[Super::IDX_B] = cross.Y();
+			this->parameters[Super::IDX_C] = cross.Z();
+			this->parameters[Super::IDX_D] = d;
 
 			this->Normalise();
 		}
