@@ -754,7 +754,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		}
 	}
 #endif
-
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 #if 1
 	glDisable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

@@ -277,7 +277,28 @@ void main() {
     nDir = dir -  dot(dir, tangent) * tangent;
     nDir = -normalize(nDir);
     
-    int mytype = atoms[id[0]].type;
+    int mytype = atoms[id[1]].type;
+    int mytype2 = atoms[id[1] + 1].type;
+    
+    bool change = false;
+    int where = 3;
+    int lasttype = atoms[id[1] + 1].type;
+    
+    for(int i = 3; i > -1; i = i - 1 )
+    {
+        int mytype = atoms[id[0] + i - 1].type;
+        
+        if(mytype != lasttype)
+        {
+            change = true;
+            where = i;
+        }
+        
+        lasttype = mytype;
+    }
+    
+    /*if(change && ((where == 2)||(where == 1)))
+        color = vec4(1.0, 1.0, 1.0, 1.0);*/
     
     if(mytype != 1 && mytype != 2)
     {
