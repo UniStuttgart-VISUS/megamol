@@ -87,8 +87,8 @@ void main(void) {
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_EXT_gpu_shader4 : require
 
-uniform int uOuter0 = 10;
-uniform int uOuter1 = 10;
+uniform int uOuter0 = 15;
+uniform int uOuter1 = 15;
 
 uniform int minInner = 2;
 uniform int maxInner = 12;
@@ -150,6 +150,8 @@ layout(quads, equal_spacing, ccw) in;
 
 uniform float minDistance = 1.0;
 uniform float maxDistance = 1.0;
+
+uniform bool interpolateColors = false;
 
 uniform float pipeWidth = 1.0;
 
@@ -231,14 +233,24 @@ void main() {
     gl_Position =  d20 * ( 1.0 - q5) + d21 * q5;
     
     // interpolate colors, too
-    vec4 c10 = colors[0] * (1.0 - q) + colors[1] * q;
-    vec4 c11 = colors[1] * (1.0 - q1) + colors[2] * q1;
-    vec4 c12 = colors[2] * (1.0 - q2) + colors[3] * q2;
-    
-    vec4 c20 = c10 * (1.0 - q3) + c11 * q3;
-    vec4 c21 = c11 * (1.0 - q4) + c12 * q4;
-    
-    color = c20 * (1.0 - q5) + c21 * q5;
+    if(interpolateColors)
+    {
+        vec4 c10 = colors[0] * (1.0 - q) + colors[1] * q;
+        vec4 c11 = colors[1] * (1.0 - q1) + colors[2] * q1;
+        vec4 c12 = colors[2] * (1.0 - q2) + colors[3] * q2;
+        
+        vec4 c20 = c10 * (1.0 - q3) + c11 * q3;
+        vec4 c21 = c11 * (1.0 - q4) + c12 * q4;
+        
+        color = c20 * (1.0 - q5) + c21 * q5;
+    }
+    else
+    {
+        if(u > 0.5)
+            color = colors[2];
+        else
+            color = colors[1]; 
+    }
     
     // interpolate directions
     // TODO is this correct?

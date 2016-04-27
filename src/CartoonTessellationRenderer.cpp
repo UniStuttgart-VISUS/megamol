@@ -123,7 +123,8 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 	backboneWidthParam("backbone width", "the width of the backbone"),
 	materialParam("material", "ambient, diffuse, specular components + exponent"),
 	lineDebugParam("wireframe", "render in wireframe mode"),
-	buttonParam("nix", "nix"),
+	buttonParam("reload shaders", "reload the shaders"),
+	colorInterpolationParam("color interpolation", "should the colors be interpolated?"),
     // this variant should not need the fence
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
@@ -151,6 +152,9 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 
 	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
 	this->MakeSlotAvailable(&this->buttonParam);
+
+	this->colorInterpolationParam << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->colorInterpolationParam);
 
 	/*float components[4] = { 0.2f, 0.8f, 0.4f, 10.0f };
 	vislib::math::Vector<float, 4U> myvec(components);
@@ -860,6 +864,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
 		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
 		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
+		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), this->colorInterpolationParam.Param<param::BoolParam>()->Value());
 		float minC = 0.0f, maxC = 0.0f;
 		unsigned int colTabSize = 0;
 		glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));

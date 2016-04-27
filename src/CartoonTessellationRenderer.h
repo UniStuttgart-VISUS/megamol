@@ -180,6 +180,7 @@ namespace protein {
 		core::param::ParamSlot materialParam;
 		core::param::ParamSlot lineDebugParam;
 		core::param::ParamSlot buttonParam;
+		core::param::ParamSlot colorInterpolationParam;
 
         vislib::Array<vislib::Array<float> > positionsCa;
         vislib::Array<vislib::Array<float> > positionsO;
