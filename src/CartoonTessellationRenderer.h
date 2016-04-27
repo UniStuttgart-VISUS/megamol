@@ -178,6 +178,8 @@ namespace protein {
 		core::param::ParamSlot backboneParam;
 		core::param::ParamSlot backboneWidthParam;
 		core::param::ParamSlot materialParam;
+		core::param::ParamSlot lineDebugParam;
+		core::param::ParamSlot buttonParam;
 
         vislib::Array<vislib::Array<float> > positionsCa;
         vislib::Array<vislib::Array<float> > positionsO;

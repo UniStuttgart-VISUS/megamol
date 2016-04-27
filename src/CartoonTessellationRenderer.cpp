@@ -15,6 +15,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
@@ -121,6 +122,8 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
 	backboneParam("backbone", "render backbone as tubes"),
 	backboneWidthParam("backbone width", "the width of the backbone"),
 	materialParam("material", "ambient, diffuse, specular components + exponent"),
+	lineDebugParam("wireframe", "render in wireframe mode"),
+	buttonParam("nix", "nix"),
     // this variant should not need the fence
     singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
@@ -142,6 +145,12 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void) : Renderer3DModul
     
 	this->backboneWidthParam << new core::param::FloatParam(0.25f);
 	this->MakeSlotAvailable(&this->backboneWidthParam);
+
+	this->lineDebugParam << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->lineDebugParam);
+
+	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
+	this->MakeSlotAvailable(&this->buttonParam);
 
 	/*float components[4] = { 0.2f, 0.8f, 0.4f, 10.0f };
 	vislib::math::Vector<float, 4U> myvec(components);
@@ -470,6 +479,66 @@ bool CartoonTessellationRenderer::Render(Call& call) {
     MolecularDataCall *mol = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
     if (mol == NULL) return false;
 
+	if (this->buttonParam.IsDirty()) {
+		this->buttonParam.ResetDirty();
+
+		instance()->ShaderSourceFactory().LoadBTF("cartoontessellationnew", true);
+
+		// load tube shader
+		tubeVert = new ShaderSource();
+		tubeTessCont = new ShaderSource();
+		tubeTessEval = new ShaderSource();
+		tubeGeom = new ShaderSource();
+		tubeFrag = new ShaderSource();
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellationnew::vertex", *tubeVert)) {
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellationnew::tesscontrol", *tubeTessCont)) {
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellationnew::tesseval", *tubeTessEval)) {
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellationnew::geometry", *tubeGeom)) {
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("cartoontessellationnew::fragment", *tubeFrag)) {
+			return false;
+		}
+
+		try {
+			// compile the shader
+			if (!this->tubeShader.Compile(tubeVert->Code(), tubeVert->Count(),
+				tubeTessCont->Code(), tubeTessCont->Count(),
+				tubeTessEval->Code(), tubeTessEval->Count(),
+				tubeGeom->Code(), tubeGeom->Count(),
+				tubeFrag->Code(), tubeFrag->Count())) {
+				throw vislib::Exception("Could not compile tube shader. ", __FILE__, __LINE__);
+			}
+			// link the shader
+			if (!this->tubeShader.Link()) {
+				throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
+			}
+		}
+		catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Unable to compile tessellation shader (@%s): %s\n",
+				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+					ce.FailedAction()), ce.GetMsgA());
+			return false;
+		}
+		catch (vislib::Exception e) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Unable to compile tessellation shader: %s\n", e.GetMsgA());
+			return false;
+		}
+		catch (...) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Unable to compile tessellation shader: Unknown exception\n");
+			return false;
+		}
+	}
+
 //	timer.BeginFrame();
 
     float clipDat[4];
@@ -551,10 +620,14 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 	CAlpha lastCalpha;
 	bool firstset = false;
 
+	int molCount = mol->MoleculeCount();
+	std::vector<int> molSizes;
+
 	// loop over all molecules of the protein
 	for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++) {
 
 		MolecularDataCall::Molecule chain = mol->Molecules()[molIdx];
+		molSizes.push_back(0);
 
 		// is the first residue an aminoacid?
 		if (mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID) {
@@ -593,6 +666,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 
 				auto type = mol->SecondaryStructures()[secIdx].Type();
 				calpha.type = (int)type;
+				molSizes[molIdx]++;
 
 				// TODO do this on GPU?
 				// orientation check for the direction
@@ -617,6 +691,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 				if (!firstset) {
 					mainchain.push_back(calpha);
 					mainchain.push_back(calpha);
+					molSizes[molIdx] += 2;
 					firstset = true;
 				}
 			}
@@ -625,6 +700,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		// add the last atom 3 times
 		mainchain.push_back(lastCalpha);
 		mainchain.push_back(lastCalpha);
+		molSizes[molIdx] += 2;
 	}
 	
 #ifdef FIRSTFRAME_CHECK
@@ -754,10 +830,14 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		}
 	}
 #endif
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 #if 1
 	glDisable(GL_CULL_FACE);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	if (this->lineDebugParam.Param<param::BoolParam>()->Value())
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	if (backboneParam.Param<param::BoolParam>()->Value()) {
 		//currBuf = 0;
@@ -792,25 +872,30 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 
 		UINT64 numVerts;
 		numVerts = this->bufSize / vertStride;
-		UINT64 vertCounter = 0;
-		while (vertCounter < mainchain.size()) {
-			const char *currVert = (const char *)(&mainchain[vertCounter]);
-			void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
-			const char *whence = currVert;
-			UINT64 vertsThisTime = vislib::math::Min(mainchain.size() - vertCounter, numVerts);
-			this->waitSignal(fences[currBuf]);
-			memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
-			glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
-			glUniform1i(this->splineShader.ParameterLocation("instanceOffset"), 0);
+		UINT64 stride = 0;
 
-			glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
-			glPatchParameteri(GL_PATCH_VERTICES, 1);
-			glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));
-			this->queueSignal(fences[currBuf]);
+		for (int i = 0; i < molSizes.size(); i++) {
+			UINT64 vertCounter = 0;
+			while (vertCounter < molSizes[i]) {
+				const char *currVert = (const char *)(&mainchain[vertCounter + stride]);
+				void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
+				const char *whence = currVert;
+				UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);
+				this->waitSignal(fences[currBuf]);
+				memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
+				glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
+				glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), 0);
 
-			currBuf = (currBuf + 1) % this->numBuffers;
-			vertCounter += vertsThisTime;
-			currVert += vertsThisTime * vertStride;
+				glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
+				glPatchParameteri(GL_PATCH_VERTICES, 1);
+				glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));
+				this->queueSignal(fences[currBuf]);
+
+				currBuf = (currBuf + 1) % this->numBuffers;
+				vertCounter += vertsThisTime;
+				currVert += vertsThisTime * vertStride;
+			}
+			stride += molSizes[i];
 		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

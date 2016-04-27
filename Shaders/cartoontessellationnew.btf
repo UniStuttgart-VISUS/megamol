@@ -95,7 +95,7 @@ uniform int maxInner = 12;
 uniform int minOuter = 2;
 uniform int maxOuter = 12;
 
-uniform int instanceOffset;
+uniform int instanceOffset = 0;
 
 layout( vertices = 4 ) out;
 //layout(vertices = 4) out;
@@ -149,7 +149,7 @@ void main() {
         gl_TessLevelOuter[3] = 2.0 * float( uOuter1);
         
         gl_TessLevelInner[0] = float( uOuter0);
-        gl_TessLevelInner[1] = 2.0 * float( uOuter1);
+        gl_TessLevelInner[1] = float( uOuter1);
     }
 }
 -->
