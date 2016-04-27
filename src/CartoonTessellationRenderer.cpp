@@ -832,8 +832,6 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 #endif
 
 #if 1
-	glDisable(GL_CULL_FACE);
-
 	if (this->lineDebugParam.Param<param::BoolParam>()->Value())
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else

@@ -115,26 +115,8 @@ layout(std430, binding = 2) buffer shader_data {
 };
 
 void main() {
-    /*
-        12 vertices per line segment side, always 2 vertices per quad representing one line vertex, 
-        all inner vertices have 4 representatives per side
-    
-        1/13   2/14  5/17   6    9      10
-         o         oo         oo        o
         
-         0          1          2        3
-
-        
-         o         oo         oo        o
-        0/12  3/15   4/16   7    8      11
-        
-        Modulus of 12 makes the side irrelevant.
-        Addition of 2 eliminates the neccessity to care about the too small numbers at the start vertex.
-        Modulus of 4 determines the index of the final of the 4 vertices.
-    */
-    
     int atomPos = gl_PrimitiveID + (gl_InvocationID % 2);
-    //int atomPos = gl_PrimitiveID + gl_InvocationID;
     gl_out[gl_InvocationID].gl_Position = atoms[atomPos].pos;
     id[gl_InvocationID] = atomPos;
     
@@ -163,7 +145,7 @@ void main() {
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_EXT_gpu_shader4 : require
         
-layout(quads, equal_spacing, cw) in;
+layout(quads, equal_spacing, ccw) in;
 //layout(isolines, equal_spacing) in;
 
 uniform float minDistance = 1.0;
@@ -303,7 +285,7 @@ void main() {
     if(mytype != 1 && mytype != 2)
     {
         // rotate negative dir vector around tangent vector
-        float a = v * 2.0 * M_PI;
+        float a = 2.0 * M_PI - v * 2.0 * M_PI; // has to be this angle becaus of backface culling
         vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
         vrot = normalize(vrot);
         
