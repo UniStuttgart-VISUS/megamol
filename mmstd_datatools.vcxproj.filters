@@ -103,6 +103,9 @@
     <ClCompile Include="src\OverrideMultiParticleListGlobalColors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleBoxGeneratorDataSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
@@ -181,6 +184,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\OverrideMultiParticleListGlobalColors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleBoxGeneratorDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

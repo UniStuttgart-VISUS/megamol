@@ -36,6 +36,7 @@
 #include "ParticleIColFilter.h"
 #include "MultiParticleRelister.h"
 #include "OverrideMultiParticleListGlobalColors.h"
+#include "ParticleBoxGeneratorDataSource.h"
 
 
 /*
@@ -139,6 +140,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiParticleRelister>();
             this->module_descriptions.RegisterAutoDescription< megamol::stdplugin::datatools::OverrideMultiParticleListGlobalColors >();
+			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
             // register calls here:
             // ...
         }
