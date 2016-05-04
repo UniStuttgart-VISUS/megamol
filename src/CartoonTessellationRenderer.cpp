@@ -877,10 +877,10 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		numVerts = this->bufSize / vertStride;
 		UINT64 stride = 0;
 
-		for (int i = 0; i < molSizes.size(); i++) {
+		for (int i = 0; i < (int)molSizes.size(); i++) {
 			UINT64 vertCounter = 0;
 			while (vertCounter < molSizes[i]) {
-				const char *currVert = (const char *)(&mainchain[vertCounter + stride]);
+				const char *currVert = (const char *)(&mainchain[(unsigned int)vertCounter + (unsigned int)stride]);
 				void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
 				const char *whence = currVert;
 				UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);
