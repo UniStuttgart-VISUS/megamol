@@ -14,6 +14,9 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include <cstdint>
+#include "vislib/RawStorage.h"
 
 
 namespace megamol {
@@ -75,6 +78,9 @@ namespace datatools {
         virtual void release(void);
 
     private:
+		typedef core::moldyn::SimpleSphericalParticles Particles;
+
+		bool reseed(core::param::ParamSlot& p);
 
         /**
          * Gets the data from the source.
@@ -101,6 +107,10 @@ namespace datatools {
          */
         void assertData(void);
 
+		core::CalleeSlot dataSlot;
+
+		core::param::ParamSlot randomSeedSlot;
+		core::param::ParamSlot randomReseedSlot;
         core::param::ParamSlot particleCountSlot;
 		core::param::ParamSlot radiusPerParticleSlot;
 		core::param::ParamSlot colorDataSlot;
@@ -109,6 +119,16 @@ namespace datatools {
 		core::param::ParamSlot positionNoiseSlot;
 
 		size_t dataHash;
+
+		uint64_t cnt;
+		vislib::RawStorage data;
+		float rad;
+		Particles::VertexDataType vdt;
+		void *vdp;
+		unsigned int vds;
+		Particles::ColourDataType cdt;
+		void *cdp;
+		unsigned int cds;
 
     };
 
@@ -119,59 +139,6 @@ namespace datatools {
 #endif /* MEGAMOLCORE_PARTICLEBOXGENERATORDATASOURCE_H_INCLUDED */
 
 #if 0
-#pragma once
-#include "DataStore.h"
-#include <random>
-
-enum class DataScenario {
-	Box,
-	Line
-};
-
-///
-/// Particle will not overlap, but touch
-///
-class DataGenerator {
-public:
-	DataGenerator(uint32_t c = 1000000u, DataScenario s = DataScenario::Box, DataLayout l = DataLayout::XYZRI, uint32_t r_seed = 5489u);
-	~DataGenerator();
-
-	void Generate(DataStore& store);
-
-	inline DataGenerator& SetCount(uint32_t c) { cnt = c; return *this; }
-	inline uint32_t Count() const { return cnt; }
-	inline DataGenerator& SetScenario(DataScenario s) { scenario = s; return *this; }
-	inline DataScenario Scenario() const { return scenario; }
-	inline DataGenerator& SetLayout(DataLayout l) { layout = l; return *this; }
-	inline DataLayout Layout() const { return layout; }
-	inline DataGenerator& SetRandomSeed(uint32_t s) { rnd_seed = s; return *this; }
-	inline uint32_t RandomSeed() const { return rnd_seed; }
-
-	///
-	/// Radius scale factor
-	///
-	/// A factor of 1.0 will result in touch spheres if there is no position noise
-	///
-	inline DataGenerator& SetRadiusScale(float s) { rad_param = s; return *this; }
-	inline float RadiusScale() const { return rad_param; }
-
-	///
-	/// Position noise scale
-	///
-	/// A value of 1.0 will displace a particle 1xrad from it's original position
-	///
-	inline DataGenerator& SetPositionNoiseScale(float s) { pos_param = s;  return *this; }
-	inline float PositionNoiseScale() const { return pos_param; }
-
-private:
-
-	uint32_t cnt;
-	DataScenario scenario;
-	DataLayout layout;
-	uint32_t rnd_seed;
-
-	float rad_param;
-	float pos_param;
 
 	///// l2 norm
 	//template<class T_engine>
@@ -212,18 +179,6 @@ private:
 		y += (dist(eng) * 2.0f - 1.0f) * scale;
 		z += (dist(eng) * 2.0f - 1.0f) * scale;
 	}
-
-	template<class T_engine, class T_dist>
-	float makePackedColorRGBA(T_dist& dist, T_engine& eng) {
-		float r;
-		unsigned char *c = reinterpret_cast<unsigned char *>(&r);
-		c[0] = static_cast<unsigned char>(dist(eng)); // red
-		c[1] = static_cast<unsigned char>(dist(eng)); // green
-		c[2] = static_cast<unsigned char>(dist(eng)); // blue
-		c[3] = 255; // alpha
-		return r;
-	}
-
 
 };
 #endif
