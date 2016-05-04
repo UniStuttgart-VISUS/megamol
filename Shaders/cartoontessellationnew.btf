@@ -139,7 +139,7 @@ void main() {
     </shader>
 
     <shader name="tesseval">
-      <snippet type="version">400</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <!--
 #extension GL_ARB_shader_storage_buffer_object : require
@@ -172,8 +172,13 @@ layout(std430, binding = 2) buffer shader_data {
     CAlpha atoms[];
 };
 
+const float arrowLUT[10] =
+{
+    5.0, 5.0, 5.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0
+};
+
 void main() {
-    // see comment of tesscontrol shader to see why we use these 4 points  
+    
     CAlpha alph0 = atoms[id[0] - 1];
     CAlpha alph1 = atoms[id[0]];
     CAlpha alph2 = atoms[id[1]];
@@ -211,9 +216,6 @@ void main() {
     float u = gl_TessCoord.x;
     float v = gl_TessCoord.y;
     
-    // Catmull-Rom Spline
-    //gl_Position = 0.5 *( (2.0 * p1) + (-p0 + p2) * u + ( 2.0 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1- 3 * p2 + p3) * u*u*u);
-    
     // Cubic B-Spline
     u += 3;
     float q = ( u - 1.0) / 3.0;
@@ -230,6 +232,7 @@ void main() {
     
     float q5 = ( u - 3.0); 
     vec4 mypos = d20 * (1.0 - q5) + d21 * q5;
+    vec4 savepos = mypos;
     gl_Position =  d20 * ( 1.0 - q5) + d21 * q5;
     
     // interpolate colors, too
@@ -246,14 +249,11 @@ void main() {
     }
     else
     {
-        if(u > 0.5)
-            color = colors[2];
-        else
-            color = colors[1]; 
+        color = colors[2];
     }
     
+    
     // interpolate directions
-    // TODO is this correct?
     vec3 dir10 = mix(alph0.dir, alph1.dir, q);
     vec3 dir11 = mix(alph1.dir, alph2.dir, q1);
     vec3 dir12 = mix(alph2.dir, alph3.dir, q2);
@@ -291,7 +291,7 @@ void main() {
         lasttype = mytype;
     }
     
-    /*if(change && ((where == 2)||(where == 1)))
+    /*if(change && ((where == 1)))
         color = vec4(1.0, 1.0, 1.0, 1.0);*/
     
     if(mytype != 1 && mytype != 2)
@@ -336,6 +336,36 @@ void main() {
         {
             mypos.xyz += nDir * pipeWidth * 5.0 - normalLeft * mix(pipeWidth, 0, ((v - (1.0 - val))/ val));
             n = normalDown;
+        }
+        
+        u = gl_TessCoord.x;
+        float factor = 0.01;
+        float thresh = 0.01;
+        
+        if(change && (where == 2))
+        {
+            vec3 surfdir = mypos.xyz - savepos.xyz; // direction from spline to tube surface.
+            vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
+            
+            if(u > (1.0 - factor))
+            {
+                /*mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);*/
+                mypos.xyz += thresh * tangent;
+                n = tangent;
+            }
+        }
+        
+        if(change && (where == 1))
+        {
+            vec3 surfdir = mypos.xyz - savepos.xyz; // direction from spline to tube surface.
+            vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
+            
+            if(u < factor)
+            {
+                /*mypos.xyz = mix(newpos, mypos.xyz, u / factor);*/
+                mypos.xyz += thresh * (-tangent);
+                n = -tangent;
+            }
         }
     }
     
