@@ -75,10 +75,10 @@ ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void) : core::Mod
 	interleavePosAndColorSlot.SetParameter(new core::param::BoolParam(true));
 	MakeSlotAvailable(&interleavePosAndColorSlot);
 
-	radiusScaleSlot.SetParameter(new core::param::FloatParam(1.0f, 0.0f));
+	radiusScaleSlot.SetParameter(new core::param::FloatParam(0.5f, 0.0f));
 	MakeSlotAvailable(&radiusScaleSlot);
 
-	positionNoiseSlot.SetParameter(new core::param::FloatParam(0.0f, 0.0f));
+	positionNoiseSlot.SetParameter(new core::param::FloatParam(1.25f, 0.0f));
 	MakeSlotAvailable(&positionNoiseSlot);
 
 	randomSeedSlot.SetParameter(new core::param::IntParam(2007, 0));
