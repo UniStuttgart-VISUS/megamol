@@ -15,7 +15,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/misc/BezierCurvesListDataCall.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "mmcore/param/ParamSlot.h"
@@ -111,7 +111,7 @@ namespace protein {
          *
          * @param dat The incoming data
          */
-		void update(megamol::core::moldyn::MolecularDataCall& dat);
+		void update(megamol::protein_calls::MolecularDataCall& dat);
 
         /** The call for data */
         core::CalleeSlot outDataSlot;

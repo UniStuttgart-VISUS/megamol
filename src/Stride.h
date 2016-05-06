@@ -21,7 +21,7 @@
 #include <stdarg.h>
 #include "vislib/String.h"
 #include "vislib/math/Vector.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
 namespace protein {	
@@ -279,13 +279,13 @@ public:
 		BUFFER Type;
 	} PATTERN;
 
-	Stride( megamol::core::moldyn::MolecularDataCall *mol);
+	Stride( megamol::protein_calls::MolecularDataCall *mol);
 	virtual ~Stride(void);
 
-	bool WriteToInterface(megamol::core::moldyn::MolecularDataCall *mol);
+	bool WriteToInterface(megamol::protein_calls::MolecularDataCall *mol);
 	
 protected:
-	void GetChains(megamol::core::moldyn::MolecularDataCall *mol);
+	void GetChains(megamol::protein_calls::MolecularDataCall *mol);
 	bool ComputeSecondaryStructure();
 	
 	void DefaultCmd( COMMAND *Cmd );

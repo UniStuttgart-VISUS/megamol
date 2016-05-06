@@ -16,7 +16,7 @@
 #include "mmcore/CallerSlot.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/view/AnimDataModule.h"
 
 
@@ -107,7 +107,7 @@ namespace protein {
         SIZE_T dataHash;
     
         /* the structure data */            
-		vislib::Array<megamol::core::moldyn::MolecularDataCall*> datacall;
+		vislib::Array<megamol::protein_calls::MolecularDataCall*> datacall;
 
         /* a pointer to the real data, required to change atom positions! */
         vislib::Array<PDBLoader*> pdb;

@@ -13,8 +13,8 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
-#include "mmcore/moldyn/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/BindingSiteCall.h"
 
 namespace megamol {
 namespace protein {
@@ -98,7 +98,7 @@ public:
 	  *
 	  *	@param mol1 The MolecularDataCall of the protein
 	  */
-	 void SetColoringTarget(megamol::core::moldyn::MolecularDataCall *mol1) {
+	 void SetColoringTarget(megamol::protein_calls::MolecularDataCall *mol1) {
 		 this->mol1 = mol1;
 	 }
 
@@ -108,7 +108,7 @@ public:
 	  *
 	  * @return The MolecularDataCall containing the protein.
 	  */
-	 megamol::core::moldyn::MolecularDataCall* GetColoringTarget() {
+	 megamol::protein_calls::MolecularDataCall* GetColoringTarget() {
 		 return this->mol1;
 	 }
 
@@ -117,7 +117,7 @@ public:
 	  *
 	  *	@param bs The BindingSiteCall
 	  */
-	 void SetBindingSiteCall(const core::moldyn::BindingSiteCall *bs) {
+	 void SetBindingSiteCall(const protein_calls::BindingSiteCall *bs) {
 		 this->bs = bs;
 	 }
 
@@ -126,7 +126,7 @@ public:
 	  *
 	  *	@return The BindingSiteCall
 	  */
-	 const core::moldyn::BindingSiteCall* GetBindingSiteCall() {
+	 const protein_calls::BindingSiteCall* GetBindingSiteCall() {
 		 return this->bs;
 	 }
 
@@ -306,10 +306,10 @@ private:
 	vislib::Array<vislib::math::Vector< float, 3> > * rainbowColors;
 
 	/** The protein that the color table is computed for*/
-	megamol::core::moldyn::MolecularDataCall * mol1;
+	megamol::protein_calls::MolecularDataCall * mol1;
 	
 	/** The binding site call*/
-	const core::moldyn::BindingSiteCall * bs;
+	const protein_calls::BindingSiteCall * bs;
 
 	/** Should the color table be recomputed?*/
 	bool forceRecompute;

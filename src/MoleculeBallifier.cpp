@@ -7,14 +7,14 @@
 
 #include "stdafx.h"
 #include "MoleculeBallifier.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
 
 using namespace megamol;
 using namespace megamol::protein;
 using namespace megamol::core::moldyn;
-
+using namespace megamol::protein_calls;
 
 /*
  * 

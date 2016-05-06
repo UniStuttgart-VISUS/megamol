@@ -17,7 +17,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/CrystalStructureDataCall.h"
+#include "protein_calls/CrystalStructureDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include <fstream>
@@ -255,7 +255,7 @@ namespace protein {
          * Helper class to unlock frame data when 'CrystalStructureDataCall' is
          * used.
          */
-        class Unlocker : public core::moldyn::CrystalStructureDataCall::Unlocker {
+        class Unlocker : public protein_calls::CrystalStructureDataCall::Unlocker {
         public:
 
             /**
@@ -263,7 +263,7 @@ namespace protein {
              *
              * @param frame The frame to unlock
              */
-            Unlocker(Frame& frame) : core::moldyn::CrystalStructureDataCall::Unlocker(),
+			Unlocker(Frame& frame) : protein_calls::CrystalStructureDataCall::Unlocker(),
                     frame(&frame) {
                 // intentionally empty
             }
@@ -355,7 +355,7 @@ namespace protein {
         vislib::Array<int> atomEdges;
 
         /// The atom types
-        vislib::Array<core::moldyn::CrystalStructureDataCall::AtomType> atomType;
+		vislib::Array<protein_calls::CrystalStructureDataCall::AtomType> atomType;
 
         /// The cell data
         int *cells;

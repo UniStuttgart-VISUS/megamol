@@ -4,6 +4,7 @@
     <OutputBin>%outbin%</OutputBin>
     <MegaMolCorePath>%mmcorePath%</MegaMolCorePath>
     <VISlibPath>%vislib%</VISlibPath>
+	<ProteinCallsPath>%protein_calls%</ProteinCallsPath>
     <HAPTICSPath>%hapticsPath%</HAPTICSPath>
 	<OPENBABELPath>%openbabelPath%</OPENBABELPath>
 	<CURLPath>%curlPath%</CURLPath>
@@ -31,6 +32,9 @@
     <BuildMacro Include="VISlibPath">
       <Value>$(VISlibPath)</Value>
     </BuildMacro>
+	<BuildMacro Include="ProteinCallsPath">
+	  <Value>$(ProteinCallsPath)</Value>
+	</BuildMacro>
     <BuildMacro Include="HAPTICSPath">
       <Value>$(HAPTICSPath)</Value>
     </BuildMacro>

@@ -18,8 +18,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
-#include "mmcore/moldyn/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/BindingSiteCall.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #ifdef USE_SIMPLE_FONT
 #include "vislib/graphics/gl/SimpleFont.h"
@@ -28,7 +28,7 @@
 #include "vislib/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "mmcore/moldyn/ResidueSelectionCall.h"
+#include "protein_calls/ResidueSelectionCall.h"
 
 namespace megamol {
 namespace protein {
@@ -98,7 +98,7 @@ namespace protein {
          * @param mol The molecular data call.
          * @return true if preparation was successful, false otherwise
          */
-		bool PrepareData(megamol::core::moldyn::MolecularDataCall *mol, core::moldyn::BindingSiteCall *bs);
+		bool PrepareData(megamol::protein_calls::MolecularDataCall *mol, protein_calls::BindingSiteCall *bs);
         
         /**
          * TODO
@@ -206,7 +206,7 @@ namespace protein {
         // the index of the residue
         vislib::Array<unsigned int> resIndex;
         // the secondary structure element type of the residue
-		vislib::Array<megamol::core::moldyn::MolecularDataCall::SecStructure::ElementType> resSecStructType;
+		vislib::Array<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
         
@@ -219,7 +219,7 @@ namespace protein {
         bool initialClickSelection;
         // selection 
         vislib::Array<bool> selection;
-		core::moldyn::ResidueSelectionCall *resSelectionCall;
+		protein_calls::ResidueSelectionCall *resSelectionCall;
     };
 
 } /* end namespace protein */

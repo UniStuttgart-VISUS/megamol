@@ -9,8 +9,8 @@ ResidueSelection::ResidueSelection(void) :
     getSelectionSlot("getSelection", "Provides selection data to clients."),
     selection() {
 
-	this->getSelectionSlot.SetCallback(core::moldyn::ResidueSelectionCall::ClassName(), core::moldyn::ResidueSelectionCall::FunctionName(core::moldyn::ResidueSelectionCall::CallForGetSelection), &ResidueSelection::getSelectionCallback);
-	this->getSelectionSlot.SetCallback(core::moldyn::ResidueSelectionCall::ClassName(), core::moldyn::ResidueSelectionCall::FunctionName(core::moldyn::ResidueSelectionCall::CallForSetSelection), &ResidueSelection::setSelectionCallback);
+	this->getSelectionSlot.SetCallback(protein_calls::ResidueSelectionCall::ClassName(), protein_calls::ResidueSelectionCall::FunctionName(protein_calls::ResidueSelectionCall::CallForGetSelection), &ResidueSelection::getSelectionCallback);
+	this->getSelectionSlot.SetCallback(protein_calls::ResidueSelectionCall::ClassName(), protein_calls::ResidueSelectionCall::FunctionName(protein_calls::ResidueSelectionCall::CallForSetSelection), &ResidueSelection::setSelectionCallback);
     this->MakeSlotAvailable(&this->getSelectionSlot);
 }
 
@@ -31,7 +31,7 @@ void ResidueSelection::release(void) {
 
 
 bool ResidueSelection::getSelectionCallback(core::Call& caller) {
-	core::moldyn::ResidueSelectionCall *sc = dynamic_cast<core::moldyn::ResidueSelectionCall*>(&caller);
+	protein_calls::ResidueSelectionCall *sc = dynamic_cast<protein_calls::ResidueSelectionCall*>(&caller);
     if (sc == NULL) return false;
 
     sc->SetSelectionPointer(&this->selection);
@@ -41,7 +41,7 @@ bool ResidueSelection::getSelectionCallback(core::Call& caller) {
 
 
 bool ResidueSelection::setSelectionCallback(core::Call& caller) {
-	core::moldyn::ResidueSelectionCall *sc = dynamic_cast<core::moldyn::ResidueSelectionCall*>(&caller);
+	protein_calls::ResidueSelectionCall *sc = dynamic_cast<protein_calls::ResidueSelectionCall*>(&caller);
     if (sc == NULL) return false;
     
     this->selection = *sc->GetSelectionPointer();

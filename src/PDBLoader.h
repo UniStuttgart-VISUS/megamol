@@ -18,7 +18,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/RunnableThread.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "ForceDataCall.h"
 #include "Stride.h"
 #include "mmcore/view/AnimDataModule.h"
@@ -473,7 +473,7 @@ namespace protein {
          * Helper class to unlock frame data when 'CallSimpleSphereData' is
          * used.
          */
-		class Unlocker : public megamol::core::moldyn::MolecularDataCall::Unlocker {
+		class Unlocker : public megamol::protein_calls::MolecularDataCall::Unlocker {
         public:
 
             /**
@@ -481,7 +481,7 @@ namespace protein {
              *
              * @param frame The frame to unlock
              */
-			Unlocker(Frame& frame) : megamol::core::moldyn::MolecularDataCall::Unlocker(),
+			Unlocker(Frame& frame) : megamol::protein_calls::MolecularDataCall::Unlocker(),
                     frame(&frame) {
                 // intentionally empty
             }
@@ -660,10 +660,10 @@ namespace protein {
         vislib::Array<int> atomResidueIdx;
 
         /** The array of atom types */
-		vislib::Array<megamol::core::moldyn::MolecularDataCall::AtomType> atomType;
+		vislib::Array<megamol::protein_calls::MolecularDataCall::AtomType> atomType;
 
         /** The array of residues */
-		vislib::Array<megamol::core::moldyn::MolecularDataCall::Residue*> residue;
+		vislib::Array<megamol::protein_calls::MolecularDataCall::Residue*> residue;
 
         /** The array of residue type names */
         vislib::Array<vislib::StringA> residueTypeName;
@@ -672,10 +672,10 @@ namespace protein {
         vislib::Array<unsigned int> solventResidueIdx;
 
         /** The array of molecules */
-		vislib::Array<megamol::core::moldyn::MolecularDataCall::Molecule> molecule;
+		vislib::Array<megamol::protein_calls::MolecularDataCall::Molecule> molecule;
 
         /** The array of chains */
-		vislib::Array<megamol::core::moldyn::MolecularDataCall::Chain> chain;
+		vislib::Array<megamol::protein_calls::MolecularDataCall::Chain> chain;
 
         /**
          * Stores the connectivity information (i.e. subsequent pairs of atom
@@ -698,7 +698,7 @@ namespace protein {
         vislib::Array<unsigned int> chainFirstRes;
         vislib::Array<unsigned int> chainResCount;
         vislib::Array<char> chainName;
-		vislib::Array<megamol::core::moldyn::MolecularDataCall::Chain::ChainType> chainType;
+		vislib::Array<megamol::protein_calls::MolecularDataCall::Chain::ChainType> chainType;
         char chainId;
 
         /** the number of frames */

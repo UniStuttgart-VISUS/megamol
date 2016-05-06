@@ -36,7 +36,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
@@ -2607,7 +2607,7 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(
  * update parameters
  */
 void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall *mol,
-    const core::moldyn::BindingSiteCall *bs) {
+    const protein_calls::BindingSiteCall *bs) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
         Color::ReadColorTableFromFile(

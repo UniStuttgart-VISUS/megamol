@@ -18,7 +18,7 @@
 #include "mmcore/view/TimeControl.h"
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
 namespace protein {
@@ -126,7 +126,7 @@ private:
      * @param dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-	bool writePDB(megamol::core::moldyn::MolecularDataCall *mol);
+	bool writePDB(megamol::protein_calls::MolecularDataCall *mol);
 
     /**
      * Write one frame to the respective *.pqr file.
@@ -134,7 +134,7 @@ private:
      * @param dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-	bool writePQR(megamol::core::moldyn::MolecularDataCall *mol);
+	bool writePQR(megamol::protein_calls::MolecularDataCall *mol);
 
     core::CallerSlot dataCallerSlot;  ///> Data caller slot
     core::view::TimeControl timeCtrl; ///> The time control

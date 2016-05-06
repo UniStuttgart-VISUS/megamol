@@ -12,7 +12,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sys/Log.h"
@@ -102,7 +102,7 @@ private:
 	unsigned int atom_count;
 	unsigned int con_count;
 	vislib::Array<unsigned int> atomTypeIdx_arr;
-	vislib::Array<megamol::core::moldyn::MolecularDataCall::AtomType> atomType_arr;
+	vislib::Array<megamol::protein_calls::MolecularDataCall::AtomType> atomType_arr;
 	std::vector<float> charge;
 	std::vector<float> bfactor;
 	std::vector<float> occupancy;
@@ -130,7 +130,7 @@ private:
 	std::vector<MolecularDataCall::Molecule> molecules;
 	vislib::Array<int> filter;
 
-	vislib::Array<megamol::core::moldyn::MolecularDataCall::Chain> chain;
+	vislib::Array<megamol::protein_calls::MolecularDataCall::Chain> chain;
 };
 
 } // namespace protein

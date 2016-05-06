@@ -27,7 +27,7 @@
 
 using namespace megamol;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 typedef unsigned int uint;
 

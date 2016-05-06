@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 #include "VTIWriter.h"
-#include "mmcore/moldyn/VTIDataCall.h"
+#include "protein_calls/VTIDataCall.h"
 #include "Base64.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
@@ -47,7 +47,7 @@ VTIWriter::VTIWriter()  : AbstractJob(), Module(),
         jobDone(false), filenameDigits(0) {
 
     // Make data caller slot available
-	this->dataCallerSlot.SetCompatibleCall<core::moldyn::VTIDataCallDescription>();
+	this->dataCallerSlot.SetCompatibleCall<protein_calls::VTIDataCallDescription>();
     this->MakeSlotAvailable (&this->dataCallerSlot);
 
     // Parameter to determine the first frame to be written
@@ -72,9 +72,9 @@ VTIWriter::VTIWriter()  : AbstractJob(), Module(),
 
     // Parameter for the output format of the data
     megamol::core::param::EnumParam *fp =
-		new megamol::core::param::EnumParam((int)core::moldyn::VTKImageData::VTISOURCE_ASCII);
-	fp->SetTypePair(core::moldyn::VTKImageData::VTISOURCE_BINARY, "Binary");
-	fp->SetTypePair(core::moldyn::VTKImageData::VTISOURCE_ASCII, "Ascii");
+		new megamol::core::param::EnumParam((int)protein_calls::VTKImageData::VTISOURCE_ASCII);
+	fp->SetTypePair(protein_calls::VTKImageData::VTISOURCE_BINARY, "Binary");
+	fp->SetTypePair(protein_calls::VTKImageData::VTISOURCE_ASCII, "Ascii");
     //fp->SetTypePair(VTKImageData::VTISOURCE_APPENDED, "Appended"); // TODO Not implemented yet
     this->dataFormatSlot << fp;
     this->MakeSlotAvailable(&this->dataFormatSlot);
@@ -103,14 +103,14 @@ bool VTIWriter::IsRunning(void) const {
 bool VTIWriter::Start(void) {
     using namespace vislib::sys;
 
-	core::moldyn::VTIDataCall *dc = this->dataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
+	protein_calls::VTIDataCall *dc = this->dataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (dc == NULL) {
         this->jobDone = true;
         return false;
     }
 
     // Get extent of the data set
-	if (!(*dc)(core::moldyn::VTIDataCall::CallForGetExtent)) return false;
+	if (!(*dc)(protein_calls::VTIDataCall::CallForGetExtent)) return false;
 
     Log::DefaultLog.WriteMsg (Log::LEVEL_INFO,
         "%s: Number of frames %u", this->ClassName(), dc->FrameCount());
@@ -155,11 +155,11 @@ bool VTIWriter::Start(void) {
 
         // Request frame
         dc->SetFrameID(fr, true);  // Set 'force' flag
-		if (!(*dc)(core::moldyn::VTIDataCall::CallForGetExtent)) {
+		if (!(*dc)(protein_calls::VTIDataCall::CallForGetExtent)) {
             this->jobDone = true;
             return false;
         }
-		if (!(*dc)(core::moldyn::VTIDataCall::CallForGetData)) {
+		if (!(*dc)(protein_calls::VTIDataCall::CallForGetData)) {
             this->jobDone = true;
             return false;
         }
@@ -236,11 +236,11 @@ bool VTIWriter::createDirectories(vislib::StringA folder) {
 /*
  * VTIWriter::GetFormatStr
  */
-vislib::TString VTIWriter::getFormatStr(core::moldyn::VTKImageData::DataFormat f) {
+vislib::TString VTIWriter::getFormatStr(protein_calls::VTKImageData::DataFormat f) {
     switch (f) {
-	case core::moldyn::VTKImageData::VTISOURCE_BINARY: return vislib::TString("binary");
-	case core::moldyn::VTKImageData::VTISOURCE_ASCII: return vislib::TString("ascii");
-	case core::moldyn::VTKImageData::VTISOURCE_APPENDED: return vislib::TString("appended");
+	case protein_calls::VTKImageData::VTISOURCE_BINARY: return vislib::TString("binary");
+	case protein_calls::VTKImageData::VTISOURCE_ASCII: return vislib::TString("ascii");
+	case protein_calls::VTKImageData::VTISOURCE_APPENDED: return vislib::TString("appended");
     default: return vislib::TString("");
     }
 }
@@ -249,13 +249,13 @@ vislib::TString VTIWriter::getFormatStr(core::moldyn::VTKImageData::DataFormat f
 /*
  * VTIWriter::GetTypeStr
  */
-vislib::TString VTIWriter::getTypeStr(core::moldyn::VTKImageData::DataArray::DataType t) {
+vislib::TString VTIWriter::getTypeStr(protein_calls::VTKImageData::DataArray::DataType t) {
     switch (t) {
-	case core::moldyn::VTKImageData::DataArray::VTI_FLOAT: return vislib::TString("Float32");
-	case core::moldyn::VTKImageData::DataArray::VTI_INT: return vislib::TString("Int32");
-	case core::moldyn::VTKImageData::DataArray::VTI_UINT: return vislib::TString("UInt32");
-	case core::moldyn::VTKImageData::DataArray::VTI_DOUBLE: return vislib::TString("Float64");
-	case core::moldyn::VTKImageData::DataArray::VTI_UNKNOWN: return vislib::TString("Unknown");
+	case protein_calls::VTKImageData::DataArray::VTI_FLOAT: return vislib::TString("Float32");
+	case protein_calls::VTKImageData::DataArray::VTI_INT: return vislib::TString("Int32");
+	case protein_calls::VTKImageData::DataArray::VTI_UINT: return vislib::TString("UInt32");
+	case protein_calls::VTKImageData::DataArray::VTI_DOUBLE: return vislib::TString("Float64");
+	case protein_calls::VTKImageData::DataArray::VTI_UNKNOWN: return vislib::TString("Unknown");
     default: return vislib::TString("");
     }
 }
@@ -265,14 +265,14 @@ vislib::TString VTIWriter::getTypeStr(core::moldyn::VTKImageData::DataArray::Dat
  * VTIWriter::writeDataAscii
  */
 bool VTIWriter::writeDataAscii(const void *data, size_t size, std::ofstream &outfile,
-		core::moldyn::VTKImageData::DataArray::DataType t) {
+		protein_calls::VTKImageData::DataArray::DataType t) {
     switch (t) {
-	case core::moldyn::VTKImageData::DataArray::VTI_FLOAT:
+	case protein_calls::VTKImageData::DataArray::VTI_FLOAT:
         this->writeDataAsciiFloat((const float*)data, size, outfile); return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_INT: return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_UINT: return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_DOUBLE: return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_UNKNOWN: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_INT: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_UINT: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_DOUBLE: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_UNKNOWN: return true;
     default: return "";
     }
 }
@@ -282,14 +282,14 @@ bool VTIWriter::writeDataAscii(const void *data, size_t size, std::ofstream &out
  * VTIWriter::writeDataBinary
  */
 bool VTIWriter::writeDataBinary(const void *data, size_t size, std::ofstream &outfile,
-		core::moldyn::VTKImageData::DataArray::DataType t) {
+		protein_calls::VTKImageData::DataArray::DataType t) {
     switch (t) {
-	case core::moldyn::VTKImageData::DataArray::VTI_FLOAT:
+	case protein_calls::VTKImageData::DataArray::VTI_FLOAT:
         this->writeDataBinaryFloat((const float*)data, size, outfile); return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_INT: return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_UINT: return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_DOUBLE: return true;
-	case core::moldyn::VTKImageData::DataArray::VTI_UNKNOWN: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_INT: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_UINT: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_DOUBLE: return true;
+	case protein_calls::VTKImageData::DataArray::VTI_UNKNOWN: return true;
     default: return "";
     }
 }
@@ -341,7 +341,7 @@ bool VTIWriter::writeDataBinaryFloat(const float *data, size_t size,
 /*
  * VTIWriter::writeDataArray
  */
-bool VTIWriter::writeDataArray(const core::moldyn::VTIDataCall *dc, bool isPointData,
+bool VTIWriter::writeDataArray(const protein_calls::VTIDataCall *dc, bool isPointData,
         unsigned int dataIdx, unsigned int pieceIdx, std::ofstream &outfile) {
 
     // Write point data
@@ -351,28 +351,28 @@ bool VTIWriter::writeDataArray(const core::moldyn::VTIDataCall *dc, bool isPoint
         outfile << "\" Name=\"" << dc->GetPointDataArrayId(dataIdx, pieceIdx);
         outfile << "\" format=\"";
         outfile << this->getFormatStr(
-				static_cast<core::moldyn::VTKImageData::DataFormat>(
+				static_cast<protein_calls::VTKImageData::DataFormat>(
                         this->dataFormatSlot.Param<core::param::EnumParam>()->Value()));
         outfile << "\" RangeMin=\"" << std::scientific << dc->GetPointDataArrayMin(dataIdx, pieceIdx);
         outfile << "\" RangeMax=\"" << std::scientific << dc->GetPointDataArrayMax(dataIdx, pieceIdx);
         outfile << "\">" << std::endl;
         // Write data according to parameter
         switch (this->dataFormatSlot.Param<core::param::EnumParam>()->Value()) {
-			case core::moldyn::VTKImageData::VTISOURCE_ASCII:
+			case protein_calls::VTKImageData::VTISOURCE_ASCII:
                 this->writeDataAscii(
                         dc->GetPointDataByIdx(dataIdx, pieceIdx),
                         dc->GetPiecePointArraySize(dataIdx, pieceIdx),
                         outfile,
                         dc->GetPiecePointArrayType(dataIdx, pieceIdx));
                 break;
-			case core::moldyn::VTKImageData::VTISOURCE_BINARY:
+			case protein_calls::VTKImageData::VTISOURCE_BINARY:
                 this->writeDataBinary(
                         dc->GetPointDataByIdx(dataIdx, pieceIdx),
                         dc->GetPiecePointArraySize(dataIdx, pieceIdx),
                         outfile,
                         dc->GetPiecePointArrayType(dataIdx, pieceIdx));
                 break;
-			case core::moldyn::VTKImageData::VTISOURCE_APPENDED: break; // TODO
+			case protein_calls::VTKImageData::VTISOURCE_APPENDED: break; // TODO
         }
         outfile << std::endl;
         outfile << "        </DataArray>" << std::endl;
@@ -382,28 +382,28 @@ bool VTIWriter::writeDataArray(const core::moldyn::VTIDataCall *dc, bool isPoint
         outfile << "\" Name=\"" << dc->GetCellDataArrayId(dataIdx, pieceIdx);
         outfile << "\" format=\"";
         outfile << this->getFormatStr(
-				static_cast<core::moldyn::VTKImageData::DataFormat>(
+				static_cast<protein_calls::VTKImageData::DataFormat>(
                         this->dataFormatSlot.Param<core::param::EnumParam>()->Value()));
         outfile << "\" RangeMin=\"" << std::scientific << dc->GetCellDataArrayMin(dataIdx, pieceIdx);
         outfile << "\" RangeMax=\"" << std::scientific << dc->GetCellDataArrayMax(dataIdx, pieceIdx);
         outfile << "\">" << std::endl;
         // Write data according to parameter
         switch (this->dataFormatSlot.Param<core::param::EnumParam>()->Value()) {
-			case core::moldyn::VTKImageData::VTISOURCE_ASCII:
+			case protein_calls::VTKImageData::VTISOURCE_ASCII:
                 this->writeDataAscii(
                         dc->GetCellDataByIdx(dataIdx, pieceIdx),
                         dc->GetPieceCellArraySize(dataIdx, pieceIdx),
                         outfile,
                         dc->GetPiecePointArrayType(dataIdx, pieceIdx));
                 break;
-			case core::moldyn::VTKImageData::VTISOURCE_BINARY:
+			case protein_calls::VTKImageData::VTISOURCE_BINARY:
                 this->writeDataBinary(
                         dc->GetCellDataByIdx(dataIdx, pieceIdx),
                         dc->GetPieceCellArraySize(dataIdx, pieceIdx),
                         outfile,
                         dc->GetPieceCellArrayType(dataIdx, pieceIdx));
                 break;
-			case core::moldyn::VTKImageData::VTISOURCE_APPENDED: break; // TODO
+			case protein_calls::VTKImageData::VTISOURCE_APPENDED: break; // TODO
         }
         outfile << std::endl;
         outfile << "        </DataArray>" << std::endl;
@@ -416,7 +416,7 @@ bool VTIWriter::writeDataArray(const core::moldyn::VTIDataCall *dc, bool isPoint
 /*
  * VTIWriter::writeFile
  */
-bool VTIWriter::writeFile(core::moldyn::VTIDataCall *dc) {
+bool VTIWriter::writeFile(protein_calls::VTIDataCall *dc) {
     using namespace vislib::sys;
 
     // Generate filename based on frame number
@@ -492,7 +492,7 @@ bool VTIWriter::writeFile(core::moldyn::VTIDataCall *dc) {
 /*
  * VTIWriter::writePiece
  */
-bool VTIWriter::writePiece(const core::moldyn::VTIDataCall *dc, uint idx, std::ofstream &outfile) {
+bool VTIWriter::writePiece(const protein_calls::VTIDataCall *dc, uint idx, std::ofstream &outfile) {
 
 
     /* Write piece data header */

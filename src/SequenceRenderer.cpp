@@ -23,7 +23,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace vislib::graphics::gl;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 using vislib::sys::Log;
 
 /*

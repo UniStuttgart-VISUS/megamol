@@ -32,7 +32,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 /*
  * protein::FrodockLoader::FrodockLoader
@@ -50,19 +50,19 @@ FrodockLoader::FrodockLoader(void) : Module(),
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->filenameSlot);
 
-	this->dataOutSlot.SetCallback(megamol::core::moldyn::MolecularDataCall::ClassName(), megamol::core::moldyn::MolecularDataCall::FunctionName(megamol::core::moldyn::MolecularDataCall::CallForGetData), &FrodockLoader::getData);
-	this->dataOutSlot.SetCallback(megamol::core::moldyn::MolecularDataCall::ClassName(), megamol::core::moldyn::MolecularDataCall::FunctionName(megamol::core::moldyn::MolecularDataCall::CallForGetExtent), &FrodockLoader::getExtent);
+	this->dataOutSlot.SetCallback(megamol::protein_calls::MolecularDataCall::ClassName(), megamol::protein_calls::MolecularDataCall::FunctionName(megamol::protein_calls::MolecularDataCall::CallForGetData), &FrodockLoader::getData);
+	this->dataOutSlot.SetCallback(megamol::protein_calls::MolecularDataCall::ClassName(), megamol::protein_calls::MolecularDataCall::FunctionName(megamol::protein_calls::MolecularDataCall::CallForGetExtent), &FrodockLoader::getExtent);
     this->MakeSlotAvailable( &this->dataOutSlot);
 
     this->strideFlagSlot << new param::BoolParam( true);
     this->MakeSlotAvailable( &this->strideFlagSlot);
 
     // receptor
-	this->receptorDataCallerSlot.SetCompatibleCall<megamol::core::moldyn::MolecularDataCallDescription>();
+	this->receptorDataCallerSlot.SetCompatibleCall<megamol::protein_calls::MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->receptorDataCallerSlot);
 
     // ligand
-	this->ligandDataCallerSlot.SetCompatibleCall<megamol::core::moldyn::MolecularDataCallDescription>();
+	this->ligandDataCallerSlot.SetCompatibleCall<megamol::protein_calls::MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->ligandDataCallerSlot);
     
     // file server name
@@ -138,7 +138,7 @@ bool FrodockLoader::create(void) {
 bool FrodockLoader::getData( core::Call& call) {
     using vislib::sys::Log;
 
-	megamol::core::moldyn::MolecularDataCall *dc = dynamic_cast<megamol::core::moldyn::MolecularDataCall*>(&call);
+	megamol::protein_calls::MolecularDataCall *dc = dynamic_cast<megamol::protein_calls::MolecularDataCall*>(&call);
     if ( dc == NULL ) return false;
 
     // try to load the input file
@@ -154,7 +154,7 @@ bool FrodockLoader::getData( core::Call& call) {
     //////////////////////////////////////////////////////////////////
     // get pointer to receptor MolecularDataCall
     //////////////////////////////////////////////////////////////////
-	megamol::core::moldyn::MolecularDataCall *receptor = this->receptorDataCallerSlot.CallAs<megamol::core::moldyn::MolecularDataCall>();
+	megamol::protein_calls::MolecularDataCall *receptor = this->receptorDataCallerSlot.CallAs<megamol::protein_calls::MolecularDataCall>();
     vislib::StringA receptorFilename( frodockInput.receptor);
 #ifdef WIN32
     // convert linux path for windows, if fileServerName is set
@@ -185,7 +185,7 @@ bool FrodockLoader::getData( core::Call& call) {
             paramSlot->Param<param::BoolParam>()->SetValue( this->strideFlagSlot.Param<param::BoolParam>()->Value());
         }
         // all parameters set, execute the data call
-		if (!(*receptor)(megamol::core::moldyn::MolecularDataCall::CallForGetData))
+		if (!(*receptor)(megamol::protein_calls::MolecularDataCall::CallForGetData))
             Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load receptor file."); // DEBUG
         //else
         //    Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Successfully load receptor file."); // DEBUG
@@ -194,7 +194,7 @@ bool FrodockLoader::getData( core::Call& call) {
     //////////////////////////////////////////////////////////////////
     // get pointer to ligand MolecularDataCall
     //////////////////////////////////////////////////////////////////
-	megamol::core::moldyn::MolecularDataCall *ligand = this->ligandDataCallerSlot.CallAs<megamol::core::moldyn::MolecularDataCall>();
+	megamol::protein_calls::MolecularDataCall *ligand = this->ligandDataCallerSlot.CallAs<megamol::protein_calls::MolecularDataCall>();
     vislib::StringA ligandFilename( frodockInput.ligand);
 #ifdef WIN32
     // convert linux path for windows, if fileServerName is set
@@ -225,7 +225,7 @@ bool FrodockLoader::getData( core::Call& call) {
             paramSlot->Param<param::BoolParam>()->SetValue( this->strideFlagSlot.Param<param::BoolParam>()->Value());
         }
         // all parameters set, execute the data call
-		if (!(*ligand)(megamol::core::moldyn::MolecularDataCall::CallForGetData))
+		if (!(*ligand)(megamol::protein_calls::MolecularDataCall::CallForGetData))
             Log::DefaultLog.WriteMsg( Log::LEVEL_ERROR, "Could not load ligand file."); // DEBUG
         //else
         //    Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Successfully load ligand file."); // DEBUG

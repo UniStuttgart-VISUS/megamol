@@ -19,7 +19,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include <map>
 #include <utility>
 
@@ -29,7 +29,7 @@ namespace megamol {
 namespace protein {
 
 	using namespace megamol::core;
-	using namespace megamol::core::moldyn;
+	using namespace megamol::protein_calls;
 	using namespace vislib::graphics::gl;
 
     /**

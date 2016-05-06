@@ -11,7 +11,7 @@
 #include <sstream>
 
 #include "CrystalStructureDataSource.h"
-#include "mmcore/moldyn/CrystalStructureDataCall.h"
+#include "protein_calls/CrystalStructureDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -57,14 +57,14 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void) : AnimData
 
     // Data out slot
     this->dataOutSlot.SetCallback(
-            core::moldyn::CrystalStructureDataCall::ClassName(),
-			core::moldyn::CrystalStructureDataCall::FunctionName
-				(core::moldyn::CrystalStructureDataCall::CallForGetData),
+            protein_calls::CrystalStructureDataCall::ClassName(),
+			protein_calls::CrystalStructureDataCall::FunctionName
+				(protein_calls::CrystalStructureDataCall::CallForGetData),
 			&CrystalStructureDataSource::getData);
     this->dataOutSlot.SetCallback(
-			core::moldyn::CrystalStructureDataCall::ClassName(),
-			core::moldyn::CrystalStructureDataCall::FunctionName
-				(core::moldyn::CrystalStructureDataCall::CallForGetExtent),
+			protein_calls::CrystalStructureDataCall::ClassName(),
+			protein_calls::CrystalStructureDataCall::FunctionName
+				(protein_calls::CrystalStructureDataCall::CallForGetExtent),
             &CrystalStructureDataSource::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
@@ -169,8 +169,8 @@ bool protein::CrystalStructureDataSource::create(void) {
 bool protein::CrystalStructureDataSource::getData(core::Call& call) {
     using vislib::sys::Log;
 
-	core::moldyn::CrystalStructureDataCall *dc =
-			dynamic_cast<core::moldyn::CrystalStructureDataCall*>(&call);
+	protein_calls::CrystalStructureDataCall *dc =
+			dynamic_cast<protein_calls::CrystalStructureDataCall*>(&call);
 
     // TODO Invalid filepointer if frameIdx == 0?
 
@@ -248,8 +248,8 @@ bool protein::CrystalStructureDataSource::getExtent(core::Call& call) {
     updateParams();
 
 
-	core::moldyn::CrystalStructureDataCall *dc =
-			dynamic_cast<core::moldyn::CrystalStructureDataCall*>(&call);
+	protein_calls::CrystalStructureDataCall *dc =
+			dynamic_cast<protein_calls::CrystalStructureDataCall*>(&call);
     if(dc == NULL) return false;
 
 
@@ -349,16 +349,16 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     this->atomType.SetCount(this->atomCnt);
     for(unsigned int i = 0; i < this->atomCnt; i++) {
         if(bufferAtoms[i*7] == 1) {
-			this->atomType[i] = core::moldyn::CrystalStructureDataCall::O;
+			this->atomType[i] = protein_calls::CrystalStructureDataCall::O;
         }
         else if(bufferAtoms[i*7] == 0) {
-			this->atomType[i] = core::moldyn::CrystalStructureDataCall::BA;
+			this->atomType[i] = protein_calls::CrystalStructureDataCall::BA;
         }
         else if(bufferAtoms[i*7] == 2){
-			this->atomType[i] = core::moldyn::CrystalStructureDataCall::TI;
+			this->atomType[i] = protein_calls::CrystalStructureDataCall::TI;
         }
         else {
-			this->atomType[i] = core::moldyn::CrystalStructureDataCall::GENERIC;
+			this->atomType[i] = protein_calls::CrystalStructureDataCall::GENERIC;
             return false;
         }
         // Get connectivity information of this atom

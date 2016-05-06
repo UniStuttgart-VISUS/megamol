@@ -14,7 +14,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "slicing.h"
 #include "Color.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -136,7 +136,7 @@ namespace protein {
         /**
          * Volume rendering using molecular data.
         */
-		bool RenderMolecularData(megamol::core::view::CallRender3D *call, megamol::core::moldyn::MolecularDataCall *mol);
+		bool RenderMolecularData(megamol::core::view::CallRender3D *call, megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Refresh all parameters.
@@ -148,7 +148,7 @@ namespace protein {
          *
          * @param mol The data interface.
         */
-		void UpdateVolumeTexture(megamol::core::moldyn::MolecularDataCall *mol);
+		void UpdateVolumeTexture(megamol::protein_calls::MolecularDataCall *mol);
         
         /**
          * Draw the volume.

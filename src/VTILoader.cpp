@@ -12,7 +12,7 @@
 
 #include "stdafx.h"
 #include "VTILoader.h"
-#include "mmcore/moldyn/VTIDataCall.h"
+#include "protein_calls/VTIDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -47,7 +47,7 @@ VTILoader::VTILoader(void) : AnimDataModule(),
         frameStartSlot("frameStart", "The first frame to be loaded"),
         maxCacheSizeSlot("maxCacheSize", "The maximum size of the cache"),
         hash(0),
-		byteOrder(core::moldyn::VTKImageData::VTI_LITTLE_ENDIAN),
+		byteOrder(protein_calls::VTKImageData::VTI_LITTLE_ENDIAN),
         version(0, 0),
         wholeExtent(0, 0, 0, 0, 0, 0),
         origin(0.0f, 0.0f, 0.0f),
@@ -57,12 +57,12 @@ VTILoader::VTILoader(void) : AnimDataModule(),
         nFrames(0) {
 
     this->dataOutSlot.SetCallback(
-			core::moldyn::VTIDataCall::ClassName(),
-			core::moldyn::VTIDataCall::FunctionName(core::moldyn::VTIDataCall::CallForGetData),
+			protein_calls::VTIDataCall::ClassName(),
+			protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetData),
             &VTILoader::getData);
     this->dataOutSlot.SetCallback(
-			core::moldyn::VTIDataCall::ClassName(),
-			core::moldyn::VTIDataCall::FunctionName(core::moldyn::VTIDataCall::CallForGetExtent),
+			protein_calls::VTIDataCall::ClassName(),
+			protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetExtent),
             &VTILoader::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
@@ -112,12 +112,12 @@ bool VTILoader::getData(core::Call& call) {
     using namespace vislib::sys;
 
     // Get data call
-	core::moldyn::VTIDataCall *dc = dynamic_cast<core::moldyn::VTIDataCall*>(&call);
+	protein_calls::VTIDataCall *dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
     if (dc == NULL) {
         return false;
     }
 
-	if (!(*dc)(core::moldyn::VTIDataCall::CallForGetExtent)) {
+	if (!(*dc)(protein_calls::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -253,7 +253,7 @@ bool VTILoader::getExtent(core::Call& call) {
     }
 
     // Get data call
-	core::moldyn::VTIDataCall *dc = dynamic_cast<core::moldyn::VTIDataCall*>(&call);
+	protein_calls::VTIDataCall *dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
     if (dc == NULL) {
         return false;
     }
@@ -430,7 +430,7 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
 
             vislib::StringA dataType, version, byteOrder;
             //printf("%s\n", entity.PeekBuffer()); // DEBUG
-			core::moldyn::VTKImageData::ByteOrder b;
+			protein_calls::VTKImageData::ByteOrder b;
 
             // type
             dataType = entity.Substring(entity.Find("type", 0)+6);
@@ -462,10 +462,10 @@ bool VTILoader::loadFile(const vislib::StringA& filename) {
             byteOrder = entity.Substring(entity.Find("byte_order", 0)+12);
             byteOrder = byteOrder.Substring(0, byteOrder.Find("\"", 0));
             if(byteOrder == vislib::StringA("LittleEndian")) {
-				b = core::moldyn::VTKImageData::VTI_LITTLE_ENDIAN;
+				b = protein_calls::VTKImageData::VTI_LITTLE_ENDIAN;
             }
             else if(byteOrder == vislib::StringA("BigEndian")) {
-				b = core::moldyn::VTKImageData::VTI_BIG_ENDIAN;
+				b = protein_calls::VTKImageData::VTI_BIG_ENDIAN;
             }
             else {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (wrong 'byte_order' attribute)",
@@ -772,12 +772,12 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
 
             // type
             vislib::StringA dataType;
-			core::moldyn::VTKImageData::DataArray::DataType t; // TODO Actually use data type
-			core::moldyn::VTKImageData::DataFormat f;
+			protein_calls::VTKImageData::DataArray::DataType t; // TODO Actually use data type
+			protein_calls::VTKImageData::DataFormat f;
             dataType = entity.Substring(entity.Find("type", 0)+6);
             dataType = dataType.Substring(0, dataType.Find("\"", 0));
             if(dataType == vislib::StringA("Float32")) {
-				t = core::moldyn::VTKImageData::DataArray::VTI_FLOAT;
+				t = protein_calls::VTKImageData::DataArray::VTI_FLOAT;
             }
             else {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (wrong data type in data array)",
@@ -799,10 +799,10 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
             format = entity.Substring(entity.Find("format", 0)+8);
             format = format.Substring(0, format.Find("\"", 0));
             if(format == vislib::StringA("ascii")) {
-				f = core::moldyn::VTKImageData::VTISOURCE_ASCII;
+				f = protein_calls::VTKImageData::VTISOURCE_ASCII;
             }
             else if(format == vislib::StringA("binary")) {
-				f = core::moldyn::VTKImageData::VTISOURCE_BINARY;
+				f = protein_calls::VTKImageData::VTISOURCE_BINARY;
             }
             else {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load file '%s' (unsupported data format %s)",
@@ -850,22 +850,22 @@ void VTILoader::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) 
                     (fr->GetPieceExtent(pieceCounter-1).Height()+1) * numComponents;
 
             float *data = 0;
-			if (f == core::moldyn::VTKImageData::VTISOURCE_ASCII) {
+			if (f == protein_calls::VTKImageData::VTISOURCE_ASCII) {
                 data = new float[gridSize];
                 this->readDataAscii2Float(pt_end, data, gridSize);
                 fr->SetPointData(
                         (const char*)data, min, max,
-						core::moldyn::VTKImageData::DataArray::VTI_FLOAT,
+						protein_calls::VTKImageData::DataArray::VTI_FLOAT,
                         name,
                         1, pieceCounter-1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
 			}
-			else if (f == core::moldyn::VTKImageData::VTISOURCE_BINARY) {
+			else if (f == protein_calls::VTKImageData::VTISOURCE_BINARY) {
                 data = new float[gridSize+1];
                 this->readDataBinary2Float(pt_end, data, gridSize);
                 const float *dataplus = data + 1;
                 fr->SetPointData(
                         (const char*)(dataplus), min, max,
-						core::moldyn::VTKImageData::DataArray::VTI_FLOAT,
+						protein_calls::VTKImageData::DataArray::VTI_FLOAT,
                         name,
                         numComponents, pieceCounter-1); // TODO Use real ID AND NUMBER OF COMPONENTS!!
 

@@ -13,7 +13,7 @@
 
 #include "slicing.h"
 #include "Color.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -148,13 +148,13 @@ namespace protein {
 		* @return The return value of the function.
 		*/
 		virtual bool Render( megamol::core::Call& call);
-		void UpdateColorTable(megamol::core::moldyn::MolecularDataCall *mol);
-		void ColorAtom(float *atomColor, megamol::core::moldyn::MolecularDataCall *mol, int polymerColorMode, int atomIdx, int residueIdx);
+		void UpdateColorTable(megamol::protein_calls::MolecularDataCall *mol);
+		void ColorAtom(float *atomColor, megamol::protein_calls::MolecularDataCall *mol, int polymerColorMode, int atomIdx, int residueIdx);
 
 		/**
          * Volume rendering using molecular data.
 		*/
-		bool RenderMolecularData(megamol::core::view::CallRender3D *call, megamol::core::moldyn::MolecularDataCall *mol);
+		bool RenderMolecularData(megamol::core::view::CallRender3D *call, megamol::protein_calls::MolecularDataCall *mol);
 		
 		/**
          * Render the current mouse position on the clipping plane as a small sphere.
@@ -167,15 +167,15 @@ namespace protein {
         /**
          * Refresh all parameters.
 		*/
-		void ParameterRefresh(megamol::core::view::CallRender3D *call, megamol::core::moldyn::MolecularDataCall *mol);
+		void ParameterRefresh(megamol::core::view::CallRender3D *call, megamol::protein_calls::MolecularDataCall *mol);
 		
 		/** 
          * Create a volume containing all molecule atoms.
 		 *
 		 * @param mol The data interface.
 		*/
-		void UpdateVolumeTexture(megamol::core::moldyn::MolecularDataCall *mol);
-		void CreateSpatialProbabilitiesTexture(megamol::core::moldyn::MolecularDataCall *mol);
+		void UpdateVolumeTexture(megamol::protein_calls::MolecularDataCall *mol);
+		void CreateSpatialProbabilitiesTexture(megamol::protein_calls::MolecularDataCall *mol);
 
 		/**
          * Draw the volume.
@@ -188,12 +188,12 @@ namespace protein {
 		 * Render the molecular data in stick mode.
 		 * Special case when using solvent rendering: only render solvent molecules near the isosurface between the solvent and the molecule.
 		 */
-		void RenderMolecules( /*const*/ megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderMolecules( /*const*/ megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
 		/*
 		 * Render hydrogen bounds
 		 */
-		void RenderHydrogenBounds(megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderHydrogenBounds(megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
 		/**
          * Write the parameters of the ray to the textures.
@@ -228,7 +228,7 @@ namespace protein {
 		 *
 		 * @param mol The data interface.
 		 */
-		void FindVisibleSolventMolecules(megamol::core::moldyn::MolecularDataCall *mol);
+		void FindVisibleSolventMolecules(megamol::protein_calls::MolecularDataCall *mol);
 
 		/**********************************************************************
 		 * variables
@@ -390,7 +390,7 @@ namespace protein {
 
 		// temporary atom array as member - do not use new-operator inside render()-routines!
 		// temporary arrays for rendering operations ...
-		bool getFrameData(megamol::core::moldyn::MolecularDataCall *mol, int frameID, float *&interPosFramePtr, int *&interHBondFramePtr);
+		bool getFrameData(megamol::protein_calls::MolecularDataCall *mol, int frameID, float *&interPosFramePtr, int *&interHBondFramePtr);
 
 		vislib::Array<float> interpAtomPosTmpArray;
 		vislib::Array<int> interpHBondTmpArray;

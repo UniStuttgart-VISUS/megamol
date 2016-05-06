@@ -11,7 +11,7 @@
 
 #include "stdafx.h"
 #include "VMDDXLoader.h"
-#include "mmcore/moldyn/VTIDataCall.h"
+#include "protein_calls/VTIDataCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -51,12 +51,12 @@ VMDDXLoader::VMDDXLoader(void) : Module(),
 {
 
     this->dataOutSlot.SetCallback(
-			core::moldyn::VTIDataCall::ClassName(),
-			core::moldyn::VTIDataCall::FunctionName(core::moldyn::VTIDataCall::CallForGetData),
+			protein_calls::VTIDataCall::ClassName(),
+			protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetData),
             &VMDDXLoader::getData);
     this->dataOutSlot.SetCallback(
-			core::moldyn::VTIDataCall::ClassName(),
-			core::moldyn::VTIDataCall::FunctionName(core::moldyn::VTIDataCall::CallForGetExtent),
+			protein_calls::VTIDataCall::ClassName(),
+			protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetExtent),
             &VMDDXLoader::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
@@ -97,7 +97,7 @@ bool VMDDXLoader::getData(core::Call& call) {
     using namespace vislib::sys;
 
     // Get data call
-	core::moldyn::VTIDataCall *dc = dynamic_cast<core::moldyn::VTIDataCall*>(&call);
+	protein_calls::VTIDataCall *dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
     if(dc == NULL) return false;
 
 //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Frame requested: %u",
@@ -163,7 +163,7 @@ bool VMDDXLoader::getExtent(core::Call& call) {
     }
 
     // Get data call
-	core::moldyn::VTIDataCall *dc = dynamic_cast<core::moldyn::VTIDataCall*>(&call);
+	protein_calls::VTIDataCall *dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
     if(dc == NULL) return false;
 
     // Set frame count
@@ -296,7 +296,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
     // Setup data array
     this->imgdata.SetNumberOfPieces(1);
     this->imgdata.SetPointData((const char*)this->data.Peek(), min, max,
-			core::moldyn::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
+			protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... done (%f s)",
             this->ClassName(),

@@ -36,7 +36,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 /*
  * protein::CartoonRenderer::CartoonRenderer (CTOR)
@@ -373,6 +373,6 @@ bool CartoonRenderer::Render(Call& call) {
  * update parameters
  */
 void CartoonRenderer::UpdateParameters(const MolecularDataCall *mol,
-    const core::moldyn::BindingSiteCall *bs) {
+    const protein_calls::BindingSiteCall *bs) {
     // TODO
 }

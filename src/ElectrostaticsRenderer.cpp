@@ -41,7 +41,7 @@ ElectrostaticsRenderer::ElectrostaticsRenderer(void) : Renderer3DModule (),
         fieldSize( 0), field( 0) {
     // the caller slot
     this->dataCallerSlot.SetCompatibleCall<ParticleDataCallDescription>();
-	this->dataCallerSlot.SetCompatibleCall<megamol::core::moldyn::MolecularDataCallDescription>();
+	this->dataCallerSlot.SetCompatibleCall<megamol::protein_calls::MolecularDataCallDescription>();
     this->MakeSlotAvailable( &this->dataCallerSlot);
 
     // the cell length parameter
@@ -133,7 +133,7 @@ bool ElectrostaticsRenderer::GetExtents(Call& call) {
     if( cr3d == NULL ) return false;
 
     ParticleDataCall *pdc = this->dataCallerSlot.CallAs<ParticleDataCall>();
-	megamol::core::moldyn::MolecularDataCall *mdc = this->dataCallerSlot.CallAs<megamol::core::moldyn::MolecularDataCall>();
+	megamol::protein_calls::MolecularDataCall *mdc = this->dataCallerSlot.CallAs<megamol::protein_calls::MolecularDataCall>();
     float scale;
     if( pdc != NULL ) {
         if (!(*pdc)(ParticleDataCall::CallForGetExtent)) return false;
@@ -144,7 +144,7 @@ bool ElectrostaticsRenderer::GetExtents(Call& call) {
         }
         cr3d->AccessBoundingBoxes() = pdc->AccessBoundingBoxes();
     } else if( mdc != NULL ) {
-		if (!(*mdc)(megamol::core::moldyn::MolecularDataCall::CallForGetExtent)) return false;
+		if (!(*mdc)(megamol::protein_calls::MolecularDataCall::CallForGetExtent)) return false;
         if( !vislib::math::IsEqual( mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) { 
             scale = 2.0f / mdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
         } else {

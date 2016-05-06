@@ -48,7 +48,7 @@ VolumeDirectionRenderer::VolumeDirectionRenderer(void) : Renderer3DModuleDS (),
     getTFSlot("getTransferFunction", "Connects to the transfer function module"),
     greyTF(0), datahash(-1)
 {
-	this->vtiDataCallerSlot.SetCompatibleCall<core::moldyn::VTIDataCallDescription>();
+	this->vtiDataCallerSlot.SetCompatibleCall<protein_calls::VTIDataCallDescription>();
     this->MakeSlotAvailable( &this->vtiDataCallerSlot);
     
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
@@ -156,15 +156,15 @@ bool VolumeDirectionRenderer::GetExtents(Call& call) {
     if( cr3d == NULL ) return false;
 
     
-	core::moldyn::VTIDataCall *vti = this->vtiDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
+	protein_calls::VTIDataCall *vti = this->vtiDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if( vti == NULL ) return false;
     // set call time
     vti->SetCalltime(cr3d->Time());
     vti->SetFrameID(static_cast<int>(cr3d->Time()));
     // try to call for extent
-	if (!(*vti)(core::moldyn::VTIDataCall::CallForGetExtent)) return false;
+	if (!(*vti)(protein_calls::VTIDataCall::CallForGetExtent)) return false;
     // try to call for data
-	if (!(*vti)(core::moldyn::VTIDataCall::CallForGetData)) return false;
+	if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) return false;
 
     float scale;
     if( !vislib::math::IsEqual( vti->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
@@ -199,7 +199,7 @@ bool VolumeDirectionRenderer::Render(Call& call) {
     float callTime = cr->Time();
 
     // get pointer to MolecularDataCall
-	core::moldyn::VTIDataCall *vti = this->vtiDataCallerSlot.CallAs<core::moldyn::VTIDataCall>();
+	protein_calls::VTIDataCall *vti = this->vtiDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if( vti == NULL) return false;
     
     // set call time
@@ -207,7 +207,7 @@ bool VolumeDirectionRenderer::Render(Call& call) {
     // set frame ID
     vti->SetFrameID(static_cast<int>( callTime));
     // try to call for data
-	if (!(*vti)(core::moldyn::VTIDataCall::CallForGetData)) return false;
+	if (!(*vti)(protein_calls::VTIDataCall::CallForGetData)) return false;
     
     glPushMatrix();
     // compute scale factor and scale world
@@ -386,7 +386,7 @@ bool VolumeDirectionRenderer::Render(Call& call) {
 /*
  * update parameters
  */
-void VolumeDirectionRenderer::UpdateParameters(const core::moldyn::VTIDataCall *vti) {
+void VolumeDirectionRenderer::UpdateParameters(const protein_calls::VTIDataCall *vti) {
     if( this->minDensityFilterParam.IsDirty() ) {
         this->minDensityFilterParam.ResetDirty();
         this->triggerArrowComputation = true;

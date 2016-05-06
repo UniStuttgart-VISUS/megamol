@@ -11,11 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/moldyn/BindingSiteCall.h"
+#include "protein_calls/BindingSiteCall.h"
 #include "CallColor.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
 
@@ -115,14 +115,14 @@ public:
       * @param forceRecompute      Force recomputation of the color table.
       * @param bs                  The binding site data call.
       */
-	 void MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
+	 void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
 		ColoringMode cm0,
         ColoringMode cm1,
         vislib::Array<float> &atomColorTable,
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
         vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
         bool forceRecompute = false,
-		const core::moldyn::BindingSiteCall *bs = 0);
+		const protein_calls::BindingSiteCall *bs = 0);
 	 
      /**
       * Make color table for all atoms acoording to the current coloring
@@ -141,13 +141,13 @@ public:
       * @param forceRecompute      Force recomputation of the color table.
       * @param bs                  The binding site data call.
       */
-	 void MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
+	 void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
 		ColoringMode currentColoringMode,
         vislib::Array<float> &atomColorTable,
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
         vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
         bool forceRecompute = false,
-		const core::moldyn::BindingSiteCall *bs = 0);
+		const protein_calls::BindingSiteCall *bs = 0);
 
 	 /**
       * Make color table for all atoms acoording to compare two different
@@ -164,14 +164,14 @@ public:
       * @param forceRecompute      Force recomputation of the color table.
       * @param bs                  The binding site data call.
       */
-	 void MakeComparisonColorTable(megamol::core::moldyn::MolecularDataCall *mol1,
+	 void MakeComparisonColorTable(megamol::protein_calls::MolecularDataCall *mol1,
 		ColoringMode currentColoringMode,
 		vislib::Array<float> &atomColorTable,
 		vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
 		vislib::Array<vislib::math::Vector<float, 3> > &rainbowColors,
 		unsigned int frameID,
 		bool forceRecompute = false,
-		const core::moldyn::BindingSiteCall *bs = 0);
+		const protein_calls::BindingSiteCall *bs = 0);
 
 	 /**
       * Fill amino acid color table.

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "MoleculeSequenceRenderer.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 
@@ -9,7 +9,7 @@
 using namespace megamol::core::view;
 using namespace megamol::core;
 using namespace megamol::protein;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 MoleculeSequenceRenderer::MoleculeSequenceRenderer(void) : 
 	dataCall(new CallerSlot("getdata", "call used to fetch data from a data provider"))

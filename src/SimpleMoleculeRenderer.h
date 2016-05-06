@@ -11,8 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/moldyn/MolecularDataCall.h"
-#include "mmcore/moldyn/BindingSiteCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/BindingSiteCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -137,7 +137,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderLines(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderLines(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in stick mode.
@@ -145,7 +145,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderStick(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderStick(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in ball-and-stick mode.
@@ -153,7 +153,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderBallAndStick(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderBallAndStick(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in ball-and-stick mode.
@@ -161,7 +161,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderStickClipPlane(megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderStickClipPlane(megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -169,7 +169,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSpacefilling(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderSpacefilling(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -177,7 +177,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSpacefillingClipPlane(megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderSpacefillingClipPlane(megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in solvent accessible surface mode.
@@ -185,7 +185,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSAS(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderSAS(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Test the filter module.
@@ -193,7 +193,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderPointsFilter(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderPointsFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Test the filter module.
@@ -201,7 +201,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderLinesFilter(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderLinesFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in stick mode.
@@ -209,7 +209,7 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderStickFilter(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderStickFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Render the molecular data in spacefilling mode.
@@ -217,14 +217,14 @@ namespace protein {
          * @param mol        Pointer to the data call.
          * @param atomPos    Pointer to the interpolated atom positions.
          */
-		void RenderSpacefillingFilter(const megamol::core::moldyn::MolecularDataCall *mol, const float *atomPos);
+		void RenderSpacefillingFilter(const megamol::protein_calls::MolecularDataCall *mol, const float *atomPos);
 
         /**
          * Update all parameter slots.
          *
          * @param mol   Pointer to the data call.
          */
-		void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol, const core::moldyn::BindingSiteCall *bs = 0);
+		void UpdateParameters(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs = 0);
 
 
         /**********************************************************************

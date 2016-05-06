@@ -18,7 +18,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/view/Renderer3DModule.h"
 
 #include "HostArr.h"
@@ -106,7 +106,7 @@ private:
     /**
      * Helper class to unlock frame data.
      */
-	class Unlocker : public megamol::core::moldyn::MolecularDataCall::Unlocker {
+	class Unlocker : public megamol::protein_calls::MolecularDataCall::Unlocker {
     public:
 
         /**
@@ -115,7 +115,7 @@ private:
          * @param mol The molecular data call whos 'Unlock'-method is to be
          *            called.
          */
-		Unlocker(megamol::core::moldyn::MolecularDataCall& mol) : megamol::core::moldyn::MolecularDataCall::Unlocker(),
+		Unlocker(megamol::protein_calls::MolecularDataCall& mol) : megamol::protein_calls::MolecularDataCall::Unlocker(),
         mol(&mol){
             // intentionally empty
         }
@@ -132,7 +132,7 @@ private:
 
     private:
 
-		megamol::core::moldyn::MolecularDataCall *mol;
+		megamol::protein_calls::MolecularDataCall *mol;
 
     };
 
@@ -141,7 +141,7 @@ private:
      *
      * @param mol   Pointer to the data call.
      */
-	void updateParams(megamol::core::moldyn::MolecularDataCall *mol);
+	void updateParams(megamol::protein_calls::MolecularDataCall *mol);
 
 
     /// Caller slot to get unfiltered data

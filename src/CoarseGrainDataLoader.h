@@ -17,7 +17,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "SphereDataCall.h"
 
 namespace megamol {

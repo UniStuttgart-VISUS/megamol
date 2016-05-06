@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "CartoonTessellationRenderer.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -24,8 +24,8 @@
 #include <stdint.h>
 
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
 using namespace megamol::protein;
+using namespace megamol::protein_calls;
 
 #define RENDER_ATOMS_AS_SPHERES 1
 

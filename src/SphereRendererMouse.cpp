@@ -16,7 +16,7 @@
 #include <GL/glu.h>
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/BoolParam.h"
@@ -28,7 +28,7 @@
 #include "vislib/math/Vector.h"
 
 using namespace megamol;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 /*
  * protein::special::SphereRendererMouse::SphereRendererMouse
