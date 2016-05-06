@@ -5,12 +5,21 @@
  */
 
 #include "stdafx.h"
-#include "Protein_Calls/Protein_Calls.h"
+#include "protein_calls/Protein_Calls.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
+
+#include "protein_calls/BindingSiteCall.h"
+#include "protein_calls/CrystalStructureDataCall.h"
+#include "protein_calls/DiagramCall.h"
+#include "protein_calls/IntSelectionCall.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ResidueSelectionCall.h"
+#include "protein_calls/SplitMergeCall.h"
+#include "protein_calls/VTIDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -26,7 +35,7 @@ namespace {
                 "Protein_Calls", // TODO: Change this!
 
                 /* human-readable plugin description */
-                "Describing Protein_Calls (TODO: Change this!)") {
+                "Plugin containing calls used by Protein and Protein_CUDA") {
 
             // here we could perform addition initialization
         };
@@ -48,15 +57,14 @@ namespace {
             //
 
             // register calls here:
-
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::Protein_Calls::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::Protein_Calls::MyCall2>();
-            //   ...
-            //
-
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::BindingSiteCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::CrystalStructureDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::DiagramCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::IntSelectionCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::MolecularDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::ResidueSelectionCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::SplitMergeCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VTIDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

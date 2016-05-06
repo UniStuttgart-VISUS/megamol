@@ -100,13 +100,13 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Protein_Calls</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">protein_calls</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Protein_Calls</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">protein_calls</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Protein_Calls</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">protein_calls</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.mmplg</TargetExt>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Protein_Calls</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">protein_calls</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.mmplg</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -229,19 +229,39 @@
     <None Include="ExtLibs.props.input" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Protein_Calls\BindingSiteCall.h" />
+    <ClInclude Include="include\Protein_Calls\CrystalStructureDataCall.h" />
+    <ClInclude Include="include\Protein_Calls\DiagramCall.h" />
+    <ClInclude Include="include\Protein_Calls\Interpol.h" />
+    <ClInclude Include="include\Protein_Calls\IntSelectionCall.h" />
+    <ClInclude Include="include\Protein_Calls\MolecularDataCall.h" />
     <ClInclude Include="include\Protein_Calls\Protein_Calls.h" />
+    <ClInclude Include="include\Protein_Calls\ResidueSelectionCall.h" />
+    <ClInclude Include="include\Protein_Calls\SplitMergeCall.h" />
+    <ClInclude Include="include\Protein_Calls\VTIDataCall.h" />
+    <ClInclude Include="include\Protein_Calls\VTKImageData.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\BindingSiteCall.cpp" />
+    <ClCompile Include="src\CrystalStructureDataCall.cpp" />
+    <ClCompile Include="src\DiagramCall.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\Interpol.cpp" />
+    <ClCompile Include="src\IntSelectionCall.cpp" />
+    <ClCompile Include="src\MolecularDataCall.cpp" />
     <ClCompile Include="src\Protein_Calls.cpp" />
+    <ClCompile Include="src\ResidueSelectionCall.cpp" />
+    <ClCompile Include="src\SplitMergeCall.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\VTIDataCall.cpp" />
+    <ClCompile Include="src\VTKImageData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
