@@ -12,9 +12,9 @@
 
 #include "stdafx.h"
 #include "PotentialCalculator.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
-#include "mmcore/moldyn/VTIDataCall.h"
-#include "mmcore/moldyn/VTKImageData.h"
+#include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "protein_calls/VTKImageData.h"
 //#include "vislib_vector_typedefs.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -33,7 +33,7 @@
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 typedef unsigned int uint;
 

@@ -21,8 +21,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/Array.h"
 #include "HostArr.h"
-#include "mmcore/moldyn/DiagramCall.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/DiagramCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
@@ -205,14 +205,14 @@ private:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool getRMSPosArray(megamol::core::moldyn::MolecularDataCall *mol, HostArr<float> &posArr,
+    bool getRMSPosArray(megamol::protein_calls::MolecularDataCall *mol, HostArr<float> &posArr,
             unsigned int &cnt);
 
 
     /**
      * TODO
      */
-    void getAtomPosArray(megamol::core::moldyn::MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt);
+    void getAtomPosArray(megamol::protein_calls::MolecularDataCall *mol, HostArr<float> &posArr, size_t &particleCnt);
 
     /**
      * Update parameters slots.
@@ -402,7 +402,7 @@ private:
     /* Diagram data */
 
     /// Diagram series that contains data series for DiagramCall
-	vislib::PtrArray<core::moldyn::DiagramCall::DiagramSeries> featureList;
+	vislib::PtrArray<protein_calls::DiagramCall::DiagramSeries> featureList;
 
 
     /* RMS fitting */

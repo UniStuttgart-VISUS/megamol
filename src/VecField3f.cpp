@@ -16,7 +16,7 @@
 #endif
 
 #include "VecField3f.h"
-#include "mmcore/moldyn/Interpol.h"
+#include "protein_calls/Interpol.h"
 
 
 
@@ -98,7 +98,7 @@ Vec3f VecField3f::GetAtTrilin(float posX, float posY, float posZ,
     printf("n7 (%.16f %.16f %.16f)\n", n[7].X(), n[7].Y(), n[7].Z());*/
 
     // Interpolate
-	Vec3f v = core::moldyn::Interpol::Trilin<Vec3f>(n[0], n[1], n[2], n[3],
+	Vec3f v = protein_calls::Interpol::Trilin<Vec3f>(n[0], n[1], n[2], n[3],
             n[4], n[5], n[6], n[7], cx, cy, cz);
 
     return v;
@@ -471,43 +471,43 @@ VecField3f::CritPoint::Type VecField3f::classifyCritPoint(Vec3u cellId,
     Mat3f jac;
 
     // Row #0
-	jac.SetAt(0, 0, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(0, 0),
+	jac.SetAt(0, 0, protein_calls::Interpol::Trilin<float>(j[0].GetAt(0, 0),
             j[1].GetAt(0, 0),j[2].GetAt(0, 0),j[3].GetAt(0, 0),
             j[4].GetAt(0, 0),j[5].GetAt(0, 0),j[6].GetAt(0, 0),
             j[7].GetAt(0, 0), alpha, beta, gamma));
-	jac.SetAt(0, 1, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(0, 1),
+	jac.SetAt(0, 1, protein_calls::Interpol::Trilin<float>(j[0].GetAt(0, 1),
             j[1].GetAt(0, 1),j[2].GetAt(0, 1),j[3].GetAt(0, 1),
             j[4].GetAt(0, 1),j[5].GetAt(0, 1),j[6].GetAt(0, 1),
             j[7].GetAt(0, 1), alpha, beta, gamma));
-	jac.SetAt(0, 2, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(0, 2),
+	jac.SetAt(0, 2, protein_calls::Interpol::Trilin<float>(j[0].GetAt(0, 2),
             j[1].GetAt(0, 2),j[2].GetAt(0, 2),j[3].GetAt(0, 2),
             j[4].GetAt(0, 2),j[5].GetAt(0, 2),j[6].GetAt(0, 2),
             j[7].GetAt(0, 2), alpha, beta, gamma));
 
     // Row #1
-	jac.SetAt(1, 0, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(1, 0),
+	jac.SetAt(1, 0, protein_calls::Interpol::Trilin<float>(j[0].GetAt(1, 0),
             j[1].GetAt(1, 0),j[2].GetAt(1, 0),j[3].GetAt(1, 0),
             j[4].GetAt(1, 0),j[5].GetAt(1, 0),j[6].GetAt(1, 0),
             j[7].GetAt(1, 0), alpha, beta, gamma));
-	jac.SetAt(1, 1, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(1, 1),
+	jac.SetAt(1, 1, protein_calls::Interpol::Trilin<float>(j[0].GetAt(1, 1),
             j[1].GetAt(1, 1),j[2].GetAt(1, 1),j[3].GetAt(1, 1),
             j[4].GetAt(1, 1),j[5].GetAt(1, 1),j[6].GetAt(1, 1),
             j[7].GetAt(1, 1), alpha, beta, gamma));
-	jac.SetAt(1, 2, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(1, 2),
+	jac.SetAt(1, 2, protein_calls::Interpol::Trilin<float>(j[0].GetAt(1, 2),
             j[1].GetAt(1, 2),j[2].GetAt(1, 2),j[3].GetAt(1, 2),
             j[4].GetAt(1, 2),j[5].GetAt(1, 2),j[6].GetAt(1, 2),
             j[7].GetAt(1, 2), alpha, beta, gamma));
 
     // Row #2
-	jac.SetAt(2, 0, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(2, 0),
+	jac.SetAt(2, 0, protein_calls::Interpol::Trilin<float>(j[0].GetAt(2, 0),
             j[1].GetAt(2, 0),j[2].GetAt(2, 0),j[3].GetAt(2, 0),
             j[4].GetAt(2, 0),j[5].GetAt(2, 0),j[6].GetAt(2, 0),
             j[7].GetAt(2, 0), alpha, beta, gamma));
-	jac.SetAt(2, 1, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(2, 1),
+	jac.SetAt(2, 1, protein_calls::Interpol::Trilin<float>(j[0].GetAt(2, 1),
             j[1].GetAt(2, 1),j[2].GetAt(2, 1),j[3].GetAt(2, 1),
             j[4].GetAt(2, 1),j[5].GetAt(2, 1),j[6].GetAt(2, 1),
             j[7].GetAt(2, 1), alpha, beta, gamma));
-	jac.SetAt(2, 2, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(2, 2),
+	jac.SetAt(2, 2, protein_calls::Interpol::Trilin<float>(j[0].GetAt(2, 2),
             j[1].GetAt(2, 2),j[2].GetAt(2, 2),j[3].GetAt(2, 2),
             j[4].GetAt(2, 2),j[5].GetAt(2, 2),j[6].GetAt(2, 2),
             j[7].GetAt(2, 2), alpha, beta, gamma));
@@ -635,27 +635,27 @@ bool VecField3f::isFieldVanishingInCellBisectionRec(unsigned int currDepth,
         // Interpolate missing values
         s.SetCount(19);
         // Back
-		s[0] = core::moldyn::Interpol::Lin<Vec3f>(n[0], n[1], 0.5f);
-		s[1] = core::moldyn::Interpol::Lin<Vec3f>(n[0], n[2], 0.5f);
-		s[2] = core::moldyn::Interpol::Bilin<Vec3f>(n[0], n[1], n[2], n[3], 0.5f, 0.5f);
-		s[3] = core::moldyn::Interpol::Lin<Vec3f>(n[1], n[3], 0.5f);
-		s[4] = core::moldyn::Interpol::Lin<Vec3f>(n[2], n[3], 0.5f);
+		s[0] = protein_calls::Interpol::Lin<Vec3f>(n[0], n[1], 0.5f);
+		s[1] = protein_calls::Interpol::Lin<Vec3f>(n[0], n[2], 0.5f);
+		s[2] = protein_calls::Interpol::Bilin<Vec3f>(n[0], n[1], n[2], n[3], 0.5f, 0.5f);
+		s[3] = protein_calls::Interpol::Lin<Vec3f>(n[1], n[3], 0.5f);
+		s[4] = protein_calls::Interpol::Lin<Vec3f>(n[2], n[3], 0.5f);
         // Middle
-		s[5] = core::moldyn::Interpol::Lin<Vec3f>(n[0], n[4], 0.5f);
-		s[6] = core::moldyn::Interpol::Bilin<Vec3f>(n[0], n[1], n[4], n[5], 0.5f, 0.5f);
-		s[7] = core::moldyn::Interpol::Lin<Vec3f>(n[1], n[5], 0.5f);
-		s[8] = core::moldyn::Interpol::Bilin<Vec3f>(n[0], n[2], n[4], n[6], 0.5f, 0.5f);
-		s[9] = core::moldyn::Interpol::Trilin<Vec3f>(n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], 0.5f, 0.5f, 0.5f);
-		s[10] = core::moldyn::Interpol::Bilin<Vec3f>(n[1], n[3], n[5], n[7], 0.5f, 0.5f);
-		s[11] = core::moldyn::Interpol::Lin<Vec3f>(n[2], n[6], 0.5f);
-		s[12] = core::moldyn::Interpol::Bilin<Vec3f >(n[2], n[3], n[6], n[7], 0.5f, 0.5f);
-		s[13] = core::moldyn::Interpol::Lin<Vec3f>(n[3], n[7], 0.5f);
+		s[5] = protein_calls::Interpol::Lin<Vec3f>(n[0], n[4], 0.5f);
+		s[6] = protein_calls::Interpol::Bilin<Vec3f>(n[0], n[1], n[4], n[5], 0.5f, 0.5f);
+		s[7] = protein_calls::Interpol::Lin<Vec3f>(n[1], n[5], 0.5f);
+		s[8] = protein_calls::Interpol::Bilin<Vec3f>(n[0], n[2], n[4], n[6], 0.5f, 0.5f);
+		s[9] = protein_calls::Interpol::Trilin<Vec3f>(n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], 0.5f, 0.5f, 0.5f);
+		s[10] = protein_calls::Interpol::Bilin<Vec3f>(n[1], n[3], n[5], n[7], 0.5f, 0.5f);
+		s[11] = protein_calls::Interpol::Lin<Vec3f>(n[2], n[6], 0.5f);
+		s[12] = protein_calls::Interpol::Bilin<Vec3f >(n[2], n[3], n[6], n[7], 0.5f, 0.5f);
+		s[13] = protein_calls::Interpol::Lin<Vec3f>(n[3], n[7], 0.5f);
         // Front
-		s[14] = core::moldyn::Interpol::Lin<Vec3f>(n[4], n[5], 0.5f);
-		s[15] = core::moldyn::Interpol::Lin<Vec3f>(n[4], n[6], 0.5f);
-		s[16] = core::moldyn::Interpol::Bilin<Vec3f>(n[4], n[5], n[6], n[7], 0.5f, 0.5f);
-		s[17] = core::moldyn::Interpol::Lin<Vec3f>(n[5], n[7], 0.5f);
-		s[18] = core::moldyn::Interpol::Lin<Vec3f>(n[6], n[7], 0.5f);
+		s[14] = protein_calls::Interpol::Lin<Vec3f>(n[4], n[5], 0.5f);
+		s[15] = protein_calls::Interpol::Lin<Vec3f>(n[4], n[6], 0.5f);
+		s[16] = protein_calls::Interpol::Bilin<Vec3f>(n[4], n[5], n[6], n[7], 0.5f, 0.5f);
+		s[17] = protein_calls::Interpol::Lin<Vec3f>(n[5], n[7], 0.5f);
+		s[18] = protein_calls::Interpol::Lin<Vec3f>(n[6], n[7], 0.5f);
 
         /*for(int i = 0; i < 19; i++) {
             printf("s[%i].Z(): %f\n", i, s[i].Z());
@@ -1014,43 +1014,43 @@ Vec3f VecField3f::searchNullPointNewton(
                     j[6], j[7], alpha, beta, gamma);*/
 
             // Row #0
-			jac.SetAt(0, 0, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(0, 0),
+			jac.SetAt(0, 0, protein_calls::Interpol::Trilin<float>(j[0].GetAt(0, 0),
                     j[1].GetAt(0, 0),j[2].GetAt(0, 0),j[3].GetAt(0, 0),
                     j[4].GetAt(0, 0),j[5].GetAt(0, 0),j[6].GetAt(0, 0),
                     j[7].GetAt(0, 0), alpha, beta, gamma));
-			jac.SetAt(0, 1, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(0, 1),
+			jac.SetAt(0, 1, protein_calls::Interpol::Trilin<float>(j[0].GetAt(0, 1),
                     j[1].GetAt(0, 1),j[2].GetAt(0, 1),j[3].GetAt(0, 1),
                     j[4].GetAt(0, 1),j[5].GetAt(0, 1),j[6].GetAt(0, 1),
                     j[7].GetAt(0, 1), alpha, beta, gamma));
-			jac.SetAt(0, 2, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(0, 2),
+			jac.SetAt(0, 2, protein_calls::Interpol::Trilin<float>(j[0].GetAt(0, 2),
                     j[1].GetAt(0, 2),j[2].GetAt(0, 2),j[3].GetAt(0, 2),
                     j[4].GetAt(0, 2),j[5].GetAt(0, 2),j[6].GetAt(0, 2),
                     j[7].GetAt(0, 2), alpha, beta, gamma));
 
             // Row #1
-			jac.SetAt(1, 0, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(1, 0),
+			jac.SetAt(1, 0, protein_calls::Interpol::Trilin<float>(j[0].GetAt(1, 0),
                     j[1].GetAt(1, 0),j[2].GetAt(1, 0),j[3].GetAt(1, 0),
                     j[4].GetAt(1, 0),j[5].GetAt(1, 0),j[6].GetAt(1, 0),
                     j[7].GetAt(1, 0), alpha, beta, gamma));
-			jac.SetAt(1, 1, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(1, 1),
+			jac.SetAt(1, 1, protein_calls::Interpol::Trilin<float>(j[0].GetAt(1, 1),
                     j[1].GetAt(1, 1),j[2].GetAt(1, 1),j[3].GetAt(1, 1),
                     j[4].GetAt(1, 1),j[5].GetAt(1, 1),j[6].GetAt(1, 1),
                     j[7].GetAt(1, 1), alpha, beta, gamma));
-			jac.SetAt(1, 2, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(1, 2),
+			jac.SetAt(1, 2, protein_calls::Interpol::Trilin<float>(j[0].GetAt(1, 2),
                     j[1].GetAt(1, 2),j[2].GetAt(1, 2),j[3].GetAt(1, 2),
                     j[4].GetAt(1, 2),j[5].GetAt(1, 2),j[6].GetAt(1, 2),
                     j[7].GetAt(1, 2), alpha, beta, gamma));
 
             // Row #2
-			jac.SetAt(2, 0, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(2, 0),
+			jac.SetAt(2, 0, protein_calls::Interpol::Trilin<float>(j[0].GetAt(2, 0),
                     j[1].GetAt(2, 0),j[2].GetAt(2, 0),j[3].GetAt(2, 0),
                     j[4].GetAt(2, 0),j[5].GetAt(2, 0),j[6].GetAt(2, 0),
                     j[7].GetAt(2, 0), alpha, beta, gamma));
-			jac.SetAt(2, 1, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(2, 1),
+			jac.SetAt(2, 1, protein_calls::Interpol::Trilin<float>(j[0].GetAt(2, 1),
                     j[1].GetAt(2, 1),j[2].GetAt(2, 1),j[3].GetAt(2, 1),
                     j[4].GetAt(2, 1),j[5].GetAt(2, 1),j[6].GetAt(2, 1),
                     j[7].GetAt(2, 1), alpha, beta, gamma));
-			jac.SetAt(2, 2, core::moldyn::Interpol::Trilin<float>(j[0].GetAt(2, 2),
+			jac.SetAt(2, 2, protein_calls::Interpol::Trilin<float>(j[0].GetAt(2, 2),
                     j[1].GetAt(2, 2),j[2].GetAt(2, 2),j[3].GetAt(2, 2),
                     j[4].GetAt(2, 2),j[5].GetAt(2, 2),j[6].GetAt(2, 2),
                     j[7].GetAt(2, 2), alpha, beta, gamma));

@@ -33,12 +33,12 @@ typedef vislib::math::Cuboid<float> Cubef;
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
 #include "CudaDevArr.h"
 #include "HostArr.h"
 #include "gridParams.h"
-#include "mmcore/moldyn/VTIDataCall.h"
+#include "protein_calls/VTIDataCall.h"
 #include "DeformableGPUSurfaceMT.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "HostArr.h"
@@ -172,7 +172,7 @@ protected:
      */
     bool computeDensityMap(
             const float *atomPos,
-            const megamol::core::moldyn::MolecularDataCall *mol,
+            const megamol::protein_calls::MolecularDataCall *mol,
             CUDAQuickSurf *cqs);
 
     /**
@@ -192,7 +192,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool fitMoleculeRMS(megamol::core::moldyn::MolecularDataCall *mol1, megamol::core::moldyn::MolecularDataCall *mol2);
+    bool fitMoleculeRMS(megamol::protein_calls::MolecularDataCall *mol1, megamol::protein_calls::MolecularDataCall *mol2);
 
     /**
      * The get capabilities callback. The module should set the members
@@ -246,7 +246,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool initPotentialMap(core::moldyn::VTIDataCall *cmd, gridParams &gridPotentialMap,
+    bool initPotentialMap(protein_calls::VTIDataCall *cmd, gridParams &gridPotentialMap,
                     GLuint &potentialTex, CudaDevArr<float> &tex_D,
                     int3 &dim, float3 &org, float3 &delta);
 

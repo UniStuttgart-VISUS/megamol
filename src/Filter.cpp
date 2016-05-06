@@ -15,7 +15,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
@@ -54,15 +54,15 @@ Filter::Filter(void) : core::Module(),
     calltimeOld(-1.0), atmCnt(0) {
 
     // Enable caller slot
-	this->molDataCallerSlot.SetCompatibleCall<megamol::core::moldyn::MolecularDataCallDescription>();
+	this->molDataCallerSlot.SetCompatibleCall<megamol::protein_calls::MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
 
     // Enable dataout slot
-	this->dataOutSlot.SetCallback(megamol::core::moldyn::MolecularDataCall::ClassName(),
-		megamol::core::moldyn::MolecularDataCall::FunctionName(megamol::core::moldyn::MolecularDataCall::CallForGetData),
+	this->dataOutSlot.SetCallback(megamol::protein_calls::MolecularDataCall::ClassName(),
+		megamol::protein_calls::MolecularDataCall::FunctionName(megamol::protein_calls::MolecularDataCall::CallForGetData),
         &Filter::getData);
-	this->dataOutSlot.SetCallback(megamol::core::moldyn::MolecularDataCall::ClassName(),
-		megamol::core::moldyn::MolecularDataCall::FunctionName(megamol::core::moldyn::MolecularDataCall::CallForGetExtent),
+	this->dataOutSlot.SetCallback(megamol::protein_calls::MolecularDataCall::ClassName(),
+		megamol::protein_calls::MolecularDataCall::FunctionName(megamol::protein_calls::MolecularDataCall::CallForGetExtent),
         &Filter::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
     
@@ -187,11 +187,11 @@ bool Filter::getData(megamol::core::Call& call) {
     int cnt;
     
     // Get a pointer to the outgoing data call
-	megamol::core::moldyn::MolecularDataCall *molOut = this->molDataCallerSlot.CallAs<megamol::core::moldyn::MolecularDataCall>();
+	megamol::protein_calls::MolecularDataCall *molOut = this->molDataCallerSlot.CallAs<megamol::protein_calls::MolecularDataCall>();
     if(molOut == NULL) return false;
     
     // Get a pointer to the incoming data call
-	megamol::core::moldyn::MolecularDataCall *molIn = dynamic_cast<megamol::core::moldyn::MolecularDataCall*>(&call);
+	megamol::protein_calls::MolecularDataCall *molIn = dynamic_cast<megamol::protein_calls::MolecularDataCall*>(&call);
     if(molIn == NULL) return false;
     
     // Calltime hasn't changed
@@ -200,7 +200,7 @@ bool Filter::getData(megamol::core::Call& call) {
         // Set the frame ID, calltime and call data
         molOut->SetFrameID(molIn->FrameID());
         molOut->SetCalltime(molIn->Calltime());
-		if (!(*molOut)(megamol::core::moldyn::MolecularDataCall::CallForGetData)) return false;
+		if (!(*molOut)(megamol::protein_calls::MolecularDataCall::CallForGetData)) return false;
 
     }
     // Interpolate and filter if calltime has changed
@@ -217,7 +217,7 @@ bool Filter::getData(megamol::core::Call& call) {
             molOut->SetFrameID(molIn->FrameID());
         }
 
-		if (!(*molOut)(megamol::core::moldyn::MolecularDataCall::CallForGetData)) return false;
+		if (!(*molOut)(megamol::protein_calls::MolecularDataCall::CallForGetData)) return false;
         
         // Update parameters
         this->updateParams(molOut);
@@ -230,7 +230,7 @@ bool Filter::getData(megamol::core::Call& call) {
         molOut->Unlock();
         molOut->SetFrameID(molIn->FrameID());
         
-		if (!(*molOut)(megamol::core::moldyn::MolecularDataCall::CallForGetData)) {
+		if (!(*molOut)(megamol::protein_calls::MolecularDataCall::CallForGetData)) {
             delete[] pos1;
             return false;
         }
@@ -299,15 +299,15 @@ bool Filter::getData(megamol::core::Call& call) {
 bool Filter::getExtent(core::Call& call) {
 
     // Get a pointer to the incoming data call.
-	megamol::core::moldyn::MolecularDataCall *molIn = dynamic_cast<megamol::core::moldyn::MolecularDataCall*>(&call);
+	megamol::protein_calls::MolecularDataCall *molIn = dynamic_cast<megamol::protein_calls::MolecularDataCall*>(&call);
     if(molIn == NULL) return false;
     
     // Get a pointer to the outgoing data call.
-	megamol::core::moldyn::MolecularDataCall *molOut = this->molDataCallerSlot.CallAs<megamol::core::moldyn::MolecularDataCall>();
+	megamol::protein_calls::MolecularDataCall *molOut = this->molDataCallerSlot.CallAs<megamol::protein_calls::MolecularDataCall>();
     if(molOut == NULL) return false;
     
     // Get extend.
-	if (!(*molOut)(megamol::core::moldyn::MolecularDataCall::CallForGetExtent)) return false;
+	if (!(*molOut)(megamol::protein_calls::MolecularDataCall::CallForGetExtent)) return false;
     
     // TODO: Verify this.
     // Set extend.
@@ -321,7 +321,7 @@ bool Filter::getExtent(core::Call& call) {
 /*
  * Filter::updateParams
  */
-void Filter::updateParams(megamol::core::moldyn::MolecularDataCall *mol) {
+void Filter::updateParams(megamol::protein_calls::MolecularDataCall *mol) {
     
     using namespace vislib::sys;
     
@@ -473,7 +473,7 @@ void Filter::initAtomVisibility(int visibility) {
 /*
  * Filter::flagSolventAtoms 
  */
-void Filter::flagSolventAtoms(const megamol::core::moldyn::MolecularDataCall *mol) {
+void Filter::flagSolventAtoms(const megamol::protein_calls::MolecularDataCall *mol) {
     
     unsigned int ch, at, res, m;
     
@@ -487,7 +487,7 @@ void Filter::flagSolventAtoms(const megamol::core::moldyn::MolecularDataCall *mo
     for(ch = 0; ch < mol->ChainCount(); ch++) {
         
         // Chain contains solvent atoms
-		if (mol->Chains()[ch].Type() == megamol::core::moldyn::MolecularDataCall::Chain::SOLVENT) {
+		if (mol->Chains()[ch].Type() == megamol::protein_calls::MolecularDataCall::Chain::SOLVENT) {
             
             // Loop through all molecules of this chain
             for(m = mol->Chains()[ch].FirstMoleculeIndex(); 
@@ -536,7 +536,7 @@ void Filter::getProtAtoms(float *atomPos) {
 /*
  * Filter::setHierarchicalVisibility
  */
-void Filter::setHierarchicalVisibility(const megamol::core::moldyn::MolecularDataCall *mol) {
+void Filter::setHierarchicalVisibility(const megamol::protein_calls::MolecularDataCall *mol) {
     
      // TODO: this is ugly!
     
@@ -548,21 +548,21 @@ void Filter::setHierarchicalVisibility(const megamol::core::moldyn::MolecularDat
         // Loop through all chains
         for(ch = 0; ch < mol->ChainCount(); ch++) {
     
-			const_cast<megamol::core::moldyn::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(0);
+			const_cast<megamol::protein_calls::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(0);
             
             // Loop through all molecules of this chain
             for(m = mol->Chains()[ch].FirstMoleculeIndex(); 
                 m < mol->Chains()[ch].MoleculeCount() + mol->Chains()[ch].FirstMoleculeIndex(); 
                 m++) {
                     
-				const_cast<megamol::core::moldyn::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(0);
+				const_cast<megamol::protein_calls::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(0);
                 
                 // Loop through all residues of this molecule
                 for(res = mol->Molecules()[m].FirstResidueIndex(); 
                     res < mol->Molecules()[m].ResidueCount() + mol->Molecules()[m].FirstResidueIndex(); 
                     res++) {
                         
-					const_cast<megamol::core::moldyn::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(0);
+					const_cast<megamol::protein_calls::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(0);
                     
                     // Loop through all atoms of this residue
                     for(at = mol->Residues()[res]->FirstAtomIndex(); 
@@ -570,13 +570,13 @@ void Filter::setHierarchicalVisibility(const megamol::core::moldyn::MolecularDat
                         at++) {
                         
                         if(this->atomVisibility[at] == 1) {
-							const_cast<megamol::core::moldyn::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(1);
+							const_cast<megamol::protein_calls::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(1);
                             break;
                         }
                     }
                     
                     if(mol->Residues()[res]->Filter() == 1) {
-						const_cast<megamol::core::moldyn::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(1);
+						const_cast<megamol::protein_calls::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(1);
                         // TODO HACK FOR SFB DEMO --> Recalc visibility of children
                         // Loop through all atoms of this residue if the residue is visible
                         for(at = mol->Residues()[res]->FirstAtomIndex();
@@ -589,7 +589,7 @@ void Filter::setHierarchicalVisibility(const megamol::core::moldyn::MolecularDat
                 }
                 
                 if(mol->Molecules()[m].Filter() == 1) {
-					const_cast<megamol::core::moldyn::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(1);
+					const_cast<megamol::protein_calls::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(1);
                 }
             }
         }
@@ -600,21 +600,21 @@ void Filter::setHierarchicalVisibility(const megamol::core::moldyn::MolecularDat
         // Loop through all chains
         for(ch = 0; ch < mol->ChainCount(); ch++) {
             
-			const_cast<megamol::core::moldyn::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(1);
+			const_cast<megamol::protein_calls::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(1);
             
             // Loop through all molecules of this chain
             for(m = mol->Chains()[ch].FirstMoleculeIndex(); 
                 m < mol->Chains()[ch].MoleculeCount() + mol->Chains()[ch].FirstMoleculeIndex(); 
                 m++) {
                     
-				const_cast<megamol::core::moldyn::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(1);
+				const_cast<megamol::protein_calls::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(1);
                 
                 // Loop through all residues of this molecule
                 for(res = mol->Molecules()[m].FirstResidueIndex(); 
                     res < mol->Molecules()[m].ResidueCount() + mol->Molecules()[m].FirstResidueIndex(); 
                     res++) {
                         
-					const_cast<megamol::core::moldyn::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(1);
+					const_cast<megamol::protein_calls::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(1);
                     
                     // Loop through all atoms of this residue
                     for(at = mol->Residues()[res]->FirstAtomIndex(); 
@@ -622,18 +622,18 @@ void Filter::setHierarchicalVisibility(const megamol::core::moldyn::MolecularDat
                         at++) {
                         
                         if(this->atomVisibility[at] == 0) {
-							const_cast<megamol::core::moldyn::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(0);
+							const_cast<megamol::protein_calls::MolecularDataCall::Residue**>(mol->Residues())[res]->SetFilter(0);
                             break;
                         }
                     }
                     
                     if(mol->Residues()[res]->Filter() == 0) {
-						const_cast<megamol::core::moldyn::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(0);
+						const_cast<megamol::protein_calls::MolecularDataCall::Molecule*>(mol->Molecules())[m].SetFilter(0);
                     }
                 }
                 
                 if(mol->Molecules()[m].Filter() == 0) {
-					const_cast<megamol::core::moldyn::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(0);
+					const_cast<megamol::protein_calls::MolecularDataCall::Chain*>(mol->Chains())[ch].SetFilter(0);
                 }
             }
         }

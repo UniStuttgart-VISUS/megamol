@@ -13,7 +13,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -98,7 +98,7 @@ namespace protein_cuda {
          *
          * @return 
          */
-        int calcSurf(megamol::core::moldyn::MolecularDataCall *mol, float *posInter,
+        int calcSurf(megamol::protein_calls::MolecularDataCall *mol, float *posInter,
                          int quality, float radscale, float gridspacing,
                          float isoval, bool useCol);
 
@@ -169,7 +169,7 @@ namespace protein_cuda {
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol);
+        void UpdateParameters(const megamol::protein_calls::MolecularDataCall *mol);
 
 
         /**********************************************************************

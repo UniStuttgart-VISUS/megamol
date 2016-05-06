@@ -25,10 +25,10 @@
 // Toggle benchmarking of the mapping
 #define BENCHMARK
 
-#include "mmcore/moldyn/VTIDataCall.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/DiagramCall.h"
+#include "protein_calls/DiagramCall.h"
 #include "VariantMatchDataCall.h"
 #include "MolecularSurfaceFeature.h"
 #include "mmcore/param/EnumParam.h"
@@ -55,7 +55,7 @@
 using namespace megamol;
 using namespace megamol::protein_cuda;
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 
 // TODO Make diagram renderer react to singleFrame-parameter
 

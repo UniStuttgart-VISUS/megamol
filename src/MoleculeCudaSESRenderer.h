@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -105,7 +105,7 @@ namespace protein_cuda {
          * Renders all atoms using GPU ray casting and write atom ID to red color channel.
          * @param protein The protein call.
          */
-        void RenderAtomIdGPU(megamol::core::moldyn::MolecularDataCall *protein);
+        void RenderAtomIdGPU(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Create the FBO for visibility test.
@@ -123,25 +123,25 @@ namespace protein_cuda {
          * Find all visible atoms
          * @param protein The protein call.
          */
-        void FindVisibleAtoms(megamol::core::moldyn::MolecularDataCall *protein);
+        void FindVisibleAtoms(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Find for each visible atom all atoms that are in the proximity.
          * @param protein The protein call.
          */
-        void ComputeVisibleAtomsVicinityTable(megamol::core::moldyn::MolecularDataCall *protein);
+        void ComputeVisibleAtomsVicinityTable(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Use CUDA to find for each visible atom all atoms that are in the neighborhood.
          * @param protein The protein call.
          */
-        void ComputeVicinityTableCUDA(megamol::core::moldyn::MolecularDataCall *protein);
+        void ComputeVicinityTableCUDA(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Compute the Reduced Surface using the Fragment Shader.
          * @param protein The protein call.
          */
-        void ComputeRSFragShader(megamol::core::moldyn::MolecularDataCall *protein);
+        void ComputeRSFragShader(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Creates the FBO for reduced surface triangle generation.
@@ -159,13 +159,13 @@ namespace protein_cuda {
          * Render all potential RS-faces as triangles using a vertex shader.
          * @param protein The protein call.
          */
-        void RenderTriangles(megamol::core::moldyn::MolecularDataCall *protein);
+        void RenderTriangles(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Find all visible triangles (i.e. visible RS-faces).
          * @param protein The protein call.
          */
-        void FindVisibleTriangles(megamol::core::moldyn::MolecularDataCall *protein);
+        void FindVisibleTriangles(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Create fbo for adjacent triangles of visible triangles
@@ -178,50 +178,50 @@ namespace protein_cuda {
          * Find the adjacent triangles to all visible triangles.
          * @param protein The protein call.
          */
-        void FindAdjacentTriangles(megamol::core::moldyn::MolecularDataCall *protein);
+        void FindAdjacentTriangles(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Find the adjacent triangles to all visible triangles.
          * @param mol The molecular data call.
          */
-        void FindAdjacentTrianglesCUDA(megamol::core::moldyn::MolecularDataCall *mol);
+        void FindAdjacentTrianglesCUDA(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Create the VBO for transform feedback.
          */
-        void CreateTransformFeedbackVBO(megamol::core::moldyn::MolecularDataCall *mol);
+        void CreateTransformFeedbackVBO(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Find all intersecting probes for each probe and create the singularity texture.
          * @param mol The molecular data call.
          * @param numProbes The number of RS-faces (i.e. probes in fixed positions).
          */
-        void CreateSingularityTextureCuda(megamol::core::moldyn::MolecularDataCall *mol, unsigned int numProbes);
+        void CreateSingularityTextureCuda(megamol::protein_calls::MolecularDataCall *mol, unsigned int numProbes);
 
         /**
          * Render the SES using GPU ray casting.
          * @param mol The molecular data call.
          * @param primitiveCount The number of primitives.
          */
-        void RenderSESCuda(megamol::core::moldyn::MolecularDataCall *mol, unsigned int primitiveCount);
+        void RenderSESCuda(megamol::protein_calls::MolecularDataCall *mol, unsigned int primitiveCount);
 
         /**
          * Render all visible atoms using GPU ray casting.
          * @param protein The protein call.
          */
-        void RenderVisibleAtomsGPU(megamol::core::moldyn::MolecularDataCall *protein);
+        void RenderVisibleAtomsGPU(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Mark all atoms which are vertices of adjacent triangles as visible
          */
-        void MarkAdjacentAtoms(megamol::core::moldyn::MolecularDataCall *protein);
+        void MarkAdjacentAtoms(megamol::protein_calls::MolecularDataCall *protein);
 
         /**
          * Mark all atoms which are vertices of adjacent triangles as visible
          *
          * @param mol The molecular data call.
          */
-        void MarkAdjacentAtomsCUDA(megamol::core::moldyn::MolecularDataCall *mol);
+        void MarkAdjacentAtomsCUDA(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Initialize CUDA
@@ -230,12 +230,12 @@ namespace protein_cuda {
          * @param cr3d Pointer to the render call.
          * @return 'true' if initialization was successful, otherwise 'false'
          */
-        bool initCuda(megamol::core::moldyn::MolecularDataCall *protein, uint gridDim, core::view::CallRender3D *cr3d);
+        bool initCuda(megamol::protein_calls::MolecularDataCall *protein, uint gridDim, core::view::CallRender3D *cr3d);
 
         /**
          * Write atom positions and radii to an array for processing in CUDA
          */
-        void writeAtomPositions(megamol::core::moldyn::MolecularDataCall *protein );
+        void writeAtomPositions(megamol::protein_calls::MolecularDataCall *protein );
 
     private:
         
@@ -279,38 +279,38 @@ namespace protein_cuda {
          *
          * @param mol The molecular data call.
          */
-        void ComputeRSCuda(megamol::core::moldyn::MolecularDataCall *mol);
+        void ComputeRSCuda(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Find all visible triangles (i.e. visible RS-faces).
          * @param mol The molecular call.
          */
-        void FindVisibleTrianglesCuda(megamol::core::moldyn::MolecularDataCall *mol);
+        void FindVisibleTrianglesCuda(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Render all potential RS-faces as triangles.
          * @param mol The protein call.
          */
-        void RenderTrianglesCuda(megamol::core::moldyn::MolecularDataCall *mol);
+        void RenderTrianglesCuda(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Render all potential RS-faces as triangles.
          * @param mol The protein call.
          */
-        void RenderTrianglesCuda2(megamol::core::moldyn::MolecularDataCall *mol);
+        void RenderTrianglesCuda2(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Render all visible RS-faces as triangles.
          * @param mol The protein call.
          */
-        void RenderVisibleTrianglesCuda(megamol::core::moldyn::MolecularDataCall *mol);
+        void RenderVisibleTrianglesCuda(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Create geometric primitives for ray casting.
          * @param mol The molecular data call.
          * @return The number of primitives which were read back.
          */
-        unsigned int CreateGeometricPrimitivesCuda(megamol::core::moldyn::MolecularDataCall *mol);
+        unsigned int CreateGeometricPrimitivesCuda(megamol::protein_calls::MolecularDataCall *mol);
 
         /**********************************************************************
          * variables

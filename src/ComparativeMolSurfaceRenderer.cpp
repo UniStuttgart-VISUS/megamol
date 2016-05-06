@@ -17,8 +17,8 @@
 //#define VERBOSE
 
 #include "VBODataCall.h"
-#include "mmcore/moldyn/VTIDataCall.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "RMS.h"
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
@@ -42,8 +42,8 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
-using namespace megamol::core::moldyn;
 using namespace megamol::protein_cuda;
+using namespace megamol::protein_calls;
 
 // 99 75 0
 Vec3f dark_brown = Vec3f(0.388235294, 0.294117647, 0.0);
@@ -1462,20 +1462,20 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     }
 
     // Get pointer to potential map data call
-    core::moldyn::VTIDataCall *cmd0 =
-            this->volDataSlot1.CallAs<core::moldyn::VTIDataCall>();
+    protein_calls::VTIDataCall *cmd0 =
+            this->volDataSlot1.CallAs<protein_calls::VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
-    if (!(*cmd0)(core::moldyn::VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd0)(protein_calls::VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    core::moldyn::VTIDataCall *cmd1 =
-            this->volDataSlot2.CallAs<core::moldyn::VTIDataCall>();
+    protein_calls::VTIDataCall *cmd1 =
+            this->volDataSlot2.CallAs<protein_calls::VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }
-    if (!(*cmd1)(core::moldyn::VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd1)(protein_calls::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 
@@ -1654,20 +1654,20 @@ bool ComparativeMolSurfaceRenderer::getVBOExtent(core::Call& call) {
     c->SetBBox(this->bbox);
 
     // Get pointer to potential map data call
-    core::moldyn::VTIDataCall *cmd0 =
-            this->volDataSlot1.CallAs<core::moldyn::VTIDataCall>();
+    protein_calls::VTIDataCall *cmd0 =
+            this->volDataSlot1.CallAs<protein_calls::VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
-    if (!(*cmd0)(core::moldyn::VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd0)(protein_calls::VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    core::moldyn::VTIDataCall *cmd1 =
-            this->volDataSlot2.CallAs<core::moldyn::VTIDataCall>();
+    protein_calls::VTIDataCall *cmd1 =
+            this->volDataSlot2.CallAs<protein_calls::VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }
-    if (!(*cmd1)(core::moldyn::VTIDataCall::CallForGetExtent)) {
+    if (!(*cmd1)(protein_calls::VTIDataCall::CallForGetExtent)) {
         return false;
     }
 

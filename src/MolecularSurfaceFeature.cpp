@@ -4,7 +4,7 @@
 namespace megamol {
 namespace protein_cuda {
 
-MolecularSurfaceFeature::MolecularSurfaceFeature( float maxT, vislib::math::Vector<float, 3> pos) : core::moldyn::DiagramCall::DiagramMappable(),
+MolecularSurfaceFeature::MolecularSurfaceFeature( float maxT, vislib::math::Vector<float, 3> pos) : protein_calls::DiagramCall::DiagramMappable(),
         data(), maxTime( maxT), maxSurfaceArea( 0.0f), position( pos) {
     data.SetCapacityIncrement( 1000);
 }

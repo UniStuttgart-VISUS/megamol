@@ -15,9 +15,9 @@
 
 #include "VolumeMeshRenderer.cuh"
 #include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/moldyn/DiagramCall.h"
-#include "mmcore/moldyn/SplitMergeCall.h"
-#include "mmcore/moldyn/BindingSiteCall.h"
+#include "protein_calls/DiagramCall.h"
+#include "protein_calls/SplitMergeCall.h"
+#include "protein_calls/BindingSiteCall.h"
 #include "Color.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
@@ -30,8 +30,8 @@
 #include "CenterLineGenerator.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "mmcore/moldyn/ResidueSelectionCall.h"
-#include "mmcore\moldyn\MolecularDataCall.h"
+#include "protein_calls/ResidueSelectionCall.h"
+#include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -138,7 +138,7 @@ namespace protein_cuda {
          *
          * @return 
          */
-        int calcMap(megamol::core::moldyn::MolecularDataCall *mol, float *posInter,
+        int calcMap(megamol::protein_calls::MolecularDataCall *mol, float *posInter,
                          int quality, float radscale, float gridspacing,
                          float isoval, bool useCol);
 
@@ -182,7 +182,7 @@ namespace protein_cuda {
         bool UpdateMesh(float* densityMap, 
             vislib::math::Vector<float, 3> translation, 
             vislib::math::Vector<float, 3> scale, const float* aoVolumeHost, 
-            megamol::core::moldyn::MolecularDataCall *mol, int* neighborMap);
+            megamol::protein_calls::MolecularDataCall *mol, int* neighborMap);
 
         /**
          *
@@ -192,7 +192,7 @@ namespace protein_cuda {
         /**
          *
          */
-		void ParameterRefresh(const megamol::core::moldyn::MolecularDataCall *mol, const core::moldyn::BindingSiteCall *bs = 0);
+		void ParameterRefresh(const megamol::protein_calls::MolecularDataCall *mol, const protein_calls::BindingSiteCall *bs = 0);
         
         /**
          *
@@ -461,16 +461,16 @@ namespace protein_cuda {
         vislib::Array<bool> featureVisibility;
 
         /** array for surface features */
-        vislib::PtrArray<core::moldyn::DiagramCall::DiagramSeries> featureList;
+        vislib::PtrArray<protein_calls::DiagramCall::DiagramSeries> featureList;
         
         /** array for splitmerge series */
-		vislib::PtrArray<core::moldyn::SplitMergeCall::SplitMergeSeries> splitMergeList;
+		vislib::PtrArray<protein_calls::SplitMergeCall::SplitMergeSeries> splitMergeList;
         
         /** array for feature transitions */
-		vislib::PtrArray<core::moldyn::SplitMergeCall::SplitMergeTransition> transitionList;
+		vislib::PtrArray<protein_calls::SplitMergeCall::SplitMergeTransition> transitionList;
         
         /** array for surface feature center lines */
-		vislib::PtrArray<core::moldyn::DiagramCall::DiagramSeries> featureCenterLines;
+		vislib::PtrArray<protein_calls::DiagramCall::DiagramSeries> featureCenterLines;
 
         /** data bounding box */
         vislib::math::Cuboid<float> dataBBox;
@@ -509,7 +509,7 @@ namespace protein_cuda {
         float time;                 // TIMING
 
         /** call ptr for residue selection */
-		core::moldyn::ResidueSelectionCall *resSelectionCall;
+		protein_calls::ResidueSelectionCall *resSelectionCall;
         bool *atomSelection;
         unsigned int atomSelectionCnt;
 

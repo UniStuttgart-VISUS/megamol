@@ -20,8 +20,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/moldyn/VTIDataCall.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "CUDAMarchingCubes.h"
 #include "slicing.h"
 #include <GL/glu.h>
@@ -84,7 +84,7 @@ protected:
      * @param mol The data call containing the particles
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDensityMap(const megamol::core::moldyn::MolecularDataCall *mol);
+    bool computeDensityMap(const megamol::protein_calls::MolecularDataCall *mol);
 
     /**
      * Implementation of 'create'.
@@ -133,7 +133,7 @@ protected:
      * @param cmd The data call with the potential map
      * @return 'True' on success, 'false' otherwise
      */
-	bool initPotential(core::moldyn::VTIDataCall *cmd);
+	bool initPotential(protein_calls::VTIDataCall *cmd);
 
     /**
      * Implementation of 'release'.

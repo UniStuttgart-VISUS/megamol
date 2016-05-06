@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -110,17 +110,17 @@ namespace protein_cuda {
 		/**
 		 * Initialize CUDA
 		 */
-        bool initCuda(megamol::core::moldyn::MolecularDataCall *mol, uint gridDim, core::view::CallRender3D *cr3d);
+        bool initCuda(megamol::protein_calls::MolecularDataCall *mol, uint gridDim, core::view::CallRender3D *cr3d);
 
 		/**
 		 * Write atom positions and radii to an array for processing in CUDA
 		 */
-        void writeAtomPositions(const megamol::core::moldyn::MolecularDataCall *mol);
+        void writeAtomPositions(const megamol::protein_calls::MolecularDataCall *mol);
 
 		/**
 		 * Write atom positions and radii to a VBO for processing in CUDA
 		 */
-		void writeAtomPositionsVBO(megamol::core::moldyn::MolecularDataCall *mol);
+		void writeAtomPositionsVBO(megamol::protein_calls::MolecularDataCall *mol);
 
     private:
         
@@ -186,7 +186,7 @@ namespace protein_cuda {
          * TODO
          *
          */
-        void ContourBuildupCuda(megamol::core::moldyn::MolecularDataCall *mol);
+        void ContourBuildupCuda(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * CPU version of contour buildup algorithm
@@ -194,14 +194,14 @@ namespace protein_cuda {
          * TODO
          *
          */
-        void ContourBuildupCPU(megamol::core::moldyn::MolecularDataCall *mol);
+        void ContourBuildupCPU(megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Update all parameter slots.
          *
          * @param mol   Pointer to the data call.
          */
-        void UpdateParameters(const megamol::core::moldyn::MolecularDataCall *mol);
+        void UpdateParameters(const megamol::protein_calls::MolecularDataCall *mol);
 
 		/**
 		 * Deinitialises this renderer. This is only called if there was a 

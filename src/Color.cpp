@@ -59,7 +59,7 @@ void Color::FillAminoAcidColorTable(
 /*
  * Color::GetModeByIndex
  */
-Color::ColoringMode Color::GetModeByIndex(const megamol::core::moldyn::MolecularDataCall *mol,
+Color::ColoringMode Color::GetModeByIndex(const megamol::protein_calls::MolecularDataCall *mol,
     unsigned int idx) {
 
     switch(idx) {
@@ -79,8 +79,8 @@ Color::ColoringMode Color::GetModeByIndex(const megamol::core::moldyn::Molecular
 /*
  * Color::GetModeByIndex
  */
-Color::ColoringMode Color::GetModeByIndex(const megamol::core::moldyn::MolecularDataCall *mol,
-	const core::moldyn::BindingSiteCall *bs, unsigned int idx) {
+Color::ColoringMode Color::GetModeByIndex(const megamol::protein_calls::MolecularDataCall *mol,
+	const protein_calls::BindingSiteCall *bs, unsigned int idx) {
     switch(idx) {
         case 0 : return ELEMENT;
         case 1 : return RESIDUE;
@@ -125,7 +125,7 @@ std::string Color::GetName(Color::ColoringMode col) {
 /*
  * MakeColorTable routine for molecular data call
  */
-void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
+void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         ColoringMode currentColoringMode,
         vislib::Array<float> &atomColorTable,
         vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
@@ -134,7 +134,7 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-		const core::moldyn::BindingSiteCall *bs) {
+		const protein_calls::BindingSiteCall *bs) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx,
@@ -234,7 +234,7 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
                 atomColorTable.Add( colNone.Z());
             }
             // write colors for sec structure elements
-			megamol::core::moldyn::MolecularDataCall::SecStructure::ElementType elemType;
+			megamol::protein_calls::MolecularDataCall::SecStructure::ElementType elemType;
 
             for( cntSecS = 0; cntSecS < mol->SecondaryStructureCount();
                  ++cntSecS ) {
@@ -249,17 +249,17 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
                     atomCnt = atomIdx + mol->Residues()[cntRes]->AtomCount();
                     for( cntAtom = atomIdx; cntAtom < atomCnt; ++cntAtom ) {
                         if( elemType ==
-							megamol::core::moldyn::MolecularDataCall::SecStructure::TYPE_HELIX) {
+							megamol::protein_calls::MolecularDataCall::SecStructure::TYPE_HELIX) {
                             atomColorTable[3*cntAtom+0] = colHelix.X();
                             atomColorTable[3*cntAtom+1] = colHelix.Y();
                             atomColorTable[3*cntAtom+2] = colHelix.Z();
                         } else if( elemType ==
-							megamol::core::moldyn::MolecularDataCall::SecStructure::TYPE_SHEET) {
+							megamol::protein_calls::MolecularDataCall::SecStructure::TYPE_SHEET) {
                             atomColorTable[3*cntAtom+0] = colSheet.X();
                             atomColorTable[3*cntAtom+1] = colSheet.Y();
                             atomColorTable[3*cntAtom+2] = colSheet.Z();
                         } else if( elemType ==
-							megamol::core::moldyn::MolecularDataCall::SecStructure::TYPE_COIL) {
+							megamol::protein_calls::MolecularDataCall::SecStructure::TYPE_COIL) {
                             atomColorTable[3*cntAtom+0] = colRCoil.X();
                             atomColorTable[3*cntAtom+1] = colRCoil.Y();
                             atomColorTable[3*cntAtom+2] = colRCoil.Z();
@@ -567,7 +567,7 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
  * MakeColorTable routine for molecular data call interpolating between two
  * colors
  */
-void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
+void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         ColoringMode cm0,
         ColoringMode cm1,
         float weight0,
@@ -579,7 +579,7 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-		const core::moldyn::BindingSiteCall *bs) {
+		const protein_calls::BindingSiteCall *bs) {
 
     // if recomputation is forced: clear current color table
     if(forceRecompute) {
@@ -619,8 +619,8 @@ void Color::MakeColorTable(const megamol::core::moldyn::MolecularDataCall *mol,
     }
 }
 
-void Color::MakeComparisonColorTable(const megamol::core::moldyn::MolecularDataCall *mol1,
-	const megamol::core::moldyn::MolecularDataCall *mol2,
+void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall *mol1,
+	const megamol::protein_calls::MolecularDataCall *mol2,
 	ColoringMode currentColoringMode,
 	vislib::Array<float> &atomColorTable,
 	vislib::Array<vislib::math::Vector<float, 3> > &colorLookupTable,
@@ -629,7 +629,7 @@ void Color::MakeComparisonColorTable(const megamol::core::moldyn::MolecularDataC
 	vislib::TString midGradColor,
 	vislib::TString maxGradColor,
 	bool forceRecompute,
-	const core::moldyn::BindingSiteCall *bs) {
+	const protein_calls::BindingSiteCall *bs) {
 
 	// temporary variables
     unsigned int cnt, cnt2, idx, idx2, cntAtom, cntRes, cntSecS, atomIdx,
@@ -675,18 +675,18 @@ void Color::MakeComparisonColorTable(const megamol::core::moldyn::MolecularDataC
 			atomCnt = atomIdx + mol1->Residues()[cntRes]->AtomCount();
 			atomCnt2 = atomIdx2 + mol2->Residues()[cntRes]->AtomCount(); 
 
-			megamol::core::moldyn::MolecularDataCall::AminoAcid * aminoacid1;
-			megamol::core::moldyn::MolecularDataCall::AminoAcid * aminoacid2;
+			megamol::protein_calls::MolecularDataCall::AminoAcid * aminoacid1;
+			megamol::protein_calls::MolecularDataCall::AminoAcid * aminoacid2;
 
-			const megamol::core::moldyn::MolecularDataCall::Residue* t1 = mol2->Residues()[cntRes];
+			const megamol::protein_calls::MolecularDataCall::Residue* t1 = mol2->Residues()[cntRes];
 
 			if(t1 == NULL)
 				break;
 
-			if (mol1->Residues()[cntRes]->Identifier() == megamol::core::moldyn::MolecularDataCall::Residue::AMINOACID
-				&& mol2->Residues()[cntRes]->Identifier() == megamol::core::moldyn::MolecularDataCall::Residue::AMINOACID) {
-				aminoacid1 = (megamol::core::moldyn::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
-				aminoacid2 = (megamol::core::moldyn::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
+			if (mol1->Residues()[cntRes]->Identifier() == megamol::protein_calls::MolecularDataCall::Residue::AMINOACID
+				&& mol2->Residues()[cntRes]->Identifier() == megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
+				aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
+				aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
 			} else {// TODO check if this is correct
 				continue;
 			}

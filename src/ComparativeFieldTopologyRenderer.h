@@ -18,7 +18,7 @@
 
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/moldyn/VTIDataCall.h"
+#include "protein_calls/VTIDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -124,7 +124,7 @@ private:
      * @param egradfield Vector field object for the gradient of the electric
      *                   field strength
      */
-    void calcElectrostaticField(core::moldyn::VTIDataCall *cmd,
+    void calcElectrostaticField(protein_calls::VTIDataCall *cmd,
             VecField3f &efield, VecField3f &egradfield);
 
     /**
@@ -139,7 +139,7 @@ private:
      *
      * @param cmd The data call.
      */
-    bool renderFieldArrows(const core::moldyn::VTIDataCall *cmd);
+    bool renderFieldArrows(const protein_calls::VTIDataCall *cmd);
 
     /**
      * Renders a streamline bundle around the manually set seed point.
@@ -157,8 +157,8 @@ private:
      * @return 'True' on success, 'false' otherwise
      */
     bool renderStreamlinesRoi(
-            const core::moldyn::VTIDataCall *cmd0,
-            const core::moldyn::VTIDataCall *cmd1);
+            const protein_calls::VTIDataCall *cmd0,
+            const protein_calls::VTIDataCall *cmd1);
 
     /**
      * Search for neighbours in a certain distance for all sources/sinks in
@@ -173,7 +173,7 @@ private:
     void updateParams();
 
     /** TODO */
-    inline float GetPotentialAt(core::moldyn::VTIDataCall *dc, unsigned int x, unsigned int y,
+    inline float GetPotentialAt(protein_calls::VTIDataCall *dc, unsigned int x, unsigned int y,
             unsigned int z) {
         return dc->GetPointDataByIdx(0, 0)[
                  dc->GetGridsize().X()*(dc->GetGridsize().Y()*z+y)+x];

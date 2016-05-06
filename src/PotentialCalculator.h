@@ -19,7 +19,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "gridParams.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "HostArr.h"
 #include "CudaDevArr.h"
 //#include "vislib_vector_typedefs.h"
@@ -127,31 +127,31 @@ private:
     /**
      * TODO
      */
-	bool computeChargeDistribution(const megamol::core::moldyn::MolecularDataCall *mol);
+	bool computeChargeDistribution(const megamol::protein_calls::MolecularDataCall *mol);
 
     /**
      * TODO
      */
-	bool computePotentialMap(const megamol::core::moldyn::MolecularDataCall *mol);
+	bool computePotentialMap(const megamol::protein_calls::MolecularDataCall *mol);
 
     /**
      * TODO
      */
-	bool computePotentialMapDCS(const megamol::core::moldyn::MolecularDataCall *mol,
+	bool computePotentialMapDCS(const megamol::protein_calls::MolecularDataCall *mol,
             float sphericalCutOff,
             bool usePeriodicImages=false);
 
     /**
      * TODO
      */
-	bool computePotentialMapEwaldSum(const megamol::core::moldyn::MolecularDataCall *mol,
+	bool computePotentialMapEwaldSum(const megamol::protein_calls::MolecularDataCall *mol,
             float beta);
 
     /**
      * TODO
      */
     float computeChargeWeightedStructureFactor(uint maxWaveLength,
-		megamol::core::moldyn::MolecularDataCall *mol);
+		megamol::protein_calls::MolecularDataCall *mol);
 
     /**
      * TODO
@@ -162,7 +162,7 @@ private:
     /**
      * TODO
      */
-	void initGridParams(gridParams &grid, megamol::core::moldyn::MolecularDataCall *dcOut);
+	void initGridParams(gridParams &grid, megamol::protein_calls::MolecularDataCall *dcOut);
 
     /**
      * TODO

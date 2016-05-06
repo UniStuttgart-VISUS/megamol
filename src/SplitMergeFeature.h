@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/moldyn/SplitMergeCall.h"
+#include "protein_calls/SplitMergeCall.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/math/Vector.h"
@@ -22,7 +22,7 @@ namespace protein_cuda {
     /**
      * Split-Merge Feature
      */
-	class SplitMergeFeature : public core::moldyn::SplitMergeCall::SplitMergeMappable
+	class SplitMergeFeature : public protein_calls::SplitMergeCall::SplitMergeMappable
     {
     public:
         SplitMergeFeature( float maxT, vislib::math::Vector<float, 3> pos = vislib::math::Vector<float, 3>(0, 0, 0));

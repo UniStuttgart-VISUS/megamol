@@ -4,7 +4,7 @@
 namespace megamol {
 namespace protein_cuda {
 
-MappableFloatPair::MappableFloatPair(float offsetX, float offsetY, bool flipX, int holePos) : core::moldyn::DiagramCall::DiagramMappable(),
+MappableFloatPair::MappableFloatPair(float offsetX, float offsetY, bool flipX, int holePos) : protein_calls::DiagramCall::DiagramMappable(),
     offsetX(offsetX), offsetY(offsetY), flipX(flipX), holePos(holePos) {
 }
 

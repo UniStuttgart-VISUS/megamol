@@ -43,7 +43,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 
 

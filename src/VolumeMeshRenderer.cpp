@@ -14,8 +14,8 @@
 #undef min
 #undef max
 #include "VolumeMeshRenderer.h"
-#include "mmcore/moldyn/IntSelectionCall.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
+#include "protein_calls/IntSelectionCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -47,7 +47,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 
 #define CUDA_VERIFY(call) CudaVerify(call, __LINE__)
