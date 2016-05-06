@@ -38,17 +38,9 @@
 #include "mmcore/misc/CalloutImageCall.h"
 #include "mmcore/view/Call6DofInteraction.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
-#include "mmcore/moldyn/MolecularDataCall.h"
-#include "mmcore/moldyn/BindingSiteCall.h"
 #include "mmcore/misc/CallTriMeshData.h"
 #include "mmcore/moldyn/EllipsoidalDataCall.h"
 #include "mmcore/moldyn/ParticleRelistCall.h"
-#include "mmcore/moldyn/CrystalStructureDataCall.h"
-#include "mmcore/moldyn/DiagramCall.h"
-#include "mmcore/moldyn/IntSelectionCall.h"
-#include "mmcore/moldyn/ResidueSelectionCall.h"
-#include "mmcore/moldyn/SplitMergeCall.h"
-#include "mmcore/moldyn/VTIDataCall.h"
 
 using namespace megamol::core;
 
@@ -87,15 +79,7 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<misc::CalloutImageCall>();
     instance.RegisterAutoDescription<view::Call6DofInteraction>();
     instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
-    instance.RegisterAutoDescription<moldyn::MolecularDataCall>();
-    instance.RegisterAutoDescription<moldyn::BindingSiteCall>();
     instance.RegisterAutoDescription<misc::CallTriMeshData>();
     instance.RegisterAutoDescription<moldyn::EllipsoidalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
-	instance.RegisterAutoDescription<moldyn::CrystalStructureDataCall>();
-	instance.RegisterAutoDescription<moldyn::DiagramCall>();
-	instance.RegisterAutoDescription<moldyn::IntSelectionCall>();
-	instance.RegisterAutoDescription<moldyn::ResidueSelectionCall>();
-	instance.RegisterAutoDescription<moldyn::SplitMergeCall>();
-	instance.RegisterAutoDescription<moldyn::VTIDataCall>();
 }
