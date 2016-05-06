@@ -1,0 +1,9 @@
+#PATHPARAMETER
+outbin
+T:\MegaMol\Megamol_Binaries\
+#PATHPARAMETER
+mmcore
+T:\MegaMol\Megamol\
+#PATHPARAMETER
+vislib
+T:\MegaMol\Vislib\

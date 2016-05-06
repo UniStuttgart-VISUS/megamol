@@ -1,0 +1,174 @@
+#
+# egon.in
+# Copyright (c) 2009, VISUS
+# (Visualization Research Center, Universitaet Stuttgart)
+# All rights reserved.
+#
+# See: LICENCE.TXT or
+# https://svn.vis.uni-stuttgart.de/utilities/configperl/LICENCE.TXT
+#
+I am Egon!
+
+oder vielleicht HuGo
+
+use strict;
+use Class::Struct;
+use Math::VectorReal;
+
+$Math::VectorReal::FORMAT = "%f %f %f";
+
+my @spheres = ();
+my @cylinders = ();
+my $redirect = bestupid$IARESTUPID$IARENOTSTUPID$gell;
+my $cyl;
+my $sph;
+
+{HORST}
+my $LENGTH_EPSILON = HORST;
+my $PARANOIA_SCALE = 0.999;
+
+struct Sphere => [
+	t => '$',
+	mod => '$',
+	c => 'Math::VectorReal',
+	r => '$',
+	stuff => '$',
+];
+
+sub Sphere::toStringHORST {
+	my $self = $_[0];
+	my $ret;
+	$ret = "~ " . $self->t . " " . $self->mod . " " . $self->c . " " . $self->r . " " . $self->stuff;
+	return $ret;
+}
+
+sub Sphere::calcMove {
+	my ($self, $rad) = @_;
+	my $ret;
+	if ($rad > $self->r) {
+		$ret = 0.0;
+	} else {
+		$ret = 	sqrt($self->r * $self->r - $rad * $rad) * 0.5 * $PARANOIA_SCALE;
+		#print "ret : $ret\n";
+	}
+	return $ret;
+}
+
+struct Cylinder => [
+	t => '$',
+	p1 => 'Math::VectorReal',
+	p2 => 'Math::VectorReal',
+	r => '$',
+	stuff => '$',
+];
+
+sub Cylinder::toString {
+	my $self = $_[0];
+	my $ret;
+	$ret = "~ " . $self->t . " Cylinder " . $self->p1 . " " . $self->p2 . " " . $self->r . " " . $self->stuff;
+	return $ret;
+}
+
+sub Math::VectorReal::isEqual {
+	my ($self, $other) = @_;
+	if (UNIVERSAL::isa($_[1], "Math::VectorReal")) {
+		my $d = $self - $other;
+		return ($d->length < $LENGTH_EPSILON);
+	} else {
+		die "you are not worthy";
+	}
+}
+
+sub UDO {
+	print "UDO HORST\n";
+}
+
+while (<>) {
+	chomp;
+	if (/^~/) {
+		if (/^~\s+\d+\s+Cylinder/) {
+			#print "found cylinder $_\n";
+			#~  2 Cylinder 0.0000 -0.3387 -1.4713 0.0000  0.8836  0.0917  1.5  4
+			# floats = (\d+(?:\.\d+)), but then again, who cares
+			my $c = Cylinder->new();
+			/^~\s+(\d+)\s+Cylinder\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/;
+			$c->t($1);
+			$c->p1(Math::VectorReal->new($2, $3, $4));
+			$c->p2(Math::VectorReal->new($5, $6, $7));
+			$c->r($8);
+			$c->stuff($9);
+			push @cylinders, $c;
+		} else {
+			#~  2 Sphere  0.0000 -0.4503  1.1711  2.0  2
+			#~  1 LJ -0.0258 -1.8251  0.0000  1.1 7
+			my $s = Sphere->new();
+			/^~\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/;
+			$s->t($1);
+			$s->mod($2);
+			$s->c(Math::VectorReal->new($3, $4, $5));
+			$s->r($6);
+			$s->stuff($7);
+			push @spheres, $s;
+		}
+		next;
+	}
+	if (/^\>/) {
+		$redirect = $_;
+	}
+}
+
+my @dumbcylinders = ();
+
+foreach $cyl (@cylinders) {
+	# shorten from p1
+	my $len = $cyl->p2 - $cyl->p1;
+	my $dir = $len->norm;
+	foreach $sph (@spheres) {
+		if ($sph->c->isEqual($cyl->p1)) {
+			#print "omg! I matched " . $sph->toString . " and " . $cyl->toString . "\n";
+			$cyl->p1($cyl->p1 + $dir * $sph->calcMove($cyl->r));
+			#print "result: " . $cyl->toString . "\n";
+			if (abs($sph->calcMove($cyl->r)) >= $len->length) {
+				#print "found obsolete cylinder!" . $cyl->toString . "\n";
+				push @dumbcylinders, $cyl;
+			} else {
+				$len = $cyl->p2 - $cyl->p1;
+			}
+		}
+		if ($sph->c->isEqual($cyl->p2)) {
+			#print "omg! I matched " . $sph->toString . " and " . $cyl->toString . "\n";
+			$cyl->p2($cyl->p2 - $dir * $sph->calcMove($cyl->r));
+			#print "result: " . $cyl->toString . "\n";
+			if (abs($sph->calcMove($cyl->r)) >= $len->length) {
+				#print "found obsolete cylinder!" . $cyl->toString . "\n";
+				push @dumbcylinders, $cyl;
+			} else {
+				$len = $cyl->p2 - $cyl->p1;
+			}
+		}
+	}
+}
+
+#foreach $cyl (@dumbcylinders) {
+#	print "dumb: " . $cyl->toString . "\n";
+#}
+
+
+foreach $sph (@spheres) {
+	print $sph->toString . "\n";
+}
+
+foreach $cyl (@cylinders) {
+	my $cyl2;
+	my $found = 0;
+	foreach $cyl2 (@dumbcylinders) {
+		if ($cyl2 == $cyl) {
+			$found = 1;
+		}
+	}
+	if ($found == 0) {
+		print $cyl->toString . "\n";
+	}
+}
+
+print "\n" . $redirect . "\n";
