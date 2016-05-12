@@ -452,6 +452,30 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
 
 
 /*
+ * mmcSetConfigurationValueA
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueA(
+		void *hCore, mmcConfigID id, const char *name, const char* val) {
+	VLSTACKTRACE("mmcSetConfigurationValueA", __FILE__, __LINE__);
+	megamol::core::CoreInstance *inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+	if (inst == NULL) { return false; }
+	return const_cast<megamol::core::utility::Configuration&>(inst->Configuration()).SetValue(id, name, val);
+}
+
+
+/*
+* mmcSetConfigurationValueW
+*/
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
+		void *hCore, mmcConfigID id, const wchar_t *name, const wchar_t* val) {
+	VLSTACKTRACE("mmcSetConfigurationValueW", __FILE__, __LINE__);
+	megamol::core::CoreInstance *inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+	if (inst == NULL) { return false; }
+	return const_cast<megamol::core::utility::Configuration&>(inst->Configuration()).SetValue(id, name, val);
+}
+
+
+/*
  * mmcRequestAllInstances
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore) {

@@ -402,6 +402,37 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
     mmcValueType *outType);
 
 /**
+ * Sets a configuration value of the core instance.
+ *
+ * @param hCore The core instance handle.
+ * @param id The id of the configuration value to be set.
+ * @param name The name of the configuration value to be set. The effect
+ *             of this parameter depends on the value of 'id'.
+ * @param val Value as string to be set.
+ *
+ * @return True on success
+ */
+#if defined(UNICODE) || defined(_UNICODE)
+#define mmcSetConfigurationValue mmcSetConfigurationValueW
+#else
+#define mmcSetConfigurationValue mmcSetConfigurationValueA
+#endif
+
+/**
+ * ANSI Implementation of mmcSetConfigurationValue
+ * @see mmcSetConfigurationValue
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueA(
+	void *hCore, mmcConfigID id, const char *name, const char *val);
+
+/**
+ * Unicode Implementation of mmcSetConfigurationValue
+ * @see mmcSetConfigurationValue
+ */
+MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
+	void *hCore, mmcConfigID id, const wchar_t *name, const wchar_t* val);
+
+/**
  * Request all available instances.
  *
  * @param hCore The core instance handle.

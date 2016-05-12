@@ -196,6 +196,22 @@ namespace xml {
         const void * GetValue(mmcConfigID id, const wchar_t *name,
             mmcValueType *outType) const;
 
+		/**
+		 * Sets a configuration value.
+		 *
+		 * @param id Must be MMC_CFGID_VARIABLE
+		 * @param name The name of the variable to be set
+		 * @param val The value of the variable to be set
+		 *
+		 * @return True on success
+		 */
+		template<class T>
+		inline bool SetValue(mmcConfigID id, const T *name, const T *val) {
+			if (id != MMC_CFGID_VARIABLE) return false;
+			this->setConfigValue(name, val);
+			return true;
+		}
+
         /**
          * Activates the configuration set specified. This must be performed
          * before the configuration file is parsed!
