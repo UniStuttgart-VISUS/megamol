@@ -275,6 +275,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src/TransferFunctionQuery.cpp" />
+    <ClCompile Include="src\CallFloatTableData.cpp" />
+    <ClCompile Include="src\CSVDataSource.cpp" />
     <ClCompile Include="src\EnforceSymmetricParticleColorRanges.cpp" />
     <ClCompile Include="src\MultiParticleRelister.cpp" />
     <ClCompile Include="src\OverrideMultiParticleListGlobalColors.cpp" />
@@ -287,6 +289,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\ParticleSortFixHack.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\mmstd_datatools\CallFloatTableData.h" />
     <ClInclude Include="src/AbstractParticleManipulator.h" />
     <ClInclude Include="src/DataFileSequence.h" />
     <ClInclude Include="src/DataFileSequenceStepper.h" />
@@ -304,6 +307,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src/stdafx.h" />
     <ClInclude Include="src/targetver.h" />
     <ClInclude Include="src/TransferFunctionQuery.h" />
+    <ClInclude Include="src\CSVDataSource.h" />
     <ClInclude Include="src\EnforceSymmetricParticleColorRanges.h" />
     <ClInclude Include="src\MultiParticleRelister.h" />
     <ClInclude Include="src\OverrideMultiParticleListGlobalColors.h" />

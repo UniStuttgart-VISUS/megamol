@@ -37,6 +37,8 @@
 #include "MultiParticleRelister.h"
 #include "OverrideMultiParticleListGlobalColors.h"
 #include "ParticleBoxGeneratorDataSource.h"
+#include "mmstd_datatools/CallFloatTableData.h"
+#include "CSVDataSource.h"
 
 
 /*
@@ -141,8 +143,10 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiParticleRelister>();
             this->module_descriptions.RegisterAutoDescription< megamol::stdplugin::datatools::OverrideMultiParticleListGlobalColors >();
 			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
-            // register calls here:
+			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVDataSource>();
+			// register calls here:
             // ...
+			this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CallFloatTableData>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
