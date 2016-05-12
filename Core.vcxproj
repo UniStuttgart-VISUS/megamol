@@ -451,7 +451,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\job\JobThread.cpp" />
     <ClCompile Include="src\job\PluginsStateFileGeneratorJob.cpp" />
     <ClCompile Include="src\MegaMolCore.cpp" />
-    <ClCompile Include="src\MegaMolCoreConfiguratorBackdoor.cpp" />
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="src\misc\CalloutImageCall.cpp" />
     <ClCompile Include="src\misc\CallTriMeshData.cpp" />

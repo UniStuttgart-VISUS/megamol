@@ -2068,23 +2068,6 @@ megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
     using vislib::sys::Log;
     VLSTACKTRACE("instantiateModule", __FILE__, __LINE__);
 
-#if defined(DEBUG) || defined(_DEBUG)
-
-    unsigned int plc = 0;
-    mmcParamSlotDescription *pl = NULL;
-    unsigned int celc = 0;
-    mmcCalleeSlotDescription *cel = NULL;
-    unsigned int crlc = 0;
-    mmcCallerSlotDescription *crl = NULL;
-
-    ::mmcGetModuleSlotDescriptions(const_cast<void*>(static_cast<const void*>(desc.get())),
-        &plc, &pl, &celc, &cel, &crlc, &crl);
-
-    ::mmcReleaseModuleSlotDescriptions(
-        plc, &pl, celc, &cel, crlc, &crl);
-
-#endif /* DEBUG */
-
     ASSERT(path.StartsWith("::"));
     ASSERT(desc != NULL);
 
