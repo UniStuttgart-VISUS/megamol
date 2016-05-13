@@ -112,6 +112,9 @@
     <ClCompile Include="src\CSVDataSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\FloatTableToParticles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
@@ -199,6 +202,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\CSVDataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FloatTableToParticles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

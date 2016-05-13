@@ -278,6 +278,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\CallFloatTableData.cpp" />
     <ClCompile Include="src\CSVDataSource.cpp" />
     <ClCompile Include="src\EnforceSymmetricParticleColorRanges.cpp" />
+    <ClCompile Include="src\FloatTableToParticles.cpp" />
     <ClCompile Include="src\MultiParticleRelister.cpp" />
     <ClCompile Include="src\OverrideMultiParticleListGlobalColors.cpp" />
     <ClCompile Include="src\OverrideParticleBBox.cpp" />
@@ -309,6 +310,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src/TransferFunctionQuery.h" />
     <ClInclude Include="src\CSVDataSource.h" />
     <ClInclude Include="src\EnforceSymmetricParticleColorRanges.h" />
+    <ClInclude Include="src\FloatTableToParticles.h" />
     <ClInclude Include="src\MultiParticleRelister.h" />
     <ClInclude Include="src\OverrideMultiParticleListGlobalColors.h" />
     <ClInclude Include="src\OverrideParticleBBox.h" />
