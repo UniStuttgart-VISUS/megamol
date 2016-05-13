@@ -228,6 +228,9 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
             mpdc->AccessParticles(0).SetCount(fr->GetNumberOfPoints());
             // Set particle type
             mpdc->AccessParticles(0).SetGlobalType(0); // TODO What is this?
+
+//#define CONTEST2016
+#ifndef CONTEST2016
             // Set attribute array as float 'color' value
             if (!this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value().IsEmpty()) {
                 mpdc->AccessParticles(0).SetColourData(
@@ -235,6 +238,31 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
                         fr->PeekPointDataByName(
                             this->mpdcAttributeSlot.Param<core::param::StringParam>()->Value())->PeekData(), 0);
             }
+#else
+			std::vector<float> dataVec;
+			dataVec.resize(fr->GetNumberOfPoints() * 4);
+			
+			const float * velPtr = reinterpret_cast<const float*>(fr->PeekPointDataByName("velocity")->PeekData());
+			const float * conPtr = reinterpret_cast<const float*>(fr->PeekPointDataByName("concentration")->PeekData());
+
+			/*for (int i = 0; i < fr->GetNumberOfPoints(); i++) {
+				std::cout << (int)fr->PeekPointDataByName("concentration")->PeekData()[i] << std::endl;
+			}*/
+
+			for (int64_t i = 0; i < (int64_t)fr->GetNumberOfPoints(); i++) {
+				//std::cout << conPtr[i] << std::endl;
+				dataVec[(unsigned int)i * 4 + 0] = velPtr[(unsigned int)i * 3 + 0];
+				dataVec[(unsigned int)i * 4 + 1] = velPtr[(unsigned int)i * 3 + 1];
+				dataVec[(unsigned int)i * 4 + 2] = velPtr[(unsigned int)i * 3 + 2];
+				dataVec[(unsigned int)i * 4 + 3] = conPtr[(unsigned int)i];
+
+				/*if (i > 1) {
+					std::cout << dataVec[i * 4] << " " << dataVec[i * 4 + 1] << " " << dataVec[i * 4 + 2] << " " << dataVec[i * 4 + 3] << std::endl;
+				}*/
+			}
+			mpdc->AccessParticles(0).SetColourData(
+				core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA, dataVec.data(), 0);
+#endif
             // Set vertex positions
             mpdc->AccessParticles(0).SetVertexData(
                     core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
@@ -1049,25 +1077,27 @@ void VTKLegacyDataLoaderUnstructuredGrid::readFieldData(char*& buffPt,
 
     line = this->readCurrentLine(buffPt);
     this->seekNextLine(buffPt); // Skip to next line
+	//std::cout << "Line: " << line << std::endl;
 
     // Loop through all field arrays
     for (size_t a = 0; a < numArrays; ++a) {
 
         fieldId = this->readNextToken(buffPt); // Read field name
+		//std::cout << "Field: " <<  fieldId << std::endl;
         this->seekNextToken(buffPt);
 
         nComponentsStr = this->readNextToken(buffPt); // Read number of components
         nComponents = static_cast<size_t>(atoi(nComponentsStr.PeekBuffer()));
-        //    printf("Number of components %i\n", nComponents);
+            //printf("Number of components %i\n", nComponents);
         this->seekNextToken(buffPt);
 
         nTupelStr = this->readNextToken(buffPt); // Read number of tupels
         nTupel = static_cast<size_t>(atoi(nTupelStr.PeekBuffer()));
-        //    printf("Number of tupel %i\n", nTupel);
+            //printf("Number of tupel %i\n", nTupel);
         this->seekNextToken(buffPt);
 
         dataTypeStr = this->readNextToken(buffPt); // Read number of tupels
-        //    printf("Data type %s\n", dataTypeStr.PeekBuffer());
+            //printf("Data type %s\n", dataTypeStr.PeekBuffer());
         t = AbstractVTKLegacyData::GetDataTypeByString(dataTypeStr);
         this->seekNextToken(buffPt);
 
@@ -1092,6 +1122,8 @@ void VTKLegacyDataLoaderUnstructuredGrid::readFieldData(char*& buffPt,
         // Increment buffPt
         buffPt += nComponents*nTupel*4; // Assumes float
 
+		if (a != numArrays - 1)
+			this->seekNextLine(buffPt);
     }
 
 }
