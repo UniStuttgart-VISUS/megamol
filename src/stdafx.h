@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLPLUGIN_STDAFX_H_INCLUDED
-#define MEGAMOLPLUGIN_STDAFX_H_INCLUDED
+#ifndef INFOVIS_STDAFX_H_INCLUDED
+#define INFOVIS_STDAFX_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -32,4 +32,4 @@
 
 #include "vislib/types.h"
 
-#endif /* MEGAMOLPLUGIN_STDAFX_H_INCLUDED */
+#endif /* INFOVIS_STDAFX_H_INCLUDED */
