@@ -472,7 +472,7 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
  * job::PluginsStateFileGeneratorJob::WriteParamInfo
  */
 void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, const param::FilePathParam* param) const {
-    file << "              <Type xsi:type=\"String\">" << std::endl;
+    file << "              <Type xsi:type=\"FilePath\">" << std::endl;
     WriteParamCommonTypeInfoe(file, "                ", param);
     file << "              </Type>" << std::endl;
 }
