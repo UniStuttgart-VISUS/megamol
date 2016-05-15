@@ -1,7 +1,7 @@
 /*
  * CSVDataSource.h
  *
- * Copyright (C) 2015 by CGV (TU Dresden)
+ * Copyright (C) 2015-2015 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
  */
 

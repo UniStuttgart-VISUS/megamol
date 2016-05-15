@@ -1,7 +1,7 @@
 /*
  * CallFloatTableData.h
  *
- * Copyright (C) 2015 by CGV (TU Dresden)
+ * Copyright (C) 2015-2016 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
  */
 
@@ -21,7 +21,7 @@ namespace megamol {
 namespace stdplugin {
 namespace datatools {
 
-	class MMSTD_DATATOOLS_API CallFloatTableData : public core::AbstractGetDataCall {
+    class MMSTD_DATATOOLS_API CallFloatTableData : public core::AbstractGetDataCall {
     public:
 
         static const char *ClassName(void) { return "CallFloatTableData"; }
@@ -40,7 +40,7 @@ namespace datatools {
             QUANTITATIVE
         };
 
-		class MMSTD_DATATOOLS_API ColumnInfo {
+        class MMSTD_DATATOOLS_API ColumnInfo {
         public:
             ColumnInfo();
             ColumnInfo(const ColumnInfo& src);
@@ -71,7 +71,7 @@ namespace datatools {
             }
 
         private:
-			VISLIB_MSVC_SUPPRESS_WARNING(4251)
+            VISLIB_MSVC_SUPPRESS_WARNING(4251)
             std::string name;
             ColumnType type;
             float minVal;
@@ -114,14 +114,14 @@ namespace datatools {
         }
         
         inline size_t GetFirstCategoricalColumnIndex() const {
-			for (size_t i = 0; i < columns_count; ++i) {
-				if (columns[i].Type() == ColumnType::CATEGORICAL) {
-					return i;
-				}
-			}
-			
-			return -1;
-		}
+            for (size_t i = 0; i < columns_count; ++i) {
+                if (columns[i].Type() == ColumnType::CATEGORICAL) {
+                    return i;
+                }
+            }
+            
+            return -1;
+        }
 
     private:
 

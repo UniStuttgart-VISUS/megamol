@@ -1,7 +1,7 @@
 /*
  * CallFloatTableData.cpp
  *
- * Copyright (C) 2015 by CGV (TU Dresden)
+ * Copyright (C) 2015-2016 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
