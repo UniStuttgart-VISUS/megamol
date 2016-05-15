@@ -98,7 +98,7 @@ FloatTableToParticles::FloatTableToParticles(void) : Module(),
  * FloatTableToParticles::~FloatTableToParticles
  */
 FloatTableToParticles::~FloatTableToParticles(void) {
-
+    this->Release();
 }
 
 
@@ -275,21 +275,21 @@ bool FloatTableToParticles::getMultiParticleData(core::Call& call) {
 		size_t colOffset = 0;
 		switch (this->slotRadiusMode.Param<core::param::EnumParam>()->Value()) {
 			case 0: // per particle
-				c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->everything.data(), stride * sizeof(float));
+				c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR, this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
 				colOffset = 4;
 				break;
 			case 1: // global
-				c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->everything.data(), stride * sizeof(float));
+				c.AccessParticles(0).SetVertexData(megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->everything.data(), static_cast<unsigned int>(stride * sizeof(float)));
 				colOffset = 3;
 				break;
 		}
 
 		switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
 			case 0: // RGB
-				c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB, this->everything.data() + colOffset, stride * sizeof(float));
+				c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB, this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
 				break;
 			case 1: // I
-				c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->everything.data() + colOffset, stride * sizeof(float));
+				c.AccessParticles(0).SetColourData(megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I, this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
 				c.AccessParticles(0).SetColourMapIndexValues(iMin, iMax);
 				break;
 			case 2: // global RGB
