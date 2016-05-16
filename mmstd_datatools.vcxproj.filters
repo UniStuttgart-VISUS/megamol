@@ -130,6 +130,12 @@
     <ClCompile Include="src\floattable\CallFloatTableData.cpp">
       <Filter>floattable\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\floattable\MMFTDataSource.cpp">
+      <Filter>floattable\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\floattable\MMFTDataWriter.cpp">
+      <Filter>floattable\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -221,6 +227,12 @@
     </ClInclude>
     <ClInclude Include="include\mmstd_datatools\floattable\CallFloatTableData.h">
       <Filter>Public Header Files\floattable</Filter>
+    </ClInclude>
+    <ClInclude Include="src\floattable\MMFTDataSource.h">
+      <Filter>floattable\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\floattable\MMFTDataWriter.h">
+      <Filter>floattable\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

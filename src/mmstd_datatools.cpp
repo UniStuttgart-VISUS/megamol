@@ -40,6 +40,8 @@
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 #include "floattable/CSVDataSource.h"
 #include "FloatTableToParticles.h"
+#include "floattable/MMFTDataSource.h"
+#include "floattable/MMFTDataWriter.h"
 
 
 /*
@@ -146,6 +148,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToParticles>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataWriter>();
             // register calls here:
             // ...
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
