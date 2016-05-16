@@ -584,14 +584,14 @@ void datatools::ParticleSortFixHack::copyData(particle_data& tar, core::moldyn::
     }
     if (vertStride < vertSize) vertStride = vertSize;
 
-    tar.dat.EnforceSize((colSize + vertSize) * tar.parts.GetCount());
+    tar.dat.EnforceSize(static_cast<size_t>((colSize + vertSize) * tar.parts.GetCount()));
     tar.parts.SetVertexData(src.GetVertexDataType(), tar.dat.At(0), colSize + vertSize);
     tar.parts.SetColourData(src.GetColourDataType(), tar.dat.At(vertSize), colSize + vertSize);
 
     for (UINT64 pi = 0; pi < tar.parts.GetCount(); ++pi) {
-        ::memcpy(tar.dat.At(pi * (colSize + vertSize) + 0), vertPtr, vertSize);
+        ::memcpy(tar.dat.At(static_cast<size_t>(pi * (colSize + vertSize) + 0)), vertPtr, vertSize);
         vertPtr += vertStride;
-        ::memcpy(tar.dat.At(pi * (colSize + vertSize) + vertSize), colPtr, colSize);
+        ::memcpy(tar.dat.At(static_cast<size_t>(pi * (colSize + vertSize) + vertSize)), colPtr, colSize);
         colPtr += colStride;
     }
 

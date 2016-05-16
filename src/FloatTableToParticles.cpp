@@ -89,7 +89,7 @@ FloatTableToParticles::FloatTableToParticles(void) : Module(),
 		&FloatTableToParticles::getMultiparticleExtent);
     this->MakeSlotAvailable(&this->slotCallMultiPart);
 
-	this->slotCallFloatTable.SetCompatibleCall<CallFloatTableDataDescription>();
+	this->slotCallFloatTable.SetCompatibleCall<floattable::CallFloatTableDataDescription>();
 	this->MakeSlotAvailable(&this->slotCallFloatTable);
 }
 
@@ -150,7 +150,7 @@ bool FloatTableToParticles::pushColumnIndex(std::vector<size_t>& cols, std::stri
 	}
 }
 
-bool FloatTableToParticles::assertData(CallFloatTableData *ft) {
+bool FloatTableToParticles::assertData(floattable::CallFloatTableData *ft) {
 	if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
 
 	if (this->inputHash != ft->DataHash()) {
@@ -248,7 +248,7 @@ bool FloatTableToParticles::getMultiParticleData(core::Call& call) {
     try {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<
             core::moldyn::MultiParticleDataCall&>(call);
-		CallFloatTableData *ft = this->slotCallFloatTable.CallAs<CallFloatTableData>();
+		floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
 		if (ft == NULL) return false;
 		(*ft)();
 
@@ -318,7 +318,7 @@ bool FloatTableToParticles::getMultiparticleExtent(core::Call& call) {
     try {
         core::moldyn::MultiParticleDataCall& c = dynamic_cast<
             core::moldyn::MultiParticleDataCall&>(call);
-		CallFloatTableData *ft = this->slotCallFloatTable.CallAs<CallFloatTableData>();
+		floattable::CallFloatTableData *ft = this->slotCallFloatTable.CallAs<floattable::CallFloatTableData>();
 		if (ft == NULL) return false;
 		(*ft)();
 

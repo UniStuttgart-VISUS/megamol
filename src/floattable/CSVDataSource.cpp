@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "CSVDataSource.h"
+#include "floattable/CSVDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -26,7 +26,7 @@ using namespace megamol;
 using namespace megamol::stdplugin;
 
 
-datatools::CSVDataSource::CSVDataSource(void) : core::Module(),
+datatools::floattable::CSVDataSource::CSVDataSource(void) : core::Module(),
         filenameSlot("filename", "The file name"),
         readNameLineSlot("readNameLine", "The first row of the data set stores the names of the columns"),
         readTypeLineSlot("readTypeLine", "The second row of the data set stores the data types of the columns"),
@@ -69,21 +69,21 @@ datatools::CSVDataSource::CSVDataSource(void) : core::Module(),
 
 }
 
-datatools::CSVDataSource::~CSVDataSource(void) {
+datatools::floattable::CSVDataSource::~CSVDataSource(void) {
     this->Release();
 }
 
-bool datatools::CSVDataSource::create(void) {
+bool datatools::floattable::CSVDataSource::create(void) {
     // nothing to do
     return true;
 }
 
-void datatools::CSVDataSource::release(void) {
+void datatools::floattable::CSVDataSource::release(void) {
     this->columns.clear();
     this->values.clear();
 }
 
-void datatools::CSVDataSource::assertData(void) {
+void datatools::floattable::CSVDataSource::assertData(void) {
     if (!this->filenameSlot.IsDirty()
         && !this->readNameLineSlot.IsDirty()
         && !this->readTypeLineSlot.IsDirty()
@@ -198,11 +198,11 @@ void datatools::CSVDataSource::assertData(void) {
         if (readTypeLineSlot.Param<core::param::BoolParam>()->Value()) {
             vislib::Array<vislib::StringA> tokens(vislib::StringTokeniserA::Split(file[readNameLineSlot.Param<core::param::BoolParam>()->Value() ? 1 : 0], colSep, false));
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
-                datatools::CallFloatTableData::ColumnType T = datatools::CallFloatTableData::ColumnType::QUANTITATIVE;
+                CallFloatTableData::ColumnType T = CallFloatTableData::ColumnType::QUANTITATIVE;
                 try {
                     if (tokens.Count() > i) {
                         if (tokens[i].Equals("CATEGORICAL", true)) {
-                            T = datatools::CallFloatTableData::ColumnType::CATEGORICAL;
+                            T = CallFloatTableData::ColumnType::CATEGORICAL;
                             hasCatDims = true;
                         }
                     }
@@ -215,7 +215,7 @@ void datatools::CSVDataSource::assertData(void) {
         } else {
             for (SIZE_T i = 0; i < dimNames.Count(); i++) {
                 this->columns[i].SetName(dimNames[i].PeekBuffer())
-                    .SetType(datatools::CallFloatTableData::ColumnType::QUANTITATIVE)
+                    .SetType(CallFloatTableData::ColumnType::QUANTITATIVE)
                     .SetMinimumValue(0.0f)
                     .SetMaximumValue(1.0f);
                 //this->values[i].AssertCapacity(this->values[i].Count() + file.Count() - 1);
@@ -225,7 +225,7 @@ void datatools::CSVDataSource::assertData(void) {
         // 5. format is now clear ... start parsing the actual data!
         //////////////////////////////////////////////////////////////////////
         // lets assume all lines will work and parser in parallel
-        size_t colCnt = this->columns.size();
+        size_t colCnt = static_cast<size_t>(this->columns.size());
         size_t rowCnt = static_cast<size_t>(file.Count() - firstDatRow);
         int colSepEnd = colSep.Length() - 1;
 
@@ -233,7 +233,7 @@ void datatools::CSVDataSource::assertData(void) {
         for (; rowCnt > 0; --rowCnt) {
             const char *start = file[firstDatRow + rowCnt - 1];
             const char *end = start;
-            int col = 0;
+            size_t col = 0;
             while ((*end != '\0') && (col < colCnt)) {
                 int colSepPos = 0;
                 while ((*end != '\0') && ((*end != colSep[colSepEnd]) || (colSepEnd != colSepPos))) {
@@ -254,9 +254,9 @@ void datatools::CSVDataSource::assertData(void) {
 #pragma omp parallel for
         for (long long idx = 0; idx < static_cast<long long>(rowCnt); ++idx) {
             int thId = omp_get_thread_num();
-            const char *start = file[firstDatRow +idx];
+            const char *start = file[static_cast<size_t>(firstDatRow + idx)];
             const char *end = start;
-            int col = 0;
+            size_t col = 0;
             while ((*end != '\0') && (col < colCnt)) {
                 std::map<std::string, float> &catMap = catMaps[thId + col * thCnt];
                 int colSepPos = 0;
@@ -268,22 +268,22 @@ void datatools::CSVDataSource::assertData(void) {
                 char *ez = const_cast<char*>(end - colSepEnd);
                 ez = '\0';
 
-                if (this->columns[col].Type() == datatools::CallFloatTableData::ColumnType::QUANTITATIVE) {
+                if (this->columns[col].Type() == CallFloatTableData::ColumnType::QUANTITATIVE) {
                     if (DEdouble) for (ez = const_cast<char*>(start); ez != end; ++ez) if (*ez == ',') *ez = '.';
                     try {
-                        values[idx * colCnt + col] = static_cast<float>(vislib::CharTraitsA::ParseDouble(start));
+                        values[static_cast<size_t>(idx * colCnt + col)] = static_cast<float>(vislib::CharTraitsA::ParseDouble(start));
                     } catch(...) {
-                        values[idx * colCnt + col] = std::numeric_limits<float>::quiet_NaN();
+                        values[static_cast<size_t>(idx * colCnt + col)] = std::numeric_limits<float>::quiet_NaN();
                         hasInvalids = true;
                     }
                 }
-                else if (this->columns[col].Type() == datatools::CallFloatTableData::ColumnType::CATEGORICAL) {
+                else if (this->columns[col].Type() == CallFloatTableData::ColumnType::CATEGORICAL) {
                     assert(hasCatDims);
                     std::map<std::string, float>::iterator cmi = catMap.find(start);
                     if (cmi == catMap.end()) {
                         cmi = catMap.insert(std::pair<std::string, float>(start, static_cast<float>(thId + thCnt * catMap.size()))).first;
                     }
-                    values[idx * colCnt + col] = cmi->second;
+                    values[static_cast<size_t>(idx * colCnt + col)] = cmi->second;
                 } else {
                     assert(false);
                 }
@@ -295,7 +295,7 @@ void datatools::CSVDataSource::assertData(void) {
                 }
             }
             for (;col < colCnt; ++col) {
-                values[idx * colCnt + col] = std::numeric_limits<float>::quiet_NaN();
+                values[static_cast<size_t>(idx * colCnt + col)] = std::numeric_limits<float>::quiet_NaN();
                 hasInvalids = true;
             }
         }
@@ -381,7 +381,7 @@ void datatools::CSVDataSource::assertData(void) {
 }
 
 
-void datatools::CSVDataSource::shuffleData()
+void datatools::floattable::CSVDataSource::shuffleData()
 {
     // Shuffle if neccessary
     if (!this->shuffleSlot.Param<core::param::BoolParam>()->Value())
@@ -401,7 +401,7 @@ void datatools::CSVDataSource::shuffleData()
 
 
 
-bool datatools::CSVDataSource::getDataCallback(core::Call& caller) {
+bool datatools::floattable::CSVDataSource::getDataCallback(core::Call& caller) {
     CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
     if (tfd == nullptr) return false;
 
@@ -419,7 +419,7 @@ bool datatools::CSVDataSource::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool datatools::CSVDataSource::getHashCallback(core::Call& caller) {
+bool datatools::floattable::CSVDataSource::getHashCallback(core::Call& caller) {
     CallFloatTableData *tfd = dynamic_cast<CallFloatTableData*>(&caller);
     if (tfd == nullptr) return false;
 
@@ -431,7 +431,7 @@ bool datatools::CSVDataSource::getHashCallback(core::Call& caller) {
     return true;
 }
 
-bool datatools::CSVDataSource::clearData(core::param::ParamSlot& caller) {
+bool datatools::floattable::CSVDataSource::clearData(core::param::ParamSlot& caller) {
     this->columns.clear();
     this->values.clear();
 

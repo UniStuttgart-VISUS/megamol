@@ -89,7 +89,7 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     if (s.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_NONE) return; // No data is no data
     if (s.GetColourDataType() != SimpleSphericalParticles::COLDATA_FLOAT_I) return; // for now, wrongly formated data is simply removed
 
-    const size_t cnt = s.GetCount();
+    const uint64_t cnt = s.GetCount();
 
     const uint8_t* vp = reinterpret_cast<const uint8_t*>(s.GetVertexData());
     int v_size = 0;
@@ -120,8 +120,8 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     }
 
     // now count particles surviving
-    size_t r_cnt = 0;
-    for (size_t i = 0; i < cnt; ++i) {
+    uint64_t r_cnt = 0;
+    for (uint64_t i = 0; i < cnt; ++i) {
         const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
         const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
         if (((minVal <= *ci) && (*ci <= maxVal)) || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
@@ -130,8 +130,8 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     }
 
     // now copying particles
-    d.AssertSize(r_cnt * (v_size + c_size));
-    const size_t c_off = r_cnt * v_size;
+    d.AssertSize(static_cast<size_t>(r_cnt * (v_size + c_size)));
+    const size_t c_off = static_cast<size_t>(r_cnt * v_size);
     p.SetCount(r_cnt);
     p.SetVertexData(s.GetVertexDataType(), d);
     p.SetColourData(SimpleSphericalParticles::COLDATA_FLOAT_I, d.At(c_off));
@@ -142,8 +142,8 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
         const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
         const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
         if (((minVal <= *ci) && (*ci <= maxVal)) || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
-            ::memcpy(d.At(r_cnt * v_size), vi, v_size);
-            ::memcpy(d.At(c_off + r_cnt * c_size), ci, c_size);
+            ::memcpy(d.At(static_cast<size_t>(r_cnt * v_size)), vi, static_cast<size_t>(v_size));
+            ::memcpy(d.At(static_cast<size_t>(c_off + r_cnt * c_size)), ci, static_cast<size_t>(c_size));
             r_cnt++;
         }
     }

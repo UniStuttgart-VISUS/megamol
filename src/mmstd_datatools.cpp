@@ -37,8 +37,8 @@
 #include "MultiParticleRelister.h"
 #include "OverrideMultiParticleListGlobalColors.h"
 #include "ParticleBoxGeneratorDataSource.h"
-#include "mmstd_datatools/CallFloatTableData.h"
-#include "CSVDataSource.h"
+#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "floattable/CSVDataSource.h"
 #include "FloatTableToParticles.h"
 
 
@@ -143,12 +143,12 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColFilter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiParticleRelister>();
             this->module_descriptions.RegisterAutoDescription< megamol::stdplugin::datatools::OverrideMultiParticleListGlobalColors >();
-			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToParticles>();
-			// register calls here:
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleBoxGeneratorDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CSVDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToParticles>();
+            // register calls here:
             // ...
-			this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CallFloatTableData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

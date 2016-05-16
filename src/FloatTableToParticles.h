@@ -10,7 +10,7 @@
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_datatools/CallFloatTableData.h"
+#include "mmstd_datatools/floattable/CallFloatTableData.h"
 #include <map>
 
 namespace megamol {
@@ -81,7 +81,7 @@ namespace datatools {
 
     private:
 
-		bool assertData(CallFloatTableData *ft);
+		bool assertData(floattable::CallFloatTableData *ft);
 
 		bool anythingDirty();
 

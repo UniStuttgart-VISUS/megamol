@@ -20,6 +20,7 @@
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
+namespace floattable {
 
     class MMSTD_DATATOOLS_API CallFloatTableData : public core::AbstractGetDataCall {
     public:
@@ -134,6 +135,7 @@ namespace datatools {
 
     typedef core::factories::CallAutoDescription<CallFloatTableData> CallFloatTableDataDescription;
 
+} /* end namespace floattable */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

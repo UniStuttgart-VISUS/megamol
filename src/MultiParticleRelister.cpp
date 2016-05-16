@@ -135,8 +135,8 @@ void MultiParticleRelister::copyData(const core::moldyn::SimpleSphericalParticle
     data.resize(relist.TargetListCount());
 
     for (size_t pi = 0; pi < inData.GetCount(); ++pi, colDat += colStep, verDat += verStep, relistData++) {
-        for (int i = 0; i < verSize; ++i) data[*relistData].push_back(verDat[i]);
-        for (int i = 0; i < colSize; ++i) data[*relistData].push_back(colDat[i]);
+        for (size_t i = 0; i < verSize; ++i) data[*relistData].push_back(verDat[i]);
+        for (size_t i = 0; i < colSize; ++i) data[*relistData].push_back(colDat[i]);
     }
 
 }

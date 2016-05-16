@@ -23,6 +23,21 @@
     <Filter Include="Config and Make Files\cmake">
       <UniqueIdentifier>{5c04e2e6-cc44-4e9f-8f2f-ad340c4a8e5a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="floattable">
+      <UniqueIdentifier>{761802f2-4098-4da5-8a55-4f690c514266}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="floattable\Source Files">
+      <UniqueIdentifier>{41c1d792-24f6-4356-a207-0c93b9cf126f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="floattable\Header Files">
+      <UniqueIdentifier>{fdb57473-9060-4336-bb25-d9d293e96bd2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Public Header Files">
+      <UniqueIdentifier>{f22c6ad4-b963-453c-8488-ee7dee2b54a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Public Header Files\floattable">
+      <UniqueIdentifier>{06e59629-e1de-4b22-a589-3687683f78bf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/dllmain.cpp">
@@ -106,20 +121,17 @@
     <ClCompile Include="src\ParticleBoxGeneratorDataSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CallFloatTableData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CSVDataSource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\FloatTableToParticles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\floattable\CSVDataSource.cpp">
+      <Filter>floattable\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\floattable\CallFloatTableData.cpp">
+      <Filter>floattable\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src/stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -198,14 +210,17 @@
     <ClInclude Include="src\ParticleBoxGeneratorDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\mmstd_datatools\CallFloatTableData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CSVDataSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\FloatTableToParticles.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include/mmstd_datatools/mmstd_datatools.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\floattable\CSVDataSource.h">
+      <Filter>floattable\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmstd_datatools\floattable\CallFloatTableData.h">
+      <Filter>Public Header Files\floattable</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

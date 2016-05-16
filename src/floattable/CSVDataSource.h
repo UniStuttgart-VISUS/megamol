@@ -13,11 +13,13 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmstd_datatools/CallFloatTableData.h"
+#include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include <vector>
 
 namespace megamol {
 namespace stdplugin {
 namespace datatools {
+namespace floattable {
 
     class CSVDataSource : public core::Module {
     public:
@@ -60,6 +62,7 @@ namespace datatools {
 
     };
 
+} /* end namespace floattable */
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */
