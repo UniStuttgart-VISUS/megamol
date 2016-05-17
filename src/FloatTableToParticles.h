@@ -87,7 +87,10 @@ namespace datatools {
 
 		void resetAllDirty();
 
-		bool pushColumnIndex(std::vector<size_t>& cols, std::string colName);
+		std::string cleanUpColumnHeader(const std::string& header) const;
+		std::string cleanUpColumnHeader(const vislib::TString& header) const;
+
+		bool pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName);
 
         /** Minimum coordinates of the bounding box. */
         float bboxMin[3];
