@@ -9,6 +9,7 @@
 #include "mmcore/moldyn/MMPLDWriter.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/String.h"
@@ -24,10 +25,20 @@ using namespace megamol::core;
  */
 moldyn::MMPLDWriter::MMPLDWriter(void) : AbstractDataWriter(),
         filenameSlot("filename", "The path to the MMPLD file to be written"),
+        versionSlot("version", "The file format version to be written"),
         dataSlot("data", "The slot requesting the data to be written") {
 
     this->filenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
+
+    param::EnumParam *verPar = new param::EnumParam(100);
+    verPar->SetTypePair(100, "1.0");
+#ifdef WITH_CLUSTERINFO
+    verPar->SetTypePair(101, "1.1");
+#endif
+    verPar->SetTypePair(102, "1.2");
+    this->versionSlot.SetParameter(verPar);
+    this->MakeSlotAvailable(&this->versionSlot);
 
     this->dataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->dataSlot);
@@ -192,10 +203,7 @@ bool moldyn::MMPLDWriter::run(void) {
     ASSERT_WRITEOUT(&frameOffset, 8);
 
     file.Seek(6); // set correct version to show that file is complete
-    version = 100;
-#ifdef WITH_CLUSTERINFO
-    version++;
-#endif
+    version = this->versionSlot.Param<param::EnumParam>()->Value();
     ASSERT_WRITEOUT(&version, 2);
 
     file.Seek(frameOffset);
@@ -227,6 +235,13 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
         return false; \
     }
     using vislib::sys::Log;
+    int ver = this->versionSlot.Param<param::EnumParam>()->Value();
+
+    if (ver == 102) {
+        float ts = data.GetTimeStamp();
+        ASSERT_WRITEOUT(&ts, 4);
+    }
+
     UINT32 listCnt = data.GetParticleListCount();
     ASSERT_WRITEOUT(&listCnt, 4);
 
@@ -297,15 +312,17 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
             }
         }
 #ifdef WITH_CLUSTERINFO
-        if (points.GetClusterInfos() != NULL) {
-            ASSERT_WRITEOUT(&points.GetClusterInfos()->numClusters, sizeof(unsigned int));
-            ASSERT_WRITEOUT(&points.GetClusterInfos()->sizeofPlainData, sizeof(size_t));
-            ASSERT_WRITEOUT(points.GetClusterInfos()->plainData, points.GetClusterInfos()->sizeofPlainData);
-        } else {
-            unsigned int zero1 = 0u;
-            size_t zero2 = 0;
-            ASSERT_WRITEOUT(&zero1, sizeof(unsigned int));
-            ASSERT_WRITEOUT(&zero2, sizeof(size_t));
+        if (ver == 101) {
+            if (points.GetClusterInfos() != NULL) {
+                ASSERT_WRITEOUT(&points.GetClusterInfos()->numClusters, sizeof(unsigned int));
+                ASSERT_WRITEOUT(&points.GetClusterInfos()->sizeofPlainData, sizeof(size_t));
+                ASSERT_WRITEOUT(points.GetClusterInfos()->plainData, points.GetClusterInfos()->sizeofPlainData);
+            } else {
+                unsigned int zero1 = 0u;
+                size_t zero2 = 0;
+                ASSERT_WRITEOUT(&zero1, sizeof(unsigned int));
+                ASSERT_WRITEOUT(&zero2, sizeof(size_t));
+            }
         }
 #endif
     }

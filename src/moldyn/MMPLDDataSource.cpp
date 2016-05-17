@@ -67,8 +67,14 @@ void moldyn::MMPLDDataSource::Frame::SetData(MultiParticleDataCall& call) {
         return;
     }
 
-    SIZE_T p = sizeof(UINT32);
-    UINT32 plc = *this->dat.As<UINT32>();
+    SIZE_T p = 0;
+    float timestamp = static_cast<float>(call.FrameID());
+    if (this->fileVersion == 102) {
+        timestamp = *this->dat.AsAt<float>(p);
+        p += sizeof(float);
+    }
+    UINT32 plc = *this->dat.AsAt<UINT32>(p);
+    p += sizeof(UINT32);
     call.SetParticleListCount(plc);
     for (UINT32 i = 0; i < plc; i++) {
         MultiParticleDataCall::Particles &pts = call.AccessParticles(i);
@@ -297,7 +303,7 @@ bool moldyn::MMPLDDataSource::filenameChanged(param::ParamSlot& slot) {
     }
     unsigned short ver;
     _ASSERT_READFILE(&ver, 2);
-    if (ver != 100 && ver != 101) {
+    if (ver != 100 && ver != 101 && ver != 102) {
         _ERROR_OUT("MMPLD file header version wrong");
     }
     this->fileVersion = ver;

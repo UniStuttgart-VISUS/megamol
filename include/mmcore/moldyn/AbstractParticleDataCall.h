@@ -107,6 +107,24 @@ namespace moldyn {
         }
 
         /**
+         * Gets the data defined time stamp
+         *
+         * @return The data defined time stamp
+         */
+        inline float GetTimeStamp(void) const {
+            return timeStamp;
+        }
+
+        /**
+         * Sets the data defined time stamp
+         *
+         * @param timeStamp The new time stamp value
+         */
+        void SetTimeStamp(float timeStamp) {
+            this->timeStamp = timeStamp;
+        }
+
+        /**
          * Assignment operator.
          * Makes a deep copy of all members. While for data these are only
          * pointers, the pointer to the unlocker object is also copied.
@@ -136,6 +154,9 @@ namespace moldyn {
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
 
+        /** The data defined time stamp */
+        float timeStamp;
+
     };
 
 
@@ -144,7 +165,7 @@ namespace moldyn {
      */
     template <class T>
     AbstractParticleDataCall<T>::AbstractParticleDataCall(void)
-            : AbstractGetData3DCall(), lists() {
+            : AbstractGetData3DCall(), lists(), timeStamp(0.0f) {
         // Intentionally empty
     }
 
@@ -170,6 +191,7 @@ namespace moldyn {
         for (SIZE_T i = 0; i < this->lists.Count(); i++) {
             this->lists[i] = rhs.lists[i];
         }
+        this->timeStamp = rhs.timeStamp;
         return *this;
     }
 

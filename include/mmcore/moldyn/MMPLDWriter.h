@@ -116,6 +116,9 @@ namespace moldyn {
         /** The file name of the file to be written */
         param::ParamSlot filenameSlot;
 
+        /** The file format version to be written */
+        param::ParamSlot versionSlot;
+
         /** The slot asking for data */
         CallerSlot dataSlot;
 
