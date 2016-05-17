@@ -285,6 +285,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\OverrideMultiParticleListGlobalColors.cpp" />
     <ClCompile Include="src\OverrideParticleBBox.cpp" />
     <ClCompile Include="src\ParticleBoxGeneratorDataSource.cpp" />
+    <ClCompile Include="src\ParticleColorChannelSelect.cpp" />
     <ClCompile Include="src\ParticleColorSignedDistance.cpp" />
     <ClCompile Include="src\ParticleColorSignThreshold.cpp" />
     <ClCompile Include="src\ParticleDataSequenceConcatenate.cpp" />
@@ -319,6 +320,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\OverrideMultiParticleListGlobalColors.h" />
     <ClInclude Include="src\OverrideParticleBBox.h" />
     <ClInclude Include="src\ParticleBoxGeneratorDataSource.h" />
+    <ClInclude Include="src\ParticleColorChannelSelect.h" />
     <ClInclude Include="src\ParticleColorSignedDistance.h" />
     <ClInclude Include="src\ParticleColorSignThreshold.h" />
     <ClInclude Include="src\ParticleDataSequenceConcatenate.h" />

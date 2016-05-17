@@ -136,6 +136,9 @@
     <ClCompile Include="src\floattable\MMFTDataWriter.cpp">
       <Filter>floattable\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleColorChannelSelect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -233,6 +236,9 @@
     </ClInclude>
     <ClInclude Include="src\floattable\MMFTDataWriter.h">
       <Filter>floattable\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleColorChannelSelect.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

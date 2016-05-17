@@ -103,7 +103,7 @@ void datatools::floattable::MMFTDataSource::assertData(void) {
     uint64_t rowCnt;
     ASSERT_READ(&rowCnt, 8);
 
-    values.resize(rowCnt * colCnt);
+    values.resize(static_cast<std::vector<float>::size_type>(rowCnt * colCnt));
 
     ASSERT_READ(values.data(), rowCnt * colCnt * 4);
 

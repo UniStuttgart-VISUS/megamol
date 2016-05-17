@@ -42,6 +42,7 @@
 #include "FloatTableToParticles.h"
 #include "floattable/MMFTDataSource.h"
 #include "floattable/MMFTDataWriter.h"
+#include "ParticleColorChannelSelect.h"
 
 
 /*
@@ -150,6 +151,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::FloatTableToParticles>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorChannelSelect>();
             // register calls here:
             // ...
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
