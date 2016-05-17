@@ -251,6 +251,8 @@ namespace plugins {
             return !this->pendingJobInstRequests.IsEmpty();
         }
 
+        vislib::StringA GetPendingViewName(void) const;
+
         /**
          * Instantiates the next pending view, if there is one.
          *

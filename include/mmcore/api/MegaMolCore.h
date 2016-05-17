@@ -475,7 +475,17 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
  *         'false' otherwise.
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
-    void *hCore);
+	void *hCore);
+
+/**
+ * Answer the name of the next pending view instance
+ *
+ * @param hCore The core instance handle.
+ *
+ * @return The name of the next pending view instance. This string will remain
+ *         valid until this function is called the next time.
+ */
+MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void *hCore);
 
 /**
  * Creates a view instance out of the next pending view instantiation request.

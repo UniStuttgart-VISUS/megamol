@@ -543,6 +543,19 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
 
 
 /*
+ * mmcGetPendingViewInstanceName
+ */
+MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void *hCore) {
+    VLSTACKTRACE("mmcHasPendingViewInstantiationRequests", __FILE__, __LINE__);
+    static vislib::StringA name;
+    megamol::core::CoreInstance *core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
+    if (core == nullptr) return nullptr;
+    name = core->GetPendingViewName();
+    return name.PeekBuffer();
+}
+
+
+/*
  * mmcInstantiatePendingView
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,

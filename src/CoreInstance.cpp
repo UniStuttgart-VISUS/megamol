@@ -702,6 +702,16 @@ void megamol::core::CoreInstance::RequestJobInstantiation(
 
 
 /*
+ * megamol::core::CoreInstance::GetPendingViewName
+ */
+vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) const {
+    if (this->pendingViewInstRequests.IsEmpty()) return nullptr;
+    ViewInstanceRequest request = this->pendingViewInstRequests.First();
+    return request.Name();
+}
+
+
+/*
  * megamol::core::CoreInstance::InstantiatePendingView
  */
 megamol::core::ViewInstance::ptr_type
