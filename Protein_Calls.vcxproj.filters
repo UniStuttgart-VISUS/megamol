@@ -72,9 +72,6 @@
     <ClInclude Include="include\Protein_Calls\IntSelectionCall.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Protein_Calls\MolecularDataCall.h">
-      <Filter>Public Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\Protein_Calls\ResidueSelectionCall.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
@@ -88,6 +85,12 @@
       <Filter>Public Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Protein_Calls\BindingSiteCall.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\protein_calls\MolecularDataCall.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\protein_calls\VariantMatchDataCall.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -129,6 +132,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VTKImageData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VariantMatchDataCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

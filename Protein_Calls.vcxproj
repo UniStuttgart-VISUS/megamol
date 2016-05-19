@@ -234,10 +234,11 @@
     <ClInclude Include="include\Protein_Calls\DiagramCall.h" />
     <ClInclude Include="include\Protein_Calls\Interpol.h" />
     <ClInclude Include="include\Protein_Calls\IntSelectionCall.h" />
-    <ClInclude Include="include\Protein_Calls\MolecularDataCall.h" />
+    <ClInclude Include="include\protein_calls\MolecularDataCall.h" />
     <ClInclude Include="include\Protein_Calls\Protein_Calls.h" />
     <ClInclude Include="include\Protein_Calls\ResidueSelectionCall.h" />
     <ClInclude Include="include\Protein_Calls\SplitMergeCall.h" />
+    <ClInclude Include="include\protein_calls\VariantMatchDataCall.h" />
     <ClInclude Include="include\Protein_Calls\VTIDataCall.h" />
     <ClInclude Include="include\Protein_Calls\VTKImageData.h" />
     <ClInclude Include="src\stdafx.h" />
@@ -260,6 +261,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\VariantMatchDataCall.cpp" />
     <ClCompile Include="src\VTIDataCall.cpp" />
     <ClCompile Include="src\VTKImageData.cpp" />
   </ItemGroup>

@@ -20,6 +20,7 @@
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
 #include "protein_calls/VTIDataCall.h"
+#include "protein_calls/VariantMatchDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -64,6 +65,7 @@ namespace {
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::MolecularDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::ResidueSelectionCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::SplitMergeCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VariantMatchDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VTIDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
