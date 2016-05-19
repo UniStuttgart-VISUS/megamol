@@ -28,6 +28,7 @@
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
+#ifdef INFOVIS_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,5 +92,6 @@ INFOVIS_API void mmplgReleasePluginInstance(
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+#endif /* INFOVIS_EXPORTS */
 
 #endif /* INFOVIS_H_INCLUDED */

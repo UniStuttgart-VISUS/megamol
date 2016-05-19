@@ -50,6 +50,16 @@ $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
+$a = PathParameter->new();
+	  $a->directorySeparator("\\");
+    $a->enforceTrailingDirectorySeparator(1);
+    $a->id("datatools");
+    $a->description("Path to the mmstd_datatools plugin");
+    $a->placeholder("%datatoolsPath%");
+    $a->markerFile("include/mmstd_datatools/mmstd_datatools.h");
+    $a->relativeLocation("../../");
+    $a->autoDetect(1);
+    push @pps, $a;
 
 $c = ConfigFilePair->new();
     $c->inFile("ExtLibs.props.input");

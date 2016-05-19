@@ -1,0 +1,417 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="pc_item_draw" type="MegaMolGLSLShader" version="1.0">
+
+  <include file="pc" />
+
+  <snippet name="interface" type="string">
+    <![CDATA[
+flat uint itemID;
+flat uint dimension;
+flat uint dataID;
+flat vec4 color;
+//noperspective float linePosition;
+	  ]]>
+  </snippet>
+
+  <snippet name="uniforms" type="string">
+    <![CDATA[
+uniform vec4 color = vec4(0.7, 0.7, 0.7, 1.0);
+
+uniform uint fragmentTestMask = 0;
+uniform uint fragmentPassMask = 0;
+
+uniform uint tick = 0;
+
+layout(binding = 0) uniform sampler1D transferFunction;
+	  ]]>
+  </snippet>
+
+  <snippet name="vertexShaderMain" type="string">
+    <![CDATA[
+const vec4 itemColors[5] =
+{
+// 5-class Dark2
+// 27,158,119
+vec4(0.11, 0.62, 0.48, 0.8),
+// 217,95,2
+vec4(0.85, 0.37, 0.01, 0.8),
+// 117,112,179
+vec4(0.46, 0.44, 0.70, 0.8),
+// 231,41,138
+vec4(0.91, 0.16, 0.54, 0.8),
+// 102,166,30
+vec4(0.40, 0.65, 0.12, 0.8)
+};
+
+void main()
+{
+  uint instanceID = getInstanceID();
+  uint dimensions = pc_dimension_count();
+  
+#ifdef USE_LINE_STRIP
+	out_.itemID = instanceID;
+	out_.dimension = pc_dimension(gl_VertexID);
+//	out_.linePosition = float(gl_VertexID) / (dimensions - 1);
+#else
+	out_.itemID = uint(instanceID / dimensions);
+	out_.dimension = pc_dimension(uint(instanceID % dimensions) + gl_VertexID);
+//	out_.linePosition = float(gl_VertexID);
+#endif
+
+	out_.dataID = pc_item_dataID(out_.itemID, out_.dimension);
+  
+#if 0
+  uint rank = uint(data[pc_item_dataID(out_.itemID, 0)]);
+  out_.color = itemColors[rank];
+#endif
+
+#if 1
+  float value = instanceID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
+  out_.color = texture(transferFunction, value);//value);
+#endif
+
+if (out_.itemID == 93)
+{
+out_.color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+}
+
+	vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dimension);
+  
+  if (!bitflag_isVisible(flags[out_.itemID])
+	|| (out_.itemID != 5 && out_.itemID != 65)// && out_.itemID != 93)
+
+	)
+  {
+    vertex.w = -1.0;
+  }
+#if 0
+  else
+  {
+    const vec4 center = vec4(vertex.x, 0.5 * scaling.y, vertex.z, vertex.w);
+    float alpha = smoothstep(0.0, 1.0, float(tick) * 0.001f);
+    vertex = mix(center, vertex, alpha);
+  }
+#endif
+
+  gl_Position = projection * modelView * vertex;
+}
+		]]>
+  </snippet>
+
+  <namespace name="discrete">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::instancingOffset" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- BEGIN Output data -->
+      <snippet type="string">
+        <![CDATA[
+out Interface
+{
+      ]]>
+      </snippet>
+      <snippet name="::pc_item_draw::interface" />
+      <snippet type="string">
+        <![CDATA[
+} out_;
+        ]]>
+      </snippet>
+      <!-- END Output data -->
+      <snippet name="::pc_item_draw::vertexShaderMain" />
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- Input data -->
+      <snippet type="string">
+        <![CDATA[
+in Interface
+{
+      ]]>
+      </snippet>
+      <snippet name="::pc_item_draw::interface" />
+      <snippet type="string">
+        <![CDATA[
+} in_;
+        ]]>
+      </snippet>
+      <snippet type="string">
+        <![CDATA[
+layout(location = 0) out vec4 fragColor;
+
+void main()
+{
+#if 0
+float factor = 1000.0f;
+uint bit = uint(round(in_.linePosition * factor)) & 31u;
+uint pattern = 0xF0F0F0F0;
+if ((pattern & (1u << bit)) == 0u)
+{
+	discard;
+}
+#endif
+
+  if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask))
+  {
+    fragColor = in_.color;
+  }
+  else
+  {
+    discard;
+  }
+}
+      ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+  <namespace name="continuous">
+    <snippet name="uniforms" type="string">
+      <![CDATA[
+layout(binding = 1) uniform sampler2D fragCount;
+
+uniform vec4 clearColor = vec4(0.0);
+      ]]>
+    </snippet>
+
+    <shader name="comp">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::pc_item_draw::continuous::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+uniform uvec2 resolution = uvec2(0);
+//uniform uvec2 stepSize = uvec2(3);
+uniform uvec2 fragmentCountStepSize = uvec2(10);
+
+void main()
+{
+  if (any(greaterThanEqual(gl_GlobalInvocationID.xy, resolution)))
+  {
+    return;
+  }
+  
+  uint minFrag = 4294967295u;
+  uint maxFrag = 0;
+
+  uvec2 start = min(gl_GlobalInvocationID.xy * fragmentCountStepSize, resolution);
+  uvec2 end = min(start + fragmentCountStepSize, resolution);
+  uvec2 texCoord = start;
+  
+  while (texCoord.y < end.y)
+  {
+    texCoord.x = start.x;
+    
+    while (texCoord.x < end.x)
+    {
+      vec4 texel = texelFetch(fragCount, ivec2(texCoord), 0) - clearColor;
+      uint count = uint(texel.r);
+
+      if (count > 0 && count < minFrag)
+      {
+        minFrag = count;
+      }
+    
+      if (count > maxFrag)
+      {
+        maxFrag = count;
+      }
+        
+      ++texCoord.x;
+    }
+    
+    ++texCoord.y;
+  }
+  
+  atomicMin(minFragmentCount, minFrag);
+  atomicMax(maxFragmentCount, maxFrag);
+}
+        ]]>
+      </snippet>
+    </shader>
+
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc_item_draw::continuous::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+uniform vec2 bottomLeft = vec2(-1.0);
+uniform vec2 topRight = vec2(1.0);
+
+smooth out vec2 texCoord;
+
+void main()
+{
+  const vec2 vertices[6] =
+  {
+  // b_l, b_r, t_r
+  bottomLeft, vec2(topRight.x, bottomLeft.y), topRight
+  // t_r, t_l, b_l
+  , topRight, vec2(bottomLeft.x, topRight.y), bottomLeft
+  };
+  
+  const vec2 texCoords[6] =
+  {
+  // b_l, b_r, t_r
+  vec2(0.0), vec2(1.0, 0.0), vec2(1.0)
+  // t_r, t_l, b_l
+  , vec2(1.0), vec2(0.0, 1.0), vec2(0.0)
+  };
+  
+  texCoord = texCoords[gl_VertexID];
+
+  vec4 vertex = vec4(vertices[gl_VertexID], pc_item_defaultDepth, 1.0);
+  
+  gl_Position = /*projection * modelView */ vertex;
+}
+        ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::pc_item_draw::continuous::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+smooth in vec2 texCoord;
+
+layout(location = 0) out vec4 fragColor;
+
+void main()
+{
+  vec4 frags = texture(fragCount, texCoord) - clearColor;
+  
+  if (frags.r >= minFragmentCount)
+  {
+    float value = (frags.r - minFragmentCount) / (maxFragmentCount - minFragmentCount);
+    value = clamp(value, 0.0, 1.0);
+    fragColor = texture(transferFunction, value);
+  }
+  else
+  {
+    fragColor = clearColor;
+  }
+}
+        ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+  <namespace name="histogramm">
+    <snippet name="uniforms" type="string">
+      <![CDATA[
+layout(binding = 1) uniform sampler2D fragCount;
+
+uniform vec4 clearColor = vec4(0.0);
+      ]]>
+    </snippet>
+
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc_item_draw::histogramm::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+uniform vec2 bottomLeft = vec2(-1.0);
+uniform vec2 topRight = vec2(1.0);
+
+smooth out vec2 texCoord;
+
+void main()
+{
+  const vec2 vertices[6] =
+  {
+  // b_l, b_r, t_r
+  bottomLeft, vec2(topRight.x, bottomLeft.y), topRight
+  // t_r, t_l, b_l
+  , topRight, vec2(bottomLeft.x, topRight.y), bottomLeft
+  };
+  
+  const vec2 texCoords[6] =
+  {
+  // b_l, b_r, t_r
+  vec2(0.0), vec2(1.0, 0.0), vec2(1.0)
+  // t_r, t_l, b_l
+  , vec2(1.0), vec2(0.0, 1.0), vec2(0.0)
+  };
+  
+  texCoord = texCoords[gl_VertexID];
+
+  vec4 vertex = vec4(vertices[gl_VertexID], pc_item_defaultDepth, 1.0);
+  
+  gl_Position = /*projection * modelView */ vertex;
+}
+        ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::pc_item_draw::histogramm::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+smooth in vec2 texCoord;
+
+layout(location = 0) out vec4 fragColor;
+
+void main()
+{
+#if 0
+  vec4 value = clearColor;
+  
+  for (uint dimension = 0; dimension < dimensions; ++dimension)
+  {
+	  float axis = scaling.x * abscissae[dimension];
+  }
+#endif
+
+  vec4 frags = texture(fragCount, texCoord) - clearColor;
+  
+  if (frags.r >= minFragmentCount)
+  {
+    float value = (frags.r - minFragmentCount) / (maxFragmentCount - minFragmentCount);
+    value = clamp(value, 0.0, 1.0);
+    fragColor = texture(transferFunction, value);
+  }
+  else
+  {
+    fragColor = clearColor;
+  }
+}
+        ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+</btf>

@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="pc_item_filter" type="MegaMolGLSLShader" version="1.0">
+
+  <include file="pc" />
+
+  <snippet name="uniforms" type="string">
+    <![CDATA[
+uniform uint filterCount = 0;
+    ]]>
+  </snippet>
+            
+  <shader name="comp">
+    <snippet type="version">430</snippet>
+    <snippet name="::pc::extensions" />
+    <snippet name="::pc::useLineStrip" />
+    <snippet name="::pc::buffers" />
+    <snippet name="::pc::uniforms" />
+    <snippet name="::pc::common" />
+    <snippet name="::pc_item_filter::uniforms" />
+    <snippet name="::bitflags::main" />
+    <snippet type="string">
+      <![CDATA[
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+void main()
+{
+  uint itemID = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
+  
+  if (itemID < itemCount
+    && bitflag_isVisible(flags[itemID])
+    )
+  {
+		for (uint f = 0; f < filterCount; ++f)
+		{
+    	uint dataID = pc_item_dataID(itemID, filters[f].dimension);
+		  float value = pc_item_dataValue(dataID, filters[f].dimension);
+
+      if (value >= filters[f].lower && value <= filters[f].upper)
+      {
+        bitflag_set(flags[itemID], FLAG_FILTERED, true);
+  		  break;
+		  }
+	  }
+  }
+}
+      ]]>
+    </snippet>
+  </shader>
+
+</btf>

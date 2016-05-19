@@ -11,7 +11,9 @@
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
-
+#include "FlagCall.h"
+#include "FlagStorage.h"
+#include "NGParallelCoordinatesRenderer2D.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -39,23 +41,11 @@ namespace {
 
             // register modules here:
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::infovis::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::infovis::MyModule2>();
-            //   ...
-            //
+			this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
+			this->module_descriptions.RegisterAutoDescription<megamol::infovis::NGParallelCoordinatesRenderer2D>();
 
             // register calls here:
-
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::infovis::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::infovis::MyCall2>();
-            //   ...
-            //
+			this->call_descriptions.RegisterAutoDescription<megamol::infovis::FlagCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

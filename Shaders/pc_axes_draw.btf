@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="pc_axes_draw" type="MegaMolGLSLShader" version="1.0">
+
+  <include file="pc" />
+
+  <snippet name="uniforms" type="string">
+    <![CDATA[
+uniform vec4 color = vec4(1.0, 0.0, 1.0, 1.0);
+uniform float axisPadding = 0.0075;
+uniform float scalePadding = 0.03;
+uniform float axisScaleStep = 1.0 / 4.0;
+	  ]]>
+  </snippet>
+
+  <snippet name="axesInterface" type="string">
+    <![CDATA[
+vec4 axis_line(uint dimension, bool top)
+{
+  float topFactor = top ? 1.0 : 0.0;
+  
+  return vec4(
+    scaling.x * abscissae[dimension]
+    , scaling.y * topFactor + (topFactor * axisPadding) - ((1.0 - topFactor) * axisPadding)
+    , pc_item_defaultDepth
+    , 1.0
+    );
+}
+    ]]>
+  </snippet>
+
+  <namespace name="axes">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_axes_draw::uniforms" />
+      <snippet name="::pc_axes_draw::axesInterface" />
+      <snippet type="string">
+        <![CDATA[
+void main()
+{
+  uint dimension = pc_dimension(gl_InstanceID);
+	vec4 vertex = axis_line(dimension, gl_VertexID == 0 ? false : true);
+  
+  gl_Position = projection * modelView * vertex;
+}
+		    ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc_axes_draw::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 fragColor;
+
+void main()
+{
+  fragColor = color;
+}
+        ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+  <namespace name="scales">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_axes_draw::uniforms" />
+      <snippet name="::pc_axes_draw::axesInterface" />
+      <snippet type="string">
+        <![CDATA[
+void main()
+{
+  uint dimensions = pc_dimension_count() - 1;
+  uint dimension = pc_dimension(gl_InstanceID % dimensions);
+  float percentage = (gl_InstanceID / dimensions) * axisScaleStep;
+  
+  vec4 bottom = axis_line(dimension, false);
+  vec4 top = axis_line(dimension, true);
+  
+  vec4 vertex = vec4(
+    (bottom.x - scalePadding) * gl_VertexID + ((1 - gl_VertexID) * (top.x + scalePadding))
+    , mix(bottom.y, top.y, percentage)
+    , bottom.z
+    , bottom.w
+    );
+
+  gl_Position = projection * modelView * vertex;
+}
+		    ]]>
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc_axes_draw::uniforms" />
+      <snippet type="string">
+        <![CDATA[
+out vec4 fragColor;
+
+void main()
+{
+  fragColor = color;
+}
+        ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+</btf>

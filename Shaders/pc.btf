@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<btf namespace="pc" type="MegaMolGLSLShader" version="1.0">
+
+  <include file="bitflags" />
+  
+  <snippet name="extensions" type="string">
+    <![CDATA[
+    ]]>
+  </snippet>
+
+  <snippet name="useLineStrip" type="string">
+    <![CDATA[
+#define USE_LINE_STRIP
+  	]]>
+  </snippet>
+
+  <snippet name="earlyFragmentTests" type="string">
+    <![CDATA[
+//layout(early_fragment_tests) in;
+  	]]>
+  </snippet>
+
+  <snippet name="buffers" type="string">
+    <![CDATA[
+layout(std430, binding = 0) buffer Data
+{
+	float data[];
+};
+
+layout(std430, binding = 1) buffer Flags
+{
+	coherent uint flags[];
+};
+
+layout(std430, binding = 2) buffer DataMinimum
+{
+	float dataMinimum[];
+};
+
+layout(std430, binding = 3) buffer DataMaximum
+{
+	float dataMaximum[];
+};
+
+layout(std430, binding = 4) buffer Abscissae
+{
+	float abscissae[];
+};
+
+struct DimensionFilter
+{
+	uint dimension;
+	float lower;
+	float upper;
+  uint flags;
+};
+
+layout(std430, binding = 5) buffer Filters
+{
+	DimensionFilter filters[];
+};
+
+layout(std430, binding = 6) buffer FragmentMinMax
+{
+  coherent uint minFragmentCount;
+  coherent uint maxFragmentCount;
+};
+  	]]>
+  </snippet>
+
+  <snippet name="uniforms" type="string">
+    <![CDATA[
+uniform vec2 scaling = vec2(1.0);
+uniform mat4 modelView = mat4(1.0);
+uniform mat4 projection = mat4(1.0);
+
+uniform uint dimensionCount = 0;
+uniform uint itemCount = 0;
+
+uniform float pc_item_defaultDepth = 0.0;
+	  ]]>
+  </snippet>
+  
+  <snippet name="instancingOffset" type="string">
+    <![CDATA[
+uniform uint instanceOffset = 0;
+
+uint getInstanceID()
+{
+  return gl_InstanceID + instanceOffset;
+}
+	  ]]>
+  </snippet>
+  
+  <snippet name="common" type="string">
+    <![CDATA[
+uint pc_dimension_count()
+{
+  return dimensionCount;
+}
+
+uint pc_dimension(uint base)
+{
+  return base;// + 1;
+}
+
+uint pc_item_dataID(uint itemID, uint dimension)
+{
+  return itemID * dimensionCount + dimension;
+}
+
+float pc_item_dataValue(uint dataID, uint dimension)
+{
+  return (data[dataID] - dataMinimum[dimension]) / (dataMaximum[dimension] - dataMinimum[dimension]);
+}
+
+vec4 pc_item_vertex(uint itemID, uint dataID, uint dimension)
+{
+  return vec4(
+	  scaling.x * abscissae[dimension]
+	  , scaling.y * pc_item_dataValue(dataID, dimension)
+	  , pc_item_defaultDepth
+	  , 1.0
+	  );
+}
+vec2 pc_item_vec2(uint itemID, uint dataID, uint dimension)
+{
+  return vec2(
+	  abscissae[dimension]
+	  , pc_item_dataValue(dataID, dimension)
+	  );
+}
+	  ]]>
+  </snippet>
+  
+</btf>
