@@ -29,6 +29,7 @@
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
+#ifdef MMSTD_DATATOOLS_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,6 +92,7 @@ MMSTD_DATATOOLS_API void mmplgReleasePluginInstance(
 
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
 #endif
 
 #endif /* MMSTD_DATATOOLS_H_INCLUDED */
