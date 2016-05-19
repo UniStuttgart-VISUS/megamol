@@ -14,6 +14,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include "vislib/AlreadyExistsException.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/macro_utils.h"
 #include "vislib/String.h"
@@ -213,7 +214,7 @@ namespace factories {
     void ObjectDescriptionManager<T>::Register(description_ptr_type objDesc) {
         if (!objDesc) throw vislib::IllegalParamException("objDesc", __FILE__, __LINE__);
         if (this->Find(objDesc->ClassName()) != nullptr) {
-            throw vislib::IllegalParamException("objDesc", __FILE__, __LINE__);
+            throw vislib::AlreadyExistsException("objDesc", __FILE__, __LINE__);
         }
         this->descriptions.push_back(objDesc);
     }
