@@ -7,8 +7,9 @@
 
 #include "stdafx.h"
 
-#include "../include/protein/Protein.h"
+#include "protein/Protein.h"
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/utility/plugins/Plugin200Utilities.h"
 
 // views
 #include "View3DSpaceMouse.h"
@@ -80,9 +81,7 @@
 #include "ParticleDataCall.h"
 #include "ForceDataCall.h"
 #include "CallMouseInput.h"
-#include "VariantMatchDataCall.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
-
 
 #include "MoleculeBallifier.h"
 
@@ -92,196 +91,190 @@
 #include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
 
-#include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/factories/ModuleAutoDescription.h"
+#include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/ThreadSafeStackTrace.h"
 
+/* anonymous namespace hides this type from any other object files */
+namespace {
+	/** Implementing the instance class of this plugin */
+    class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
+    public:
+        /** ctor */
+        plugin_instance(void)
+            : ::megamol::core::utility::plugins::Plugin200Instance(
 
+                /* machine-readable plugin assembly name */
+                "Protein",
+
+                /* human-readable plugin description */
+                "Plugin for protein rendering (SFB716 D4)") {
+
+            // here we could perform addition initialization
+        };
+        /** Dtor */
+        virtual ~plugin_instance(void) {
+            // here we could perform addition de-initialization
+        }
+        /** Registers modules and calls */
+        virtual void registerClasses(void) {
+
+            // register modules here:
+#ifdef WITH_OPENHAPTICS
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
+#endif // WITH_OPENHAPTICS
+#ifdef WITH_OPENBABEL
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::OpenBabelLoader>();
+#endif // WITH_OPENBABEL
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SequenceRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::BindingSiteDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolPathRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinVolumeRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::CCP4VolumeData>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SimpleMoleculeRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::CoarseGrainDataLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SphereRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeSESRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeCartoonRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::FrodockLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::XYZLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::ElectrostaticsRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventVolumeRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventDataGenerator>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::View3DSpaceMouse>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::GROLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SSAORendererDeferred>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::ToonRendererDeferred>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::DofRendererDeferred>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SphereRendererMouse>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::View3DMouse>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::GLSLVolumeRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::DiagramRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SplitMergeRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::IntSelection>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::CrystalStructureDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::VTILoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBWriter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::VTIWriter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::VMDDXLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::TrajectorySmoothFilter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::VariantMatchRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeBallifier>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::ResidueSelection>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SecPlaneRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::AggregatedDensity>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataLoaderUnstructuredGrid>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::UnstructuredGridRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularBezierData>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiParticleDataFilter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::VolumeDirectionRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::LayeredIsosurfaceRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiPDBLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::ColorModule>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
+
+            // register calls here:
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallProteinVolumeData>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::SphereDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::ParticleDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallMouseInput>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallColor>();
+		}
+        MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
+    };
+}
 
 /*
  * mmplgPluginAPIVersion
  */
 PROTEIN_API int mmplgPluginAPIVersion(void) {
-    return 100;
+	MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
 
 /*
- * mmplgPluginName
+ * mmplgGetPluginCompatibilityInfo
  */
-PROTEIN_API const char * mmplgPluginName(void) {
-    return "Protein";
-}
+PROTEIN_API
+::megamol::core::utility::plugins::PluginCompatibilityInfo *
+mmplgGetPluginCompatibilityInfo(
+        ::megamol::core::utility::plugins::ErrorCallback onError) {
+    // compatibility information with core and vislib
+    using ::megamol::core::utility::plugins::PluginCompatibilityInfo;
+    using ::megamol::core::utility::plugins::LibraryVersionInfo;
 
+    PluginCompatibilityInfo *ci = new PluginCompatibilityInfo;
+    ci->libs_cnt = 2;
+    ci->libs = new LibraryVersionInfo[2];
 
-/*
- * mmplgPluginDescription
- */
-PROTEIN_API const char * mmplgPluginDescription(void) {
-    return "Plugin for protein rendering (SFB716 D4)";
-}
-
-
-/*
- * mmplgCoreCompatibilityValue
- */
-PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
-    static const mmplgCompatibilityValues compRev = {
-        sizeof(mmplgCompatibilityValues),
-        MEGAMOL_CORE_COMP_REV,
-        VISLIB_VERSION_REVISION
-    };
-    return &compRev;
-}
-
-
-/*
- * mmplgModuleCount
- */
-PROTEIN_API int mmplgModuleCount(void) {
-    int moduleCount = 52;
-#ifdef WITH_OPENHAPTICS
-    moduleCount+=1;
-#endif // WITH_OPENHAPTICS
-#ifdef WITH_OPENBABEL
-    moduleCount += 1;
-#endif // WITH_OPENBABEL
-    return moduleCount;
-}
-
-
-/*
- * mmplgModuleDescription
- */
-PROTEIN_API void* mmplgModuleDescription(int idx) {
-    using namespace megamol;
-    using namespace megamol::core;
-    switch (idx) {
-#ifdef WITH_OPENHAPTICS
-		case 0 : return new megamol::core::factories::ModuleAutoDescription<megamol::protein::HapticsMoleculeRenderer>();
-        #define HAPTICS_OFFSET 1
-#else
-        #define HAPTICS_OFFSET 0
-#endif // WITH_OPENHAPTICS
-#ifdef WITH_OPENBABEL
-		case CUDA_OFFSET + HAPTICS_OFFSET + 0: return new factories::ModuleAutoDescription<protein::OpenBabelLoader>();
-        #define OPENBABAEL_OFFSET 1
-#else
-        #define OPENBABAEL_OFFSET 0
-#endif //WITH_OPENBABEL
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  0 : return new factories::ModuleAutoDescription<protein::SequenceRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  1 : return new factories::ModuleAutoDescription<protein::BindingSiteDataSource>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  2 : return new factories::ModuleAutoDescription<protein::SolPathDataSource>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  3 : return new factories::ModuleAutoDescription<protein::SolPathRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  4 : return new factories::ModuleAutoDescription<protein::ProteinVolumeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  5 : return new factories::ModuleAutoDescription<protein::CCP4VolumeData>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  6 : return new factories::ModuleAutoDescription<protein::PDBLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  7 : return new factories::ModuleAutoDescription<protein::SimpleMoleculeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  8 : return new factories::ModuleAutoDescription<protein::CoarseGrainDataLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET +  9 : return new factories::ModuleAutoDescription<protein::SphereRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 10 : return new factories::ModuleAutoDescription<protein::MoleculeSESRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 11 : return new factories::ModuleAutoDescription<protein::MoleculeCartoonRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 12 : return new factories::ModuleAutoDescription<protein::FrodockLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 13 : return new factories::ModuleAutoDescription<protein::VolumeSliceRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 14 : return new factories::ModuleAutoDescription<protein::Diagram2DRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 15 : return new factories::ModuleAutoDescription<protein::XYZLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 16 : return new factories::ModuleAutoDescription<protein::ElectrostaticsRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 17 : return new factories::ModuleAutoDescription<protein::SolventVolumeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 18 : return new factories::ModuleAutoDescription<protein::SolventDataGenerator>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 19 : return new factories::ModuleAutoDescription<protein::View3DSpaceMouse>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 20 : return new factories::ModuleAutoDescription<protein::GROLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 21 : return new factories::ModuleAutoDescription<protein::SSAORendererDeferred>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 22 : return new factories::ModuleAutoDescription<protein::ToonRendererDeferred>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 23 : return new factories::ModuleAutoDescription<protein::DofRendererDeferred>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 24 : return new factories::ModuleAutoDescription<protein::SphereRendererMouse>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 25 : return new factories::ModuleAutoDescription<protein::View3DMouse>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 26 : return new factories::ModuleAutoDescription<protein::GLSLVolumeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 27 : return new factories::ModuleAutoDescription<protein::DiagramRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 28 : return new factories::ModuleAutoDescription<protein::SplitMergeRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 29 : return new factories::ModuleAutoDescription<protein::IntSelection>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 30 : return new factories::ModuleAutoDescription<protein::CrystalStructureDataSource>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 31 : return new factories::ModuleAutoDescription<protein::VTILoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 32 : return new factories::ModuleAutoDescription<protein::PDBWriter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 33 : return new factories::ModuleAutoDescription<protein::VTIWriter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 34 : return new factories::ModuleAutoDescription<protein::VMDDXLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 35 : return new factories::ModuleAutoDescription<protein::TrajectorySmoothFilter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 36 : return new factories::ModuleAutoDescription<protein::VariantMatchRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 37 : return new factories::ModuleAutoDescription<protein::MoleculeBallifier>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 38 : return new factories::ModuleAutoDescription<protein::ResidueSelection>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 39 : return new factories::ModuleAutoDescription<protein::SecPlaneRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 40 : return new factories::ModuleAutoDescription<protein::AggregatedDensity>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 41 : return new factories::ModuleAutoDescription<protein::VTKLegacyDataLoaderUnstructuredGrid>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 42 : return new factories::ModuleAutoDescription<protein::UnstructuredGridRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 43 : return new factories::ModuleAutoDescription<protein::MolecularBezierData>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 44 : return new factories::ModuleAutoDescription<protein::MultiParticleDataFilter>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 45 : return new factories::ModuleAutoDescription<protein::VolumeDirectionRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 46 : return new factories::ModuleAutoDescription<protein::LayeredIsosurfaceRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 47 : return new factories::ModuleAutoDescription<protein::MultiPDBLoader>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 48: return new factories::ModuleAutoDescription<protein::ColorModule>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 49: return new factories::ModuleAutoDescription<protein::PDBInterpolator>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 50: return new factories::ModuleAutoDescription<protein::CartoonRenderer>();
-        case OPENBABAEL_OFFSET + HAPTICS_OFFSET + 51: return new factories::ModuleAutoDescription<protein::CartoonTessellationRenderer>();
-        default: return NULL;
-    }
-    return NULL;
-}
-
-
-/*
- * mmplgCallCount
- */
-PROTEIN_API int mmplgCallCount(void) {
-    return 11;
-}
-
-
-/*
- * mmplgCallDescription
- */
-PROTEIN_API void* mmplgCallDescription(int idx) {
-    switch (idx) {
-        case 0: return new megamol::core::factories::CallAutoDescription<megamol::protein::SolPathDataCall>();
-        case 1: return new megamol::core::factories::CallAutoDescription<megamol::protein::CallProteinVolumeData>();
-        case 2: return new megamol::core::factories::CallAutoDescription<megamol::protein::SphereDataCall>();
-        case 3: return new megamol::core::factories::CallAutoDescription<megamol::protein::VolumeSliceCall>();
-        case 4: return new megamol::core::factories::CallAutoDescription<megamol::protein::Diagram2DCall>();
-        case 5: return new megamol::core::factories::CallAutoDescription<megamol::protein::ParticleDataCall>();
-        case 6: return new megamol::core::factories::CallAutoDescription<megamol::protein::ForceDataCall>();
-        case 7: return new megamol::core::factories::CallAutoDescription<megamol::protein::CallMouseInput>();
-        case 8: return new megamol::core::factories::CallAutoDescription<megamol::protein::VariantMatchDataCall>();
-        case 9: return new megamol::core::factories::CallAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
-		case 10: return new megamol::core::factories::CallAutoDescription<megamol::protein::CallColor>();
-        default: return NULL;
-    }
-    return NULL;
-}
-
-
-/*
- * mmplgConnectStatics
- */
-PROTEIN_API bool mmplgConnectStatics(int which, void* value) {
+    SetLibraryVersionInfo(ci->libs[0], "MegaMolCore",
+        MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV, 0
 #if defined(DEBUG) || defined(_DEBUG)
-    // only trace non-vislib messages
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
-#endif /* DEBUG || _DEBUG */
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
+#endif
+#if defined(MEGAMOL_CORE_DIRTY) && (MEGAMOL_CORE_DIRTY != 0)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
+#endif
+        );
 
-    switch (which) {
-        case 1: // vislib::log
-            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-            vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-            vislib::sys::Log::DefaultLog.SetEchoTarget(new
-                vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value)));
-            vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-            vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-            return true;
-        case 2: // vislib::stacktrace
-            return vislib::sys::ThreadSafeStackTrace::Initialise(
-                *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true);
-    }
-    return false;
+    SetLibraryVersionInfo(ci->libs[1], "vislib",
+        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD, 0
+#if defined(DEBUG) || defined(_DEBUG)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
+#endif
+#if defined(VISLIB_DIRTY_BUILD) && (VISLIB_DIRTY_BUILD != 0)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
+#endif
+        );
+    //
+    // If you want to test additional compatibilties, add the corresponding versions here
+    //
+
+    return ci;
+}
+
+
+/*
+ * mmplgReleasePluginCompatibilityInfo
+ */
+PROTEIN_API
+void mmplgReleasePluginCompatibilityInfo(
+        ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
+    // release compatiblity data on the correct heap
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)
+}
+
+
+/*
+ * mmplgGetPluginInstance
+ */
+PROTEIN_API
+::megamol::core::utility::plugins::AbstractPluginInstance*
+mmplgGetPluginInstance(
+        ::megamol::core::utility::plugins::ErrorCallback onError) {
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgGetPluginInstance(plugin_instance, onError)
+}
+
+
+/*
+ * mmplgReleasePluginInstance
+ */
+PROTEIN_API
+void mmplgReleasePluginInstance(
+        ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
 }

@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 #include "VariantMatchRenderer.h"
-#include "VariantMatchDataCall.h"
+#include "protein_calls/VariantMatchDataCall.h"
 #include "ogl_error_check.h"
 
 #include "mmcore/param/FloatParam.h"
@@ -41,7 +41,7 @@ VariantMatchRenderer::VariantMatchRenderer(void) : Renderer2DModule () ,
         thefont(vislib::graphics::gl::FontInfo_Verdana) {
 
     // Data caller slot to get matching matrix
-    this->dataCallerSlot.SetCompatibleCall<VariantMatchDataCallDescription>();
+    this->dataCallerSlot.SetCompatibleCall<protein_calls::VariantMatchDataCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
     // Parameter for minimum color
@@ -170,13 +170,13 @@ bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
     this->updateParams();
 
     // Get pointer to VariantMatchDataCall
-    VariantMatchDataCall *vmc = this->dataCallerSlot.CallAs<VariantMatchDataCall>();
+	protein_calls::VariantMatchDataCall *vmc = this->dataCallerSlot.CallAs<protein_calls::VariantMatchDataCall>();
     if(vmc == NULL) {
         return false;
     }
 
     //  Execute call for Getdata
-    if (!(*vmc)(VariantMatchDataCall::CallForGetData)) {
+	if (!(*vmc)(protein_calls::VariantMatchDataCall::CallForGetData)) {
         return false;
     }
 
