@@ -136,6 +136,8 @@ namespace utility {
          */
         static bool FromString(const vislib::StringA& str, float &outR, float &outG, float &outB, float &outA);
 
+		static bool FromString(const vislib::StringA& str, unsigned int outColLen, unsigned char *outCol);
+
         /**
          * Converts a unicode string representation to an rgb colour
          *
@@ -167,6 +169,11 @@ namespace utility {
             vislib::StringA strA(str);
             return FromString(strA, outR, outG, outB, outA);
         }
+
+		static inline bool FromString(const vislib::StringW& str, unsigned int outColLen, unsigned char *outCol) {
+			vislib::StringA strA(str);
+			return FromString(strA, outColLen, outCol);
+		}
 
     private:
 
