@@ -19,12 +19,12 @@
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
 #ifdef PROTEIN_CUDA_EXPORTS
-#define PROTEIN_API __declspec(dllexport)
+#define PROTEIN_CUDA_API __declspec(dllexport)
 #else
-#define PROTEIN_API __declspec(dllimport)
+#define PROTEIN_CUDA_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define PROTEIN_API
+#define PROTEIN_CUDA_API
 #endif /* _WIN32 */
 
 
@@ -37,35 +37,35 @@ extern "C" {
  *
  * @return The used MegaMol™ plugin api
  */
-PROTEIN_API int mmplgPluginAPIVersion(void);
+PROTEIN_CUDA_API int mmplgPluginAPIVersion(void);
 
 /**
  * Answer the name of the plugin in UTF8/ASCII7
  *
  * @return The name of the plugin in UTF8/ASCII7
  */
-PROTEIN_API const char * mmplgPluginName(void);
+PROTEIN_CUDA_API const char * mmplgPluginName(void);
 
 /**
  * Answer the description of the plugin in UTF8/ASCII7
  *
  * @return The description of the plugin in UTF8/ASCII7
  */
-PROTEIN_API const char * mmplgPluginDescription(void);
+PROTEIN_CUDA_API const char * mmplgPluginDescription(void);
 
 /**
  * Answer the core compatibility information
  *
  * @return The core compatibility information
  */
-PROTEIN_API const void * mmplgCoreCompatibilityValue(void);
+PROTEIN_CUDA_API const void * mmplgCoreCompatibilityValue(void);
 
 /**
  * Answer the number of exported modules
  *
  * @return The number of exported modules
  */
-PROTEIN_API int mmplgModuleCount(void);
+PROTEIN_CUDA_API int mmplgModuleCount(void);
 
 /**
  * Answer the module definition object of the idx-th module
@@ -74,14 +74,14 @@ PROTEIN_API int mmplgModuleCount(void);
  *
  * @return The module definition
  */
-PROTEIN_API void* mmplgModuleDescription(int idx);
+PROTEIN_CUDA_API void* mmplgModuleDescription(int idx);
 
 /**
  * Answer the number of exported calls
  *
  * @return The number of exported calls
  */
-PROTEIN_API int mmplgCallCount(void);
+PROTEIN_CUDA_API int mmplgCallCount(void);
 
 /**
  * Answer the call definition object of the idx-th call
@@ -90,7 +90,7 @@ PROTEIN_API int mmplgCallCount(void);
  *
  * @return The call definition
  */
-PROTEIN_API void* mmplgCallDescription(int idx);
+PROTEIN_CUDA_API void* mmplgCallDescription(int idx);
 
 /**
  * Connects static objects to the core. (See docu for more information)
@@ -101,7 +101,7 @@ PROTEIN_API void* mmplgCallDescription(int idx);
  * @return True if this static object has been connected, false if the object
  *         either does not exist or if there was an error.
  */
-PROTEIN_API bool mmplgConnectStatics(int which, void* value);
+PROTEIN_CUDA_API bool mmplgConnectStatics(int which, void* value);
 
 #ifdef __cplusplus
 } /* extern "C" */

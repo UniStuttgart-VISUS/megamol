@@ -74,7 +74,7 @@ public:
         case 1:
             return "getData";
         }
-        return "";
+        return NULL;
     }
 
     /**

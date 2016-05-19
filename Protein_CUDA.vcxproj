@@ -265,7 +265,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\targetver.h" />
     <ClInclude Include="src\UniGrid3D.h" />
     <ClInclude Include="src\utilities.h" />
-    <ClInclude Include="src\VariantMatchDataCall.h" />
     <ClInclude Include="src\VBODataCall.h" />
     <ClInclude Include="src\VecField3f.h" />
     <ClInclude Include="src\VolumeMeshRenderer.cuh" />
@@ -319,7 +318,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="src\SurfacePotentialRendererSlave.cpp" />
     <ClCompile Include="src\UniGrid3D.cpp" />
-    <ClCompile Include="src\VariantMatchDataCall.cpp" />
     <ClCompile Include="src\VBODataCall.cpp" />
     <ClCompile Include="src\VecField3f.cpp" />
     <ClCompile Include="src\VolumeMeshRenderer.cpp" />

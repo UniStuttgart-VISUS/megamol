@@ -29,7 +29,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/Module.h"
 #include "protein_calls/DiagramCall.h"
-#include "VariantMatchDataCall.h"
+#include "protein_calls/VariantMatchDataCall.h"
 #include "MolecularSurfaceFeature.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"

@@ -1,7 +1,7 @@
 /*
- * Protein.cpp
+ * Protein_CUDA.cpp
  *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -10,108 +10,34 @@
 #include "../include/protein_cuda/Protein_CUDA.h"
 #include "mmcore/api/MegaMolCore.std.h"
 
-// views
-//#include "View3DSpaceMouse.h"
-//#include "View3DMouse.h"
-
 // jobs
 #include "DataWriter.h"
-//#include "PDBWriter.h"
-//#include "VTIWriter.h"
 
 // 3D renderers
-//#include "ProteinVolumeRenderer.h"
-//#include "SolventVolumeRenderer.h"
-//#include "SimpleMoleculeRenderer.h"
-//#include "SphereRenderer.h"
-//#include "SolPathRenderer.h"
-//#include "MoleculeSESRenderer.h"
-//#include "MoleculeCartoonRenderer.h"
 #include "MoleculeCudaSESRenderer.h"
-//#include "ElectrostaticsRenderer.h"
 #include "MoleculeCBCudaRenderer.h"
-//#include "HapticsMoleculeRenderer.h"
-//#include "SSAORendererDeferred.h"
-//#include "ToonRendererDeferred.h"
 #include "CrystalStructureVolumeRenderer.h"
-//#include "DofRendererDeferred.h"
-//#include "SphereRendererMouse.h"
 #include "QuickSurfRenderer.h"
 #include "QuickSurfRenderer2.h"
 #include "QuickSurfMTRenderer.h"
 #include "MoleculeVolumeCudaRenderer.h"
-//#include "GLSLVolumeRenderer.h"
 #include "VolumeMeshRenderer.h"
 #include "ComparativeFieldTopologyRenderer.h"
 #include "PotentialVolumeRaycaster.h"
 #include "SurfacePotentialRendererSlave.h"
 #include "StreamlineRenderer.h"
-//#include "VariantMatchRenderer.h"
-//#include "SecPlaneRenderer.h"
 #include "ComparativeMolSurfaceRenderer.h"
-//#include "UnstructuredGridRenderer.h"
-//#include "VolumeDirectionRenderer.h"
-//#include "LayeredIsosurfaceRenderer.h"
-
-// 2D renderers
-//#include "VolumeSliceRenderer.h"
-//#include "Diagram2DRenderer.h"
-//#include "DiagramRenderer.h"
-//#include "SplitMergeRenderer.h"
-//#include "SequenceRenderer.h"
 
 // data sources
-//#include "PDBLoader.h"
-//#include "SolPathDataSource.h"
-//#include "CCP4VolumeData.h"
-//#include "CoarseGrainDataLoader.h"
-//#include "FrodockLoader.h"
-//#include "XYZLoader.h"
 #include "Filter.h"
-//#include "SolventDataGenerator.h"
-//#include "GROLoader.h"
-//#include "CrystalStructureDataSource.h"
-//#include "VTILoader.h"
-//#include "VMDDXLoader.h"
-//#include "TrajectorySmoothFilter.h"
-//#include "BindingSiteDataSource.h"
-//#include "AggregatedDensity.h"
-//#include "ResidueSelection.h"
-//#include "VTKLegacyDataLoaderUnstructuredGrid.h"
-//#include "MolecularBezierData.h"
-//#include "MultiPDBLoader.h"
-//#include "OpenBabelLoader.h"
 
 // data interfaces (calls)
-//#include "SolPathDataCall.h"
 #include "mmcore/CallVolumeData.h"
-//#include "CallColor.h"
-//#include "SphereDataCall.h"
-//#include "VolumeSliceCall.h"
-//#include "Diagram2DCall.h"
-//#include "ParticleDataCall.h"
-//#include "ForceDataCall.h"
-//#include "CrystalStructureDataCall.h"
-//#include "CallMouseInput.h"
-//#include "DiagramCall.h"
-//#include "SplitMergeCall.h"
-//#include "IntSelectionCall.h"
-//#include "ResidueSelectionCall.h"
-//#include "VTIDataCall.h"
 #include "VBODataCall.h"
-#include "VariantMatchDataCall.h"
-//#include "VTKLegacyDataCallUnstructuredGrid.h"
-
-
-//#include "MoleculeBallifier.h"
 
 // other modules (filter etc)
-//#include "ColorModule.h"
-//#include "IntSelection.h"
 #include "PotentialCalculator.h"
 #include "ProteinVariantMatch.h"
-//#include "MultiParticleDataFilter.h"
-//#include "PDBInterpolator.h"
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/factories/ModuleAutoDescription.h"
@@ -126,7 +52,7 @@
 /*
  * mmplgPluginAPIVersion
  */
-PROTEIN_API int mmplgPluginAPIVersion(void) {
+PROTEIN_CUDA_API int mmplgPluginAPIVersion(void) {
     return 100;
 }
 
@@ -134,7 +60,7 @@ PROTEIN_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgPluginName
  */
-PROTEIN_API const char * mmplgPluginName(void) {
+PROTEIN_CUDA_API const char * mmplgPluginName(void) {
     return "Protein_CUDA";
 }
 
@@ -142,7 +68,7 @@ PROTEIN_API const char * mmplgPluginName(void) {
 /*
  * mmplgPluginDescription
  */
-PROTEIN_API const char * mmplgPluginDescription(void) {
+PROTEIN_CUDA_API const char * mmplgPluginDescription(void) {
     return "Plugin for protein rendering using CUDA for accelleration (SFB716 D4)";
 }
 
@@ -150,7 +76,7 @@ PROTEIN_API const char * mmplgPluginDescription(void) {
 /*
  * mmplgCoreCompatibilityValue
  */
-PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
+PROTEIN_CUDA_API const void * mmplgCoreCompatibilityValue(void) {
     static const mmplgCompatibilityValues compRev = {
         sizeof(mmplgCompatibilityValues),
         MEGAMOL_CORE_COMP_REV,
@@ -163,8 +89,7 @@ PROTEIN_API const void * mmplgCoreCompatibilityValue(void) {
 /*
  * mmplgModuleCount
  */
-PROTEIN_API int mmplgModuleCount(void) {
-    //int moduleCount = 53;
+PROTEIN_CUDA_API int mmplgModuleCount(void) {
 	int moduleCount = 3;
 #ifdef WITH_CUDA
     moduleCount+=14;
@@ -182,7 +107,7 @@ PROTEIN_API int mmplgModuleCount(void) {
 /*
  * mmplgModuleDescription
  */
-PROTEIN_API void* mmplgModuleDescription(int idx) {
+PROTEIN_CUDA_API void* mmplgModuleDescription(int idx) {
     using namespace megamol;
     using namespace megamol::core;
     switch (idx) {
@@ -229,19 +154,17 @@ PROTEIN_API void* mmplgModuleDescription(int idx) {
 /*
  * mmplgCallCount
  */
-PROTEIN_API int mmplgCallCount(void) {
-    //return 18;
-	return 2;
+PROTEIN_CUDA_API int mmplgCallCount(void) {
+	return 1;
 }
 
 
 /*
  * mmplgCallDescription
  */
-PROTEIN_API void* mmplgCallDescription(int idx) {
+PROTEIN_CUDA_API void* mmplgCallDescription(int idx) {
     switch (idx) {
-		case 0: return new megamol::core::factories::CallAutoDescription<megamol::protein_cuda::VariantMatchDataCall>();
-		case 1: return new megamol::core::factories::CallAutoDescription<megamol::protein_cuda::VBODataCall>();
+		case 0: return new megamol::core::factories::CallAutoDescription<megamol::protein_cuda::VBODataCall>();
         default: return NULL;
     }
     return NULL;
@@ -251,7 +174,7 @@ PROTEIN_API void* mmplgCallDescription(int idx) {
 /*
  * mmplgConnectStatics
  */
-PROTEIN_API bool mmplgConnectStatics(int which, void* value) {
+PROTEIN_CUDA_API bool mmplgConnectStatics(int which, void* value) {
 #if defined(DEBUG) || defined(_DEBUG)
     // only trace non-vislib messages
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
