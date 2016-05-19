@@ -314,19 +314,23 @@ void job::PluginsStateFileGeneratorJob::WriteModuleInfo(std::ofstream& file,
                 for (std::string callName : uniqueCallNames) {
                     factories::CallDescriptionManager::description_ptr_type desc = ci->GetCallDescriptionManager().Find(callName.c_str());
                     bool allFound = true;
-                    for (unsigned int i = 0; i < desc->FunctionCount(); ++i) {
-                        std::string fn = desc->FunctionName(i);
-                        bool found = false;
-                        for (size_t j = 0; j < ll; ++j) {
-                            if ((callNames[j] == callName) && (funcNames[j] == fn)) {
-                                found = true;
+                    if (desc != nullptr) {
+                        for (unsigned int i = 0; i < desc->FunctionCount(); ++i) {
+                            std::string fn = desc->FunctionName(i);
+                            bool found = false;
+                            for (size_t j = 0; j < ll; ++j) {
+                                if ((callNames[j] == callName) && (funcNames[j] == fn)) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                allFound = false;
                                 break;
                             }
                         }
-                        if (!found) {
-                            allFound = false;
-                            break;
-                        }
+                    } else {
+                        allFound = false;
                     }
                     if (allFound) {
                         completeCallNames.insert(callName);
