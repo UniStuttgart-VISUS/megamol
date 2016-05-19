@@ -28,6 +28,7 @@
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
+#ifdef MEGAMOLPLUGIN_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -90,6 +91,7 @@ MEGAMOLPLUGIN_API void mmplgReleasePluginInstance(
 
 #ifdef __cplusplus
 } /* extern "C" */
+#endif
 #endif
 
 #endif /* MEGAMOLPLUGIN_H_INCLUDED */
