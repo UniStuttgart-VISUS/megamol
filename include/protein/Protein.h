@@ -27,6 +27,7 @@
 #define PROTEIN_API
 #endif /* _WIN32 */
 
+#if PROTEIN_EXPORTS
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
 #ifdef __cplusplus
@@ -93,4 +94,5 @@ PROTEIN_API void mmplgReleasePluginInstance(
 } /* extern "C" */
 #endif
 
+#endif /* PROTEIN_EXPORTS */
 #endif /* PROTEIN_H_INCLUDED */
