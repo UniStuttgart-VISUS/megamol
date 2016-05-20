@@ -262,6 +262,8 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 	glGenBuffers(1, &filtersBuffer);
 	glGenBuffers(1, &minmaxBuffer);
 
+	if (!font.Initialise()) return false;
+
 	if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
 	if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
 
@@ -355,12 +357,14 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
 	this->filters.resize(columnCount);
 	this->minimums.resize(columnCount);
 	this->maximums.resize(columnCount);
+	this->names.resize(columnCount);
 	for (GLuint x = 0; x < columnCount; x++) {
 		axisIndirection[x] = x;
 		filters[x].dimension = 0;
 		filters[x].flags = 0;
 		minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
 		maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
+		names[x] = floats->GetColumnsInfos()[x].Name();
 		filters[x].lower = minimums[x];
 		filters[x].upper = maximums[x];
 	}
@@ -436,6 +440,15 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 		glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
 		glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount * this->numTicks);
 		this->drawScalesProgram.Disable();
+
+		for (unsigned int c = 0; c < this->columnCount; c++) {
+			unsigned int realCol = this->axisIndirection[c];
+			float x = this->marginX + this->axisDistance * c;
+			float fontsize = this->axisDistance / 10.0f;
+			this->font.DrawString(x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+			this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+			this->font.DrawString(x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+		}
 
 	}
 }

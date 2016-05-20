@@ -14,6 +14,7 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/SimpleFont.h"
 #include <map>
 
 namespace megamol {
@@ -208,6 +209,9 @@ namespace infovis {
 		std::vector<GLfloat> maximums;
 		std::vector<DimensionFilter> filters;
 		std::vector<GLuint> fragmentMinMax;
+		std::vector<std::string> names;
+
+		vislib::graphics::gl::SimpleFont font;
 	};
 
 } /* end namespace infovis */
