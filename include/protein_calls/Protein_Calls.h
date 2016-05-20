@@ -26,6 +26,7 @@
 #define PROTEIN_CALLS_API
 #endif /* _WIN32 */
 
+#ifdef PROTEIN_CALLS_EXPORTS
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
 #ifdef __cplusplus
@@ -92,4 +93,5 @@ PROTEIN_CALLS_API void mmplgReleasePluginInstance(
 } /* extern "C" */
 #endif
 
+#endif /* PROTEIN_CALLS_EXPORTS */
 #endif /* PROTEIN_CALLS_H_INCLUDED */
