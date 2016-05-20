@@ -61,7 +61,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
 	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
 	itemCount(0), columnCount(0),
-	numTicks(5)
+	numTicks(5), pickedAxis(-1)
 {
 
 	this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
@@ -282,6 +282,18 @@ void NGParallelCoordinatesRenderer2D::release(void) {
 	this->drawAxesProgram.Release();
 }
 
+int NGParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
+	float f = (x - this->marginX) / this->axisDistance;
+	float frac = f - static_cast<long>(f);
+	int integral = static_cast<int>(std::round(f));
+	if (frac > 0.9 || frac < 0.1) {
+		vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
+		return axisIndirection[integral];
+	} else {
+		return -1;
+	}
+}
+
 bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core::view::MouseFlags flags) {
 	if (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_CTRL_DOWN) {
 		return false;
@@ -297,8 +309,14 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 			mousePressedY = y;
 		}
 	} else if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) {
+		if (mouseFlags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN) {
+			pickedAxis = mouseXtoAxis(mousePressedX);
+		}
 		mouseFlags = 0;
 	}
+
+	mouseX = x;
+	mouseY = y;
 
 	return true;
 }
@@ -429,8 +447,36 @@ bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call)
 
 void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 	if (this->columnCount > 0) {
+
+		if ((mouseFlags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
+			&& (mouseFlags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
+			&& pickedAxis != -1) {
+			// we are dragging an axis!
+
+			int currAxis = mouseXtoAxis(mouseX);
+			if (currAxis != pickedAxis && currAxis >= 0 && currAxis < this->columnCount) {
+				for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
+					if (*ax == pickedAxis) {
+						this->axisIndirection.erase(ax);
+						break;
+					}
+				}
+				for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
+					if (*ax == currAxis) {
+						this->axisIndirection.insert(ax, pickedAxis);
+						break;
+					}
+				}
+			}
+
+		}
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
+
 		this->enableProgramAndBind(this->drawAxesProgram);
 		glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1, this->axesColor);
+		glUniform1i(this->drawAxesProgram.ParameterLocation("pickedAxis"), pickedAxis);
 		glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount);
 		this->drawAxesProgram.Disable();
 
@@ -438,6 +484,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 		glUniform4fv(this->drawScalesProgram.ParameterLocation("color"), 1, this->axesColor);
 		glUniform1ui(this->drawScalesProgram.ParameterLocation("numTicks"), this->numTicks);
 		glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
+		glUniform1i(this->drawScalesProgram.ParameterLocation("pickedAxis"), pickedAxis);
 		glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount * this->numTicks);
 		this->drawScalesProgram.Disable();
 

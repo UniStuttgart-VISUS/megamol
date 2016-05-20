@@ -85,6 +85,7 @@ uniform float axisDistance = 0.0;
 uniform float axisHeight = 0.0;
 uniform float axisHalfTick = 2.0;
 uniform uint numTicks = 3;
+uniform int pickedAxis = -1;
 
 uniform uint fragmentTestMask = 0;
 uniform uint fragmentPassMask = 0;

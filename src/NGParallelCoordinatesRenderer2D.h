@@ -127,6 +127,8 @@ namespace infovis {
 
 		void drawParcos(void);
 
+		int mouseXtoAxis(float x);
+
 		bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
 		
 		bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
@@ -145,6 +147,8 @@ namespace infovis {
 		float mousePressedY;
 		float mouseReleasedX;
 		float mouseReleasedY;
+		float mouseX;
+		float mouseY;
 		::megamol::core::view::MouseFlags mouseFlags;
 
 		::megamol::core::param::ParamSlot drawModeSlot;
@@ -210,6 +214,8 @@ namespace infovis {
 		std::vector<DimensionFilter> filters;
 		std::vector<GLuint> fragmentMinMax;
 		std::vector<std::string> names;
+
+		int pickedAxis;
 
 		vislib::graphics::gl::SimpleFont font;
 	};

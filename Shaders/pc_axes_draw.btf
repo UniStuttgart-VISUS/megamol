@@ -12,10 +12,18 @@
       <snippet name="::pc::common" />
       <snippet type="string">
         <![CDATA[
+out vec4 actualColor;
+
 void main()
 {
   uint dimension = pc_dimension(gl_InstanceID);
 	vec4 vertex = axis_line(dimension, gl_VertexID);
+	
+  if (dimension == pickedAxis) {
+  	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
+  } else {
+  	actualColor = color;
+  }
   
   gl_Position = projection * modelView * vertex;
 }
@@ -32,10 +40,11 @@ void main()
       <snippet type="string">
         <![CDATA[
 out vec4 fragColor;
+in vec4 actualColor;
 
 void main()
 {
-  fragColor = color;
+  fragColor = actualColor;
 }
         ]]>
       </snippet>
@@ -51,6 +60,8 @@ void main()
       <snippet name="::pc::common" />
       <snippet type="string">
         <![CDATA[
+out vec4 actualColor;
+        
 void main()
 {
   
@@ -64,6 +75,11 @@ void main()
   bottom.z,
   bottom.w);
   
+  if (dimension == pickedAxis) {
+  	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
+  } else {
+  	actualColor = color;
+  }
   gl_Position = projection * modelView * vertex;
 }
 		    ]]>
@@ -79,10 +95,11 @@ void main()
       <snippet type="string">
         <![CDATA[
 out vec4 fragColor;
+in vec4 actualColor;
 
 void main()
 {
-  fragColor = color;
+  fragColor = actualColor;
 }
         ]]>
       </snippet>
