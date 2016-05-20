@@ -42,9 +42,9 @@ layout(std430, binding = 3) buffer DataMaximum
 	float dataMaximum[];
 };
 
-layout(std430, binding = 4) buffer Abscissae
+layout(std430, binding = 4) buffer AxisIndirection
 {
-	float abscissae[];
+	uint axisIndirection[];
 };
 
 struct DimensionFilter
@@ -80,9 +80,11 @@ uniform uint itemCount = 0;
 uniform float pc_item_defaultDepth = 0.0;
 
 uniform vec4 color = vec4(1.0, 0.0, 1.0, 1.0);
-uniform float marginX = 0.0;
-uniform float marginY = 0.0;
-uniform float axisScaleStep = 1.0 / 4.0;
+uniform vec2 margin = vec2(0.0, 0.0);
+uniform float axisDistance = 0.0;
+uniform float axisHeight = 0.0;
+uniform float axisHalfTick = 2.0;
+uniform uint numTicks = 3;
 
 uniform uint fragmentTestMask = 0;
 uniform uint fragmentPassMask = 0;
@@ -117,7 +119,7 @@ uint pc_dimension_count()
 
 uint pc_dimension(uint base)
 {
-  return base;
+  return axisIndirection[base];
 }
 
 uint pc_item_dataID(uint itemID, uint dimension)
@@ -132,30 +134,30 @@ float pc_item_dataValue(uint dataID, uint dimension)
 
 vec4 pc_item_vertex(uint itemID, uint dataID, uint dimension)
 {
-  return vec4(
-	  scaling.x * abscissae[dimension]
-	  , scaling.y * pc_item_dataValue(dataID, dimension)
-	  , pc_item_defaultDepth
-	  , 1.0
-	  );
+  //return vec4(
+	//  scaling.x * abscissae[dimension]
+	//  , scaling.y * pc_item_dataValue(dataID, dimension)
+	//  , pc_item_defaultDepth
+	//  , 1.0
+	//  );
+	return vec4(1.0);
 }
 vec2 pc_item_vec2(uint itemID, uint dataID, uint dimension)
 {
-  return vec2(
-	  abscissae[dimension]
-	  , pc_item_dataValue(dataID, dimension)
-	  );
+  //return vec2(
+	//  abscissae[dimension]
+	//  , pc_item_dataValue(dataID, dimension)
+	//  );
+	return vec2(1.0);
 }
 
-vec4 axis_line(uint dimension, bool top)
-{
-  float topFactor = top ? 1.0 : 0.0;
+vec4 axis_line(uint dimension, int topFactor) {
   
   return vec4(
-    scaling.x * abscissae[dimension]
-    , scaling.y * topFactor + (topFactor * axisPadding) - ((1.0 - topFactor) * axisPadding)
-    , pc_item_defaultDepth
-    , 1.0
+    margin.x + axisDistance * dimension,
+    margin.y + topFactor * axisHeight,
+    pc_item_defaultDepth,
+    1.0
     );
 }
 	  ]]>

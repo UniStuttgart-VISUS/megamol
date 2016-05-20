@@ -60,7 +60,8 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	//selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
 	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
 	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
-	itemCount(0), columnCount(0)
+	itemCount(0), columnCount(0),
+	numTicks(5)
 {
 
 	this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
@@ -104,7 +105,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	drawAxesSlot << new ::megamol::core::param::BoolParam(true);
 	this->MakeSlotAvailable(&drawAxesSlot);
 
-	axesColorSlot << new ::megamol::core::param::StringParam("indigo");
+	axesColorSlot << new ::megamol::core::param::StringParam("white");
 	axesColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::axesColorSlotCallback);
 	this->MakeSlotAvailable(&axesColorSlot);
 	axesColorSlotCallback(axesColorSlot);
@@ -224,6 +225,10 @@ bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl:
 	glUniform1ui(program.ParameterLocation("dimensionCount"), this->columnCount);
 	glUniform1ui(program.ParameterLocation("itemCount"), this->itemCount);
 
+	glUniform2f(program.ParameterLocation("margin"), this->marginX, this->marginY);
+	glUniform1f(program.ParameterLocation("axisDistance"), this->axisDistance);
+	glUniform1f(program.ParameterLocation("axisHeight"), this->axisHeight);
+
 	return true;
 }
 
@@ -243,7 +248,8 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 		//zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 1282 },
 		//zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 131204 },
 		// Buffer object ... will use VIDEO memory as the source for buffer object operations.
-		//zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131185 },
+		zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131185 },
+		zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131188 }
 		// Buffer performance warning: Buffer object ... is being copied / moved from VIDEO memory to HOST memory.
 		//zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, 131186 },
 	});
@@ -423,6 +429,14 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 		glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1, this->axesColor);
 		glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount);
 		this->drawAxesProgram.Disable();
+
+		this->enableProgramAndBind(this->drawScalesProgram);
+		glUniform4fv(this->drawScalesProgram.ParameterLocation("color"), 1, this->axesColor);
+		glUniform1ui(this->drawScalesProgram.ParameterLocation("numTicks"), this->numTicks);
+		glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
+		glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount * this->numTicks);
+		this->drawScalesProgram.Disable();
+
 	}
 }
 
@@ -434,9 +448,7 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 	windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
 	// this is the apex of suck and must die
-	GLfloat modelViewMatrix_column[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-	GLfloat projMatrix_column[16];
 	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
 	// end suck
 
@@ -449,12 +461,12 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
 	glDisable(GL_DEPTH_TEST);
 
-	glBegin(GL_LINES);
-	for (int x = 0, max = fc->GetColumnsCount(); x < max; x++) {
-		glVertex2f(this->marginX + this->axisDistance * x + 2, this->marginY);
-		glVertex2f(this->marginX + this->axisDistance * x + 2, this->marginY + this->axisHeight);
-	}
-	glEnd();
+	//glBegin(GL_LINES);
+	//for (int x = 0, max = fc->GetColumnsCount(); x < max; x++) {
+	//	glVertex2f(this->marginX + this->axisDistance * x + 10, this->marginY);
+	//	glVertex2f(this->marginX + this->axisDistance * x + 10, this->marginY + this->axisHeight);
+	//}
+	//glEnd();
 
 	drawAxes();
 

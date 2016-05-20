@@ -188,6 +188,7 @@ namespace infovis {
 		float marginX, marginY;
 		float axisDistance;
 		float axisHeight;
+		GLuint numTicks;
 		float fontSize;
 		float windowAspect;
 		vislib::math::Rectangle<float> bounds;

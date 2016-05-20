@@ -10,13 +10,12 @@
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
       <snippet name="::pc::common" />
-      <snippet name="::pc_axes_draw::uniforms" />
       <snippet type="string">
         <![CDATA[
 void main()
 {
   uint dimension = pc_dimension(gl_InstanceID);
-	vec4 vertex = axis_line(dimension, gl_VertexID == 0 ? false : true);
+	vec4 vertex = axis_line(dimension, gl_VertexID);
   
   gl_Position = projection * modelView * vertex;
 }
@@ -30,7 +29,6 @@ void main()
       <snippet name="::pc::earlyFragmentTests" />
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
-      <snippet name="::pc_axes_draw::uniforms" />
       <snippet type="string">
         <![CDATA[
 out vec4 fragColor;
@@ -51,25 +49,21 @@ void main()
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
       <snippet name="::pc::common" />
-      <snippet name="::pc_axes_draw::uniforms" />
       <snippet type="string">
         <![CDATA[
 void main()
 {
-  uint dimensions = pc_dimension_count() - 1;
-  uint dimension = pc_dimension(gl_InstanceID % dimensions);
-  float percentage = (gl_InstanceID / dimensions) * axisScaleStep;
   
-  vec4 bottom = axis_line(dimension, false);
-  vec4 top = axis_line(dimension, true);
+  uint dimension = pc_dimension(gl_InstanceID / numTicks);
+	vec4 bottom = axis_line(dimension, 0);
+	vec4 top = axis_line(dimension, 1);
   
   vec4 vertex = vec4(
-    (bottom.x - scalePadding) * gl_VertexID + ((1 - gl_VertexID) * (top.x + scalePadding))
-    , mix(bottom.y, top.y, percentage)
-    , bottom.z
-    , bottom.w
-    );
-
+  bottom.x - axisHalfTick + 2 * gl_VertexID * axisHalfTick,
+  mix(bottom.y, top.y, (gl_InstanceID % numTicks) / float(numTicks - 1)),
+  bottom.z,
+  bottom.w);
+  
   gl_Position = projection * modelView * vertex;
 }
 		    ]]>
@@ -82,7 +76,6 @@ void main()
       <snippet name="::pc::earlyFragmentTests" />
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
-      <snippet name="::pc_axes_draw::uniforms" />
       <snippet type="string">
         <![CDATA[
 out vec4 fragColor;
