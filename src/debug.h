@@ -130,7 +130,7 @@ debug_action make_debug_action_ostream(std::ostream & stream)
 inline
 debug_action make_debug_action_Log(vislib::sys::Log& l) {
 	return [&](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const * message, GLvoid const * userParam) {
-		static const vislib::StringA separator("--------------------------------------------------------------------");
+		static const vislib::StringA separator("----------- KHR_DEBUG Callback ---------------------------------------------------------");
 
 		auto m = (void (vislib::sys::Log::*)(const char *, ...))&vislib::sys::Log::WriteInfo;
 		switch (type) {
@@ -150,13 +150,13 @@ debug_action make_debug_action_Log(vislib::sys::Log& l) {
 				m = (void (vislib::sys::Log::*)(const char *, ...))&vislib::sys::Log::WriteInfo;
 				break;
 		}
-		(l.*m)("%ws", separator);
-		(l.*m)("Source: %s", debugSourceToString(source, "unknown"));
-		(l.*m)("Type: %s", debugTypeToString(type, "unknown"));
+		(l.*m)("%s", separator);
+		(l.*m)("Source: %s", debugSourceToString(source, "unknown").c_str());
+		(l.*m)("Type: %s", debugTypeToString(type, "unknown").c_str());
 		(l.*m)("ID: %u", id);
-		(l.*m)("Severity: %s", debugSeverityToString(severity, "unknown"));
-		(l.*m)("Message: %s", std::string(message, length));
-		(l.*m)("UserParam: ", debug_message_user_param_handler(userParam));
+		(l.*m)("Severity: %s", debugSeverityToString(severity, "unknown").c_str());
+		(l.*m)("Message: %s", std::string(message, length).c_str());
+		(l.*m)("UserParam: ", debug_message_user_param_handler(userParam).c_str());
 	};
 }
 

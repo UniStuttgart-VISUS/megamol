@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "NGParallelCoordinatesRenderer2D.h"
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 #include "FlagCall.h"
@@ -58,7 +59,8 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	resetFlagsSlot("resetFlags", "Reset item flags to initial state"),
 	//selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
 	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
-	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0)
+	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
+	itemCount(0), columnCount(0)
 {
 
 	this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
@@ -207,6 +209,7 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
 
 bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
 	program.Enable();
+	// bindbuffer?
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, flagsBuffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
@@ -215,22 +218,21 @@ bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl:
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, filtersBuffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
 
-	glUniform2f(0, 1.0f, 1.0f); // scaling, whatever
-	glUniformMatrix4fv(1, 1, GL_FALSE, modelViewMatrix_column);
-	glUniformMatrix4fv(2, 1, GL_FALSE, projMatrix_column);
-	glUniform1ui(3, this->columnCount);
-	glUniform1ui(4, this->itemCount);
-
+	glUniform2f(program.ParameterLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
+	glUniformMatrix4fv(program.ParameterLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
+	glUniformMatrix4fv(program.ParameterLocation("projection"), 1, GL_FALSE, projMatrix_column);
+	glUniform1ui(program.ParameterLocation("dimensionCount"), this->columnCount);
+	glUniform1ui(program.ParameterLocation("itemCount"), this->itemCount);
 
 	return true;
 }
 
 bool NGParallelCoordinatesRenderer2D::create(void) {
-	std::array< zen::gl::debug_action, 2 > actions =
+	std::array< zen::gl::debug_action, 1 > actions =
 	{
 		//zen::gl::make_debug_action_ostream(std::cerr)
 		zen::gl::make_debug_action_Log(vislib::sys::Log::DefaultLog)
-		, zen::gl::debug_action_throw
+		//, zen::gl::debug_action_throw
 	};
 
 	zen::gl::enable_debug_callback(nullptr, true, std::begin(actions), std::end(actions));
@@ -295,13 +297,13 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 
 bool NGParallelCoordinatesRenderer2D::selectedItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
 	utility::ColourParser::FromString(this->selectedItemsColorSlot.Param<param::StringParam>()->Value(), 4, selectedItemsColor);
-	selectedItemsColor[4] = static_cast<unsigned char>(this->selectedItemsAlphaSlot.Param<param::FloatParam>()->Value() * 255.0f);
+	selectedItemsColor[3] = this->selectedItemsAlphaSlot.Param<param::FloatParam>()->Value();
 	return true;
 }
 
 bool NGParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
 	utility::ColourParser::FromString(this->otherItemsColorSlot.Param<param::StringParam>()->Value(), 4, otherItemsColor);
-	otherItemsColor[4] = static_cast<unsigned char>(this->otherItemsAlphaSlot.Param<param::FloatParam>()->Value() * 255.0f);
+	otherItemsColor[3] = this->otherItemsAlphaSlot.Param<param::FloatParam>()->Value();
 	return true;
 }
 bool NGParallelCoordinatesRenderer2D::axesColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
@@ -323,27 +325,26 @@ bool NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback(::megamol::core::pa
 }
 
 void NGParallelCoordinatesRenderer2D::assertData(void) {
-	auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
-	if (fc == nullptr) return;
+	auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+	if (floats == nullptr) return;
 	auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
 	if (tc == nullptr) return;
 	auto flagsc = getFlagsSlot.CallAs<FlagCall>();
 	if (flagsc == nullptr) return;
 
-	(*fc)(1);
-	auto hash = fc->DataHash();
+	(*floats)(0);
+	auto hash = floats->DataHash();
 
 	if (hash == this->currentHash) return;
 
 	this->currentHash = hash;
-	(*fc)(0);
 	(*tc)(0);
 	(*flagsc)(0);
 
 	this->computeScaling();
 
-	this->columnCount = static_cast<GLuint>(fc->GetColumnsCount());
-	this->itemCount = static_cast<GLuint>(fc->GetRowsCount());
+	this->columnCount = static_cast<GLuint>(floats->GetColumnsCount());
+	this->itemCount = static_cast<GLuint>(floats->GetRowsCount());
 	this->axisIndirection.resize(columnCount);
 	this->filters.resize(columnCount);
 	this->minimums.resize(columnCount);
@@ -352,8 +353,8 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
 		axisIndirection[x] = x;
 		filters[x].dimension = 0;
 		filters[x].flags = 0;
-		minimums[x] = fc->GetColumnsInfos()[x].MinimumValue();
-		maximums[x] = fc->GetColumnsInfos()[x].MaximumValue();
+		minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
+		maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
 		filters[x].lower = minimums[x];
 		filters[x].upper = maximums[x];
 	}
@@ -370,7 +371,7 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
 
 	//dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), fc->GetData(), GL_STATIC_DRAW); // TODO: huh.
+	glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(), GL_STATIC_DRAW); // TODO: huh.
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, this->itemCount * sizeof(FlagStorage::FlagItemType), flagvector.data(), GL_DYNAMIC_COPY);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, minimumsBuffer);
@@ -416,6 +417,19 @@ bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call)
 	return true;
 }
 
+void NGParallelCoordinatesRenderer2D::drawAxes(void) {
+	if (this->columnCount > 0) {
+		this->enableProgramAndBind(this->drawAxesProgram);
+		glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1, this->axesColor);
+		glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount);
+		this->drawAxesProgram.Disable();
+	}
+}
+
+void NGParallelCoordinatesRenderer2D::drawParcos(void) {
+
+}
+
 bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 	windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
@@ -433,12 +447,16 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 	auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
 	if (tc == nullptr) return false;
 
+	glDisable(GL_DEPTH_TEST);
+
 	glBegin(GL_LINES);
 	for (int x = 0, max = fc->GetColumnsCount(); x < max; x++) {
 		glVertex2f(this->marginX + this->axisDistance * x + 2, this->marginY);
 		glVertex2f(this->marginX + this->axisDistance * x + 2, this->marginY + this->axisHeight);
 	}
 	glEnd();
+
+	drawAxes();
 
 	return true;
 }

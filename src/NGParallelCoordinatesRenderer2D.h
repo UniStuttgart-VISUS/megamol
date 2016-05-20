@@ -14,6 +14,7 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
+#include <map>
 
 namespace megamol {
 namespace infovis {
@@ -150,21 +151,21 @@ namespace infovis {
 		::megamol::core::param::ParamSlot drawSelectedItemsSlot;
 		::megamol::core::param::ParamSlot selectedItemsColorSlot;
 		::megamol::core::param::ParamSlot selectedItemsAlphaSlot;
-		unsigned char selectedItemsColor[4];
+		float selectedItemsColor[4];
 
 		::megamol::core::param::ParamSlot drawOtherItemsSlot;
 		::megamol::core::param::ParamSlot otherItemsColorSlot;
 		::megamol::core::param::ParamSlot otherItemsAlphaSlot;
-		unsigned char otherItemsColor[4];
+		float otherItemsColor[4];
 
 		::megamol::core::param::ParamSlot drawAxesSlot;
 		::megamol::core::param::ParamSlot axesColorSlot;
-		unsigned char axesColor[4];
+		float axesColor[4];
 
 		::megamol::core::param::ParamSlot selectionModeSlot;
 		::megamol::core::param::ParamSlot drawSelectionIndicatorSlot;
 		::megamol::core::param::ParamSlot selectionIndicatorColorSlot;
-		unsigned char selectionIndicatorColor[4];
+		float selectionIndicatorColor[4];
 
 		::megamol::core::param::ParamSlot pickRadiusSlot;
 
