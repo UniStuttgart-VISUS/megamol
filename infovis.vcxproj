@@ -229,6 +229,12 @@
     <None Include="configure.win.pl" />
     <None Include="ExtLibs.props.input" />
     <None Include="packages.config" />
+    <None Include="Shaders\pc.btf" />
+    <None Include="Shaders\pc_axes_draw.btf" />
+    <None Include="Shaders\pc_item_draw.btf" />
+    <None Include="Shaders\pc_item_filter.btf" />
+    <None Include="Shaders\pc_item_pick.btf" />
+    <None Include="Shaders\pc_item_stroke.btf" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\infovis\infovis.h" />

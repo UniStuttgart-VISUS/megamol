@@ -3,13 +3,6 @@
 
   <include file="pc" />
 
-  <snippet name="uniforms" type="string">
-    <![CDATA[
-uniform vec2 mousePressed = vec2(0, 0);
-uniform vec2 mouseReleased = vec2(0, 0);
-    ]]>
-  </snippet>
-
   <snippet name="intersectLineLine" type="string">
     <![CDATA[
 // @see http://stackoverflow.com/a/565282/791895

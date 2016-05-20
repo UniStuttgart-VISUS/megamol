@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "NGParallelCoordinatesRenderer2D.h"
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
+#include "FlagCall.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
@@ -20,6 +21,7 @@ using namespace megamol::infovis;
 NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Renderer2DModule(),
 	getDataSlot("getdata", "connects to the float table data"),
 	getTFSlot("getTF", "connects to the transfer function"),
+	getFlagsSlot("getFlags", "connects to the flag storage"),
 	densityFBO(),
 	mousePressedX(),
 	mousePressedY(),
@@ -53,8 +55,10 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST"),
 	glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH"),
 	glLineWidthSlot("glLineWidth", "Value for glLineWidth"),
-	resetFlagsSlot("resetFlags", "Reset item flags to initial state")
-	//selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor()
+	resetFlagsSlot("resetFlags", "Reset item flags to initial state"),
+	//selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
+	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
+	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0)
 {
 
 	this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
@@ -62,6 +66,9 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 
 	this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
 	this->MakeSlotAvailable(&this->getTFSlot);
+
+	this->getFlagsSlot.SetCompatibleCall<FlagCallDescription>();
+	this->MakeSlotAvailable(&this->getFlagsSlot);
 
 	auto drawModes = new ::megamol::core::param::EnumParam(DRAW_DISCRETE);
 	drawModes->SetTypePair(DRAW_DISCRETE, "Discrete");
@@ -152,6 +159,8 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	resetFlagsSlot << new ::megamol::core::param::ButtonParam();
 	resetFlagsSlot.SetUpdateCallback(this, &NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
 	this->MakeSlotAvailable(&resetFlagsSlot);
+
+	fragmentMinMax.resize(2);
 }
 
 
@@ -196,6 +205,26 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
 	}
 }
 
+bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
+	program.Enable();
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, flagsBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maximumsBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, axisIndirectionBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, filtersBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
+
+	glUniform2f(0, 1.0f, 1.0f); // scaling, whatever
+	glUniformMatrix4fv(1, 1, GL_FALSE, modelViewMatrix_column);
+	glUniformMatrix4fv(2, 1, GL_FALSE, projMatrix_column);
+	glUniform1ui(3, this->columnCount);
+	glUniform1ui(4, this->itemCount);
+
+
+	return true;
+}
+
 bool NGParallelCoordinatesRenderer2D::create(void) {
 	std::array< zen::gl::debug_action, 2 > actions =
 	{
@@ -217,13 +246,30 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 		//zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, 131186 },
 	});
 
+	glGenBuffers(1, &dataBuffer);
+	glGenBuffers(1, &flagsBuffer);
+	glGenBuffers(1, &minimumsBuffer);
+	glGenBuffers(1, &maximumsBuffer);
+	glGenBuffers(1, &axisIndirectionBuffer);
+	glGenBuffers(1, &filtersBuffer);
+	glGenBuffers(1, &minmaxBuffer);
+
 	if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
+	if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
 
 	return true;
 }
 
 void NGParallelCoordinatesRenderer2D::release(void) {
+	glDeleteBuffers(1, &dataBuffer);
+	glDeleteBuffers(1, &flagsBuffer);
+	glDeleteBuffers(1, &minimumsBuffer);
+	glDeleteBuffers(1, &maximumsBuffer);
+	glDeleteBuffers(1, &axisIndirectionBuffer);
+	glDeleteBuffers(1, &filtersBuffer);
+	glDeleteBuffers(1, &minmaxBuffer);
 
+	this->drawAxesProgram.Release();
 }
 
 bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::core::view::MouseFlags flags) {
@@ -281,6 +327,8 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
 	if (fc == nullptr) return;
 	auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
 	if (tc == nullptr) return;
+	auto flagsc = getFlagsSlot.CallAs<FlagCall>();
+	if (flagsc == nullptr) return;
 
 	(*fc)(1);
 	auto hash = fc->DataHash();
@@ -290,8 +338,51 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
 	this->currentHash = hash;
 	(*fc)(0);
 	(*tc)(0);
+	(*flagsc)(0);
 
 	this->computeScaling();
+
+	this->columnCount = static_cast<GLuint>(fc->GetColumnsCount());
+	this->itemCount = static_cast<GLuint>(fc->GetRowsCount());
+	this->axisIndirection.resize(columnCount);
+	this->filters.resize(columnCount);
+	this->minimums.resize(columnCount);
+	this->maximums.resize(columnCount);
+	for (GLuint x = 0; x < columnCount; x++) {
+		axisIndirection[x] = x;
+		filters[x].dimension = 0;
+		filters[x].flags = 0;
+		minimums[x] = fc->GetColumnsInfos()[x].MinimumValue();
+		maximums[x] = fc->GetColumnsInfos()[x].MaximumValue();
+		filters[x].lower = minimums[x];
+		filters[x].upper = maximums[x];
+	}
+
+	if (!flagsc->has_data()) {
+		std::shared_ptr<FlagStorage::FlagVectorType> v;
+		v = std::make_shared<FlagStorage::FlagVectorType>();
+		v->resize(itemCount);
+		flagsc->SetFlags(v);
+		(*flagsc)(1); // set flags
+	}
+
+	auto flagvector = flagsc->GetFlags();
+
+	//dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), fc->GetData(), GL_STATIC_DRAW); // TODO: huh.
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, flagsBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, this->itemCount * sizeof(FlagStorage::FlagItemType), flagvector.data(), GL_DYNAMIC_COPY);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, minimumsBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->minimums.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, maximumsBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->maximums.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLuint), axisIndirection.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(DimensionFilter), this->filters.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, minmaxBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLfloat), fragmentMinMax.data(), GL_DYNAMIC_READ); // TODO: huh.
 }
 
 void NGParallelCoordinatesRenderer2D::computeScaling(void) {
@@ -307,16 +398,16 @@ void NGParallelCoordinatesRenderer2D::computeScaling(void) {
 	if (this->scaleToFitSlot.Param<param::BoolParam>()->Value()) {
 		// scale to fit
 		float requiredHeight = this->bounds.Width() / windowAspect;
-		this->axisHeight = requiredHeight - 2.0f * marginY;
+		this->axisHeight = requiredHeight - 3.0f * marginY;
 	} else {
 		this->axisHeight = 80.0f;
 	}
 	this->bounds.SetBottom(0.0f);
-	this->bounds.SetTop(2.0f * marginY + this->axisHeight);
+	this->bounds.SetTop(3.0f * marginY + this->axisHeight);
 }
 
 bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call) {
-	windowAspect = call.GetViewport().AspectRatio();
+	windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
 	this->assertData();
 	
@@ -326,7 +417,14 @@ bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call)
 }
 
 bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
-	windowAspect = call.GetViewport().AspectRatio();
+	windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
+
+	// this is the apex of suck and must die
+	GLfloat modelViewMatrix_column[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+	GLfloat projMatrix_column[16];
+	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+	// end suck
 
 	this->assertData();
 
@@ -337,8 +435,8 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
 	glBegin(GL_LINES);
 	for (int x = 0, max = fc->GetColumnsCount(); x < max; x++) {
-		glVertex2f(this->marginX + this->axisDistance * x, this->marginY);
-		glVertex2f(this->marginX + this->axisDistance * x, this->marginY + this->axisHeight);
+		glVertex2f(this->marginX + this->axisDistance * x + 2, this->marginY);
+		glVertex2f(this->marginX + this->axisDistance * x + 2, this->marginY + this->axisHeight);
 	}
 	glEnd();
 

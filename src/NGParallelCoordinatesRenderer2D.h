@@ -36,6 +36,13 @@ namespace infovis {
 			, SELECT_STROKE
 		};
 
+		struct DimensionFilter {
+			uint32_t dimension; // useless but good padding
+			float lower;
+			float upper;
+			uint32_t flags;
+		};
+
 		/**
 		* Answer the name of this module.
 		*
@@ -119,10 +126,14 @@ namespace infovis {
 		void drawParcos(void);
 
 		bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
+		
+		bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
 
 		CallerSlot getDataSlot;
 
 		CallerSlot getTFSlot;
+
+		CallerSlot getFlagsSlot;
 
 		size_t currentHash;
 
@@ -180,7 +191,21 @@ namespace infovis {
 		float windowAspect;
 		vislib::math::Rectangle<float> bounds;
 
+		GLuint columnCount;
+		GLuint itemCount;
+		GLfloat modelViewMatrix_column[16];
+		GLfloat projMatrix_column[16];
+
 		vislib::graphics::gl::GLSLShader drawAxesProgram;
+		vislib::graphics::gl::GLSLShader drawScalesProgram;
+
+		GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
+
+		std::vector<GLuint> axisIndirection;
+		std::vector<GLfloat> minimums;
+		std::vector<GLfloat> maximums;
+		std::vector<DimensionFilter> filters;
+		std::vector<GLuint> fragmentMinMax;
 	};
 
 } /* end namespace infovis */

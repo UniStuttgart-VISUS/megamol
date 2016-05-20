@@ -50,6 +50,24 @@
       <Filter>Config and Make Files\cmake</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Shaders\pc.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\pc_axes_draw.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\pc_item_draw.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\pc_item_filter.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\pc_item_pick.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\pc_item_stroke.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\infovis\infovis.h">

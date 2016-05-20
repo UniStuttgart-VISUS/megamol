@@ -3,31 +3,6 @@
 
   <include file="pc" />
 
-  <snippet name="uniforms" type="string">
-    <![CDATA[
-uniform vec4 color = vec4(1.0, 0.0, 1.0, 1.0);
-uniform float axisPadding = 0.0075;
-uniform float scalePadding = 0.03;
-uniform float axisScaleStep = 1.0 / 4.0;
-	  ]]>
-  </snippet>
-
-  <snippet name="axesInterface" type="string">
-    <![CDATA[
-vec4 axis_line(uint dimension, bool top)
-{
-  float topFactor = top ? 1.0 : 0.0;
-  
-  return vec4(
-    scaling.x * abscissae[dimension]
-    , scaling.y * topFactor + (topFactor * axisPadding) - ((1.0 - topFactor) * axisPadding)
-    , pc_item_defaultDepth
-    , 1.0
-    );
-}
-    ]]>
-  </snippet>
-
   <namespace name="axes">
     <shader name="vert">
       <snippet type="version">430</snippet>
@@ -36,7 +11,6 @@ vec4 axis_line(uint dimension, bool top)
       <snippet name="::pc::uniforms" />
       <snippet name="::pc::common" />
       <snippet name="::pc_axes_draw::uniforms" />
-      <snippet name="::pc_axes_draw::axesInterface" />
       <snippet type="string">
         <![CDATA[
 void main()
@@ -78,7 +52,6 @@ void main()
       <snippet name="::pc::uniforms" />
       <snippet name="::pc::common" />
       <snippet name="::pc_axes_draw::uniforms" />
-      <snippet name="::pc_axes_draw::axesInterface" />
       <snippet type="string">
         <![CDATA[
 void main()

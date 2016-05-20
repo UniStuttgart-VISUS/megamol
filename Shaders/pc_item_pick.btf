@@ -3,13 +3,6 @@
 
   <include file="pc" />
 
-  <snippet name="uniforms" type="string">
-    <![CDATA[
-uniform vec2 mouse = vec2(0, 0);
-uniform float pickRadius = 0.1;
-    ]]>
-  </snippet>
-
   <snippet name="intersectLineCircle" type="string">
     <![CDATA[
 #define FLOAT_EPS (1.0e-10)

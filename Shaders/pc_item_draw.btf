@@ -15,13 +15,6 @@ flat vec4 color;
 
   <snippet name="uniforms" type="string">
     <![CDATA[
-uniform vec4 color = vec4(0.7, 0.7, 0.7, 1.0);
-
-uniform uint fragmentTestMask = 0;
-uniform uint fragmentPassMask = 0;
-
-uniform uint tick = 0;
-
 layout(binding = 0) uniform sampler1D transferFunction;
 	  ]]>
   </snippet>

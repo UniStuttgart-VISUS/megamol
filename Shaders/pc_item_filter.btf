@@ -3,12 +3,6 @@
 
   <include file="pc" />
 
-  <snippet name="uniforms" type="string">
-    <![CDATA[
-uniform uint filterCount = 0;
-    ]]>
-  </snippet>
-            
   <shader name="comp">
     <snippet type="version">430</snippet>
     <snippet name="::pc::extensions" />
@@ -30,10 +24,10 @@ void main()
     && bitflag_isVisible(flags[itemID])
     )
   {
-		for (uint f = 0; f < filterCount; ++f)
+		for (uint f = 0; f < dimensionCount; ++f)
 		{
-    	uint dataID = pc_item_dataID(itemID, filters[f].dimension);
-		  float value = pc_item_dataValue(dataID, filters[f].dimension);
+    	uint dataID = pc_item_dataID(itemID, f);
+		  float value = pc_item_dataValue(dataID, f);
 
       if (value >= filters[f].lower && value <= filters[f].upper)
       {
