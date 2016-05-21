@@ -10,7 +10,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "AbstractParticleManipulator.h"
+#include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "mmcore/CallerSlot.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include <vector>

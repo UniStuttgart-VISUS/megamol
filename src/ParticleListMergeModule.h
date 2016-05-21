@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Module.h"
-#include "AbstractParticleManipulator.h"
+#include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "vislib/math/Cuboid.h"
 #include "TransferFunctionQuery.h"
 

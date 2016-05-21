@@ -293,8 +293,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\ParticleSortFixHack.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\mmstd_datatools\AbstractParticleManipulator.h" />
     <ClInclude Include="include\mmstd_datatools\floattable\CallFloatTableData.h" />
-    <ClInclude Include="src/AbstractParticleManipulator.h" />
     <ClInclude Include="src/DataFileSequence.h" />
     <ClInclude Include="src/DataFileSequenceStepper.h" />
     <ClInclude Include="src/DataSetTimeRewriteModule.h" />

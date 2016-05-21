@@ -10,7 +10,7 @@
 #pragma once
 
 #ifdef WITH_ANN
-#include "AbstractParticleManipulator.h"
+#include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 

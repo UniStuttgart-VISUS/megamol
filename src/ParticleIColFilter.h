@@ -9,7 +9,7 @@
 #pragma once
 
 #include "mmcore/Module.h"
-#include "AbstractParticleManipulator.h"
+#include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
