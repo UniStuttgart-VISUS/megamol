@@ -41,6 +41,8 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	drawAxesSlot("drawAxes", "Draw dimension axes"),
 	axesColorSlot("axesColor", "Color for dimension axes"),
 	axesColor(),
+	filterIndicatorColorSlot("filterIndicatorCol", "Color for filter indicators"),
+	filterIndicatorColor(),
 	selectionModeSlot("selectionMode", "Selection mode"),
 	drawSelectionIndicatorSlot("drawSelectionIndicator", "Draw selection indicator"),
 	selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator"),
@@ -61,7 +63,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
 	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
 	itemCount(0), columnCount(0), dragging(false),
-	numTicks(5), pickedAxis(-1)
+	numTicks(5), pickedAxis(-1), pickedIndicatorAxis(-1), pickedIndicatorIndex(-1)
 {
 
 	this->getDataSlot.SetCompatibleCall<megamol::stdplugin::datatools::floattable::CallFloatTableDataDescription>();
@@ -109,6 +111,11 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	axesColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::axesColorSlotCallback);
 	this->MakeSlotAvailable(&axesColorSlot);
 	axesColorSlotCallback(axesColorSlot);
+
+	filterIndicatorColorSlot << new ::megamol::core::param::StringParam("orange");
+	filterIndicatorColorSlot.SetUpdateCallback(&NGParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback);
+	this->MakeSlotAvailable(&filterIndicatorColorSlot);
+	filterIndicatorColorSlotCallback(filterIndicatorColorSlot);
 
 	drawSelectionIndicatorSlot << new ::megamol::core::param::BoolParam(true);
 	this->MakeSlotAvailable(&drawSelectionIndicatorSlot);
@@ -266,6 +273,7 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 
 	if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
 	if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
+	if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
 
 	return true;
 }
@@ -343,6 +351,10 @@ bool NGParallelCoordinatesRenderer2D::otherItemsColorSlotCallback(::megamol::cor
 }
 bool NGParallelCoordinatesRenderer2D::axesColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
 	utility::ColourParser::FromString(this->axesColorSlot.Param<param::StringParam>()->Value(), 4, axesColor);
+	return true;
+}
+bool NGParallelCoordinatesRenderer2D::filterIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
+	utility::ColourParser::FromString(this->filterIndicatorColorSlot.Param<param::StringParam>()->Value(), 4, filterIndicatorColor);
 	return true;
 }
 bool NGParallelCoordinatesRenderer2D::selectionIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller) {
@@ -498,6 +510,14 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 		glUniform1i(this->drawScalesProgram.ParameterLocation("pickedAxis"), pickedAxis);
 		glDrawArraysInstanced(GL_LINES, 0, 2, this->columnCount * this->numTicks);
 		this->drawScalesProgram.Disable();
+
+		this->enableProgramAndBind(this->drawFilterIndicatorsProgram);
+		glUniform4fv(this->drawScalesProgram.ParameterLocation("color"), 1, this->filterIndicatorColor);
+		glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
+		glUniform2i(this->drawScalesProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis, pickedIndicatorIndex);
+		glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
+		this->drawScalesProgram.Disable();
+
 
 		for (unsigned int c = 0; c < this->columnCount; c++) {
 			unsigned int realCol = this->axisIndirection[c];

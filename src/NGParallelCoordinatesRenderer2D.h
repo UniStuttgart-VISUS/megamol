@@ -113,6 +113,7 @@ namespace infovis {
 		bool selectedItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller);
 		bool otherItemsColorSlotCallback(::megamol::core::param::ParamSlot & caller);
 		bool axesColorSlotCallback(::megamol::core::param::ParamSlot & caller);
+		bool filterIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller);
 		bool selectionIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller);
 		bool scalingChangedCallback(::megamol::core::param::ParamSlot & caller);
 		bool resetFlagsSlotCallback(::megamol::core::param::ParamSlot & caller);
@@ -167,6 +168,10 @@ namespace infovis {
 		::megamol::core::param::ParamSlot axesColorSlot;
 		float axesColor[4];
 
+		::megamol::core::param::ParamSlot filterIndicatorColorSlot;
+		float filterIndicatorColor[4];
+
+
 		::megamol::core::param::ParamSlot selectionModeSlot;
 		::megamol::core::param::ParamSlot drawSelectionIndicatorSlot;
 		::megamol::core::param::ParamSlot selectionIndicatorColorSlot;
@@ -205,6 +210,7 @@ namespace infovis {
 
 		vislib::graphics::gl::GLSLShader drawAxesProgram;
 		vislib::graphics::gl::GLSLShader drawScalesProgram;
+		vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
 
 		GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
 
@@ -217,6 +223,8 @@ namespace infovis {
 
 		int pickedAxis;
 		bool dragging;
+		int pickedIndicatorAxis;
+		int pickedIndicatorIndex;
 
 		vislib::graphics::gl::SimpleFont font;
 	};
