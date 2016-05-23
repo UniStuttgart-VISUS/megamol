@@ -60,7 +60,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	//selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
 	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
 	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
-	itemCount(0), columnCount(0),
+	itemCount(0), columnCount(0), dragging(false),
 	numTicks(5), pickedAxis(-1)
 {
 
@@ -309,10 +309,19 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 			mousePressedY = y;
 		}
 	} else if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) {
-		if (mouseFlags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN) {
-			pickedAxis = mouseXtoAxis(mousePressedX);
-		}
 		mouseFlags = 0;
+	}
+	if (pickedAxis != -1 && (mousePressedX - x > this->axisDistance * 0.5f)
+		&& (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
+		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)) {
+		this->dragging = true;
+	} else {
+		this->dragging = false;
+	}
+	if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
+		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED)
+		&& !(flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)) {
+		pickedAxis = mouseXtoAxis(mousePressedX);
 	}
 
 	mouseX = x;
@@ -448,9 +457,10 @@ bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call)
 void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 	if (this->columnCount > 0) {
 
-		if ((mouseFlags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
-			&& (mouseFlags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
-			&& pickedAxis != -1) {
+		//if ((mouseFlags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
+		//	&& (mouseFlags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
+		//	&& pickedAxis != -1) {
+		if (dragging) {
 			// we are dragging an axis!
 
 			int currAxis = mouseXtoAxis(mouseX);
@@ -471,6 +481,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 
 		}
 
+		// todo does this actually need to be turned around? or is this the correct lookup?
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
 

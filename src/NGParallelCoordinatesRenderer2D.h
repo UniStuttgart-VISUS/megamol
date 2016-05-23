@@ -216,6 +216,7 @@ namespace infovis {
 		std::vector<std::string> names;
 
 		int pickedAxis;
+		bool dragging;
 
 		vislib::graphics::gl::SimpleFont font;
 	};

@@ -17,7 +17,7 @@ out vec4 actualColor;
 void main()
 {
   uint dimension = pc_dimension(gl_InstanceID);
-	vec4 vertex = axis_line(dimension, gl_VertexID);
+	vec4 vertex = axis_line(gl_InstanceID, gl_VertexID);
 	
   if (dimension == pickedAxis) {
   	actualColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -66,8 +66,8 @@ void main()
 {
   
   uint dimension = pc_dimension(gl_InstanceID / numTicks);
-	vec4 bottom = axis_line(dimension, 0);
-	vec4 top = axis_line(dimension, 1);
+	vec4 bottom = axis_line(gl_InstanceID / numTicks, 0);
+	vec4 top = axis_line(gl_InstanceID / numTicks, 1);
   
   vec4 vertex = vec4(
   bottom.x - axisHalfTick + 2 * gl_VertexID * axisHalfTick,
