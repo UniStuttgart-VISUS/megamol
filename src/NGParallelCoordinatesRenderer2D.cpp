@@ -62,7 +62,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	//selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
 	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
 	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
-	itemCount(0), columnCount(0), dragging(false),
+	itemCount(0), columnCount(0), dragging(false), filtering(false),
 	numTicks(5), pickedAxis(-1), pickedIndicatorAxis(-1), pickedIndicatorIndex(-1)
 {
 
@@ -294,11 +294,28 @@ int NGParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
 	float f = (x - this->marginX) / this->axisDistance;
 	float frac = f - static_cast<long>(f);
 	int integral = static_cast<int>(std::round(f));
-	if (frac > 0.9 || frac < 0.1) {
-		//vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
+	if (frac > 0.8 || frac < 0.2) {
+		vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
 		return axisIndirection[integral];
 	} else {
 		return -1;
+	}
+}
+
+void NGParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, int& index) {
+	axis = mouseXtoAxis(x);
+	float val = (y - this->marginY) / axisHeight;
+	if (val >= 0.0f && val <= 1.0f && axis != -1) {
+		float thresh = this->maximums[axis] - this->minimums[axis];
+		thresh /= 10.0f;
+		val = relToAbsValue(axis, val);
+		if (fabs(this->filters[axis].upper - val) < thresh) {
+			index = 1;
+		} else if (fabs(this->filters[axis].lower - val) < thresh) {
+			index = 0;
+		} else {
+			index = -1;
+		}
 	}
 }
 
@@ -319,7 +336,7 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 	} else if (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED) {
 		mouseFlags = 0;
 	}
-	if (pickedAxis != -1 && (mousePressedX - x > this->axisDistance * 0.5f)
+	if (pickedAxis != -1 && (fabs(mousePressedX - x) > this->axisDistance * 0.5f)
 		&& (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
 		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)) {
 		this->dragging = true;
@@ -328,8 +345,43 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 	}
 	if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
 		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED)
-		&& !(flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)) {
+		&& !(flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
+		&& !dragging) {
 		pickedAxis = mouseXtoAxis(mouseReleasedX);
+	}
+
+	if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN)
+		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED)
+		&& !(flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
+		&& !dragging) {
+		pickIndicator(mouseReleasedX, mouseReleasedY, pickedIndicatorAxis, pickedIndicatorIndex);
+	}
+	if ((pickedIndicatorAxis != -1)
+		&& (flags & ::megamol::core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN)
+		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
+		&& !dragging) {
+		this->filtering = true;
+	} else {
+		this->filtering = false;
+	}
+	if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_SHIFT_DOWN)
+		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
+		&& filtering) {
+		int checkAxis, checkIndex;
+		pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
+		if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
+			float val = (mouseReleasedY - this->marginY) / axisHeight;
+			if (val >= 0.0f && val <= 1.0f) {
+				val = relToAbsValue(pickedIndicatorAxis, val);
+				if (pickedIndicatorIndex == 0) {
+					this->filters[pickedIndicatorAxis].lower = val;
+				} else {
+					this->filters[pickedIndicatorAxis].upper = val;
+				}
+			}
+		} else {
+			filtering = false;
+		}
 	}
 
 	mouseX = x;
@@ -476,6 +528,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 			// we are dragging an axis!
 
 			int currAxis = mouseXtoAxis(mouseX);
+			printf("trying to drag to axis %i\n", currAxis);
 			if (currAxis != pickedAxis && currAxis >= 0 && currAxis < this->columnCount) {
 				for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
 					if (*ax == pickedAxis) {
@@ -493,9 +546,10 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 
 		}
 
-		// todo does this actually need to be turned around? or is this the correct lookup?
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
 
 		this->enableProgramAndBind(this->drawAxesProgram);
 		glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1, this->axesColor);
@@ -512,9 +566,9 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 		this->drawScalesProgram.Disable();
 
 		this->enableProgramAndBind(this->drawFilterIndicatorsProgram);
-		glUniform4fv(this->drawScalesProgram.ParameterLocation("color"), 1, this->filterIndicatorColor);
-		glUniform1f(this->drawScalesProgram.ParameterLocation("axisHalfTick"), 2.0f);
-		glUniform2i(this->drawScalesProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis, pickedIndicatorIndex);
+		glUniform4fv(this->drawFilterIndicatorsProgram.ParameterLocation("color"), 1, this->filterIndicatorColor);
+		glUniform1f(this->drawFilterIndicatorsProgram.ParameterLocation("axisHalfTick"), 2.0f);
+		glUniform2i(this->drawFilterIndicatorsProgram.ParameterLocation("pickedIndicator"), pickedIndicatorAxis, pickedIndicatorIndex);
 		glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
 		this->drawScalesProgram.Disable();
 

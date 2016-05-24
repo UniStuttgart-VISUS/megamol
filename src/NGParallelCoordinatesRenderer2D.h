@@ -120,6 +120,12 @@ namespace infovis {
 
 	private:
 
+		inline float relToAbsValue(int axis, float val) {
+			return (val * (this->maximums[axis] - this->minimums[axis])) + this->minimums[axis];
+		}
+
+		void pickIndicator(float x, float y, int& axis, int& index);
+
 		void assertData(void);
 
 		void computeScaling(void);
@@ -223,7 +229,9 @@ namespace infovis {
 
 		int pickedAxis;
 		bool dragging;
+		bool filtering;
 		int pickedIndicatorAxis;
+		//int lastPickedIndicatorAxis;
 		int pickedIndicatorIndex;
 
 		vislib::graphics::gl::SimpleFont font;
