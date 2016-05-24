@@ -40,7 +40,7 @@ namespace infovis {
 			, SOFTSELECTED = 1 << 3
 		};
 
-		typedef uint8_t FlagItemType;
+		typedef uint32_t FlagItemType;
 
 		typedef std::vector<FlagItemType> FlagVectorType;
 

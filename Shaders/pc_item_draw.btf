@@ -107,15 +107,14 @@ layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-  if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask))
-  {
+  if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
+  //if (bitflag_test(flags[in_.itemID], 5, 1)) {
     fragColor = in_.color;
+  } else {
+    discard;
+    //fragColor = vec4(vec3(0.2), 1.0);
   }
-  else
-  {
-    //discard;
-    fragColor = in_.color; //vec4(vec3(0.4), 1.0);
-  }
+  
 }
       ]]>
       </snippet>

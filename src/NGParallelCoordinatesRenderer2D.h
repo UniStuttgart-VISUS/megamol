@@ -139,6 +139,7 @@ namespace infovis {
 		int mouseXtoAxis(float x);
 
 		bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
+		bool makeComputeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program);
 		
 		bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
 
@@ -221,6 +222,8 @@ namespace infovis {
 		vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
 		vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
 
+		vislib::graphics::gl::GLSLComputeShader filterProgram;
+
 		GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
 
 		std::vector<GLuint> axisIndirection;
@@ -236,6 +239,9 @@ namespace infovis {
 		int pickedIndicatorAxis;
 		//int lastPickedIndicatorAxis;
 		int pickedIndicatorIndex;
+
+		GLint workgroupSize[3];
+		GLint maxWorkgroupCount[3];
 
 		vislib::graphics::gl::SimpleFont font;
 	};

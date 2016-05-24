@@ -20,18 +20,19 @@ void main()
 {
   uint itemID = gl_GlobalInvocationID.y * (gl_NumWorkGroups.x * gl_WorkGroupSize.x) + gl_GlobalInvocationID.x;
   
-  if (itemID < itemCount
-    && bitflag_isVisible(flags[itemID])
-    )
-  {
+    
+  if (itemID < itemCount && bitflag_isVisible(flags[itemID]))  {
+  	
+  	bitflag_set(flags[itemID], FLAG_FILTERED, false);
+  	
 		for (uint f = 0; f < dimensionCount; ++f)
 		{
     	uint dataID = pc_item_dataID(itemID, f);
 		  float value = pc_item_dataValue(dataID, f);
 
-      if (value >= filters[f].lower && value <= filters[f].upper)
-      {
+      if (value < filters[f].lower || value > filters[f].upper) {
         bitflag_set(flags[itemID], FLAG_FILTERED, true);
+        //bitflag_set(flags[itemID], FLAG_ENABLED, false);
   		  break;
 		  }
 	  }

@@ -215,6 +215,43 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
 	}
 }
 
+bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program) {
+	vislib::graphics::gl::ShaderSource comp;
+
+	vislib::StringA compname((prefix + "::comp").c_str());
+	vislib::StringA pref(prefix.c_str());
+
+	if (!this->instance()->ShaderSourceFactory().MakeShaderSource(compname, comp)) return false;
+
+	try {
+		if (!program.Compile(comp.Code(), comp.Count())) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Unable to compile %s: Unknown error\n", pref);
+			return false;
+		}
+		if (!program.Link()) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Unable to link %s: Unknown error\n", pref);
+			return false;
+		}
+
+	} catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile %s (@%s): %s\n", pref,
+			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+			ce.FailedAction()), ce.GetMsgA());
+		return false;
+	} catch (vislib::Exception e) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile %s: %s\n", pref, e.GetMsgA());
+		return false;
+	} catch (...) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile %s: Unknown exception\n", pref);
+		return false;
+	}
+}
+
 bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
 	program.Enable();
 	// bindbuffer?
@@ -277,6 +314,13 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 
 	if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
 
+	if (!makeComputeProgram("::pc_item_filter", this->filterProgram)) return false;
+
+	glGetProgramiv(this->filterProgram, GL_COMPUTE_LOCAL_WORK_SIZE, workgroupSize);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
+
 	return true;
 }
 
@@ -309,9 +353,10 @@ void NGParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis,
 	axis = mouseXtoAxis(x);
 	float val = (y - this->marginY) / axisHeight;
 	if (val >= 0.0f && val <= 1.0f && axis != -1) {
-		float thresh = this->maximums[axis] - this->minimums[axis];
-		thresh /= 10.0f;
-		val = relToAbsValue(axis, val);
+		//float thresh = this->maximums[axis] - this->minimums[axis];
+		//thresh /= 10.0f;
+		float thresh = 0.1f;
+		//val = relToAbsValue(axis, val);
 		if (fabs(this->filters[axis].upper - val) < thresh) {
 			index = 1;
 		} else if (fabs(this->filters[axis].lower - val) < thresh) {
@@ -374,14 +419,16 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 		pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
 		if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
 			float val = (mouseReleasedY - this->marginY) / axisHeight;
-			if (val >= 0.0f && val <= 1.0f) {
-				val = relToAbsValue(pickedIndicatorAxis, val);
+			val = std::max(0.0f, val);
+			val = std::min(val, 1.0f);
+			//if (val >= 0.0f && val <= 1.0f) {
+				//val = relToAbsValue(pickedIndicatorAxis, val);
 				if (pickedIndicatorIndex == 0) {
 					this->filters[pickedIndicatorAxis].lower = val;
 				} else {
 					this->filters[pickedIndicatorAxis].upper = val;
 				}
-			}
+			//}
 		} else {
 			filtering = false;
 		}
@@ -459,14 +506,14 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
 		minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
 		maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
 		names[x] = floats->GetColumnsInfos()[x].Name();
-		filters[x].lower = minimums[x];
-		filters[x].upper = maximums[x];
+		filters[x].lower = 0.0f; // minimums[x];
+		filters[x].upper = 1.0f; // maximums[x];
 	}
 
-	if (!flagsc->has_data()) {
+	if (!flagsc->has_data() || flagsc->GetFlags().size() != itemCount) {
 		std::shared_ptr<FlagStorage::FlagVectorType> v;
 		v = std::make_shared<FlagStorage::FlagVectorType>();
-		v->resize(itemCount);
+		v->assign(itemCount, FlagStorage::ENABLED);
 		flagsc->SetFlags(v);
 		(*flagsc)(1); // set flags
 	}
@@ -554,11 +601,6 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 
 		}
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
-
 		this->enableProgramAndBind(this->drawAxesProgram);
 		glUniform4fv(this->drawAxesProgram.ParameterLocation("color"), 1, this->axesColor);
 		glUniform1i(this->drawAxesProgram.ParameterLocation("pickedAxis"), pickedAxis);
@@ -603,22 +645,32 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 	if (tf == nullptr) return;
 
 	this->enableProgramAndBind(this->drawItemsDiscreteProgram);
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
-	glUniform1i(this->drawAxesProgram.ParameterLocation("transferFunction"), 0);
-	glUniform1ui(this->drawAxesProgram.ParameterLocation("fragmentTestMask"), testMask);
-	glUniform1ui(this->drawAxesProgram.ParameterLocation("fragmentPassMask"), passMask);
+	glUniform1i(this->drawItemsDiscreteProgram.ParameterLocation("transferFunction"), 5);
+	glUniform1ui(this->drawItemsDiscreteProgram.ParameterLocation("fragmentTestMask"), testMask);
+	glUniform1ui(this->drawItemsDiscreteProgram.ParameterLocation("fragmentPassMask"), passMask);
 	glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
 	this->drawItemsDiscreteProgram.Disable();
 }
 
 void NGParallelCoordinatesRenderer2D::drawParcos(void) {
+
+	size_t groups = this->itemCount / (workgroupSize[0] * workgroupSize[1] * workgroupSize[2]);
+	GLuint groupCounts[3] = {
+		(groups % maxWorkgroupCount[0]) + 1u
+		, (groups / maxWorkgroupCount[0]) + 1u
+		, 1u
+	};
+	this->enableProgramAndBind(this->filterProgram);
+	filterProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+
 	if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
-		this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED, FlagStorage::ENABLED, this->otherItemsColor);
+		this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED, this->otherItemsColor);
 	}
-	if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
-		this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED, FlagStorage::ENABLED | FlagStorage::SELECTED, this->selectedItemsColor);
-	}
+	//if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
+	//	this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED, FlagStorage::ENABLED | FlagStorage::SELECTED, this->selectedItemsColor);
+	//}
 }
 
 bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
@@ -638,12 +690,10 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
 	glDisable(GL_DEPTH_TEST);
 
-	//glBegin(GL_LINES);
-	//for (int x = 0, max = fc->GetColumnsCount(); x < max; x++) {
-	//	glVertex2f(this->marginX + this->axisDistance * x + 10, this->marginY);
-	//	glVertex2f(this->marginX + this->axisDistance * x + 10, this->marginY + this->axisHeight);
-	//}
-	//glEnd();
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
 
 	drawParcos();
 
