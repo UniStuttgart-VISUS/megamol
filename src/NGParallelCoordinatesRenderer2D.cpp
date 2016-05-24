@@ -59,6 +59,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH"),
 	glLineWidthSlot("glLineWidth", "Value for glLineWidth"),
 	resetFlagsSlot("resetFlags", "Reset item flags to initial state"),
+	resetFiltersSlot("resetFilters", "Reset dimension filters to initial state"),
 	//selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
 	dataBuffer(0), flagsBuffer(0), minimumsBuffer(0), maximumsBuffer(0),
 	axisIndirectionBuffer(0), filtersBuffer(0), minmaxBuffer(0),
@@ -169,6 +170,10 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
 	resetFlagsSlot << new ::megamol::core::param::ButtonParam();
 	resetFlagsSlot.SetUpdateCallback(this, &NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
 	this->MakeSlotAvailable(&resetFlagsSlot);
+
+	resetFiltersSlot << new ::megamol::core::param::ButtonParam();
+	resetFiltersSlot.SetUpdateCallback(this, &NGParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
+	this->MakeSlotAvailable(&resetFiltersSlot);
 
 	fragmentMinMax.resize(2);
 }
@@ -470,6 +475,14 @@ bool NGParallelCoordinatesRenderer2D::scalingChangedCallback(::megamol::core::pa
 }
 
 bool NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback(::megamol::core::param::ParamSlot & caller) {
+	return true;
+}
+
+bool NGParallelCoordinatesRenderer2D::resetFiltersSlotCallback(::megamol::core::param::ParamSlot & caller) {
+	for (auto i = 0; i < this->columnCount; i++) {
+		this->filters[i].lower = 0.0f;
+		this->filters[i].upper = 1.0f;
+	}
 	return true;
 }
 

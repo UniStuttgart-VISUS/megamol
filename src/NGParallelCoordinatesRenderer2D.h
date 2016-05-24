@@ -117,6 +117,7 @@ namespace infovis {
 		bool selectionIndicatorColorSlotCallback(::megamol::core::param::ParamSlot & caller);
 		bool scalingChangedCallback(::megamol::core::param::ParamSlot & caller);
 		bool resetFlagsSlotCallback(::megamol::core::param::ParamSlot & caller);
+		bool resetFiltersSlotCallback(::megamol::core::param::ParamSlot & caller);
 
 	private:
 
@@ -203,6 +204,7 @@ namespace infovis {
 		::megamol::core::param::ParamSlot glLineWidthSlot;
 
 		::megamol::core::param::ParamSlot resetFlagsSlot;
+		::megamol::core::param::ParamSlot resetFiltersSlot;
 
 		float marginX, marginY;
 		float axisDistance;
