@@ -275,6 +275,8 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 	if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
 	if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
 
+	if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
+
 	return true;
 }
 
@@ -294,8 +296,9 @@ int NGParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
 	float f = (x - this->marginX) / this->axisDistance;
 	float frac = f - static_cast<long>(f);
 	int integral = static_cast<int>(std::round(f));
+	if (integral >= this->columnCount || integral < 0) return -1;
 	if (frac > 0.8 || frac < 0.2) {
-		vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
+		//vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
 		return axisIndirection[integral];
 	} else {
 		return -1;
@@ -433,12 +436,12 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
 
 	(*floats)(0);
 	auto hash = floats->DataHash();
+	(*tc)(0);
+	(*flagsc)(0);
 
 	if (hash == this->currentHash) return;
 
 	this->currentHash = hash;
-	(*tc)(0);
-	(*flagsc)(0);
 
 	this->computeScaling();
 
@@ -528,7 +531,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 			// we are dragging an axis!
 
 			int currAxis = mouseXtoAxis(mouseX);
-			printf("trying to drag to axis %i\n", currAxis);
+			//printf("trying to drag to axis %i\n", currAxis);
 			if (currAxis != pickedAxis && currAxis >= 0 && currAxis < this->columnCount) {
 				for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
 					if (*ax == pickedAxis) {
@@ -538,7 +541,12 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 				}
 				for (auto ax = this->axisIndirection.begin(), e = this->axisIndirection.end(); ax != e; ax++) {
 					if (*ax == currAxis) {
-						this->axisIndirection.insert(ax, pickedAxis);
+						if (mouseX > mousePressedX) {
+							ax++;
+							this->axisIndirection.insert(ax, pickedAxis);
+						} else {
+							this->axisIndirection.insert(ax, pickedAxis);
+						}
 						break;
 					}
 				}
@@ -572,7 +580,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 		glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
 		this->drawScalesProgram.Disable();
 
-
+		glActiveTexture(GL_TEXTURE0);
 		for (unsigned int c = 0; c < this->columnCount; c++) {
 			unsigned int realCol = this->axisIndirection[c];
 			if (this->pickedAxis == realCol) {
@@ -590,8 +598,27 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 	}
 }
 
-void NGParallelCoordinatesRenderer2D::drawParcos(void) {
+void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, float color[4]) {
+	auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+	if (tf == nullptr) return;
 
+	this->enableProgramAndBind(this->drawItemsDiscreteProgram);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
+	glUniform1i(this->drawAxesProgram.ParameterLocation("transferFunction"), 0);
+	glUniform1ui(this->drawAxesProgram.ParameterLocation("fragmentTestMask"), testMask);
+	glUniform1ui(this->drawAxesProgram.ParameterLocation("fragmentPassMask"), passMask);
+	glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
+	this->drawItemsDiscreteProgram.Disable();
+}
+
+void NGParallelCoordinatesRenderer2D::drawParcos(void) {
+	if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
+		this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED, FlagStorage::ENABLED, this->otherItemsColor);
+	}
+	if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
+		this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED, FlagStorage::ENABLED | FlagStorage::SELECTED, this->selectedItemsColor);
+	}
 }
 
 bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
@@ -617,6 +644,8 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 	//	glVertex2f(this->marginX + this->axisDistance * x + 10, this->marginY + this->axisHeight);
 	//}
 	//glEnd();
+
+	drawParcos();
 
 	drawAxes();
 

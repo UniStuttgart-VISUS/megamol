@@ -6,10 +6,10 @@
   <snippet name="interface" type="string">
     <![CDATA[
 flat uint itemID;
-flat uint dimension;
+flat uint worldSpaceAxis;
+flat uint dataDimension;
 flat uint dataID;
 flat vec4 color;
-//noperspective float linePosition;
 	  ]]>
   </snippet>
 
@@ -21,62 +21,21 @@ layout(binding = 0) uniform sampler1D transferFunction;
 
   <snippet name="vertexShaderMain" type="string">
     <![CDATA[
-const vec4 itemColors[5] =
-{
-// 5-class Dark2
-// 27,158,119
-vec4(0.11, 0.62, 0.48, 0.8),
-// 217,95,2
-vec4(0.85, 0.37, 0.01, 0.8),
-// 117,112,179
-vec4(0.46, 0.44, 0.70, 0.8),
-// 231,41,138
-vec4(0.91, 0.16, 0.54, 0.8),
-// 102,166,30
-vec4(0.40, 0.65, 0.12, 0.8)
-};
 
 void main()
 {
-  uint instanceID = getInstanceID();
-  uint dimensions = pc_dimension_count();
+  uint instanceID = gl_InstanceID; //getInstanceID();
   
-#ifdef USE_LINE_STRIP
 	out_.itemID = instanceID;
-	out_.dimension = pc_dimension(gl_VertexID);
-//	out_.linePosition = float(gl_VertexID) / (dimensions - 1);
-#else
-	out_.itemID = uint(instanceID / dimensions);
-	out_.dimension = pc_dimension(uint(instanceID % dimensions) + gl_VertexID);
-//	out_.linePosition = float(gl_VertexID);
-#endif
-
-	out_.dataID = pc_item_dataID(out_.itemID, out_.dimension);
+	out_.dataDimension = pc_dimension(gl_VertexID);
+	out_.worldSpaceAxis = gl_VertexID;
+	out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
-#if 0
-  uint rank = uint(data[pc_item_dataID(out_.itemID, 0)]);
-  out_.color = itemColors[rank];
-#endif
-
-#if 1
   float value = instanceID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
   out_.color = texture(transferFunction, value);//value);
-#endif
 
-if (out_.itemID == 93)
-{
-out_.color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-}
+	vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
 
-	vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dimension);
-  
-  if (!bitflag_isVisible(flags[out_.itemID])
-	|| (out_.itemID != 5 && out_.itemID != 65)// && out_.itemID != 93)
-
-	)
-  {
-    vertex.w = -1.0;
-  }
 #if 0
   else
   {
@@ -148,23 +107,14 @@ layout(location = 0) out vec4 fragColor;
 
 void main()
 {
-#if 0
-float factor = 1000.0f;
-uint bit = uint(round(in_.linePosition * factor)) & 31u;
-uint pattern = 0xF0F0F0F0;
-if ((pattern & (1u << bit)) == 0u)
-{
-	discard;
-}
-#endif
-
   if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask))
   {
     fragColor = in_.color;
   }
   else
   {
-    discard;
+    //discard;
+    fragColor = in_.color; //vec4(vec3(0.4), 1.0);
   }
 }
       ]]>

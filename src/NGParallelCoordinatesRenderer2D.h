@@ -132,6 +132,8 @@ namespace infovis {
 
 		void drawAxes(void);
 
+		void drawItemsDiscrete(uint32_t testMask, uint32_t passMask, float color[4]);
+
 		void drawParcos(void);
 
 		int mouseXtoAxis(float x);
@@ -217,6 +219,7 @@ namespace infovis {
 		vislib::graphics::gl::GLSLShader drawAxesProgram;
 		vislib::graphics::gl::GLSLShader drawScalesProgram;
 		vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
+		vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
 
 		GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
 

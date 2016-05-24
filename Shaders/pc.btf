@@ -133,15 +133,14 @@ float pc_item_dataValue(uint dataID, uint dimension)
   return (data[dataID] - dataMinimum[dimension]) / (dataMaximum[dimension] - dataMinimum[dimension]);
 }
 
-vec4 pc_item_vertex(uint itemID, uint dataID, uint dimension)
+vec4 pc_item_vertex(uint itemID, uint dataID, uint dimension, uint worldSpaceAxis)
 {
-  //return vec4(
-	//  scaling.x * abscissae[dimension]
-	//  , scaling.y * pc_item_dataValue(dataID, dimension)
-	//  , pc_item_defaultDepth
-	//  , 1.0
-	//  );
-	return vec4(1.0);
+  return vec4(
+		margin.x + axisDistance * worldSpaceAxis
+		, margin.y + axisHeight * pc_item_dataValue(dataID, dimension)
+	  , pc_item_defaultDepth
+	  , 1.0
+	);
 }
 vec2 pc_item_vec2(uint itemID, uint dataID, uint dimension)
 {
