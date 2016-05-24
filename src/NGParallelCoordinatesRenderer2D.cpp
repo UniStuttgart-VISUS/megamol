@@ -295,7 +295,7 @@ int NGParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
 	float frac = f - static_cast<long>(f);
 	int integral = static_cast<int>(std::round(f));
 	if (frac > 0.9 || frac < 0.1) {
-		vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
+		//vislib::sys::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i", axisIndirection[integral], integral);
 		return axisIndirection[integral];
 	} else {
 		return -1;
@@ -329,7 +329,7 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 	if ((flags & ::megamol::core::view::MOUSEFLAG_MODKEY_ALT_DOWN)
 		&& (flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_CHANGED)
 		&& !(flags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)) {
-		pickedAxis = mouseXtoAxis(mousePressedX);
+		pickedAxis = mouseXtoAxis(mouseReleasedX);
 	}
 
 	mouseX = x;
@@ -521,6 +521,11 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 
 		for (unsigned int c = 0; c < this->columnCount; c++) {
 			unsigned int realCol = this->axisIndirection[c];
+			if (this->pickedAxis == realCol) {
+				glColor3f(1.0f, 0.0f, 0.0f);
+			} else {
+				glColor3fv(this->axesColor);
+			}
 			float x = this->marginX + this->axisDistance * c;
 			float fontsize = this->axisDistance / 10.0f;
 			this->font.DrawString(x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
