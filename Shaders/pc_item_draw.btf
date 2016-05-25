@@ -24,17 +24,45 @@ layout(binding = 0) uniform sampler1D transferFunction;
 
 void main()
 {
+#define DOLINES
+#define DOSTRIPS
+
+#ifdef DOSTRIPS
   uint instanceID = gl_InstanceID; //getInstanceID();
-  
-	out_.itemID = instanceID;
-	out_.dataDimension = pc_dimension(gl_VertexID);
-	out_.worldSpaceAxis = gl_VertexID;
+ 	out_.itemID = instanceID;
+
+#ifdef DOLINES // line strip
+	uint theID = gl_VertexID;
+#else          // triangle strip
+	uint theID = gl_VertexID / 2;
+#endif
+
+#else // no strips
+#ifdef DOLINES // single lines
+  uint instanceID = gl_VertexID / ((dimensionCount - 1) * 2);
+ 	out_.itemID = instanceID;
+	uint theID = gl_VertexID % ((dimensionCount - 1) * 2);
+	theID = (theID + 1) / 2;
+#else          // single triangles
+  uint instanceID = gl_VertexID / ((dimensionCount - 1) * 6);
+ 	out_.itemID = instanceID;
+	uint theID = gl_VertexID % ((dimensionCount - 1) * 6);
+	theID = (theID / 6) + ((theID % 6) / 2) - ((theID % 6) / 3);
+#endif
+#endif
+
+	out_.dataDimension = pc_dimension(theID);
+	out_.worldSpaceAxis = theID;
+ 	
 	out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
-  float value = instanceID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
+  float value = out_.itemID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
   out_.color = texture(transferFunction, value);//value);
 
 	vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
+#ifndef DOLINES // triangles need to be "less degenerate"
+	vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
+#endif
 
 #if 0
   else

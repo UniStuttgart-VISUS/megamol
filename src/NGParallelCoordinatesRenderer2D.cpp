@@ -664,6 +664,9 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 	glUniform1ui(this->drawItemsDiscreteProgram.ParameterLocation("fragmentTestMask"), testMask);
 	glUniform1ui(this->drawItemsDiscreteProgram.ParameterLocation("fragmentPassMask"), passMask);
 	glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
+	//glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
+	//glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+	//glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
 	this->drawItemsDiscreteProgram.Disable();
 }
 
