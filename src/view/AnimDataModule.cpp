@@ -9,6 +9,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/assert.h"
 #include "vislib/sys/Log.h"
+#include <chrono>
 
 using namespace megamol::core;
 
@@ -224,6 +225,11 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
 #endif /* _LOADING_REPORTING */
     Frame *frame;
 
+    std::chrono::high_resolution_clock::duration accumDuration;
+    unsigned int accumCount = 0;
+    std::chrono::system_clock::time_point lastReportTime = std::chrono::system_clock::now();
+    const std::chrono::system_clock::duration lastReportDistance = std::chrono::seconds(3);
+
     while (This->isRunning.load()) {
         // sleep to enforce thread changes
         vislib::sys::Thread::Sleep(1);
@@ -316,12 +322,40 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
 #ifdef _LOADING_REPORTING
             printf("Loading frame %i into cache %i\n", index, l);
 #endif /* _LOADING_REPORTING */
+
+            std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
             This->loadFrame(frame, index);
+
+            std::chrono::high_resolution_clock::duration duration = std::chrono::high_resolution_clock::now() - start;
+            accumDuration += duration;
+            accumCount++;
+
+            std::chrono::system_clock::time_point reportTime = std::chrono::system_clock::now();
+            if ((reportTime - lastReportTime) > lastReportDistance) {
+                lastReportTime = reportTime;
+                if (accumCount > 0) {
+                    vislib::sys::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
+                        This->FullName().PeekBuffer(),
+                        1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
+                        static_cast<unsigned int>(accumCount)
+                        );
+                }
+            }
+
             // we no not need to lock here, because this transition from 
             // 'STATE_LOADING' to 'STATE_AVAILABLE' is safe for the using 
             // thread.
             frame->state = Frame::STATE_AVAILABLE;
         }
+    }
+
+    if (accumCount > 0) {
+        vislib::sys::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
+            This->FullName().PeekBuffer(),
+            1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
+            static_cast<unsigned int>(accumCount)
+            );
     }
 
     vislib::sys::Log::DefaultLog.WriteInfo("The loader thread is exiting.");
