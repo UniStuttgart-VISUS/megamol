@@ -584,7 +584,7 @@ void mdao::SphereRenderer::renderParticlesGeometry(megamol::core::view::Abstract
 		glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(dataCall->AccessParticles(i).GetCount()));
 	}
 
-	sphereShader.Disable();
+//	sphereShader.Disable();
 }
 
 
@@ -756,13 +756,13 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
 			return;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-			glBufferData(GL_ARRAY_BUFFER, partCount*particles.GetVertexDataStride(), particles.GetVertexData(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetVertexDataStride(), static_cast<unsigned int>(3 * sizeof(float))), particles.GetVertexData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, particles.GetVertexDataStride(), 0);
 			break;
 
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-			glBufferData(GL_ARRAY_BUFFER, partCount*particles.GetVertexDataStride(), particles.GetVertexData(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetVertexDataStride(), static_cast<unsigned int>(4*sizeof(float))), particles.GetVertexData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, particles.GetVertexDataStride(), 0);
 			break;
