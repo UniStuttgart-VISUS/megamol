@@ -124,7 +124,7 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     for (uint64_t i = 0; i < cnt; ++i) {
         const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
         const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
-        if (((minVal <= *ci) && (*ci <= maxVal)) || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
+        if ((minVal <= *ci) && (*ci <= maxVal)) { // || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
             r_cnt++;
         }
     }
@@ -141,7 +141,7 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     for (size_t i = 0; i < cnt; ++i) {
         const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
         const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
-        if (((minVal <= *ci) && (*ci <= maxVal)) || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
+        if ((minVal <= *ci) && (*ci <= maxVal)) { // || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
             ::memcpy(d.At(static_cast<size_t>(r_cnt * v_size)), vi, static_cast<size_t>(v_size));
             ::memcpy(d.At(static_cast<size_t>(c_off + r_cnt * c_size)), ci, static_cast<size_t>(c_size));
             r_cnt++;
