@@ -136,7 +136,27 @@ namespace utility {
          */
         static bool FromString(const vislib::StringA& str, float &outR, float &outG, float &outB, float &outA);
 
-		static bool FromString(const vislib::StringA& str, unsigned int outColLen, unsigned char *outCol);
+        /**
+         * Converts an ANSI string representation to an rgb colour
+         *
+         * @param str The string to be parsed
+         * @param outColLen the number of components in the return vector
+         * @param outCol a character vector receiving the parsed color components (0..255)
+         *
+         * @return 'true' on success, 'false' on failure
+         */
+        static bool FromString(const vislib::StringA& str, unsigned int outColLen, unsigned char *outCol);
+
+        /**
+         * Converts an ANSI string representation to an rgb colour
+         *
+         * @param str The string to be parsed
+         * @param outColLen the number of components in the return vector
+         * @param outCol a float vector receiving the parsed color components (0..1)
+         *
+         * @return 'true' on success, 'false' on failure
+         */
+        static bool FromString(const vislib::StringA& str, unsigned int outColLen, float *outCol);
 
         /**
          * Converts a unicode string representation to an rgb colour
@@ -170,10 +190,33 @@ namespace utility {
             return FromString(strA, outR, outG, outB, outA);
         }
 
-		static inline bool FromString(const vislib::StringW& str, unsigned int outColLen, unsigned char *outCol) {
-			vislib::StringA strA(str);
-			return FromString(strA, outColLen, outCol);
-		}
+        /**
+         * Converts a unicode string representation to an rgb colour
+         *
+         * @param str The string to be parsed
+         * @param outColLen the number of components in the return vector
+         * @param outCol a character vector receiving the parsed color components (0..255)
+         *
+         * @return 'true' on success, 'false' on failure
+         */
+        static inline bool FromString(const vislib::StringW& str, unsigned int outColLen, unsigned char *outCol) {
+            vislib::StringA strA(str);
+            return FromString(strA, outColLen, outCol);
+        }
+
+        /**
+         * Converts a unicode string representation to an rgb colour
+         *
+         * @param str The string to be parsed
+         * @param outColLen the number of components in the return vector
+         * @param outCol a float vector receiving the parsed color components (0..1)
+         *
+         * @return 'true' on success, 'false' on failure
+         */
+        static inline bool FromString(const vislib::StringW& str, unsigned int outColLen, float *outCol) {
+            vislib::StringA strA(str);
+            return FromString(strA, outColLen, outCol);
+        }
 
     private:
 

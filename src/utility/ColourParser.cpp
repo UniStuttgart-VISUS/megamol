@@ -348,23 +348,48 @@ bool utility::ColourParser::FromString(const vislib::StringA& str, float &outR, 
 }
 
 
+/*
+* utility::ColourParser::FromString
+*/
 bool utility::ColourParser::FromString(const vislib::StringA& str, unsigned int outColLen, unsigned char *outCol) {
-	float r, g, b, a;
-	bool ret = FromString(str, r, g, b, a);
+    float r, g, b, a;
+    bool ret = FromString(str, r, g, b, a);
 
-	if (outColLen > 0) {
-		outCol[0] = static_cast<unsigned char>(vislib::math::Clamp(r, 0.0f, 1.0f) * 255.0f);
-		if (outColLen > 1) {
-			outCol[1] = static_cast<unsigned char>(vislib::math::Clamp(g, 0.0f, 1.0f) * 255.0f);
-			if (outColLen > 2) {
-				outCol[2] = static_cast<unsigned char>(vislib::math::Clamp(b, 0.0f, 1.0f) * 255.0f);
-				if (outColLen > 3) outCol[3] = static_cast<unsigned char>(vislib::math::Clamp(a, 0.0f, 1.0f) * 255.0f);
-			}
-		}
-	}
+    if (outColLen > 0) {
+        outCol[0] = static_cast<unsigned char>(vislib::math::Clamp(r, 0.0f, 1.0f) * 255.0f);
+        if (outColLen > 1) {
+            outCol[1] = static_cast<unsigned char>(vislib::math::Clamp(g, 0.0f, 1.0f) * 255.0f);
+            if (outColLen > 2) {
+                outCol[2] = static_cast<unsigned char>(vislib::math::Clamp(b, 0.0f, 1.0f) * 255.0f);
+                if (outColLen > 3) outCol[3] = static_cast<unsigned char>(vislib::math::Clamp(a, 0.0f, 1.0f) * 255.0f);
+            }
+        }
+    }
 
-	return ret;
+    return ret;
 }
+
+
+/*
+ * utility::ColourParser::FromString
+ */
+bool utility::ColourParser::FromString(const vislib::StringA& str, unsigned int outColLen, float *outCol) {
+    float r, g, b, a;
+    bool ret = FromString(str, r, g, b, a);
+
+    if (outColLen > 0) {
+        outCol[0] = vislib::math::Clamp(r, 0.0f, 1.0f);
+        if (outColLen > 1) {
+            outCol[1] = vislib::math::Clamp(g, 0.0f, 1.0f);
+            if (outColLen > 2) {
+                outCol[2] = vislib::math::Clamp(b, 0.0f, 1.0f);
+                if (outColLen > 3) outCol[3] = vislib::math::Clamp(a, 0.0f, 1.0f);
+            }
+        }
+    }
+    return ret;
+}
+
 
 /*
  * utility::ColourParser::ColourParser
