@@ -14,6 +14,7 @@
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/GLSLTesselationShader.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include <map>
 
@@ -141,6 +142,7 @@ namespace infovis {
 
 		bool makeProgram(std::string prefix, vislib::graphics::gl::GLSLShader& program);
 		bool makeComputeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program);
+		bool makeTessellationProgram(std::string prefix, vislib::graphics::gl::GLSLTesselationShader& program);
 		
 		bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);
 
@@ -223,6 +225,7 @@ namespace infovis {
 		vislib::graphics::gl::GLSLShader drawScalesProgram;
 		vislib::graphics::gl::GLSLShader drawFilterIndicatorsProgram;
 		vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
+		vislib::graphics::gl::GLSLTesselationShader drawItemsDiscreteTessProgram;
 
 		vislib::graphics::gl::GLSLComputeShader filterProgram;
 
@@ -241,6 +244,8 @@ namespace infovis {
 		int pickedIndicatorAxis;
 		//int lastPickedIndicatorAxis;
 		int pickedIndicatorIndex;
+		GLint maxAxes;
+		GLint isoLinesPerInvocation;
 
 		GLint workgroupSize[3];
 		GLint maxWorkgroupCount[3];

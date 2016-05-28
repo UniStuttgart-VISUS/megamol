@@ -18,6 +18,12 @@ flat vec4 color;
 layout(binding = 0) uniform sampler1D transferFunction;
 	  ]]>
   </snippet>
+  
+  <snippet name="tessuniforms" type="string">
+    <![CDATA[
+uniform int isoLinesPerInvocation;
+	  ]]>
+  </snippet>
 
   <snippet name="vertexShaderMain" type="string">
     <![CDATA[
@@ -384,4 +390,172 @@ void main()
     </shader>
   </namespace>
 
+  <namespace name="discTess">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::instancingOffset" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::pc_item_draw::tessuniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- BEGIN Output data -->
+      <snippet type="string">
+        <![CDATA[
+//out Interface
+//{
+//	flat uint baseItemID;
+//} out_;
+        ]]>
+      </snippet>
+      <!-- END Output data -->
+      <snippet type="string">
+void main(void) {
+	//out_.baseItemID = gl_InstanceID * isoLinesPerInvocation;
+	gl_Position = vec4(1);
+}
+      </snippet>
+    </shader>
+    
+    <shader name="control">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::instancingOffset" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::pc_item_draw::tessuniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- BEGIN Output data -->
+      <snippet type="string">
+        <![CDATA[
+layout (vertices = 1) out;
+//in InterfaceI
+//{
+//	flat uint baseItemID;
+//} in_[];
+patch out InterfaceO
+{
+	flat uint baseItemID;
+	flat uint generatedLines;
+} out_;
+        ]]>
+      </snippet>
+      <!-- END Output data -->
+      <snippet type="string">
+void main(void) {
+	if (gl_InvocationID == 0) {
+		unsigned int baseItemID = gl_PrimitiveID * isoLinesPerInvocation;
+		unsigned int remaining = max(itemCount - baseItemID, 0);
+		out_.baseItemID = baseItemID;
+		out_.generatedLines = remaining;
+		gl_TessLevelOuter[0] = remaining;
+		gl_TessLevelOuter[1] = dimensionCount - 1;
+	}
+	gl_out[gl_InvocationID].gl_Position = vec4(1.0);
+}
+      </snippet>
+    </shader>
+    
+    <shader name="eval">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::instancingOffset" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::pc_item_draw::tessuniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- BEGIN Output data -->
+      <snippet type="string">
+        <![CDATA[
+layout(isolines, equal_spacing) in;
+patch in InterfaceI
+{
+	flat uint baseItemID;
+	flat uint generatedLines;
+} in_;
+out InterfaceO
+{
+	flat uint itemID;
+	//flat uint worldSpaceAxis;
+	//flat uint dataDimension;
+	//flat uint dataID;
+	flat vec4 color;
+} out_;
+        ]]>
+      </snippet>
+      <!-- END Output data -->
+      <snippet type="string">
+void main(void) {
+	uint itemID = int(round(in_.baseItemID + gl_TessCoord.y * in_.generatedLines));
+	uint worldSpaceAxis = uint(gl_TessCoord.x * 5); //int(round(gl_TessCoord.x * dimensionCount));
+	uint dataDimension = pc_dimension(worldSpaceAxis);
+	uint dataID = pc_item_dataID(itemID, dataDimension);
+	out_.itemID = itemID;
+	
+	float value = itemID / float(itemCount);
+	out_.color = texture(transferFunction, value); //vec4(vec3(gl_TessCoord.x),1.0); //
+
+	vec4 vertex = pc_item_vertex(itemID, dataID, dataDimension, worldSpaceAxis);
+	//vertex = vec4(
+	//	margin.x + axisDistance * gl_TessCoord.x * 100
+	//	, margin.y + axisHeight * gl_TessCoord.y * 100
+	//  , pc_item_defaultDepth
+	//  , 1.0
+	//);
+	//out_.color = vec4(1.0, 0.0, 0.0, 1.0);
+
+	gl_Position = projection * modelView * vertex;
+}
+      </snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::pc_item_draw::tessuniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- Input data -->
+      <snippet type="string">
+        <![CDATA[
+in Interface
+{
+	flat uint itemID;
+	flat vec4 color;
+} in_;
+        ]]>
+      </snippet>
+      <snippet type="string">
+        <![CDATA[
+layout(location = 0) out vec4 fragColor;
+
+void main()
+{
+  if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
+  //if (true) {
+    fragColor = in_.color;
+  } else {
+    discard;
+    //fragColor = vec4(vec3(0.2), 1.0);
+  }
+  
+}
+      ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
+
 </btf>
+

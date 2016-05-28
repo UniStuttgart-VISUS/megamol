@@ -11,10 +11,11 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/CoreInstance.h"
-#include "debug.h"
 #include <array>
 #include <iostream>
 #include "vislib/graphics/gl/ShaderSource.h"
+#include "debug.h"
+
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -218,6 +219,7 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
 			"Unable to compile %s: Unknown exception\n", pref);
 		return false;
 	}
+	return true;
 }
 
 bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vislib::graphics::gl::GLSLComputeShader& program) {
@@ -255,6 +257,63 @@ bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vis
 			"Unable to compile %s: Unknown exception\n", pref);
 		return false;
 	}
+	return true;
+}
+
+bool NGParallelCoordinatesRenderer2D::makeTessellationProgram(std::string prefix, vislib::graphics::gl::GLSLTesselationShader& program) {
+	vislib::graphics::gl::ShaderSource vert, frag, control, eval, geom;
+
+	vislib::StringA vertname((prefix + "::vert").c_str());
+	vislib::StringA fragname((prefix + "::frag").c_str());
+	vislib::StringA controlname((prefix + "::control").c_str());
+	vislib::StringA evalname((prefix + "::eval").c_str());
+	vislib::StringA geomname((prefix + "::geom").c_str());
+	vislib::StringA pref(prefix.c_str());
+
+	if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
+	if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
+	// no complete tess?
+	auto r1 = this->instance()->ShaderSourceFactory().MakeShaderSource(controlname, control);
+	auto r2 = this->instance()->ShaderSourceFactory().MakeShaderSource(evalname, eval);
+	if (r1 != r2) return false;
+	bool haveTess = r1;
+	bool haveGeom = this->instance()->ShaderSourceFactory().MakeShaderSource(geomname, geom);
+	
+	try {
+		if (!program.Compile(vert.Code(), vert.Count(),
+			haveTess ? control.Code() : nullptr, haveTess ? control.Count() : 0,
+			haveTess ? eval.Code() : nullptr, haveTess ? eval.Count() : 0,
+			haveGeom ? geom.Code() : nullptr, haveGeom ? geom.Count() : 0,
+			frag.Code(), frag.Count())) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Unable to compile %s: Unknown error\n", pref);
+			return false;
+		}
+		if (!program.Link()) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Unable to link %s: Unknown error\n", pref);
+			return false;
+		}
+
+	}
+	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile %s (@%s): %s\n", pref,
+			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+			ce.FailedAction()), ce.GetMsgA());
+		return false;
+	}
+	catch (vislib::Exception e) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile %s: %s\n", pref, e.GetMsgA());
+		return false;
+	}
+	catch (...) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile %s: Unknown exception\n", pref);
+		return false;
+	}
+	return true;
 }
 
 bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
@@ -318,6 +377,10 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 	if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
 
 	if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
+
+	if (!makeTessellationProgram("::pc_item_draw::discTess", drawItemsDiscreteTessProgram)) return false;
+	glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &this->maxAxes); // TODO we should reject data with more axes!
+	this->isoLinesPerInvocation = maxAxes; // warning: for tesslevel n there are JUST n lines!!! not n+1 !!
 
 	if (!makeComputeProgram("::pc_item_filter", this->filterProgram)) return false;
 
@@ -424,8 +487,8 @@ bool NGParallelCoordinatesRenderer2D::MouseEvent(float x, float y, ::megamol::co
 		pickIndicator(mouseX, mouseY, checkAxis, checkIndex);
 		if (pickedIndicatorAxis != -1 && checkAxis == pickedIndicatorAxis && checkIndex == pickedIndicatorIndex) {
 			float val = (mouseReleasedY - this->marginY) / axisHeight;
-			val = std::max(0.0f, val);
-			val = std::min(val, 1.0f);
+			val = (std::max)(0.0f, val);
+			val = (std::min)(val, 1.0f);
 			//if (val >= 0.0f && val <= 1.0f) {
 				//val = relToAbsValue(pickedIndicatorAxis, val);
 				if (pickedIndicatorIndex == 0) {
@@ -657,17 +720,30 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 	auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
 	if (tf == nullptr) return;
 
-	this->enableProgramAndBind(this->drawItemsDiscreteProgram);
+#define USE_TESSELATION
+#ifdef USE_TESSELATION
+	vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
+#else
+	vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+#endif
+
+	this->enableProgramAndBind(prog);
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
-	glUniform1i(this->drawItemsDiscreteProgram.ParameterLocation("transferFunction"), 5);
-	glUniform1ui(this->drawItemsDiscreteProgram.ParameterLocation("fragmentTestMask"), testMask);
-	glUniform1ui(this->drawItemsDiscreteProgram.ParameterLocation("fragmentPassMask"), passMask);
+	glUniform1i(prog.ParameterLocation("transferFunction"), 5);
+	glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
+	glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
+#ifdef USE_TESSELATION
+	glUniform1i(prog.ParameterLocation("isoLinesPerInvocation"), isoLinesPerInvocation);
+	glPatchParameteri(GL_PATCH_VERTICES, 1);
+	glDrawArrays(GL_PATCHES, 0, (this->itemCount / isoLinesPerInvocation) + 1);
+#else
 	glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
 	//glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
 	//glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
 	//glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
-	this->drawItemsDiscreteProgram.Disable();
+#endif
+	prog.Disable();
 }
 
 void NGParallelCoordinatesRenderer2D::drawParcos(void) {
