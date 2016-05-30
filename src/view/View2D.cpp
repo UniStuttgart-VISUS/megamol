@@ -17,6 +17,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/Trace.h"
+#include "vislib/math/Matrix4.h"
 
 using namespace megamol::core;
 
@@ -159,7 +160,14 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         asp = this->overrideViewTile[3]
             / this->overrideViewTile[2];
     }
-    ::glScalef(asp, 1.0f, 1.0f);
+    //::glScalef(asp, 1.0f, 1.0f);
+    //float aMatrix[16];
+    vislib::math::Matrix<float, 4, vislib::math::MatrixLayout::COLUMN_MAJOR> m;
+    //glGetFloatv(GL_PROJECTION_MATRIX, aMatrix);
+
+    m.SetIdentity();
+    m.SetAt(0,0,asp);
+    glLoadMatrixf(m.PeekComponents());
 
     float vx = this->viewX;
     float vy = this->viewY;
@@ -178,9 +186,15 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
 
     ::glMatrixMode(GL_MODELVIEW);
     ::glLoadIdentity();
-
-    ::glScalef(vz, vz, 1.0f);
-    ::glTranslatef(vx, vy, 0.0f);
+    m.SetIdentity();
+    m.SetAt(0, 0, vz);
+    m.SetAt(1, 1, vz);
+    m.SetAt(0, 3, vx * vz);
+    m.SetAt(1, 3, vy * vz);
+    //::glScalef(vz, vz, 1.0f);
+    //::glTranslatef(vx, vy, 0.0f);
+    //glGetFloatv(GL_MODELVIEW_MATRIX, aMatrix);
+    glLoadMatrixf(m.PeekComponents());
 
     cr2d->SetBackgroundColour(
         static_cast<unsigned char>(bkgndCol[0] * 255.0f),
