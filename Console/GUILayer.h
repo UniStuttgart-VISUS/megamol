@@ -774,7 +774,7 @@ namespace console {
     private:
 
         /** Ctor */
-        GUILayer(void);
+        GUILayer(bool core);
 
         /** Dtor */
         ~GUILayer(void);

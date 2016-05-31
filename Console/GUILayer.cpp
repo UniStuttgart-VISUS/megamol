@@ -103,12 +103,19 @@ GUILayer::GUIClient::~GUIClient(void) {
 }
 
 
+/**
+ * Access flag to request a Core-Profile AntTweakBar
+ * Defined in Console.cpp
+ */
+extern bool useCoreAntTweakBarHotFix;
+
+
 /*
  * GUILayer::GUIClient::Layer
  */
 GUILayer& GUILayer::GUIClient::Layer(void) {
     if (layer == NULL) {
-        layer = new GUILayer();
+        layer = new GUILayer(useCoreAntTweakBarHotFix);
         if (activeClient != NULL) {
             GUIClient *c = activeClient;
             activeClient = NULL;
@@ -866,8 +873,10 @@ bool GUILayer::KeyPressed(unsigned short keycode, bool shift, bool alt, bool ctr
 /*
  * GUILayer::GUILayer
  */
-GUILayer::GUILayer(void) : active(false) {
-    TW_VERIFY(::TwInit(TW_OPENGL, NULL), __LINE__);
+GUILayer::GUILayer(bool core) : active(false) {
+    TW_VERIFY(::TwInit(
+        core ? TW_OPENGL_CORE : TW_OPENGL
+        , NULL), __LINE__);
     if (::TwGetBarCount() > 0) {
         TW_VERIFY(::TwDeleteAllBars(), __LINE__);
     }

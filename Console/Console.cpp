@@ -102,6 +102,12 @@ static bool useRelativeFileNames;
 static vislib::TString mainProjectFile;
 
 
+/**
+ * Flag to request a Core-Profile AntTweakBar
+ */
+bool useCoreAntTweakBarHotFix;
+
+
 extern "C" {
 
 /**
@@ -949,6 +955,8 @@ int runNormal(megamol::console::utility::CmdLineParser *&parser) {
     if (hotFixes.Contains("relFileNames")) {
         useRelativeFileNames = true;
     }
+
+    useCoreAntTweakBarHotFix = hotFixes.Contains("atbCore");
 
     // run the application!
 #ifdef _WIN32
