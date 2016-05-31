@@ -134,7 +134,15 @@ namespace infovis {
 
 		void drawAxes(void);
 
-		void drawItemsDiscrete(uint32_t testMask, uint32_t passMask, float color[4]);
+		void drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor);
+
+		void drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor);
+
+		void drawItemsContinuous();
+
+		void drawItemsHistogram();
+
+		void doFragmentCount();
 
 		void drawParcos(void);
 
@@ -214,6 +222,9 @@ namespace infovis {
 		GLuint numTicks;
 		float fontSize;
 		float windowAspect;
+		int windowWidth;
+		int windowHeight;
+		float backgroundColor[4];
 		vislib::math::Rectangle<float> bounds;
 
 		GLuint columnCount;
@@ -227,9 +238,15 @@ namespace infovis {
 		vislib::graphics::gl::GLSLShader drawItemsDiscreteProgram;
 		vislib::graphics::gl::GLSLTesselationShader drawItemsDiscreteTessProgram;
 
+		vislib::graphics::gl::GLSLShader drawItemContinuousProgram;
+		vislib::graphics::gl::GLSLShader drawItemsHistogramProgram;
+		vislib::graphics::gl::GLSLShader traceItemsDiscreteProgram;
+		
 		vislib::graphics::gl::GLSLComputeShader filterProgram;
+		vislib::graphics::gl::GLSLComputeShader minMaxProgram;
 
 		GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
+		GLuint counterBuffer;
 
 		std::vector<GLuint> axisIndirection;
 		std::vector<GLfloat> minimums;
@@ -247,7 +264,8 @@ namespace infovis {
 		GLint maxAxes;
 		GLint isoLinesPerInvocation;
 
-		GLint workgroupSize[3];
+		GLint filterWorkgroupSize[3];
+		GLint counterWorkgroupSize[3];
 		GLint maxWorkgroupCount[3];
 
 		vislib::graphics::gl::SimpleFont font;

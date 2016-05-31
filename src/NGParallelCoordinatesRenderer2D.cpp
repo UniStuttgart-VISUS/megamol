@@ -16,6 +16,9 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "debug.h"
 
+//#define FUCK_THE_PIPELINE
+//#define USE_TESSELLATION
+//#define BE_DEBUGGABLE
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -357,7 +360,8 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 		//zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 131204 },
 		// Buffer object ... will use VIDEO memory as the source for buffer object operations.
 		zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131185 },
-		zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131188 }
+		zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131188 },
+		zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131184 }
 		// Buffer performance warning: Buffer object ... is being copied / moved from VIDEO memory to HOST memory.
 		//zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, 131186 },
 	});
@@ -369,22 +373,33 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 	glGenBuffers(1, &axisIndirectionBuffer);
 	glGenBuffers(1, &filtersBuffer);
 	glGenBuffers(1, &minmaxBuffer);
+	glGenBuffers(1, &counterBuffer);
 
+#ifndef BE_DEBUGGABLE
 	if (!font.Initialise()) return false;
+#endif
 
 	if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
 	if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
 	if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
 
 	if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
+	if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram)) return false;
 
 	if (!makeTessellationProgram("::pc_item_draw::discTess", drawItemsDiscreteTessProgram)) return false;
 	glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &this->maxAxes); // TODO we should reject data with more axes!
 	this->isoLinesPerInvocation = maxAxes; // warning: for tesslevel n there are JUST n lines!!! not n+1 !!
 
+	if (!makeProgram("::fragment_count", this->drawItemContinuousProgram)) return false;
+	if (!makeComputeProgram("::fragment_count", this->minMaxProgram)) return false;
+
+	//if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram)) return false;
+
 	if (!makeComputeProgram("::pc_item_filter", this->filterProgram)) return false;
 
-	glGetProgramiv(this->filterProgram, GL_COMPUTE_LOCAL_WORK_SIZE, workgroupSize);
+	glGetProgramiv(this->filterProgram, GL_COMPUTE_LOCAL_WORK_SIZE, filterWorkgroupSize);
+	glGetProgramiv(this->minMaxProgram, GL_COMPUTE_LOCAL_WORK_SIZE, counterWorkgroupSize);
+
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
@@ -400,6 +415,7 @@ void NGParallelCoordinatesRenderer2D::release(void) {
 	glDeleteBuffers(1, &axisIndirectionBuffer);
 	glDeleteBuffers(1, &filtersBuffer);
 	glDeleteBuffers(1, &minmaxBuffer);
+	glDeleteBuffers(1, &counterBuffer);
 
 	this->drawAxesProgram.Release();
 }
@@ -698,6 +714,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 		glDrawArraysInstanced(GL_LINE_STRIP, 0, 3, this->columnCount * 2);
 		this->drawScalesProgram.Disable();
 
+#ifndef BE_DEBUGGABLE
 		glActiveTexture(GL_TEXTURE0);
 		for (unsigned int c = 0; c < this->columnCount; c++) {
 			unsigned int realCol = this->axisIndirection[c];
@@ -712,43 +729,118 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 			this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 			this->font.DrawString(x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 		}
+#endif
 
 	}
 }
 
-void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, float color[4]) {
+void NGParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor) {
+	if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
+		this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED, otherColor, tfColorFactor);
+	}
+	//if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
+	//	this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED | FlagStorage::SELECTED, selectedColor, tfColorFactor);
+	//}
+}
+
+void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
 	auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
 	if (tf == nullptr) return;
 
-#define USE_TESSELATION
-#ifdef USE_TESSELATION
+#ifdef FUCK_THE_PIPELINE
+	vislib::graphics::gl::GLSLShader& prog = this->traceItemsDiscreteProgram;
+#else
+#ifdef USE_TESSELLATION
 	vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #else
 	vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+#endif
 #endif
 
 	this->enableProgramAndBind(prog);
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
+	glUniform4fv(prog.ParameterLocation("color"), 1, color);
+	glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
 	glUniform1i(prog.ParameterLocation("transferFunction"), 5);
 	glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
 	glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
-#ifdef USE_TESSELATION
+
+#ifdef FUCK_THE_PIPELINE
+	glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
+#else
+#ifdef USE_TESSELLATION
 	glUniform1i(prog.ParameterLocation("isoLinesPerInvocation"), isoLinesPerInvocation);
 	glPatchParameteri(GL_PATCH_VERTICES, 1);
 	glDrawArrays(GL_PATCHES, 0, (this->itemCount / isoLinesPerInvocation) + 1);
 #else
-	glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
+	//glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
 	//glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-	//glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+	glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
 	//glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+#endif
 #endif
 	prog.Disable();
 }
 
+void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
+	int invocations[] = {
+		static_cast<int>(std::ceil(windowWidth / 16)),
+		static_cast<int>(std::ceil(windowHeight / 16))
+	};
+	GLuint invocationCount = invocations[0] * invocations[1];
+
+	size_t bytes = sizeof(uint32_t) * 2 * invocationCount;
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, counterBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, nullptr, GL_STATIC_COPY);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, counterBuffer);
+
+	glActiveTexture(GL_TEXTURE1);
+	densityFBO.BindColourTexture();
+
+	GLuint groupCounts[3] = {
+		static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[0]) / counterWorkgroupSize[0]))),
+		static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[1]) / counterWorkgroupSize[1]))),
+		1
+	};
+
+	this->enableProgramAndBind(minMaxProgram);
+
+	// uniforms invocationcount etc.
+	::glUniform1ui(minMaxProgram.ParameterLocation("invocationCount"), invocationCount);
+	::glUniform4fv(minMaxProgram.ParameterLocation("clearColor"), 1, backgroundColor);
+
+	minMaxProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+
+	minMaxProgram.Disable();
+}
+
+void NGParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
+	doFragmentCount();
+	this->enableProgramAndBind(drawItemContinuousProgram);
+	//glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
+	//glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
+	glActiveTexture(GL_TEXTURE1);
+	densityFBO.BindColourTexture();
+	glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	drawItemContinuousProgram.Disable();
+}
+
+void NGParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
+	doFragmentCount();
+	this->enableProgramAndBind(drawItemsHistogramProgram);
+	glActiveTexture(GL_TEXTURE1);
+	densityFBO.BindColourTexture();
+	glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	drawItemContinuousProgram.Disable();
+}
+
 void NGParallelCoordinatesRenderer2D::drawParcos(void) {
 
-	size_t groups = this->itemCount / (workgroupSize[0] * workgroupSize[1] * workgroupSize[2]);
+	// TODO only when filters changed!
+	size_t groups = this->itemCount / (filterWorkgroupSize[0] * filterWorkgroupSize[1] * filterWorkgroupSize[2]);
 	GLuint groupCounts[3] = {
 		(groups % maxWorkgroupCount[0]) + 1u
 		, (groups / maxWorkgroupCount[0]) + 1u
@@ -757,12 +849,48 @@ void NGParallelCoordinatesRenderer2D::drawParcos(void) {
 	this->enableProgramAndBind(this->filterProgram);
 	filterProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
 
-	if (this->drawOtherItemsSlot.Param<param::BoolParam>()->Value()) {
-		this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED | FlagStorage::FILTERED, FlagStorage::ENABLED, this->otherItemsColor);
+	const float red[] = { 1.0f, 0.0f, 0.0f, 1.0 };
+	const float moreRed[] = { 10.0f, 0.0f, 0.0f, 1.0 };
+
+	auto drawmode = this->drawModeSlot.Param<param::EnumParam>()->Value();
+
+	switch (drawmode) {
+		case DRAW_DISCRETE:
+			this->drawDiscrete(this->otherItemsColor, this->selectedItemsColor, 1.0f);
+			break;
+		case DRAW_CONTINUOUS:
+		case DRAW_HISTOGRAM:
+			bool ok = true;
+			if (!this->densityFBO.IsValid() ||
+				this->densityFBO.GetWidth() != windowWidth || this->densityFBO.GetHeight() != windowHeight) {
+				densityFBO.Release();
+				ok = densityFBO.Create(windowWidth, windowHeight, GL_R32F, GL_RED, GL_FLOAT);
+			}
+			if (ok) {
+				densityFBO.Enable();
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				//::glDisable(GL_ALPHA_TEST);
+				glDisable(GL_DEPTH_TEST);
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_ONE, GL_ONE);
+				glBlendEquation(GL_FUNC_ADD);
+				this->drawDiscrete(red, moreRed, 0.0f);
+				densityFBO.Disable();
+				glDisable(GL_BLEND);
+
+				if (drawmode == DRAW_CONTINUOUS) {
+					this->drawItemsContinuous();
+				} else if (drawmode == DRAW_HISTOGRAM) {
+					this->drawItemsHistogram();
+				}
+
+			} else {
+				vislib::sys::Log::DefaultLog.WriteError("could not create FBO");
+			}
+			break;
 	}
-	//if (this->drawSelectedItemsSlot.Param<param::BoolParam>()->Value()) {
-	//	this->drawItemsDiscrete(FlagStorage::ENABLED | FlagStorage::SELECTED, FlagStorage::ENABLED | FlagStorage::SELECTED, this->selectedItemsColor);
-	//}
+
+
 }
 
 bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
@@ -772,6 +900,13 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 	glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
 	glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
 	// end suck
+	windowWidth = call.GetViewport().Width();
+	windowHeight = call.GetViewport().Height();
+	auto bg = call.GetBackgroundColour();
+	backgroundColor[0] = bg[0] / 255.0f;
+	backgroundColor[1] = bg[1] / 255.0f;
+	backgroundColor[2] = bg[2] / 255.0f;
+	backgroundColor[3] = bg[3] / 255.0f;
 
 	this->assertData();
 
@@ -781,6 +916,7 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 	if (tc == nullptr) return false;
 
 	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
@@ -790,6 +926,8 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 	drawParcos();
 
 	drawAxes();
+
+	glDepthMask(GL_TRUE);
 
 	return true;
 }

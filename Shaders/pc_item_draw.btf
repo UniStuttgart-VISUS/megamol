@@ -31,7 +31,7 @@ uniform int isoLinesPerInvocation;
 void main()
 {
 #define DOLINES
-#define DOSTRIPS
+//#define DOSTRIPS
 
 #ifdef DOSTRIPS
   uint instanceID = gl_InstanceID; //getInstanceID();
@@ -63,7 +63,7 @@ void main()
 	out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
   float value = out_.itemID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
-  out_.color = texture(transferFunction, value);//value);
+  out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
 
 	vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
 #ifndef DOLINES // triangles need to be "less degenerate"
@@ -299,7 +299,7 @@ void main()
     </shader>
   </namespace>
 
-  <namespace name="histogramm">
+  <namespace name="histogram">
     <snippet name="uniforms" type="string">
       <![CDATA[
 layout(binding = 1) uniform sampler2D fragCount;
@@ -390,6 +390,101 @@ void main()
     </shader>
   </namespace>
 
+  <namespace name="muhaha">
+    <shader name="vert">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::instancingOffset" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- BEGIN Output data -->
+      <snippet type="string">
+        <![CDATA[
+out Interface
+{
+      ]]>
+      </snippet>
+      <snippet name="::pc_item_draw::interface" />
+      <snippet type="string">
+        <![CDATA[
+} out_;
+        ]]>
+      </snippet>
+      <!-- END Output data -->
+      <snippet type="string">
+        <![CDATA[
+void main() {
+    	uint instanceID = gl_VertexID / 6;
+ 			out_.itemID = instanceID;
+ 			float value = out_.itemID / float(itemCount);
+  		out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
+
+			uint local = gl_VertexID % 6;
+			uint x = local / 2 - local / 3;
+			uint y = local % 2;
+			vec4 vertex = vec4(
+		  	margin.x + axisDistance * (dimensionCount - 1) * x,
+    		margin.y + y * axisHeight,
+    		pc_item_defaultDepth,
+    		1.0);
+
+			gl_Position = projection * modelView * vertex;
+}
+      ]]>
+     	</snippet>
+    </shader>
+
+    <shader name="frag">
+      <snippet type="version">430</snippet>
+      <snippet name="::pc::extensions" />
+      <snippet name="::pc::useLineStrip" />
+      <snippet name="::pc::earlyFragmentTests" />
+      <snippet name="::pc::buffers" />
+      <snippet name="::pc::uniforms" />
+      <snippet name="::pc::common" />
+      <snippet name="::pc_item_draw::uniforms" />
+      <snippet name="::bitflags::main" />
+      <!-- Input data -->
+      <snippet type="string">
+        <![CDATA[
+in Interface
+{
+      ]]>
+      </snippet>
+      <snippet name="::pc_item_draw::interface" />
+      <snippet type="string">
+        <![CDATA[
+} in_;
+        ]]>
+      </snippet>
+      <snippet type="string">
+        <![CDATA[
+layout(location = 0) out vec4 fragColor;
+
+void main()
+{
+#if 0
+  if (bitflag_test(flags[in_.itemID], fragmentTestMask, fragmentPassMask)) {
+  //if (bitflag_test(flags[in_.itemID], 5, 1)) {
+    fragColor = in_.color;
+  } else {
+    discard;
+    //fragColor = vec4(vec3(0.2), 1.0);
+  }
+#endif
+  
+  fragColor = in_.color;
+  
+}
+      ]]>
+      </snippet>
+    </shader>
+  </namespace>
+
   <namespace name="discTess">
     <shader name="vert">
       <snippet type="version">430</snippet>
@@ -453,7 +548,7 @@ void main(void) {
 		out_.baseItemID = baseItemID;
 		out_.generatedLines = remaining;
 		gl_TessLevelOuter[0] = remaining;
-		gl_TessLevelOuter[1] = dimensionCount - 1;
+		gl_TessLevelOuter[1] = dimensionCount;
 	}
 	gl_out[gl_InvocationID].gl_Position = vec4(1.0);
 }
@@ -482,9 +577,6 @@ patch in InterfaceI
 out InterfaceO
 {
 	flat uint itemID;
-	//flat uint worldSpaceAxis;
-	//flat uint dataDimension;
-	//flat uint dataID;
 	flat vec4 color;
 } out_;
         ]]>
@@ -500,6 +592,7 @@ void main(void) {
 	
 	float value = itemID / float(itemCount);
 	out_.color = texture(transferFunction, value); //vec4(vec3(gl_TessCoord.x),1.0); //
+	out_.color = vec4(1.0, 0.0, 0.0, 1.0);
 
 	vec4 vertex = pc_item_vertex(itemID, dataID, dataDimension, worldSpaceAxis);
 	//vertex = vec4(
@@ -549,13 +642,10 @@ void main()
     discard;
     //fragColor = vec4(vec3(0.2), 1.0);
   }
-  
+  fragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
       ]]>
       </snippet>
     </shader>
-  </namespace>
-
-
-</btf>
+  </namespace></btf>
 

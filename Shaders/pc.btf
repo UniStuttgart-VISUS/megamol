@@ -80,6 +80,7 @@ uniform uint itemCount = 0;
 uniform float pc_item_defaultDepth = 0.0;
 
 uniform vec4 color = vec4(1.0, 0.0, 1.0, 1.0);
+uniform float tfColorFactor = 1.0;
 uniform vec2 margin = vec2(0.0, 0.0);
 uniform float axisDistance = 0.0;
 uniform float axisHeight = 0.0;
