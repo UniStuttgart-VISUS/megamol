@@ -587,6 +587,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\view\Renderer2DModule.cpp" />
     <ClCompile Include="src\view\Renderer3DModule.cpp" />
     <ClCompile Include="src\view\Renderer3DModuleDS.cpp" />
+    <ClCompile Include="src\view\RendererRegistration.cpp" />
     <ClCompile Include="src\view\RenderOutput.cpp" />
     <ClCompile Include="src\view\SharedCameraParameters.cpp" />
     <ClCompile Include="src\view\special\AbstractStereoView.cpp" />
@@ -792,6 +793,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\view\Renderer2DModule.h" />
     <ClInclude Include="include\mmcore\view\Renderer3DModule.h" />
     <ClInclude Include="include\mmcore\view\Renderer3DModuleDS.h" />
+    <ClInclude Include="include\mmcore\view\RendererRegistration.h" />
     <ClInclude Include="include\mmcore\view\RenderOutput.h" />
     <ClInclude Include="include\mmcore\view\SharedCameraParameters.h" />
     <ClInclude Include="include\mmcore\view\special\AbstractStereoView.h" />

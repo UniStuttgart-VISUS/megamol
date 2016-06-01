@@ -903,6 +903,9 @@
     <ClCompile Include="src\job\PluginsStateFileGeneratorJob.cpp">
       <Filter>job\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\view\RendererRegistration.cpp">
+      <Filter>view\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1531,6 +1534,9 @@
     </ClInclude>
     <ClInclude Include="src\job\PluginsStateFileGeneratorJob.h">
       <Filter>job\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\view\RendererRegistration.h">
+      <Filter>view\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

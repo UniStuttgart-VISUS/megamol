@@ -55,6 +55,7 @@
 #include "mmcore/view/TileView.h"
 #include "mmcore/view/View2D.h"
 #include "mmcore/view/View3D.h"
+#include "mmcore/view/RendererRegistration.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "mmcore/view/ViewDirect3D.h"
 #include "mmcore/moldyn/D3D11SimpleSphereRenderer.h"
@@ -134,6 +135,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::SharedCameraParameters>();
     instance.RegisterAutoDescription<view::LinkedView3D>();
+    instance.RegisterAutoDescription<view::RendererRegistration>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();
