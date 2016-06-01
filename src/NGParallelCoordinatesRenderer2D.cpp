@@ -396,9 +396,13 @@ bool NGParallelCoordinatesRenderer2D::create(void) {
 	//if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram)) return false;
 
 	if (!makeComputeProgram("::pc_item_filter", this->filterProgram)) return false;
+	if (!makeComputeProgram("::pc_item_pick", this->pickProgram)) return false;
+	if (!makeComputeProgram("::pc_item_stroke", this->strokeProgram)) return false;
 
 	glGetProgramiv(this->filterProgram, GL_COMPUTE_LOCAL_WORK_SIZE, filterWorkgroupSize);
 	glGetProgramiv(this->minMaxProgram, GL_COMPUTE_LOCAL_WORK_SIZE, counterWorkgroupSize);
+	glGetProgramiv(this->pickProgram, GL_COMPUTE_LOCAL_WORK_SIZE, pickWorkgroupSize);
+	glGetProgramiv(this->strokeProgram, GL_COMPUTE_LOCAL_WORK_SIZE, strokeWorkgroupSize);
 
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
@@ -782,6 +786,47 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 #endif
 	prog.Disable();
 }
+
+
+void NGParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
+
+	this->enableProgramAndBind(pickProgram);
+
+	::glUniform2f(pickProgram.ParameterLocation("mouse"), x, y);
+	::glUniform1f(pickProgram.ParameterLocation("pickRadius"), pickRadius);
+
+
+	size_t groups = itemCount / (pickWorkgroupSize[0] * pickWorkgroupSize[1] * pickWorkgroupSize[2]);
+	GLuint groupCounts[3] = {
+		static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[0]))),
+		static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[1]))),
+		1
+	};
+
+	pickProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+
+	pickProgram.Disable();
+}
+
+void NGParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, float y1) {
+
+	this->enableProgramAndBind(strokeProgram);
+
+	::glUniform2f(strokeProgram.ParameterLocation("mousePressed"), x0, y0);
+	::glUniform2f(strokeProgram.ParameterLocation("mouseReleased"), x1, y1);
+
+	size_t groups = itemCount / (strokeWorkgroupSize[0] * strokeWorkgroupSize[1] * strokeWorkgroupSize[2]);
+	GLuint groupCounts[3] = {
+		static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[0]))),
+		static_cast<GLuint>((std::max)(1.0f, std::ceil(static_cast<float>(groups) / maxWorkgroupCount[1]))),
+		1
+	};
+
+	strokeProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
+
+	strokeProgram.Disable();
+}
+
 
 void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
 	int invocations[] = {

@@ -142,6 +142,10 @@ namespace infovis {
 
 		void drawItemsHistogram();
 
+		void doPicking(float x, float y, float pickRadius);
+
+		void doStroking(float x0, float y0, float x1, float y1);
+
 		void doFragmentCount();
 
 		void drawParcos(void);
@@ -245,6 +249,9 @@ namespace infovis {
 		vislib::graphics::gl::GLSLComputeShader filterProgram;
 		vislib::graphics::gl::GLSLComputeShader minMaxProgram;
 
+		vislib::graphics::gl::GLSLComputeShader pickProgram;
+		vislib::graphics::gl::GLSLComputeShader strokeProgram;
+
 		GLuint dataBuffer, flagsBuffer, minimumsBuffer, maximumsBuffer, axisIndirectionBuffer, filtersBuffer, minmaxBuffer;
 		GLuint counterBuffer;
 
@@ -266,6 +273,8 @@ namespace infovis {
 
 		GLint filterWorkgroupSize[3];
 		GLint counterWorkgroupSize[3];
+		GLint pickWorkgroupSize[3];
+		GLint strokeWorkgroupSize[3];
 		GLint maxWorkgroupCount[3];
 
 		vislib::graphics::gl::SimpleFont font;

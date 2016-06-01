@@ -58,14 +58,14 @@ void main()
     
     for (uint dimension = 1; dimension < dimensionCount; ++dimension)
     {
-      vec4 p = pc_item_vertex(itemID, pc_item_dataID(itemID, dimension - 1), dimension - 1);
-      vec4 q = pc_item_vertex(itemID, pc_item_dataID(itemID, dimension), dimension);
+      //vec4 p = pc_item_vertex(itemID, pc_item_dataID(itemID, dimension - 1), dimension - 1);
+      //vec4 q = pc_item_vertex(itemID, pc_item_dataID(itemID, dimension), dimension);
       
-      if (intersectLineLine(mousePressed, mouseReleased - mousePressed, p.xy, q.xy - p.xy))
-      {
-        selected = true;
-        break;
-      }
+      //if (intersectLineLine(mousePressed, mouseReleased - mousePressed, p.xy, q.xy - p.xy))
+      //{
+      //  selected = true;
+      //  break;
+      //}
     }
     
     bitflag_set(flags[itemID], FLAG_SELECTED, selected);
