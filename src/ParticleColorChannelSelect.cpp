@@ -20,7 +20,8 @@ using namespace megamol::stdplugin;
  */
 datatools::ParticleColorChannelSelect::ParticleColorChannelSelect(void)
         : AbstractParticleManipulator("outData", "indata"),
-        channelSlot("channel", "The color channel to be selected as new I color channel") {
+        channelSlot("channel", "The color channel to be selected as new I color channel"),
+        dataHash(-1), colRange() {
 
     core::param::EnumParam *chan = new core::param::EnumParam(3);
     chan->SetTypePair(0, "R");
@@ -53,9 +54,15 @@ bool datatools::ParticleColorChannelSelect::manipulateData(
     if (chan < 0) chan = 0;
     if (chan > 3) chan = 3;
 
+    if (dataHash != inData.DataHash()) {
+        dataHash = inData.DataHash();
+        colRange.clear();
+    }
+
     unsigned int plc = outData.GetParticleListCount();
     for (unsigned int i = 0; i < plc; i++) {
         auto& p = outData.AccessParticles(i);
+        if (p.GetCount() <= 0) continue;
 
         if (((p.GetColourDataType() == megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGB) && (chan != 3)) 
                 || (p.GetColourDataType() == megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA)) {
@@ -69,6 +76,30 @@ bool datatools::ParticleColorChannelSelect::manipulateData(
             if (p.GetColourDataStride() > stride) stride = p.GetColourDataStride();
             p.SetColourData(megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
                 static_cast<const float*>(p.GetColourData()) + chan, stride);
+
+            std::map<const void*, std::pair<float, float> >::iterator clRng = colRange.find(p.GetColourData());
+
+            if (clRng == colRange.end()) {
+                // find min and max color values
+                const uint8_t *colPtr = static_cast<const uint8_t*>(p.GetColourData()) + sizeof(float) * chan;
+                float minV, maxV;
+                minV = maxV = *reinterpret_cast<const float*>(colPtr);
+                for (uint64_t i = 1; i < p.GetCount(); ++i, colPtr += stride) {
+                    const float& f = *reinterpret_cast<const float*>(colPtr);
+                    if (minV > f) minV = f;
+                    if (maxV < f) maxV = f;
+                }
+
+                if (minV > maxV - 0.0001f) {
+                    maxV = minV + 0.5f;
+                    minV -= 0.5f;
+                }
+
+                colRange[p.GetColourData()] = std::pair<float, float>(minV, maxV);
+                p.SetColourMapIndexValues(minV, maxV);
+            } else {
+                p.SetColourMapIndexValues(clRng->second.first, clRng->second.second);
+            }
         } // else everything stays as it is
     }
     return true;

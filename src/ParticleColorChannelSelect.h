@@ -13,7 +13,8 @@
 
 #include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
-
+#include <map>
+#include <utility>
 
 namespace megamol {
 namespace stdplugin {
@@ -65,6 +66,8 @@ namespace datatools {
     private:
 
         core::param::ParamSlot channelSlot;
+		size_t dataHash;
+		std::map<const void*, std::pair<float, float> > colRange;
 
     };
 
