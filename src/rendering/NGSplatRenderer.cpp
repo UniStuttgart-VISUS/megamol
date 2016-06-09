@@ -514,7 +514,7 @@ bool NGSplatRenderer::Render(Call& call) {
 
     //this->sphereShader.Enable();
 
-    glScalef(scaling, scaling, scaling);
+    //glScalef(scaling, scaling, scaling);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
 
@@ -522,6 +522,11 @@ bool NGSplatRenderer::Render(Call& call) {
     GLfloat modelViewMatrix_column[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
+    scaleMat.SetAt(0, 0, scaling);
+    scaleMat.SetAt(1, 1, scaling);
+    scaleMat.SetAt(2, 2, scaling);
+    modelViewMatrix = modelViewMatrix * scaleMat;
     GLfloat projMatrix_column[16];
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
@@ -539,7 +544,7 @@ bool NGSplatRenderer::Render(Call& call) {
              newShader = this->generateShader(parts);
         }
         newShader->Enable();
-        colIdxAttribLoc = glGetAttribLocationARB(*this->newShader, "colIdx");
+        colIdxAttribLoc = glGetAttribLocation(*this->newShader, "colIdx");
         glUniform4fv(newShader->ParameterLocation("viewAttr"), 1, viewportStuff);
         glUniform3fv(newShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
         glUniform3fv(newShader->ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
@@ -633,8 +638,8 @@ bool NGSplatRenderer::Render(Call& call) {
         }
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
+        //glDisableClientState(GL_COLOR_ARRAY);
+        //glDisableClientState(GL_VERTEX_ARRAY);
         //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
         newShader->Disable();

@@ -325,7 +325,7 @@ bool NGSphereBufferArrayRenderer::Render(Call& call) {
 
     glScalef(scaling, scaling, scaling);
 
-    colIdxAttribLoc = glGetAttribLocationARB(this->sphereShader, "colIdx");
+    colIdxAttribLoc = glGetAttribLocation(this->sphereShader, "colIdx");
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
 
