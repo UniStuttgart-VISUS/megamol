@@ -57,12 +57,16 @@ void vislib::graphics::gl::CameraOpenGL::glMultProjectionMatrix(void) const {
         this->updateMembers();
     }
 
-    if (this->Parameters()->Projection() != CameraParameters::MONO_ORTHOGRAPHIC) {
-        ::glFrustum(left, right, bottom, top, nearClip, farClip);
-    } else {
-        // TODO: write alternative ortho to be more compatible with normal projection
-        ::glOrtho(left, right, bottom, top, nearClip, farClip);
-    }
+    //if (this->Parameters()->Projection() != CameraParameters::MONO_ORTHOGRAPHIC) {
+    //    ::glFrustum(left, right, bottom, top, nearClip, farClip);
+    //} else {
+    //    // TODO: write alternative ortho to be more compatible with normal projection
+    //    ::glOrtho(left, right, bottom, top, nearClip, farClip);
+    //}
+	float mat[16]; // , mat2[16];
+	//glGetFloatv(GL_PROJECTION_MATRIX, mat2);
+    ProjectionMatrix(mat);
+	glLoadMatrixf(mat);
 }
 
 
@@ -74,9 +78,14 @@ void vislib::graphics::gl::CameraOpenGL::glMultViewMatrix(void) const {
         this->updateMembers();
     }
 
-    ::gluLookAt(pos.X(), pos.Y(), pos.Z(), 
-        pos.X() + lookDir.X(), pos.Y() + lookDir.Y(), pos.Z() + lookDir.Z(), 
-        up.X(), up.Y(), up.Z());
+    //::gluLookAt(pos.X(), pos.Y(), pos.Z(), 
+    //    pos.X() + lookDir.X(), pos.Y() + lookDir.Y(), pos.Z() + lookDir.Z(), 
+    //    up.X(), up.Y(), up.Z());
+
+	float mat[16]; // , mat2[16];
+    //glGetFloatv(GL_MODELVIEW_MATRIX, mat2);
+    ViewMatrix(mat);
+    glLoadMatrixf(mat);
 }
 
 
