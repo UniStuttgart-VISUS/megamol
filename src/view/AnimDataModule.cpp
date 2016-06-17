@@ -224,6 +224,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
     unsigned int l;
 #endif /* _LOADING_REPORTING */
     Frame *frame;
+    vislib::StringA fullName(This->FullName());
 
     std::chrono::high_resolution_clock::duration accumDuration;
     unsigned int accumCount = 0;
@@ -336,7 +337,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
                 lastReportTime = reportTime;
                 if (accumCount > 0) {
                     vislib::sys::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
-                        This->FullName().PeekBuffer(),
+                        fullName.PeekBuffer(),
                         1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
                         static_cast<unsigned int>(accumCount)
                         );
@@ -352,7 +353,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
 
     if (accumCount > 0) {
         vislib::sys::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
-            This->FullName().PeekBuffer(),
+            fullName.PeekBuffer(),
             1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
             static_cast<unsigned int>(accumCount)
             );
