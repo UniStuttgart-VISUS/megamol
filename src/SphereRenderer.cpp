@@ -584,7 +584,8 @@ void mdao::SphereRenderer::renderParticlesGeometry(megamol::core::view::Abstract
 		glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(dataCall->AccessParticles(i).GetCount()));
 	}
 
-//	sphereShader.Disable();
+	glBindVertexArray(0);
+	sphereShader.Disable();
 }
 
 
@@ -736,13 +737,13 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
 			break;
-		// Not supported - fall through to the gray version
+		// Not supported - fall through to the gay version
 		// FIXME: this will probably not work!
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: 
 			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(1*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
-			std::cout<<"Transfer function"<<std::endl;
+			//std::cout<<"Transfer function"<<std::endl;
 			break;
 		default:
 			glColor4ub(127, 127, 127,255);
@@ -770,6 +771,13 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 			glDisableVertexAttribArray(0);
 			return;
 	}
+
+    // reset shotter for legacy opengl crap
+    glBindVertexArray(0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 
