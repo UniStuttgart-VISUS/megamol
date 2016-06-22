@@ -60,6 +60,7 @@ namespace datatools {
         unsigned int frameId;
         std::vector<core::moldyn::MultiParticleDataCall::Particles> parts;
         std::vector<vislib::RawStorage> data;
+        core::param::ParamSlot inValRangeSlot;
 
     };
 

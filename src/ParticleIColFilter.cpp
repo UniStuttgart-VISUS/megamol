@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "ParticleIColFilter.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/Vector2fParam.h"
 #include <algorithm>
 
 using namespace megamol;
@@ -16,16 +17,23 @@ datatools::ParticleIColFilter::ParticleIColFilter() : AbstractParticleManipulato
         minValSlot("minVal", "The minimal color value of particles to be passed on"),
         maxValSlot("maxVal", "The maximal color value of particles to be passed on"),
         staifHackDistSlot("staifHackDist", "Distance to the bounding box to include particles"),
-        dataHash(0), frameId(0), parts(), data() {
+        dataHash(0), frameId(0), parts(), data(),
+        inValRangeSlot("inValRange", "Displays the value range of the input color values") {
+
     minValSlot.SetParameter(new core::param::FloatParam(0.0f));
     minValSlot.SetUpdateCallback(&ParticleIColFilter::reset);
     MakeSlotAvailable(&minValSlot);
+
     maxValSlot.SetParameter(new core::param::FloatParam(1.0f));
     maxValSlot.SetUpdateCallback(&ParticleIColFilter::reset);
     MakeSlotAvailable(&maxValSlot);
+
     staifHackDistSlot.SetParameter(new core::param::FloatParam(0.0f, 0.0f));
     staifHackDistSlot.SetUpdateCallback(&ParticleIColFilter::reset);
     MakeSlotAvailable(&staifHackDistSlot);
+
+    inValRangeSlot.SetParameter(new core::param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 1.0f)));
+    MakeSlotAvailable(&inValRangeSlot);
 }
 
 datatools::ParticleIColFilter::~ParticleIColFilter() {
@@ -62,10 +70,19 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall&
     parts.resize(cnt);
     data.resize(cnt);
 
+    float minV, maxV;
     for (unsigned int i = 0; i < cnt; ++i) {
         setData(parts[i], data[i], inDat.AccessParticles(i), inDat.AccessBoundingBoxes().ObjectSpaceBBox());
+        if (i == 0) {
+            minV = inDat.AccessParticles(i).GetMinColourIndexValue();
+            maxV = inDat.AccessParticles(i).GetMaxColourIndexValue();
+        } else {
+            minV = std::min<float>(minV, inDat.AccessParticles(i).GetMinColourIndexValue());
+            maxV = std::max<float>(maxV, inDat.AccessParticles(i).GetMaxColourIndexValue());
+        }
     }
 
+    inValRangeSlot.Param<core::param::Vector2fParam>()->SetValue(vislib::math::Vector<float, 2>(minV, maxV), false);
 }
 
 //namespace {
