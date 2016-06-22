@@ -146,6 +146,16 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
         }
     }
 
+    if (r_cnt == 0) {
+        p.SetCount(0);
+        p.SetGlobalRadius(s.GetGlobalRadius());
+        p.SetGlobalColour(s.GetGlobalColour()[0], s.GetGlobalColour()[1], s.GetGlobalColour()[2], s.GetGlobalColour()[3]);
+        p.SetVertexData(SimpleSphericalParticles::VERTDATA_NONE, nullptr);
+        p.SetColourData(SimpleSphericalParticles::COLDATA_NONE, nullptr);
+        p.SetColourMapIndexValues(s.GetMinColourIndexValue(), s.GetMaxColourIndexValue());
+        return;
+    }
+
     // now copying particles
     d.AssertSize(static_cast<size_t>(r_cnt * (v_size + c_size)));
     const size_t c_off = static_cast<size_t>(r_cnt * v_size);
