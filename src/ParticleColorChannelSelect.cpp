@@ -81,7 +81,7 @@ bool datatools::ParticleColorChannelSelect::manipulateData(
 
             if (clRng == colRange.end()) {
                 // find min and max color values
-                const uint8_t *colPtr = static_cast<const uint8_t*>(p.GetColourData()) + sizeof(float) * chan;
+                const uint8_t *colPtr = static_cast<const uint8_t*>(p.GetColourData());
                 float minV, maxV;
                 minV = maxV = *reinterpret_cast<const float*>(colPtr);
                 for (uint64_t i = 1; i < p.GetCount(); ++i, colPtr += stride) {

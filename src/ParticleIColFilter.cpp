@@ -111,13 +111,13 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     float maxVal = maxValSlot.Param<core::param::FloatParam>()->Value();
     if (maxVal < minVal) std::swap(minVal, maxVal);
 
-    const float minStaifDist = 0.0001f;
-    float staifDist = staifHackDistSlot.Param<core::param::FloatParam>()->Value();
-    if (staifDist > minStaifDist) {
-        bbox.Grow(-staifDist);
-    } else {
-        bbox.Set(-1000.0f, -1000.0f, -1000.0f, -1000.0f, -1000.0f, -1000.0f);
-    }
+    //const float minStaifDist = 0.0001f;
+    //float staifDist = staifHackDistSlot.Param<core::param::FloatParam>()->Value();
+    //if (staifDist > minStaifDist) {
+    //    bbox.Grow(-staifDist);
+    //} else {
+    //    bbox.Set(-1000.0f, -1000.0f, -1000.0f, -1000.0f, -1000.0f, -1000.0f);
+    //}
 
     // now count particles surviving
     uint64_t r_cnt = 0;
@@ -133,6 +133,8 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     d.AssertSize(static_cast<size_t>(r_cnt * (v_size + c_size)));
     const size_t c_off = static_cast<size_t>(r_cnt * v_size);
     p.SetCount(r_cnt);
+    p.SetGlobalRadius(s.GetGlobalRadius());
+    p.SetGlobalColour(s.GetGlobalColour()[0], s.GetGlobalColour()[1], s.GetGlobalColour()[2], s.GetGlobalColour()[3]);
     p.SetVertexData(s.GetVertexDataType(), d);
     p.SetColourData(SimpleSphericalParticles::COLDATA_FLOAT_I, d.At(c_off));
     p.SetColourMapIndexValues(s.GetMinColourIndexValue(), s.GetMaxColourIndexValue());
