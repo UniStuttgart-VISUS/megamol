@@ -78,6 +78,7 @@ AbstractNamedObject::~AbstractNamedObject(void) {
  * AbstractNamedObject::FullName
  */
 vislib::StringA AbstractNamedObject::FullName(void) const {
+  try {
     AbstractNamedObject::GraphLocker locker(this->shared_from_this(), false);
     vislib::sys::AutoLock lock(locker);
     vislib::StringA name;
@@ -91,6 +92,9 @@ vislib::StringA AbstractNamedObject::FullName(void) const {
         ano = ano->Parent();
     }
     return name;
+  } catch(...) { // evil multi-threading and broken shared ownership results in ill behaviour
+    return "";
+  }
 }
 
 
