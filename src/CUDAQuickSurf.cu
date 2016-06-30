@@ -714,6 +714,7 @@ __global__ void sortAtomsGenCellLists(unsigned int natoms,
   unsigned int index = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int hash;
 
+  // do nothing if current index exceeds the number of atoms
   if (index < natoms) {
     hash = atomHash_d[index];
     hash_s[threadIdx.x+1] = hash; // use smem to avoid redundant loads
