@@ -124,6 +124,9 @@ xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /
 if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
 </Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <GPUDebugInfo>false</GPUDebugInfo>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
