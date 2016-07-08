@@ -139,6 +139,9 @@
     <ClCompile Include="src\ParticleColorChannelSelect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleIColGradientField.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -239,6 +242,9 @@
     </ClInclude>
     <ClInclude Include="include\mmstd_datatools\AbstractParticleManipulator.h">
       <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticleIColGradientField.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
