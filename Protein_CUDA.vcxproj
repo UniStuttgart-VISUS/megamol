@@ -229,6 +229,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CUDAKernels.h" />
     <ClInclude Include="src\CUDAMarchingCubes.h" />
     <ClInclude Include="src\CUDAQuickSurf.h" />
+    <ClInclude Include="src\CUDAQuickSurfArray.h" />
     <ClInclude Include="src\CUDAStreamlines.h" />
     <ClInclude Include="src\cuda_error_check.h" />
     <ClInclude Include="src\cuda_helper.h" />
@@ -363,6 +364,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <CudaCompile Include="src\CUDAFieldTopology.cu" />
     <CudaCompile Include="src\CUDAMarchingCubes.cu" />
     <CudaCompile Include="src\CUDAQuickSurf.cu" />
+    <CudaCompile Include="src\CUDAQuickSurfArray.cu" />
     <CudaCompile Include="src\CUDAStreamlines.cu" />
     <CudaCompile Include="src\cuenergy.cu">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

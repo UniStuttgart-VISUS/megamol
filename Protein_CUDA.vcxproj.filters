@@ -216,6 +216,9 @@
     <ClInclude Include="src\SplitMergeFeature.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\CUDAQuickSurfArray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
@@ -404,6 +407,9 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="src\VolumeMeshRenderer.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSurfArray.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>
