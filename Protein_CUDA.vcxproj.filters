@@ -219,6 +219,9 @@
     <ClInclude Include="src\CUDAQuickSurfArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\QuickSurfRaycaster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
@@ -341,6 +344,9 @@
     <ClCompile Include="src\SplitMergeFeature.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\QuickSurfRaycaster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\VolumeMeshRenderer-sort.cu">
@@ -410,6 +416,9 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="src\CUDAQuickSurfArray.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSurfRaycaster.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>

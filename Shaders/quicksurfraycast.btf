@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="quicksurfraycast">
+    <include file="common" />
+
+    <namespace name="texture">
+        <shader name="textureVertex">
+            <snippet type="version">430</snippet>
+            <snippet type="string">
+<!--
+layout(location = 0) in vec4 vPosition;
+layout(location = 1) in vec4 vColor;
+
+out vec2 texCoord;
+
+void main()
+{
+    texCoord = vColor.xy;
+    gl_Position = vec4(vPosition.xyz, 1.0);
+}
+-->
+        </snippet>
+    </shader>
+
+    <shader name="textureFragment">
+        <snippet type="version">430</snippet>
+        <snippet type="string">
+<!--
+layout(location = 0) out vec4 frag_color;
+
+layout(binding = 15) uniform sampler2D myTexture;
+
+in vec2 texCoord;
+
+void main()
+{
+    frag_color = texture(myTexture, texCoord.st).rgba;
+    //frag_color = vec4(texCoord.st, 0, 1);
+}
+-->
+            </snippet>
+        </shader>
+    </namespace>
+</btf>

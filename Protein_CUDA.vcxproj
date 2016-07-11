@@ -109,7 +109,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -134,7 +134,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -162,7 +162,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -188,7 +188,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -255,6 +255,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\PotentialVolumeRaycaster.h" />
     <ClInclude Include="src\ProteinVariantMatch.h" />
     <ClInclude Include="src\QuickSurfMTRenderer.h" />
+    <ClInclude Include="src\QuickSurfRaycaster.h" />
     <ClInclude Include="src\QuickSurfRenderer.h" />
     <ClInclude Include="src\QuickSurfRenderer2.h" />
     <ClInclude Include="src\RMS.h" />
@@ -307,6 +308,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\Protein_CUDA.cpp" />
     <ClCompile Include="src\ProteinVariantMatch.cpp" />
     <ClCompile Include="src\QuickSurfMTRenderer.cpp" />
+    <ClCompile Include="src\QuickSurfRaycaster.cpp" />
     <ClCompile Include="src\QuickSurfRenderer.cpp" />
     <ClCompile Include="src\QuickSurfRenderer2.cpp" />
     <ClCompile Include="src\RMS.cpp" />
@@ -364,6 +366,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <CudaCompile Include="src\CUDAFieldTopology.cu" />
     <CudaCompile Include="src\CUDAMarchingCubes.cu" />
     <CudaCompile Include="src\CUDAQuickSurf.cu" />
+    <CudaCompile Include="src\CUDAQuickSurfRaycaster.cu" />
     <CudaCompile Include="src\CUDAQuickSurfArray.cu" />
     <CudaCompile Include="src\CUDAStreamlines.cu" />
     <CudaCompile Include="src\cuenergy.cu">

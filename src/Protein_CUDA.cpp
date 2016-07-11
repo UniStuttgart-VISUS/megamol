@@ -20,6 +20,7 @@
 #include "QuickSurfRenderer.h"
 #include "QuickSurfRenderer2.h"
 #include "QuickSurfMTRenderer.h"
+#include "QuickSurfRaycaster.h"
 #include "MoleculeVolumeCudaRenderer.h"
 #include "VolumeMeshRenderer.h"
 #include "ComparativeFieldTopologyRenderer.h"
@@ -90,7 +91,7 @@ PROTEIN_CUDA_API const void * mmplgCoreCompatibilityValue(void) {
  * mmplgModuleCount
  */
 PROTEIN_CUDA_API int mmplgModuleCount(void) {
-	int moduleCount = 3;
+	int moduleCount = 4;
 #ifdef WITH_CUDA
     moduleCount+=14;
 #endif // WITH_CUDA
@@ -132,7 +133,8 @@ PROTEIN_CUDA_API void* mmplgModuleDescription(int idx) {
         case HAPTICS_OFFSET + 11 : return new factories::ModuleAutoDescription<protein_cuda::ComparativeMolSurfaceRenderer>();
         case HAPTICS_OFFSET + 12 : return new factories::ModuleAutoDescription<protein_cuda::ComparativeFieldTopologyRenderer>();
         case HAPTICS_OFFSET + 13 : return new factories::ModuleAutoDescription<protein_cuda::ProteinVariantMatch>();
-        #define CUDA_OFFSET 14
+		case HAPTICS_OFFSET + 14 : return new factories::ModuleAutoDescription<protein_cuda::QuickSurfRaycaster>();
+        #define CUDA_OFFSET 15
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
