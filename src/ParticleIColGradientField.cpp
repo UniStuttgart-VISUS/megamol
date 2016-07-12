@@ -6,6 +6,7 @@
  */
 #include "stdafx.h"
 #include "ParticleIColGradientField.h"
+#include "mmstd_datatools/MultiParticleDataAdaptor.h"
 
 #include "nanoflann.hpp"
 #include "mmcore/param/FloatParam.h"
@@ -75,76 +76,23 @@ namespace {
     /**
      * Utility class forming a data adapter for nanoflann
      */
-    class DataAdapter {
-    private:
-        struct listData {
-            size_t cnt;
-            const uint8_t *posDat;
-            const uint8_t *colDat;
-            size_t posDatStep;
-            size_t colDatStep;
-        };
+    class DataAdapter : public stdplugin::datatools::MultiParticleDataAdaptor {
     public:
-        DataAdapter(megamol::core::moldyn::MultiParticleDataCall& dat) : dat(dat), cnt(0), data() {
-
-            unsigned int plc = dat.GetParticleListCount();
-            for (unsigned int pli = 0; pli < plc; pli++) {
-                auto& pl = dat.AccessParticles(pli);
-                if ((pl.GetColourDataType() != megamol::core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I)
-                    || ((pl.GetVertexDataType() != megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
-                    && (pl.GetVertexDataType() != megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR))) continue;
-                if (pl.GetCount() <= 0) continue;
-
-                data.push_back(listData());
-                listData& list = data.back();
-                list.cnt = static_cast<size_t>(pl.GetCount());
-                list.posDat = reinterpret_cast<const uint8_t *>(pl.GetVertexData());
-                assert(list.posDat != nullptr);
-                list.posDatStep = std::max<unsigned int>(pl.GetVertexDataStride(), sizeof(float) * (
-                    (pl.GetVertexDataType() == megamol::core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
-                    ? 3
-                    : 4
-                    ));
-                list.colDat = reinterpret_cast<const uint8_t *>(pl.GetColourData());
-                assert(list.colDat != nullptr);
-                list.colDatStep = std::max<unsigned int>(pl.GetColourDataStride(), sizeof(float));
-
-                cnt += list.cnt;
-            }
-
+        DataAdapter(megamol::core::moldyn::MultiParticleDataCall& dat) : stdplugin::datatools::MultiParticleDataAdaptor(dat) {
+            // intentionally empty
         }
-
-        float const *get_pos(size_t idx) const {
-            for (const listData& l : data) {
-                if (idx > l.cnt) {
-                    idx -= l.cnt;
-                    continue;
-                }
-                return reinterpret_cast<float const*>(l.posDat + idx * l.posDatStep);
-            }
-            return nullptr;
+        ~DataAdapter() {
+            // intentionally empty
         }
-
-        float const *get_col(size_t idx) const {
-            for (const listData& l : data) {
-                if (idx > l.cnt) {
-                    idx -= l.cnt;
-                    continue;
-                }
-                return reinterpret_cast<float const*>(l.colDat + idx * l.colDatStep);
-            }
-            return nullptr;
-        }
-
         // Must return the number of data points
-        inline size_t kdtree_get_point_count() const { return cnt; }
+        inline size_t kdtree_get_point_count() const { return get_count(); }
 
         typedef float coord_t;
 
         // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
         inline coord_t kdtree_distance(const coord_t *p1, const size_t idx_p2, size_t /*size*/) const
         {
-            float const *p2 = get_pos(idx_p2);
+            float const *p2 = get_position(idx_p2);
             const coord_t d0 = p1[0] - p2[0];
             const coord_t d1 = p1[1] - p2[1];
             const coord_t d2 = p1[2] - p2[2];
@@ -156,7 +104,7 @@ namespace {
         //  "if/else's" are actually solved at compile time.
         inline coord_t kdtree_get_pt(const size_t idx, int dim) const {
             assert((dim >= 0) && (dim < 3));
-            return get_pos(idx)[dim];
+            return get_position(idx)[dim];
         }
 
         // Optional bounding-box computation: return false to default to a standard bbox computation loop.
@@ -167,7 +115,7 @@ namespace {
             //return false;
 
             assert(bb.size() == 3);
-            const auto& cbox = dat.AccessBoundingBoxes().ObjectSpaceClipBox();
+            const auto& cbox = data.GetBoundingBoxes().ObjectSpaceClipBox();
             bb[0].low = cbox.Left();
             bb[0].high = cbox.Right();
             bb[1].low = cbox.Bottom();
@@ -176,12 +124,6 @@ namespace {
             bb[2].high = cbox.Front();
             return true;
         }
-
-    private:
-        megamol::core::moldyn::MultiParticleDataCall& dat;
-
-        size_t cnt;
-        std::vector<listData> data;
     };
 }
 
@@ -207,8 +149,8 @@ void datatools::ParticleIColGradientField::compute_colors(megamol::core::moldyn:
     for (int part_i = 0; part_i < static_cast<int>(data.kdtree_get_point_count()); ++part_i) {
         // compute gradient vector for point i
 
-        vislib::math::ShallowPoint<const float, 3> query_pos(data.get_pos(part_i));
-        const float *query_col = data.get_col(part_i);
+        vislib::math::ShallowPoint<const float, 3> query_pos(data.get_position(part_i));
+        const float *query_col = data.get_color(part_i);
 
         res.clear();
         index.radiusSearch(query_pos.PeekCoordinates(), rad, res, nanoflann::SearchParams(10, 0.01f, false));
@@ -216,9 +158,9 @@ void datatools::ParticleIColGradientField::compute_colors(megamol::core::moldyn:
         vislib::math::Vector<double, 3> gradient;
 
         for (std::pair<size_t, float>& p : res) {
-            vislib::math::Vector<double, 3> dir(vislib::math::ShallowPoint<float, 3>(const_cast<float*>(data.get_pos(p.first))) - query_pos);
+            vislib::math::Vector<double, 3> dir(vislib::math::ShallowPoint<float, 3>(const_cast<float*>(data.get_position(p.first))) - query_pos);
             dir.Normalise();
-            double colDiff = static_cast<double>(*data.get_col(p.first)) - static_cast<double>(*query_col);
+            double colDiff = static_cast<double>(*data.get_color(p.first)) - static_cast<double>(*query_col);
             //double weight = static_cast<double>(rad - p.second) / static_cast<double>(rad);
 
             dir *= colDiff;

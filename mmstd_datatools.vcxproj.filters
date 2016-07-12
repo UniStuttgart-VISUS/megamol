@@ -142,6 +142,9 @@
     <ClCompile Include="src\ParticleIColGradientField.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MultiParticleDataAdaptor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -245,6 +248,9 @@
     </ClInclude>
     <ClInclude Include="src\ParticleIColGradientField.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmstd_datatools\MultiParticleDataAdaptor.h">
+      <Filter>Public Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

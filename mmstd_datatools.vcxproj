@@ -281,6 +281,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\floattable\CSVDataSource.cpp" />
     <ClCompile Include="src\floattable\MMFTDataSource.cpp" />
     <ClCompile Include="src\floattable\MMFTDataWriter.cpp" />
+    <ClCompile Include="src\MultiParticleDataAdaptor.cpp" />
     <ClCompile Include="src\MultiParticleRelister.cpp" />
     <ClCompile Include="src\OverrideMultiParticleListGlobalColors.cpp" />
     <ClCompile Include="src\OverrideParticleBBox.cpp" />
@@ -296,6 +297,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   <ItemGroup>
     <ClInclude Include="include\mmstd_datatools\AbstractParticleManipulator.h" />
     <ClInclude Include="include\mmstd_datatools\floattable\CallFloatTableData.h" />
+    <ClInclude Include="include\mmstd_datatools\MultiParticleDataAdaptor.h" />
     <ClInclude Include="src/DataFileSequence.h" />
     <ClInclude Include="src/DataFileSequenceStepper.h" />
     <ClInclude Include="src/DataSetTimeRewriteModule.h" />
