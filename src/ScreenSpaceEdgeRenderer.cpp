@@ -177,6 +177,9 @@ bool ScreenSpaceEdgeRenderer::Render(Call& call) {
     this->colorSlot.ResetDirty();
     utility::ColourParser::FromString(this->colorSlot.Param<param::StringParam>()->Value(), r, g, b);
 
+    ::glDisable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     shader.Enable();
     glActiveTexture(GL_TEXTURE0 + 0);
     fbo.BindColourTexture(0);
