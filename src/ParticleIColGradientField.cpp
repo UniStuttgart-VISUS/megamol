@@ -200,6 +200,9 @@ void datatools::ParticleIColGradientField::compute_colors(megamol::core::moldyn:
 
     double maxLen = 0.0;
 
+    std::vector<std::pair<size_t, float> > res;
+    res.reserve(100);
+
 //#pragma omp parallel for
     for (int part_i = 0; part_i < static_cast<int>(data.kdtree_get_point_count()); ++part_i) {
         // compute gradient vector for point i
@@ -207,8 +210,8 @@ void datatools::ParticleIColGradientField::compute_colors(megamol::core::moldyn:
         vislib::math::ShallowPoint<const float, 3> query_pos(data.get_pos(part_i));
         const float *query_col = data.get_col(part_i);
 
-        std::vector<std::pair<size_t, float> > res;
-        index.radiusSearch(query_pos.PeekCoordinates(), rad, res, nanoflann::SearchParams(10));
+        res.clear();
+        index.radiusSearch(query_pos.PeekCoordinates(), rad, res, nanoflann::SearchParams(10, 0.01f, false));
 
         vislib::math::Vector<double, 3> gradient;
 
