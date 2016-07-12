@@ -117,33 +117,10 @@ namespace trisoup {
 
         /** The slot to fetch the data */
         core::CallerSlot rendererSlot;
+        core::param::ParamSlot colorSlot;
 
         vislib::graphics::gl::FramebufferObject fbo;
         vislib::graphics::gl::GLSLShader shader;
-
-        ///** The slot to fetch the volume data */
-        //core::CallerSlot getVolDataSlot;
-
-        ///** Flag whether or not to show vertices */
-        //core::param::ParamSlot showVertices;
-
-        ///** Flag whether or not use lighting for the surface */
-        //core::param::ParamSlot lighting;
-
-        ///** The rendering style for the front surface */
-        //core::param::ParamSlot surFrontStyle;
-
-        ///** The rendering style for the back surface */
-        //core::param::ParamSlot surBackStyle;
-        //
-        ///** The Triangle winding rule */
-        //core::param::ParamSlot windRule;
-        //
-        ///** The Triangle color */
-        //core::param::ParamSlot colorSlot;
-
-        ///** Slot to activate scaling */
-        //core::param::ParamSlot doScaleSlot;
 
     };
 

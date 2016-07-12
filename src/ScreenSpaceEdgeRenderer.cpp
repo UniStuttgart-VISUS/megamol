@@ -10,25 +10,8 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-
-//#include "mmcore/misc/CallTriMeshData.h"
-//#include "CallVolumetricData.h"
-//#include "mmcore/param/BoolParam.h"
-//#include "mmcore/param/EnumParam.h"
-//#include "mmcore/param/StringParam.h"
-//#include "mmcore/view/CallRender3D.h"
-//#include "mmcore/utility/ColourParser.h"
-//
-//
-//#include "mmcore/param/ButtonParam.h"
-//#include "mmcore/param/StringParam.h"
-//#include "mmcore/param/FilePathParam.h"
-//#include "vislib/sys/KeyCode.h"
-//#include "vislib/sys/Log.h"
-//#include "vislib/math/mathfunctions.h"
-//#include "vislib/sys/MemmappedFile.h"
-//#include "vislib/math/ShallowPoint.h"
-//#include "vislib/math/Vector.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ColourParser.h"
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -39,10 +22,14 @@ using namespace megamol::core;
  * ScreenSpaceEdgeRenderer::ScreenSpaceEdgeRenderer
  */
 ScreenSpaceEdgeRenderer::ScreenSpaceEdgeRenderer(void) : Renderer3DModule(),
-        rendererSlot("renderer", "Connects to the renderer actually rendering the image") {
+        rendererSlot("renderer", "Connects to the renderer actually rendering the image"),
+        colorSlot("color", "The triangle color (if not colors are read from file)") {
 
     this->rendererSlot.SetCompatibleCall<view::CallRender3DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
+
+    this->colorSlot.SetParameter(new param::StringParam("silver"));
+    this->MakeSlotAvailable(&this->colorSlot);
 }
 
 
@@ -186,6 +173,10 @@ bool ScreenSpaceEdgeRenderer::Render(Call& call) {
 
     ::glPushAttrib(GL_TEXTURE_BIT | GL_TRANSFORM_BIT);
 
+    float r, g, b;
+    this->colorSlot.ResetDirty();
+    utility::ColourParser::FromString(this->colorSlot.Param<param::StringParam>()->Value(), r, g, b);
+
     shader.Enable();
     glActiveTexture(GL_TEXTURE0 + 0);
     fbo.BindColourTexture(0);
@@ -193,6 +184,8 @@ bool ScreenSpaceEdgeRenderer::Render(Call& call) {
     fbo.BindDepthTexture();
     shader.SetParameter("inColorTex", 0);
     shader.SetParameter("inDepthTex", 1);
+    shader.SetParameter("viewportMax", vp.Width() - 1, vp.Height() - 1);
+    shader.SetParameter("color", r, g, b);
 
     ::glMatrixMode(GL_PROJECTION);
     ::glPushMatrix();
