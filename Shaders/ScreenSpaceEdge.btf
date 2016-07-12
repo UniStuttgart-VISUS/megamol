@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="ScreenSpaceEdge">
+	<shader name="vertex">
+    <snippet type="version">410</snippet>
+    <snippet type="string">
+		<![CDATA[
+//#version 110
+in vec4 in_vertex;
+
+void main() {
+  gl_Position = in_vertex;
+}
+
+]]>
+		</snippet>
+	</shader>
+	
+	<shader name="fragment">
+    <snippet type="version">410</snippet>
+		<snippet type="string">
+		<![CDATA[
+//uniform float inWidth;
+//uniform float inHeight;
+
+uniform sampler2D inColorTex;
+uniform sampler2D inDepthTex;
+
+out vec4 fragColor;
+
+void main() {
+  vec4 col = texelFetch(inColorTex, ivec2(gl_FragCoord.xy), 0);
+  float depth = texelFetch(inDepthTex, ivec2(gl_FragCoord.xy), 0).r;
+  col.r = 1.0;
+
+
+  fragColor = col;
+  gl_FragDepth = depth;
+}
+
+]]>
+		</snippet>
+	</shader>
+</btf>

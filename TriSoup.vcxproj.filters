@@ -58,6 +58,9 @@
     <None Include="cmake\ConfigLocal.cmake.in">
       <Filter>Config and Make Files\cmake</Filter>
     </None>
+    <None Include="Shaders\ScreenSpaceEdge.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\TriSoup\TriSoup.h">
@@ -123,6 +126,9 @@
     <ClInclude Include="src\volumetrics\MarchingSquareTables.h">
       <Filter>volumetrics\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ScreenSpaceEdgeRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\TriSoup.cpp">
@@ -181,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="src\volumetrics\TagVolume.cpp">
       <Filter>volumetrics\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ScreenSpaceEdgeRenderer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

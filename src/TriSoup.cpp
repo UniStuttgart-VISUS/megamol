@@ -23,6 +23,8 @@
 #include "volumetrics/IsoSurface.h"
 #include "CallBinaryVolumeData.h"
 #include "CallVolumetricData.h"
+#include "ScreenSpaceEdgeRenderer.h"
+#include "vislib/Trace.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -41,6 +43,7 @@ namespace {
                 "Plugin for rendering TriSoup mesh data") {
 
             // here we could perform addition initialization
+            vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
         };
         /** Dtor */
         virtual ~plugin_instance(void) {
@@ -59,6 +62,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::CoordSysMarker>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TrackerRendererTransform>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
+            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::ScreenSpaceEdgeRenderer>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
