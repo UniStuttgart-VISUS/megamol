@@ -699,6 +699,12 @@ void mdao::SphereRenderer::rebuildWorkingData(megamol::core::view::AbstractCallR
 
 	}
 	
+    // reset shotter for legacy opengl crap
+    glBindVertexArray(0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	this->enableAOSlot.ResetDirty();
 	this->aoVolSizeSlot.ResetDirty();
 	this->oldClipDat = clipDat;
@@ -771,12 +777,6 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 			glDisableVertexAttribArray(0);
 			return;
 	}
-
-    // reset shotter for legacy opengl crap
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }
 
