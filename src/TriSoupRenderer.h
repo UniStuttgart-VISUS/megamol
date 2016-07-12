@@ -132,6 +132,10 @@ namespace trisoup {
         
         /** The Triangle color */
         core::param::ParamSlot colorSlot;
+
+        /** Slot to activate scaling */
+        core::param::ParamSlot doScaleSlot;
+
     };
 
 

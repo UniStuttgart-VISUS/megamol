@@ -47,7 +47,8 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
         surFrontStyle("frontstyle", "The rendering style for the front surface"),
         surBackStyle("backstyle", "The rendering style for the back surface"),
         windRule("windingrule", "The triangle edge winding rule"),
-        colorSlot("color", "The triangle color (if not colors are read from file)") {
+        colorSlot("color", "The triangle color (if not colors are read from file)"),
+        doScaleSlot("doScale", "Do Scaling of model data") {
 
     this->getDataSlot.SetCompatibleCall<core::misc::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -85,6 +86,9 @@ TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule(),
     
     this->colorSlot.SetParameter(new param::StringParam("white"));
     this->MakeSlotAvailable(&this->colorSlot);
+
+    this->doScaleSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->doScaleSlot);
 
 }
 
@@ -135,9 +139,13 @@ bool TriSoupRenderer::GetExtents(Call& call) {
     cr->SetTimeFramesCount(ctmd->FrameCount());
     cr->AccessBoundingBoxes().Clear();
     cr->AccessBoundingBoxes() = ctmd->AccessBoundingBoxes();
-    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-    if (scale > 0.0f) scale = 2.0f / scale;
-    cr->AccessBoundingBoxes().MakeScaledWorld(scale);
+    if (this->doScaleSlot.Param<param::BoolParam>()->Value()) {
+        float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
+        if (scale > 0.0f) scale = 2.0f / scale;
+        cr->AccessBoundingBoxes().MakeScaledWorld(scale);
+    } else {
+        cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+    }
 
     return true;
 }
@@ -162,9 +170,18 @@ bool TriSoupRenderer::Render(Call& call) {
 
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(1)) return false;
-    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-    if (scale > 0.0f) scale = 2.0f / scale;
-    ::glScalef(scale, scale, scale);
+    if (this->doScaleSlot.Param<param::BoolParam>()->Value()) {
+        float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
+        if (scale > 0.0f) scale = 2.0f / scale;
+        //float mat[16] = {
+        //    scale, 0.0f, 0.0f, 0.0f,
+        //    0.0f, scale, 0.0f, 0.0f,
+        //    0.0f, 0.0f, scale, 0.0f,
+        //    0.0f, 0.0f, 0.0f, 1.0f
+        //};
+        //::glMultMatrixf(mat);
+        ::glScalef(scale, scale, scale);
+    }
 
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(0)) return false;
@@ -172,9 +189,9 @@ bool TriSoupRenderer::Render(Call& call) {
     bool normals = false;
     bool colors = false;
     bool textures = false;
-
     ::glEnable(GL_DEPTH_TEST);
-    if (this->lighting.Param<param::BoolParam>()->Value()) {
+    bool doLighting = this->lighting.Param<param::BoolParam>()->Value();
+    if (doLighting) {
         ::glEnable(GL_LIGHTING);
     } else {
         ::glDisable(GL_LIGHTING);
@@ -226,7 +243,7 @@ bool TriSoupRenderer::Render(Call& call) {
         ::glCullFace(cf);
     }
 
-    ::glColor3f(1.0f, 1.0f, 1.0f);
+    //::glColor3f(1.0f, 1.0f, 1.0f);
     float r, g, b;
     this->colorSlot.ResetDirty();
     utility::ColourParser::FromString(this->colorSlot.Param<param::StringParam>()->Value(), r, g, b);
@@ -308,17 +325,21 @@ bool TriSoupRenderer::Render(Call& call) {
         if (obj.GetMaterial() != NULL) {
             const core::misc::CallTriMeshData::Material &mat = *obj.GetMaterial();
 
-            ::glDisable(GL_COLOR_MATERIAL);
-            GLfloat mat_ambient[4] = { mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f };
-            GLfloat mat_diffuse[4] = { mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f };
-            GLfloat mat_specular[4] = { mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f };
-            GLfloat mat_emission[4] = { mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f };
-            GLfloat mat_shininess[1] = { mat.GetNs() };
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+            if (doLighting) {
+                ::glDisable(GL_COLOR_MATERIAL);
+                GLfloat mat_ambient[4] = { mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f };
+                GLfloat mat_diffuse[4] = { mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f };
+                GLfloat mat_specular[4] = { mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f };
+                GLfloat mat_emission[4] = { mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f };
+                GLfloat mat_shininess[1] = { mat.GetNs() };
+                ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+                ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+                ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+                ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
+                ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+            } else {
+                ::glColor3f(mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2]);
+            }
 
             GLuint mapid = mat.GetMapID();
             if (mapid > 0) {
@@ -361,6 +382,10 @@ bool TriSoupRenderer::Render(Call& call) {
         } else {
             ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
         }
+
+        if (!doLighting) {
+            ::glColor3f(r, g, b);
+        }
     }
 
     if (normals) ::glDisableClientState(GL_NORMAL_ARRAY);
@@ -384,7 +409,7 @@ bool TriSoupRenderer::Render(Call& call) {
     ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if (this->showVertices.Param<param::BoolParam>()->Value()) {
-        ::glEnable(GL_POINT_SIZE);
+        //::glEnable(GL_POINT_SIZE);
         ::glPointSize(3.0f);
         ::glDisable(GL_LIGHTING);
 
@@ -402,7 +427,7 @@ bool TriSoupRenderer::Render(Call& call) {
             ::glDrawArrays(GL_POINTS, 0, ctmd->Objects()[i].GetVertexCount());
         }
 
-        ::glEnable(GL_POINT_SIZE);
+        //::glEnable(GL_POINT_SIZE);
         ::glPointSize(1.0f);
     }
 
@@ -413,14 +438,14 @@ bool TriSoupRenderer::Render(Call& call) {
 
     ::glEnable(GL_CULL_FACE);
     ::glDisableClientState(GL_VERTEX_ARRAY);
-    ::glDisable(GL_POINT_SIZE);
+    //::glDisable(GL_POINT_SIZE);
     ::glEnable(GL_BLEND);
 
 
     CallVolumetricData *cvd = this->getVolDataSlot.CallAs<CallVolumetricData>();
     if (cvd != NULL && (*cvd)(0)) {
         vislib::Array<CallVolumetricData::Volume>& volumes = cvd->GetVolumes();
-        ::glEnable(GL_POINT_SIZE);
+        //::glEnable(GL_POINT_SIZE);
         ::glEnable(GL_DEPTH_TEST);
         ::glDisable(GL_BLEND);
         ::glDisable(GL_LIGHTING);
@@ -462,6 +487,11 @@ bool TriSoupRenderer::Render(Call& call) {
         }
         ::glEnd();
     }
+
+    ::GetLastError();
+    ::glCullFace(cfm);
+    ::glFrontFace(twr);
+    ::glDisableClientState(GL_VERTEX_ARRAY);
 
     return true;
 }
