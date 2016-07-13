@@ -28,6 +28,8 @@
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
+#ifdef TRISOUP_EXPORTS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,5 +93,7 @@ TRISOUP_API void mmplgReleasePluginInstance(
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
+
+#endif TRISOUP_EXPORTS
 
 #endif /* TRISOUP_H_INCLUDED */
