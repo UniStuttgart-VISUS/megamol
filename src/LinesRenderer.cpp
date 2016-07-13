@@ -99,7 +99,7 @@ bool trisoup::LinesRenderer::Render(core::Call& call) {
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
 
-    ::glDisable(GL_TEXTURE);
+    ::glDisable(GL_TEXTURE_2D);
     ::glDisable(GL_LINE_SMOOTH);
     ::glDisable(GL_BLEND);
     ::glDisable(GL_LIGHTING);
