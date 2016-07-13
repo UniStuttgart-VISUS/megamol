@@ -129,6 +129,15 @@
     <ClInclude Include="src\ScreenSpaceEdgeRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\TriSoup\CallTriMeshData.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TriSoup\LinesDataCall.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LinesRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\TriSoup.cpp">
@@ -189,6 +198,15 @@
       <Filter>volumetrics\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ScreenSpaceEdgeRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinesDataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LinesRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CallTriMeshData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -238,6 +238,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="Shaders\ScreenSpaceEdge.btf" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\TriSoup\CallTriMeshData.h" />
+    <ClInclude Include="include\TriSoup\LinesDataCall.h" />
     <ClInclude Include="include\TriSoup\TriSoup.h" />
     <ClInclude Include="src\AbstractTriMeshDataSource.h" />
     <ClInclude Include="src\AbstractTriMeshLoader.h" />
@@ -245,6 +247,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CallBinaryVolumeData.h" />
     <ClInclude Include="src\CallVolumetricData.h" />
     <ClInclude Include="src\CoordSysMarker.h" />
+    <ClInclude Include="src\LinesRenderer.h" />
     <ClInclude Include="src\OSCBFix.h" />
     <ClInclude Include="src\ScreenSpaceEdgeRenderer.h" />
     <ClInclude Include="src\stdafx.h" />
@@ -266,8 +269,11 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\AbstractTriMeshLoader.cpp" />
     <ClCompile Include="src\BlockVolumeMesh.cpp" />
     <ClCompile Include="src\CallBinaryVolumeData.cpp" />
+    <ClCompile Include="src\CallTriMeshData.cpp" />
     <ClCompile Include="src\CoordSysMarker.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\LinesDataCall.cpp" />
+    <ClCompile Include="src\LinesRenderer.cpp" />
     <ClCompile Include="src\OSCBFix.cpp" />
     <ClCompile Include="src\ScreenSpaceEdgeRenderer.cpp" />
     <ClCompile Include="src\TrackerRendererTransform.cpp" />

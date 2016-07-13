@@ -21,8 +21,8 @@ AbstractTriMeshDataSource::AbstractTriMeshDataSource(void) : core::Module(),
         objs(), mats(), bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f), datahash(0),
         getDataSlot("getdata", "The slot publishing the loaded data") {
 
-    this->getDataSlot.SetCallback(core::misc::CallTriMeshData::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
-    this->getDataSlot.SetCallback(core::misc::CallTriMeshData::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
+    this->getDataSlot.SetCallback(trisoup::CallTriMeshData::ClassName(), "GetData", &AbstractTriMeshDataSource::getDataCallback);
+    this->getDataSlot.SetCallback(trisoup::CallTriMeshData::ClassName(), "GetExtent", &AbstractTriMeshDataSource::getExtentCallback);
     this->MakeSlotAvailable(&this->getDataSlot);
 
 }
@@ -60,7 +60,7 @@ void AbstractTriMeshDataSource::release(void) {
  * AbstractTriMeshDataSource::getDataCallback
  */
 bool AbstractTriMeshDataSource::getDataCallback(core::Call& caller) {
-    core::misc::CallTriMeshData *ctmd = dynamic_cast<core::misc::CallTriMeshData *>(&caller);
+    trisoup::CallTriMeshData *ctmd = dynamic_cast<trisoup::CallTriMeshData *>(&caller);
     if (ctmd == NULL) return false;
     this->assertData();
 
@@ -76,7 +76,7 @@ bool AbstractTriMeshDataSource::getDataCallback(core::Call& caller) {
  * AbstractTriMeshDataSource::getExtentCallback
  */
 bool AbstractTriMeshDataSource::getExtentCallback(core::Call& caller) {
-    core::misc::CallTriMeshData *ctmd = dynamic_cast<core::misc::CallTriMeshData *>(&caller);
+    trisoup::CallTriMeshData *ctmd = dynamic_cast<trisoup::CallTriMeshData *>(&caller);
     if (ctmd == NULL) return false;
     this->assertData();
 

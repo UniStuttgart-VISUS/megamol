@@ -17,7 +17,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/RawStorage.h"
-#include "mmcore/misc/CallTriMeshData.h"
+#include "TriSoup/CallTriMeshData.h"
 #include "vislib/math/Point.h"
 
 
@@ -213,7 +213,7 @@ namespace volumetrics {
         vislib::RawStorage normal;
 
         /** My mesh */
-        core::misc::CallTriMeshData::Mesh mesh;
+        trisoup::CallTriMeshData::Mesh mesh;
 
     };
 

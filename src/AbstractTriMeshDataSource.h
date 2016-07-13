@@ -15,7 +15,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/misc/CallTriMeshData.h"
+#include "TriSoup/CallTriMeshData.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/String.h"
@@ -40,10 +40,10 @@ namespace trisoup {
     protected:
 
         /** Alias for mesh class */
-        typedef core::misc::CallTriMeshData::Mesh Mesh;
+        typedef trisoup::CallTriMeshData::Mesh Mesh;
 
         /** Alias for material class */
-        typedef core::misc::CallTriMeshData::Material Material;
+        typedef trisoup::CallTriMeshData::Material Material;
 
         /**
          * Implementation of 'Create'.

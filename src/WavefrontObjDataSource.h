@@ -130,7 +130,7 @@ namespace trisoup {
          * @param n The normal vectors array
          * @param t The texture coordinates array
          */
-        void makeMesh(core::misc::CallTriMeshData::Mesh& mesh,
+        void makeMesh(trisoup::CallTriMeshData::Mesh& mesh,
                 const vislib::Array<WavefrontObjDataSource::Tri>& tris,
                 unsigned int* vu, const vislib::Array<vislib::math::Vector<float, 3> >& v,
                 const vislib::Array<vislib::math::Vector<float, 3> >& n,
