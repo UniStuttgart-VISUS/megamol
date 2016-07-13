@@ -25,6 +25,9 @@
 #include "CallVolumetricData.h"
 #include "ScreenSpaceEdgeRenderer.h"
 #include "vislib/Trace.h"
+#include "TriSoup/CallTriMeshData.h"
+#include "TriSoup/LinesDataCall.h"
+#include "LinesRenderer.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -63,10 +66,13 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TrackerRendererTransform>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::ScreenSpaceEdgeRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::LinesRenderer>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallVolumetricData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallTriMeshData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::trisoup::LinesDataCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
