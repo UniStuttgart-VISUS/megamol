@@ -453,9 +453,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\MegaMolCore.cpp" />
     <ClCompile Include="src\misc\BezierCurvesListDataCall.cpp" />
     <ClCompile Include="src\misc\CalloutImageCall.cpp" />
-    <ClCompile Include="src\misc\CallTriMeshData.cpp" />
-    <ClCompile Include="src\misc\LinesDataCall.cpp" />
-    <ClCompile Include="src\misc\LinesRenderer.cpp" />
     <ClCompile Include="src\misc\PngBitmapCodec.cpp" />
     <ClCompile Include="src\misc\QRCodeDataCall.cpp" />
     <ClCompile Include="src\misc\SiffCSplineFitter.cpp" />
@@ -668,9 +665,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\job\JobThread.h" />
     <ClInclude Include="include\mmcore\misc\BezierCurvesListDataCall.h" />
     <ClInclude Include="include\mmcore\misc\CalloutImageCall.h" />
-    <ClInclude Include="include\mmcore\misc\CallTriMeshData.h" />
-    <ClInclude Include="include\mmcore\misc\LinesDataCall.h" />
-    <ClInclude Include="include\mmcore\misc\LinesRenderer.h" />
     <ClInclude Include="include\mmcore\misc\PngBitmapCodec.h" />
     <ClInclude Include="include\mmcore\misc\QRCodeDataCall.h" />
     <ClInclude Include="include\mmcore\misc\SiffCSplineFitter.h" />

@@ -498,12 +498,6 @@
     <ClCompile Include="src\misc\CalloutImageCall.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\misc\LinesDataCall.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\misc\LinesRenderer.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\misc\PngBitmapCodec.cpp">
       <Filter>misc\Source Files</Filter>
     </ClCompile>
@@ -885,9 +879,6 @@
     <ClCompile Include="src\utility\plugins\PluginManager.cpp">
       <Filter>utility\plugins\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\misc\CallTriMeshData.cpp">
-      <Filter>misc\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\utility\plugins\Plugin200Instance.cpp">
       <Filter>utility\plugins\Source Files</Filter>
     </ClCompile>
@@ -1104,12 +1095,6 @@
       <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\CalloutImageCall.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\misc\LinesDataCall.h">
-      <Filter>misc\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\misc\LinesRenderer.h">
       <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\misc\PngBitmapCodec.h">
@@ -1513,9 +1498,6 @@
     </ClInclude>
     <ClInclude Include="src\utility\plugins\PluginManager.h">
       <Filter>utility\plugins\Private Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\mmcore\misc\CallTriMeshData.h">
-      <Filter>misc\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\mmcore\utility\plugins\Plugin200Instance.h">
       <Filter>utility\plugins\Header Files</Filter>

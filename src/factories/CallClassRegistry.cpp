@@ -11,7 +11,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/factories/CallDescription.h"
 
-#include "mmcore/misc/LinesDataCall.h"
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/moldyn/DirectionalParticleDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
@@ -38,7 +37,6 @@
 #include "mmcore/misc/CalloutImageCall.h"
 #include "mmcore/view/Call6DofInteraction.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
-#include "mmcore/misc/CallTriMeshData.h"
 #include "mmcore/moldyn/EllipsoidalDataCall.h"
 #include "mmcore/moldyn/ParticleRelistCall.h"
 
@@ -54,7 +52,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     //////////////////////////////////////////////////////////////////////
     instance.RegisterAutoDescription<cluster::CallRegisterAtController>();
     instance.RegisterAutoDescription<cluster::simple::ClientViewRegistration>();
-    instance.RegisterAutoDescription<misc::LinesDataCall>();
     instance.RegisterAutoDescription<moldyn::DirectionalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::MultiParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleGridDataCall>();
@@ -79,7 +76,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<misc::CalloutImageCall>();
     instance.RegisterAutoDescription<view::Call6DofInteraction>();
     instance.RegisterAutoDescription<cluster::mpi::MpiCall>();
-    instance.RegisterAutoDescription<misc::CallTriMeshData>();
     instance.RegisterAutoDescription<moldyn::EllipsoidalParticleDataCall>();
     instance.RegisterAutoDescription<moldyn::ParticleRelistCall>();
 }
