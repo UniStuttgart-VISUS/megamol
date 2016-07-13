@@ -71,6 +71,20 @@ namespace trisoup {
             ~Lines(void);
 
             /**
+             * Removes all data
+             */
+            inline void Clear() {
+                this->count = 0;
+                this->vrtDT = DT_NONE;
+                this->vrt.dataFloat = nullptr;
+                this->colDT = CDT_NONE;
+                this->col.dataByte = nullptr;
+                this->idxDT = DT_NONE;
+                this->idx.dataByte = nullptr;
+                this->globCol.Set(0, 0, 0, 0);
+            }
+
+            /**
              * Answer the number of elements. If 'IndexArray' is NULL this
              * is the number of vertex (and colour) entries stored. If
              * 'IndexArray' is not NULL this is the number of index entries
