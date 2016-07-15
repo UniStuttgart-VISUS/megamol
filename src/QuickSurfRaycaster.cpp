@@ -15,6 +15,9 @@
 
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
+
+#include "vislib/StringTokeniser.h"
 
 #include <channel_descriptor.h>
 #include <driver_functions.h>
@@ -64,7 +67,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	radscaleParam("quicksurf::radscale", "Radius scale"),
 	gridspacingParam("quicksurf::gridspacing", "Grid spacing"),
 	isovalParam("quicksurf::isoval", "Isovalue"),
-	selectedIsoval("quicksurf::selectedIsoval", "The isovalue we want to ray cast the isoplane from"),
+	selectedIsovals("quicksurf::selectedIsovals", "Semicolon seperated list of normalized isovalues we want to ray cast the isoplanes from"),
 	scalingFactor("quicksurf::scalingFactor", "Scaling factor for the density values and particle radii"),
 	setCUDAGLDevice(true),
 	particlesSize(0)
@@ -86,8 +89,9 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	this->isovalParam.SetParameter(new param::FloatParam(0.5f, 0.0f));
 	this->MakeSlotAvailable(&this->isovalParam);
 
-	this->selectedIsoval.SetParameter(new param::FloatParam(200.0f, 0.0f));
-	this->MakeSlotAvailable(&this->selectedIsoval);
+	this->selectedIsovals.SetParameter(new param::StringParam("0.5,0.9"));
+	this->MakeSlotAvailable(&this->selectedIsovals);
+	this->selectedIsovals.ForceSetDirty(); // necessary for initial update
 
 	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->scalingFactor);
@@ -140,7 +144,7 @@ bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions
 	y = (numVoxels[1] - 1) * gridspacing;
 	z = (numVoxels[2] - 1) * gridspacing;
 
-	printf("vox %i %i %i \n", numVoxels[0], numVoxels[1], numVoxels[2]);
+	//printf("vox %i %i %i \n", numVoxels[0], numVoxels[1], numVoxels[2]);
 
 	volumeExtent = make_cudaExtent(numVoxels[0], numVoxels[1], numVoxels[2]);
 
@@ -569,8 +573,28 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		cudaqsurf = new CUDAQuickSurf();
 	}
 
-	// normalize isoval parameter
-	float myIso = (this->selectedIsoval.Param<param::FloatParam>()->Value() - concMin) / (concMax - concMin);
+	// parse selected isovalues if needed
+	if (selectedIsovals.IsDirty()) {
+		std::vector<float> isoVals;
+		vislib::TString valString = selectedIsovals.Param<param::StringParam>()->Value();
+		vislib::StringA vala = T2A(valString);
+
+		vislib::StringTokeniserA sta(vala, ',');
+		while (sta.HasNext()) {
+			vislib::StringA t = sta.Next();
+			if (t.IsEmpty()) {
+				continue;
+			}
+			isoVals.push_back((float)vislib::CharTraitsA::ParseDouble(t));
+		}
+
+		/*for (float f: isoVals)
+			printf("value: %f\n", f);*/
+
+		transferIsoValues(isoVals.data(), (int)isoVals.size());
+
+		selectedIsovals.ResetDirty();
+	}
 
 	bool suc = this->calcVolume(bbMin, bbMax, particles, 
 					this->qualityParam.Param<param::IntParam>()->Value(),
@@ -584,7 +608,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	CUDAQuickSurf * cqs = (CUDAQuickSurf*)cudaqsurf;
 	float * map = cqs->getMap();
 
-	printf("size: %i %i %i\n", cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
+	//printf("size: %i %i %i\n", cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
 
 	transferNewVolume(map, volumeExtent);
 

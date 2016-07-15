@@ -34,6 +34,7 @@ extern "C" void freeCudaBuffers();
 extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, unsigned int *d_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0, 1.0, 1.0));
 extern "C" void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, unsigned int *d_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), dim3 volSize = dim3(1,1,1));
 extern "C" void copyLUT(float4* myLUT, int lutSize = 256);
+extern "C" void transferIsoValues(float* h_isoVals, int h_numIsos);
 extern "C" void transferNewVolume(void *h_volume, cudaExtent volumeSize);
 
 #include "vislib/math/Vector.h"
@@ -282,7 +283,7 @@ namespace protein_cuda {
 
 		megamol::core::param::ParamSlot scalingFactor;
 
-		megamol::core::param::ParamSlot selectedIsoval;
+		megamol::core::param::ParamSlot selectedIsovals;
 
 		cudaArray *tmpCudaArray;
 

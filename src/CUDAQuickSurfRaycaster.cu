@@ -31,6 +31,9 @@ cudaEvent_t evtStart, evtStop;
 cudaArray *d_volumeArray = 0;
 cudaArray *d_customTransferFuncArray;
 
+cudaArray *d_isoValArray = 0;
+__device__ int d_numIsoVals = 0;
+
 std::vector<float> fpsVec;
 
 typedef float VolumeType;
@@ -133,7 +136,7 @@ __device__ uint rgbaFloatToInt(float4 rgba) {
 
 __global__ void
 d_render(uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear,
-float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal, 
+float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
 const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f))
 {
 	const int maxSteps = 512;
@@ -312,12 +315,13 @@ extern "C"
 void freeCudaBuffers() {
 	checkCudaErrors(cudaFreeArray(d_volumeArray));
 	checkCudaErrors(cudaFreeArray(d_customTransferFuncArray));
+	checkCudaErrors(cudaFreeArray(d_isoValArray));
 }
 
 
 extern "C"
 void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, 
-	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, 
+	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f)) {
 
 	d_render<<<gridSize, blockSize>>>(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
@@ -384,6 +388,21 @@ void copyLUT(float4* myLUT, int lutSize = 256)
 	customTransferTex.addressMode[0] = cudaAddressModeClamp;
 
 	checkCudaErrors(cudaBindTextureToArray(customTransferTex, d_customTransferFuncArray, channelDesc3));
+}
+
+extern "C"
+void transferIsoValues(float* h_isoVals, int h_numIsos) {
+
+	if (d_isoValArray) {
+		checkCudaErrors(cudaFreeArray(d_isoValArray));
+		d_isoValArray = 0;
+	}
+
+	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
+	checkCudaErrors(cudaMallocArray(&d_isoValArray, &channelDesc, h_numIsos));
+	checkCudaErrors(cudaMemcpyToArray(d_isoValArray, 0, 0, h_isoVals, sizeof(VolumeType)*h_numIsos, cudaMemcpyHostToDevice));
+
+	cudaMemset(&d_numIsoVals, h_numIsos, sizeof(int));
 }
 
 extern "C"
