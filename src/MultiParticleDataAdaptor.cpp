@@ -43,13 +43,13 @@ MultiParticleDataAdaptor::MultiParticleDataAdaptor(core::moldyn::MultiParticleDa
 
         list[pli].col_data = reinterpret_cast<const uint8_t *>(pl.GetColourData());
         list[pli].col_data_step = pl.GetColourDataStride();
-        if (pl.GetVertexDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+        if (pl.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
             if (list[pli].col_data_step < 4) list[pli].col_data_step = 4;
         }
-        if (pl.GetVertexDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+        if (pl.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
             if (list[pli].col_data_step < 12) list[pli].col_data_step = 12;
         }
-        else if (pl.GetVertexDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+        else if (pl.GetColourDataType() == MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
             if (list[pli].col_data_step < 16) list[pli].col_data_step = 16;
         }
 
