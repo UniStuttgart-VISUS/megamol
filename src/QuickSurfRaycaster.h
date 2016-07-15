@@ -32,6 +32,7 @@ extern "C" void setTextureFilterMode(bool bLinearFilter);
 extern "C" void initCudaDevice(void *h_volume, cudaExtent volumeSize);
 extern "C" void freeCudaBuffers();
 extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, unsigned int *d_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0, 1.0, 1.0));
+extern "C" void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, unsigned int *d_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), dim3 volSize = dim3(1,1,1));
 extern "C" void copyLUT(float4* myLUT, int lutSize = 256);
 extern "C" void transferNewVolume(void *h_volume, cudaExtent volumeSize);
 
@@ -203,17 +204,22 @@ namespace protein_cuda {
 		/**
 		 *	Calculates the volume data used for ray casting from the given call and other values
 		 *
-		 *	@param mpdc Pointer to the call containing the data.
+		 *	@param bbMin The min values of the object space bounding box
+		 *	@param bbMax The max values of the object space bounding box
 		 *	@param position Array containing all particle positions followed by the radii.
 		 *	@param quality
 		 *	@param radscale
 		 *	@param gridspacing
 		 *	@param isoval
+		 *	@param minConcentration Minimal concentration over all particles
+		 *	@param maxConcentration Maximal concentration over all particles
 		 *	@param useCol
+		 *	@return True on success, false otherwise
 		 */
-		void calcVolume(megamol::core::moldyn::MultiParticleDataCall * mpdc, float* positions,
+		bool calcVolume(float3 bbMin, float3 bbMax, float* positions,
 			int quality, float radscale, float gridspacing,
-			float isoval, bool useCol);
+			float isoval, float minConcentration, float maxConcentration,
+			bool useCol);
 
 		/** caller slot */
 		megamol::core::CallerSlot particleDataSlot;
@@ -273,6 +279,14 @@ namespace protein_cuda {
 		megamol::core::param::ParamSlot gridspacingParam;
 
 		megamol::core::param::ParamSlot isovalParam;
+
+		megamol::core::param::ParamSlot scalingFactor;
+
+		megamol::core::param::ParamSlot selectedIsoval;
+
+		cudaArray *tmpCudaArray;
+
+		cudaExtent volumeExtent;
 	};
 
 } /* end namespace protein_cuda */

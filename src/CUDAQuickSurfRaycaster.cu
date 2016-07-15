@@ -20,6 +20,8 @@
 #include <omp.h>
 #include <fstream>
 #include <vector>
+#include <thrust/extrema.h>
+#include <thrust/device_ptr.h>
 
 typedef unsigned int  uint;
 typedef unsigned char uchar;
@@ -134,10 +136,11 @@ d_render(uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float
 float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal, 
 const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f))
 {
-	const int maxSteps = 1024;
+	const int maxSteps = 512;
 	//const float tstep = 0.0009765625f;
 
-	const float tstep = (boxMax.x - boxMin.x) / (float)maxSteps;
+	//const float tstep = (boxMax.x - boxMin.x) / (float)maxSteps;
+	const float tstep = length(boxMax - boxMin) / (float)maxSteps;
 	const float opacityThreshold = 0.95f;
 
 	uint x = blockIdx.x*blockDim.x + threadIdx.x;
@@ -172,10 +175,10 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 		//d_output[y*imageW + x] = rgbaFloatToInt(make_float4(1.0f));
 		return;
 	} 
-	else {
+	/*else {
 		d_output[y*imageW + x] = rgbaFloatToInt(make_float4(1.0f));
 		return;
-	}
+	}*/
 
 	if (tnear < 0.0f) tnear = 0.0f;     // clamp to near plane
 
@@ -199,10 +202,19 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 
 		sample /= maxVal;
 
+		sample *= 2.0f;
+
 		float sampleCamDist = length(eyeRay.o - pos);
 
 		// lookup in transfer function texture
-		float4 col = tex1D(customTransferTex, (sample - transferOffset)*transferScale);
+		//float4 col = tex1D(customTransferTex, (sample - transferOffset)*transferScale);
+		float4 col = make_float4(0.0);
+
+		col = make_float4(sample);
+
+		/*float4 col = make_float4(0.0);
+		if( sample > 0.00001 )
+			col = make_float4(1.0);*/
 
 		col.w *= density;
 
@@ -313,6 +325,51 @@ void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, u
 }
 
 extern "C"
+void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
+	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
+	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), dim3 volSize = dim3(1,1,1)) {
+	
+	float* horst = new float[volSize.x * volSize.y * volSize.z];
+	horst[0] = 1.0f;
+	checkCudaErrors(cudaDeviceSynchronize());
+	//checkCudaErrors(cudaMemcpyFromArray(horst, renderArray, 0, 0, sizeof(float) * volSize.x * volSize.y, cudaMemcpyDeviceToHost));
+	
+	cudaExtent volExt;
+	volExt.width = volSize.x;
+	volExt.height = volSize.y;
+	volExt.depth = volSize.z;
+
+	cudaPitchedPtr pitchedHorst = make_cudaPitchedPtr(horst, sizeof(float) * volSize.x, volSize.x, volSize.y);
+
+	cudaMemcpy3DParms myParms = { 0 };
+	myParms.extent = volExt;
+	myParms.srcArray = renderArray;
+	myParms.dstPtr = pitchedHorst;
+	myParms.kind = cudaMemcpyDeviceToHost;
+
+	checkCudaErrors(cudaMemcpy3D(&myParms));
+
+	checkCudaErrors(cudaDeviceSynchronize());
+	for (unsigned int i = 0; i < volSize.x * volSize.y * volSize.z; i++) {
+		if (horst[i] > 0.000001)
+			printf("%i - %.3f\n", i, horst[i]);
+	}
+	delete[] horst;
+
+	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
+	checkCudaErrors(cudaBindTextureToArray(tex, renderArray, channelDesc));
+
+	checkCudaErrors(cudaDeviceSynchronize());
+
+	d_render << <gridSize, blockSize >> >(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
+		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax);
+
+	checkCudaErrors(cudaDeviceSynchronize());
+
+	checkCudaErrors(cudaUnbindTexture(tex));
+}
+
+extern "C"
 void copyLUT(float4* myLUT, int lutSize = 256)
 {
 	checkCudaErrors(cudaFreeArray(d_customTransferFuncArray));
@@ -344,15 +401,11 @@ void transferNewVolume(void* h_volume, cudaExtent volumeSize) {
 
 	// get min and max value from volume
 	float *volptr = static_cast<float*>(h_volume);
-	minVal = FLT_MAX;
-	maxVal = FLT_MIN;
-	for (unsigned int i = 0; i < volumeSize.width * volumeSize.height * volumeSize.depth; i++) {
-		if (minVal > volptr[i])
-			minVal = volptr[i];
-		if (maxVal < volptr[i])
-			maxVal = volptr[i];
-	}
-	printf("min = %f, max = %f\n", minVal, maxVal);
+	thrust::device_ptr<float> ptr = thrust::device_ptr<float>(volptr);
+
+	auto res = thrust::minmax_element(ptr, ptr + (volumeSize.width * volumeSize.depth * volumeSize.height));
+	minVal = (float)*res.first;
+	maxVal = (float)*res.second;
 
 	// copy data to 3D array
 	cudaMemcpy3DParms copyParams = { 0 };

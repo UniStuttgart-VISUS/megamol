@@ -16,11 +16,44 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 
+#include <channel_descriptor.h>
+#include <driver_functions.h>
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
+
+
+
+// Load raw data from disk
+void *loadRawFile(char *filename, size_t size)
+{
+	FILE *fp = fopen(filename, "rb");
+
+	if (!fp)
+	{
+		fprintf(stderr, "Error opening file '%s'\n", filename);
+		return 0;
+	}
+
+	void *data = malloc(size);
+	size_t read = fread(data, 1, size, fp);
+	fclose(fp);
+
+	printf("Read '%s', %d bytes\n", filename, (int)read);
+
+	size_t count = size / sizeof(unsigned char);
+	size_t fsize = count * sizeof(float);
+	void *floatdata = malloc(fsize);
+	for (size_t i = 0; i < count; i++) {
+		((float*)floatdata)[i] = ((float)(((unsigned char*)data)[i])) / 255.0f;
+	}
+
+	return floatdata;
+}
+
 
 /*
  *	QuickSurfRaycaster::QuickSurfRaycaster
@@ -31,6 +64,8 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	radscaleParam("quicksurf::radscale", "Radius scale"),
 	gridspacingParam("quicksurf::gridspacing", "Grid spacing"),
 	isovalParam("quicksurf::isoval", "Isovalue"),
+	selectedIsoval("quicksurf::selectedIsoval", "The isovalue we want to ray cast the isoplane from"),
+	scalingFactor("quicksurf::scalingFactor", "Scaling factor for the density values and particle radii"),
 	setCUDAGLDevice(true),
 	particlesSize(0)
 {
@@ -44,18 +79,27 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	this->radscaleParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->radscaleParam);
 
-	this->gridspacingParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+	//this->gridspacingParam.SetParameter(new param::FloatParam(0.01953125f, 0.0f));
+	this->gridspacingParam.SetParameter(new param::FloatParam(0.1f, 0.0f));
 	this->MakeSlotAvailable(&this->gridspacingParam);
 
 	this->isovalParam.SetParameter(new param::FloatParam(0.5f, 0.0f));
 	this->MakeSlotAvailable(&this->isovalParam);
 
+	this->selectedIsoval.SetParameter(new param::FloatParam(200.0f, 0.0f));
+	this->MakeSlotAvailable(&this->selectedIsoval);
+
+	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
+	this->MakeSlotAvailable(&this->scalingFactor);
+
 	lastViewport.Set(0, 0);
 
-	cudaqsurf = NULL;
-	cudaImage = NULL;
-	volumeArray = NULL;
-	particles = NULL;
+	volumeExtent = make_cudaExtent(0, 0, 0);
+
+	cudaqsurf = nullptr;
+	cudaImage = nullptr;
+	volumeArray = nullptr;
+	particles = nullptr;
 	texHandle = 0;
 }
 
@@ -80,10 +124,55 @@ void QuickSurfRaycaster::release(void) {
 
 }
 
-void QuickSurfRaycaster::calcVolume(MultiParticleDataCall * mpdc, float* positions, int quality, float radscale, float gridspacing,
-	float isoval, bool useCol) {
+bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions, int quality, float radscale, float gridspacing,
+	float isoval, float minConcentration, float maxConcentration, bool useCol) {
 
-	
+	float x = bbMax.x - bbMin.x;
+	float y = bbMax.y - bbMin.y;
+	float z = bbMax.z - bbMin.z;
+
+	int numVoxels[3];
+	numVoxels[0] = (int)ceil(x / gridspacing);
+	numVoxels[1] = (int)ceil(y / gridspacing);
+	numVoxels[2] = (int)ceil(z / gridspacing);
+
+	x = (numVoxels[0] - 1) * gridspacing;
+	y = (numVoxels[1] - 1) * gridspacing;
+	z = (numVoxels[2] - 1) * gridspacing;
+
+	printf("vox %i %i %i \n", numVoxels[0], numVoxels[1], numVoxels[2]);
+
+	volumeExtent = make_cudaExtent(numVoxels[0], numVoxels[1], numVoxels[2]);
+
+	float gausslim = 2.0f;
+	switch (quality) { // TODO adjust values
+	case 3: gausslim = 4.0f; break;
+	case 2: gausslim = 3.0f; break;
+	case 1: gausslim = 2.5f; break;
+	case 0:
+	default: gausslim = 2.0f; break;
+	}
+
+	float origin[3] = { bbMin.x, bbMin.y, bbMin.z };
+
+	if (cudaqsurf == NULL) {
+		cudaqsurf = new CUDAQuickSurf();
+	}
+
+	CUDAQuickSurf *cqs = (CUDAQuickSurf*)cudaqsurf;
+
+	int result = -1;
+	result = cqs->calc_map((long)numParticles, positions, colorTable.data(), 1, 
+	//result = cqs->calc_map((long)numParticles, positions, NULL, 0,
+		origin, numVoxels, maxConcentration, radscale, gridspacing, 
+		//origin, numVoxels, 2.0f, radscale, gridspacing,
+		isoval, gausslim);
+
+	checkCudaErrors(cudaDeviceSynchronize());
+
+	volumeExtent = make_cudaExtent(cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
+
+	return (result == 0);
 }
 
 /*
@@ -179,6 +268,25 @@ bool QuickSurfRaycaster::initCuda(view::CallRender3D& cr3d) {
 		}
 		setCUDAGLDevice = false;
 	}
+
+	//char *volumeFilename = "T:\MegaMol\Megamol_Binaries\x64\Debug\Bucky.raw";
+	//cudaExtent volumeSize;
+	//volumeSize.width = 32;
+	//volumeSize.height = 32;
+	//volumeSize.depth = 32;
+	//size_t size = volumeSize.width * volumeSize.height * volumeSize.depth * sizeof(unsigned char);
+	//void *h_volume = loadRawFile(volumeFilename, size);
+	//if (!h_volume)  return false;
+	//// create 3D array
+	//cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+	//checkCudaErrors(cudaMalloc3DArray(&tmpCudaArray, &channelDesc, volumeSize, cudaArraySurfaceLoadStore));
+	//// copy data to 3D array
+	//cudaMemcpy3DParms copyParams = { 0 };
+	//copyParams.srcPtr = make_cudaPitchedPtr(h_volume, volumeSize.width*sizeof(float), volumeSize.width, volumeSize.height);
+	//copyParams.dstArray = tmpCudaArray;
+	//copyParams.extent = volumeSize;
+	//copyParams.kind = cudaMemcpyHostToDevice;
+	//checkCudaErrors(cudaMemcpy3D(&copyParams));
 
 	return true;
 }
@@ -277,13 +385,18 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	this->cameraInfo = cr3d->GetCameraParameters();
 
 	callTime = cr3d->Time();
-	if (callTime < 1.0f) callTime = 1.0f;
 
 	MultiParticleDataCall * mpdc = particleDataSlot.CallAs<MultiParticleDataCall>();
 	MolecularDataCall * mdc = particleDataSlot.CallAs<MolecularDataCall>();
 
 	float3 bbMin;
 	float3 bbMax;
+
+	float3 clipBoxMin;
+	float3 clipBoxMax;
+
+	float concMin = FLT_MAX;
+	float concMax = FLT_MIN;
 
 	if (mpdc == NULL && mdc == NULL) return false;
 
@@ -293,7 +406,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		if (!(*mpdc)(0)) return false;
 
 		numParticles = 0;
-		//printf("ListCount: %i \n", mpdc->GetParticleListCount());
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			numParticles += mpdc->AccessParticles(i).GetCount();
 		}
@@ -301,8 +413,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		if (numParticles == 0) {
 			return true;
 		}
-
-		//printf("NumParticles: %i\n", numParticles);
 
 		if (this->particlesSize < this->numParticles * 4) {
 			if (this->particles) {
@@ -316,7 +426,14 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 		UINT64 particleCnt = 0;
 		this->colorTable.clear();
-		this->colorTable.reserve(numParticles * 3);
+		this->colorTable.reserve(numParticles * 4);
+
+		auto bb = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
+		bbMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
+		bbMax = make_float3(bb.Right(), bb.Top(), bb.Front());
+		bb = mpdc->GetBoundingBoxes().ClipBox();
+		clipBoxMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
+		clipBoxMax = make_float3(bb.Right(), bb.Top(), bb.Front());
 
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
@@ -325,6 +442,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 			unsigned int posStride = parts.GetVertexDataStride();
 			unsigned int colStride = parts.GetColourDataStride();
 			float globalRadius = parts.GetGlobalRadius();
+			//globalRadius /= 2.0f;
 			bool useGlobRad = (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
 			int numColors = 0;
 
@@ -347,25 +465,27 @@ bool QuickSurfRaycaster::Render(Call& call) {
 				if (posStride < 16) posStride = 16;
 			}
 
-			// Why does this work?
 			for (UINT64 j = 0; j < parts.GetCount(); j++, pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride),
 				colorPos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(colorPos) + colStride)) {
 
-				particles[particleCnt * 4 + 0] = pos[0];
-				particles[particleCnt * 4 + 1] = pos[1];
-				particles[particleCnt * 4 + 2] = pos[2];
-				if (useGlobRad) { // TODO take the concentration instead of the radius
-#define SCIVISCONTEST2016
-#ifdef SCIVISCONTEST2016
-					particles[particleCnt * 4 + 3] = colorPos[3]; // concentration
-#else
+				particles[particleCnt * 4 + 0] = pos[0] - bbMin.x;
+				particles[particleCnt * 4 + 1] = pos[1] - bbMin.y;
+				particles[particleCnt * 4 + 2] = pos[2] - bbMin.z;
+				if (useGlobRad) {
+					//particles[particleCnt * 4 + 3] = colorPos[3]; // concentration
+
+					//if (colorPos[3] < concMin) concMin = colorPos[3];
+					//if (colorPos[3] > concMax) concMax = colorPos[3];
+
 					particles[particleCnt * 4 + 3] = globalRadius;
-#endif
 				}
 				else {
 					particles[particleCnt * 4 + 3] = pos[3];
 				}
+				if (particles[particleCnt * 4 + 3] < concMin) concMin = particles[particleCnt * 4 + 3];
+				if (particles[particleCnt * 4 + 3] > concMax) concMax = particles[particleCnt * 4 + 3];
 
+				this->colorTable.push_back(1.0f);
 				this->colorTable.push_back(1.0f);
 				this->colorTable.push_back(1.0f);
 				this->colorTable.push_back(1.0f);
@@ -391,10 +511,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		}
 		glScalef(scale, scale, scale);
 
-		auto bb = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
-		bbMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
-		bbMax = make_float3(bb.Right(), bb.Top(), bb.Front());
-
 	} else if (mdc != NULL) {
 		// TODO
 		printf("MolecularDataCall currently not supported\n");
@@ -403,6 +519,13 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 	initCuda(*cr3d);
 	initPixelBuffer(*cr3d);
+
+	float factor = scalingFactor.Param<param::FloatParam>()->Value();
+
+	// normalize concentration
+	//for (UINT64 i = 0; i < numParticles; i++) {
+	//	particles[i * 4 + 3] = ((particles[i * 4 + 3] - concMin) / (concMax - concMin)) * factor;
+	//}
 
 	auto viewport = cr3d->GetViewport().GetSize();
 
@@ -415,10 +538,10 @@ bool QuickSurfRaycaster::Render(Call& call) {
     modelMatrix.Invert();
 	projectionMatrix.Invert();
 	float3 camPos = make_float3(modelMatrix.GetAt(0, 3), modelMatrix.GetAt(1, 3), modelMatrix.GetAt(2, 3));
-	float3 camDir = norm(make_float3(modelMatrix.GetAt(0, 2), modelMatrix.GetAt(1, 2), modelMatrix.GetAt(2, 2)));
-	float3 camUp = norm(make_float3(-modelMatrix.GetAt(0, 1), -modelMatrix.GetAt(1, 1), -modelMatrix.GetAt(2, 1)));
-	float3 camRight = norm(make_float3(-modelMatrix.GetAt(0, 0), -modelMatrix.GetAt(1, 0), -modelMatrix.GetAt(2, 0)));
-	// be careful: the minuses in the up and right vector computation are a dirty trick that makes everything work
+	float3 camDir = norm(make_float3(-modelMatrix.GetAt(0, 2), -modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2)));
+	float3 camUp = norm(make_float3(modelMatrix.GetAt(0, 1), modelMatrix.GetAt(1, 1), modelMatrix.GetAt(2, 1)));
+	float3 camRight = norm(make_float3(modelMatrix.GetAt(0, 0), modelMatrix.GetAt(1, 0), modelMatrix.GetAt(2, 0)));
+	// the direction has to be negated because of the right-handed view space of OpenGL
 
 	auto cam = cr3d->GetCameraParameters();
 
@@ -436,20 +559,43 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	float transferOffset = 0.0f;
 	float transferScale = 1.0f;
 
-	// TODO render volume
+	/*printf("min: %f %f %f \n", clipBoxMin.x, clipBoxMin.y, clipBoxMin.z);
+	printf("max: %f %f %f \n\n", clipBoxMax.x, clipBoxMax.y, clipBoxMax.z);*/
+
 	dim3 blockSize = dim3(8, 8);
 	dim3 gridSize = dim3(iDivUp(viewport.GetWidth(), blockSize.x), iDivUp(viewport.GetHeight(), blockSize.y));
 
-	/*printf("min: %f %f %f \n", bbMin.x, bbMin.y, bbMin.z);
-	printf("max: %f %f %f \n", bbMax.x, bbMax.y, bbMax.z);*/
+	if (cudaqsurf == NULL) {
+		cudaqsurf = new CUDAQuickSurf();
+	}
 
-	render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax);
+	// normalize isoval parameter
+	float myIso = (this->selectedIsoval.Param<param::FloatParam>()->Value() - concMin) / (concMax - concMin);
+
+	bool suc = this->calcVolume(bbMin, bbMax, particles, 
+					this->qualityParam.Param<param::IntParam>()->Value(),
+					this->radscaleParam.Param<param::FloatParam>()->Value(),
+					this->gridspacingParam.Param<param::FloatParam>()->Value(),
+					this->isovalParam.Param<param::FloatParam>()->Value(), 
+					concMin, concMax, true);
+
+	//if (!suc) return false;
+
+	CUDAQuickSurf * cqs = (CUDAQuickSurf*)cudaqsurf;
+	float * map = cqs->getMap();
+
+	printf("size: %i %i %i\n", cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
+
+	transferNewVolume(map, volumeExtent);
+
+	//if (!suc)
+		render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax);
+	//else
+		//renderArray_kernel(cqs->getMap(), gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, dim3(cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ()));
+	
 	getLastCudaError("kernel failed");
 
 	checkCudaErrors(cudaDeviceSynchronize());
-
-	/*for (int i = 0; i < viewport.GetWidth() * viewport.GetHeight(); i++)
-		printf("%u \n", cudaImage[i]);*/
 
 	glActiveTexture(GL_TEXTURE15);
 	glBindTexture(GL_TEXTURE_2D, texHandle);
@@ -474,13 +620,10 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	/*glDisable(GL_CULL_FACE);
-	glBegin(GL_TRIANGLES);
-	glColor4f(1, 0, 0, 1);
-	glVertex3f(bbMin.x, bbMin.y, bbMin.z);
-	glVertex3f(bbMax.x, bbMin.y, bbMin.z);
-	glVertex3f((bbMax.x - bbMin.x) / 2.0f, bbMax.y, bbMin.z);
-	glEnd();*/
+	if (mpdc)
+		mpdc->Unlock();
+	if (mdc)
+		mdc->Unlock();
 
 	return true;
 }

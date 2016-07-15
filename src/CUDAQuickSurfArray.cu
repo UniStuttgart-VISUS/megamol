@@ -27,6 +27,8 @@
 // multi-threaded direct summation implementation
 //
 
+surface<void, 3> outputSurface;
+
 inline __host__ __device__ float dot(float3 a, float3 b) { 
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
@@ -117,7 +119,6 @@ __global__ void sortAtomsGenCellListsQSA(unsigned int natoms,
       hash_s[0] = atomHash_d[index-1];
     }
   }
-
   __syncthreads();
 
   if (index < natoms) {
@@ -129,11 +130,10 @@ __global__ void sortAtomsGenCellListsQSA(unsigned int natoms,
       if (index > 0)
         cellStartEnd_d[hash_s[threadIdx.x]].y = index; // set end
     }
-
+	
     if (index == natoms - 1) {
       cellStartEnd_d[hash].y = index + 1; // set end
     }
-
     // Reorder atoms according to sorted indices
     unsigned int sortedIndex = atomIndex_d[index];
     sorted_atomIndex_d[sortedIndex] = index;
@@ -163,7 +163,13 @@ int vmd_cuda_build_density_atom_gridQSA(int natoms,
 
   // Compute block and grid sizes to use for various kernels
   dim3 hBsz(256, 1, 1);
+  cudaError_t err;
 
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+	  return -1;
+  }
   // If we have a very large atom count, we must either use 
   // larger thread blocks, or use multi-dimensional grids of thread blocks. 
   // We can use up to 65535 blocks in a 1-D grid, so we can use
@@ -181,16 +187,31 @@ int vmd_cuda_build_density_atom_gridQSA(int natoms,
   hashAtomsQSA<<<hGsz, hBsz>>>(natoms, xyzr_d, volsz, invgridspacing,
                             atomIndex_d, atomHash_d);
 
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+	  return -1;
+  }
   // Sort atom indices by their grid cell address
   // (wrapping the device pointers with vector iterators)
   thrust::sort_by_key(thrust::device_ptr<unsigned int>(atomHash_d),
                       thrust::device_ptr<unsigned int>(atomHash_d + natoms),
                       thrust::device_ptr<unsigned int>(atomIndex_d));
 
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+	  return -1;
+  }
   // Initialize all cells to empty
   int ncells = volsz.x * volsz.y * volsz.z;
   cudaMemset(cellStartEnd_d, GRID_CELL_EMPTY, ncells*sizeof(uint2));
 
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+	  printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+	  return -1;
+  }
   // Reorder atoms into sorted order and find start and end of each cell
   // XXX need to use 2-D indexing for large atom counts or we exceed the
   //     per-dimension 65535 block grid size limitation
@@ -205,7 +226,7 @@ int vmd_cuda_build_density_atom_gridQSA(int natoms,
   //     where errors fall through all of the CUDA API calls until the
   //     end and we do the cleanup only at the end.
   cudaThreadSynchronize();
-  cudaError_t err = cudaGetLastError();
+  err = cudaGetLastError();
   if (err != cudaSuccess) {
     printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
     return -1;
@@ -390,7 +411,7 @@ __global__ static void gaussdensity_fast_texQSA(int natoms,
   }
 
   //densitygrid[outaddr          ] = densityval1;
-  surf3Dwrite(densityval1, densitygrid, xindex, yindex, zindex);
+  surf3Dwrite(densityval1, densitygrid, xindex * sizeof(float), yindex, zindex);
   voltexmap[outaddr          ].x = densitycol1.x;
   voltexmap[outaddr          ].y = densitycol1.y;
   voltexmap[outaddr          ].z = densitycol1.z;
@@ -398,20 +419,20 @@ __global__ static void gaussdensity_fast_texQSA(int natoms,
 #if GTEXUNROLL >= 2
   int planesz = numvoxels.x * numvoxels.y;
   //densitygrid[outaddr + planesz] = densityval2;
-  surf3Dwrite(densityval2, densitygrid, xindex, yindex, zindex + 1);
+  surf3Dwrite(densityval2, densitygrid, xindex * sizeof(float), yindex, zindex + 1);
   voltexmap[outaddr + planesz].x = densitycol2.x;
   voltexmap[outaddr + planesz].y = densitycol2.y;
   voltexmap[outaddr + planesz].z = densitycol2.z;
 #endif
 #if GTEXUNROLL >= 4
   //densitygrid[outaddr + 2*planesz] = densityval3;
-  surf3Dwrite(densityval3, densitygrid, xindex, yindex, zindex + 2);
+  surf3Dwrite(densityval3, densitygrid, xindex * sizeof(float), yindex, zindex + 2);
   voltexmap[outaddr + 2*planesz].x = densitycol3.x;
   voltexmap[outaddr + 2*planesz].y = densitycol3.y;
   voltexmap[outaddr + 2*planesz].z = densitycol3.z;
 
   //densitygrid[outaddr + 3*planesz] = densityval4;
-  surf3Dwrite(densityval4, densitygrid, xindex, yindex, zindex + 3);
+  surf3Dwrite(densityval4, densitygrid, xindex * sizeof(float), yindex, zindex + 3);
   voltexmap[outaddr + 3*planesz].x = densitycol4.x;
   voltexmap[outaddr + 3*planesz].y = densitycol4.y;
   voltexmap[outaddr + 3*planesz].z = densitycol4.z;
@@ -562,19 +583,28 @@ __global__ static void gaussdensity_fastQSA(int natoms,
       }
     }
   }
-  
+
+  densityval1 = 1.0f;
+  densityval2 = 1.0f;
+  densityval3 = 1.0f;
+  densityval4 = 1.0f;
+
   //densitygrid[outaddr            ] = densityval1;
-  surf3Dwrite(densityval1, densitygrid, xindex, yindex, zindex);
+  //surf3Dwrite(densityval1, densitygrid, xindex * sizeof(float), yindex, zindex);
+  surf3Dwrite(densityval1, outputSurface, xindex * sizeof(float), yindex, zindex);
 #if GUNROLL >= 2
   int planesz = numvoxels.x * numvoxels.y;
   //densitygrid[outaddr +   planesz] = densityval2;
-  surf3Dwrite(densityval1, densitygrid, xindex, yindex, zindex + 1);
+  //surf3Dwrite(densityval2, densitygrid, xindex * sizeof(float), yindex, zindex + 1);
+  surf3Dwrite(densityval2, outputSurface, xindex * sizeof(float), yindex, zindex + 1);
 #endif
 #if GUNROLL >= 4
   //densitygrid[outaddr + 2*planesz] = densityval3;
-  surf3Dwrite(densityval1, densitygrid, xindex, yindex, zindex + 2);
+  //surf3Dwrite(densityval3, densitygrid, xindex * sizeof(float), yindex, zindex + 2);
+  surf3Dwrite(densityval3, outputSurface, xindex * sizeof(float), yindex, zindex + 2);
   //densitygrid[outaddr + 3*planesz] = densityval4;
-  surf3Dwrite(densityval1, densitygrid, xindex, yindex, zindex + 3);
+  //surf3Dwrite(densityval4, densitygrid, xindex * sizeof(float), yindex, zindex + 3);
+  surf3Dwrite(densityval4, outputSurface, xindex * sizeof(float), yindex, zindex + 3);
 #endif
   
   if( storeNearestNeighbor ) {
@@ -727,6 +757,7 @@ int CUDAQuickSurfArray::alloc_bufs_map(long int natoms, int colorperatom,
                                   int gx, int gy, int gz,
                                   bool storeNearestAtom) {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
+  cudaError_t err;
 
   // early exit from allocation call if we've already got existing
   // buffers that are large enough to support the request
@@ -752,15 +783,19 @@ int CUDAQuickSurfArray::alloc_bufs_map(long int natoms, int colorperatom,
   volumeSize.height = gy;
   volumeSize.depth = gz;
   cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-  cudaMalloc3DArray(&gpuh->devdensity, &channelDesc, volumeSize);
+  cudaMalloc3DArray(&gpuh->devdensity, &channelDesc, volumeSize, cudaArraySurfaceLoadStore);
   // Specify surface
+  /*
   struct cudaResourceDesc resDesc;
   memset(&resDesc, 0, sizeof(resDesc));
   resDesc.resType = cudaResourceTypeArray;
   // Create the surface objects
   resDesc.res.array.array = gpuh->devdensity;
   gpuh->devdensitySurface = 0;
-  cudaCreateSurfaceObject(&gpuh->devdensitySurface, &resDesc);
+  err = cudaCreateSurfaceObject(&gpuh->devdensitySurface, &resDesc);
+  if (err != cudaSuccess)
+	  return -1;
+  */
 
   if (colorperatom) {
     cudaMalloc((void**)&gpuh->devvoltexmap, 3*volmemsz);
@@ -785,7 +820,7 @@ int CUDAQuickSurfArray::alloc_bufs_map(long int natoms, int colorperatom,
   cudaMalloc(&gpuh->safety, natoms*sizeof(float4) +           // thrust
              8 * gx * gy * sizeof(float));
   
-  cudaError_t err = cudaGetLastError();
+  err = cudaGetLastError();
   if (err != cudaSuccess)
     return -1;
 
@@ -916,9 +951,7 @@ int CUDAQuickSurfArray::calc_map(long int natoms, const float *xyzr_f,
 
         xyzr[i].w = arinv;
     }
-
-
-
+	
     wkf_timerhandle globaltimer = wkf_timer_create();
     wkf_timer_start(globaltimer);
 
@@ -1075,6 +1108,12 @@ int CUDAQuickSurfArray::calc_map(long int natoms, const float *xyzr_f,
     dim3 Gszslice = Gsz;
     if (deviceProp.major < 2)
         Gszslice.z = 1;
+
+	err = cudaBindSurfaceToArray(outputSurface, gpuh->devdensity);
+	if (err != cudaSuccess) {
+		printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		return -1;
+	}
 
     if (colorperatom) {
         gaussdensity_fast_texQSA<<<Gszslice, Bsz, 0>>>(natoms, 
