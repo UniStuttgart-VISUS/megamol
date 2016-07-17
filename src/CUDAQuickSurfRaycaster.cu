@@ -137,7 +137,7 @@ __device__ uint rgbaFloatToInt(float4 rgba) {
 __global__ void
 d_render(uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear,
 float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
-const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f))
+const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent = make_cudaExtent(1, 1, 1))
 {
 	const int maxSteps = 512;
 	//const float tstep = 0.0009765625f;
@@ -175,7 +175,6 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 
 	if (!hit) {
 		d_output[y*imageW + x] = rgbaFloatToInt(make_float4(0.0f));
-		//d_output[y*imageW + x] = rgbaFloatToInt(make_float4(1.0f));
 		return;
 	} 
 	/*else {
@@ -205,7 +204,7 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 
 		sample /= maxVal;
 
-		sample *= 2.0f;
+		//sample *= 2.0f;
 
 		float sampleCamDist = length(eyeRay.o - pos);
 
@@ -231,7 +230,6 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 
 		// "over" operator for front-to-back blending
 		sum = sum + col*(1.0f - sum.w);
-
 
 		// exit early if opaque
 		if (sum.w > opacityThreshold)
@@ -322,28 +320,25 @@ void freeCudaBuffers() {
 extern "C"
 void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, 
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
-	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f)) {
+	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1)) {
 
 	d_render<<<gridSize, blockSize>>>(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
-		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax);
+		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize);
 }
 
 extern "C"
 void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
-	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), dim3 volSize = dim3(1,1,1)) {
+	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1,1,1)) {
 	
-	float* horst = new float[volSize.x * volSize.y * volSize.z];
+	float* horst = new float[volSize.width * volSize.height * volSize.depth];
 	horst[0] = 1.0f;
 	checkCudaErrors(cudaDeviceSynchronize());
 	//checkCudaErrors(cudaMemcpyFromArray(horst, renderArray, 0, 0, sizeof(float) * volSize.x * volSize.y, cudaMemcpyDeviceToHost));
 	
-	cudaExtent volExt;
-	volExt.width = volSize.x;
-	volExt.height = volSize.y;
-	volExt.depth = volSize.z;
+	cudaExtent volExt = volSize;
 
-	cudaPitchedPtr pitchedHorst = make_cudaPitchedPtr(horst, sizeof(float) * volSize.x, volSize.x, volSize.y);
+	cudaPitchedPtr pitchedHorst = make_cudaPitchedPtr(horst, sizeof(float) * volSize.width, volSize.height, volSize.height);
 
 	cudaMemcpy3DParms myParms = { 0 };
 	myParms.extent = volExt;
@@ -354,7 +349,7 @@ void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, u
 	checkCudaErrors(cudaMemcpy3D(&myParms));
 
 	checkCudaErrors(cudaDeviceSynchronize());
-	for (unsigned int i = 0; i < volSize.x * volSize.y * volSize.z; i++) {
+	for (unsigned int i = 0; i < volSize.width * volSize.depth * volSize.height; i++) {
 		if (horst[i] > 0.000001)
 			printf("%i - %.3f\n", i, horst[i]);
 	}
@@ -366,7 +361,7 @@ void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, u
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	d_render << <gridSize, blockSize >> >(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
-		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax);
+		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize);
 
 	checkCudaErrors(cudaDeviceSynchronize());
 

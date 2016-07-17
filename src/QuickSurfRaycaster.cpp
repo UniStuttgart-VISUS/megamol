@@ -613,7 +613,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	transferNewVolume(map, volumeExtent);
 
 	//if (!suc)
-		render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax);
+		render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent);
 	//else
 		//renderArray_kernel(cqs->getMap(), gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, dim3(cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ()));
 	
