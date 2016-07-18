@@ -32,7 +32,7 @@ cudaArray *d_volumeArray = 0;
 cudaArray *d_customTransferFuncArray;
 
 //cudaArray *d_isoValArray = 0;
-__device__ float * d_isoValArray = 0;
+__device__ float4 d_isoVals;
 __device__ int d_numIsoVals = 0;
 
 std::vector<float> fpsVec;
@@ -135,10 +135,27 @@ __device__ uint rgbaFloatToInt(float4 rgba) {
 	return (uint(rgba.w * 255) << 24) | (uint(rgba.z * 255) << 16) | (uint(rgba.y * 255) << 8) | uint(rgba.x * 255);
 }
 
+__device__ float4 performLighting(float3 normal, float3 camDirection, float3 lightDirection, float4 surfaceColor, float4 lightParams) {
+	float3 lightDir = normalize(lightDirection);
+	float3 n = normalize(normal);
+	float3 dir = normalize(camDirection);
+	float ndotl = dot(n, lightDir);
+
+	float3 r = normalize(2.0f * ndotl * n - lightDir);
+	float spec = powf(max(dot(r, -dir), 0.0), lightParams.w);
+	float diff = max(abs(ndotl), 0.0);
+
+	float3 col = make_float3(surfaceColor.x, surfaceColor.y, surfaceColor.z);
+	float3 result = lightParams.x * col + lightParams.y * diff * col + lightParams.z * spec * make_float3(1, 1, 1);
+
+	return make_float4(result, surfaceColor.w);
+}
+
 __global__ void
 d_render(uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear,
 float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
-const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent = make_cudaExtent(1, 1, 1))
+const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
+const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f))
 {
 	const int maxSteps = 512;
 	//const float tstep = 0.0009765625f;
@@ -202,10 +219,11 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 	sP.x = (pos.x - boxMin.x) / diff.x;
 	sP.y = (pos.y - boxMin.y) / diff.y;
 	sP.z = (pos.z - boxMin.z) / diff.z;
-	float val = tex3D(tex, sP.x, sP.y, sP.z);
+	float val = tex3D(tex, sP.x, sP.y, sP.z) / maxVal;
 
 	float isoDiff = 0;
-	float isoDiffOld = val - d_isoValArray[0];
+	//float isoDiffOld = val - d_isoValArray[0];
+	float isoDiffOld = val - 0.1;
 
 	// TODO why this?
 	//if (isoDiffOld > 0.0) {
@@ -216,6 +234,8 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 	//	dest.rgb *= dest.a;
 	//}
 
+	float3 voxelSize = make_float3(1.0f / (float)volSize.width, 1.0f / (float)volSize.height, 1.0f / (float)volSize.depth);
+
 	for (int i = 0; i<maxSteps; i++) {
 		// read from 3D texture
 		// remap position to [0, 1] coordinates
@@ -225,39 +245,69 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 		samplePos.y = (pos.y - boxMin.y) / diff.y;
 		samplePos.z = (pos.z - boxMin.z) / diff.z;
 		float sample = tex3D(tex, samplePos.x, samplePos.y, samplePos.z);
-
 		sample /= maxVal;
 
-		//sample *= 2.0f;
+		//isoDiff = sample - d_isoValArray[0];
+		isoDiff = sample - 0.1f;
 
-		float sampleCamDist = length(eyeRay.o - pos);
+		//sum = make_float4(d_isoValArray[0]);
 
-		// lookup in transfer function texture
-		//float4 col = tex1D(customTransferTex, (sample - transferOffset)*transferScale);
-		float4 col = make_float4(0.0);
+		
+		if ((isoDiff * isoDiffOld) <= 0.0f) {
+			//sum = make_float4(1.0f, 0.0f, 0.0f, 1.0f);
 
-		col = make_float4(sample);
+			// interpolated exact position of the isosurface
+			float3 isoPos = lerp(pos - step, pos, isoDiffOld / (isoDiffOld - isoDiff));
 
-		/*float4 col = make_float4(0.0);
-		if( sample > 0.00001 )
-			col = make_float4(1.0);*/
+			float3 isoSamplePos;
+			isoSamplePos.x = (isoPos.x - boxMin.x) / diff.x;
+			isoSamplePos.y = (isoPos.y - boxMin.y) / diff.y;
+			isoSamplePos.z = (isoPos.z - boxMin.z) / diff.z;
 
-		col.w *= density;
+			float3 gradient = make_float3(1, 0, 0);
+			gradient.x = tex3D(tex, isoSamplePos.x + voxelSize.x, isoSamplePos.y, isoSamplePos.z)
+				- tex3D(tex, isoSamplePos.x - voxelSize.x, isoSamplePos.y, isoSamplePos.z);
+			gradient.y = tex3D(tex, isoSamplePos.x, isoSamplePos.y + voxelSize.y, isoSamplePos.z)
+				- tex3D(tex, isoSamplePos.x, isoSamplePos.y - voxelSize.y, isoSamplePos.z);
+			gradient.z = tex3D(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z + voxelSize.z)
+				- tex3D(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z - voxelSize.z);
+			gradient = normalize(gradient);
 
-		// "under" operator for back-to-front blending
-		//sum = lerp(sum, col, col.w);
+			//sample *= 2.0f;
 
-		// pre-multiply alpha
-		col.x *= col.w;
-		col.y *= col.w;
-		col.z *= col.w;
+			float4 col = make_float4(0.0);
 
-		// "over" operator for front-to-back blending
-		sum = sum + col*(1.0f - sum.w);
+			col = make_float4(sample);
+			col.w *= density;
 
-		// exit early if opaque
-		if (sum.w > opacityThreshold)
-			break;
+			// "under" operator for back-to-front blending
+			//sum = lerp(sum, col, col.w);
+
+			// pre-multiply alpha
+			//col.x *= col.w;
+			//col.y *= col.w;
+			//col.z *= col.w;
+
+			// isosurface color
+			col = make_float4(1.0f, 0.0f, 0.0f, 1.0f);
+
+			//float4 mycol = col;
+			float4 mycol = performLighting(gradient, -eyeRay.d, lightDir, col, lightParams);
+			mycol *= mycol.w;
+			mycol.w = col.w;
+
+			sum = sum + (mycol * (1.0f - sum.w));
+			//sum = make_float4(1.0f, 0.0f, 0.0f, 1.0f);
+
+			// "over" operator for front-to-back blending
+			//sum = sum + col*(1.0f - sum.w);
+
+			//// exit early if opaque
+			if (sum.w > opacityThreshold)
+				break;
+
+		}
+		isoDiffOld = isoDiff;
 
 		t += tstep;
 
@@ -345,16 +395,18 @@ void freeCudaBuffers() {
 extern "C"
 void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, 
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
-	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1)) {
+	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
+	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f)) {
 
 	d_render<<<gridSize, blockSize>>>(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
-		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize);
+		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams);
 }
 
 extern "C"
 void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
-	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1,1,1)) {
+	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1,1,1),
+	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f)) {
 	
 	float* horst = new float[volSize.width * volSize.height * volSize.depth];
 	horst[0] = 1.0f;
@@ -386,7 +438,7 @@ void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, u
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	d_render << <gridSize, blockSize >> >(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
-		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize);
+		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams);
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
@@ -411,21 +463,9 @@ void copyLUT(float4* myLUT, int lutSize = 256)
 }
 
 extern "C"
-void transferIsoValues(float* h_isoVals, int h_numIsos) {
+void transferIsoValues(float4 h_isoVals, int h_numIsos) {
 
-	if (d_isoValArray) {
-		//checkCudaErrors(cudaFreeArray(d_isoValArray));
-		checkCudaErrors(cudaFree(d_isoValArray));
-		//d_isoValArray = 0; // not possible since it is a device pointer
-	}
-
-	/*cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
-	checkCudaErrors(cudaMallocArray(&d_isoValArray, &channelDesc, h_numIsos));
-	checkCudaErrors(cudaMemcpyToArray(d_isoValArray, 0, 0, h_isoVals, sizeof(VolumeType)*h_numIsos, cudaMemcpyHostToDevice));*/
-
-	checkCudaErrors(cudaMalloc(&d_isoValArray, h_numIsos * sizeof(VolumeType)));
-	checkCudaErrors(cudaMemcpyToSymbol(d_isoValArray, &h_isoVals, h_numIsos * sizeof(VolumeType), 0, cudaMemcpyHostToDevice));
-
+	checkCudaErrors(cudaMemcpyToSymbol(d_isoVals, &h_isoVals, sizeof(float4), 0, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpyToSymbol(d_numIsoVals, &h_numIsos, sizeof(int), 0, cudaMemcpyHostToDevice));
 }
 

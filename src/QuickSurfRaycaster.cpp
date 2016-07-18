@@ -439,6 +439,9 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		clipBoxMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
 		clipBoxMax = make_float3(bb.Right(), bb.Top(), bb.Front());
 
+		float minConc = FLT_MAX;
+		float maxConc = FLT_MIN;
+
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
 			const float *pos = static_cast<const float*>(parts.GetVertexData());
@@ -494,15 +497,27 @@ bool QuickSurfRaycaster::Render(Call& call) {
 				this->colorTable.push_back(1.0f);
 				this->colorTable.push_back(1.0f);
 
-				// TODO delete that, when possible
-				if (numColors > 3)
-					numColors = 3;
-
-				for (int k = 0; k < numColors; k++) {
+				/*for (int k = 0; k < numColors; k++) {
 					for (int l = 0; l < 3 - k; l++) {
-						this->colorTable[particleCnt * 3 + k + l] = colorPos[k];
+						this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
 					}
+				}*/
+
+				/*for (int k = 0; k < numColors; k++) {
+					for (int l = 0; l < 3 - k; l++) {
+						this->colorTable[particleCnt * 4 + k + l] = colorPos[numColors - 1];
+					}
+				}*/
+
+				for (int k = 0; k < 3; k++) {
+					this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
 				}
+
+				//if (colorPos[3] < minConc) minConc = colorPos[numColors - 1];
+				//if (colorPos[3] > maxConc) maxConc = colorPos[numColors - 1];
+
+				if (this->colorTable[particleCnt * 4 + 3] > 1.0)
+					printf("%u : %f %f %f :::: %f %f %f %f \n", j, particles[particleCnt * 4 + 0], particles[particleCnt * 4 + 1], particles[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 0], this->colorTable[particleCnt * 4 + 1], this->colorTable[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 3]);
 
 				particleCnt++;
 			}
@@ -558,7 +573,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	float fovx = 2.0f * atan(tan(fovy / 2.0f) * aspect);
 	float zNear = (2.0f * projectionMatrix.GetAt(2, 3)) / (2.0f * projectionMatrix.GetAt(2, 2) - 2.0f);
 
-	float density = 0.05f;
+	float density = 0.5f;
 	float brightness = 1.0f;
 	float transferOffset = 0.0f;
 	float transferScale = 1.0f;
@@ -575,7 +590,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 	// parse selected isovalues if needed
 	if (selectedIsovals.IsDirty()) {
-		std::vector<float> isoVals;
+		isoVals.clear();
 		vislib::TString valString = selectedIsovals.Param<param::StringParam>()->Value();
 		vislib::StringA vala = T2A(valString);
 
@@ -591,7 +606,17 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		/*for (float f: isoVals)
 			printf("value: %f\n", f);*/
 
-		transferIsoValues(isoVals.data(), (int)isoVals.size());
+		// sort the isovalues ascending
+		std::sort(isoVals.begin(), isoVals.end());
+
+		// copy the first four isovalues into a float4
+		std::vector<float> help(4, -1.0f);
+		for (int i = 0; i < std::min((int)isoVals.size(), 4); i++) {
+			help[i] = isoVals[i];
+		}
+		float4 values = make_float4(help[0], help[1], help[2], help[3]);
+
+		transferIsoValues(values, (int)std::min((int)isoVals.size(), 4));
 
 		selectedIsovals.ResetDirty();
 	}
@@ -610,15 +635,22 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 	//printf("size: %i %i %i\n", cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
 
+	// read lighting parameters
+	float lightPos[4];
+	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+	float3 light = make_float3(lightPos[0], lightPos[1], lightPos[2]);
+
+	// TODO read slot for lighting params
+
 	transferNewVolume(map, volumeExtent);
+	checkCudaErrors(cudaDeviceSynchronize());
 
 	//if (!suc)
-		render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent);
+		render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f));
 	//else
 		//renderArray_kernel(cqs->getMap(), gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, dim3(cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ()));
 	
 	getLastCudaError("kernel failed");
-
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	glActiveTexture(GL_TEXTURE15);
