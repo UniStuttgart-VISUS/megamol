@@ -442,6 +442,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		float minConc = FLT_MAX;
 		float maxConc = FLT_MIN;
 
+		// TODO compute min and max concentration before copying to throw away useless particles beforehand
+
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
 			const float *pos = static_cast<const float*>(parts.GetVertexData());
@@ -479,49 +481,48 @@ bool QuickSurfRaycaster::Render(Call& call) {
 				particles[particleCnt * 4 + 1] = pos[1] - bbMin.y;
 				particles[particleCnt * 4 + 2] = pos[2] - bbMin.z;
 				if (useGlobRad) {
-					//particles[particleCnt * 4 + 3] = colorPos[3]; // concentration
-
-					//if (colorPos[3] < concMin) concMin = colorPos[3];
-					//if (colorPos[3] > concMax) concMax = colorPos[3];
-
 					particles[particleCnt * 4 + 3] = globalRadius;
 				}
 				else {
 					particles[particleCnt * 4 + 3] = pos[3];
 				}
-				if (particles[particleCnt * 4 + 3] < concMin) concMin = particles[particleCnt * 4 + 3];
-				if (particles[particleCnt * 4 + 3] > concMax) concMax = particles[particleCnt * 4 + 3];
 
 				this->colorTable.push_back(1.0f);
 				this->colorTable.push_back(1.0f);
 				this->colorTable.push_back(1.0f);
 				this->colorTable.push_back(1.0f);
 
+				/*---------------------------------choose-one---------------------------------------------------------*/
+
+				// 1. copy all available values into the color, the rest gets filled up with the last available value
 				/*for (int k = 0; k < numColors; k++) {
 					for (int l = 0; l < 3 - k; l++) {
 						this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
 					}
 				}*/
 
-				/*for (int k = 0; k < numColors; k++) {
-					for (int l = 0; l < 3 - k; l++) {
-						this->colorTable[particleCnt * 4 + k + l] = colorPos[numColors - 1];
-					}
-				}*/
 
+				// 2. fill r,g & b with the last available color value (should be density)
 				for (int k = 0; k < 3; k++) {
 					this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
 				}
 
-				//if (colorPos[3] < minConc) minConc = colorPos[numColors - 1];
-				//if (colorPos[3] > maxConc) maxConc = colorPos[numColors - 1];
+				/*---------------------------------------------------------------------------------------------------*/
 
-				if (this->colorTable[particleCnt * 4 + 3] > 1.0)
-					printf("%u : %f %f %f :::: %f %f %f %f \n", j, particles[particleCnt * 4 + 0], particles[particleCnt * 4 + 1], particles[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 0], this->colorTable[particleCnt * 4 + 1], this->colorTable[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 3]);
+				if (colorPos[numColors - 1] < minConc) minConc = colorPos[numColors - 1];
+				if (colorPos[numColors - 1] > maxConc) maxConc = colorPos[numColors - 1];
 
+				/*if (this->colorTable[particleCnt * 4 + 0] > 1.0)
+					printf("%u : %f %f %f :::: %f %f %f %f \n", j, particles[particleCnt * 4 + 0], particles[particleCnt * 4 + 1], particles[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 0], this->colorTable[particleCnt * 4 + 1], this->colorTable[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 3]);*/
+
+				//if (this->colorTable[particleCnt * 4 + 0] > 50.0f)
 				particleCnt++;
 			}
 		}
+
+		//numParticles = particleCnt;
+
+		//printf("conc: %f %f\n", minConc, maxConc);
 
 		glPushMatrix();
 		float scale = 1.0f;
