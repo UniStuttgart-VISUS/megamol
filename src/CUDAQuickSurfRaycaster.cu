@@ -31,7 +31,8 @@ cudaEvent_t evtStart, evtStop;
 cudaArray *d_volumeArray = 0;
 cudaArray *d_customTransferFuncArray;
 
-cudaArray *d_isoValArray = 0;
+//cudaArray *d_isoValArray = 0;
+__device__ float * d_isoValArray = 0;
 __device__ int d_numIsoVals = 0;
 
 std::vector<float> fpsVec;
@@ -192,6 +193,29 @@ const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = ma
 
 	float3 diff = boxMax - boxMin;
 
+	if (d_numIsoVals < 1) { // no isosurfaces to render
+		d_output[y*imageW + x] = rgbaFloatToInt(make_float4(0.0f));
+		return;
+	}
+
+	float3 sP;
+	sP.x = (pos.x - boxMin.x) / diff.x;
+	sP.y = (pos.y - boxMin.y) / diff.y;
+	sP.z = (pos.z - boxMin.z) / diff.z;
+	float val = tex3D(tex, sP.x, sP.y, sP.z);
+
+	float isoDiff = 0;
+	float isoDiffOld = val - d_isoValArray[0];
+
+	// TODO why this?
+	//if (isoDiffOld > 0.0) {
+	//	sum = make_float4(val);
+	//	// higher opacity for surfaces orthogonal to view dir
+	//	dest = vec4(volColor, clipPlaneOpacity);
+	//	// perform blending
+	//	dest.rgb *= dest.a;
+	//}
+
 	for (int i = 0; i<maxSteps; i++) {
 		// read from 3D texture
 		// remap position to [0, 1] coordinates
@@ -313,7 +337,8 @@ extern "C"
 void freeCudaBuffers() {
 	checkCudaErrors(cudaFreeArray(d_volumeArray));
 	checkCudaErrors(cudaFreeArray(d_customTransferFuncArray));
-	checkCudaErrors(cudaFreeArray(d_isoValArray));
+	//checkCudaErrors(cudaFreeArray(d_isoValArray));
+	//checkCudaErrors(cudaFree(d_isoValArray));
 }
 
 
@@ -389,15 +414,19 @@ extern "C"
 void transferIsoValues(float* h_isoVals, int h_numIsos) {
 
 	if (d_isoValArray) {
-		checkCudaErrors(cudaFreeArray(d_isoValArray));
-		d_isoValArray = 0;
+		//checkCudaErrors(cudaFreeArray(d_isoValArray));
+		checkCudaErrors(cudaFree(d_isoValArray));
+		//d_isoValArray = 0; // not possible since it is a device pointer
 	}
 
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
+	/*cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
 	checkCudaErrors(cudaMallocArray(&d_isoValArray, &channelDesc, h_numIsos));
-	checkCudaErrors(cudaMemcpyToArray(d_isoValArray, 0, 0, h_isoVals, sizeof(VolumeType)*h_numIsos, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToArray(d_isoValArray, 0, 0, h_isoVals, sizeof(VolumeType)*h_numIsos, cudaMemcpyHostToDevice));*/
 
-	cudaMemset(&d_numIsoVals, h_numIsos, sizeof(int));
+	checkCudaErrors(cudaMalloc(&d_isoValArray, h_numIsos * sizeof(VolumeType)));
+	checkCudaErrors(cudaMemcpyToSymbol(d_isoValArray, &h_isoVals, h_numIsos * sizeof(VolumeType), 0, cudaMemcpyHostToDevice));
+
+	checkCudaErrors(cudaMemcpyToSymbol(d_numIsoVals, &h_numIsos, sizeof(int), 0, cudaMemcpyHostToDevice));
 }
 
 extern "C"
