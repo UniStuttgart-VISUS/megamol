@@ -18,7 +18,7 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
-#include "CUDAQuickSurf.h"
+#include "CUDAQuickSurfAlternative.h"
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -238,8 +238,11 @@ namespace protein_cuda {
 		/** The current time */
 		float callTime;
 
-		/** The number of rendered particles*/
+		/** The total number of rendered particles*/
 		UINT64 numParticles;
+
+		/** The number of particles after filtering*/
+		UINT64 particleCnt;
 
 		/** The resulting CUDA image*/
 		unsigned int * cudaImage;

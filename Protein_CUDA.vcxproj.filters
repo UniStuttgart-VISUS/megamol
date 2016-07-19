@@ -222,6 +222,9 @@
     <ClInclude Include="src\QuickSurfRaycaster.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\CUDAQuickSurfAlternative.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
@@ -419,6 +422,9 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="src\CUDAQuickSurfRaycaster.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSurfAlternative.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -344,7 +344,7 @@ void initCudaDevice(void *h_volume, cudaExtent volumeSize) {
 		if (maxVal < volptr[i])
 			maxVal = volptr[i];
 	}
-	printf("min = %f, max = %f\n", minVal, maxVal);
+	//printf("min = %f, max = %f\n", minVal, maxVal);
 
 	// copy data to 3D array
 	cudaMemcpy3DParms copyParams = { 0 };

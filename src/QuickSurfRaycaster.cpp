@@ -28,36 +28,6 @@ using namespace megamol::core::moldyn;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
 
-
-
-// Load raw data from disk
-void *loadRawFile(char *filename, size_t size)
-{
-	FILE *fp = fopen(filename, "rb");
-
-	if (!fp)
-	{
-		fprintf(stderr, "Error opening file '%s'\n", filename);
-		return 0;
-	}
-
-	void *data = malloc(size);
-	size_t read = fread(data, 1, size, fp);
-	fclose(fp);
-
-	printf("Read '%s', %d bytes\n", filename, (int)read);
-
-	size_t count = size / sizeof(unsigned char);
-	size_t fsize = count * sizeof(float);
-	void *floatdata = malloc(fsize);
-	for (size_t i = 0; i < count; i++) {
-		((float*)floatdata)[i] = ((float)(((unsigned char*)data)[i])) / 255.0f;
-	}
-
-	return floatdata;
-}
-
-
 /*
  *	QuickSurfRaycaster::QuickSurfRaycaster
  */
@@ -83,15 +53,17 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	this->MakeSlotAvailable(&this->radscaleParam);
 
 	//this->gridspacingParam.SetParameter(new param::FloatParam(0.01953125f, 0.0f));
-	this->gridspacingParam.SetParameter(new param::FloatParam(0.1f, 0.0f));
+	this->gridspacingParam.SetParameter(new param::FloatParam(0.2f, 0.0f));
 	this->MakeSlotAvailable(&this->gridspacingParam);
 
 	this->isovalParam.SetParameter(new param::FloatParam(0.5f, 0.0f));
 	this->MakeSlotAvailable(&this->isovalParam);
 
-	this->selectedIsovals.SetParameter(new param::StringParam("0.5,0.9"));
+	this->selectedIsovals.SetParameter(new param::StringParam("0.1,0.9"));
 	this->MakeSlotAvailable(&this->selectedIsovals);
 	this->selectedIsovals.ForceSetDirty(); // necessary for initial update
+	isoVals.push_back(0.1f);
+	isoVals.push_back(0.9f);
 
 	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->scalingFactor);
@@ -112,7 +84,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
  */
 QuickSurfRaycaster::~QuickSurfRaycaster(void) {
 	if (cudaqsurf) {
-		CUDAQuickSurf *cqs = (CUDAQuickSurf *)cudaqsurf;
+		CUDAQuickSurfAlternative *cqs = (CUDAQuickSurfAlternative *)cudaqsurf;
 		delete cqs;
 		cqs = nullptr;
 		cudaqsurf = nullptr;
@@ -160,16 +132,14 @@ bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions
 	float origin[3] = { bbMin.x, bbMin.y, bbMin.z };
 
 	if (cudaqsurf == NULL) {
-		cudaqsurf = new CUDAQuickSurf();
+		cudaqsurf = new CUDAQuickSurfAlternative();
 	}
 
-	CUDAQuickSurf *cqs = (CUDAQuickSurf*)cudaqsurf;
+	CUDAQuickSurfAlternative *cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
 
 	int result = -1;
-	result = cqs->calc_map((long)numParticles, positions, colorTable.data(), 1, 
-	//result = cqs->calc_map((long)numParticles, positions, NULL, 0,
+	result = cqs->calc_map((long)particleCnt, positions, colorTable.data(), 1, 
 		origin, numVoxels, maxConcentration, radscale, gridspacing, 
-		//origin, numVoxels, 2.0f, radscale, gridspacing,
 		isoval, gausslim);
 
 	checkCudaErrors(cudaDeviceSynchronize());
@@ -273,25 +243,6 @@ bool QuickSurfRaycaster::initCuda(view::CallRender3D& cr3d) {
 		setCUDAGLDevice = false;
 	}
 
-	//char *volumeFilename = "T:\MegaMol\Megamol_Binaries\x64\Debug\Bucky.raw";
-	//cudaExtent volumeSize;
-	//volumeSize.width = 32;
-	//volumeSize.height = 32;
-	//volumeSize.depth = 32;
-	//size_t size = volumeSize.width * volumeSize.height * volumeSize.depth * sizeof(unsigned char);
-	//void *h_volume = loadRawFile(volumeFilename, size);
-	//if (!h_volume)  return false;
-	//// create 3D array
-	//cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-	//checkCudaErrors(cudaMalloc3DArray(&tmpCudaArray, &channelDesc, volumeSize, cudaArraySurfaceLoadStore));
-	//// copy data to 3D array
-	//cudaMemcpy3DParms copyParams = { 0 };
-	//copyParams.srcPtr = make_cudaPitchedPtr(h_volume, volumeSize.width*sizeof(float), volumeSize.width, volumeSize.height);
-	//copyParams.dstArray = tmpCudaArray;
-	//copyParams.extent = volumeSize;
-	//copyParams.kind = cudaMemcpyHostToDevice;
-	//checkCudaErrors(cudaMemcpy3D(&copyParams));
-
 	return true;
 }
 
@@ -386,6 +337,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
 	if (cr3d == NULL) return false;
 
+	if (isoVals.size() < 1) return true;
+
 	this->cameraInfo = cr3d->GetCameraParameters();
 
 	callTime = cr3d->Time();
@@ -428,7 +381,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		}
 		memset(this->particles, 0, this->numParticles * 4 * sizeof(float));
 
-		UINT64 particleCnt = 0;
+		particleCnt = 0;
 		this->colorTable.clear();
 		this->colorTable.reserve(numParticles * 4);
 
@@ -439,10 +392,36 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		clipBoxMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
 		clipBoxMax = make_float3(bb.Right(), bb.Top(), bb.Front());
 
-		float minConc = FLT_MAX;
-		float maxConc = FLT_MIN;
+		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
+			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
+			const float *colorPos = static_cast<const float*>(parts.GetColourData());
+			unsigned int colStride = parts.GetColourDataStride();
+			int numColors = 0;
 
-		// TODO compute min and max concentration before copying to throw away useless particles beforehand
+			switch (parts.GetColourDataType()) {
+			case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: numColors = 1; break;
+			case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB: numColors = 3; break;
+			case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA: numColors = 4; break;
+			case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB: numColors = 0; break; // TODO
+			case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA: numColors = 0; break; // TODO
+			}
+
+			// if the vertices have no type, take the next list
+			if (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE) {
+				continue;
+			}
+
+			if (numColors > 0) {
+
+				for (UINT64 j = 0; j < parts.GetCount(); j++, colorPos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(colorPos)+colStride)) {
+
+					if (colorPos[numColors - 1] < concMin) concMin = colorPos[numColors - 1];
+					if (colorPos[numColors - 1] > concMax) concMax = colorPos[numColors - 1];
+				}
+			}
+		}
+
+		particleCnt = 0;
 
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
@@ -451,7 +430,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 			unsigned int posStride = parts.GetVertexDataStride();
 			unsigned int colStride = parts.GetColourDataStride();
 			float globalRadius = parts.GetGlobalRadius();
-			//globalRadius /= 2.0f;
 			bool useGlobRad = (parts.GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ);
 			int numColors = 0;
 
@@ -477,52 +455,58 @@ bool QuickSurfRaycaster::Render(Call& call) {
 			for (UINT64 j = 0; j < parts.GetCount(); j++, pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride),
 				colorPos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(colorPos) + colStride)) {
 
-				particles[particleCnt * 4 + 0] = pos[0] - bbMin.x;
-				particles[particleCnt * 4 + 1] = pos[1] - bbMin.y;
-				particles[particleCnt * 4 + 2] = pos[2] - bbMin.z;
-				if (useGlobRad) {
-					particles[particleCnt * 4 + 3] = globalRadius;
-				}
-				else {
-					particles[particleCnt * 4 + 3] = pos[3];
-				}
+				if (colorPos[numColors - 1] > (concMax - concMin) * isoVals[0] + concMin
+					&& colorPos[numColors - 1] < (concMax - concMin) * isoVals[isoVals.size() - 1] + concMin) {
 
-				this->colorTable.push_back(1.0f);
-				this->colorTable.push_back(1.0f);
-				this->colorTable.push_back(1.0f);
-				this->colorTable.push_back(1.0f);
-
-				/*---------------------------------choose-one---------------------------------------------------------*/
-
-				// 1. copy all available values into the color, the rest gets filled up with the last available value
-				/*for (int k = 0; k < numColors; k++) {
-					for (int l = 0; l < 3 - k; l++) {
-						this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
+					particles[particleCnt * 4 + 0] = pos[0] - bbMin.x;
+					particles[particleCnt * 4 + 1] = pos[1] - bbMin.y;
+					particles[particleCnt * 4 + 2] = pos[2] - bbMin.z;
+					if (useGlobRad) {
+						particles[particleCnt * 4 + 3] = globalRadius;
 					}
-				}*/
+					else {
+						particles[particleCnt * 4 + 3] = pos[3];
+					}
+
+					this->colorTable.push_back(1.0f);
+					this->colorTable.push_back(1.0f);
+					this->colorTable.push_back(1.0f);
+					this->colorTable.push_back(1.0f);
+
+					/*---------------------------------choose-one---------------------------------------------------------*/
+
+					// 1. copy all available values into the color, the rest gets filled up with the last available value
+					/*for (int k = 0; k < numColors; k++) {
+						for (int l = 0; l < 3 - k; l++) {
+						this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
+						}
+						}*/
 
 
-				// 2. fill r,g & b with the last available color value (should be density)
-				for (int k = 0; k < 3; k++) {
-					this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
+					// 2. fill r,g & b with the last available color value (should be density)
+					for (int k = 0; k < 3; k++) {
+						this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
+					}
+
+					/*---------------------------------------------------------------------------------------------------*/
+
+					particleCnt++;
 				}
 
-				/*---------------------------------------------------------------------------------------------------*/
-
-				if (colorPos[numColors - 1] < minConc) minConc = colorPos[numColors - 1];
-				if (colorPos[numColors - 1] > maxConc) maxConc = colorPos[numColors - 1];
-
-				/*if (this->colorTable[particleCnt * 4 + 0] > 1.0)
-					printf("%u : %f %f %f :::: %f %f %f %f \n", j, particles[particleCnt * 4 + 0], particles[particleCnt * 4 + 1], particles[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 0], this->colorTable[particleCnt * 4 + 1], this->colorTable[particleCnt * 4 + 2], this->colorTable[particleCnt * 4 + 3]);*/
-
-				//if (this->colorTable[particleCnt * 4 + 0] > 50.0f)
-				particleCnt++;
+				
 			}
 		}
 
-		//numParticles = particleCnt;
+		if (particleCnt == 0) {
+			return true;
+		}
 
-		//printf("conc: %f %f\n", minConc, maxConc);
+		this->particlesSize = this->particleCnt * 4; // adapt size of the particle list
+		//this->colorTable.resize(particleCnt * 4); // shrink color vector
+
+		//printf("conc: %f %f\n", concMin, concMax);
+		//printf("part: %llu\n", particleCnt);
+		printf("col: %u\n", colorTable.size());
 
 		glPushMatrix();
 		float scale = 1.0f;
@@ -531,9 +515,12 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		}
 		glScalef(scale, scale, scale);
 
+		mpdc->Unlock();
+
 	} else if (mdc != NULL) {
 		// TODO
 		printf("MolecularDataCall currently not supported\n");
+		mdc->Unlock();
 		return false;
 	}
 
@@ -541,11 +528,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	initPixelBuffer(*cr3d);
 
 	float factor = scalingFactor.Param<param::FloatParam>()->Value();
-
-	// normalize concentration
-	//for (UINT64 i = 0; i < numParticles; i++) {
-	//	particles[i * 4 + 3] = ((particles[i * 4 + 3] - concMin) / (concMax - concMin)) * factor;
-	//}
 
 	auto viewport = cr3d->GetViewport().GetSize();
 
@@ -586,40 +568,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	dim3 gridSize = dim3(iDivUp(viewport.GetWidth(), blockSize.x), iDivUp(viewport.GetHeight(), blockSize.y));
 
 	if (cudaqsurf == NULL) {
-		cudaqsurf = new CUDAQuickSurf();
-	}
-
-	// parse selected isovalues if needed
-	if (selectedIsovals.IsDirty()) {
-		isoVals.clear();
-		vislib::TString valString = selectedIsovals.Param<param::StringParam>()->Value();
-		vislib::StringA vala = T2A(valString);
-
-		vislib::StringTokeniserA sta(vala, ',');
-		while (sta.HasNext()) {
-			vislib::StringA t = sta.Next();
-			if (t.IsEmpty()) {
-				continue;
-			}
-			isoVals.push_back((float)vislib::CharTraitsA::ParseDouble(t));
-		}
-
-		/*for (float f: isoVals)
-			printf("value: %f\n", f);*/
-
-		// sort the isovalues ascending
-		std::sort(isoVals.begin(), isoVals.end());
-
-		// copy the first four isovalues into a float4
-		std::vector<float> help(4, -1.0f);
-		for (int i = 0; i < std::min((int)isoVals.size(), 4); i++) {
-			help[i] = isoVals[i];
-		}
-		float4 values = make_float4(help[0], help[1], help[2], help[3]);
-
-		transferIsoValues(values, (int)std::min((int)isoVals.size(), 4));
-
-		selectedIsovals.ResetDirty();
+		cudaqsurf = new CUDAQuickSurfAlternative();
 	}
 
 	bool suc = this->calcVolume(bbMin, bbMax, particles, 
@@ -627,11 +576,11 @@ bool QuickSurfRaycaster::Render(Call& call) {
 					this->radscaleParam.Param<param::FloatParam>()->Value(),
 					this->gridspacingParam.Param<param::FloatParam>()->Value(),
 					this->isovalParam.Param<param::FloatParam>()->Value(), 
-					concMin, concMax, true);
+					(concMax - concMin) * isoVals[0] + concMin, (concMax - concMin) * isoVals[isoVals.size() - 1] + concMin, true);
 
 	//if (!suc) return false;
 
-	CUDAQuickSurf * cqs = (CUDAQuickSurf*)cudaqsurf;
+	CUDAQuickSurfAlternative * cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
 	float * map = cqs->getMap();
 
 	//printf("size: %i %i %i\n", cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
@@ -677,10 +626,38 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	if (mpdc)
-		mpdc->Unlock();
-	if (mdc)
-		mdc->Unlock();
+	// parse selected isovalues if needed
+	if (selectedIsovals.IsDirty()) {
+		isoVals.clear();
+		vislib::TString valString = selectedIsovals.Param<param::StringParam>()->Value();
+		vislib::StringA vala = T2A(valString);
+
+		vislib::StringTokeniserA sta(vala, ',');
+		while (sta.HasNext()) {
+			vislib::StringA t = sta.Next();
+			if (t.IsEmpty()) {
+				continue;
+			}
+			isoVals.push_back((float)vislib::CharTraitsA::ParseDouble(t));
+		}
+
+		/*for (float f: isoVals)
+		printf("value: %f\n", f);*/
+
+		// sort the isovalues ascending
+		std::sort(isoVals.begin(), isoVals.end());
+
+		// copy the first four isovalues into a float4
+		std::vector<float> help(4, -1.0f);
+		for (int i = 0; i < std::min((int)isoVals.size(), 4); i++) {
+			help[i] = isoVals[i];
+		}
+		float4 values = make_float4(help[0], help[1], help[2], help[3]);
+
+		transferIsoValues(values, (int)std::min((int)isoVals.size(), 4));
+
+		selectedIsovals.ResetDirty();
+	}
 
 	return true;
 }

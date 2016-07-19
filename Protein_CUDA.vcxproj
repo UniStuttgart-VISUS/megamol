@@ -229,6 +229,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CUDAKernels.h" />
     <ClInclude Include="src\CUDAMarchingCubes.h" />
     <ClInclude Include="src\CUDAQuickSurf.h" />
+    <ClInclude Include="src\CUDAQuickSurfAlternative.h" />
     <ClInclude Include="src\CUDAQuickSurfArray.h" />
     <ClInclude Include="src\CUDAStreamlines.h" />
     <ClInclude Include="src\cuda_error_check.h" />
@@ -366,6 +367,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <CudaCompile Include="src\CUDAFieldTopology.cu" />
     <CudaCompile Include="src\CUDAMarchingCubes.cu" />
     <CudaCompile Include="src\CUDAQuickSurf.cu" />
+    <CudaCompile Include="src\CUDAQuickSurfAlternative.cu" />
     <CudaCompile Include="src\CUDAQuickSurfRaycaster.cu" />
     <CudaCompile Include="src\CUDAQuickSurfArray.cu" />
     <CudaCompile Include="src\CUDAStreamlines.cu" />
