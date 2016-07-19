@@ -40,6 +40,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	selectedIsovals("quicksurf::selectedIsovals", "Semicolon seperated list of normalized isovalues we want to ray cast the isoplanes from"),
 	scalingFactor("quicksurf::scalingFactor", "Scaling factor for the density values and particle radii"),
 	setCUDAGLDevice(true),
+	firstTransfer(true),
 	particlesSize(0)
 {
 	this->particleDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
@@ -56,7 +57,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	this->gridspacingParam.SetParameter(new param::FloatParam(0.2f, 0.0f));
 	this->MakeSlotAvailable(&this->gridspacingParam);
 
-	this->isovalParam.SetParameter(new param::FloatParam(0.5f, 0.0f));
+	this->isovalParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->isovalParam);
 
 	this->selectedIsovals.SetParameter(new param::StringParam("0.1,0.9"));
@@ -385,13 +386,15 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		this->colorTable.clear();
 		this->colorTable.reserve(numParticles * 4);
 
+
 		auto bb = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
 		bbMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
 		bbMax = make_float3(bb.Right(), bb.Top(), bb.Front());
 		bb = mpdc->GetBoundingBoxes().ClipBox();
 		clipBoxMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
 		clipBoxMax = make_float3(bb.Right(), bb.Top(), bb.Front());
-
+#define FILTER
+#ifdef FILTER // filtering: calculate min and max beforehand
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
 			const float *colorPos = static_cast<const float*>(parts.GetColourData());
@@ -420,8 +423,10 @@ bool QuickSurfRaycaster::Render(Call& call) {
 				}
 			}
 		}
+#endif
 
 		particleCnt = 0;
+		float concFactor = 2.0f;
 
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
@@ -455,9 +460,10 @@ bool QuickSurfRaycaster::Render(Call& call) {
 			for (UINT64 j = 0; j < parts.GetCount(); j++, pos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(pos) + posStride),
 				colorPos = reinterpret_cast<const float*>(reinterpret_cast<const char*>(colorPos) + colStride)) {
 
+#ifdef FILTER
 				if (colorPos[numColors - 1] > (concMax - concMin) * isoVals[0] + concMin
 					&& colorPos[numColors - 1] < (concMax - concMin) * isoVals[isoVals.size() - 1] + concMin) {
-
+#endif FILTER
 					particles[particleCnt * 4 + 0] = pos[0] - bbMin.x;
 					particles[particleCnt * 4 + 1] = pos[1] - bbMin.y;
 					particles[particleCnt * 4 + 2] = pos[2] - bbMin.z;
@@ -473,40 +479,59 @@ bool QuickSurfRaycaster::Render(Call& call) {
 					this->colorTable.push_back(1.0f);
 					this->colorTable.push_back(1.0f);
 
+#ifndef FILTER // calculate the min and max here if no filtering performed
+					if (colorPos[numColors - 1] < concMin) concMin = colorPos[numColors - 1];
+					if (colorPos[numColors - 1] > concMax) concMax = colorPos[numColors - 1];
+#endif
+
 					/*---------------------------------choose-one---------------------------------------------------------*/
 
 					// 1. copy all available values into the color, the rest gets filled up with the last available value
-					/*for (int k = 0; k < numColors; k++) {
+					for (int k = 0; k < numColors; k++) {
 						for (int l = 0; l < 3 - k; l++) {
-						this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
+							this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
 						}
-						}*/
+					}
+
+#ifdef FILTER
+					// normalize concentration, multiply it with a factor and write it
+					// TODO do weird things with the concentration so it results in a nice iso-surface
+					this->colorTable[particleCnt * 4 + 3] = ((colorPos[numColors - 1] - concMin) / (concMax - concMin)) * concFactor;
+#else
+					this->colorTable[particleCnt * 4 + 3] = colorPos[numColors - 1];
+#endif
 
 
 					// 2. fill r,g & b with the last available color value (should be density)
-					for (int k = 0; k < 3; k++) {
+					/*for (int k = 0; k < 3; k++) {
 						this->colorTable[particleCnt * 4 + k] = colorPos[numColors - 1];
-					}
+					}*/
 
 					/*---------------------------------------------------------------------------------------------------*/
 
 					particleCnt++;
+#ifdef FILTER
 				}
-
-				
+#endif FILTER
 			}
 		}
+
+#ifndef FILTER // no filtering: we need to normalize the concentration values
+		for (int i = 0; i < particleCnt; i++) {
+			this->colorTable[i * 4 + 3] = ((this->colorTable[i * 4 + 3] - concMin) / (concMax - concMin)) * concFactor;
+		}
+#endif
 
 		if (particleCnt == 0) {
 			return true;
 		}
 
-		this->particlesSize = this->particleCnt * 4; // adapt size of the particle list
+		//this->particlesSize = this->particleCnt * 4; // adapt size of the particle list
 		//this->colorTable.resize(particleCnt * 4); // shrink color vector
 
 		//printf("conc: %f %f\n", concMin, concMax);
 		//printf("part: %llu\n", particleCnt);
-		printf("col: %u\n", colorTable.size());
+		//printf("col: %u\n", colorTable.size());
 
 		glPushMatrix();
 		float scale = 1.0f;
@@ -575,7 +600,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 					this->qualityParam.Param<param::IntParam>()->Value(),
 					this->radscaleParam.Param<param::FloatParam>()->Value(),
 					this->gridspacingParam.Param<param::FloatParam>()->Value(),
-					this->isovalParam.Param<param::FloatParam>()->Value(), 
+					//this->isovalParam.Param<param::FloatParam>()->Value(), 
+					1.0f, // necessary to switch off velocity scaling
 					(concMax - concMin) * isoVals[0] + concMin, (concMax - concMin) * isoVals[isoVals.size() - 1] + concMin, true);
 
 	//if (!suc) return false;
@@ -627,7 +653,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	glDepthFunc(GL_LESS);
 
 	// parse selected isovalues if needed
-	if (selectedIsovals.IsDirty()) {
+	if (selectedIsovals.IsDirty() || firstTransfer) {
 		isoVals.clear();
 		vislib::TString valString = selectedIsovals.Param<param::StringParam>()->Value();
 		vislib::StringA vala = T2A(valString);
@@ -647,16 +673,27 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		// sort the isovalues ascending
 		std::sort(isoVals.begin(), isoVals.end());
 
+		std::vector<float> adaptedIsoVals = isoVals;
+		float div = isoVals[std::min((int)isoVals.size(), 4) - 1] - isoVals[0];
+
+		float bla = 0.5f;
+
+		// adapt the isovalues to the filtered values
+		for (int i = 0; i < std::min((int)isoVals.size(), 4); i++) {
+			adaptedIsoVals[i] = (adaptedIsoVals[i] - isoVals[0]) / div;
+		}
+
 		// copy the first four isovalues into a float4
 		std::vector<float> help(4, -1.0f);
-		for (int i = 0; i < std::min((int)isoVals.size(), 4); i++) {
+		for (int i = 0; i < std::min((int)adaptedIsoVals.size(), 4); i++) {
 			help[i] = isoVals[i];
 		}
 		float4 values = make_float4(help[0], help[1], help[2], help[3]);
-
+		printf("isos: %f %f %f %f\n", help[0], help[1], help[2], help[3]);
 		transferIsoValues(values, (int)std::min((int)isoVals.size(), 4));
 
 		selectedIsovals.ResetDirty();
+		if (firstTransfer) firstTransfer = false;
 	}
 
 	return true;

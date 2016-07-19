@@ -940,7 +940,7 @@ __global__ static void gaussdensity_fast_tex(int natoms,
             float dxy2 = dx*dx + dy*dy;
             float dz = coorz - atom.z;
             float r21 = (dxy2 + dz*dz) * atom.w;
-            float tmp1 = exp2f(r21);
+            float tmp1 = exp2f(r21) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
             densityval1 += tmp1;
             tmp1 *= invisovalue;
             densitycol1.x += tmp1 * color.x;
@@ -955,8 +955,8 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 #if GTEXUNROLL >= 2
             float dz2 = dz + gridspacing;
             float r22 = (dxy2 + dz2*dz2) * atom.w;
-            float tmp2 = exp2f(r22);
-            densityval2 += tmp2;
+			float tmp2 = exp2f(r22) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
+			densityval2 += tmp2;
             tmp2 *= invisovalue;
             densitycol2.x += tmp2 * color.x;
             densitycol2.y += tmp2 * color.y;
@@ -970,7 +970,7 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 #if GTEXUNROLL >= 4
             float dz3 = dz2 + gridspacing;
             float r23 = (dxy2 + dz3*dz3) * atom.w;
-            float tmp3 = exp2f(r23);
+			float tmp3 = exp2f(r23) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
             densityval3 += tmp3;
             tmp3 *= invisovalue;
             densitycol3.x += tmp3 * color.x;
@@ -984,7 +984,7 @@ __global__ static void gaussdensity_fast_tex(int natoms,
 
             float dz4 = dz3 + gridspacing;
             float r24 = (dxy2 + dz4*dz4) * atom.w;
-            float tmp4 = exp2f(r24);
+			float tmp4 = exp2f(r24) * color.w; // schatzkn: scale the gaussian by the concentration that is written in the w-component of the color
             densityval4 += tmp4;
             tmp4 *= invisovalue;
             densitycol4.x += tmp4 * color.x;

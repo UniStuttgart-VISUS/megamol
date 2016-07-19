@@ -32,8 +32,12 @@ cudaArray *d_volumeArray = 0;
 cudaArray *d_customTransferFuncArray;
 
 //cudaArray *d_isoValArray = 0;
-__device__ float4 d_isoVals;
+
 __device__ int d_numIsoVals = 0;
+__device__ float d_iso1 = -1.0f;
+__device__ float d_iso2 = -1.0f;
+__device__ float d_iso3 = -1.0f;
+__device__ float d_iso4 = -1.0f;
 
 std::vector<float> fpsVec;
 
@@ -157,7 +161,7 @@ float density, float brightness, float transferOffset, float transferScale, floa
 const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
 const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f))
 {
-	const int maxSteps = 512;
+	const int maxSteps = 256;
 	//const float tstep = 0.0009765625f;
 
 	//const float tstep = (boxMax.x - boxMin.x) / (float)maxSteps;
@@ -215,6 +219,16 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 		return;
 	}
 
+	if (d_numIsoVals > 0 && d_iso1 < 0.0f) {
+		d_output[y*imageW + x] = rgbaFloatToInt(make_float4(0.0f));
+		return;
+	}
+
+	if (d_numIsoVals > 0) {
+		d_output[y*imageW + x] = rgbaFloatToInt(make_float4(d_iso1));
+		return;
+	}
+
 	float3 sP;
 	sP.x = (pos.x - boxMin.x) / diff.x;
 	sP.y = (pos.y - boxMin.y) / diff.y;
@@ -223,7 +237,7 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 
 	float isoDiff = 0;
 	//float isoDiffOld = val - d_isoValArray[0];
-	float isoDiffOld = val - 0.1;
+	float isoDiffOld = val - d_iso1;
 
 	// TODO why this?
 	//if (isoDiffOld > 0.0) {
@@ -248,7 +262,7 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 		sample /= maxVal;
 
 		//isoDiff = sample - d_isoValArray[0];
-		isoDiff = sample - 0.1f;
+		isoDiff = sample - d_iso1;
 
 		//sum = make_float4(d_isoValArray[0]);
 
@@ -465,7 +479,11 @@ void copyLUT(float4* myLUT, int lutSize = 256)
 extern "C"
 void transferIsoValues(float4 h_isoVals, int h_numIsos) {
 
-	checkCudaErrors(cudaMemcpyToSymbol(d_isoVals, &h_isoVals, sizeof(float4), 0, cudaMemcpyHostToDevice));
+	//checkCudaErrors(cudaMemcpyToSymbol(d_isoVals, &h_isoVals, sizeof(float4), 0, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToSymbol(d_iso1, &(h_isoVals.x), sizeof(float), 0, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToSymbol(d_iso2, &(h_isoVals.y), sizeof(float), 0, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToSymbol(d_iso3, &(h_isoVals.z), sizeof(float), 0, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToSymbol(d_iso4, &(h_isoVals.w), sizeof(float), 0, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpyToSymbol(d_numIsoVals, &h_numIsos, sizeof(int), 0, cudaMemcpyHostToDevice));
 }
 

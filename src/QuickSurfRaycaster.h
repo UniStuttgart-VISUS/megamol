@@ -293,6 +293,8 @@ namespace protein_cuda {
 
 		cudaArray *tmpCudaArray;
 
+		bool firstTransfer;
+
 		cudaExtent volumeExtent;
 	};
 
