@@ -290,14 +290,17 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\ParticleColorSignedDistance.cpp" />
     <ClCompile Include="src\ParticleColorSignThreshold.cpp" />
     <ClCompile Include="src\ParticleDataSequenceConcatenate.cpp" />
+    <ClCompile Include="src\ParticleFilterMapDataCall.cpp" />
     <ClCompile Include="src\ParticleIColFilter.cpp" />
     <ClCompile Include="src\ParticleIColGradientField.cpp" />
     <ClCompile Include="src\ParticleSortFixHack.cpp" />
+    <ClCompile Include="src\RemapIColValues.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmstd_datatools\AbstractParticleManipulator.h" />
     <ClInclude Include="include\mmstd_datatools\floattable\CallFloatTableData.h" />
     <ClInclude Include="include\mmstd_datatools\MultiParticleDataAdaptor.h" />
+    <ClInclude Include="include\mmstd_datatools\ParticleFilterMapDataCall.h" />
     <ClInclude Include="src/DataFileSequence.h" />
     <ClInclude Include="src/DataFileSequenceStepper.h" />
     <ClInclude Include="src/DataSetTimeRewriteModule.h" />
@@ -330,6 +333,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ParticleIColFilter.h" />
     <ClInclude Include="src\ParticleIColGradientField.h" />
     <ClInclude Include="src\ParticleSortFixHack.h" />
+    <ClInclude Include="src\RemapIColValues.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cmake\ConfigInstall.cmake.in" />

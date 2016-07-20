@@ -14,10 +14,11 @@ using namespace megamol;
 using namespace megamol::stdplugin;
 
 datatools::ParticleIColFilter::ParticleIColFilter() : AbstractParticleManipulator("outData", "inData"),
+        particleMapSlot("outParticleMap", "Publishes the particle map data"),
         minValSlot("minVal", "The minimal color value of particles to be passed on"),
         maxValSlot("maxVal", "The maximal color value of particles to be passed on"),
         staifHackDistSlot("staifHackDist", "Distance to the bounding box to include particles"),
-        dataHash(0), frameId(0), parts(), data(),
+        dataHash(0), frameId(0), parts(), data(), mapIndex(),
         inValRangeSlot("inValRange", "Displays the value range of the input color values") {
 
     minValSlot.SetParameter(new core::param::FloatParam(0.0f));
@@ -28,12 +29,16 @@ datatools::ParticleIColFilter::ParticleIColFilter() : AbstractParticleManipulato
     maxValSlot.SetUpdateCallback(&ParticleIColFilter::reset);
     MakeSlotAvailable(&maxValSlot);
 
-    staifHackDistSlot.SetParameter(new core::param::FloatParam(0.0f, 0.0f));
-    staifHackDistSlot.SetUpdateCallback(&ParticleIColFilter::reset);
-    MakeSlotAvailable(&staifHackDistSlot);
+    //staifHackDistSlot.SetParameter(new core::param::FloatParam(0.0f, 0.0f));
+    //staifHackDistSlot.SetUpdateCallback(&ParticleIColFilter::reset);
+    //MakeSlotAvailable(&staifHackDistSlot);
 
     inValRangeSlot.SetParameter(new core::param::Vector2fParam(vislib::math::Vector<float, 2>(0.0f, 1.0f)));
     MakeSlotAvailable(&inValRangeSlot);
+
+    particleMapSlot.SetCallback(ParticleFilterMapDataCall::ClassName(), ParticleFilterMapDataCall::FunctionName(ParticleFilterMapDataCall::GET_DATA), &ParticleIColFilter::getParticleMapData);
+    particleMapSlot.SetCallback(ParticleFilterMapDataCall::ClassName(), ParticleFilterMapDataCall::FunctionName(ParticleFilterMapDataCall::GET_EXTENT), &ParticleIColFilter::getParticleMapExtent);
+    particleMapSlot.SetCallback(ParticleFilterMapDataCall::ClassName(), ParticleFilterMapDataCall::FunctionName(ParticleFilterMapDataCall::GET_HASH), &ParticleIColFilter::getParticleMapHash);
 }
 
 datatools::ParticleIColFilter::~ParticleIColFilter() {
@@ -69,10 +74,12 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall&
     unsigned int cnt = inDat.GetParticleListCount();
     parts.resize(cnt);
     data.resize(cnt);
+    mapIndex.clear();
+    ParticleFilterMapDataCall::index_t mapOffset = 0;
 
     float minV, maxV;
     for (unsigned int i = 0; i < cnt; ++i) {
-        setData(parts[i], data[i], inDat.AccessParticles(i), inDat.AccessBoundingBoxes().ObjectSpaceBBox());
+        setData(parts[i], data[i], inDat.AccessParticles(i), inDat.AccessBoundingBoxes().ObjectSpaceBBox(), mapOffset);
         if (i == 0) {
             minV = inDat.AccessParticles(i).GetMinColourIndexValue();
             maxV = inDat.AccessParticles(i).GetMaxColourIndexValue();
@@ -94,7 +101,7 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall&
 //    }
 //}
 
-void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox) {
+void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox, ParticleFilterMapDataCall::index_t& mapOffset) {
     using core::moldyn::MultiParticleDataCall;
     using core::moldyn::SimpleSphericalParticles;
     using vislib::RawStorage;
@@ -157,6 +164,7 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     }
 
     // now copying particles
+    mapIndex.reserve(mapIndex.size() + r_cnt);
     d.AssertSize(static_cast<size_t>(r_cnt * (v_size + c_size)));
     const size_t c_off = static_cast<size_t>(r_cnt * v_size);
     p.SetCount(r_cnt);
@@ -174,7 +182,40 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
             ::memcpy(d.At(static_cast<size_t>(r_cnt * v_size)), vi, static_cast<size_t>(v_size));
             ::memcpy(d.At(static_cast<size_t>(c_off + r_cnt * c_size)), ci, static_cast<size_t>(c_size));
             r_cnt++;
+            mapIndex.push_back(static_cast<ParticleFilterMapDataCall::index_t>(mapOffset + i));
         }
     }
 
+    mapOffset += static_cast<ParticleFilterMapDataCall::index_t>(cnt);
+
+}
+
+bool datatools::ParticleIColFilter::getParticleMapData(core::Call& c) {
+    ParticleFilterMapDataCall* mapCall = dynamic_cast<ParticleFilterMapDataCall*>(&c);
+    if (mapCall == nullptr) return false;
+
+    mapCall->Set(mapIndex.data(), mapIndex.size());
+    mapCall->SetUnlocker(nullptr);
+
+    return true;
+}
+
+bool datatools::ParticleIColFilter::getParticleMapExtent(core::Call& c) {
+    ParticleFilterMapDataCall* mapCall = dynamic_cast<ParticleFilterMapDataCall*>(&c);
+    if (mapCall == nullptr) return false;
+
+    mapCall->SetFrameCount(0); // not supported by this module :-/
+    mapCall->SetUnlocker(nullptr);
+
+    return true;
+}
+
+bool datatools::ParticleIColFilter::getParticleMapHash(core::Call& c) {
+    ParticleFilterMapDataCall* mapCall = dynamic_cast<ParticleFilterMapDataCall*>(&c);
+    if (mapCall == nullptr) return false;
+
+    mapCall->SetDataHash(dataHash);
+    mapCall->SetUnlocker(nullptr);
+
+    return true;
 }

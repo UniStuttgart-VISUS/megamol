@@ -12,6 +12,7 @@
 #include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "vislib/math/Cuboid.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd_datatools/ParticleFilterMapDataCall.h"
 #include <vector>
 
 
@@ -51,8 +52,13 @@ namespace datatools {
 
         bool reset(core::param::ParamSlot&);
         void setData(core::moldyn::MultiParticleDataCall& inDat);
-        void setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox);
+        void setData(core::moldyn::MultiParticleDataCall::Particles& p, vislib::RawStorage& d, const core::moldyn::SimpleSphericalParticles& s, vislib::math::Cuboid<float> bbox, ParticleFilterMapDataCall::index_t& mapOffset);
 
+        bool getParticleMapData(core::Call& c);
+        bool getParticleMapExtent(core::Call& c);
+        bool getParticleMapHash(core::Call& c);
+
+        core::CalleeSlot particleMapSlot;
         core::param::ParamSlot minValSlot;
         core::param::ParamSlot maxValSlot;
         core::param::ParamSlot staifHackDistSlot;
@@ -60,6 +66,7 @@ namespace datatools {
         unsigned int frameId;
         std::vector<core::moldyn::MultiParticleDataCall::Particles> parts;
         std::vector<vislib::RawStorage> data;
+        std::vector<ParticleFilterMapDataCall::index_t> mapIndex;
         core::param::ParamSlot inValRangeSlot;
 
     };

@@ -145,6 +145,12 @@
     <ClCompile Include="src\MultiParticleDataAdaptor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ParticleFilterMapDataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RemapIColValues.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -251,6 +257,12 @@
     </ClInclude>
     <ClInclude Include="include\mmstd_datatools\MultiParticleDataAdaptor.h">
       <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmstd_datatools\ParticleFilterMapDataCall.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RemapIColValues.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

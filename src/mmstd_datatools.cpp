@@ -44,6 +44,8 @@
 #include "floattable/MMFTDataWriter.h"
 #include "ParticleColorChannelSelect.h"
 #include "ParticleIColGradientField.h"
+#include "mmstd_datatools/ParticleFilterMapDataCall.h"
+#include "RemapIColValues.h"
 
 
 /*
@@ -154,9 +156,11 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::MMFTDataWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorChannelSelect>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColGradientField>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::RemapIColValues>();
             // register calls here:
             // ...
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
+            this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };
