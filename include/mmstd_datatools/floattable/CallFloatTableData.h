@@ -124,13 +124,30 @@ namespace floattable {
             return -1;
         }
 
+        inline void SetFrameCount(const unsigned int frameCount) {
+            this->frameCount = frameCount;
+        }
+
+        inline unsigned int GetFrameCount(void) const {
+            return this->frameCount;
+        }
+
+        inline void SetFrameID(const unsigned int frameID) {
+            this->frameID = frameID;
+        }
+
+        inline unsigned int GetFrameID(void) const {
+            return this->frameID;
+        }
+
     private:
 
         size_t columns_count;
         size_t rows_count;
         const ColumnInfo *columns;
         const float *data; // data is stored row major order, aka array of structs
-
+        unsigned int frameCount;
+        unsigned int frameID;
     };
 
     typedef core::factories::CallAutoDescription<CallFloatTableData> CallFloatTableDataDescription;

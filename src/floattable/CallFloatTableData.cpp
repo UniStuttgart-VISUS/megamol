@@ -39,7 +39,7 @@ bool datatools::floattable::CallFloatTableData::ColumnInfo::operator==(const Col
 }
 
 
-datatools::floattable::CallFloatTableData::CallFloatTableData(void) : core::AbstractGetDataCall(), columns_count(0), rows_count(0), columns(nullptr), data(nullptr) {
+datatools::floattable::CallFloatTableData::CallFloatTableData(void) : core::AbstractGetDataCall(), columns_count(0), rows_count(0), columns(nullptr), data(nullptr), frameCount(0), frameID(0) {
     // intentionally empty
 }
 
