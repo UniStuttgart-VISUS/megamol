@@ -216,12 +216,13 @@ namespace protein_cuda {
 		 *	@param minConcentration Minimal concentration over all particles
 		 *	@param maxConcentration Maximal concentration over all particles
 		 *	@param useCol
+		 *	@param timestep The current timestep index
 		 *	@return True on success, false otherwise
 		 */
 		bool calcVolume(float3 bbMin, float3 bbMax, float* positions,
 			int quality, float radscale, float gridspacing,
 			float isoval, float minConcentration, float maxConcentration,
-			bool useCol);
+			bool useCol, int timestep = 0);
 
 		/** caller slot */
 		megamol::core::CallerSlot particleDataSlot;
@@ -289,6 +290,8 @@ namespace protein_cuda {
 
 		megamol::core::param::ParamSlot selectedIsovals;
 
+		megamol::core::param::ParamSlot concFactorParam;
+
 		std::vector<float> isoVals;
 
 		cudaArray *tmpCudaArray;
@@ -296,6 +299,8 @@ namespace protein_cuda {
 		bool firstTransfer;
 
 		cudaExtent volumeExtent;
+
+		cudaExtent volumeExtentSmall;
 	};
 
 } /* end namespace protein_cuda */

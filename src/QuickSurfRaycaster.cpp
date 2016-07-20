@@ -39,6 +39,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	isovalParam("quicksurf::isoval", "Isovalue"),
 	selectedIsovals("quicksurf::selectedIsovals", "Semicolon seperated list of normalized isovalues we want to ray cast the isoplanes from"),
 	scalingFactor("quicksurf::scalingFactor", "Scaling factor for the density values and particle radii"),
+	concFactorParam("quicksurf::concentrationFactor", "Scaling factor for particle radii based on their concentration"),
 	setCUDAGLDevice(true),
 	firstTransfer(true),
 	particlesSize(0)
@@ -68,6 +69,9 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 
 	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->scalingFactor);
+
+	this->concFactorParam.SetParameter(new param::FloatParam(2.0f, 0.0f));
+	this->MakeSlotAvailable(&this->concFactorParam);
 
 	lastViewport.Set(0, 0);
 
@@ -102,7 +106,7 @@ void QuickSurfRaycaster::release(void) {
 }
 
 bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions, int quality, float radscale, float gridspacing,
-	float isoval, float minConcentration, float maxConcentration, bool useCol) {
+	float isoval, float minConcentration, float maxConcentration, bool useCol, int timestep) {
 
 	float x = bbMax.x - bbMin.x;
 	float y = bbMax.y - bbMin.y;
@@ -117,9 +121,10 @@ bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions
 	y = (numVoxels[1] - 1) * gridspacing;
 	z = (numVoxels[2] - 1) * gridspacing;
 
-	//printf("vox %i %i %i \n", numVoxels[0], numVoxels[1], numVoxels[2]);
+	printf("vox %i %i %i \n", numVoxels[0], numVoxels[1], numVoxels[2]);
 
 	volumeExtent = make_cudaExtent(numVoxels[0], numVoxels[1], numVoxels[2]);
+	volumeExtentSmall = make_cudaExtent(numVoxels[0], numVoxels[1], numVoxels[2]);
 
 	float gausslim = 2.0f;
 	switch (quality) { // TODO adjust values
@@ -141,11 +146,15 @@ bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions
 	int result = -1;
 	result = cqs->calc_map((long)particleCnt, positions, colorTable.data(), 1, 
 		origin, numVoxels, maxConcentration, radscale, gridspacing, 
-		isoval, gausslim);
+		isoval, gausslim, false, timestep, 44);
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	volumeExtent = make_cudaExtent(cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
+
+	// make the initial plane more beautiful
+	if (volumeExtent.depth > volumeExtentSmall.depth)
+		volumeExtentSmall.depth = volumeExtentSmall.depth + 1;
 
 	return (result == 0);
 }
@@ -384,8 +393,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 		particleCnt = 0;
 		this->colorTable.clear();
-		this->colorTable.reserve(numParticles * 4);
-
+		this->colorTable.resize(numParticles * 4, 0.0f);
 
 		auto bb = mpdc->GetBoundingBoxes().ObjectSpaceBBox();
 		bbMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
@@ -393,7 +401,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		bb = mpdc->GetBoundingBoxes().ClipBox();
 		clipBoxMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
 		clipBoxMax = make_float3(bb.Right(), bb.Top(), bb.Front());
-#define FILTER
+//#define FILTER
 #ifdef FILTER // filtering: calculate min and max beforehand
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
@@ -426,7 +434,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 #endif
 
 		particleCnt = 0;
-		float concFactor = 2.0f;
 
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
 			MultiParticleDataCall::Particles &parts = mpdc->AccessParticles(i);
@@ -474,30 +481,32 @@ bool QuickSurfRaycaster::Render(Call& call) {
 						particles[particleCnt * 4 + 3] = pos[3];
 					}
 
-					this->colorTable.push_back(1.0f);
-					this->colorTable.push_back(1.0f);
-					this->colorTable.push_back(1.0f);
-					this->colorTable.push_back(1.0f);
-
 #ifndef FILTER // calculate the min and max here if no filtering performed
 					if (colorPos[numColors - 1] < concMin) concMin = colorPos[numColors - 1];
 					if (colorPos[numColors - 1] > concMax) concMax = colorPos[numColors - 1];
 #endif
 
 					/*---------------------------------choose-one---------------------------------------------------------*/
-
+#define ALWAYS4COLORS
+#ifndef ALWAYS4COLORS
 					// 1. copy all available values into the color, the rest gets filled up with the last available value
 					for (int k = 0; k < numColors; k++) {
 						for (int l = 0; l < 3 - k; l++) {
 							this->colorTable[particleCnt * 4 + k + l] = colorPos[k];
 						}
 					}
+#else
+					for(int k = 0; k < 4; k++) {
+						this->colorTable[particleCnt * 4 + k] = colorPos[k];
+					}
+#endif
 
 #ifdef FILTER
 					// normalize concentration, multiply it with a factor and write it
 					// TODO do weird things with the concentration so it results in a nice iso-surface
-					this->colorTable[particleCnt * 4 + 3] = ((colorPos[numColors - 1] - concMin) / (concMax - concMin)) * concFactor;
+					this->colorTable[particleCnt * 4 + 3] = ((colorPos[numColors - 1] - concMin) / (concMax - concMin)) * concFactorParam.Param<param::FloatParam>()->Value();
 #else
+					// normalization of the values happens later
 					this->colorTable[particleCnt * 4 + 3] = colorPos[numColors - 1];
 #endif
 
@@ -518,7 +527,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 #ifndef FILTER // no filtering: we need to normalize the concentration values
 		for (int i = 0; i < particleCnt; i++) {
-			this->colorTable[i * 4 + 3] = ((this->colorTable[i * 4 + 3] - concMin) / (concMax - concMin)) * concFactor;
+			this->colorTable[i * 4 + 3] = ((this->colorTable[i * 4 + 3] - concMin) / (concMax - concMin)) * concFactorParam.Param<param::FloatParam>()->Value();
 		}
 #endif
 
@@ -596,20 +605,30 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		cudaqsurf = new CUDAQuickSurfAlternative();
 	}
 
+#ifdef FILTER
 	bool suc = this->calcVolume(bbMin, bbMax, particles, 
 					this->qualityParam.Param<param::IntParam>()->Value(),
 					this->radscaleParam.Param<param::FloatParam>()->Value(),
 					this->gridspacingParam.Param<param::FloatParam>()->Value(),
-					//this->isovalParam.Param<param::FloatParam>()->Value(), 
 					1.0f, // necessary to switch off velocity scaling
-					(concMax - concMin) * isoVals[0] + concMin, (concMax - concMin) * isoVals[isoVals.size() - 1] + concMin, true);
+					(concMax - concMin) * isoVals[0] + concMin, (concMax - concMin) * isoVals[isoVals.size() - 1] + concMin, true,
+					static_cast<int>(callTime));
+#else
+	bool suc = this->calcVolume(bbMin, bbMax, particles,
+		this->qualityParam.Param<param::IntParam>()->Value(),
+		this->radscaleParam.Param<param::FloatParam>()->Value(),
+		this->gridspacingParam.Param<param::FloatParam>()->Value(),
+		1.0f, // necessary to switch off velocity scaling
+		0.0f, this->concFactorParam.Param<param::FloatParam>()->Value(), true,
+		static_cast<int>(callTime));
+		// the concentrations are scaled to [0, concFactor]
+#endif
+	// TODO change maxRad?
 
 	//if (!suc) return false;
 
 	CUDAQuickSurfAlternative * cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
 	float * map = cqs->getMap();
-
-	//printf("size: %i %i %i\n", cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ());
 
 	// read lighting parameters
 	float lightPos[4];
@@ -618,7 +637,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 	// TODO read slot for lighting params
 
-	transferNewVolume(map, volumeExtent);
+	//transferNewVolume(map, volumeExtent);
+	transferNewVolume(map, volumeExtentSmall);
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	//if (!suc)

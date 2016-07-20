@@ -41,6 +41,7 @@
 #endif
 
 //#define WRITE_DATRAW_FILE
+#define WRITE_DATRAW_FILE_MAP
 
 #include "utilities.h"
 #include "WKFThreads.h"
@@ -606,6 +607,7 @@ static void * cudadensitythread(void *voidparms) {
                                       gridspacing, k, devdensity);
       }
       cudaThreadSynchronize();
+	  getLastCudaError("kernel failed");
       CUERR // check and clear any existing errors
 
       // Copy the GPU output data back to the host and use/store it..
@@ -786,6 +788,7 @@ int vmd_cuda_build_density_atom_grid_alt(int natoms,
   //     per-dimension 65535 block grid size limitation
   hashAtomsAlt<<<hGsz, hBsz>>>(natoms, xyzr_d, volsz, invgridspacing,
                             atomIndex_d, atomHash_d);
+  getLastCudaError("kernel failed");
 
   // Sort atom indices by their grid cell address
   // (wrapping the device pointers with vector iterators)
@@ -804,13 +807,13 @@ int vmd_cuda_build_density_atom_grid_alt(int natoms,
   sortAtomsGenCellListsAlt<<<hGsz, hBsz, smemSize>>>(
                        natoms, xyzr_d, color_d, atomIndex_d, sorted_atomIndex_d, 
                        atomHash_d, sorted_xyzr_d, sorted_color_d, cellStartEnd_d);
-
 #if 1
   // XXX when the code is ready for production use, we can disable
   //     detailed error checking and use a more all-or-nothing approach
   //     where errors fall through all of the CUDA API calls until the
   //     end and we do the cleanup only at the end.
   cudaThreadSynchronize();
+  getLastCudaError("kernel failed");
   cudaError_t err = cudaGetLastError();
   if (err != cudaSuccess) {
     printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
@@ -2781,6 +2784,7 @@ int CUDAQuickSurfAlternative::calc_surf(long int natoms, const float *xyzr_f,
       }
     }
     cudaThreadSynchronize(); 
+	getLastCudaError("kernel failed");
     densitykerneltime = wkf_timer_timenow(globaltimer);
     
 #ifdef CUDA_TIMER		
@@ -3431,6 +3435,7 @@ int CUDAQuickSurfAlternative::calc_surf(long int natoms, const float *xyzr_f,
       }
     }
     cudaThreadSynchronize(); 
+	getLastCudaError("kernel failed");
     densitykerneltime = wkf_timer_timenow(globaltimer);
     
 #ifdef CUDA_TIMER		
@@ -3740,7 +3745,9 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
                              float *origin, int *numvoxels, float maxrad,
                              float radscale, float gridspacing, 
                              float isovalue, float gausslim, 
-                             bool storeNearestAtom) {
+                             bool storeNearestAtom,
+							 int fileIndex,
+							 int resolution) {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
   float4 *colors = (float4 *) colors_f;
@@ -3882,6 +3889,7 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
           grid.y *= 2;
       }
       setArrayToInt<<<grid, 256>>>( gridDim, gpuh->nearest_atom_d, -1);
+	  getLastCudaError("kernel failed");
   }
   
   free(xyzr);
@@ -3991,6 +3999,7 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
 
     chunkcount++; // increment number of chunks processed
   }
+  getLastCudaError("kernel failed");
 
   // catch any errors that may have occured so that at the very least,
   // all of the subsequent resource deallocation calls will succeed
@@ -4014,6 +4023,44 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
          (deviceProp.major == 1 && deviceProp.minor == 3) ? "SM 1.3" : "SM 2.x",
          totalruntime, sorttime, densitytime, copytime);
 #endif
+
+#ifdef WRITE_DATRAW_FILE_MAP
+  std::string name1 = "Volume_data/qsvolume_" + std::to_string(resolution) + "_" + std::to_string(fileIndex) + ".dat";
+  std::string name2 = "Volume_data/qsvolume_" + std::to_string(resolution) + "_" + std::to_string(fileIndex) + ".raw";
+
+  FILE *qsDatFile = fopen(name1.c_str(), "w");
+  FILE *qsRawFile = fopen(name2.c_str(), "wb");
+
+  uint3 gvsz = make_uint3(numvoxels[0], numvoxels[1], numvoxels[2]);
+
+  printf("size: %i %i %i\n", this->getMapSizeX(), this->getMapSizeY(), this->getMapSizeZ());
+
+  float *vol;
+  vol = new float[gvsz.x * gvsz.y * gvsz.z * 4];
+  // copy
+  checkCudaErrors(cudaMemcpy(vol, gpuh->devvoltexmap, gvsz.x * gvsz.y * gvsz.z * sizeof(float) * 4, cudaMemcpyDeviceToHost));
+  cudaDeviceSynchronize();
+
+  std::string filenameText = "ObjectFileName: " + name2 + "\n";
+  fprintf(qsDatFile, filenameText.c_str());
+  fprintf(qsDatFile, "TaggedFileName: ---\n");
+  fprintf(qsDatFile, "Resolution:     %i %i %i\n", gvsz.x, gvsz.y, gvsz.z);
+  fprintf(qsDatFile, "SliceThickness: 1 1 1\n");
+  fprintf(qsDatFile, "Format:         FLOAT\n");
+  fprintf(qsDatFile, "NbrTags:        0\n");
+  fprintf(qsDatFile, "ObjectType:     TEXTURE_VOLUME_OBJECT\n");
+  fprintf(qsDatFile, "ObjectModel:    RGBA\n");
+  fprintf(qsDatFile, "GridType:       EQUIDISTANT\n");
+  fflush(qsDatFile);
+  fwrite(vol, sizeof(float), gvsz.x * gvsz.y * gvsz.z, qsRawFile);
+  fflush(qsRawFile);
+  delete[] vol;
+
+  fclose(qsDatFile);
+  fclose(qsRawFile);
+#endif // WRITE_DATRAW_FILE_MAP
+
+  getLastCudaError("kernel failed");
 
   return 0;
 }

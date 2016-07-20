@@ -23,6 +23,8 @@
 #ifdef WITH_CUDA
 
 #include <vector_types.h>
+#include <cuda_runtime_api.h>
+#include <helper_cuda.h>
 
 // Write file for Daniel Kauker (puxel)
 //#define WRITE_FILE
@@ -85,7 +87,9 @@ struct Vertex
   int calc_map(long int natoms, const float *xyzr, const float *colors,
                int colorperatom, float *origin, int* numvoxels, float maxrad,
                float radscale, float gridspacing,
-               float isovalue, float gausslim, bool storeNearestAtom = false);
+               float isovalue, float gausslim, bool storeNearestAtom = false,
+			   int fileIndex = 0,
+			   int resolution = 44);
   
   //int calc_map_alt(long int natoms, const float *xyzr, const float *colors,
   //             int colorperatom, float *origin, int* numvoxels, float maxrad,
