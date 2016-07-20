@@ -70,7 +70,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->scalingFactor);
 
-	this->concFactorParam.SetParameter(new param::FloatParam(2.0f, 0.0f));
+	this->concFactorParam.SetParameter(new param::FloatParam(0.5f, 0.0f));
 	this->MakeSlotAvailable(&this->concFactorParam);
 
 	lastViewport.Set(0, 0);
@@ -82,6 +82,8 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	volumeArray = nullptr;
 	particles = nullptr;
 	texHandle = 0;
+
+	curTime = 0;
 }
 
 /*
@@ -146,7 +148,7 @@ bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions
 	int result = -1;
 	result = cqs->calc_map((long)particleCnt, positions, colorTable.data(), 1, 
 		origin, numVoxels, maxConcentration, radscale, gridspacing, 
-		isoval, gausslim, false, timestep, 44);
+		isoval, gausslim, false, timestep, 20);
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
@@ -353,6 +355,9 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 	callTime = cr3d->Time();
 
+	//int myTime = curTime; // only for writing of velocity data
+	int myTime = static_cast<int>(callTime);
+
 	MultiParticleDataCall * mpdc = particleDataSlot.CallAs<MultiParticleDataCall>();
 	MolecularDataCall * mdc = particleDataSlot.CallAs<MolecularDataCall>();
 
@@ -368,7 +373,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	if (mpdc == NULL && mdc == NULL) return false;
 
 	if (mpdc != NULL) {
-		mpdc->SetFrameID(static_cast<int>(callTime));
+		mpdc->SetFrameID(myTime);
 		if (!(*mpdc)(1)) return false;
 		if (!(*mpdc)(0)) return false;
 
@@ -401,6 +406,10 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		bb = mpdc->GetBoundingBoxes().ClipBox();
 		clipBoxMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
 		clipBoxMax = make_float3(bb.Right(), bb.Top(), bb.Front());
+
+		//printf("bbMin %f %f %f\n", bbMin.x, bbMin.y, bbMin.z);
+		//exit(-1);
+
 //#define FILTER
 #ifdef FILTER // filtering: calculate min and max beforehand
 		for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -612,7 +621,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 					this->gridspacingParam.Param<param::FloatParam>()->Value(),
 					1.0f, // necessary to switch off velocity scaling
 					(concMax - concMin) * isoVals[0] + concMin, (concMax - concMin) * isoVals[isoVals.size() - 1] + concMin, true,
-					static_cast<int>(callTime));
+					myTime);
 #else
 	bool suc = this->calcVolume(bbMin, bbMax, particles,
 		this->qualityParam.Param<param::IntParam>()->Value(),
@@ -620,7 +629,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		this->gridspacingParam.Param<param::FloatParam>()->Value(),
 		1.0f, // necessary to switch off velocity scaling
 		0.0f, this->concFactorParam.Param<param::FloatParam>()->Value(), true,
-		static_cast<int>(callTime));
+		myTime);
 		// the concentrations are scaled to [0, concFactor]
 #endif
 	// TODO change maxRad?
@@ -715,6 +724,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		selectedIsovals.ResetDirty();
 		if (firstTransfer) firstTransfer = false;
 	}
+
+	curTime++;
 
 	return true;
 }

@@ -300,6 +300,8 @@ namespace protein_cuda {
 
 		cudaExtent volumeExtent;
 
+		int curTime;
+
 		cudaExtent volumeExtentSmall;
 	};
 

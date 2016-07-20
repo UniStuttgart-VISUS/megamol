@@ -41,7 +41,7 @@
 #endif
 
 //#define WRITE_DATRAW_FILE
-#define WRITE_DATRAW_FILE_MAP
+//#define WRITE_DATRAW_FILE_MAP
 
 #include "utilities.h"
 #include "WKFThreads.h"
@@ -4027,6 +4027,7 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
 #ifdef WRITE_DATRAW_FILE_MAP
   std::string name1 = "Volume_data/qsvolume_" + std::to_string(resolution) + "_" + std::to_string(fileIndex) + ".dat";
   std::string name2 = "Volume_data/qsvolume_" + std::to_string(resolution) + "_" + std::to_string(fileIndex) + ".raw";
+  std::string name3 = "qsvolume_" + std::to_string(resolution) + "_" + std::to_string(fileIndex) + ".raw";
 
   FILE *qsDatFile = fopen(name1.c_str(), "w");
   FILE *qsRawFile = fopen(name2.c_str(), "wb");
@@ -4036,23 +4037,29 @@ int CUDAQuickSurfAlternative::calc_map(long int natoms, const float *xyzr_f,
   printf("size: %i %i %i\n", this->getMapSizeX(), this->getMapSizeY(), this->getMapSizeZ());
 
   float *vol;
-  vol = new float[gvsz.x * gvsz.y * gvsz.z * 4];
+  vol = new float[gvsz.x * gvsz.y * gvsz.z * 3];
   // copy
-  checkCudaErrors(cudaMemcpy(vol, gpuh->devvoltexmap, gvsz.x * gvsz.y * gvsz.z * sizeof(float) * 4, cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(vol, gpuh->devvoltexmap, gvsz.x * gvsz.y * gvsz.z * sizeof(float) * 3, cudaMemcpyDeviceToHost));
   cudaDeviceSynchronize();
 
-  std::string filenameText = "ObjectFileName: " + name2 + "\n";
+  float thicknessX = 10.0f / (float)gvsz.x;
+  float thicknessY = 10.0f / (float)gvsz.y;
+  float thicknessZ = 10.0f / (float)gvsz.z;
+
+  std::string filenameText = "ObjectFileName: " + name3 + "\n";
   fprintf(qsDatFile, filenameText.c_str());
-  fprintf(qsDatFile, "TaggedFileName: ---\n");
-  fprintf(qsDatFile, "Resolution:     %i %i %i\n", gvsz.x, gvsz.y, gvsz.z);
-  fprintf(qsDatFile, "SliceThickness: 1 1 1\n");
   fprintf(qsDatFile, "Format:         FLOAT\n");
-  fprintf(qsDatFile, "NbrTags:        0\n");
-  fprintf(qsDatFile, "ObjectType:     TEXTURE_VOLUME_OBJECT\n");
-  fprintf(qsDatFile, "ObjectModel:    RGBA\n");
   fprintf(qsDatFile, "GridType:       EQUIDISTANT\n");
+  fprintf(qsDatFile, "Components:     3\n");
+  fprintf(qsDatFile, "Dimensions:     3\n");
+  fprintf(qsDatFile, "TimeSteps:      1\n");
+  fprintf(qsDatFile, "ByteOrder:      LITTLE_ENDIAN\n");
+  fprintf(qsDatFile, "Resolution:     %i %i %i\n", gvsz.x, gvsz.y, gvsz.z);
+  fprintf(qsDatFile, "SliceThickness: %1.5f %1.5f %1.5f\n", thicknessX, thicknessY, thicknessZ);
+  fprintf(qsDatFile, "Origin:         -5.0 -5.0 0.0\n");
+  fprintf(qsDatFile, "Time:           %i.0\n", fileIndex);
   fflush(qsDatFile);
-  fwrite(vol, sizeof(float), gvsz.x * gvsz.y * gvsz.z, qsRawFile);
+  fwrite(vol, sizeof(float), gvsz.x * gvsz.y * gvsz.z * 3, qsRawFile);
   fflush(qsRawFile);
   delete[] vol;
 
