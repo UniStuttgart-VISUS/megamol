@@ -42,8 +42,12 @@ namespace datatools {
         core::CallerSlot inParticleMapSlot;
 
         size_t dataHash;
+        size_t inIColHash;
+        size_t inMapHash;
+        size_t outDataHash;
         unsigned int frameId;
         std::vector<float> col;
+        float minCol, maxCol;
 
     };
 

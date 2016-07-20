@@ -39,6 +39,7 @@ datatools::ParticleIColFilter::ParticleIColFilter() : AbstractParticleManipulato
     particleMapSlot.SetCallback(ParticleFilterMapDataCall::ClassName(), ParticleFilterMapDataCall::FunctionName(ParticleFilterMapDataCall::GET_DATA), &ParticleIColFilter::getParticleMapData);
     particleMapSlot.SetCallback(ParticleFilterMapDataCall::ClassName(), ParticleFilterMapDataCall::FunctionName(ParticleFilterMapDataCall::GET_EXTENT), &ParticleIColFilter::getParticleMapExtent);
     particleMapSlot.SetCallback(ParticleFilterMapDataCall::ClassName(), ParticleFilterMapDataCall::FunctionName(ParticleFilterMapDataCall::GET_HASH), &ParticleIColFilter::getParticleMapHash);
+    MakeSlotAvailable(&particleMapSlot);
 }
 
 datatools::ParticleIColFilter::~ParticleIColFilter() {
