@@ -197,6 +197,7 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
 
     if (firstRequest) {
         loadTFPressed(loadTFSlot);
+        firstRequest = false;
     }
 
     bool dirty = this->minColSlot.IsDirty() || this->maxColSlot.IsDirty() || this->texSizeSlot.IsDirty();
