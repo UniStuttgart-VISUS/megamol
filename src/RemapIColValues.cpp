@@ -101,7 +101,7 @@ bool RemapIColValues::manipulateData(
         assert(col.size() >= off + pl.GetCount());
         pl.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, col.data() + off, 0);
         pl.SetColourMapIndexValues(minCol, maxCol);
-        off += pl.GetCount();
+        off += static_cast<size_t>(pl.GetCount());
     }
 
     return true;

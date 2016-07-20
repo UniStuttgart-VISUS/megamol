@@ -165,7 +165,7 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     }
 
     // now copying particles
-    mapIndex.reserve(mapIndex.size() + r_cnt);
+    mapIndex.reserve(mapIndex.size() + static_cast<size_t>(r_cnt));
     d.AssertSize(static_cast<size_t>(r_cnt * (v_size + c_size)));
     const size_t c_off = static_cast<size_t>(r_cnt * v_size);
     p.SetCount(r_cnt);
