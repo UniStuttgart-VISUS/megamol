@@ -66,7 +66,8 @@ view::LinearTransferFunction::LinearTransferFunction(void) : Module(),
         loadTFSlot("loadTF", "trigger loading from file"),
         storeTFSlot("storeTF", "trigger saving to file"),
         texID(0), texSize(1),
-        texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB) {
+        texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB),
+        firstRequest(true) {
 
     view::CallGetTransferFunctionDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0),
@@ -131,7 +132,7 @@ view::LinearTransferFunction::~LinearTransferFunction(void) {
  * view::LinearTransferFunction::create
  */
 bool view::LinearTransferFunction::create(void) {
-    // intentionally empty
+    firstRequest = true;
     return true;
 }
 
@@ -158,7 +159,8 @@ bool view::LinearTransferFunction::loadTFPressed(param::ParamSlot& param) {
             vislib::sys::Log::DefaultLog.WriteMsg(
                 vislib::sys::Log::LEVEL_WARN,
                 "Unable to open TF file.");
-            return false;
+            // failed, but does not matter here
+            return true;
         }
 
         while (!inFile.IsEOF()) {
@@ -192,6 +194,10 @@ bool view::LinearTransferFunction::loadTFPressed(param::ParamSlot& param) {
 bool view::LinearTransferFunction::requestTF(Call& call) {
     view::CallGetTransferFunction *cgtf = dynamic_cast<view::CallGetTransferFunction*>(&call);
     if (cgtf == NULL) return false;
+
+    if (firstRequest) {
+        loadTFPressed(loadTFSlot);
+    }
 
     bool dirty = this->minColSlot.IsDirty() || this->maxColSlot.IsDirty() || this->texSizeSlot.IsDirty();
     for (SIZE_T i = 0; !dirty && (i < INTER_COLOUR_COUNT); i++) {

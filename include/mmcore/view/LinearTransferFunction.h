@@ -164,6 +164,8 @@ namespace view {
         /** The array of intermediate colour definitions */
         InterColour interCols[INTER_COLOUR_COUNT];
 
+        bool firstRequest;
+
     };
 
 
