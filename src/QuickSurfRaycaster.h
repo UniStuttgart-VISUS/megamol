@@ -292,6 +292,8 @@ namespace protein_cuda {
 
 		megamol::core::param::ParamSlot concFactorParam;
 
+		megamol::core::param::ParamSlot maxRadius;
+
 		std::vector<float> isoVals;
 
 		cudaArray *tmpCudaArray;
@@ -303,6 +305,12 @@ namespace protein_cuda {
 		int curTime;
 
 		cudaExtent volumeExtentSmall;
+
+		bool recomputeVolume;
+
+		int lastTimeVal;
+
+		float * map;
 	};
 
 } /* end namespace protein_cuda */

@@ -235,10 +235,9 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 	sP.x = (pos.x - boxMin.x) / diff.x;
 	sP.y = (pos.y - boxMin.y) / diff.y;
 	sP.z = (pos.z - boxMin.z) / diff.z;
-	float val = tex3D(tex, sP.x, sP.y, sP.z) / maxVal;
+	float val = (tex3D(tex, sP.x, sP.y, sP.z) - minVal) / (maxVal - minVal);
 
 	float isoDiff = 0;
-	//float isoDiffOld = val - d_isoValArray[0];
 	float isoDiffOld = val - isoVals[0];
 
 	float isoDiffs[4] = { 0, 0, 0, 0 };
@@ -269,19 +268,14 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 		samplePos.x = (pos.x - boxMin.x) / diff.x;
 		samplePos.y = (pos.y - boxMin.y) / diff.y;
 		samplePos.z = (pos.z - boxMin.z) / diff.z;
-		float sample = tex3D(tex, samplePos.x, samplePos.y, samplePos.z);
-		sample /= maxVal;
+		float sample = (tex3D(tex, samplePos.x, samplePos.y, samplePos.z) - minVal) / (maxVal - minVal);
 
 		for (int isoIndex = 0; isoIndex < d_numIsoVals; isoIndex++) {
 
-			//isoDiff = sample - d_isoValArray[0];
 			isoDiffs[isoIndex] = sample - isoVals[isoIndex];
-
-			//sum = make_float4(d_isoValArray[0]);
 
 
 			if ((isoDiffs[isoIndex] * isoDiffsOld[isoIndex]) <= 0.0f) {
-				//sum = make_float4(1.0f, 0.0f, 0.0f, 1.0f);
 
 				// interpolated exact position of the isosurface
 				float3 isoPos = lerp(pos - step, pos, isoDiffsOld[isoIndex] / (isoDiffsOld[isoIndex] - isoDiffs[isoIndex]));
@@ -292,33 +286,25 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 				isoSamplePos.z = (isoPos.z - boxMin.z) / diff.z;
 
 				float3 gradient = make_float3(1, 0, 0);
-				gradient.x = tex3D(tex, isoSamplePos.x + voxelSize.x, isoSamplePos.y, isoSamplePos.z)
-					- tex3D(tex, isoSamplePos.x - voxelSize.x, isoSamplePos.y, isoSamplePos.z);
-				gradient.y = tex3D(tex, isoSamplePos.x, isoSamplePos.y + voxelSize.y, isoSamplePos.z)
-					- tex3D(tex, isoSamplePos.x, isoSamplePos.y - voxelSize.y, isoSamplePos.z);
-				gradient.z = tex3D(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z + voxelSize.z)
-					- tex3D(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z - voxelSize.z);
+				gradient.x = ((tex3D(tex, isoSamplePos.x + voxelSize.x, isoSamplePos.y, isoSamplePos.z) - minVal) / (maxVal - minVal))
+					- ((tex3D(tex, isoSamplePos.x - voxelSize.x, isoSamplePos.y, isoSamplePos.z) - minVal) / (maxVal - minVal));
+				gradient.y = ((tex3D(tex, isoSamplePos.x, isoSamplePos.y + voxelSize.y, isoSamplePos.z) - minVal) / (maxVal - minVal))
+					- ((tex3D(tex, isoSamplePos.x, isoSamplePos.y - voxelSize.y, isoSamplePos.z) - minVal) / (maxVal - minVal));
+				gradient.z = ((tex3D(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z + voxelSize.z) - minVal) / (maxVal - minVal))
+					- ((tex3D(tex, isoSamplePos.x, isoSamplePos.y, isoSamplePos.z - voxelSize.z) - minVal) / (maxVal - minVal));
 				gradient = normalize(gradient);
-
-				//sample *= 2.0f;
 
 				float4 col = make_float4(0.0);
 
-				col = make_float4(sample);
-				col.w *= density;
-
-				// "under" operator for back-to-front blending
-				//sum = lerp(sum, col, col.w);
-
-				// pre-multiply alpha
-				//col.x *= col.w;
-				//col.y *= col.w;
-				//col.z *= col.w;
+				// standard ray casting
+				/*col = make_float4(sample);
+				col.w *= density;*/
 
 				// isosurface color
 				col = colors[isoIndex];
 
 				float4 mycol = performLighting(gradient, -eyeRay.d, lightDir, col, lightParams);
+				// pre-multiply alpha
 				mycol *= mycol.w;
 				mycol.w = col.w;
 
@@ -344,7 +330,6 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 
 	// write output color
 	d_output[y*imageW + x] = rgbaFloatToInt(sum);
-	//d_output[y*imageW + x] = sum;
 }
 
 extern "C"
@@ -382,8 +367,8 @@ void initCudaDevice(void *h_volume, cudaExtent volumeSize) {
 	// set texture parameters
 	tex.normalized = true;                      // access with normalized texture coordinates
 	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
-	tex.addressMode[0] = cudaAddressModeBorder; // we want 0s outside for beautiful isosurfaces at the borders
-	tex.addressMode[1] = cudaAddressModeBorder;
+	tex.addressMode[0] = cudaAddressModeClamp; // we want 0s outside for beautiful isosurfaces at the borders
+	tex.addressMode[1] = cudaAddressModeClamp;
 
 	// bind array to 3D texture
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
@@ -530,8 +515,8 @@ void transferNewVolume(void* h_volume, cudaExtent volumeSize) {
 	// set texture parameters
 	tex.normalized = true;                      // access with normalized texture coordinates
 	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
-	tex.addressMode[0] = cudaAddressModeBorder; // we want 0s outside for beautiful isosurfaces at the borders
-	tex.addressMode[1] = cudaAddressModeBorder;
+	tex.addressMode[0] = cudaAddressModeClamp; // we want 0s outside for beautiful isosurfaces at the borders
+	tex.addressMode[1] = cudaAddressModeClamp;
 
 	// bind array to 3D texture
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
