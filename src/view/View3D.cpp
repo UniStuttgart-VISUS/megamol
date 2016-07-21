@@ -324,9 +324,16 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
     }
 
     if (this->overrideCall != NULL) {
+        if (cr3d != nullptr) {
+            RenderOutput *ro = dynamic_cast<RenderOutput*>(overrideCall);
+            if (ro != nullptr) {
+                *static_cast<RenderOutput*>(cr3d) = *ro;
+            }
+        }
         this->overrideCall->EnableOutputBuffer();
     } else if (cr3d != nullptr) {
         cr3d->SetOutputBuffer(GL_BACK);
+        if (cr3d != nullptr) cr3d->GetViewport(); // access the viewport to enforce evaluation
     }
 
     const float *bkgndCol = (this->overrideBkgndCol != NULL)
@@ -1284,27 +1291,33 @@ void view::View3D::renderViewCube(void) {
     float vmf[16];
     double pm[16];
     double vm[16];
-    int vp[4];
+    int vp[4], tvp[4];
     this->cam.ProjectionMatrix(pmf);
     this->cam.ViewMatrix(vmf);
     for (unsigned int i = 0; i < 16; i++) {
         pm[i] = static_cast<double>(pmf[i]);
         vm[i] = static_cast<double>(vmf[i]);
     }
+    const float viewportScale = 100.0f;
     vp[0] = vp[1] = 0;
-    vp[2] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[0] * 100.0f);
-    vp[3] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[1] * 100.0f);
+    vp[2] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[0] * viewportScale);
+    vp[3] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[1] * viewportScale);
+    tvp[0] = static_cast<int>(this->cam.Parameters()->TileRect().Left() * viewportScale);
+    tvp[1] = static_cast<int>(this->cam.Parameters()->TileRect().Bottom() * viewportScale);
+    tvp[2] = static_cast<int>(this->cam.Parameters()->TileRect().Width() * viewportScale);
+    tvp[3] = static_cast<int>(this->cam.Parameters()->TileRect().Height() * viewportScale);
+
     double wx, wy, wz, sx1, sy1, sz1, sx2, sy2, sz2;
     double size = vislib::math::Min(static_cast<double>(vp[2]), static_cast<double>(vp[3])) * 0.1f;
     wx = static_cast<double>(vp[2]) - size;
     wy = static_cast<double>(vp[3]) - size;
     wz = 0.5;
-    ::gluUnProject(wx, wy, wz, vm, pm, vp, &sx1, &sy1, &sz1);
+    ::gluUnProject(wx, wy, wz, vm, pm, tvp, &sx1, &sy1, &sz1);
     size *= 0.5;
     wx = static_cast<double>(vp[2]) - size;
     wy = static_cast<double>(vp[3]) - size;
     wz = 0.5;
-    ::gluUnProject(wx, wy, wz, vm, pm, vp, &sx2, &sy2, &sz2);
+    ::gluUnProject(wx, wy, wz, vm, pm, tvp, &sx2, &sy2, &sz2);
     sx2 -= sx1;
     sy2 -= sy1;
     sz2 -= sz1;
