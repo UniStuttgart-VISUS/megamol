@@ -146,9 +146,10 @@ bool ScreenSpaceEdgeRenderer::Render(Call& call) {
     view::CallRender3D *outCall = this->rendererSlot.CallAs<view::CallRender3D>();
     if (outCall == NULL) return false;
 
+    //const vislib::math::Rectangle<int>& vp = inCall->GetViewport();
     inCall->DisableOutputBuffer();
+    const vislib::math::Rectangle<int>& vp = inCall->GetCameraParameters()->TileRect();
 
-    const vislib::math::Rectangle<int>& vp = inCall->GetViewport();
     if (!this->fbo.IsValid()
             || (this->fbo.GetWidth() != static_cast<unsigned int>(vp.Width()))
             || (this->fbo.GetHeight() != static_cast<unsigned int>(vp.Height()))) {
