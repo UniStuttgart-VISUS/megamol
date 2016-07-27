@@ -15,6 +15,8 @@
 #include "mmcore/CallerSlot.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
+#include "mmcore/misc/VolumetricDataCallTypes.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 
@@ -37,6 +39,7 @@ extern "C" void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 b
 extern "C" void copyLUT(float4* myLUT, int lutSize = 256);
 extern "C" void transferIsoValues(float4 h_isoVals, int h_numIsos);
 extern "C" void transferNewVolume(void *h_volume, cudaExtent volumeSize);
+extern "C" void transferNewVolumeDirect(void *h_volume, cudaExtent volumeSize);
 
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"

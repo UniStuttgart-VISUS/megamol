@@ -522,4 +522,44 @@ void transferNewVolume(void* h_volume, cudaExtent volumeSize) {
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
 }
 
+extern "C"
+void transferVolumeDirect(void * h_volume, cudaExtent volumeSize) {
+
+	if (d_volumeArray) {
+		checkCudaErrors(cudaFreeArray(d_volumeArray));
+		d_volumeArray = 0;
+
+		checkCudaErrors(cudaUnbindTexture(tex));
+	}
+
+	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
+	checkCudaErrors(cudaMalloc3DArray(&d_volumeArray, &channelDesc, volumeSize));
+
+	// get min and max value from volume
+	float *volptr = static_cast<float*>(h_volume);
+	thrust::device_ptr<float> ptr = thrust::device_ptr<float>(volptr);
+
+	auto res = thrust::minmax_element(ptr, ptr + (volumeSize.width * volumeSize.depth * volumeSize.height));
+	minVal = (float)*res.first;
+	maxVal = (float)*res.second;
+
+	// copy data to 3D array
+	cudaMemcpy3DParms copyParams = { 0 };
+	copyParams.srcPtr = make_cudaPitchedPtr(h_volume, volumeSize.width*sizeof(VolumeType), volumeSize.width, volumeSize.height);
+
+	copyParams.dstArray = d_volumeArray;
+	copyParams.extent = volumeSize;
+	copyParams.kind = cudaMemcpyHostToDevice;
+	checkCudaErrors(cudaMemcpy3D(&copyParams));
+
+	// set texture parameters
+	tex.normalized = true;                      // access with normalized texture coordinates
+	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
+	tex.addressMode[0] = cudaAddressModeClamp; // we want 0s outside for beautiful isosurfaces at the borders
+	tex.addressMode[1] = cudaAddressModeClamp;
+
+	// bind array to 3D texture
+	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
+}
+
 #endif // #ifndef _VOLUMERENDER_KERNEL_CU_

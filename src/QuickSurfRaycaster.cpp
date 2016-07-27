@@ -27,6 +27,7 @@ using namespace megamol::core;
 using namespace megamol::core::moldyn;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
+using namespace megamol::core::misc;
 
 /*
  *	QuickSurfRaycaster::QuickSurfRaycaster
@@ -48,6 +49,7 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 {
 	this->particleDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
 	this->particleDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
+	this->particleDataSlot.SetCompatibleCall<VolumeticDataCallDescription>();
 	this->MakeSlotAvailable(&this->particleDataSlot);
 
 	this->qualityParam.SetParameter(new param::IntParam(1, 0, 4));
@@ -196,8 +198,9 @@ bool QuickSurfRaycaster::GetExtents(Call& call) {
 
 	MultiParticleDataCall *mpdc = this->particleDataSlot.CallAs<MultiParticleDataCall>();
 	MolecularDataCall *mdc = this->particleDataSlot.CallAs<MolecularDataCall>();
+	VolumetricDataCall *vdc = this->particleDataSlot.CallAs<VolumetricDataCall>();
 
-	if (mpdc == NULL && mdc == NULL) return false;
+	if (mpdc == NULL && mdc == NULL && vdc == NULL) return false;
 
 	// MultiParticleDataCall in use
 	if (mpdc != NULL) {
@@ -227,6 +230,21 @@ bool QuickSurfRaycaster::GetExtents(Call& call) {
 		cr3d->AccessBoundingBoxes() = mdc->AccessBoundingBoxes();
 		cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
 		cr3d->SetTimeFramesCount(mdc->FrameCount());
+	}
+	else if (vdc != NULL) {
+		if (!(*vdc)(vdc->IDX_GET_EXTENTS)) return false;
+
+		float scale;
+		if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+			scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+		}
+		else {
+			scale = 1.0f;
+		}
+
+		cr3d->AccessBoundingBoxes() = vdc->AccessBoundingBoxes();
+		cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
+		cr3d->SetTimeFramesCount(vdc->FrameCount());
 	}
 
 	return true;
@@ -383,6 +401,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 	MultiParticleDataCall * mpdc = particleDataSlot.CallAs<MultiParticleDataCall>();
 	MolecularDataCall * mdc = particleDataSlot.CallAs<MolecularDataCall>();
+	VolumetricDataCall * vdc = particleDataSlot.CallAs<VolumetricDataCall>();
 
 	float3 bbMin;
 	float3 bbMax;
@@ -393,7 +412,9 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	float concMin = FLT_MAX;
 	float concMax = FLT_MIN;
 
-	if (mpdc == NULL && mdc == NULL) return false;
+	bool onlyVolumetric = false;
+
+	if (mpdc == NULL && mdc == NULL && vdc == NULL) return false;
 
 	if (mpdc != NULL) {
 
@@ -587,11 +608,28 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 		mpdc->Unlock();
 
+		onlyVolumetric = false;
+
 	} else if (mdc != NULL) {
 		// TODO
 		printf("MolecularDataCall currently not supported\n");
 		mdc->Unlock();
+		onlyVolumetric = false;
 		return false;
+	} else if (vdc != NULL) {
+
+		vdc->SetFrameID(myTime);
+		if (!(*vdc)(vdc->IDX_GET_EXTENTS)) return false;
+		if (!(*vdc)(vdc->IDX_GET_METADATA)) return false;
+		if (!(*vdc)(vdc->IDX_GET_DATA)) return false;
+		
+		glPushMatrix();
+		float scale = 1.0f;
+		if (!vislib::math::IsEqual(vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
+			scale = 2.0f / vdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+		}
+		glScalef(scale, scale, scale);
+		onlyVolumetric = true;
 	}
 
 	initCuda(*cr3d);
@@ -637,7 +675,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	dim3 blockSize = dim3(8, 8);
 	dim3 gridSize = dim3(iDivUp(viewport.GetWidth(), blockSize.x), iDivUp(viewport.GetHeight(), blockSize.y));
 
-	if (recomputeVolume) {
+	if (recomputeVolume && !onlyVolumetric) {
 		if (cudaqsurf == NULL) {
 			cudaqsurf = new CUDAQuickSurfAlternative();
 		}
@@ -663,28 +701,63 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		//if (!suc) return false;
 	}
 
-	if (recomputeVolume) {
+	if (recomputeVolume && !onlyVolumetric) {
 		CUDAQuickSurfAlternative * cqs = (CUDAQuickSurfAlternative*)cudaqsurf;
 		map = cqs->getMap();
 	}
 
 		//transferNewVolume(map, volumeExtent);
-	transferNewVolume(map, volumeExtentSmall);
+
+	if (!onlyVolumetric) { // quicksurfed data
+		transferNewVolume(map, volumeExtentSmall);
+	}
+	else { // pure volume data
+		auto xDir = vdc->GetResolution(0);
+		auto yDir = vdc->GetResolution(1);
+		auto zDir = vdc->GetResolution(2);
+		volumeExtentSmall = make_cudaExtent(xDir, yDir, zDir);
+		volumeExtent = volumeExtentSmall;
+
+		if (vdc->GetComponents() > 1 || vdc->GetComponents() < 1) {
+			return false;
+		}
+
+		if (vdc->GetScalarType() != VolumetricDataCall::ScalarType::FLOATING_POINT) {
+			return false;
+		}
+
+		printf("before\n");
+
+		auto volPtr = vdc->GetData();
+
+		auto voxelNumber = volumeExtentSmall.width * volumeExtentSmall.height * volumeExtentSmall.depth;
+
+		if (volPtr != NULL){
+			transferNewVolume(volPtr, volumeExtentSmall);
+			checkCudaErrors(cudaDeviceSynchronize());
+		}
+		else {
+			printf("Volume data was NULL");
+			return false;
+		}
+	}
+
 	checkCudaErrors(cudaDeviceSynchronize());
-	//}
+	printf("after4\n");
 
 	// read lighting parameters
 	float lightPos[4];
 	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 	float3 light = make_float3(lightPos[0], lightPos[1], lightPos[2]);
 
-	//if (!suc)
-		render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f));
-	//else
-		//renderArray_kernel(cqs->getMap(), gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, dim3(cqs->getMapSizeX(), cqs->getMapSizeY(), cqs->getMapSizeZ()));
+	printf("after2\n");
+
+	render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f));
 	
 	getLastCudaError("kernel failed");
 	checkCudaErrors(cudaDeviceSynchronize());
+
+	printf("after3\n");
 
 	glActiveTexture(GL_TEXTURE15);
 	glBindTexture(GL_TEXTURE_2D, texHandle);
@@ -756,6 +829,10 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	curTime++;
 	lastTimeVal = myTime;
 	recomputeVolume = false;
+
+
+	if (vdc != NULL)
+		vdc->Unlock();
 
 	return true;
 }
