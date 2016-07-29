@@ -161,7 +161,7 @@ float density, float brightness, float transferOffset, float transferScale, floa
 const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
 const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f))
 {
-	const int maxSteps = 128;
+	const int maxSteps = 450;
 	//const float tstep = 0.0009765625f;
 
 	const float isoVals[4] = { d_iso1, d_iso2, d_iso3, d_iso4 };
@@ -523,7 +523,7 @@ void transferNewVolume(void* h_volume, cudaExtent volumeSize) {
 }
 
 extern "C"
-void transferVolumeDirect(void * h_volume, cudaExtent volumeSize) {
+void transferVolumeDirect(void * h_volume, cudaExtent volumeSize, float myMin, float myMax) {
 
 	if (d_volumeArray) {
 		checkCudaErrors(cudaFreeArray(d_volumeArray));
@@ -535,13 +535,13 @@ void transferVolumeDirect(void * h_volume, cudaExtent volumeSize) {
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<VolumeType>();
 	checkCudaErrors(cudaMalloc3DArray(&d_volumeArray, &channelDesc, volumeSize));
 
-	// get min and max value from volume
-	float *volptr = static_cast<float*>(h_volume);
-	thrust::device_ptr<float> ptr = thrust::device_ptr<float>(volptr);
+	//checkCudaErrors(cudaDeviceSynchronize());
 
-	auto res = thrust::minmax_element(ptr, ptr + (volumeSize.width * volumeSize.depth * volumeSize.height));
-	minVal = (float)*res.first;
-	maxVal = (float)*res.second;
+	minVal = myMin;
+	maxVal = myMax;
+
+	//printf("min %f; max %f\n", minVal, maxVal);
+	//printf("%Iu %Iu %Iu\n", volumeSize.width, volumeSize.height, volumeSize.depth);
 
 	// copy data to 3D array
 	cudaMemcpy3DParms copyParams = { 0 };

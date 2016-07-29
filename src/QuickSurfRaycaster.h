@@ -21,6 +21,9 @@
 #include "protein_calls/MolecularDataCall.h"
 
 #include "CUDAQuickSurfAlternative.h"
+#include "CUDAMarchingCubes.h"
+
+#include <fstream>
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -39,7 +42,7 @@ extern "C" void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 b
 extern "C" void copyLUT(float4* myLUT, int lutSize = 256);
 extern "C" void transferIsoValues(float4 h_isoVals, int h_numIsos);
 extern "C" void transferNewVolume(void *h_volume, cudaExtent volumeSize);
-extern "C" void transferNewVolumeDirect(void *h_volume, cudaExtent volumeSize);
+extern "C" void transferVolumeDirect(void *h_volume, cudaExtent volumeSize, float myMin, float myMax);
 
 #include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
@@ -227,6 +230,14 @@ namespace protein_cuda {
 			float isoval, float minConcentration, float maxConcentration,
 			bool useCol, int timestep = 0);
 
+		/// <summary>
+		/// Converts a given volume to a mesh and writes it to disk.
+		/// </summary>
+		/// <param name="volumeData">Pointer to the voxel data.</param>
+		/// <param name="volSize">Dimensions of the volume data.</param>
+		/// <param name="isoValue">The isovalue for which the conversion should happen.</param>
+		void convertToMesh(float * volumeData, cudaExtent volSize, float3 bbMin, float3 bbMax, float isoValue = 0.1, float concMin = 0.0f, float concMax = 1.0f);
+
 		/** caller slot */
 		megamol::core::CallerSlot particleDataSlot;
 
@@ -235,6 +246,8 @@ namespace protein_cuda {
 		
 		//! Pointer to the CUDAQuickSurf object if it exists
 		void *cudaqsurf;
+
+		void *cudaMarching;
 
 		/** Has the CUDA device to be set? */
 		bool setCUDAGLDevice;
@@ -297,6 +310,10 @@ namespace protein_cuda {
 
 		megamol::core::param::ParamSlot maxRadius;
 
+		megamol::core::param::ParamSlot triggerConvertButtonParam;
+
+		megamol::core::param::ParamSlot convertedIsoValueParam;
+
 		std::vector<float> isoVals;
 
 		cudaArray *tmpCudaArray;
@@ -314,6 +331,10 @@ namespace protein_cuda {
 		int lastTimeVal;
 
 		float * map;
+
+		float3 * mcVertices_d;
+		float3 * mcNormals_d;
+		float3 * mcColors_d;
 	};
 
 } /* end namespace protein_cuda */

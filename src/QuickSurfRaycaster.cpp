@@ -16,6 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/ButtonParam.h"
 
 #include "vislib/StringTokeniser.h"
 
@@ -38,10 +39,12 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	radscaleParam("quicksurf::radscale", "Radius scale"),
 	gridspacingParam("quicksurf::gridspacing", "Grid spacing"),
 	isovalParam("quicksurf::isoval", "Isovalue"),
-	selectedIsovals("quicksurf::selectedIsovals", "Semicolon seperated list of normalized isovalues we want to ray cast the isoplanes from"),
+	selectedIsovals("render::selectedIsovals", "Semicolon seperated list of normalized isovalues we want to ray cast the isoplanes from"),
 	scalingFactor("quicksurf::scalingFactor", "Scaling factor for the density values and particle radii"),
 	concFactorParam("quicksurf::concentrationFactor", "Scaling factor for particle radii based on their concentration"),
 	maxRadius("quicksurf::maxRadius", "The maximal particle influence radius the quicksurf algorithm uses"),
+	convertedIsoValueParam("render::convertedIsovalue", "The isovalue the mesh gets generated from"),
+	triggerConvertButtonParam("render::triggerConversion", "Button starting the conversion from volume to mesh data"),
 	setCUDAGLDevice(true),
 	firstTransfer(true),
 	recomputeVolume(true),
@@ -71,6 +74,12 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	isoVals.push_back(0.1f);
 	isoVals.push_back(0.9f);
 
+	this->convertedIsoValueParam.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
+	this->MakeSlotAvailable(&this->convertedIsoValueParam);
+
+	this->triggerConvertButtonParam.SetParameter(new param::ButtonParam('I'));
+	this->MakeSlotAvailable(&this->triggerConvertButtonParam);
+
 	this->scalingFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->scalingFactor);
 
@@ -89,6 +98,9 @@ QuickSurfRaycaster::QuickSurfRaycaster(void) : Renderer3DModule(),
 	volumeArray = nullptr;
 	particles = nullptr;
 	texHandle = 0;
+	mcVertices_d = nullptr;
+	mcNormals_d = nullptr;
+	mcColors_d = nullptr;
 
 	curTime = 0;
 }
@@ -102,6 +114,21 @@ QuickSurfRaycaster::~QuickSurfRaycaster(void) {
 		delete cqs;
 		cqs = nullptr;
 		cudaqsurf = nullptr;
+	}
+
+	if (mcVertices_d != NULL) {
+		cudaFree(mcVertices_d);
+		mcVertices_d = NULL;
+	}
+
+	if (mcNormals_d != NULL) {
+		cudaFree(mcNormals_d);
+		mcNormals_d = NULL;
+	}
+
+	if (mcColors_d != NULL) {
+		cudaFree(mcColors_d);
+		mcColors_d = NULL;
 	}
 	
 	this->Release();
@@ -173,6 +200,147 @@ bool QuickSurfRaycaster::calcVolume(float3 bbMin, float3 bbMax, float* positions
  */
 bool QuickSurfRaycaster::create(void) {
 	return initOpenGL();
+}
+
+/*
+ *	QuickSurfRaycaster::convertToMesh
+ */
+void QuickSurfRaycaster::convertToMesh(float * volumeData, cudaExtent volSize, float3 bbMin, float3 bbMax, float isoValue, float concMin, float concMax) {
+
+	uint3 extents = make_uint3(volSize.width, volSize.height, volSize.depth);
+	unsigned int chunkmaxverts = 3 * extents.x * extents.y * extents.z;
+
+	float * data = volumeData;
+
+#define DOWNSAMPLE
+#ifdef DOWNSAMPLE
+	extents = make_uint3(extents.x / 2, extents.y / 2, extents.z / 2);
+	chunkmaxverts = 3 * extents.x * extents.y * extents.z;
+
+	data = new float[extents.x * extents.y * extents.z];
+
+	float newMin = FLT_MAX;
+	float newMax = FLT_MIN;
+
+	for (int index = 0; index < chunkmaxverts / 3; index++) {
+		int i = (index % (extents.x * extents.y)) % extents.x;
+		int j = (index % (extents.x * extents.y)) / extents.x;
+		int k = index / (extents.x * extents.y);
+
+		float val = 0.0f;
+		val += volumeData[(2*k)   * extents.x * extents.y + (2*j)   * extents.x + (2*i)];
+		val += volumeData[(2*k)   * extents.x * extents.y + (2*j)   * extents.x + (2*i+1)];
+		val += volumeData[(2*k)   * extents.x * extents.y + (2*j+1) * extents.x + (2*i)];
+		val += volumeData[(2*k)   * extents.x * extents.y + (2*j+1) * extents.x + (2*i+1)];
+		val += volumeData[(2*k+1) * extents.x * extents.y + (2*j)   * extents.x + (2*i)];
+		val += volumeData[(2*k+1) * extents.x * extents.y + (2*j)   * extents.x + (2*i+1)];
+		val += volumeData[(2*k+1) * extents.x * extents.y + (2*j+1) * extents.x + (2*i)];
+		val += volumeData[(2*k+1) * extents.x * extents.y + (2*j+1) * extents.x + (2*i+1)];
+		data[k * extents.x * extents.y + j * extents.x + i] = val / 8.0f;
+
+		if (val / 8.0f < newMin) newMin = val / 8.0f;
+		if (val / 8.0f > newMax) newMax = val / 8.0f;
+	}
+#else
+	float newMin = concMin;
+	float newMax = concMax;
+#endif
+
+#define NORMALIZE
+#ifdef NORMALIZE
+	for (int i = 0; i < chunkmaxverts / 3; i++) {
+		data[i] = (data[i] - newMin) / (newMax - newMin);
+	}
+#endif
+
+	if (cudaMarching == NULL) {
+		cudaMarching = new CUDAMarchingCubes();
+		((CUDAMarchingCubes*)cudaMarching)->Initialize(extents);
+	}
+
+	CUDAMarchingCubes * cmc = (CUDAMarchingCubes*)cudaMarching;
+	uint3 oldExtents = cmc->GetMaxGridSize();
+	
+	if (extents.x > oldExtents.x || extents.y > oldExtents.y || extents.z > oldExtents.z) {
+		cmc->Initialize(extents);
+	}
+
+	float3 bbSize = make_float3(bbMax.x - bbMin.x, bbMax.y - bbMin.y, bbMax.z - bbMin.z);
+	float3 bbNewMin = make_float3(0.0f, 0.0f, 0.0f);
+
+	//std::cout << chunkmaxverts * sizeof(float3) << std::endl;
+	printf("min %f ; max %f\n", newMin, newMax);
+
+	float myIsoVal = isoValue;
+	//myIsoVal = 0.2f;
+
+	// TODO is the linear interpolation necessary? (use only isoValue instead)
+	//cmc->SetIsovalue((1.0f - myIsoVal) * newMin + myIsoVal * newMax);
+	cmc->SetIsovalue(myIsoVal);
+	if (!cmc->SetVolumeData(data, NULL, extents, bbMin, bbSize, false)) {
+		printf("SetVolumeData failed!\n");
+	}
+
+	if (mcVertices_d != NULL) {
+		cudaFree(mcVertices_d);
+		mcVertices_d = NULL;
+	}
+
+	if (mcNormals_d != NULL) {
+		cudaFree(mcNormals_d);
+		mcNormals_d = NULL;
+	}
+
+	if (mcColors_d != NULL) {
+		cudaFree(mcColors_d);
+		mcColors_d = NULL;
+	}
+
+	checkCudaErrors(cudaMalloc((void**)&mcVertices_d, chunkmaxverts * sizeof(float3)));
+	checkCudaErrors(cudaMalloc((void**)&mcNormals_d, chunkmaxverts * sizeof(float3)));
+	checkCudaErrors(cudaMalloc((void**)&mcColors_d, chunkmaxverts * sizeof(float3)));
+
+	cmc->computeIsosurface(mcVertices_d, mcNormals_d, mcColors_d, chunkmaxverts);
+	checkCudaErrors(cudaDeviceSynchronize());
+
+	int64_t count = cmc->GetVertexCount();
+
+	float *mcVertices_h = new float[count * 3 * sizeof(float)];
+	float *mcNormals_h = new float[count * 3 * sizeof(float)];
+
+	checkCudaErrors(cudaMemcpy(mcVertices_h, mcVertices_d, count * 3 * sizeof(float), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(mcNormals_h, mcNormals_d, count * 3 * sizeof(float), cudaMemcpyDeviceToHost));
+
+	std::cout << "Found " << count / 3 << " triangles" << std::endl;
+
+	std::ofstream file("mesh.obj");
+	for (int i = 0; i < count; i++) { // vertices
+		file << "v " << std::to_string(mcVertices_h[i * 3 + 0]) << " " << std::to_string(mcVertices_h[i * 3 + 1]) << " " << std::to_string(mcVertices_h[i * 3 + 2]) << std::endl;
+	}
+	file << std::endl;
+	for (int i = 0; i < count; i++) { // normals
+		file << "vn " << std::to_string(mcNormals_h[i * 3 + 0]) << " " << std::to_string(mcNormals_h[i * 3 + 1]) << " " << std::to_string(mcNormals_h[i * 3 + 2]) << std::endl;
+	}
+	file << std::endl;
+	for (int i = 0; i < count / 3; i++) { // triangles
+		std::string i1 = std::to_string(i * 3 + 1);
+		std::string i2 = std::to_string(i * 3 + 2);
+		std::string i3 = std::to_string(i * 3 + 3);
+
+		file << "f " << i1 << "//" << i1 << " " << i2 << "//" << i2 << " " << i3 << "//" << i3 << std::endl;
+	}
+
+	file.close();
+
+	delete[] mcVertices_h;
+	mcVertices_h = nullptr;
+	delete[] mcNormals_h;
+	mcNormals_h = nullptr;
+
+#ifdef DOWNSAMPLE
+	delete[] data;
+	data = nullptr;
+#endif
 }
 
 /*
@@ -718,6 +886,10 @@ bool QuickSurfRaycaster::Render(Call& call) {
 		volumeExtentSmall = make_cudaExtent(xDir, yDir, zDir);
 		volumeExtent = volumeExtentSmall;
 
+		auto bb = vdc->GetBoundingBoxes().ObjectSpaceBBox();
+		bbMin = make_float3(bb.Left(), bb.Bottom(), bb.Back());
+		bbMax = make_float3(bb.Right(), bb.Top(), bb.Front());
+
 		if (vdc->GetComponents() > 1 || vdc->GetComponents() < 1) {
 			return false;
 		}
@@ -726,38 +898,49 @@ bool QuickSurfRaycaster::Render(Call& call) {
 			return false;
 		}
 
-		printf("before\n");
-
 		auto volPtr = vdc->GetData();
-
 		auto voxelNumber = volumeExtentSmall.width * volumeExtentSmall.height * volumeExtentSmall.depth;
+		float * fPtr = reinterpret_cast<float*>(volPtr);
 
+		concMin = FLT_MAX;
+		concMax = FLT_MIN;
+
+		for (int i = 0; i < voxelNumber; i++) {
+			if (fPtr[i] < concMin) concMin = fPtr[i];
+			if (fPtr[i] > concMax) concMax = fPtr[i];
+		}
+			
 		if (volPtr != NULL){
-			transferNewVolume(volPtr, volumeExtentSmall);
+			transferVolumeDirect(volPtr, volumeExtentSmall, concMin, concMax);
 			checkCudaErrors(cudaDeviceSynchronize());
 		}
 		else {
 			printf("Volume data was NULL");
 			return false;
 		}
+
+		if (this->triggerConvertButtonParam.IsDirty()) {
+		
+			printf("Converting the isosurface of %f to a mesh\n", this->convertedIsoValueParam.Param<param::FloatParam>()->Value());
+			convertToMesh(static_cast<float*>(volPtr), volumeExtentSmall, bbMin, bbMax, this->convertedIsoValueParam.Param<param::FloatParam>()->Value(), concMin, concMax);
+			this->triggerConvertButtonParam.ResetDirty();
+		}
 	}
 
 	checkCudaErrors(cudaDeviceSynchronize());
-	printf("after4\n");
+
+	if (onlyVolumetric)
+		vdc->Unlock();
 
 	// read lighting parameters
 	float lightPos[4];
 	glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 	float3 light = make_float3(lightPos[0], lightPos[1], lightPos[2]);
 
-	printf("after2\n");
-
 	render_kernel(gridSize, blockSize, cudaImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f));
 	
 	getLastCudaError("kernel failed");
 	checkCudaErrors(cudaDeviceSynchronize());
-
-	printf("after3\n");
 
 	glActiveTexture(GL_TEXTURE15);
 	glBindTexture(GL_TEXTURE_2D, texHandle);
@@ -808,9 +991,11 @@ bool QuickSurfRaycaster::Render(Call& call) {
 
 		float bla = 0.5f;
 
-		// adapt the isovalues to the filtered values
-		for (int i = 0; i < std::min((int)isoVals.size(), 4); i++) {
-			adaptedIsoVals[i] = (adaptedIsoVals[i] - isoVals[0]) / div;
+		if (!onlyVolumetric){
+			// adapt the isovalues to the filtered values
+			for (int i = 0; i < std::min((int)isoVals.size(), 4); i++) {
+				adaptedIsoVals[i] = (adaptedIsoVals[i] - isoVals[0]) / div;
+			}
 		}
 
 		// copy the first four isovalues into a float4
@@ -829,10 +1014,6 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	curTime++;
 	lastTimeVal = myTime;
 	recomputeVolume = false;
-
-
-	if (vdc != NULL)
-		vdc->Unlock();
 
 	return true;
 }
