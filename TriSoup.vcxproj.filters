@@ -138,6 +138,9 @@
     <ClInclude Include="src\LinesRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\WavefrontObjWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\TriSoup.cpp">
@@ -207,6 +210,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\CallTriMeshData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WavefrontObjWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -15,6 +15,7 @@
 #include "TriSoupRenderer.h"
 #include "TriSoupDataSource.h"
 #include "WavefrontObjDataSource.h"
+#include "WavefrontObjWriter.h"
 #include "BlockVolumeMesh.h"
 #include "volumetrics/VoluMetricJob.h"
 #include "OSCBFix.h"
@@ -59,6 +60,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
+			this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::BlockVolumeMesh>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
             this->module_descriptions.RegisterAutoDescription<megamol::quartz::OSCBFix>();

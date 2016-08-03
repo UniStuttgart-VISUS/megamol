@@ -263,6 +263,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\volumetrics\TetraVoxelizer.h" />
     <ClInclude Include="src\volumetrics\VoluMetricJob.h" />
     <ClInclude Include="src\WavefrontObjDataSource.h" />
+    <ClInclude Include="src\WavefrontObjWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AbstractTriMeshDataSource.cpp" />
@@ -293,6 +294,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\volumetrics\TetraVoxelizer.cpp" />
     <ClCompile Include="src\volumetrics\VoluMetricJob.cpp" />
     <ClCompile Include="src\WavefrontObjDataSource.cpp" />
+    <ClCompile Include="src\WavefrontObjWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

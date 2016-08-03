@@ -52,6 +52,24 @@ namespace trisoup {
          */
         virtual bool create(void);
 
+		/**
+         * Gets the data from the source.
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        virtual bool getDataCallback(core::Call& caller);
+
+        /**
+         * Gets the data from the source.
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        virtual bool getExtentCallback(core::Call& caller);
+
         /**
          * Implementation of 'Release'.
          */
@@ -72,25 +90,7 @@ namespace trisoup {
         /** The data update hash */
         SIZE_T datahash;
 
-    private:
-
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getDataCallback(core::Call& caller);
-
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getExtentCallback(core::Call& caller);
+	private:
 
         /** The slot for requesting data */
         core::CalleeSlot getDataSlot;
