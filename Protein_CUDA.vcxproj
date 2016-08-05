@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8BC8CBB7-BC8B-4142-9A9C-7CDD6BB92508}</ProjectGuid>
+    <ProjectGuid>{68E50F89-1796-428F-9D0F-E61188121E7E}</ProjectGuid>
     <RootNamespace>Protein_CUDA</RootNamespace>
     <ProjectName>Protein_CUDA</ProjectName>
   </PropertyGroup>
@@ -251,6 +251,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\MoleculeCudaSESRenderer.h" />
     <ClInclude Include="src\MoleculeVolumeCudaRenderer.h" />
     <ClInclude Include="src\ogl_error_check.h" />
+    <ClInclude Include="src\ParticlesToMeshConverter.h" />
     <ClInclude Include="src\PotentialCalculator.cuh" />
     <ClInclude Include="src\PotentialCalculator.h" />
     <ClInclude Include="src\PotentialVolumeRaycaster.h" />
@@ -304,6 +305,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\MoleculeCBCudaRenderer.cpp" />
     <ClCompile Include="src\MoleculeCudaSESRenderer.cpp" />
     <ClCompile Include="src\MoleculeVolumeCudaRenderer.cpp" />
+    <ClCompile Include="src\ParticlesToMeshConverter.cpp" />
     <ClCompile Include="src\PotentialCalculator.cpp" />
     <ClCompile Include="src\PotentialVolumeRaycaster.cpp" />
     <ClCompile Include="src\Protein_CUDA.cpp" />

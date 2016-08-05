@@ -225,6 +225,9 @@
     <ClInclude Include="src\CUDAQuickSurfAlternative.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ParticlesToMeshConverter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
@@ -348,6 +351,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\QuickSurfRaycaster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticlesToMeshConverter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
