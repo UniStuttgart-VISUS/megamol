@@ -8,6 +8,7 @@
     <HAPTICSPath>%hapticsPath%</HAPTICSPath>
 	<OPENBABELPath>%openbabelPath%</OPENBABELPath>
 	<CURLPath>%curlPath%</CURLPath>
+	<TriSoupPath>%trisoup%</TriSoupPath>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -46,6 +47,9 @@
     </BuildMacro>
 	<BuildMacro Include="CURLPath">
 		<Value>$(CURLPath)</Value>
+	</BuildMacro>
+	<BuildMacro Include="TriSoupPath">
+		<Value>$(TriSoupPath)</Value>
 	</BuildMacro>
   </ItemGroup>
 </Project>

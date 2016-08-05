@@ -11,7 +11,7 @@
 
 #include "ParticlesToMeshConverter.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/CallTriMeshData.h"
+#include "TriSoup/CallTriMeshData.h"
 #include <gl/GLU.h>
 
 #include "mmcore/param/IntParam.h"
@@ -442,7 +442,7 @@ bool ParticlesToMeshConverter::GetExtents(Call& call) {
  *	QuickSurfRaycaster::GetData
  */
 bool ParticlesToMeshConverter::GetData(Call& call) {
-	CallTriMeshData *cmesh = dynamic_cast<CallTriMeshData *>(&call);
+    trisoup::CallTriMeshData *cmesh = dynamic_cast<trisoup::CallTriMeshData * > (&call);
 	if (cmesh == NULL) return false;
 
 	if (concFactorParam.IsDirty() || gridspacingParam.IsDirty() 
