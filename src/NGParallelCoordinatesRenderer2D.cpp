@@ -795,6 +795,8 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 
 void NGParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
 
+	// TODO, plus shader is broken
+
 	this->enableProgramAndBind(pickProgram);
 
 	::glUniform2f(pickProgram.ParameterLocation("mouse"), x, y);
@@ -814,6 +816,8 @@ void NGParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadi
 }
 
 void NGParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, float y1) {
+
+	// TODO, plus shader is broken
 
 	this->enableProgramAndBind(strokeProgram);
 
