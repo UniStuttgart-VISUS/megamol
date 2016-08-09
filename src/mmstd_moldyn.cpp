@@ -30,6 +30,8 @@
 #include "misc/ParticleWorker.h"
 #include "io/XYZLoader.h"
 #include "io/TclMolSelectionLoader.h"
+#include "mmstd_moldyn/BrickStatsCall.h"
+#include "io/BrickStatsDataSource.h"
 
 
 /*
@@ -125,8 +127,9 @@ namespace {
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::misc::ParticleWorker>();
             this->module_descriptions.RegisterDescription< ::megamol::core::factories::LoaderADModuleAutoDescription< ::megamol::stdplugin::moldyn::io::XYZLoader> >();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
             // register calls here:
-            // ...
+            this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

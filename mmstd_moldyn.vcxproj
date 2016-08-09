@@ -241,6 +241,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\io\BrickStatsDataSource.cpp" />
     <ClCompile Include="src\io\IMDAtomDataSource.cpp" />
     <ClCompile Include="src\io\MMSPDDataSource.cpp" />
     <ClCompile Include="src\io\MMSPDFrameData.cpp" />
@@ -253,6 +254,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\io\VTFDataSource.cpp" />
     <ClCompile Include="src\io\VTFResDataSource.cpp" />
     <ClCompile Include="src\io\XYZLoader.cpp" />
+    <ClCompile Include="src\misc\BrickStatsCall.cpp" />
     <ClCompile Include="src\misc\ParticleWorker.cpp" />
     <ClCompile Include="src\rendering\NGSphereBufferArrayRenderer.cpp" />
     <ClCompile Include="src\rendering\NGSphereRenderer.cpp" />
@@ -260,8 +262,10 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmstd_moldyn\mmstd_moldyn.h" />
+    <ClInclude Include="include\mmstd_moldyn\BrickStatsCall.h" />
     <ClInclude Include="src/stdafx.h" />
     <ClInclude Include="src/targetver.h" />
+    <ClInclude Include="src\io\BrickStatsDataSource.h" />
     <ClInclude Include="src\io\IMDAtomDataSource.h" />
     <ClInclude Include="src\io\MMSPDDataSource.h" />
     <ClInclude Include="src\io\MMSPDFrameData.h" />
