@@ -56,14 +56,15 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
         return false;
     }
 
-    vislib::sys::ASCIIFileBuffer lines(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
-    if (!lines.LoadFile(filename)) {
+    vislib::sys::ASCIIFileBuffer linesA(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
+    if (!linesA.LoadFile(filename)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load file");
         return false;
     }
 
     this->objs.Clear();
     this->mats.Clear();
+    this->lines.clear();
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Start loading \"%s\"\n", vislib::StringA(filename).PeekBuffer());
     double startTime = vislib::sys::PerformanceCounter::QueryMillis();
@@ -83,8 +84,8 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
 
     const SIZE_T capacityGrowth = 10 * 1024;
 
-    for (SIZE_T li = 0; li < lines.Count(); li++) {
-        const vislib::sys::ASCIIFileBuffer::LineBuffer& line = lines[li];
+    for (SIZE_T li = 0; li < linesA.Count(); li++) {
+        const vislib::sys::ASCIIFileBuffer::LineBuffer& line = linesA[li];
         if (line.Count() <= 0) continue;
 
         try {
@@ -264,6 +265,18 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                     objsMats.Append(vislib::StringA::EMPTY); // or should we keep the material? spec does not tell!
                     obj = objs.Last();
                 }
+            } else if (::strcmp(line.Word(0), "l") == 0) {
+                // new line
+                Lines lineData;
+                int idxS = vislib::CharTraitsA::ParseInt(line.Word(1));
+                int idxT = vislib::CharTraitsA::ParseInt(line.Word(2));
+                float *vertices = new float[6];
+                auto s = vert[idxS - 1];
+                auto t = vert[idxT - 1];
+                memcpy(vertices, s.PeekComponents(), 3 * sizeof(float));
+                memcpy(&(vertices[3]), t.PeekComponents(), 3 * sizeof(float));
+                lineData.Set(2, vertices, vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
+                this->lines.push_back(lineData);
             }
 
         } catch(vislib::Exception ex) {
@@ -277,29 +290,54 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     double parseTime = (vislib::sys::PerformanceCounter::QueryMillis() - startTime) * 0.001;
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Parsing file completed after %f seconds\n", parseTime);
 
-    unsigned int *vertUsed = new unsigned int[vert.Count()];
+    if (!this->lines.empty()) {
+        float minV[] = {FLT_MAX, FLT_MAX, FLT_MAX};
+        float maxV[] = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
-    unsigned int oc = 0;
-    for (SIZE_T i = 0; i < objs.Count(); i++) {
-        if (objs[i]->Count() > 0) oc++;
-    }
-    this->objs.SetCount(oc);
-    this->objs.Trim();
-    if (oc == 0) this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    else this->bbox.Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-    oc = 0;
-    for (SIZE_T i = 0; i < objs.Count(); i++) {
-        if (objs[i]->Count() <= 0) continue;
-        INT_PTR matIdx = matNames.IndexOf(objsMats[i]);
-        this->objs[oc].SetMaterial(
-            ((matIdx == vislib::Array<vislib::StringA>::INVALID_POS) || (static_cast<SIZE_T>(matIdx) >= this->mats.Count()))
-            ? NULL
-            : &this->mats[static_cast<SIZE_T>(matIdx)]);
-        this->makeMesh(this->objs[oc], *objs[i], vertUsed, vert, norm, texc);
-        oc++;
-    }
+        for (size_t i = 0; i < vert.Count(); i++) {
+            if (minV[0] > vert[i].X())
+                minV[0] = vert[i].X();
+            if (maxV[0] < vert[i].X())
+                maxV[0] = vert[i].X();
 
-    delete[] vertUsed;
+            if (minV[1] > vert[i].Y())
+                minV[1] = vert[i].Y();
+            if (maxV[1] < vert[i].Y())
+                maxV[1] = vert[i].Y();
+
+            if (minV[2] > vert[i].Z())
+                minV[2] = vert[i].Z();
+            if (maxV[2] < vert[i].Z())
+                maxV[2] = vert[i].Z();
+        }
+
+        this->bbox.Set(minV[0], minV[1], minV[2], maxV[0], maxV[1], maxV[2]);
+    } else {
+
+        unsigned int *vertUsed = new unsigned int[vert.Count()];
+
+        unsigned int oc = 0;
+        for (SIZE_T i = 0; i < objs.Count(); i++) {
+            if (objs[i]->Count() > 0) oc++;
+        }
+        this->objs.SetCount(oc);
+        this->objs.Trim();
+        if (oc == 0) this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        else this->bbox.Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        oc = 0;
+        for (SIZE_T i = 0; i < objs.Count(); i++) {
+            if (objs[i]->Count() <= 0) continue;
+            INT_PTR matIdx = matNames.IndexOf(objsMats[i]);
+            this->objs[oc].SetMaterial(
+                ((matIdx == vislib::Array<vislib::StringA>::INVALID_POS) || (static_cast<SIZE_T>(matIdx) >= this->mats.Count()))
+                ? NULL
+                : &this->mats[static_cast<SIZE_T>(matIdx)]);
+            this->makeMesh(this->objs[oc], *objs[i], vertUsed, vert, norm, texc);
+            oc++;
+        }
+
+        delete[] vertUsed;
+    }
 
     return true;
 }
@@ -320,8 +358,8 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Material library \"%s\" file does not exist", vislib::StringA(filename).PeekBuffer());
         return;
     }
-    vislib::sys::ASCIIFileBuffer lines(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
-    if (!lines.LoadFile(filename)) {
+    vislib::sys::ASCIIFileBuffer linesA(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
+    if (!linesA.LoadFile(filename)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load material library \"%s\"", vislib::StringA(filename).PeekBuffer());
         return;
     }
@@ -330,8 +368,8 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
     vislib::TString path = vislib::sys::Path::GetDirectoryName(filename);
     Material *mat = NULL;
 
-    for (SIZE_T li = 0; li < lines.Count(); li++) {
-        const vislib::sys::ASCIIFileBuffer::LineBuffer& line = lines[li];
+    for (SIZE_T li = 0; li < linesA.Count(); li++) {
+        const vislib::sys::ASCIIFileBuffer::LineBuffer& line = linesA[li];
         if (line.Count() <= 0) continue;
 
         try {

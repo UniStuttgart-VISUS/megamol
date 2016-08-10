@@ -16,6 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "TriSoup/CallTriMeshData.h"
+#include "TriSoup/LinesDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/String.h"
@@ -44,6 +45,9 @@ namespace trisoup {
 
         /** Alias for material class */
         typedef trisoup::CallTriMeshData::Material Material;
+
+        /** Alias for lines class */
+        typedef trisoup::LinesDataCall::Lines Lines;
 
         /**
          * Implementation of 'Create'.
@@ -84,6 +88,9 @@ namespace trisoup {
         /** The materials */
         vislib::Array<Material> mats;
 
+        /** The lines */
+        std::vector<Lines> lines;
+
         /** The bounding box */
         vislib::math::Cuboid<float> bbox;
 
@@ -94,6 +101,9 @@ namespace trisoup {
 
         /** The slot for requesting data */
         core::CalleeSlot getDataSlot;
+
+        /** The slot for requesting lines data */
+        core::CalleeSlot getLinesDataSlot;
 
     };
 

@@ -45,6 +45,7 @@ void AbstractTriMeshLoader::assertData(void) {
         this->filenameSlot.ResetDirty();
         this->objs.Clear();
         this->mats.Clear();
+        this->lines.clear();
         this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         bool retval = false;
         try {
@@ -69,6 +70,7 @@ void AbstractTriMeshLoader::assertData(void) {
             // ensure there is no partial data
             this->objs.Clear();
             this->mats.Clear();
+            this->lines.clear();
             this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }
         this->datahash++;

@@ -76,11 +76,11 @@ bool trisoup::WavefrontObjWriter::run(void) {
 		return false;
 	}
 
-	if (vislib::sys::File::Exists(filename)) {
+	/*if (vislib::sys::File::Exists(filename)) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
 			"File %s already exists and will be overwritten.",
 			vislib::StringA(filename).PeekBuffer());
-	}
+	}*/
 
 	return writeLines(ldc);
 }
@@ -101,6 +101,9 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
 	vislib::math::Cuboid<float> bbox;
 	vislib::math::Cuboid<float> cbox;
 	UINT32 frameCnt = 1;
+	
+    /*unsigned int myFrame = static_cast<unsigned int>(this->frameIDSlot.Param<param::IntParam>()->Value());
+    ldc->SetFrameID(myFrame, true);*/
 
 	if (!(*ldc)(1)) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to query data extents.");
@@ -131,49 +134,51 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
 		frameCnt = ldc->FrameCount();
 		if (frameCnt == 0) {
 			Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-				"Data source counts zero frames. Abort.");
+				"WavefronObjWriter: Data source counts zero frames. Abort.");
 			ldc->Unlock();
 			return false;
 		}
 	}
 
-	unsigned int myFrame = static_cast<unsigned int>(this->frameIDSlot.Param<param::IntParam>()->Value());
-	if (myFrame >= frameCnt) {
+	/*if (myFrame >= frameCnt) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
 			"The requested frame does not exist. Abort.");
 		ldc->Unlock();
 		return false;
-	}
+	}*/
 
-	vislib::sys::FastFile file;
-	if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-			"Unable to create output file \"%s\". Abort.",
-			vislib::StringA(filename).PeekBuffer());
-		ldc->Unlock();
-		return false;
-	}
 
 	ldc->Unlock();
-	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Started writing data for frame %u\n", myFrame);
-	int missCnt = -9;
-	do {
-		ldc->Unlock();
-		ldc->SetFrameID(myFrame, true);
-		if (!(*ldc)(0)) {
-			Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot get data frame %u. Abort.\n", myFrame);
-			file.Close();
-			return false;
-		}
-		if (ldc->FrameID() != myFrame) {
-			if ((missCnt % 10) == 0) {
-				Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
-					"Frame %u returned on request for frame %u\n", ldc->FrameID(), myFrame);
-			}
-			++missCnt;
-			vislib::sys::Thread::Sleep(static_cast<DWORD>(1 + std::max<int>(missCnt, 0) * 100));
-		}
-	} while (ldc->FrameID() != myFrame);
+    for (UINT32 myFrame = 0; myFrame < frameCnt; myFrame++) {
+        vislib::sys::FastFile file;
+        vislib::TString outFilename = filename + vislib::TString("_") + vislib::TString(std::to_string(myFrame).c_str()) + vislib::TString(".obj");
+        if (!file.Open(outFilename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE, vislib::sys::File::CREATE_OVERWRITE)) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                "Unable to create output file \"%s\". Abort.",
+                vislib::StringA(outFilename).PeekBuffer());
+            ldc->Unlock();
+            return false;
+        }
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Started writing data for frame %u\n", myFrame);
+        int missCnt = -9;
+        do {
+            ldc->Unlock();
+            ldc->SetFrameID(myFrame, true);
+            if (!(*ldc)(0)) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot get data frame %u. Abort.\n", myFrame);
+                file.Close();
+                return false;
+            }
+            if (ldc->FrameID() != myFrame) {
+                if ((missCnt % 10) == 0) {
+                    Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+                        "Frame %u returned on request for frame %u\n", ldc->FrameID(), myFrame);
+                }
+                ++missCnt;
+                vislib::sys::Thread::Sleep(static_cast<DWORD>(1 + std::max<int>(missCnt, 0) * 100));
+            }
+        } while (ldc->FrameID() != myFrame);
 
 #define ASSERT_WRITEOUT(A, S) if (file.Write((A), (S)) != (S)) { \
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
@@ -181,106 +186,107 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
         return false; \
 		    }
 
-	std::string header = "# OBJ file created by the MegaMol WavefrontObjWriter\n#\n";
-	ASSERT_WRITEOUT(header.c_str(), header.size());
+        std::string header = "# OBJ file created by the MegaMol WavefrontObjWriter\n#\n";
+        ASSERT_WRITEOUT(header.c_str(), header.size());
 
-	unsigned int firstVertex = 1; // index of the first vertex for the next line (.obj indices start at 1)
-	std::vector<float> vertexPositions; // vector containing the positions of all vertices
-	std::vector<std::vector<unsigned int>> indices; // vector containing the vertex indices for each line
-	indices.resize(ldc->Count());
+        unsigned int firstVertex = 1; // index of the first vertex for the next line (.obj indices start at 1)
+        std::vector<float> vertexPositions; // vector containing the positions of all vertices
+        std::vector<std::vector<unsigned int>> indices; // vector containing the vertex indices for each line
+        indices.resize(ldc->Count());
 
-	auto theLines = ldc->GetLines();
-	
-	// reorganize the data into the vectors
-	for (unsigned int i = 0; i < ldc->Count(); i++) {
-		auto line = theLines[i];
-		if (line.Count() < 2) {
-			Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Skipping base line with index %u because of having too few vertices (%u)\n", i, line.Count()); 
-			continue;
-		}
+        auto theLines = ldc->GetLines();
 
-		if (line.VertexArrayDataType() != LinesDataCall::Lines::DT_FLOAT && line.VertexArrayDataType() != LinesDataCall::Lines::DT_DOUBLE) {
-			Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Skipping base line with index %u due to missing vertex data\n", i);
-			continue;
-		}
+        // reorganize the data into the vectors
+        for (unsigned int i = 0; i < ldc->Count(); i++) {
+            auto line = theLines[i];
+            if (line.Count() < 2) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Skipping base line with index %u because of having too few vertices (%u)\n", i, line.Count());
+                continue;
+            }
 
-		bool useIndexArray = true;
-		if (line.IndexArrayDataType() != LinesDataCall::Lines::DT_BYTE && line.IndexArrayDataType() != LinesDataCall::Lines::DT_UINT16
-			&& line.IndexArrayDataType() != LinesDataCall::Lines::DT_UINT32) {
-			useIndexArray = false;
-		}
+            if (line.VertexArrayDataType() != LinesDataCall::Lines::DT_FLOAT && line.VertexArrayDataType() != LinesDataCall::Lines::DT_DOUBLE) {
+                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Skipping base line with index %u due to missing vertex data\n", i);
+                continue;
+            }
 
-		if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_BYTE && line.IndexArrayByte() == NULL) {
-			useIndexArray = false;
-		}
-		if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT16 && line.IndexArrayUInt16() == NULL) {
-			useIndexArray = false;
-		}
-		if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT32 && line.IndexArrayUInt32() == NULL) {
-			useIndexArray = false;
-		}
+            bool useIndexArray = true;
+            if (line.IndexArrayDataType() != LinesDataCall::Lines::DT_BYTE && line.IndexArrayDataType() != LinesDataCall::Lines::DT_UINT16
+                && line.IndexArrayDataType() != LinesDataCall::Lines::DT_UINT32) {
+                useIndexArray = false;
+            }
 
-		for (unsigned int j = 0; j < line.Count(); j++) {
-			if (useIndexArray) {
-				if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_BYTE) {
-					indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayByte()[j]));
-				} else if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT16) {
-					indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayUInt16()[j]));
-				} else if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT32) {
-					indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayUInt32()[j]));
-				} // else should never happen (catched the possibility before)
-			} else {
-				indices[i].push_back(firstVertex + j);
-			}
-		}
+            if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_BYTE && line.IndexArrayByte() == NULL) {
+                useIndexArray = false;
+            }
+            if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT16 && line.IndexArrayUInt16() == NULL) {
+                useIndexArray = false;
+            }
+            if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT32 && line.IndexArrayUInt32() == NULL) {
+                useIndexArray = false;
+            }
 
-		for (unsigned int j = 0; j < line.Count(); j++) {
-			if (line.VertexArrayDataType() == LinesDataCall::Lines::DT_FLOAT) {
-				const float * ptr = line.VertexArrayFloat();
-				vertexPositions.push_back(ptr[j * 3 + 0]);
-				vertexPositions.push_back(ptr[j * 3 + 1]);
-				vertexPositions.push_back(ptr[j * 3 + 2]);
-			} else if (line.VertexArrayDataType() == LinesDataCall::Lines::DT_DOUBLE) {
-				const double * ptr = line.VertexArrayDouble();
-				vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 0]));
-				vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 1]));
-				vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 2]));
-			} // else should never happen (catched the possibility before)
-			firstVertex++;
-		}
-	}
+            for (unsigned int j = 0; j < line.Count(); j++) {
+                if (useIndexArray) {
+                    if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_BYTE) {
+                        indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayByte()[j]));
+                    } else if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT16) {
+                        indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayUInt16()[j]));
+                    } else if (line.IndexArrayDataType() == LinesDataCall::Lines::DT_UINT32) {
+                        indices[i].push_back(firstVertex + static_cast<unsigned int>(line.IndexArrayUInt32()[j]));
+                    } // else should never happen (catched the possibility before)
+                } else {
+                    indices[i].push_back(firstVertex + j);
+                }
+            }
 
-	ldc->Unlock();
+            for (unsigned int j = 0; j < line.Count(); j++) {
+                if (line.VertexArrayDataType() == LinesDataCall::Lines::DT_FLOAT) {
+                    const float * ptr = line.VertexArrayFloat();
+                    vertexPositions.push_back(ptr[j * 3 + 0]);
+                    vertexPositions.push_back(ptr[j * 3 + 1]);
+                    vertexPositions.push_back(ptr[j * 3 + 2]);
+                } else if (line.VertexArrayDataType() == LinesDataCall::Lines::DT_DOUBLE) {
+                    const double * ptr = line.VertexArrayDouble();
+                    vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 0]));
+                    vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 1]));
+                    vertexPositions.push_back(static_cast<float>(ptr[j * 3 + 2]));
+                } // else should never happen (catched the possibility before)
+                firstVertex++;
+            }
+        }
 
-	// write all vertices
-	for (unsigned int i = 0; i < vertexPositions.size(); i = i + 3) {
-		std::string vertexString = "v ";
-		vertexString += std::to_string(vertexPositions[i + 0]) + " ";
-		vertexString += std::to_string(vertexPositions[i + 1]) + " ";
-		vertexString += std::to_string(vertexPositions[i + 2]) + "\n";
-		ASSERT_WRITEOUT(vertexString.c_str(), vertexString.size());
-	}
-	std::string newline = "\n";
-	ASSERT_WRITEOUT(newline.c_str(), newline.size());
+        ldc->Unlock();
 
-	// write all lines 
-	for (unsigned int i = 0; i < indices.size(); i++) { // loop over all lines
-		bool write = false;
-		std::string lineStart = "l ";
-		std::string lineString = lineStart;
-		for (unsigned int j = 0; j < indices[i].size(); j++) { // loop over all indices along the line
-			lineString += std::to_string(indices[i][j]) + " ";
-			
-			if (j % 2 == 1) { // write a line after two vertices
-				lineString += newline;
-				ASSERT_WRITEOUT(lineString.c_str(), lineString.size());
-				lineString = lineStart;
-			}
-		}
-	}
+        // write all vertices
+        for (unsigned int i = 0; i < vertexPositions.size(); i = i + 3) {
+            std::string vertexString = "v ";
+            vertexString += std::to_string(vertexPositions[i + 0]) + " ";
+            vertexString += std::to_string(vertexPositions[i + 1]) + " ";
+            vertexString += std::to_string(vertexPositions[i + 2]) + "\n";
+            ASSERT_WRITEOUT(vertexString.c_str(), vertexString.size());
+        }
+        std::string newline = "\n";
+        ASSERT_WRITEOUT(newline.c_str(), newline.size());
+
+        // write all lines 
+        for (unsigned int i = 0; i < indices.size(); i++) { // loop over all lines
+            bool write = false;
+            std::string lineStart = "l ";
+            std::string lineString = lineStart;
+            for (unsigned int j = 0; j < indices[i].size(); j++) { // loop over all indices along the line
+                lineString += std::to_string(indices[i][j]) + " ";
+
+                if (j % 2 == 1) { // write a line after two vertices
+                    lineString += newline;
+                    ASSERT_WRITEOUT(lineString.c_str(), lineString.size());
+                    lineString = lineStart;
+                }
+            }
+        }
+	    file.Close();
+    }
 
 	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "WavefrontObjWriter: Completed writing data\n");
-	file.Close();
 
 	return true;
 }
