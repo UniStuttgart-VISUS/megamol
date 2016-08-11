@@ -192,6 +192,7 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
         unsigned int firstVertex = 1; // index of the first vertex for the next line (.obj indices start at 1)
         std::vector<float> vertexPositions; // vector containing the positions of all vertices
         std::vector<std::vector<unsigned int>> indices; // vector containing the vertex indices for each line
+        std::vector<size_t> lineIDs;
         indices.resize(ldc->Count());
 
         auto theLines = ldc->GetLines();
@@ -208,6 +209,8 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Skipping base line with index %u due to missing vertex data\n", i);
                 continue;
             }
+
+            lineIDs.push_back(line.ID());
 
             bool useIndexArray = true;
             if (line.IndexArrayDataType() != LinesDataCall::Lines::DT_BYTE && line.IndexArrayDataType() != LinesDataCall::Lines::DT_UINT16
@@ -277,6 +280,7 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
                 lineString += std::to_string(indices[i][j]) + " ";
 
                 if (j % 2 == 1) { // write a line after two vertices
+                    lineString += std::to_string(lineIDs[i]) + " ";
                     lineString += newline;
                     ASSERT_WRITEOUT(lineString.c_str(), lineString.size());
                     lineString = lineStart;
