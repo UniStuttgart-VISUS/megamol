@@ -9,6 +9,7 @@
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/assert.h"
 #include "vislib/sys/Log.h"
+#include "vislib/sys/Thread.h"
 #include <chrono>
 
 using namespace megamol::core;
@@ -89,6 +90,7 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
 
         this->isRunning.store(true);
         this->loader.Start(this);
+        vislib::sys::Thread::Sleep(250);
     } else {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to create frame data cache ('constructFrame' returned 'NULL').");
