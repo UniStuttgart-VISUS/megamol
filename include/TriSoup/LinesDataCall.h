@@ -148,6 +148,15 @@ namespace trisoup {
             }
 
             /**
+            * Answer the ID of this line
+            *
+            * @return The ID
+            */
+            inline const size_t ID(void) const {
+                return this->id;
+            }
+
+            /**
              * The data type of the index array
              *
              * @return The data type of the index array
@@ -284,6 +293,15 @@ namespace trisoup {
                 this->setColData(col, withAlpha);
                 this->setIdxData(idx);
                 this->globCol.Set(0, 0, 0, 255);
+            }
+
+            /**
+             * Sets the list ID
+             *
+             * @param ID the list ID
+             */
+            inline void SetID(size_t ID) {
+                this->id = ID;
             }
 
             /**
@@ -560,6 +578,9 @@ namespace trisoup {
                 const float *dataFloat;
                 const double *dataDouble;
             } vrt;
+
+            /** the line ID */
+            size_t id;
 
         };
 

@@ -136,6 +136,9 @@ namespace trisoup {
                 const vislib::Array<vislib::math::Vector<float, 3> >& n,
                 const vislib::Array<vislib::math::Vector<float, 2> >& t);
 
+
+        /** vertex store for lines */
+        vislib::Array<vislib::Array<float> > lineVerts;
     };
 
 } /* end namespace trisoup */

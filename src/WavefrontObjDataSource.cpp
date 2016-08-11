@@ -20,6 +20,7 @@
 #include "vislib/math/ShallowVector.h"
 #include "vislib/StringConverter.h"
 #include "vislib/math/Vector.h"
+#include <map>
 
 using namespace megamol;
 using namespace megamol::trisoup;
@@ -29,7 +30,8 @@ using namespace megamol::trisoup;
  * WavefrontObjDataSource::WavefrontObjDataSource
  */
 WavefrontObjDataSource::WavefrontObjDataSource(void) : AbstractTriMeshLoader() {
-    // intentionally empty
+    lineVerts.AssertCapacity(1000);
+    lineVerts.SetCapacityIncrement(1000);
 }
 
 
@@ -77,6 +79,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     vislib::Array<vislib::math::Vector<float, 3> > vert;
     vislib::Array<vislib::math::Vector<float, 3> > norm;
     vislib::Array<vislib::math::Vector<float, 2> > texc;
+    std::map<size_t, size_t> lineID2Idx;
     vislib::Array<vislib::StringA> objsMats;
     vislib::PtrArray<vislib::Array<Tri> > objs;
     vislib::Array<Tri> *obj = NULL;
@@ -135,12 +138,12 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
 
             } else if ((::strcmp(line.Word(0), "vt") == 0) && (line.Count() >= 2)) {
                 // vertex texture coordinate
-				vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
-				vec3[1] = (line.Count() >= 3) ? static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))) : 0.0f;
+                vec3[0] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(1)));
+                vec3[1] = (line.Count() >= 3) ? static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))) : 0.0f;
                 if (texc.Count() == texc.Capacity()) texc.AssertCapacity(texc.Capacity() + capacityGrowth);
                 texc.Add(vec3v2);
 
-			} else if ((::strcmp(line.Word(0), "f") == 0) && (line.Count() >= 4)) {
+            } else if ((::strcmp(line.Word(0), "f") == 0) && (line.Count() >= 4)) {
                 // face
                 if (obj == NULL) {
                     objs.Append(new vislib::Array<Tri>());
@@ -266,17 +269,45 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                     obj = objs.Last();
                 }
             } else if (::strcmp(line.Word(0), "l") == 0) {
-                // new line
-                Lines lineData;
                 int idxS = vislib::CharTraitsA::ParseInt(line.Word(1));
                 int idxT = vislib::CharTraitsA::ParseInt(line.Word(2));
+                size_t ID = 0;
+                size_t listIdx = 0;
+                if (line.Count() == 4) {
+                    ID = vislib::CharTraitsA::ParseUInt64(line.Word(3));
+                    if (lineID2Idx.find(ID) == lineID2Idx.end()) {
+                        lineID2Idx[ID] = lineID2Idx.size();
+                        lineVerts.SetCount(lineID2Idx[ID] + 1);
+                        lineVerts[lineVerts.Count() - 1].AssertCapacity(1000);
+                        lineVerts[lineVerts.Count() - 1].SetCapacityIncrement(1000);
+                        // new line
+                        Lines lineData;
+                        lineData.SetID(ID);
+                        this->lines.push_back(lineData);
+                    }
+                    listIdx = lineID2Idx[ID];
+                } else {
+                    listIdx = 0;
+                    if (lineVerts.Count() == 0) {
+                        lineVerts.SetCount(1);
+                        lineVerts[lineVerts.Count() - 1].AssertCapacity(1000);
+                        lineVerts[lineVerts.Count() - 1].SetCapacityIncrement(1000);
+                        Lines lineData;
+                        lineData.SetID(0);
+                        this->lines.push_back(lineData);
+                    }
+                }
                 float *vertices = new float[6];
                 auto s = vert[idxS - 1];
                 auto t = vert[idxT - 1];
-                memcpy(vertices, s.PeekComponents(), 3 * sizeof(float));
-                memcpy(&(vertices[3]), t.PeekComponents(), 3 * sizeof(float));
-                lineData.Set(2, vertices, vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
-                this->lines.push_back(lineData);
+                lineVerts[listIdx].Append(s.X());
+                lineVerts[listIdx].Append(s.Y());
+                lineVerts[listIdx].Append(s.Z());
+                lineVerts[listIdx].Append(t.X());
+                lineVerts[listIdx].Append(t.Y());
+                lineVerts[listIdx].Append(t.Z());
+                //lineData.Set(2, vertices, vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
+                //this->lines.push_back(lineData);
             }
 
         } catch(vislib::Exception ex) {
@@ -284,6 +315,11 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         } catch(...) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error parsing line %u: unexpected exception", li);
+        }
+    }
+    if (lineVerts.Count() > 0) {
+        for (size_t loop = 0; loop < lineVerts.Count(); loop++) {
+            lines[loop].Set(lineVerts[loop].Count(), lineVerts[loop].PeekElements(), vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
         }
     }
 
@@ -420,7 +456,7 @@ void WavefrontObjDataSource::loadMaterialLibrary(const vislib::TString& filename
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(2))),
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(line.Word(3))));
 
-			} else if (((strcmp(line.Word(0), "bump") == 0) || (strcmp(line.Word(0), "map_bump") == 0) || (strcmp(line.Word(0), "bump_map") == 0)) && (line.Count() >= 2)) {
+            } else if (((strcmp(line.Word(0), "bump") == 0) || (strcmp(line.Word(0), "map_bump") == 0) || (strcmp(line.Word(0), "bump_map") == 0)) && (line.Count() >= 2)) {
                 mat->SetBumpMapFileName(vislib::sys::Path::Concatenate(path, line.Word(1)));
 
             } else if ((strncmp(line.Word(0), "map", 3) == 0) && (line.Count() >= 2)) {
