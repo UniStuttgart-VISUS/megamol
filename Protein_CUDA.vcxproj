@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{CFE0730E-D928-4294-A3D2-4F8F0E7188A6}</ProjectGuid>
+    <ProjectGuid>{68E50F89-1796-428F-9D0F-E61188121E7E}</ProjectGuid>
     <RootNamespace>Protein_CUDA</RootNamespace>
     <ProjectName>Protein_CUDA</ProjectName>
   </PropertyGroup>

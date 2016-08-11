@@ -64,7 +64,7 @@ $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
     $a->id("trisoup");
-    $a->description("Path to the Protein_Calls plugin directory");
+    $a->description("Path to the trisoup plugin directory");
     $a->placeholder("%trisoup%");
     $a->markerFile("TriSoup.sln");
     $a->relativeLocation("./");

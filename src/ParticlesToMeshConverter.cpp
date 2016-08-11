@@ -11,9 +11,8 @@
 
 #include "ParticlesToMeshConverter.h"
 #include "mmcore/CoreInstance.h"
-#include "TriSoup/CallTriMeshData.h"
 #include <gl/GLU.h>
-
+#include "TriSoup/CallTriMeshData.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"

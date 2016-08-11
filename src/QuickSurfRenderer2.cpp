@@ -668,7 +668,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     int i;
     float mincoord[3], maxcoord[3];
 
-//#define PADDING
+#define PADDING
 #define USE_BOUNDING_BOX
 
     minrad = FLT_MAX;
@@ -690,7 +690,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     // crude estimate of the grid padding we require to prevent the
     // resulting isosurface from being clipped
 #ifdef PADDING
-    float gridpadding = radscale * maxrad * 1.5;
+    float gridpadding = radscale * maxrad * 3.0;
     float padrad = gridpadding;
     padrad = 0.4 * sqrt(4.0/3.0*M_PI*padrad*padrad*padrad);
     gridpadding = std::max(gridpadding, padrad);

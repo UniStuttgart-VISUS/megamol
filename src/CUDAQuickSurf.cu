@@ -3149,9 +3149,9 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
   int i, i4;
   float4 *xyzr = (float4 *) malloc(natoms * sizeof(float4));
   for (i=0,i4=0; i<natoms; i++,i4+=4) {
-    xyzr[i].x = xyzr_f[i4    ];
-    xyzr[i].y = xyzr_f[i4 + 1];
-    xyzr[i].z = xyzr_f[i4 + 2];
+    xyzr[i].x = xyzr_f[i4    ] - origin[0];
+    xyzr[i].y = xyzr_f[i4 + 1] - origin[1];
+    xyzr[i].z = xyzr_f[i4 + 2] - origin[2];
 
     float scaledrad = xyzr_f[i4 + 3] * radscale;
     float arinv = -1.0f * log2e / (2.0f*scaledrad*scaledrad);
