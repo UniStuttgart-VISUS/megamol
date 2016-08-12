@@ -276,7 +276,8 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 if (line.Count() == 4) {
                     ID = static_cast<size_t>(vislib::CharTraitsA::ParseUInt64(line.Word(3)));
                     if (lineID2Idx.find(ID) == lineID2Idx.end()) {
-                        lineID2Idx[ID] = lineID2Idx.size();
+                        size_t oldSize = lineID2Idx.size();
+                        lineID2Idx[ID] = oldSize;
                         lineVerts.SetCount(lineID2Idx[ID] + 1);
                         lineVerts[lineVerts.Count() - 1].AssertCapacity(1000);
                         lineVerts[lineVerts.Count() - 1].SetCapacityIncrement(1000);
