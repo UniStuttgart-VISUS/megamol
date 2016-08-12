@@ -320,7 +320,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     }
     if (lineVerts.Count() > 0) {
         for (size_t loop = 0; loop < lineVerts.Count(); loop++) {
-            lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].Count()), lineVerts[loop].PeekElements(), vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
+            lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].Count() / 3), lineVerts[loop].PeekElements(), vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
         }
     }
 
