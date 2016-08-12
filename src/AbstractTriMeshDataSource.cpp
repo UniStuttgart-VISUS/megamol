@@ -75,7 +75,7 @@ bool AbstractTriMeshDataSource::getDataCallback(core::Call& caller) {
         ctmd->SetUnlocker(NULL);
     } else if (ldc != NULL) {
         ldc->SetDataHash(this->datahash);
-        ldc->SetData(this->lines.size(), this->lines.data());
+        ldc->SetData(static_cast<unsigned int>(this->lines.size()), this->lines.data());
         ldc->SetUnlocker(NULL);
     }
 

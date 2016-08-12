@@ -274,7 +274,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
                 size_t ID = 0;
                 size_t listIdx = 0;
                 if (line.Count() == 4) {
-                    ID = vislib::CharTraitsA::ParseUInt64(line.Word(3));
+                    ID = static_cast<size_t>(vislib::CharTraitsA::ParseUInt64(line.Word(3)));
                     if (lineID2Idx.find(ID) == lineID2Idx.end()) {
                         lineID2Idx[ID] = lineID2Idx.size();
                         lineVerts.SetCount(lineID2Idx[ID] + 1);
@@ -319,7 +319,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     }
     if (lineVerts.Count() > 0) {
         for (size_t loop = 0; loop < lineVerts.Count(); loop++) {
-            lines[loop].Set(lineVerts[loop].Count(), lineVerts[loop].PeekElements(), vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
+            lines[loop].Set(static_cast<unsigned int>(lineVerts[loop].Count()), lineVerts[loop].PeekElements(), vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
         }
     }
 
