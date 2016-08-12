@@ -49,6 +49,8 @@ namespace datatools {
                     const uint8_t *p = l->pos_data;
                     if (p == nullptr) return nullptr;
                     return reinterpret_cast<float const*>(p + idx * l->pos_data_step);
+                } else { 
+                    idx -= l->count;
                 }
             }
             return nullptr;
@@ -59,6 +61,8 @@ namespace datatools {
                     const uint8_t *p = l->col_data;
                     if (p == nullptr) return nullptr;
                     return reinterpret_cast<float const*>(p + idx * l->col_data_step);
+                } else {
+                    idx -= l->count;
                 }
             }
             return nullptr;
