@@ -225,6 +225,9 @@ namespace view {
         /** Triggers the reset of the view */
         param::ParamSlot resetViewSlot;
 
+        /** whether to reset the view when the object bounding box changes */
+        param::ParamSlot resetViewOnBBoxChangeSlot;
+
         /** Shows/hides the bounding box */
         param::ParamSlot showBBoxSlot;
 

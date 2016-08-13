@@ -31,6 +31,7 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
         rendererSlot("rendering", "Connects the view to a Renderer"),
         resetViewSlot("resetView", "Triggers the reset of the view"),
         showBBoxSlot("showBBox", "Shows/hides the bounding box"),
+        resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
         viewX(0.0f), viewY(0.0f), viewZoom(1.0f), viewUpdateCnt(0),
         width(1.0f), incomingCall(NULL), overrideViewTile(NULL), timeCtrl() {
 
@@ -43,6 +44,9 @@ view::View2D::View2D(void) : view::AbstractRenderingView(),
 
     this->showBBoxSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->showBBoxSlot);
+
+    this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
 
     for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
@@ -110,7 +114,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     float h = this->height;
     if (this->overrideViewport != NULL) {
         if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0)
-                && (this->overrideViewport[2] > 0) && (this->overrideViewport[3] > 0)) {
+            && (this->overrideViewport[2] > 0) && (this->overrideViewport[3] > 0)) {
             ::glViewport(
                 vpx = this->overrideViewport[0], vpy = this->overrideViewport[1],
                 this->overrideViewport[2], this->overrideViewport[3]);
@@ -130,13 +134,15 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     if (cr2d == NULL) {
         this->renderTitle(0.0f, 0.0f, this->width, this->height,
             this->width, this->height, false, false, instTime);
-            AbstractRenderingView::endFrame(true);
+        AbstractRenderingView::endFrame(true);
         return;
     } else {
         this->removeTitleRenderer();
     }
     if (this->firstImg) {
         this->firstImg = false;
+        this->ResetView();
+    } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
         this->ResetView();
     }
 
