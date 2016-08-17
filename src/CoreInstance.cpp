@@ -124,6 +124,24 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
         all_call_descriptions(), all_module_descriptions() {
+	// setup log as early as possible.
+	this->log.SetLogFileName(static_cast<const char*>(NULL), false);
+	this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
+#ifdef _DEBUG
+	this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
+#else
+	this->log.SetEchoLevel(vislib::sys::Log::LEVEL_ERROR);
+#endif
+	this->log.SetEchoTarget(new vislib::sys::Log::StreamTarget(stdout, vislib::sys::Log::LEVEL_ALL));
+	this->log.SetOfflineMessageBufferSize(25);
+	// redirect default log to instance log of last instance
+	//  not perfect, but better than nothing.
+	vislib::sys::Log::DefaultLog.SetLogFileName(
+		static_cast<const char*>(NULL), false);
+	vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
+	vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
+	vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
+
     //printf("######### PerformanceCounter Frequency %I64u\n", vislib::sys::PerformanceCounter::QueryFrequency());
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -161,18 +179,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
 //#endif
 
-    // redirect default log to instance log of last instance
-    //  not perfect, but better than nothing.
-    vislib::sys::Log::DefaultLog.SetLogFileName(
-        static_cast<const char*>(NULL), false);
-    vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-    vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-    vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(&this->log));
 
-    this->log.SetLogFileName(static_cast<const char*>(NULL), false);
-    this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
-    this->log.SetEchoLevel(vislib::sys::Log::LEVEL_NONE);
-    this->log.SetOfflineMessageBufferSize(25);
 
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
 }
