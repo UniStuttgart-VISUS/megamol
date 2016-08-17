@@ -87,13 +87,13 @@ void main(void) {
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_EXT_gpu_shader4 : require
 
-uniform int uOuter0 = 15;
-uniform int uOuter1 = 15;
+uniform int uOuter0 = 16;
+uniform int uOuter1 = 16;
 
 uniform int minInner = 2;
-uniform int maxInner = 12;
+uniform int maxInner = 30;
 uniform int minOuter = 2;
-uniform int maxOuter = 12;
+uniform int maxOuter = 30;
 
 uniform int instanceOffset = 0;
 
@@ -126,9 +126,9 @@ void main() {
     {
         // TODO changes tesslevels
         gl_TessLevelOuter[0] = float( uOuter0);
-        gl_TessLevelOuter[1] = 2.0 * float( uOuter1);
+        gl_TessLevelOuter[1] = float( uOuter1);
         gl_TessLevelOuter[2] = float( uOuter0);
-        gl_TessLevelOuter[3] = 2.0 * float( uOuter1);
+        gl_TessLevelOuter[3] = float( uOuter1);
         
         gl_TessLevelInner[0] = float( uOuter0);
         gl_TessLevelInner[1] = float( uOuter1);
@@ -174,7 +174,7 @@ layout(std430, binding = 2) buffer shader_data {
 
 const float arrowLUT[10] =
 {
-    5.0, 5.0, 5.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0
+    5.0, 5.0, 5.0, 8.0, 7.0, 6.0, 4.5, 3.0, 2.0, 1.5
 };
 
 void main() {
@@ -205,7 +205,7 @@ void main() {
         }
         else if(mytype == 3) // turn
         {
-            colors[i] = vec4(0.7, 0.7, 0.7, 1);
+            colors[i] = vec4(0, 1, 0, 1);
         }
         else // unclassified
         {
@@ -291,10 +291,13 @@ void main() {
         lasttype = mytype;
     }
     
-    /*if(change && ((where == 1)))
-        color = vec4(1.0, 1.0, 1.0, 1.0);*/
-    
-    if(mytype != 1 && mytype != 2)
+    /*if(mytype == 1) 
+    {
+        if(change && ((where == 2))) // the position of the arrow heads
+            color = vec4(1.0, 1.0, 1.0, 1.0);
+    }*/
+
+    if(mytype != 1 && mytype != 2) // backbone
     {
         // rotate negative dir vector around tangent vector
         float a = 2.0 * M_PI - v * 2.0 * M_PI; // has to be this angle becaus of backface culling
@@ -304,43 +307,68 @@ void main() {
         mypos.xyz += pipeWidth * vrot;
         n = vrot;
     } 
-    else
+    else // alpha helix and beta sheets
     {
         vec3 curPos = mypos.xyz + nDir * pipeWidth; // point <width> under the backbone
         vec3 normalDown = nDir;
         vec3 normalLeft = normalize(cross(tangent, -nDir));
+
+        u = gl_TessCoord.x;
+        float factor = 0.01;
+        float thresh = 0.01;
         
-        float val = 1.0 / 24.0;
+        float val = 1.0 / float(gl_TessLevelOuter[1]);
+
+        float lutVal = 5.0f;
+        /*if(change && (where == 2)) 
+        {
+            if(mytype == 1) // arrow heads
+            {
+                color = vec4(1.0, 1.0, 1.0, 1.0);
+
+                // the size of the LUT is hardcoded to be 10
+                lutVal = u * 9.0f;
+                float mymin = arrowLUT[int(floor(lutVal))];
+                float mymax = arrowLUT[int(ceil(lutVal))];
+                float theU = (lutVal - floor(lutVal)) / (ceil(lutVal) - floor(lutVal));
+
+                if(ceil(lutVal) - floor(lutVal) < 0.5) 
+                {
+                    theU = 0.0f;
+
+                    if(ceil(lutVal) > 8.9f)
+                        theU = 1.0f;
+                }
+
+                lutVal = mix(mymin, mymax, theU);
+            }
+        }*/
         
         if(v < val)
         {
-            mypos.xyz += nDir * pipeWidth * 5.0 + normalLeft * mix(0, pipeWidth, v / val);
+            mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * mix(0, pipeWidth, v / val);
             n = normalDown;
         }
         else if( v >= val && v < 0.5 - val)
         {
-            mypos.xyz += nDir * pipeWidth * 5.0 + normalLeft * pipeWidth - nDir * mix(0, pipeWidth * 5.0, (v - val)/(0.5 - 2 * val) );
+            mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * pipeWidth - nDir * mix(0, pipeWidth * 5.0 * 2.0, (v - val)/(0.5 - 2 * val) );
             n = normalLeft;
         }
         else if(v >= 0.5 - val && v < 0.5 + val)
         {
-            mypos.xyz += -nDir * pipeWidth * 5.0 + pipeWidth * normalLeft - normalLeft * mix(0, 2 * pipeWidth, (v - (0.5 - val))/(2 * val));
+            mypos.xyz += -nDir * pipeWidth * lutVal + pipeWidth * normalLeft - normalLeft * mix(0, 2 * pipeWidth, (v - (0.5 - val))/(2 * val));
             n = -normalDown;
         }
         else if(v >= 0.5 + val && v < 1.0 - val)
         {
-            mypos.xyz += -nDir * pipeWidth * 5.0 - pipeWidth * normalLeft + nDir * mix(0, pipeWidth * 5.0, (v- (0.5 + val))/(0.5 - 2 * val));
+            mypos.xyz += -nDir * pipeWidth * lutVal - pipeWidth * normalLeft + nDir * mix(0, pipeWidth * 5.0 * 2.0, (v- (0.5 + val))/(0.5 - 2 * val));
             n = -normalLeft;
         }
         else
         {
-            mypos.xyz += nDir * pipeWidth * 5.0 - normalLeft * mix(pipeWidth, 0, ((v - (1.0 - val))/ val));
+            mypos.xyz += nDir * pipeWidth * lutVal - normalLeft * mix(pipeWidth, 0, ((v - (1.0 - val))/ val));
             n = normalDown;
         }
-        
-        u = gl_TessCoord.x;
-        float factor = 0.01;
-        float thresh = 0.01;
         
         if(change && (where == 2))
         {
