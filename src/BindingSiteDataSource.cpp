@@ -101,7 +101,7 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
     
     // temp variables
     unsigned int i, j, lineCnt, bsIdx, resCnt, cnt;
-    vislib::StringA line, seqNumString;
+    vislib::StringA line, seqNumString, tmpBSName;
     char chainId;
     unsigned int resId;
     vislib::sys::ASCIIFileBuffer file;
@@ -164,37 +164,42 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
                 bsIdx = 0;
             } else {
                 // check if next entry is still the same binding site
-                //if( !bsEntries[i].Substring( 11, 4).Equals( bindingSiteNames[i]) ) {
-                seqNumString = bsEntries[i].Substring( 7, 3);
-                seqNumString.TrimSpaces();
-                if( atoi( seqNumString) == 1 ) {
-                    this->bindingSiteNames.Add( bsEntries[i].Substring( 11, 4));
-                    this->bindingSiteNames.Last().TrimSpaces();
-                    this->bindingSites.Add( vislib::Array<vislib::Pair<char, unsigned int> >(10, 10));
-                    this->bindingSiteResNames.Add( vislib::Array<vislib::StringA>(10, 10));
-                    bsIdx++;
+                tmpBSName = bsEntries[i].Substring(11, 4);
+                tmpBSName.TrimSpaces();
+                if (!tmpBSName.Equals(bindingSiteNames.Last())) {
+                    seqNumString = bsEntries[i].Substring(7, 3);
+                    seqNumString.TrimSpaces();
+                    if (atoi(seqNumString) == 1) {
+                        this->bindingSiteNames.Add(bsEntries[i].Substring(11, 4));
+                        this->bindingSiteNames.Last().TrimSpaces();
+                        this->bindingSites.Add(vislib::Array<vislib::Pair<char, unsigned int> >(10, 10));
+                        this->bindingSiteResNames.Add(vislib::Array<vislib::StringA>(10, 10));
+                        bsIdx++;
+                    }
                 }
             }
 
             // get number of residues
-            line = bsEntries[i].Substring( 15, 2);
-            line.TrimSpaces();
-            // regular PDB SITE entries can store a maximum of 4 residues per line
-            if (bsEntries[i].StartsWith("SITE")) {
-                resCnt = vislib::math::Clamp(
-                    static_cast<unsigned int>(atoi(line) - bindingSites[bsIdx].Count()),
-                    0U, 4U);
-            }
-            else {
-                resCnt = static_cast<unsigned int>(atoi(line) - bindingSites[bsIdx].Count());
-            }
+            //line = bsEntries[i].Substring( 15, 2);
+            //line.TrimSpaces();
+            //// regular PDB SITE entries can store a maximum of 4 residues per line
+            //if (bsEntries[i].StartsWith("SITE")) {
+            //    resCnt = vislib::math::Clamp(
+            //        static_cast<unsigned int>(atoi(line) - bindingSites[bsIdx].Count()),
+            //        0U, 4U);
+            //}
+            //else {
+            //    resCnt = static_cast<unsigned int>(atoi(line) - bindingSites[bsIdx].Count());
+            //}
 
             // add residues
             cnt = 0;
-            for( j = 0; j < resCnt; j++ ) {
+            //for( j = 0; j < resCnt; j++ ) {
+            for (j = 0; j < 4; j++) {
                 //resName
                 line = bsEntries[i].Substring( 18 + 11 * cnt, 3);
                 line.TrimSpaces();
+                if (line.IsEmpty()) break;
                 this->bindingSiteResNames[bsIdx].Add( line);
                 // chainID
                 line = bsEntries[i].Substring( 22 + 11 * cnt, 1);
