@@ -142,12 +142,13 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     if (this->firstImg) {
         this->firstImg = false;
         this->ResetView();
-    } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
-        this->ResetView();
     }
 
-    vislib::math::Rectangle<float> bbox(-1.0f, -1.0f, 1.0f, 1.0f);
     if ((*cr2d)(1)) {
+        if (this->bbox != cr2d->GetBoundingBox()
+            && resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
+            this->ResetView();
+        }
         bbox = cr2d->GetBoundingBox();
         this->timeCtrl.SetTimeExtend(cr2d->TimeFramesCount(), cr2d->IsInSituTime());
         if (time > static_cast<float>(cr2d->TimeFramesCount())) {

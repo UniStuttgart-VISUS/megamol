@@ -16,7 +16,7 @@
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
-
+#include "vislib/math/Rectangle.h"
 
 namespace megamol {
 namespace core {
@@ -258,6 +258,8 @@ namespace view {
         /** The time control */
         TimeControl timeCtrl;
 
+        /** cached bounding box */
+        vislib::math::Rectangle<float> bbox;
     };
 
 
