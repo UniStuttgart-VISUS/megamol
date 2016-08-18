@@ -89,6 +89,7 @@
 #include "IntSelection.h"
 #include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
+#include "ProteinExploder.h"
 
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
@@ -180,6 +181,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
 
             // register calls here:
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
