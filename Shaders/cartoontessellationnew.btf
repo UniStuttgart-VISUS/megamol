@@ -90,9 +90,9 @@ void main(void) {
 uniform int uOuter0 = 16;
 uniform int uOuter1 = 16;
 
-uniform int minInner = 2;
+uniform int minInner = 6;
 uniform int maxInner = 30;
-uniform int minOuter = 2;
+uniform int minOuter = 6;
 uniform int maxOuter = 30;
 
 uniform int instanceOffset = 0;
@@ -174,7 +174,7 @@ layout(std430, binding = 2) buffer shader_data {
 
 const float arrowLUT[10] =
 {
-    5.0, 5.0, 5.0, 8.0, 7.0, 6.0, 4.5, 3.0, 2.0, 1.5
+    5.0, 5.0, 5.0, 8.0, 7.0, 6.0, 4.5, 3.0, 2.0, 1.0
 };
 
 void main() {
@@ -320,11 +320,11 @@ void main() {
         float val = 1.0 / float(gl_TessLevelOuter[1]);
 
         float lutVal = 5.0f;
-        /*if(change && (where == 2)) 
+        if(change && (where == 2)) 
         {
             if(mytype == 1) // arrow heads
             {
-                color = vec4(1.0, 1.0, 1.0, 1.0);
+                //color = vec4(1.0, 1.0, 1.0, 1.0);
 
                 // the size of the LUT is hardcoded to be 10
                 lutVal = u * 9.0f;
@@ -342,7 +342,7 @@ void main() {
 
                 lutVal = mix(mymin, mymax, theU);
             }
-        }*/
+        }
         
         if(v < val)
         {
@@ -351,7 +351,7 @@ void main() {
         }
         else if( v >= val && v < 0.5 - val)
         {
-            mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * pipeWidth - nDir * mix(0, pipeWidth * 5.0 * 2.0, (v - val)/(0.5 - 2 * val) );
+            mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * pipeWidth - nDir * mix(0, pipeWidth * lutVal * 2.0, (v - val)/(0.5 - 2 * val) );
             n = normalLeft;
         }
         else if(v >= 0.5 - val && v < 0.5 + val)
@@ -361,7 +361,7 @@ void main() {
         }
         else if(v >= 0.5 + val && v < 1.0 - val)
         {
-            mypos.xyz += -nDir * pipeWidth * lutVal - pipeWidth * normalLeft + nDir * mix(0, pipeWidth * 5.0 * 2.0, (v- (0.5 + val))/(0.5 - 2 * val));
+            mypos.xyz += -nDir * pipeWidth * lutVal - pipeWidth * normalLeft + nDir * mix(0, pipeWidth * lutVal * 2.0, (v- (0.5 + val))/(0.5 - 2 * val));
             n = -normalLeft;
         }
         else
@@ -377,7 +377,7 @@ void main() {
             
             if(u > (1.0 - factor))
             {
-                /*mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);*/
+                mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);
                 mypos.xyz += thresh * tangent;
                 n = tangent;
             }
@@ -390,7 +390,7 @@ void main() {
             
             if(u < factor)
             {
-                /*mypos.xyz = mix(newpos, mypos.xyz, u / factor);*/
+                mypos.xyz = mix(newpos, mypos.xyz, u / factor);
                 mypos.xyz += thresh * (-tangent);
                 n = -tangent;
             }
