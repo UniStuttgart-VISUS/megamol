@@ -11,92 +11,35 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
 
 #include "vislib/math/Vector.h"
+
+#include <algorithm>
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
-/*
- *	ProteinExploder::Frame::Frame
- */
-ProteinExploder::Frame::Frame(view::AnimDataModule& owner) : view::AnimDataModule::Frame(owner), atomCount(0),
-		maxBFactor(0), minBFactor(0),
-		maxCharge(0), minCharge(0),
-		maxOccupancy(0), minOccupancy(0) {
-	// Intentionally empty
-}
-
-/*
- *	ProteinExploder::Frame::~Frame
- */
-ProteinExploder::Frame::~Frame(void) {
-}
-
-/*
- *	ProteinExploder::Frame::operator==
- */
-bool ProteinExploder::Frame::operator==(const ProteinExploder::Frame& rhs) {
-	// TODO
-	return true;
-}
-
-/*
- *	ProteinExploder::Frame::setFrameIdx
- */
-void ProteinExploder::Frame::setFrameIdx(int idx) {
-	this->frame = idx;
-}
-
-/*
- *	ProteinExploder::Frame::SetAtomPosition
- */
-bool ProteinExploder::Frame::SetAtomPosition(unsigned int idx, float x, float y, float z) {
-	if (idx >= this->atomCount) return false;
-	this->atomPosition[idx * 3 + 0] = x;
-	this->atomPosition[idx * 3 + 1] = y;
-	this->atomPosition[idx * 3 + 2] = z;
-	return true;
-}
-
-/*
- *	ProteinExploder::Frame::SetAtomBFactor
- */
-bool ProteinExploder::Frame::SetAtomBFactor(unsigned int idx, float val) {
-	if (idx >= this->atomCount) return false;
-	this->bfactor[idx] = val;
-	return true;
-}
-
-/*
- *	ProteinExploder::Frame::SetAtomCharge
- */
-bool ProteinExploder::Frame::SetAtomCharge(unsigned int idx, float val) {
-	if (idx >= this->atomCount) return false;
-	this->charge[idx] = val;
-	return true;
-}
-
-/*
- *	ProteinExploder::Frame::SetAtomOccupancy
- */
-bool ProteinExploder::Frame::SetAtomOccupancy(unsigned int idx, float val) {
-	if (idx >= this->atomCount) return false;
-	this->occupancy[idx] = val;
-	return true;
-}
+using namespace std::chrono;
 
 /*
  *	ProteinExploder::ProteinExploder
  */
 ProteinExploder::ProteinExploder(void) : 
-		AnimDataModule(),
+		Module(),
 		getDataSlot("getData", "Calls molecular data"),
 		dataOutSlot("dataOut", "Provides the exploded molecular data"),
 		explosionModeParam("explosionMode", "The mode of the performed explosion"),
-		minDistanceParam("minDistance", "Minimal distance between two exploded components in angstrom") {
+		minDistanceParam("minDistance", "Minimal distance between two exploded components in angstrom"),
+		maxExplosionFactorParam("maxExplosionFactor", "Maximal displacement factor"),
+		explosionFactorParam("explosionFactor", "Current displacement factor"),
+		playParam("animation::play","Should the animation be played?"),
+		togglePlayParam("animation::togglePlay", "Button to toggle animation"),
+		replayParam("animation::replay","Restart animation after end"),
+		playDurationParam("animation::duration","Animation duration in seconds") {
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -120,8 +63,34 @@ ProteinExploder::ProteinExploder(void) :
 	this->minDistanceParam.SetParameter(new param::FloatParam(0.0f, 0.0f, 10.0f));
 	this->MakeSlotAvailable(&this->minDistanceParam);
 
+	float maxExplosionFactor = 3.0f;
+
+	this->explosionFactorParam.SetParameter(new param::FloatParam(0.0f, 0.0f, 10.0f));
+	this->MakeSlotAvailable(&this->explosionFactorParam);
+
+	this->maxExplosionFactorParam.SetParameter(new param::FloatParam(maxExplosionFactor, 0.0f, 10.0f));
+	this->MakeSlotAvailable(&this->maxExplosionFactorParam);
+
+	this->playParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->playParam);
+
+	this->togglePlayParam << new param::ButtonParam('p');
+	this->togglePlayParam.SetUpdateCallback(this, &ProteinExploder::onPlayToggleButton);
+	this->MakeSlotAvailable(&this->togglePlayParam);
+
+	this->replayParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->replayParam);
+
+	this->playDurationParam.SetParameter(new param::FloatParam(3.0f, 1.0f, 20.0f));
+	this->MakeSlotAvailable(&this->playDurationParam);
+
 	this->atomPositions = NULL;
 	this->atomPositionsSize = 0;
+
+	this->playDone = true;
+	lastTime = high_resolution_clock::now();
+	this->firstRequest = true;
+	this->timeAccum = 0.0f;
 }
 
 /*
@@ -150,28 +119,9 @@ void ProteinExploder::release(void) {
 }
 
 /*
- *	ProteinExploder::constructFrame
- */
-view::AnimDataModule::Frame* ProteinExploder::constructFrame(void) const {
-	Frame *f = new Frame(*const_cast<ProteinExploder*>(this));
-	// TODO
-	return f;
-}
-
-/*
- *	ProteinExploder::loadFrame
- */
-void ProteinExploder::loadFrame(view::AnimDataModule::Frame *frame, unsigned int idx) {
-	ProteinExploder::Frame *fr = dynamic_cast<ProteinExploder::Frame*>(frame);
-	fr->setFrameIdx(idx);
-
-	// TODO
-}
-
-/*
  *	ProteinExploder::explodeMolecule
  */
-void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::ExplosionMode mode, float minDistance) {
+void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::ExplosionMode mode, float exFactor) {
 
 	// compute middle point
 	vislib::math::Vector<float, 3> midpoint(0.0f, 0.0f, 0.0f);
@@ -247,9 +197,9 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 			lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
 
 			for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
-				this->atomPositions[3 * atomIdx + 0] = call.AtomPositions()[3 * atomIdx + 0] + minDistance * displaceDirections[molIdx].GetX();
-				this->atomPositions[3 * atomIdx + 1] = call.AtomPositions()[3 * atomIdx + 1] + minDistance * displaceDirections[molIdx].GetY();
-				this->atomPositions[3 * atomIdx + 2] = call.AtomPositions()[3 * atomIdx + 2] + minDistance * displaceDirections[molIdx].GetZ();
+				this->atomPositions[3 * atomIdx + 0] = call.AtomPositions()[3 * atomIdx + 0] + exFactor * displaceDirections[molIdx].GetX();
+				this->atomPositions[3 * atomIdx + 1] = call.AtomPositions()[3 * atomIdx + 1] + exFactor * displaceDirections[molIdx].GetY();
+				this->atomPositions[3 * atomIdx + 2] = call.AtomPositions()[3 * atomIdx + 2] + exFactor * displaceDirections[molIdx].GetZ();
 			}
 		}
 	}
@@ -267,8 +217,20 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 		if (atomPositions[i * 3 + 2] > bbMax.Z()) bbMax.SetZ(atomPositions[i * 3 + 2]);
 	}
 
-	currentBoundingBox.Set(bbMin.X(), bbMin.Y(), bbMin.Z(), bbMax.X(), bbMax.Y(), bbMax.Z());
-	currentBoundingBox.Grow(3.0f); // add 3 angstrom to each side for some renderers
+	//currentBoundingBox.Set(bbMin.X(), bbMin.Y(), bbMin.Z(), bbMax.X(), bbMax.Y(), bbMax.Z());
+	//currentBoundingBox.Grow(3.0f); // add 3 angstrom to each side for some renderers
+
+	float maxFactor = maxExplosionFactorParam.Param<param::FloatParam>()->Value();
+	currentBoundingBox = call.AccessBoundingBoxes().ObjectSpaceBBox();
+	currentBoundingBox.EnforcePositiveSize();
+
+	// the +- 3.0f is there to reverse the growing of the bounding box by the PDBLoader
+	currentBoundingBox.SetRight(currentBoundingBox.Right() - 3.0f + maxFactor * (currentBoundingBox.Right() - 3.0f - midpoint.X()));
+	currentBoundingBox.SetLeft(currentBoundingBox.Left() + 3.0f - 3.0f + maxFactor * (currentBoundingBox.Left() + 3.0f - midpoint.X()));
+	currentBoundingBox.SetTop(currentBoundingBox.Top() - 3.0f + maxFactor * (currentBoundingBox.Top() - 3.0f - midpoint.Y()));
+	currentBoundingBox.SetBottom(currentBoundingBox.Bottom() + 3.0f + maxFactor * (currentBoundingBox.Bottom() + 3.0f - midpoint.Y()));
+	currentBoundingBox.SetFront(currentBoundingBox.Front() - 3.0f + maxFactor * (currentBoundingBox.Front() - 3.0f - midpoint.Z()));
+	currentBoundingBox.SetBack(currentBoundingBox.Back() + 3.0f + maxFactor * (currentBoundingBox.Back() + 3.0f - midpoint.Z()));
 }
 
 /*
@@ -277,15 +239,6 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 bool ProteinExploder::getData(core::Call& call) {
 	MolecularDataCall * outCall = dynamic_cast<MolecularDataCall*>(&call);
 	if (outCall == NULL) return false;
-
-	/*MolecularDataCall * inCall = this->getDataSlot.CallAs<MolecularDataCall>();
-	if (inCall == NULL) return false;*/
-
-	/*inCall->SetFrameID(outCall->FrameID());
-	if (!(*inCall)(1)) return false;
-	if (!(*inCall)(0)) return false;*/
-
-	//outCall->operator=(*inCall); // deep copy
 
 	outCall->SetAtomPositions(this->atomPositions);
 
@@ -306,15 +259,64 @@ bool ProteinExploder::getExtent(core::Call& call) {
 
 	agdc->operator=(*mdc); // deep copy
 
+#ifdef _MSC_VER
+#pragma push_macro("min")
+#undef min
+#pragma push_macro("max")
+#undef max
+#endif /* _MSC_VER */
+
+	float theParam = std::min(this->explosionFactorParam.Param<param::FloatParam>()->Value(), 
+		this->maxExplosionFactorParam.Param<param::FloatParam>()->Value());
+
+#ifdef _MSC_VER
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#endif /* _MSC_VER */
+
+	bool play = this->playParam.Param<param::BoolParam>()->Value();
+	bool replay = this->replayParam.Param<param::BoolParam>()->Value();
+	high_resolution_clock::time_point curTime = high_resolution_clock::now();
+
+	if (firstRequest) {
+		lastTime = curTime;
+		firstRequest = false;
+	}
+
+	float dur = static_cast<float>(duration_cast<duration<double>>(curTime - lastTime).count());
+
+	if (play) timeAccum += dur;
+
+	float timeVal = timeAccum / this->playDurationParam.Param<param::FloatParam>()->Value();
+
+	if (timeVal > 1.0f && play) {
+		playDone = true;
+		timeVal = 1.0f;
+
+		if (replay) {
+			playDone = false;
+			lastTime = high_resolution_clock::now();
+			timeAccum = 0.0f;
+		} else {
+			this->playParam.Param<param::BoolParam>()->SetValue(false);
+		}
+	}
+
+	if (this->playParam.Param<param::BoolParam>()->Value()) {
+		//printf("%f %f\n", timeAccum, timeVal);
+		float maxVal = this->maxExplosionFactorParam.Param<param::FloatParam>()->Value();
+		theParam = timeVal * maxVal;
+		this->explosionFactorParam.Param<param::FloatParam>()->SetValue(theParam);	
+	}
+	lastTime = curTime;
+
 	explodeMolecule(*agdc, getModeByIndex(this->explosionModeParam.Param<param::EnumParam>()->Value()),
-		this->minDistanceParam.Param<param::FloatParam>()->Value());
+		theParam);
 
 	agdc->SetFrameCount(mdc->FrameCount());
 	agdc->AccessBoundingBoxes().Clear();
 	agdc->AccessBoundingBoxes().SetObjectSpaceBBox(currentBoundingBox);
 	agdc->AccessBoundingBoxes().SetObjectSpaceClipBox(currentBoundingBox);
-
-	// TODO set correct extents
 
 	return true;
 }
@@ -347,4 +349,22 @@ ProteinExploder::ExplosionMode ProteinExploder::getModeByIndex(unsigned int idx)
  */
 int ProteinExploder::getModeNumber() {
 	return 4;
+}
+
+/*
+ *	ProteinExploder::onPlayToggleButton
+ */
+bool ProteinExploder::onPlayToggleButton(param::ParamSlot& p) {
+	param::BoolParam *bp = this->playParam.Param<param::BoolParam>();
+	bp->SetValue(!bp->Value());
+
+	bool play = bp->Value();
+
+	if (play && playDone) { // restart the animation, if the previous one has ended
+		playDone = false;
+		lastTime = high_resolution_clock::now();
+		timeAccum = 0.0f;
+	}
+
+	return true;
 }
