@@ -100,7 +100,7 @@ void BindingSiteDataSource::loadPDBFile( const vislib::TString& filename) {
     using vislib::sys::Log;
     
     // temp variables
-    unsigned int i, j, lineCnt, bsIdx, resCnt, cnt;
+    unsigned int i, j, lineCnt, bsIdx, /*resCnt,*/ cnt;
     vislib::StringA line, seqNumString, tmpBSName;
     char chainId;
     unsigned int resId;
