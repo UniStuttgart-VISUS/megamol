@@ -277,8 +277,10 @@ void main(void) {
     }
     
     /// Blend it all together ///
-    gl_FragColor = vec4(color.rgb*(1-alphaLines)+ colorLines*alphaLines, 
-        alphaLines+color.a);
+    gl_FragColor = vec4(color.rgb*(1-alphaLines)+ colorLines*alphaLines, alphaLines+color.a);
+    // Pseudo-fogging
+    //float depth = texture2D(depthBuffer, gl_TexCoord[0].st).r;
+    //gl_FragColor = vec4((color.rgb*(1-alphaLines)+ colorLines*alphaLines) * (1.0 - (depth - 0.25)), alphaLines+color.a);
 }
             -->
             </snippet>

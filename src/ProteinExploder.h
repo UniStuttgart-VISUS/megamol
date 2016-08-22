@@ -91,6 +91,14 @@ namespace protein {
 		};
 
 		/**
+		 *	Function controlling the explosion timing
+		 *
+		 *	@param exVal The linear explosion factor.
+		 *	@return The new explosion factor.
+		 */
+		float explosionFunction(float exVal);
+
+		/**
 		 *	Returns the name of the given explosion mode
 		 *
 		 *	@param mode The explosion mode
@@ -120,13 +128,30 @@ namespace protein {
 		bool onPlayToggleButton(megamol::core::param::ParamSlot& p);
 
 		/**
-		 *	Displaces the atom positions of a molecule dependant from the given parameters
+		 *	Displaces the atom positions of a molecule dependant from the given parameters. 
+		 *	The middle point of the data set has to be computed beforehand
 		 *
 		 *	@param call The call containing the molecule data
 		 *	@param mode The explosion mode
 		 *	@param exFactor The explosion factor
+		 *	@param computeBoundingBox Should the bounding box be computed? Standard: false
 		 */
-		void explodeMolecule(megamol::protein_calls::MolecularDataCall& call, ExplosionMode mode, float exFactor);
+		void explodeMolecule(megamol::protein_calls::MolecularDataCall& call, ExplosionMode mode, float exFactor, bool computeBoundingBox = false);
+
+		/**
+		 *	Computes the main directions of the molecules in the data set via principal component analysis
+		 *
+		 *	@param call The call containing the molecule data
+		 */
+		void computeMainDirectionPCA(megamol::protein_calls::MolecularDataCall& call);
+
+		/**
+		 *	Computes the middle point of the data set (a.k.a. the average position)
+		 *
+		 *	@param call The call containing the molecule data
+		 *	@param call The explosion mode
+		 */
+		void computeMidPoint(megamol::protein_calls::MolecularDataCall& call, ExplosionMode mode);
 
 		/** data caller slot */
 		megamol::core::CallerSlot getDataSlot;
@@ -158,6 +183,12 @@ namespace protein {
 		/** the duration of the animation in seconds */
 		megamol::core::param::ParamSlot playDurationParam;
 
+		/** the middle point of the explosion origins from */
+		megamol::core::param::ParamSlot midPointParam;
+
+		/** force the middle point of the explosion */
+		megamol::core::param::ParamSlot forceMidPointParam;
+
 		/** The current atom positions */
 		float * atomPositions;
 
@@ -178,6 +209,21 @@ namespace protein {
 
 		/** Is this the first time request?*/
 		bool firstRequest;
+
+		/** The main directions of the data set ordered by significance*/
+		std::vector<vislib::math::Vector<float, 3>> mainDirections;
+
+		/** Does the data set have a significant main direction? */
+		bool significantDirection;
+
+		/** The hash of the last dataset rendered */
+		SIZE_T lastDataHash;
+
+		/** The middle point of the data set */
+		vislib::math::Vector<float, 3> midpoint;
+
+		/** The middle point value set by the gui*/
+		vislib::math::Vector<float, 3> guiMidpoint;
 	};
 } /* namespace protein */
 } /* namespace megamol */

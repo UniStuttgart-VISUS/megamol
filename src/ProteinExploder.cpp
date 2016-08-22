@@ -13,6 +13,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/Vector3fParam.h"
 
 #include "vislib/math/Vector.h"
 
@@ -36,6 +37,8 @@ ProteinExploder::ProteinExploder(void) :
 		minDistanceParam("minDistance", "Minimal distance between two exploded components in angstrom"),
 		maxExplosionFactorParam("maxExplosionFactor", "Maximal displacement factor"),
 		explosionFactorParam("explosionFactor", "Current displacement factor"),
+		midPointParam("midpoint", "The middle point of the explosion. Only used when forceMidpoint is activated"),
+		forceMidPointParam("forceMidpoint", "Should the explosion center be forced to a certain position?"),
 		playParam("animation::play","Should the animation be played?"),
 		togglePlayParam("animation::togglePlay", "Button to toggle animation"),
 		replayParam("animation::replay","Restart animation after end"),
@@ -63,13 +66,20 @@ ProteinExploder::ProteinExploder(void) :
 	this->minDistanceParam.SetParameter(new param::FloatParam(0.0f, 0.0f, 10.0f));
 	this->MakeSlotAvailable(&this->minDistanceParam);
 
-	float maxExplosionFactor = 3.0f;
+	float maxExplosionFactor = 2.0f;
 
 	this->explosionFactorParam.SetParameter(new param::FloatParam(0.0f, 0.0f, 10.0f));
 	this->MakeSlotAvailable(&this->explosionFactorParam);
 
 	this->maxExplosionFactorParam.SetParameter(new param::FloatParam(maxExplosionFactor, 0.0f, 10.0f));
 	this->MakeSlotAvailable(&this->maxExplosionFactorParam);
+
+	this->guiMidpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+	this->midPointParam.SetParameter(new param::Vector3fParam(guiMidpoint));
+	this->MakeSlotAvailable(&this->midPointParam);
+
+	this->forceMidPointParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->forceMidPointParam);
 
 	this->playParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->playParam);
@@ -91,6 +101,7 @@ ProteinExploder::ProteinExploder(void) :
 	lastTime = high_resolution_clock::now();
 	this->firstRequest = true;
 	this->timeAccum = 0.0f;
+	this->midpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
 }
 
 /*
@@ -119,12 +130,42 @@ void ProteinExploder::release(void) {
 }
 
 /*
+ *	ProteinExploder::computeMainDirectionPCA
+ */
+void ProteinExploder::computeMainDirectionPCA(MolecularDataCall& call) {
+
+}
+
+/*
+ *	ProteinExploder::computeMidPoint
+ */
+void ProteinExploder::computeMidPoint(MolecularDataCall& call, ProteinExploder::ExplosionMode mode) {
+
+	midpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+
+	if (mode != ExplosionMode::SPHERICAL_MASS) {
+		for (unsigned int i = 0; i < call.AtomCount(); i++) {
+			midpoint.SetX(midpoint.GetX() + call.AtomPositions()[i * 3 + 0]);
+			midpoint.SetY(midpoint.GetY() + call.AtomPositions()[i * 3 + 1]);
+			midpoint.SetZ(midpoint.GetZ() + call.AtomPositions()[i * 3 + 2]);
+		}
+	}
+	else { // ExplosionMode::SPHERICAL_MASS
+		for (unsigned int i = 0; i < call.AtomCount(); i++) {
+			// TODO adjust the computation by the mass
+			midpoint.SetX(midpoint.GetX() + call.AtomPositions()[i * 3 + 0]);
+			midpoint.SetY(midpoint.GetY() + call.AtomPositions()[i * 3 + 1]);
+			midpoint.SetZ(midpoint.GetZ() + call.AtomPositions()[i * 3 + 2]);
+		}
+	}
+
+	midpoint /= (float)call.AtomCount();
+}
+
+/*
  *	ProteinExploder::explodeMolecule
  */
-void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::ExplosionMode mode, float exFactor) {
-
-	// compute middle point
-	vislib::math::Vector<float, 3> midpoint(0.0f, 0.0f, 0.0f);
+void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::ExplosionMode mode, float exFactor, bool computeBoundingBox) {
 
 	if (atomPositions != NULL) {
 		delete[] this->atomPositions;
@@ -135,102 +176,104 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 	atomPositions = new float[call.AtomCount() * 3];
 	atomPositionsSize = call.AtomCount() * 3;
 
-	for (unsigned int i = 0; i < call.AtomCount(); i++) {
-		midpoint.SetX(midpoint.GetX() + call.AtomPositions()[i * 3 + 0]);
-		midpoint.SetY(midpoint.GetY() + call.AtomPositions()[i * 3 + 1]);
-		midpoint.SetZ(midpoint.GetZ() + call.AtomPositions()[i * 3 + 2]);
-	}
+	if (mode == ExplosionMode::SPHERICAL_MIDDLE || mode == ExplosionMode::SPHERICAL_MASS) {
 
-	midpoint /= (float)call.AtomCount();
+		unsigned int firstResIdx = 0;
+		unsigned int lastResIdx = 0;
+		unsigned int firstAtomIdx = 0;
+		unsigned int lastAtomIdx = 0;
+		unsigned int molAtomCount = 0;
 
-	//printf("middle %f %f %f\n", midpoint.GetX(), midpoint.GetY(), midpoint.GetZ());
-	
-	unsigned int firstResIdx = 0;
-	unsigned int lastResIdx = 0;
-	unsigned int firstAtomIdx = 0;
-	unsigned int lastAtomIdx = 0;
-	unsigned int molAtomCount = 0;
+		std::vector<vislib::math::Vector<float, 3>> moleculeMiddles;
 
-	std::vector<vislib::math::Vector<float, 3>> moleculeMiddles;
+		// compute middle point for each molecule
+		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
+			firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
+			lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
+			molAtomCount = 0;
 
-	// compute middle point for each molecule
-	for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
-		firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
-		lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
-		molAtomCount = 0;
+			vislib::math::Vector<float, 3> molMiddle(0.0f, 0.0f, 0.0f);
 
-		vislib::math::Vector<float, 3> molMiddle(0.0f, 0.0f, 0.0f);
+			for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
+				firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
+				lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
+				molAtomCount += call.Residues()[resIdx]->AtomCount();
 
-		for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
-			firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
-			lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
-			molAtomCount += call.Residues()[resIdx]->AtomCount();
-
-			for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
-				vislib::math::Vector<float, 3> curPos;
-				curPos.SetX(call.AtomPositions()[3 * atomIdx + 0]);
-				curPos.SetY(call.AtomPositions()[3 * atomIdx + 1]);
-				curPos.SetZ(call.AtomPositions()[3 * atomIdx + 2]);
-				molMiddle += curPos;
+				for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
+					vislib::math::Vector<float, 3> curPos;
+					curPos.SetX(call.AtomPositions()[3 * atomIdx + 0]);
+					curPos.SetY(call.AtomPositions()[3 * atomIdx + 1]);
+					curPos.SetZ(call.AtomPositions()[3 * atomIdx + 2]);
+					molMiddle += curPos;
+				}
 			}
+
+			molMiddle /= (float)molAtomCount;
+			//printf("middle %u:  %f %f %f\n", molIdx, molMiddle.GetX(), molMiddle.GetY(), molMiddle.GetZ());
+			moleculeMiddles.push_back(molMiddle);
 		}
 
-		molMiddle /= (float)molAtomCount;
-		//printf("middle %u:  %f %f %f\n", molIdx, molMiddle.GetX(), molMiddle.GetY(), molMiddle.GetZ());
-		moleculeMiddles.push_back(molMiddle);
-	}
+		// compute the direction for each molecule in which it should be displaced
+		std::vector<vislib::math::Vector<float, 3>> displaceDirections = moleculeMiddles;
 
-	// compute the direction for each molecule in which it should be displaced
-	std::vector<vislib::math::Vector<float, 3>> displaceDirections = moleculeMiddles;
+		for (int i = 0; i < moleculeMiddles.size(); i++) {
+			displaceDirections[i] = moleculeMiddles[i] - midpoint;
+		}
 
-	for (int i = 0; i < moleculeMiddles.size(); i++) {
-		displaceDirections[i] = moleculeMiddles[i] - midpoint;
-	}
+		// displace all atoms by the relevant vector
+		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
+			firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
+			lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
 
-	// displace all atoms by the relevant vector
-	for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
-		firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
-		lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
+			for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
+				firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
+				lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
 
-		for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
-			firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
-			lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
-
-			for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
-				this->atomPositions[3 * atomIdx + 0] = call.AtomPositions()[3 * atomIdx + 0] + exFactor * displaceDirections[molIdx].GetX();
-				this->atomPositions[3 * atomIdx + 1] = call.AtomPositions()[3 * atomIdx + 1] + exFactor * displaceDirections[molIdx].GetY();
-				this->atomPositions[3 * atomIdx + 2] = call.AtomPositions()[3 * atomIdx + 2] + exFactor * displaceDirections[molIdx].GetZ();
+				for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
+					this->atomPositions[3 * atomIdx + 0] = call.AtomPositions()[3 * atomIdx + 0] + exFactor * displaceDirections[molIdx].GetX();
+					this->atomPositions[3 * atomIdx + 1] = call.AtomPositions()[3 * atomIdx + 1] + exFactor * displaceDirections[molIdx].GetY();
+					this->atomPositions[3 * atomIdx + 2] = call.AtomPositions()[3 * atomIdx + 2] + exFactor * displaceDirections[molIdx].GetZ();
+				}
 			}
 		}
-	}
-	
-	vislib::math::Point<float, 3> bbMin(FLT_MAX, FLT_MAX, FLT_MAX);
-	vislib::math::Point<float, 3> bbMax(FLT_MIN, FLT_MIN, FLT_MIN);
+	} else if (mode == ExplosionMode::MAIN_DIRECTION) {
 
-	// compute new bounding box
-	for (unsigned int i = 0; i < atomPositionsSize / 3; i++) {
-		if (atomPositions[i * 3 + 0] < bbMin.X()) bbMin.SetX(atomPositions[i * 3 + 0]);
-		if (atomPositions[i * 3 + 1] < bbMin.Y()) bbMin.SetY(atomPositions[i * 3 + 1]);
-		if (atomPositions[i * 3 + 2] < bbMin.Z()) bbMin.SetZ(atomPositions[i * 3 + 2]);
-		if (atomPositions[i * 3 + 0] > bbMax.X()) bbMax.SetX(atomPositions[i * 3 + 0]);
-		if (atomPositions[i * 3 + 1] > bbMax.Y()) bbMax.SetY(atomPositions[i * 3 + 1]);
-		if (atomPositions[i * 3 + 2] > bbMax.Z()) bbMax.SetZ(atomPositions[i * 3 + 2]);
+	} else if (mode == ExplosionMode::MAIN_DIRECTION_CIRCULAR) {
+
 	}
 
-	//currentBoundingBox.Set(bbMin.X(), bbMin.Y(), bbMin.Z(), bbMax.X(), bbMax.Y(), bbMax.Z());
-	//currentBoundingBox.Grow(3.0f); // add 3 angstrom to each side for some renderers
+	vislib::math::Cuboid<float> newBB = currentBoundingBox;
 
-	float maxFactor = maxExplosionFactorParam.Param<param::FloatParam>()->Value();
-	currentBoundingBox = call.AccessBoundingBoxes().ObjectSpaceBBox();
-	currentBoundingBox.EnforcePositiveSize();
+	if (computeBoundingBox) {
+		vislib::math::Point<float, 3> bbMin(FLT_MAX, FLT_MAX, FLT_MAX);
+		vislib::math::Point<float, 3> bbMax(FLT_MIN, FLT_MIN, FLT_MIN);
 
-	// the +- 3.0f is there to reverse the growing of the bounding box by the PDBLoader
-	currentBoundingBox.SetRight(currentBoundingBox.Right() - 3.0f + maxFactor * (currentBoundingBox.Right() - 3.0f - midpoint.X()));
-	currentBoundingBox.SetLeft(currentBoundingBox.Left() + 3.0f - 3.0f + maxFactor * (currentBoundingBox.Left() + 3.0f - midpoint.X()));
-	currentBoundingBox.SetTop(currentBoundingBox.Top() - 3.0f + maxFactor * (currentBoundingBox.Top() - 3.0f - midpoint.Y()));
-	currentBoundingBox.SetBottom(currentBoundingBox.Bottom() + 3.0f + maxFactor * (currentBoundingBox.Bottom() + 3.0f - midpoint.Y()));
-	currentBoundingBox.SetFront(currentBoundingBox.Front() - 3.0f + maxFactor * (currentBoundingBox.Front() - 3.0f - midpoint.Z()));
-	currentBoundingBox.SetBack(currentBoundingBox.Back() + 3.0f + maxFactor * (currentBoundingBox.Back() + 3.0f - midpoint.Z()));
+		// compute new bounding box
+		for (unsigned int i = 0; i < atomPositionsSize / 3; i++) {
+			if (atomPositions[i * 3 + 0] < bbMin.X()) bbMin.SetX(atomPositions[i * 3 + 0]);
+			if (atomPositions[i * 3 + 1] < bbMin.Y()) bbMin.SetY(atomPositions[i * 3 + 1]);
+			if (atomPositions[i * 3 + 2] < bbMin.Z()) bbMin.SetZ(atomPositions[i * 3 + 2]);
+			if (atomPositions[i * 3 + 0] > bbMax.X()) bbMax.SetX(atomPositions[i * 3 + 0]);
+			if (atomPositions[i * 3 + 1] > bbMax.Y()) bbMax.SetY(atomPositions[i * 3 + 1]);
+			if (atomPositions[i * 3 + 2] > bbMax.Z()) bbMax.SetZ(atomPositions[i * 3 + 2]);
+		}
+
+		newBB.Set(bbMin.X(), bbMin.Y(), bbMin.Z(), bbMax.X(), bbMax.Y(), bbMax.Z());
+		newBB.Grow(3.0f); // add 3 angstrom to each side for some renderers
+
+		// when the growing moves everything to one direction this is necessary
+		newBB.Union(call.AccessBoundingBoxes().ObjectSpaceBBox()); 
+	}
+
+	currentBoundingBox = newBB;
+}
+
+/*
+ *	ProteinExploder::explosionFunction
+ */
+float ProteinExploder::explosionFunction(float exVal) {
+	return exVal;
+	//return static_cast<float>(pow(tanh(exVal / (0.1f * 3.1413f)), 4.0f)) * exVal;
 }
 
 /*
@@ -254,6 +297,7 @@ bool ProteinExploder::getExtent(core::Call& call) {
 
 	MolecularDataCall *mdc = this->getDataSlot.CallAs<MolecularDataCall>();
 	if (mdc == NULL) return false;
+	mdc->SetCalltime(agdc->Calltime());
 	if (!(*mdc)(1)) return false;
 	if (!(*mdc)(0)) return false;
 
@@ -265,10 +309,8 @@ bool ProteinExploder::getExtent(core::Call& call) {
 #pragma push_macro("max")
 #undef max
 #endif /* _MSC_VER */
-
 	float theParam = std::min(this->explosionFactorParam.Param<param::FloatParam>()->Value(), 
 		this->maxExplosionFactorParam.Param<param::FloatParam>()->Value());
-
 #ifdef _MSC_VER
 #pragma pop_macro("min")
 #pragma pop_macro("max")
@@ -280,7 +322,7 @@ bool ProteinExploder::getExtent(core::Call& call) {
 
 	if (firstRequest) {
 		lastTime = curTime;
-		firstRequest = false;
+		lastDataHash = 0;
 	}
 
 	float dur = static_cast<float>(duration_cast<duration<double>>(curTime - lastTime).count());
@@ -303,15 +345,35 @@ bool ProteinExploder::getExtent(core::Call& call) {
 	}
 
 	if (this->playParam.Param<param::BoolParam>()->Value()) {
-		//printf("%f %f\n", timeAccum, timeVal);
+		//printf("%f %f %f\n", timeAccum, timeVal, dur);
 		float maxVal = this->maxExplosionFactorParam.Param<param::FloatParam>()->Value();
 		theParam = timeVal * maxVal;
 		this->explosionFactorParam.Param<param::FloatParam>()->SetValue(theParam);	
 	}
 	lastTime = curTime;
 
+	if (!forceMidPointParam.Param<param::BoolParam>()->Value()) {
+		computeMidPoint(*mdc, getModeByIndex(this->explosionModeParam.Param<param::EnumParam>()->Value()));
+		guiMidpoint = midpoint;
+		midPointParam.Param<param::Vector3fParam>()->SetValue(guiMidpoint);
+	} else {
+		midpoint = midPointParam.Param<param::Vector3fParam>()->Value();
+	}
+
+	if (firstRequest || lastDataHash != mdc->DataHash() || maxExplosionFactorParam.IsDirty() 
+		|| forceMidPointParam.IsDirty() || midPointParam.IsDirty()) { // compute the bounding box for the maximal explosion factor
+
+		explodeMolecule(*agdc, getModeByIndex(this->explosionModeParam.Param<param::EnumParam>()->Value()),
+			this->maxExplosionFactorParam.Param<param::FloatParam>()->Value(), true);
+		lastDataHash = mdc->DataHash();
+		maxExplosionFactorParam.ResetDirty();
+		forceMidPointParam.ResetDirty();
+		midPointParam.ResetDirty();
+		firstRequest = false;
+	}
+
 	explodeMolecule(*agdc, getModeByIndex(this->explosionModeParam.Param<param::EnumParam>()->Value()),
-		theParam);
+		explosionFunction(theParam));
 
 	agdc->SetFrameCount(mdc->FrameCount());
 	agdc->AccessBoundingBoxes().Clear();
