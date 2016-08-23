@@ -213,6 +213,9 @@ namespace protein {
 		/** The main directions of the data set ordered by significance*/
 		std::vector<vislib::math::Vector<float, 3>> mainDirections;
 
+		/** The eigen-values */
+		std::vector<float> eigenValues;
+
 		/** Does the data set have a significant main direction? */
 		bool significantDirection;
 

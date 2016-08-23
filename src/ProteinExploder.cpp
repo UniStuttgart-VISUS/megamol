@@ -16,6 +16,8 @@
 #include "mmcore/param/Vector3fParam.h"
 
 #include "vislib/math/Vector.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/math/Matrix.h"
 
 #include <algorithm>
 
@@ -102,6 +104,9 @@ ProteinExploder::ProteinExploder(void) :
 	this->firstRequest = true;
 	this->timeAccum = 0.0f;
 	this->midpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+
+	mainDirections.resize(3);
+	eigenValues.resize(3);
 }
 
 /*
@@ -134,6 +139,44 @@ void ProteinExploder::release(void) {
  */
 void ProteinExploder::computeMainDirectionPCA(MolecularDataCall& call) {
 
+	std::vector<float> colors(call.AtomCount(), 0.0f);
+	vislib::math::Matrix<float, 3, vislib::math::ROW_MAJOR> covMat;
+	covMat.SetNull();
+
+	// compute covariance matrix
+	for (unsigned int x = 0; x < 3; x++) {
+		for (unsigned int y = 0; y < 3; y++) {
+			for (unsigned int k = 0; k < call.AtomCount(); k++) {
+				vislib::math::ShallowVector<const float, 3> p1(&call.AtomPositions()[k * 3]);
+				covMat(x, y) += (p1[x] - midpoint[x]) * (p1[y] - midpoint[y]);
+			}
+			covMat(x, y) /= static_cast<float>(call.AtomCount() - 1);
+		}
+	}
+	//covMat.Dump(std::cout);
+
+	float eigenVals[3];
+	vislib::math::Vector<float, 3> eigenVectors[3];
+	covMat.FindEigenvalues(eigenVals, eigenVectors, 3);
+	std::vector<unsigned int> indexVec = { 0, 1, 2 };
+
+	/*printf("%f %f %f\n", eigenVals[0], eigenVals[1], eigenVals[2]);
+	printf("v1: %f %f %f , %f\n", eigenVectors[0][0], eigenVectors[0][1], eigenVectors[0][2], eigenVectors[0].Length());
+	printf("v2: %f %f %f , %f\n", eigenVectors[1][0], eigenVectors[1][1], eigenVectors[1][2], eigenVectors[1].Length());
+	printf("v3: %f %f %f , %f\n", eigenVectors[2][0], eigenVectors[2][1], eigenVectors[2][2], eigenVectors[2].Length());*/
+
+	std::sort(indexVec.begin(), indexVec.end(), [&eigenVals](const unsigned int& a, const unsigned int& b) {
+		return eigenVals[a] > eigenVals[b];
+	});
+
+	/*printf("%u %u %u\n", indexVec[0], indexVec[1], indexVec[2]);
+	printf("sorted: %f %f %f\n", eigenVals[indexVec[0]], eigenVals[indexVec[1]], eigenVals[indexVec[2]]);*/
+
+	for (int i = 0; i < 3; i++) {
+		mainDirections[i] = eigenVectors[indexVec[i]];
+		mainDirections[i].Normalise();
+		eigenValues[i] = eigenVals[indexVec[i]];
+	}
 }
 
 /*
@@ -176,46 +219,52 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 	atomPositions = new float[call.AtomCount() * 3];
 	atomPositionsSize = call.AtomCount() * 3;
 
-	if (mode == ExplosionMode::SPHERICAL_MIDDLE || mode == ExplosionMode::SPHERICAL_MASS) {
+	unsigned int firstResIdx = 0;
+	unsigned int lastResIdx = 0;
+	unsigned int firstAtomIdx = 0;
+	unsigned int lastAtomIdx = 0;
+	unsigned int molAtomCount = 0;
 
-		unsigned int firstResIdx = 0;
-		unsigned int lastResIdx = 0;
-		unsigned int firstAtomIdx = 0;
-		unsigned int lastAtomIdx = 0;
-		unsigned int molAtomCount = 0;
+	std::vector<vislib::math::Vector<float, 3>> moleculeMiddles;
 
-		std::vector<vislib::math::Vector<float, 3>> moleculeMiddles;
+	// compute middle point for each molecule
+	for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
+		firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
+		lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
+		molAtomCount = 0;
 
-		// compute middle point for each molecule
-		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
-			firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
-			lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
-			molAtomCount = 0;
+		vislib::math::Vector<float, 3> molMiddle(0.0f, 0.0f, 0.0f);
 
-			vislib::math::Vector<float, 3> molMiddle(0.0f, 0.0f, 0.0f);
+		for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
+			firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
+			lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
+			molAtomCount += call.Residues()[resIdx]->AtomCount();
 
-			for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
-				firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
-				lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
-				molAtomCount += call.Residues()[resIdx]->AtomCount();
-
-				for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
-					vislib::math::Vector<float, 3> curPos;
-					curPos.SetX(call.AtomPositions()[3 * atomIdx + 0]);
-					curPos.SetY(call.AtomPositions()[3 * atomIdx + 1]);
-					curPos.SetZ(call.AtomPositions()[3 * atomIdx + 2]);
-					molMiddle += curPos;
-				}
+			for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
+				vislib::math::Vector<float, 3> curPos;
+				curPos.SetX(call.AtomPositions()[3 * atomIdx + 0]);
+				curPos.SetY(call.AtomPositions()[3 * atomIdx + 1]);
+				curPos.SetZ(call.AtomPositions()[3 * atomIdx + 2]);
+				molMiddle += curPos;
 			}
-
-			molMiddle /= (float)molAtomCount;
-			//printf("middle %u:  %f %f %f\n", molIdx, molMiddle.GetX(), molMiddle.GetY(), molMiddle.GetZ());
-			moleculeMiddles.push_back(molMiddle);
 		}
 
-		// compute the direction for each molecule in which it should be displaced
-		std::vector<vislib::math::Vector<float, 3>> displaceDirections = moleculeMiddles;
+		molMiddle /= (float)molAtomCount;
+		//printf("middle %u:  %f %f %f\n", molIdx, molMiddle.GetX(), molMiddle.GetY(), molMiddle.GetZ());
+		moleculeMiddles.push_back(molMiddle);
+	}
 
+	std::vector<vislib::math::Vector<float, 3>> displaceDirections = moleculeMiddles;
+
+#ifdef _MSC_VER
+#pragma push_macro("min")
+#undef min
+#pragma push_macro("max")
+#undef max
+#endif /* _MSC_VER */
+	if (mode == ExplosionMode::SPHERICAL_MIDDLE || mode == ExplosionMode::SPHERICAL_MASS) {
+
+		// compute the direction for each molecule in which it should be displaced
 		for (int i = 0; i < moleculeMiddles.size(); i++) {
 			displaceDirections[i] = moleculeMiddles[i] - midpoint;
 		}
@@ -238,9 +287,74 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 		}
 	} else if (mode == ExplosionMode::MAIN_DIRECTION) {
 
-	} else if (mode == ExplosionMode::MAIN_DIRECTION_CIRCULAR) {
+		for (int i = 0; i < moleculeMiddles.size(); i++) {
+			displaceDirections[i] = displaceDirections[i].Dot(mainDirections[0]) * mainDirections[0];
+		}
 
+		// displace all atoms by the relevant vector
+		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
+			firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
+			lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
+
+			for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
+				firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
+				lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
+
+				for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
+					this->atomPositions[3 * atomIdx + 0] = call.AtomPositions()[3 * atomIdx + 0] + exFactor * displaceDirections[molIdx].GetX();
+					this->atomPositions[3 * atomIdx + 1] = call.AtomPositions()[3 * atomIdx + 1] + exFactor * displaceDirections[molIdx].GetY();
+					this->atomPositions[3 * atomIdx + 2] = call.AtomPositions()[3 * atomIdx + 2] + exFactor * displaceDirections[molIdx].GetZ();
+				}
+			}
+		}
+	} else if (mode == ExplosionMode::MAIN_DIRECTION_CIRCULAR) {
+		for (int i = 0; i < moleculeMiddles.size(); i++) {
+			displaceDirections[i] = displaceDirections[i].Dot(mainDirections[0]) * mainDirections[0];
+		}
+
+		float maxFactor = maxExplosionFactorParam.Param<param::FloatParam>()->Value();
+
+		// displace all atoms by the relevant vector
+		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
+			firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
+			lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
+
+			for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
+				firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
+				lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
+
+				for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
+					this->atomPositions[3 * atomIdx + 0] = call.AtomPositions()[3 * atomIdx + 0] + std::min(2.0f * exFactor, maxFactor) * displaceDirections[molIdx].GetX();
+					this->atomPositions[3 * atomIdx + 1] = call.AtomPositions()[3 * atomIdx + 1] + std::min(2.0f * exFactor, maxFactor) * displaceDirections[molIdx].GetY();
+					this->atomPositions[3 * atomIdx + 2] = call.AtomPositions()[3 * atomIdx + 2] + std::min(2.0f * exFactor, maxFactor) * displaceDirections[molIdx].GetZ();
+				}
+			}
+		}
+
+		for (int i = 0; i < moleculeMiddles.size(); i++) {
+			displaceDirections[i] = moleculeMiddles[i] - (midpoint + ((moleculeMiddles[i] - midpoint).Dot(mainDirections[0]) * mainDirections[0]));
+		}
+
+		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
+			firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
+			lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
+
+			for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
+				firstAtomIdx = call.Residues()[resIdx]->FirstAtomIndex();
+				lastAtomIdx = firstAtomIdx + call.Residues()[resIdx]->AtomCount();
+
+				for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++) { // for each atom in the residue
+					this->atomPositions[3 * atomIdx + 0] += std::max(0.0f, std::min(2.0f * exFactor - maxFactor, maxFactor)) * displaceDirections[molIdx].GetX();
+					this->atomPositions[3 * atomIdx + 1] += std::max(0.0f, std::min(2.0f * exFactor - maxFactor, maxFactor)) * displaceDirections[molIdx].GetY();
+					this->atomPositions[3 * atomIdx + 2] += std::max(0.0f, std::min(2.0f * exFactor - maxFactor, maxFactor)) * displaceDirections[molIdx].GetZ();
+				}
+			}
+		}
 	}
+#ifdef _MSC_VER
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#endif /* _MSC_VER */
 
 	vislib::math::Cuboid<float> newBB = currentBoundingBox;
 
@@ -361,7 +475,9 @@ bool ProteinExploder::getExtent(core::Call& call) {
 	}
 
 	if (firstRequest || lastDataHash != mdc->DataHash() || maxExplosionFactorParam.IsDirty() 
-		|| forceMidPointParam.IsDirty() || midPointParam.IsDirty()) { // compute the bounding box for the maximal explosion factor
+		|| forceMidPointParam.IsDirty() || midPointParam.IsDirty() || explosionModeParam.IsDirty()) { // compute the bounding box for the maximal explosion factor
+
+		computeMainDirectionPCA(*mdc);
 
 		explodeMolecule(*agdc, getModeByIndex(this->explosionModeParam.Param<param::EnumParam>()->Value()),
 			this->maxExplosionFactorParam.Param<param::FloatParam>()->Value(), true);
@@ -369,6 +485,7 @@ bool ProteinExploder::getExtent(core::Call& call) {
 		maxExplosionFactorParam.ResetDirty();
 		forceMidPointParam.ResetDirty();
 		midPointParam.ResetDirty();
+		explosionModeParam.ResetDirty();
 		firstRequest = false;
 	}
 
