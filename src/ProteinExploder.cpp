@@ -8,6 +8,7 @@
 
 #include "stdafx.h"
 #include "ProteinExploder.h"
+#include "MolecularGroupsCall.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -18,6 +19,8 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/MD5HashProvider.h"
+#include "vislib/SHA1HashProvider.h"
 
 #include <algorithm>
 
@@ -35,6 +38,7 @@ ProteinExploder::ProteinExploder(void) :
 		Module(),
 		getDataSlot("getData", "Calls molecular data"),
 		dataOutSlot("dataOut", "Provides the exploded molecular data"),
+		groupOutSlot("groupOut", "Provides the grouping information for the molecules"),
 		explosionModeParam("explosionMode", "The mode of the performed explosion"),
 		minDistanceParam("minDistance", "Minimal distance between two exploded components in angstrom"),
 		maxExplosionFactorParam("maxExplosionFactor", "Maximal displacement factor"),
@@ -54,6 +58,10 @@ ProteinExploder::ProteinExploder(void) :
 	this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(0), &ProteinExploder::getData);
 	this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(1), &ProteinExploder::getExtent);
 	this->MakeSlotAvailable(&this->dataOutSlot);
+
+	this->groupOutSlot.SetCallback(MolecularGroupsCall::ClassName(), MolecularGroupsCall::FunctionName(0), &ProteinExploder::getData);
+	this->groupOutSlot.SetCallback(MolecularGroupsCall::ClassName(), MolecularGroupsCall::FunctionName(1), &ProteinExploder::getExtent);
+	this->MakeSlotAvailable(&this->groupOutSlot);
 
 	// other parameters
 	param::EnumParam * emParam = new param::EnumParam(int(ExplosionMode::SPHERICAL_MIDDLE));
@@ -107,6 +115,10 @@ ProteinExploder::ProteinExploder(void) :
 
 	mainDirections.resize(3);
 	eigenValues.resize(3);
+
+	this->groupsPointer = nullptr;
+	this->groupSizes = nullptr;
+	this->groupCount = 0;
 }
 
 /*
@@ -131,6 +143,22 @@ void ProteinExploder::release(void) {
 		delete[] this->atomPositions;
 		this->atomPositions = NULL;
 		this->atomPositionsSize = 0;
+	}
+
+	if (groupsPointer != NULL) {
+		for (unsigned int i = 0; i < groupCount; i++) {
+			if (groupsPointer[i] != 0) {
+				delete[] groupsPointer[i];
+				groupsPointer[i] = nullptr;
+			}
+		}
+		delete[] groupsPointer;
+		groupsPointer = nullptr;
+	}
+
+	if (groupSizes != NULL){
+		delete[] groupSizes;
+		groupSizes = nullptr;
 	}
 }
 
@@ -206,6 +234,80 @@ void ProteinExploder::computeMidPoint(MolecularDataCall& call, ProteinExploder::
 }
 
 /*
+ *	ProteinExploder::computeSimilarities
+ */
+void ProteinExploder::computeSimilarities(MolecularDataCall& call) {
+
+	unsigned int firstResIdx = 0;
+	unsigned int lastResIdx = 0;
+	unsigned int molAtomCount = 0;
+	std::vector<BYTE*> hashPerMol;
+	std::vector<unsigned int> hashSizes;
+
+	// compute hash values for each molecule
+	for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
+		firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
+		lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
+
+		unsigned int firstAtom = call.Residues()[firstResIdx]->FirstAtomIndex();
+		molAtomCount = 0;
+
+		for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++) { // for each residue in the molecule
+			molAtomCount += call.Residues()[resIdx]->AtomCount();
+		}
+
+		vislib::MD5HashProvider provider;
+		SIZE_T hashSize = 16; // this is the same as the hardcoded one in the vislib
+		BYTE * outHash = new BYTE[hashSize];
+
+		provider.ComputeHash(outHash, hashSize, reinterpret_cast<const BYTE*>(&call.AtomTypeIndices()[firstAtom]), molAtomCount * sizeof(unsigned int));
+
+		hashSizes.push_back(static_cast<unsigned int>(hashSize));
+		hashPerMol.push_back(outHash);
+	}
+
+	groups.clear();
+	groups.push_back(std::vector<int>(1, 0));
+
+	// build groups by comparing the hash values. Everything with the same hash value belongs to the same group
+	for (int i = 1; i < hashPerMol.size(); i++) {
+		BYTE * h1 = hashPerMol[i];
+		unsigned int size1 = hashSizes[i];
+		bool found = false;
+		for (int j = 0; j < groups.size(); j++) {
+			BYTE * h2 = hashPerMol[groups[j][0]];
+			unsigned int size2 = hashSizes[groups[j][0]];
+
+			if (isHashEqual(h1, size1, h2, size2)) {
+				groups[j].push_back(i);
+				found = true;
+			} 
+		}
+		if (!found) {
+			groups.push_back(std::vector<int>(1, i));
+		}
+	}
+
+	for (int i = 0; i < groups.size(); i++) {
+		groups[i].shrink_to_fit();
+	}
+	groups.shrink_to_fit();
+
+	for (int i = 0; i < groups.size(); i++) {
+		for (unsigned int j = 0; j < groups[i].size(); j++) {
+			std::cout << groups[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	// cleanup
+	for (int i = 0; i < hashPerMol.size(); i++){
+		delete[]hashPerMol[i];
+		hashPerMol[i] = nullptr;
+	}
+}
+
+/*
  *	ProteinExploder::explodeMolecule
  */
 void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::ExplosionMode mode, float exFactor, bool computeBoundingBox) {
@@ -215,7 +317,7 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 		this->atomPositions = NULL;
 		this->atomPositionsSize = 0;
 	}
-
+	
 	atomPositions = new float[call.AtomCount() * 3];
 	atomPositionsSize = call.AtomCount() * 3;
 
@@ -475,12 +577,17 @@ bool ProteinExploder::getExtent(core::Call& call) {
 	}
 
 	if (firstRequest || lastDataHash != mdc->DataHash() || maxExplosionFactorParam.IsDirty() 
-		|| forceMidPointParam.IsDirty() || midPointParam.IsDirty() || explosionModeParam.IsDirty()) { // compute the bounding box for the maximal explosion factor
+		|| forceMidPointParam.IsDirty() || midPointParam.IsDirty() || explosionModeParam.IsDirty()) { 
 
+		computeSimilarities(*mdc);
+
+		// compute the main direction of the data set
 		computeMainDirectionPCA(*mdc);
 
+		// compute the bounding box for the maximal explosion factor
 		explodeMolecule(*agdc, getModeByIndex(this->explosionModeParam.Param<param::EnumParam>()->Value()),
 			this->maxExplosionFactorParam.Param<param::FloatParam>()->Value(), true);
+
 		lastDataHash = mdc->DataHash();
 		maxExplosionFactorParam.ResetDirty();
 		forceMidPointParam.ResetDirty();
@@ -496,6 +603,71 @@ bool ProteinExploder::getExtent(core::Call& call) {
 	agdc->AccessBoundingBoxes().Clear();
 	agdc->AccessBoundingBoxes().SetObjectSpaceBBox(currentBoundingBox);
 	agdc->AccessBoundingBoxes().SetObjectSpaceClipBox(currentBoundingBox);
+
+	return true;
+}
+
+/*
+ *	ProteinExploder::getGroupData
+ */
+bool ProteinExploder::getGroupData(core::Call& call) {
+
+	return true;
+}
+
+/*
+ *	ProteinExploder::getGroupExtent
+ */
+bool ProteinExploder::getGroupExtent(core::Call& call) {
+
+	MolecularGroupsCall * outCall = dynamic_cast<MolecularGroupsCall*>(&call);
+	if (outCall == NULL) return false;
+
+	MolecularDataCall *inCall = this->getDataSlot.CallAs<MolecularDataCall>();
+	if (inCall == NULL) return false;
+	inCall->SetCalltime(outCall->Calltime());
+	if (!(*inCall)(1)) return false;
+	if (!(*inCall)(0)) return false;
+
+	computeSimilarities(*inCall);
+
+	if (groupsPointer != NULL) {
+		for (unsigned int i = 0; i < groupCount; i++) {
+			if (groupsPointer[i] != 0) {
+				delete[] groupsPointer[i];
+				groupsPointer[i] = nullptr;
+			}
+		}
+		delete[] groupsPointer;
+		groupsPointer = nullptr;
+	}
+
+	if (groupSizes != NULL){
+		delete[] groupSizes;
+		groupSizes = nullptr;
+	}
+
+	groupCount = static_cast<unsigned int>(groups.size());
+
+	groupSizes = new unsigned int[groupCount];
+	for (unsigned int i = 0; i < groupCount; i++) {
+		groupSizes[i] = static_cast<unsigned int>(groups[i].size());
+	}
+
+	groupsPointer = new int*[groupCount];
+	for (unsigned int i = 0; i < groupCount; i++) {
+		groupsPointer[i] = new int[groupSizes[i]];
+		for (unsigned int j = 0; j < groupSizes[i]; j++) {
+			groupsPointer[i][j] = groups[i][j];
+		}
+	}
+
+	outCall->SetGroupCount(groupCount);
+	outCall->SetGroupSizes(groupSizes);
+	outCall->SetGroupData(groupsPointer);
+
+	outCall->SetFrameCount(inCall->FrameCount());
+	outCall->SetDataHash(inCall->DataHash());
 
 	return true;
 }
@@ -528,6 +700,17 @@ ProteinExploder::ExplosionMode ProteinExploder::getModeByIndex(unsigned int idx)
  */
 int ProteinExploder::getModeNumber() {
 	return 4;
+}
+
+/*
+ *	ProteinExploder::isHashEqual
+ */
+bool ProteinExploder::isHashEqual(const BYTE * h1, unsigned int hashSize1, const BYTE * h2, unsigned int hashSize2) {
+	if (hashSize1 != hashSize2) return false;
+	for (unsigned int i = 0; i < hashSize1; i++) {
+		if (h1[i] != h2[i]) return false;
+	}
+	return true;
 }
 
 /*

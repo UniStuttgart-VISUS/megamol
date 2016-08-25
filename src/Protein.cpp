@@ -81,6 +81,7 @@
 #include "ForceDataCall.h"
 #include "CallMouseInput.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
+#include "MolecularGroupsCall.h"
 
 #include "MoleculeBallifier.h"
 
@@ -90,6 +91,7 @@
 #include "MultiParticleDataFilter.h"
 #include "PDBInterpolator.h"
 #include "ProteinExploder.h"
+#include "MolecularNeighborhood.h"
 
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
@@ -182,6 +184,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
 
             // register calls here:
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();
@@ -194,6 +197,7 @@ namespace {
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallMouseInput>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallColor>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein::MolecularGroupsCall>();
 		}
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

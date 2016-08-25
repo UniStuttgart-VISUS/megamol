@@ -18,8 +18,7 @@
 namespace megamol {
 namespace protein {
 	
-	class ProteinExploder : public megamol::core::Module
-	{
+	class ProteinExploder : public megamol::core::Module {
 	public:
 
 		/**
@@ -78,6 +77,17 @@ namespace protein {
          * Call for get extent.
          */
 		bool getExtent(megamol::core::Call& call);
+
+		/**
+		 *	Call for get data for the group slot.
+		 */
+		bool getGroupData(megamol::core::Call& call);
+
+		/**
+		 *	Call for get extent for the group slot.
+		 */
+		bool getGroupExtent(megamol::core::Call& call);
+
 	private:
 
 		/**
@@ -149,15 +159,35 @@ namespace protein {
 		 *	Computes the middle point of the data set (a.k.a. the average position)
 		 *
 		 *	@param call The call containing the molecule data
-		 *	@param call The explosion mode
+		 *	@param mode The explosion mode
 		 */
 		void computeMidPoint(megamol::protein_calls::MolecularDataCall& call, ExplosionMode mode);
+
+		/**
+		 *	Computes, which of the molecules of the given call are the same.
+		 *
+		 *	@param call The call containing the molecule data
+		 */
+		void computeSimilarities(megamol::protein_calls::MolecularDataCall& call);
+
+		/**
+		 *	Computes whether two given hashes are equal.
+		 *	
+		 *	@param h1 Pointer to the first hash.
+		 *	@param hashSize1 The size of the first hash in bytes.
+		 *	@param h2 Pointer to the second hash.
+		 *	@param hashSize2 The size of the second hash in bytes.
+		 */
+		bool isHashEqual(const BYTE* h1, unsigned int hashSize1, const BYTE* h2, unsigned int hashSize);
 
 		/** data caller slot */
 		megamol::core::CallerSlot getDataSlot;
 
 		/** slot for outgoing data */
 		megamol::core::CalleeSlot dataOutSlot;
+
+		/** slot for outgoing molecule group data */
+		megamol::core::CalleeSlot groupOutSlot;
 
 		/** minimal distance between two exploded components */
 		megamol::core::param::ParamSlot minDistanceParam;
@@ -227,6 +257,18 @@ namespace protein {
 
 		/** The middle point value set by the gui*/
 		vislib::math::Vector<float, 3> guiMidpoint;
+
+		/** Vector containing every molecule group represented as vector of molecule indices */
+		std::vector<std::vector<int>> groups;
+
+		/** Pointer to the group pointers */
+		int** groupsPointer;
+
+		/** List of the group sizes */
+		unsigned int* groupSizes;
+
+		/** The total number of molecule groups */
+		unsigned int groupCount;
 	};
 } /* namespace protein */
 } /* namespace megamol */
