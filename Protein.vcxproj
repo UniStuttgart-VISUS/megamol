@@ -242,6 +242,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\LayeredIsosurfaceRenderer.h" />
     <ClInclude Include="src\MDDriverConnector.h" />
     <ClInclude Include="src\MolecularBezierData.h" />
+    <ClInclude Include="src\MolecularGroupsCall.h" />
+    <ClInclude Include="src\MolecularNeighborhood.h" />
     <ClInclude Include="src\MoleculeBallifier.h" />
     <ClInclude Include="src\MoleculeCartoonRenderer.h" />
     <ClInclude Include="src\MoleculeSequenceRenderer.h" />
@@ -343,6 +345,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\LayeredIsosurfaceRenderer.cpp" />
     <ClCompile Include="src\MDDriverConnector.cpp" />
     <ClCompile Include="src\MolecularBezierData.cpp" />
+    <ClCompile Include="src\MolecularNeighborhood.cpp" />
     <ClCompile Include="src\MoleculeBallifier.cpp" />
     <ClCompile Include="src\MoleculeCartoonRenderer.cpp" />
     <ClCompile Include="src\MoleculeSequenceRenderer.cpp" />

@@ -309,6 +309,12 @@
     <ClInclude Include="src\ProteinExploder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\MolecularGroupsCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MolecularNeighborhood.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\XYZLoader.cpp">
@@ -564,6 +570,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ProteinExploder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MolecularNeighborhood.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
