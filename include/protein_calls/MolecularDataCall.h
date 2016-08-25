@@ -1403,6 +1403,42 @@ namespace protein_calls {
         void SetCalltime(float calltime) {
             this->calltime = calltime;
         }
+
+		/**
+		 *	Get the neighborhood sizes.
+		 *
+		 *	@return The neighborhood sizes.
+		 */
+		const unsigned int * NeighborhoodSizes(void) const {
+			return this->neighborhoodSizes;
+		}
+
+		/**
+		 *	Sets the neighborhood sizes.
+		 *
+		 *	@param neighborhoodSizes The list containing the neighborhoodSizes
+		 */
+		void SetNeighborhoodSizes(const unsigned int * neighborhoodSizes) {
+			this->neighborhoodSizes = neighborhoodSizes;
+		}
+
+		/**
+		 *	Get the atom neighborhood indices.
+		 *
+		 *	@return The neighborhood indices per atom.
+		 */
+		const unsigned int ** Neighborhoods(void) const {
+			return this->neighborhoods;
+		}
+
+		/**
+		 *	Sets the neighborhood indices.
+		 *
+		 *	@param neighborhoods The neighborhood indices per atom.
+		 */
+		void SetNeighborhoods(const unsigned int ** neighborhoods) {
+			this->neighborhoods = neighborhoods;
+		}
         
         /**
          * Set the filter information
@@ -1447,6 +1483,8 @@ namespace protein_calls {
             this->chains = s.chains;
             this->secStruct = s.secStruct; // TODO: besser zeiger und anzahl ?!
             this->calltime = s.calltime;
+			this->neighborhoods = s.neighborhoods;
+			this->neighborhoodSizes = s.neighborhoodSizes;
             return *this;
         }
 
@@ -1540,6 +1578,11 @@ namespace protein_calls {
         /** Filter information for all atoms */
         const int* atomFilter;
 
+		/** List of all sizes of the atom neighborhoods */
+		const unsigned int * neighborhoodSizes;
+
+		/** The atom neighborhoods as 2D-array. first dim: neighborhood per atom, second dim: atom index of the j-th neighbor*/
+		const unsigned int** neighborhoods;
     };
 
     /** Description class typedef */
