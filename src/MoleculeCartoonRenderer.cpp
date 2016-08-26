@@ -65,6 +65,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
         molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module"),
         proteinOnlyParam("proteinOnly", "Render only the protein"),
         tubeRadiusParam("tubeScl", "Scale factor for the tubes when rendering in tubes only mode."),
+		recomputeAlwaysParam("alwaysRecompute", "Shall the positions be recomputed every frame?"),
         currentFrameId( 0), atomCount( 0) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -209,6 +210,9 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer (void) : Renderer3DModuleDS (),
     // Tubes scale parameter
     this->tubeRadiusParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
     this->MakeSlotAvailable(&this->tubeRadiusParam);
+
+	this->recomputeAlwaysParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->recomputeAlwaysParam);
 }
 
 
@@ -748,6 +752,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     if( mol == NULL) return false;
 
     mol->SetFrameID(static_cast<int>( callTime));
+	if (!(*mol)(MolecularDataCall::CallForGetExtent)) return false;
     if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 
     // TODO store c-alpha of mol
@@ -828,6 +833,14 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
             col->SetDirty(true);
         }
     }
+
+	if (this->recomputeAlwaysParam.Param<param::BoolParam>()->Value()) {
+		this->atomCount = mol->AtomCount();
+		this->RecomputeAll();
+		if (col != NULL) {
+			col->SetDirty(true);
+		}
+	}
 
     // force recomputation
     //this->RecomputeAll();

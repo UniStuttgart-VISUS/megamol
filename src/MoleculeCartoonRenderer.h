@@ -305,6 +305,8 @@ namespace protein {
         megamol::core::param::ParamSlot proteinOnlyParam;
         /** parameter slot for stick radius */
         megamol::core::param::ParamSlot tubeRadiusParam;
+		/** parameter slot for refreshing in every frame*/
+		megamol::core::param::ParamSlot recomputeAlwaysParam;
 
         // shader for per pixel lighting (polygonal view)
         vislib::graphics::gl::GLSLShader lightShader;
