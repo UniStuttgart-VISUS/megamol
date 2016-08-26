@@ -100,6 +100,9 @@ namespace protein {
 		/** The hash of the last data set rendered */
 		SIZE_T lastDataHash;
 
+		/** The last data set hash that was sent to the render */
+		SIZE_T lastHashSent;
+
 		/** Vector containing the neighborhood for each atom as array of atom indices */
 		std::vector<vislib::Array<unsigned int>> neighborhood;
 

@@ -275,6 +275,8 @@ namespace protein {
         megamol::core::param::ParamSlot clipPlaneTimeOffsetParam;
         /**  */
         megamol::core::param::ParamSlot clipPlaneDurationParam;
+		/** Toggle use of neighborhood colors for own color */
+		megamol::core::param::ParamSlot useNeighborColors;
         float currentZClipPos;
 
         /** shader for the spheres (raycasting view) */
@@ -333,6 +335,9 @@ namespace protein {
 
         // the list of molecular indices
         vislib::Array<vislib::StringA> molIdxList;
+
+		/** The hash of the lastly rendered molecular data call*/
+		SIZE_T lastDataHash;
     };
 
 

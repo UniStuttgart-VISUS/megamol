@@ -72,6 +72,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
                 "toggleZClip", "..."), 
                 clipPlaneTimeOffsetParam("clipPlane::timeOffset", "..."),
                 clipPlaneDurationParam("clipPlane::Duration", "..."),
+				useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own"),
                 currentZClipPos(-20) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -111,6 +112,9 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     // Color weighting parameter
     this->cmWeightParam.SetParameter(new param::FloatParam(0.5f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->cmWeightParam);
+
+	this->useNeighborColors.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->useNeighborColors);
 
     // rendering mode
     this->currentRenderMode = LINES;
@@ -185,6 +189,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->clipPlaneDurationParam.SetParameter(new param::FloatParam(40.0f));
     this->MakeSlotAvailable(&this->clipPlaneDurationParam);
 
+	this->lastDataHash = 0;
 }
 
 /*
@@ -702,7 +707,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
                 this->minGradColorParam.Param<param::StringParam>()->Value(),
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
                 this->maxGradColorParam.Param<param::StringParam>()->Value(),
-                true, bs);
+                true, bs,
+				this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,
@@ -711,7 +717,8 @@ bool SimpleMoleculeRenderer::Render(Call& call) {
          this->minGradColorParam.Param<param::StringParam>()->Value(),
          this->midGradColorParam.Param<param::StringParam>()->Value(),
          this->maxGradColorParam.Param<param::StringParam>()->Value(),
-         true);*/
+         true, nullptr, 
+		 this->useNeighborColors.Param<param::BoolParam>()->Value());*/
 
     }
 
@@ -2618,7 +2625,11 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall *mol,
     // Recompute color table
     if ((this->coloringModeParam0.IsDirty())
             || (this->coloringModeParam1.IsDirty())
-            || (this->cmWeightParam.IsDirty())) {
+            || (this->cmWeightParam.IsDirty())
+			|| (this->useNeighborColors.IsDirty())
+			|| lastDataHash != mol->DataHash()) {
+
+		lastDataHash = mol->DataHash();
 
         this->currentColoringMode0 = static_cast<Color::ColoringMode>(int(
                 this->coloringModeParam0.Param<param::EnumParam>()->Value()));
@@ -2636,7 +2647,8 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall *mol,
                 this->minGradColorParam.Param<param::StringParam>()->Value(),
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
                 this->maxGradColorParam.Param<param::StringParam>()->Value(),
-                true, bs);
+                true, bs,
+				this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,
@@ -2645,11 +2657,13 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall *mol,
          this->minGradColorParam.Param<param::StringParam>()->Value(),
          this->midGradColorParam.Param<param::StringParam>()->Value(),
          this->maxGradColorParam.Param<param::StringParam>()->Value(),
-         true);*/
+         true, nullptr,
+		 this->useNeighborColors.Param<param::BoolParam>()->Value());*/
 
         this->coloringModeParam0.ResetDirty();
         this->coloringModeParam1.ResetDirty();
         this->cmWeightParam.ResetDirty();
+		this->useNeighborColors.ResetDirty();
     }
     // rendering mode param
     if (this->renderModeParam.IsDirty()) {

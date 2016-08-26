@@ -11,10 +11,12 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "vislib/math/Point.h"
+#include "vislib/sys/Log.h"
 
 #include "GridNeighbourFinder.h"
 
 #include <iostream>
+#include <chrono>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -40,7 +42,7 @@ MolecularNeighborhood::MolecularNeighborhood(void) :
 	this->MakeSlotAvailable(&this->dataOutSlot);
 
 	// other parameters
-	this->neighRadiusParam.SetParameter(new param::FloatParam(3.0f, 0.0f, 100.0f));
+	this->neighRadiusParam.SetParameter(new param::FloatParam(10.0f, 0.0f, 20.0f));
 	this->MakeSlotAvailable(&this->neighRadiusParam);
 
 	this->lastDataHash = 0;
@@ -79,9 +81,24 @@ bool MolecularNeighborhood::getData(core::Call& call) {
 	outCall->operator=(*inCall); // deep copy
 
 	// compute the neighborhoods
-	if (inCall->DataHash() != lastDataHash) {
+	if (inCall->DataHash() != lastDataHash || this->neighRadiusParam.IsDirty()) {
+		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 		findNeighborhoods(*inCall, this->neighRadiusParam.Param<param::FloatParam>()->Value());
 		lastDataHash = inCall->DataHash();
+		this->neighRadiusParam.ResetDirty();
+		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Neighborhood search took %f seconds.", static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) / 1000.0f);
+
+		if (lastHashSent != outCall->DataHash() + 5) {
+			outCall->SetDataHash(outCall->DataHash() + 5);
+			lastHashSent = outCall->DataHash();
+		} else {
+			outCall->SetDataHash(outCall->DataHash() + 10);
+			lastHashSent = outCall->DataHash();
+		}
+
+	} else {
+		lastHashSent = outCall->DataHash();
 	}
 
 	outCall->SetNeighborhoodSizes(this->neighborhoodSizes.data());

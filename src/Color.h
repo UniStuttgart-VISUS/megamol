@@ -124,6 +124,7 @@ namespace protein {
          * @param maxGradColor        The maximum value for gradient coloring.
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
+		 * @param useNeighbors        Add colors of the neighbors to the current color
          */
 		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             ColoringMode cm0,
@@ -137,7 +138,8 @@ namespace protein {
             vislib::TString midGradColor,
             vislib::TString maxGradColor,
             bool forceRecompute = false,
-			const protein_calls::BindingSiteCall *bs = 0);
+			const protein_calls::BindingSiteCall *bs = 0,
+			bool useNeighbors = false);
 
 
         /**
@@ -156,6 +158,7 @@ namespace protein {
          * @param maxGradColor        The maximum value for gradient coloring.
          * @param forceRecompute      Force recomputation of the color table.
          * @param bs                  The binding site data call.
+		 * @param useNeighbors        Add colors of the neighbors to the current color
          */
 		static void MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             ColoringMode currentColoringMode,
@@ -166,7 +169,8 @@ namespace protein {
             vislib::TString midGradColor,
             vislib::TString maxGradColor,
             bool forceRecompute = false,
-			const protein_calls::BindingSiteCall *bs = 0);
+			const protein_calls::BindingSiteCall *bs = 0,
+			bool useNeighbors = false);
 
 		/**
          * Make color table for all atoms acoording to compare two different

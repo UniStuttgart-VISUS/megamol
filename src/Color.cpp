@@ -11,6 +11,7 @@
 #include <omp.h>
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/math/ShallowVector.h"
 #include "mmcore/CoreInstance.h"
 #include <string>
 #include <iostream>
@@ -134,7 +135,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-		const protein_calls::BindingSiteCall *bs) {
+		const protein_calls::BindingSiteCall *bs,
+		bool useNeighbors) {
 
     // temporary variables
     unsigned int cnt, idx, cntAtom, cntRes, cntChain, cntMol, cntSecS, atomIdx,
@@ -148,22 +150,6 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
     }
     // reserve memory for all atoms
     atomColorTable.AssertCapacity( mol->AtomCount() * 3 );
-
-	// TODO Remove
-	/*if( atomColorTable.IsEmpty() ) {
-		for( cnt = 0; cnt < mol->AtomCount(); ++cnt) {
-
-			if( cnt < 200 ) {
-				atomColorTable.Add(1.0);
-				atomColorTable.Add(0.0);
-				atomColorTable.Add(1.0);
-			} else {
-				atomColorTable.Add(0.0);
-				atomColorTable.Add(1.0);
-				atomColorTable.Add(0.0);
-			}
-		}
-	}*/
 
     // only compute color table if necessary
     if( atomColorTable.IsEmpty() ) {
@@ -560,6 +546,11 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
             }
         } // ... END coloring mode RAINBOW
     }
+
+	// apply the neighborhood colors
+	if (useNeighbors) {
+		// TODO
+	}
 }
 
 
@@ -579,7 +570,8 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         vislib::TString midGradColor,
         vislib::TString maxGradColor,
         bool forceRecompute,
-		const protein_calls::BindingSiteCall *bs) {
+		const protein_calls::BindingSiteCall *bs, 
+		bool useNeighbors) {
 
     // if recomputation is forced: clear current color table
     if(forceRecompute) {
@@ -617,6 +609,32 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
         }
 
     }
+
+	// apply the neighborhood colors
+	if (useNeighbors) {
+		for (unsigned int i = 0; i < mol->AtomCount(); i++) {
+			vislib::math::ShallowVector<float, 3> myCol(&atomColorTable[i * 3]);
+
+			unsigned int neighSize = mol->NeighborhoodSizes()[i];
+			const unsigned int * neighborhood = mol->Neighborhoods()[i];
+			float accum[3] = { 0.0f, 0.0f, 0.0f };
+			vislib::math::ShallowVector<float, 3> accumVec(accum);
+			unsigned int actualSize = 0;
+
+			for (unsigned int j = 0; j < neighSize; j++) {
+				if (i != neighborhood[j]) {
+					actualSize++;
+					vislib::math::ShallowVector<float, 3> newCol(&atomColorTable[neighborhood[j] * 3]);
+					accumVec += newCol;
+				}
+			}
+
+			accumVec /= static_cast<float>(actualSize);
+			atomColorTable[i * 3 + 0] = accumVec[0];
+			atomColorTable[i * 3 + 1] = accumVec[1];
+			atomColorTable[i * 3 + 2] = accumVec[2];
+		}
+	}
 }
 
 void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularDataCall *mol1,
