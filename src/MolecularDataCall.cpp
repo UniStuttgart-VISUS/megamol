@@ -512,7 +512,8 @@ MolecularDataCall::MolecularDataCall(void) : AbstractGetData3DCall(),
         molecules( 0), molCount( 0),
         chains( 0), chainCount( 0),
         atomTypeCount( 0), atomType( 0) {
-    // intentionally empty
+	this->neighborhoods = nullptr;
+	this->neighborhoodSizes = nullptr;
 }
 
 
