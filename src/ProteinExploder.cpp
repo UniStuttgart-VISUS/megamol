@@ -48,7 +48,8 @@ ProteinExploder::ProteinExploder(void) :
 		playParam("animation::play","Should the animation be played?"),
 		togglePlayParam("animation::togglePlay", "Button to toggle animation"),
 		replayParam("animation::replay","Restart animation after end"),
-		playDurationParam("animation::duration","Animation duration in seconds") {
+		playDurationParam("animation::duration","Animation duration in seconds"),
+		resetButtonParam("animation::reset", "Resets the animation into the start state"){
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -97,6 +98,10 @@ ProteinExploder::ProteinExploder(void) :
 	this->togglePlayParam << new param::ButtonParam('p');
 	this->togglePlayParam.SetUpdateCallback(this, &ProteinExploder::onPlayToggleButton);
 	this->MakeSlotAvailable(&this->togglePlayParam);
+
+	this->resetButtonParam << new param::ButtonParam('o');
+	this->resetButtonParam.SetUpdateCallback(this, &ProteinExploder::onResetAnimationButton);
+	this->MakeSlotAvailable(&this->resetButtonParam);
 
 	this->replayParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->replayParam);
@@ -293,12 +298,12 @@ void ProteinExploder::computeSimilarities(MolecularDataCall& call) {
 	}
 	groups.shrink_to_fit();
 
-	for (int i = 0; i < groups.size(); i++) {
+	/*for (int i = 0; i < groups.size(); i++) {
 		for (unsigned int j = 0; j < groups[i].size(); j++) {
 			std::cout << groups[i][j] << " ";
 		}
 		std::cout << std::endl;
-	}
+	}*/
 
 	// cleanup
 	for (int i = 0; i < hashPerMol.size(); i++){
@@ -710,6 +715,20 @@ bool ProteinExploder::isHashEqual(const BYTE * h1, unsigned int hashSize1, const
 	for (unsigned int i = 0; i < hashSize1; i++) {
 		if (h1[i] != h2[i]) return false;
 	}
+	return true;
+}
+
+/*
+ *	ProteinExploder::onResetAnimationButton
+ */
+bool ProteinExploder::onResetAnimationButton(param::ParamSlot& p) {
+
+	this->playParam.Param<param::BoolParam>()->SetValue(false);
+	playDone = false;
+	timeAccum = 0.0f;
+	lastTime = high_resolution_clock::now();
+	this->explosionFactorParam.Param<param::FloatParam>()->SetValue(0.0f);
+
 	return true;
 }
 

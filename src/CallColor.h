@@ -91,6 +91,8 @@ public:
 		 this->comparisonEnabled = false;
 		 this->forceRecompute = true;
 		 this->isWeighted = true;
+		 this->bs = nullptr;
+		 this->mol1 = nullptr;
 	 }
 
 	 /**

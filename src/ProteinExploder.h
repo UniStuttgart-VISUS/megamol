@@ -130,6 +130,14 @@ namespace protein {
 		int getModeNumber();
 
 		/**
+		 *	Callback funktion for the reset animation button.
+		 *
+		 *	@param p The button parameter
+		 *	@return true
+		 */
+		bool onResetAnimationButton(megamol::core::param::ParamSlot& p);
+
+		/**
 		 *	Callback function for the animation play button.
 		 *
 		 *	@param p The button parameter
@@ -218,6 +226,9 @@ namespace protein {
 
 		/** force the middle point of the explosion */
 		megamol::core::param::ParamSlot forceMidPointParam;
+
+		/** slot for the animation reset button */
+		megamol::core::param::ParamSlot resetButtonParam;
 
 		/** The current atom positions */
 		float * atomPositions;
