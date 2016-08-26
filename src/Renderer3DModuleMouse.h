@@ -11,7 +11,7 @@
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/view/MouseFlags.h"
-#include "CallMouseInput.h"
+#include "protein_calls/CallMouseInput.h"
 
 namespace megamol {
 namespace protein {
@@ -78,7 +78,7 @@ private:
      */
     bool MouseEventCallback(core::Call& call) {
         try {
-            CallMouseInput &cm = dynamic_cast<CallMouseInput&>(call);
+			protein_calls::CallMouseInput &cm = dynamic_cast<protein_calls::CallMouseInput&>(call);
             return this->MouseEvent(cm.GetMouseX(), cm.GetMouseY(), cm.GetMouseFlags());
         } catch(...) {
             ASSERT("MouseEventCallback call cast failed\n");

@@ -127,27 +127,27 @@ bool protein::SphereRendererMouse::create(void) {
     }
 
     // Load alternative sphere shader (uses geometry shader)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
-        return false;
-    }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
-        return false;
-    }
-    try {
-        this->sphereShaderGeo.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(),
-            geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-        this->sphereShaderGeo.Link();
-    }
-    catch(vislib::Exception &e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere geometry shader: %s\n", e.GetMsgA());
-        return false;
-    }
+    //if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertexGeom", vertSrc)) {
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
+    //    return false;
+    //}
+    //if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereGeom", geomSrc)) {
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for sphere shader");
+    //    return false;
+    //}
+    //if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentGeom", fragSrc)) {
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for sphere shader");
+    //    return false;
+    //}
+    //try {
+    //    this->sphereShaderGeo.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(),
+    //        geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    //    this->sphereShaderGeo.Link();
+    //}
+    //catch(vislib::Exception &e) {
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create sphere geometry shader: %s\n", e.GetMsgA());
+    //    return false;
+    //}
 
     return true;
 }

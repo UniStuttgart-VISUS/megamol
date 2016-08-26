@@ -210,7 +210,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\BindingSiteDataSource.h" />
     <ClInclude Include="src\BSpline.h" />
     <ClInclude Include="src\CallColor.h" />
-    <ClInclude Include="src\CallMouseInput.h" />
     <ClInclude Include="src\CallProteinVolumeData.h" />
     <ClInclude Include="src\CartoonRenderer.h" />
     <ClInclude Include="src\CartoonTessellationRenderer.h" />
@@ -309,7 +308,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\Base64.cpp" />
     <ClCompile Include="src\BindingSiteDataSource.cpp" />
     <ClCompile Include="src\BSpline.cpp" />
-    <ClCompile Include="src\CallMouseInput.cpp" />
     <ClCompile Include="src\CallProteinVolumeData.cpp" />
     <ClCompile Include="src\CartoonRenderer.cpp" />
     <ClCompile Include="src\CartoonTessellationRenderer.cpp" />

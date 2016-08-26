@@ -10,7 +10,7 @@
 
 #include "View3DMouse.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "CallMouseInput.h"
+#include "protein_calls/CallMouseInput.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/view/MouseFlags.h"
 
@@ -23,7 +23,7 @@ protein::View3DMouse::View3DMouse(void) : core::view::View3D(),
          toggleSelect(false) {
 
     // Slot for mouse input call
-    this->mouseSlot.SetCompatibleCall<core::factories::CallAutoDescription<CallMouseInput> >();
+	this->mouseSlot.SetCompatibleCall<core::factories::CallAutoDescription<protein_calls::CallMouseInput> >();
     this->MakeSlotAvailable(&this->mouseSlot);
 
     // Slot for key modifier
@@ -64,7 +64,7 @@ void protein::View3DMouse::SetCursor2DPosition(float x, float y) {
         core::view::MouseFlagsResetAllChanged(this->mouseFlags);
     }
     else {
-        CallMouseInput *cm = this->mouseSlot.CallAs<CallMouseInput>();
+		protein_calls::CallMouseInput *cm = this->mouseSlot.CallAs<protein_calls::CallMouseInput>();
         if (cm) {
             cm->SetMouseInfo(static_cast<int>(x), static_cast<int>(y), this->mouseFlags);
             if ((*cm)(0)) {

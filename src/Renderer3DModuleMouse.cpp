@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "Renderer3DModuleMouse.h"
-#include "CallMouseInput.h"
+#include "protein_calls/CallMouseInput.h"
 
 using namespace megamol;
 
@@ -19,8 +19,8 @@ protein::Renderer3DModuleMouse::Renderer3DModuleMouse(void)
 
 	// Setup slot for render callback
     this->mouseSlot.SetCallback(
-    		CallMouseInput::ClassName(),
-    		CallMouseInput::FunctionName(0),
+			protein_calls::CallMouseInput::ClassName(),
+			protein_calls::CallMouseInput::FunctionName(0),
     		&Renderer3DModuleMouse::MouseEventCallback);
 
     // Make render slot available

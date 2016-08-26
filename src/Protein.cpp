@@ -79,7 +79,6 @@
 #include "Diagram2DCall.h"
 #include "ParticleDataCall.h"
 #include "ForceDataCall.h"
-#include "CallMouseInput.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
 #include "MolecularGroupsCall.h"
 
@@ -194,7 +193,6 @@ namespace {
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::Diagram2DCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::ParticleDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
-			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallMouseInput>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallColor>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::MolecularGroupsCall>();
