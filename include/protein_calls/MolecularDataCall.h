@@ -1408,6 +1408,7 @@ namespace protein_calls {
 		 *	Get the neighborhood sizes.
 		 *
 		 *	@return The neighborhood sizes.
+		 *				May be null if no neighboring information is available
 		 */
 		const unsigned int * NeighborhoodSizes(void) const {
 			return this->neighborhoodSizes;
@@ -1426,6 +1427,7 @@ namespace protein_calls {
 		 *	Get the atom neighborhood indices.
 		 *
 		 *	@return The neighborhood indices per atom.
+		 *				May be null if no neighboring information is available
 		 */
 		const unsigned int ** Neighborhoods(void) const {
 			return this->neighborhoods;
@@ -1434,7 +1436,7 @@ namespace protein_calls {
 		/**
 		 *	Sets the neighborhood indices.
 		 *
-		 *	@param neighborhoods The neighborhood indices per atom.
+		 *	@param neighborhoods The neighborhood indices per atom. 
 		 */
 		void SetNeighborhoods(const unsigned int ** neighborhoods) {
 			this->neighborhoods = neighborhoods;
