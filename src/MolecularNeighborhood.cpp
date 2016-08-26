@@ -68,6 +68,9 @@ bool MolecularNeighborhood::create(void) {
 void MolecularNeighborhood::release(void) {
 }
 
+/*
+ *	MolecularNeighborhood::getData
+ */
 bool MolecularNeighborhood::getData(core::Call& call) {
 	MolecularDataCall * outCall = dynamic_cast<MolecularDataCall*>(&call);
 	if (outCall == NULL) return false;
@@ -107,6 +110,9 @@ bool MolecularNeighborhood::getData(core::Call& call) {
 	return true;
 }
 
+/*
+ *	MolecularNeighborhood::getExtent
+ */
 bool MolecularNeighborhood::getExtent(core::Call& call) {
 
 	MolecularDataCall * outCall = dynamic_cast<MolecularDataCall*>(&call);

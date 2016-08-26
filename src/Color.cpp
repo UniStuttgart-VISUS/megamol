@@ -548,8 +548,29 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
     }
 
 	// apply the neighborhood colors
-	if (useNeighbors) {
-		// TODO
+	if (useNeighbors && mol->NeighborhoodSizes() != NULL && mol->Neighborhoods() != NULL) {
+		for (unsigned int i = 0; i < mol->AtomCount(); i++) {
+			vislib::math::ShallowVector<float, 3> myCol(&atomColorTable[i * 3]);
+
+			unsigned int neighSize = mol->NeighborhoodSizes()[i];
+			const unsigned int * neighborhood = mol->Neighborhoods()[i];
+			float accum[3] = { 0.0f, 0.0f, 0.0f };
+			vislib::math::ShallowVector<float, 3> accumVec(accum);
+			unsigned int actualSize = 0;
+
+			for (unsigned int j = 0; j < neighSize; j++) {
+				if (i != neighborhood[j]) {
+					actualSize++;
+					vislib::math::ShallowVector<float, 3> newCol(&atomColorTable[neighborhood[j] * 3]);
+					accumVec += newCol;
+				}
+			}
+
+			accumVec /= static_cast<float>(actualSize);
+			atomColorTable[i * 3 + 0] = accumVec[0];
+			atomColorTable[i * 3 + 1] = accumVec[1];
+			atomColorTable[i * 3 + 2] = accumVec[2];
+		}
 	}
 }
 
@@ -611,7 +632,7 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall *mol,
     }
 
 	// apply the neighborhood colors
-	if (useNeighbors) {
+	if (useNeighbors && mol->NeighborhoodSizes() != NULL && mol->Neighborhoods() != NULL) {
 		for (unsigned int i = 0; i < mol->AtomCount(); i++) {
 			vislib::math::ShallowVector<float, 3> myCol(&atomColorTable[i * 3]);
 
