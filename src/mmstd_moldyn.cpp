@@ -32,6 +32,7 @@
 #include "io/TclMolSelectionLoader.h"
 #include "mmstd_moldyn/BrickStatsCall.h"
 #include "io/BrickStatsDataSource.h"
+#include "rendering/BrickStatsRenderer.h"
 
 
 /*
@@ -128,6 +129,7 @@ namespace {
             this->module_descriptions.RegisterDescription< ::megamol::core::factories::LoaderADModuleAutoDescription< ::megamol::stdplugin::moldyn::io::XYZLoader> >();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::io::TclMolSelectionLoader>();
             this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsDataSource>();
+            this->module_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::rendering::BrickStatsRenderer>();
             // register calls here:
             this->call_descriptions.RegisterAutoDescription< ::megamol::stdplugin::moldyn::BrickStatsCall>();
         }

@@ -41,7 +41,7 @@ namespace moldyn {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "BrickStatsDataSource";
+            return "PTSBrickStatsDataSource";
         }
 
         /**
@@ -108,6 +108,8 @@ namespace moldyn {
          * @return 'true' on success, 'false' on failure.
          */
         bool getExtentCallback(Call& caller);
+
+	private:
 
         /** The file name */
         param::ParamSlot filename;

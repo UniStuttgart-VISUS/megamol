@@ -130,20 +130,22 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
             UINT64 offset = vislib::CharTraitsA::ParseUInt64(arr[0]);
             UINT64 len = vislib::CharTraitsA::ParseUInt64(arr[1]);
             BrickStatsCall::BrickStatsType minX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[2]));
-            BrickStatsCall::BrickStatsType maxX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[3]));
-            BrickStatsCall::BrickStatsType meanX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[4]));
-            BrickStatsCall::BrickStatsType stddevX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[5]));
-            BrickStatsCall::BrickStatsType minY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[6]));
-            BrickStatsCall::BrickStatsType maxY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[7]));
-            BrickStatsCall::BrickStatsType meanY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[8]));
-            BrickStatsCall::BrickStatsType stddevY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[9]));
-            BrickStatsCall::BrickStatsType minZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[10]));
-            BrickStatsCall::BrickStatsType maxZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[11]));
-            BrickStatsCall::BrickStatsType meanZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[12]));
-            BrickStatsCall::BrickStatsType stddevZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseUInt64(arr[13]));
+            BrickStatsCall::BrickStatsType maxX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[3]));
+            BrickStatsCall::BrickStatsType meanX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[4]));
+            BrickStatsCall::BrickStatsType stddevX = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[5]));
+            BrickStatsCall::BrickStatsType minY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[6]));
+            BrickStatsCall::BrickStatsType maxY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[7]));
+            BrickStatsCall::BrickStatsType meanY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[8]));
+            BrickStatsCall::BrickStatsType stddevY = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[9]));
+            BrickStatsCall::BrickStatsType minZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[10]));
+            BrickStatsCall::BrickStatsType maxZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[11]));
+            BrickStatsCall::BrickStatsType meanZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[12]));
+            BrickStatsCall::BrickStatsType stddevZ = static_cast<BrickStatsCall::BrickStatsType>(vislib::CharTraitsA::ParseDouble(arr[13]));
 
             this->info.Add(BrickStatsCall::BrickInfo(offset, len,
                 minX, minY, minZ, maxX, maxY, maxZ, meanX, meanY, meanZ, stddevX, stddevY, stddevZ));
+            //this->bbox.GrowToPoint(minX - stddevX, minY - stddevY, minZ - stddevZ);
+            //this->bbox.GrowToPoint(maxX + stddevX, maxY + stddevY, maxZ + stddevZ);
             this->bbox.GrowToPoint(minX, minY, minZ);
             this->bbox.GrowToPoint(maxX, maxY, maxZ);
         } catch (vislib::FormatException) {
