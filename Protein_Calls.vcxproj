@@ -230,6 +230,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Protein_Calls\BindingSiteCall.h" />
+    <ClInclude Include="include\protein_calls\CallMouseInput.h" />
     <ClInclude Include="include\Protein_Calls\CrystalStructureDataCall.h" />
     <ClInclude Include="include\Protein_Calls\DiagramCall.h" />
     <ClInclude Include="include\Protein_Calls\Interpol.h" />
@@ -246,6 +247,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\BindingSiteCall.cpp" />
+    <ClCompile Include="src\CallMouseInput.cpp" />
     <ClCompile Include="src\CrystalStructureDataCall.cpp" />
     <ClCompile Include="src\DiagramCall.cpp" />
     <ClCompile Include="src\dllmain.cpp" />

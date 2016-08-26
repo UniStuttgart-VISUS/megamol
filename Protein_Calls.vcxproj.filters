@@ -93,6 +93,9 @@
     <ClInclude Include="include\protein_calls\VariantMatchDataCall.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\protein_calls\CallMouseInput.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Protein_Calls.cpp">
@@ -135,6 +138,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\VariantMatchDataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CallMouseInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
