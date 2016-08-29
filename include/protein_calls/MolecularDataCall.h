@@ -897,7 +897,8 @@ namespace protein_calls {
              */
             AtomType(const vislib::StringA& name, float rad = 0.5f,
                 unsigned char colR = 191, unsigned char colG = 191,
-                unsigned char colB = 191);
+                unsigned char colB = 191,
+				const vislib::StringA& element = "");
 
             /**
              * Copy ctor.
@@ -932,6 +933,15 @@ namespace protein_calls {
                 this->name = name;
             }
 
+			/**
+			 * Sets the element symbol for the atom type.
+			 *
+			 * @param element The element symbol for this atom type.
+			 */
+			inline void SetElement(const vislib::StringA& element) {
+				this->element = element;
+			}
+
             /**
              * Sets the radius of the atoms of this type.
              *
@@ -958,6 +968,15 @@ namespace protein_calls {
             inline const vislib::StringA& Name(void) const {
                 return this->name;
             }
+
+			/**
+			 * Returns the string representing the element symbol of this atom.
+			 *
+			 * @return The element symbol of the atom type.
+			 */
+			inline const vislib::StringA& Element(void) const {
+				return this->element;
+			}
 
             /**
              * Returns the radius for atoms of this type.
@@ -995,6 +1014,10 @@ namespace protein_calls {
             /** The name of the atom type. */
             VISLIB_MSVC_SUPPRESS_WARNING(4251)
             vislib::StringA name;
+
+			/** The name of the atom type. */
+			VISLIB_MSVC_SUPPRESS_WARNING(4251)
+			vislib::StringA element;
 
             /** The radius of atoms of this type. */
             float rad;

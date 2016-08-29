@@ -294,11 +294,20 @@ MolecularDataCall::AtomType::AtomType(void) : name(), rad(0.5f) {
  * MolecularDataCall::AtomType::AtomType
  */
 MolecularDataCall::AtomType::AtomType(const vislib::StringA& name,
-        float rad, unsigned char colR, unsigned char colG, unsigned char colB)
+        float rad, unsigned char colR, unsigned char colG, unsigned char colB,
+		const vislib::StringA& element)
         : name(name), rad(rad) {
     this->col[0] = colR;
     this->col[1] = colG;
     this->col[2] = colB;
+
+	// when element is empty just take the first symbol of the name
+	// If the naming convention of rcsb.org does not change, this should work
+	if (element.IsEmpty()) {
+		this->element = name.Substring(0, 1);
+	} else {
+		this->element = element;
+	}
 }
 
 
@@ -327,6 +336,7 @@ MolecularDataCall::AtomType& MolecularDataCall::AtomType::operator=(
     this->col[0] = rhs.col[0];
     this->col[1] = rhs.col[1];
     this->col[2] = rhs.col[2];
+	this->element = rhs.element;
     return *this;
 }
 
@@ -340,7 +350,8 @@ bool MolecularDataCall::AtomType::operator==(
         && (this->name.Equals( rhs.name))
         && (this->col[0] == rhs.col[0])
         && (this->col[1] == rhs.col[1])
-        && (this->col[2] == rhs.col[2]);
+        && (this->col[2] == rhs.col[2])
+		&& (this->element == rhs.element);
 }
 
 // ======================================================================
