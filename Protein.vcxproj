@@ -206,6 +206,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\protein\Protein.h" />
     <ClInclude Include="src\AbstractVTKLegacyData.h" />
     <ClInclude Include="src\AggregatedDensity.h" />
+    <ClInclude Include="src\AtomWeights.h" />
     <ClInclude Include="src\Base64.h" />
     <ClInclude Include="src\BindingSiteDataSource.h" />
     <ClInclude Include="src\BSpline.h" />

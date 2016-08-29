@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #include "ProteinExploder.h"
 #include "MolecularGroupsCall.h"
+#include "AtomWeights.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -49,7 +50,8 @@ ProteinExploder::ProteinExploder(void) :
 		togglePlayParam("animation::togglePlay", "Button to toggle animation"),
 		replayParam("animation::replay","Restart animation after end"),
 		playDurationParam("animation::duration","Animation duration in seconds"),
-		resetButtonParam("animation::reset", "Resets the animation into the start state"){
+		resetButtonParam("animation::reset", "Resets the animation into the start state"),
+		useMassCenterParam("useMassCenter", "Use the mass center for explosion instead of the average position") {
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -65,7 +67,7 @@ ProteinExploder::ProteinExploder(void) :
 	this->MakeSlotAvailable(&this->groupOutSlot);
 
 	// other parameters
-	param::EnumParam * emParam = new param::EnumParam(int(ExplosionMode::SPHERICAL_MIDDLE));
+	param::EnumParam * emParam = new param::EnumParam(int(ExplosionMode::SPHERICAL));
 	ExplosionMode eMode;
 	for (int i = 0; i < getModeNumber(); i++) {
 		eMode = getModeByIndex(i);
@@ -109,6 +111,9 @@ ProteinExploder::ProteinExploder(void) :
 	this->playDurationParam.SetParameter(new param::FloatParam(3.0f, 1.0f, 20.0f));
 	this->MakeSlotAvailable(&this->playDurationParam);
 
+	this->useMassCenterParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->useMassCenterParam);
+
 	this->atomPositions = NULL;
 	this->atomPositionsSize = 0;
 
@@ -117,6 +122,7 @@ ProteinExploder::ProteinExploder(void) :
 	this->firstRequest = true;
 	this->timeAccum = 0.0f;
 	this->midpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+	this->massMidpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
 
 	mainDirections.resize(3);
 	eigenValues.resize(3);
@@ -215,27 +221,32 @@ void ProteinExploder::computeMainDirectionPCA(MolecularDataCall& call) {
 /*
  *	ProteinExploder::computeMidPoint
  */
-void ProteinExploder::computeMidPoint(MolecularDataCall& call, ProteinExploder::ExplosionMode mode) {
+void ProteinExploder::computeMidPoint(MolecularDataCall& call) {
 
 	midpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+	massMidpoint = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
 
-	if (mode != ExplosionMode::SPHERICAL_MASS) {
-		for (unsigned int i = 0; i < call.AtomCount(); i++) {
-			midpoint.SetX(midpoint.GetX() + call.AtomPositions()[i * 3 + 0]);
-			midpoint.SetY(midpoint.GetY() + call.AtomPositions()[i * 3 + 1]);
-			midpoint.SetZ(midpoint.GetZ() + call.AtomPositions()[i * 3 + 2]);
-		}
+	for (unsigned int i = 0; i < call.AtomCount(); i++) {
+		midpoint.SetX(midpoint.GetX() + call.AtomPositions()[i * 3 + 0]);
+		midpoint.SetY(midpoint.GetY() + call.AtomPositions()[i * 3 + 1]);
+		midpoint.SetZ(midpoint.GetZ() + call.AtomPositions()[i * 3 + 2]);
 	}
-	else { // ExplosionMode::SPHERICAL_MASS
-		for (unsigned int i = 0; i < call.AtomCount(); i++) {
-			// TODO adjust the computation by the mass
-			midpoint.SetX(midpoint.GetX() + call.AtomPositions()[i * 3 + 0]);
-			midpoint.SetY(midpoint.GetY() + call.AtomPositions()[i * 3 + 1]);
-			midpoint.SetZ(midpoint.GetZ() + call.AtomPositions()[i * 3 + 2]);
-		}
-	}
-
 	midpoint /= (float)call.AtomCount();
+	
+	if (useMassCenterParam.Param<param::BoolParam>()->Value()) {
+		float weightSum = 0.0f;
+		for (unsigned int i = 0; i < call.AtomCount(); i++) {
+			float myWeight = getElementWeightBySymbolString(call.AtomTypes()[call.AtomTypeIndices()[i]].Element());
+			massMidpoint.SetX(massMidpoint.GetX() + call.AtomPositions()[i * 3 + 0] * myWeight);
+			massMidpoint.SetY(massMidpoint.GetY() + call.AtomPositions()[i * 3 + 1] * myWeight);
+			massMidpoint.SetZ(massMidpoint.GetZ() + call.AtomPositions()[i * 3 + 2] * myWeight);
+			weightSum += myWeight;
+		}
+		massMidpoint /= weightSum;
+	}
+	else {
+		massMidpoint = midpoint;
+	}
 }
 
 /*
@@ -333,12 +344,14 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 	unsigned int molAtomCount = 0;
 
 	std::vector<vislib::math::Vector<float, 3>> moleculeMiddles;
+	bool useMass = useMassCenterParam.Param<param::BoolParam>()->Value();
 
 	// compute middle point for each molecule
 	for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
 		firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
 		lastResIdx = firstResIdx + call.Molecules()[molIdx].ResidueCount();
 		molAtomCount = 0;
+		float weightSum = 0.0f;
 
 		vislib::math::Vector<float, 3> molMiddle(0.0f, 0.0f, 0.0f);
 
@@ -352,16 +365,20 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 				curPos.SetX(call.AtomPositions()[3 * atomIdx + 0]);
 				curPos.SetY(call.AtomPositions()[3 * atomIdx + 1]);
 				curPos.SetZ(call.AtomPositions()[3 * atomIdx + 2]);
-				molMiddle += curPos;
+				float weight = 1.0f;
+				if (useMass) weight = getElementWeightBySymbolString(call.AtomTypes()[call.AtomTypeIndices()[atomIdx]].Element());
+				molMiddle += curPos * weight;
+				weightSum += weight;
 			}
 		}
 
-		molMiddle /= (float)molAtomCount;
+		molMiddle /= weightSum;
 		//printf("middle %u:  %f %f %f\n", molIdx, molMiddle.GetX(), molMiddle.GetY(), molMiddle.GetZ());
 		moleculeMiddles.push_back(molMiddle);
 	}
 
 	std::vector<vislib::math::Vector<float, 3>> displaceDirections = moleculeMiddles;
+	float maxFactor = maxExplosionFactorParam.Param<param::FloatParam>()->Value();
 
 #ifdef _MSC_VER
 #pragma push_macro("min")
@@ -369,11 +386,16 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 #pragma push_macro("max")
 #undef max
 #endif /* _MSC_VER */
-	if (mode == ExplosionMode::SPHERICAL_MIDDLE || mode == ExplosionMode::SPHERICAL_MASS) {
+
+	auto myMid = midpoint;
+	if (useMassCenterParam.Param<param::BoolParam>()->Value())
+		myMid = massMidpoint;
+
+	if (mode == ExplosionMode::SPHERICAL) {
 
 		// compute the direction for each molecule in which it should be displaced
 		for (int i = 0; i < moleculeMiddles.size(); i++) {
-			displaceDirections[i] = moleculeMiddles[i] - midpoint;
+			displaceDirections[i] = moleculeMiddles[i] - myMid;
 		}
 
 		// displace all atoms by the relevant vector
@@ -419,8 +441,6 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 			displaceDirections[i] = displaceDirections[i].Dot(mainDirections[0]) * mainDirections[0];
 		}
 
-		float maxFactor = maxExplosionFactorParam.Param<param::FloatParam>()->Value();
-
 		// displace all atoms by the relevant vector
 		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
 			firstResIdx = call.Molecules()[molIdx].FirstResidueIndex();
@@ -439,7 +459,7 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 		}
 
 		for (int i = 0; i < moleculeMiddles.size(); i++) {
-			displaceDirections[i] = moleculeMiddles[i] - (midpoint + ((moleculeMiddles[i] - midpoint).Dot(mainDirections[0]) * mainDirections[0]));
+			displaceDirections[i] = moleculeMiddles[i] - (myMid + ((moleculeMiddles[i] - myMid).Dot(mainDirections[0]) * mainDirections[0]));
 		}
 
 		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
@@ -458,6 +478,13 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 			}
 		}
 	}
+
+	/*float v1 = std::min(3.0f * exFactor, maxFactor);
+	float v2 = std::max(0.0f, std::min(3.0f * exFactor - maxFactor, maxFactor));
+	float v3 = std::max(0.0f, std::min(3.0f * exFactor - 2.0f * maxFactor, maxFactor));
+
+	printf("%f %f %f\n", v1, v2, v3);*/
+
 #ifdef _MSC_VER
 #pragma pop_macro("min")
 #pragma pop_macro("max")
@@ -574,11 +601,17 @@ bool ProteinExploder::getExtent(core::Call& call) {
 	lastTime = curTime;
 
 	if (!forceMidPointParam.Param<param::BoolParam>()->Value()) {
-		computeMidPoint(*mdc, getModeByIndex(this->explosionModeParam.Param<param::EnumParam>()->Value()));
-		guiMidpoint = midpoint;
+		computeMidPoint(*mdc);
+
+		if (useMassCenterParam.Param<param::BoolParam>()->Value())
+			guiMidpoint = massMidpoint;
+		else
+			guiMidpoint = midpoint;
+
 		midPointParam.Param<param::Vector3fParam>()->SetValue(guiMidpoint);
 	} else {
 		midpoint = midPointParam.Param<param::Vector3fParam>()->Value();
+		massMidpoint = midPointParam.Param<param::Vector3fParam>()->Value();
 	}
 
 	if (firstRequest || lastDataHash != mdc->DataHash() || maxExplosionFactorParam.IsDirty() 
@@ -682,8 +715,7 @@ bool ProteinExploder::getGroupExtent(core::Call& call) {
  */
 std::string ProteinExploder::getModeName(ProteinExploder::ExplosionMode mode)  {
 		switch (mode) {
-			case SPHERICAL_MIDDLE			: return "Spherical Middle";
-			case SPHERICAL_MASS				: return "Spherical Mass";
+			case SPHERICAL					: return "Spherical";
 			case MAIN_DIRECTION				: return "Main Direction";
 			case MAIN_DIRECTION_CIRCULAR	: return "Main Direction Circular";
 			default							: return "";
@@ -692,11 +724,10 @@ std::string ProteinExploder::getModeName(ProteinExploder::ExplosionMode mode)  {
 
 ProteinExploder::ExplosionMode ProteinExploder::getModeByIndex(unsigned int idx) {
 	switch (idx) {
-		case 0: return ExplosionMode::SPHERICAL_MIDDLE;
-		case 1: return ExplosionMode::SPHERICAL_MASS;
-		case 2: return ExplosionMode::MAIN_DIRECTION;
-		case 3: return ExplosionMode::MAIN_DIRECTION_CIRCULAR;
-		default: return ExplosionMode::SPHERICAL_MIDDLE;
+		case 0: return ExplosionMode::SPHERICAL;
+		case 1: return ExplosionMode::MAIN_DIRECTION;
+		case 2: return ExplosionMode::MAIN_DIRECTION_CIRCULAR;
+		default: return ExplosionMode::SPHERICAL;
 	}
 }
 
@@ -704,7 +735,7 @@ ProteinExploder::ExplosionMode ProteinExploder::getModeByIndex(unsigned int idx)
  *	ProteinExploder::getModeNumber
  */
 int ProteinExploder::getModeNumber() {
-	return 4;
+	return 3;
 }
 
 /*

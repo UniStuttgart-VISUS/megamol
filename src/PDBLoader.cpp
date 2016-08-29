@@ -1461,13 +1461,16 @@ void PDBLoader::parseAtomEntry( vislib::StringA &atomEntry, unsigned int atom,
     // get the name (atom type) of the current ATOM entry
     tmpStr = atomEntry.Substring( 12, 4);
     tmpStr.TrimSpaces();
+	// get the element symbol of the current ATOM entry
+	vislib::StringA tmpStr2 = atomEntry.Substring(76, 2);
+	tmpStr2.TrimSpaces();
     // get the radius of the element
     float radius = getElementRadius( tmpStr);
     // get the color of the element
     vislib::math::Vector<unsigned char, 3> color = getElementColor( tmpStr);
     // set the new atom type
     MolecularDataCall::AtomType type( tmpStr, radius, color.X(), color.Y(),
-        color.Z());
+        color.Z(), tmpStr2);
     // search for current atom type in atom type array
     INT_PTR atomTypeIdx = atomType.IndexOf( type);
     if( atomTypeIdx ==

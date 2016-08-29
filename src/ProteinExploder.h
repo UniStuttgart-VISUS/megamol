@@ -94,10 +94,9 @@ namespace protein {
 		 *	Enum for the mode of explosion
 		 */
 		enum ExplosionMode {
-			SPHERICAL_MIDDLE = 0,
-			SPHERICAL_MASS = 1,
-			MAIN_DIRECTION = 2,
-			MAIN_DIRECTION_CIRCULAR = 3
+			SPHERICAL = 0,
+			MAIN_DIRECTION = 1,
+			MAIN_DIRECTION_CIRCULAR = 2
 		};
 
 		/**
@@ -167,9 +166,8 @@ namespace protein {
 		 *	Computes the middle point of the data set (a.k.a. the average position)
 		 *
 		 *	@param call The call containing the molecule data
-		 *	@param mode The explosion mode
 		 */
-		void computeMidPoint(megamol::protein_calls::MolecularDataCall& call, ExplosionMode mode);
+		void computeMidPoint(megamol::protein_calls::MolecularDataCall& call);
 
 		/**
 		 *	Computes, which of the molecules of the given call are the same.
@@ -230,6 +228,9 @@ namespace protein {
 		/** slot for the animation reset button */
 		megamol::core::param::ParamSlot resetButtonParam;
 
+		/** toggle param for the usage of mass centers instead of average position centers */
+		megamol::core::param::ParamSlot useMassCenterParam;
+
 		/** The current atom positions */
 		float * atomPositions;
 
@@ -265,6 +266,9 @@ namespace protein {
 
 		/** The middle point of the data set */
 		vislib::math::Vector<float, 3> midpoint;
+
+		/** The middle point of the mass of the data set */
+		vislib::math::Vector<float, 3> massMidpoint;
 
 		/** The middle point value set by the gui*/
 		vislib::math::Vector<float, 3> guiMidpoint;
