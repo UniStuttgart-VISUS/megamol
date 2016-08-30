@@ -80,7 +80,6 @@
 #include "ParticleDataCall.h"
 #include "ForceDataCall.h"
 #include "VTKLegacyDataCallUnstructuredGrid.h"
-#include "MolecularGroupsCall.h"
 
 #include "MoleculeBallifier.h"
 
@@ -195,7 +194,6 @@ namespace {
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::ForceDataCall>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::VTKLegacyDataCallUnstructuredGrid>();
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::CallColor>();
-			this->call_descriptions.RegisterAutoDescription<megamol::protein::MolecularGroupsCall>();
 		}
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

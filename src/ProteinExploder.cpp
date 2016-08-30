@@ -8,7 +8,6 @@
 
 #include "stdafx.h"
 #include "ProteinExploder.h"
-#include "MolecularGroupsCall.h"
 #include "AtomWeights.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
@@ -16,6 +15,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "TriSoup/LinesDataCall.h"
 
 #include "vislib/math/Vector.h"
 #include "vislib/math/ShallowVector.h"
@@ -29,6 +29,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::trisoup;
 
 using namespace std::chrono;
 
@@ -51,7 +52,8 @@ ProteinExploder::ProteinExploder(void) :
 		replayParam("animation::replay","Restart animation after end"),
 		playDurationParam("animation::duration","Animation duration in seconds"),
 		resetButtonParam("animation::reset", "Resets the animation into the start state"),
-		useMassCenterParam("useMassCenter", "Use the mass center for explosion instead of the average position") {
+		useMassCenterParam("useMassCenter", "Use the mass center for explosion instead of the average position"),
+		lineCenterParam("lineCenter", "Connect the output-lines with the common center") {
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -62,8 +64,8 @@ ProteinExploder::ProteinExploder(void) :
 	this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(1), &ProteinExploder::getExtent);
 	this->MakeSlotAvailable(&this->dataOutSlot);
 
-	this->groupOutSlot.SetCallback(MolecularGroupsCall::ClassName(), MolecularGroupsCall::FunctionName(0), &ProteinExploder::getData);
-	this->groupOutSlot.SetCallback(MolecularGroupsCall::ClassName(), MolecularGroupsCall::FunctionName(1), &ProteinExploder::getExtent);
+	this->groupOutSlot.SetCallback(LinesDataCall::ClassName(), LinesDataCall::FunctionName(0), &ProteinExploder::getGroupData);
+	this->groupOutSlot.SetCallback(LinesDataCall::ClassName(), LinesDataCall::FunctionName(1), &ProteinExploder::getGroupExtent);
 	this->MakeSlotAvailable(&this->groupOutSlot);
 
 	// other parameters
@@ -114,6 +116,9 @@ ProteinExploder::ProteinExploder(void) :
 	this->useMassCenterParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->useMassCenterParam);
 
+	this->lineCenterParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->lineCenterParam);
+
 	this->atomPositions = NULL;
 	this->atomPositionsSize = 0;
 
@@ -126,10 +131,6 @@ ProteinExploder::ProteinExploder(void) :
 
 	mainDirections.resize(3);
 	eigenValues.resize(3);
-
-	this->groupsPointer = nullptr;
-	this->groupSizes = nullptr;
-	this->groupCount = 0;
 }
 
 /*
@@ -154,22 +155,6 @@ void ProteinExploder::release(void) {
 		delete[] this->atomPositions;
 		this->atomPositions = NULL;
 		this->atomPositionsSize = 0;
-	}
-
-	if (groupsPointer != NULL) {
-		for (unsigned int i = 0; i < groupCount; i++) {
-			if (groupsPointer[i] != 0) {
-				delete[] groupsPointer[i];
-				groupsPointer[i] = nullptr;
-			}
-		}
-		delete[] groupsPointer;
-		groupsPointer = nullptr;
-	}
-
-	if (groupSizes != NULL){
-		delete[] groupSizes;
-		groupSizes = nullptr;
 	}
 }
 
@@ -286,11 +271,11 @@ void ProteinExploder::computeSimilarities(MolecularDataCall& call) {
 	groups.push_back(std::vector<int>(1, 0));
 
 	// build groups by comparing the hash values. Everything with the same hash value belongs to the same group
-	for (int i = 1; i < hashPerMol.size(); i++) {
+	for (unsigned int i = 1; i < hashPerMol.size(); i++) {
 		BYTE * h1 = hashPerMol[i];
 		unsigned int size1 = hashSizes[i];
 		bool found = false;
-		for (int j = 0; j < groups.size(); j++) {
+		for (unsigned int j = 0; j < groups.size(); j++) {
 			BYTE * h2 = hashPerMol[groups[j][0]];
 			unsigned int size2 = hashSizes[groups[j][0]];
 
@@ -304,7 +289,7 @@ void ProteinExploder::computeSimilarities(MolecularDataCall& call) {
 		}
 	}
 
-	for (int i = 0; i < groups.size(); i++) {
+	for (unsigned int i = 0; i < groups.size(); i++) {
 		groups[i].shrink_to_fit();
 	}
 	groups.shrink_to_fit();
@@ -317,7 +302,7 @@ void ProteinExploder::computeSimilarities(MolecularDataCall& call) {
 	}*/
 
 	// cleanup
-	for (int i = 0; i < hashPerMol.size(); i++){
+	for (unsigned int i = 0; i < hashPerMol.size(); i++){
 		delete[]hashPerMol[i];
 		hashPerMol[i] = nullptr;
 	}
@@ -343,7 +328,8 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 	unsigned int lastAtomIdx = 0;
 	unsigned int molAtomCount = 0;
 
-	std::vector<vislib::math::Vector<float, 3>> moleculeMiddles;
+	moleculeMiddles.clear();
+	displacedMoleculeMiddles.clear();
 	bool useMass = useMassCenterParam.Param<param::BoolParam>()->Value();
 
 	// compute middle point for each molecule
@@ -379,6 +365,7 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 
 	std::vector<vislib::math::Vector<float, 3>> displaceDirections = moleculeMiddles;
 	float maxFactor = maxExplosionFactorParam.Param<param::FloatParam>()->Value();
+	displacedMoleculeMiddles = moleculeMiddles;
 
 #ifdef _MSC_VER
 #pragma push_macro("min")
@@ -394,8 +381,9 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 	if (mode == ExplosionMode::SPHERICAL) {
 
 		// compute the direction for each molecule in which it should be displaced
-		for (int i = 0; i < moleculeMiddles.size(); i++) {
+		for (unsigned int i = 0; i < moleculeMiddles.size(); i++) {
 			displaceDirections[i] = moleculeMiddles[i] - myMid;
+			displacedMoleculeMiddles[i] = moleculeMiddles[i] + exFactor * displaceDirections[i];
 		}
 
 		// displace all atoms by the relevant vector
@@ -416,8 +404,9 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 		}
 	} else if (mode == ExplosionMode::MAIN_DIRECTION) {
 
-		for (int i = 0; i < moleculeMiddles.size(); i++) {
+		for (unsigned int i = 0; i < moleculeMiddles.size(); i++) {
 			displaceDirections[i] = displaceDirections[i].Dot(mainDirections[0]) * mainDirections[0];
+			displacedMoleculeMiddles[i] = moleculeMiddles[i] + exFactor * displaceDirections[i];
 		}
 
 		// displace all atoms by the relevant vector
@@ -437,8 +426,9 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 			}
 		}
 	} else if (mode == ExplosionMode::MAIN_DIRECTION_CIRCULAR) {
-		for (int i = 0; i < moleculeMiddles.size(); i++) {
+		for (unsigned int i = 0; i < moleculeMiddles.size(); i++) {
 			displaceDirections[i] = displaceDirections[i].Dot(mainDirections[0]) * mainDirections[0];
+			displacedMoleculeMiddles[i] = moleculeMiddles[i] + std::min(2.0f * exFactor, maxFactor) * displaceDirections[i];
 		}
 
 		// displace all atoms by the relevant vector
@@ -458,8 +448,9 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 			}
 		}
 
-		for (int i = 0; i < moleculeMiddles.size(); i++) {
+		for (unsigned int i = 0; i < moleculeMiddles.size(); i++) {
 			displaceDirections[i] = moleculeMiddles[i] - (myMid + ((moleculeMiddles[i] - myMid).Dot(mainDirections[0]) * mainDirections[0]));
+			displacedMoleculeMiddles[i] += std::max(0.0f, std::min(2.0f * exFactor - maxFactor, maxFactor)) * displaceDirections[i];
 		}
 
 		for (unsigned int molIdx = 0; molIdx < call.MoleculeCount(); molIdx++) { // for each molecule
@@ -650,6 +641,18 @@ bool ProteinExploder::getExtent(core::Call& call) {
  */
 bool ProteinExploder::getGroupData(core::Call& call) {
 
+	LinesDataCall * outCall = dynamic_cast<LinesDataCall*>(&call);
+	if (outCall == NULL) return false;
+
+	/*if (lines.size() > 0) {
+		const float * arr = lines[0].VertexArrayFloat();
+		std::cout << arr[0] << " " << arr[1] << " " << arr[2] << " ::: " << arr[3] << " " << arr[4] << " " << arr[5] << std::endl;
+	}*/
+
+	outCall->SetDataHash(lastDataHash);
+	outCall->SetData(static_cast<unsigned int>(lines.size()), lines.data());
+	outCall->SetUnlocker(NULL);
+
 	return true;
 }
 
@@ -658,54 +661,89 @@ bool ProteinExploder::getGroupData(core::Call& call) {
  */
 bool ProteinExploder::getGroupExtent(core::Call& call) {
 
-	MolecularGroupsCall * outCall = dynamic_cast<MolecularGroupsCall*>(&call);
+	LinesDataCall * outCall = dynamic_cast<LinesDataCall*>(&call);
 	if (outCall == NULL) return false;
 
 	MolecularDataCall *inCall = this->getDataSlot.CallAs<MolecularDataCall>();
 	if (inCall == NULL) return false;
-	inCall->SetCalltime(outCall->Calltime());
+	inCall->SetCalltime(outCall->Time());
 	if (!(*inCall)(1)) return false;
 	if (!(*inCall)(0)) return false;
 
 	computeSimilarities(*inCall);
 
-	if (groupsPointer != NULL) {
-		for (unsigned int i = 0; i < groupCount; i++) {
-			if (groupsPointer[i] != 0) {
-				delete[] groupsPointer[i];
-				groupsPointer[i] = nullptr;
-			}
-		}
-		delete[] groupsPointer;
-		groupsPointer = nullptr;
-	}
-
-	if (groupSizes != NULL){
-		delete[] groupSizes;
-		groupSizes = nullptr;
-	}
-
-	groupCount = static_cast<unsigned int>(groups.size());
-
-	groupSizes = new unsigned int[groupCount];
-	for (unsigned int i = 0; i < groupCount; i++) {
-		groupSizes[i] = static_cast<unsigned int>(groups[i].size());
-	}
-
-	groupsPointer = new int*[groupCount];
-	for (unsigned int i = 0; i < groupCount; i++) {
-		groupsPointer[i] = new int[groupSizes[i]];
-		for (unsigned int j = 0; j < groupSizes[i]; j++) {
-			groupsPointer[i][j] = groups[i][j];
-		}
-	}
-
-	outCall->SetGroupCount(groupCount);
-	outCall->SetGroupSizes(groupSizes);
-	outCall->SetGroupData(groupsPointer);
-
 	outCall->SetFrameCount(inCall->FrameCount());
 	outCall->SetDataHash(inCall->DataHash());
+
+	core::BoundingBoxes boxes;
+	boxes.SetObjectSpaceBBox(currentBoundingBox);
+	boxes.SetObjectSpaceClipBox(currentBoundingBox);
+	outCall->SetExtent(1, boxes);
+
+	lines.clear();
+	lineVertexPositions.clear();
+	size_t lineID = 0;
+
+	std::vector<vislib::math::Vector<float, 3>> groupMiddles;
+
+	for (int i = 0; i < groups.size(); i++) {
+		vislib::math::Vector<float, 3> mid = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
+
+		for (int j = 0; j < groups[i].size(); j++) {
+			mid += displacedMoleculeMiddles[groups[i][j]];
+		}
+
+		mid /= static_cast<float>(groups[i].size());
+		groupMiddles.push_back(mid);
+	}
+
+	if (!lineCenterParam.Param<param::BoolParam>()->Value()) {
+		// Connection between every chain
+		for (int i = 0; i < groups.size(); i++) {
+			for (int j = 0; j < groups[i].size(); j++) {
+				for (int k = j + 1; k < groups[i].size(); k++) {
+					auto startPos = displacedMoleculeMiddles[groups[i][j]];
+					auto endPos = displacedMoleculeMiddles[groups[i][k]];
+
+					lineVertexPositions.push_back(startPos[0]);
+					lineVertexPositions.push_back(startPos[1]);
+					lineVertexPositions.push_back(startPos[2]);
+					lineVertexPositions.push_back(endPos[0]);
+					lineVertexPositions.push_back(endPos[1]);
+					lineVertexPositions.push_back(endPos[2]);
+
+					LinesDataCall::Lines line;
+					line.Set(2, &lineVertexPositions[lineVertexPositions.size() - 6], vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
+					line.SetID(lineID);
+					lineID++;
+
+					lines.push_back(line);
+				}
+			}
+		}
+	} else {
+		// Connection to common center
+		for (int i = 0; i < groups.size(); i++) {
+			for (int j = 0; j < groups[i].size(); j++) {
+				auto startPos = displacedMoleculeMiddles[groups[i][j]];
+				auto endPos = groupMiddles[i];
+
+				lineVertexPositions.push_back(startPos[0]);
+				lineVertexPositions.push_back(startPos[1]);
+				lineVertexPositions.push_back(startPos[2]);
+				lineVertexPositions.push_back(endPos[0]);
+				lineVertexPositions.push_back(endPos[1]);
+				lineVertexPositions.push_back(endPos[2]);
+
+				LinesDataCall::Lines line;
+				line.Set(2, &lineVertexPositions[lineVertexPositions.size() - 6], vislib::graphics::ColourRGBAu8(255, 255, 255, 255));
+				line.SetID(lineID);
+				lineID++;
+
+				lines.push_back(line);
+			}
+		}
+	}
 
 	return true;
 }

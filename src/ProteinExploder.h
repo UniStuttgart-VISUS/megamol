@@ -12,6 +12,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "TriSoup/LinesDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include <chrono>
 
@@ -231,6 +232,9 @@ namespace protein {
 		/** toggle param for the usage of mass centers instead of average position centers */
 		megamol::core::param::ParamSlot useMassCenterParam;
 
+		/** toggle param for the connection of the rendered glLines with a common center instead of all possible neighbors */
+		megamol::core::param::ParamSlot lineCenterParam;
+
 		/** The current atom positions */
 		float * atomPositions;
 
@@ -276,14 +280,17 @@ namespace protein {
 		/** Vector containing every molecule group represented as vector of molecule indices */
 		std::vector<std::vector<int>> groups;
 
-		/** Pointer to the group pointers */
-		int** groupsPointer;
+		/** The storage for the line vertex positions */
+		std::vector<float> lineVertexPositions;
 
-		/** List of the group sizes */
-		unsigned int* groupSizes;
+		/** The lines sent via the LinesDataCall */
+		std::vector<trisoup::LinesDataCall::Lines> lines;
 
-		/** The total number of molecule groups */
-		unsigned int groupCount;
+		/** The middle points of the atom chains */
+		std::vector<vislib::math::Vector<float, 3>> moleculeMiddles;
+
+		/** The middle points of the displaced atom chains */
+		std::vector<vislib::math::Vector<float, 3>> displacedMoleculeMiddles;
 	};
 } /* namespace protein */
 } /* namespace megamol */

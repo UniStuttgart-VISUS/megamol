@@ -306,9 +306,6 @@
     <ClInclude Include="src\ProteinExploder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MolecularGroupsCall.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\MolecularNeighborhood.h">
       <Filter>Header Files</Filter>
     </ClInclude>
