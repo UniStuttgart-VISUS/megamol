@@ -654,8 +654,27 @@ namespace trisoup {
          *
          * @param count The number of lines stored in 'lines'
          * @param lines Pointer to a flat array of lines.
+		 * @param time The point in time for which these lines are meant.
          */
-        void SetData(unsigned int count, const Lines *lines);
+        void SetData(unsigned int count, const Lines *lines, const float time = 0.0f);
+
+		/**
+		 * Sets the time the lines are called for.
+		 *
+		 * @param time The new time value.
+		 */
+		VISLIB_FORCEINLINE void SetTime(const float time) {
+			this->time = time;
+		}
+
+		/**
+		 * Answers the time the lines are called for.
+		 *
+		 * @return The time for which the lines are needed.
+		 */
+		VISLIB_FORCEINLINE const float Time(void) const {
+			return this->time;
+		}
 
         /**
          * Assignment operator.
@@ -669,6 +688,9 @@ namespace trisoup {
         LinesDataCall& operator=(const LinesDataCall& rhs);
 
     private:
+
+		/** The call time. */
+		float time;
 
         /** Number of curves */
         unsigned int count;

@@ -42,7 +42,7 @@ trisoup::LinesDataCall::Lines::~Lines(void) {
  * trisoup::LinesDataCall::LinesDataCall
  */
 trisoup::LinesDataCall::LinesDataCall(void)
-        : AbstractGetData3DCall(), count(0), lines(NULL) {
+        : AbstractGetData3DCall(), count(0), lines(NULL), time(0.0f) {
     // Intentionally empty
 }
 
@@ -61,9 +61,11 @@ trisoup::LinesDataCall::~LinesDataCall(void) {
  * trisoup::LinesDataCall::SetData
  */
 void trisoup::LinesDataCall::SetData(unsigned int count,
-        const trisoup::LinesDataCall::Lines *lines) {
+        const trisoup::LinesDataCall::Lines *lines,
+		const float time) {
     this->count = (lines == NULL) ? 0 : count;
     this->lines = lines;
+	this->time = time;
 }
 
 
@@ -75,5 +77,6 @@ trisoup::LinesDataCall& trisoup::LinesDataCall::operator=(
     AbstractGetData3DCall::operator =(rhs);
     this->count = rhs.count;
     this->lines = rhs.lines;
+	this->time = rhs.time;
     return *this;
 }
