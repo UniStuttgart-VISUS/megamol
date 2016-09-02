@@ -686,10 +686,10 @@ bool ProteinExploder::getGroupExtent(core::Call& call) {
 
 	std::vector<vislib::math::Vector<float, 3>> groupMiddles;
 
-	for (int i = 0; i < groups.size(); i++) {
+	for (unsigned int i = 0; i < groups.size(); i++) {
 		vislib::math::Vector<float, 3> mid = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
 
-		for (int j = 0; j < groups[i].size(); j++) {
+		for (unsigned int j = 0; j < groups[i].size(); j++) {
 			mid += displacedMoleculeMiddles[groups[i][j]];
 		}
 
@@ -699,9 +699,9 @@ bool ProteinExploder::getGroupExtent(core::Call& call) {
 
 	if (!lineCenterParam.Param<param::BoolParam>()->Value()) {
 		// Connection between every chain
-		for (int i = 0; i < groups.size(); i++) {
-			for (int j = 0; j < groups[i].size(); j++) {
-				for (int k = j + 1; k < groups[i].size(); k++) {
+		for (unsigned int i = 0; i < groups.size(); i++) {
+			for (unsigned int j = 0; j < groups[i].size(); j++) {
+				for (unsigned int k = j + 1; k < groups[i].size(); k++) {
 					auto startPos = displacedMoleculeMiddles[groups[i][j]];
 					auto endPos = displacedMoleculeMiddles[groups[i][k]];
 
@@ -723,8 +723,8 @@ bool ProteinExploder::getGroupExtent(core::Call& call) {
 		}
 	} else {
 		// Connection to common center
-		for (int i = 0; i < groups.size(); i++) {
-			for (int j = 0; j < groups[i].size(); j++) {
+		for (unsigned int i = 0; i < groups.size(); i++) {
+			for (unsigned int j = 0; j < groups[i].size(); j++) {
 				auto startPos = displacedMoleculeMiddles[groups[i][j]];
 				auto endPos = groupMiddles[i];
 
