@@ -803,16 +803,16 @@ IMDAtomDataSource::IMDAtomDataSource(void) : core::Module(),
 
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
-	
-	this->bboxEnabledSlot << new core::param::BoolParam(false);
+    
+    this->bboxEnabledSlot << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->bboxEnabledSlot);
-	vislib::math::Vector<float, 3> vMin;
-	vMin.Set(0.0f, 0.0f, 0.0f);
-	vislib::math::Vector<float, 3> vMax;
-	vMin.Set(1.0f, 1.0f, 1.0f);
-	this->bboxMinSlot << new core::param::Vector3fParam(vMin);
+    vislib::math::Vector<float, 3> vMin;
+    vMin.Set(0.0f, 0.0f, 0.0f);
+    vislib::math::Vector<float, 3> vMax;
+    vMin.Set(1.0f, 1.0f, 1.0f);
+    this->bboxMinSlot << new core::param::Vector3fParam(vMin);
     this->MakeSlotAvailable(&this->bboxMinSlot);
-	this->bboxMaxSlot << new core::param::Vector3fParam(vMax);
+    this->bboxMaxSlot << new core::param::Vector3fParam(vMax);
     this->MakeSlotAvailable(&this->bboxMaxSlot);
 
     this->getDataSlot.SetCallback("MultiParticleDataCall", "GetData", &IMDAtomDataSource::getDataCallback);
@@ -1090,49 +1090,49 @@ bool IMDAtomDataSource::getExtentCallback(core::Call& caller) {
     if (mpdc != NULL) {
         mpdc->SetDataHash(this->datahash);
         mpdc->SetFrameCount(1);
-		
-		if(this->bboxEnabledSlot.Param<core::param::BoolParam>()->Value())
-		{
-			vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<core::param::Vector3fParam>()->Value()),
-											maxP(this->bboxMaxSlot.Param<core::param::Vector3fParam>()->Value());
-			mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-			mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-		}
-		else
-		{
-			mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
-				this->headerMinX, this->headerMinY, this->headerMinZ,
-				this->headerMaxX, this->headerMaxY, this->headerMaxZ);
-				//this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
-				//this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
-			mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
-				this->minX - rad, this->minY - rad, this->minZ - rad,
-				this->maxX + rad, this->maxY + rad, this->maxZ + rad);
-		}
+        
+        if(this->bboxEnabledSlot.Param<core::param::BoolParam>()->Value())
+        {
+            vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<core::param::Vector3fParam>()->Value()),
+                                            maxP(this->bboxMaxSlot.Param<core::param::Vector3fParam>()->Value());
+            mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+            mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+        }
+        else
+        {
+            mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
+                this->headerMinX, this->headerMinY, this->headerMinZ,
+                this->headerMaxX, this->headerMaxY, this->headerMaxZ);
+                //this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+                //this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+            mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
+                this->minX - rad, this->minY - rad, this->minZ - rad,
+                this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+        }
 
     } else if (dpdc != NULL) {
         dpdc->SetDataHash(this->datahash);
         dpdc->SetFrameCount(1);
-		if(this->bboxEnabledSlot.Param<core::param::BoolParam>()->Value())
-		{
-			vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<core::param::Vector3fParam>()->Value()),
-											maxP(this->bboxMaxSlot.Param<core::param::Vector3fParam>()->Value());
-			dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-			dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
-		}
-		else
-		{
-			dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
-				this->headerMinX, this->headerMinY, this->headerMinZ,
-				this->headerMaxX, this->headerMaxY, this->headerMaxZ);
-				//this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
-				//this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
-			dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
-				this->minX - rad, this->minY - rad, this->minZ - rad,
-				this->maxX + rad, this->maxY + rad, this->maxZ + rad);
-		}
+        if(this->bboxEnabledSlot.Param<core::param::BoolParam>()->Value())
+        {
+            vislib::math::Vector<float, 3>  minP(this->bboxMinSlot.Param<core::param::Vector3fParam>()->Value()),
+                                            maxP(this->bboxMaxSlot.Param<core::param::Vector3fParam>()->Value());
+            dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+            dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(minP.GetX(), minP.GetY(), minP.GetZ(), maxP.GetX(), maxP.GetY(), maxP.GetZ());
+        }
+        else
+        {
+            dpdc->AccessBoundingBoxes().SetObjectSpaceBBox(
+                this->headerMinX, this->headerMinY, this->headerMinZ,
+                this->headerMaxX, this->headerMaxY, this->headerMaxZ);
+                //this->headerMinX - rad, this->headerMinY - rad, this->headerMinZ - rad,
+                //this->headerMaxX + rad, this->headerMaxY + rad, this->headerMaxZ + rad);
+            dpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(
+                this->minX - rad, this->minY - rad, this->minZ - rad,
+                this->maxX + rad, this->maxY + rad, this->maxZ + rad);
+        }
 
-	}
+    }
 
     return true;
 }
@@ -1170,9 +1170,9 @@ void IMDAtomDataSource::assertData(void) {
             && !this->dircolourModeSlot.IsDirty()
             && !this->dircolourColumnSlot.IsDirty()
             && !this->typeColumnSlot.IsDirty()
-			&& !this->bboxEnabledSlot.IsDirty()
-			&& !this->bboxMaxSlot.IsDirty()
-			&& !this->bboxMinSlot.IsDirty()
+            && !this->bboxEnabledSlot.IsDirty()
+            && !this->bboxMaxSlot.IsDirty()
+            && !this->bboxMinSlot.IsDirty()
         ) return;
     this->filenameSlot.ResetDirty();
     this->colourModeSlot.ResetDirty();
@@ -1184,9 +1184,9 @@ void IMDAtomDataSource::assertData(void) {
     this->dircolourModeSlot.ResetDirty();
     this->dircolourColumnSlot.ResetDirty();
     this->typeColumnSlot.ResetDirty();
-	this->bboxEnabledSlot.ResetDirty();
-	this->bboxMaxSlot.ResetDirty();
-	this->bboxMinSlot.ResetDirty();
+    this->bboxEnabledSlot.ResetDirty();
+    this->bboxMaxSlot.ResetDirty();
+    this->bboxMinSlot.ResetDirty();
 
     this->clear();
 
@@ -1859,18 +1859,18 @@ bool IMDAtomDataSource::readData(vislib::sys::File& file,
 
         if (!fail) {
 
-			if(this->bboxEnabledSlot.Param<core::param::BoolParam>()->Value())
-			{
-				vislib::math::Vector<float, 3> p(x,y,z),
-					                           minP(this->bboxMinSlot.Param<core::param::Vector3fParam>()->Value()),
-											   maxP(this->bboxMaxSlot.Param<core::param::Vector3fParam>()->Value());
-				if( (p.GetX() < minP.GetX() || p.GetY() < minP.GetY() || p.GetZ() < minP.GetZ() ) ||
-					(p.GetX() > maxP.GetX() || p.GetY() > maxP.GetY() || p.GetZ() > maxP.GetZ() )) 
-					continue;
-			
-			}
+            if(this->bboxEnabledSlot.Param<core::param::BoolParam>()->Value())
+            {
+                vislib::math::Vector<float, 3> p(x,y,z),
+                                               minP(this->bboxMinSlot.Param<core::param::Vector3fParam>()->Value()),
+                                               maxP(this->bboxMaxSlot.Param<core::param::Vector3fParam>()->Value());
+                if( (p.GetX() < minP.GetX() || p.GetY() < minP.GetY() || p.GetZ() < minP.GetZ() ) ||
+                    (p.GetX() > maxP.GetX() || p.GetY() > maxP.GetY() || p.GetZ() > maxP.GetZ() )) 
+                    continue;
+            
+            }
 
-			
+            
             int rawIdx = 0;
             if ((rawIdx = static_cast<int>(typeData.IndexOf(static_cast<unsigned int>(t)))) == static_cast<int>(vislib::Array<unsigned int>::INVALID_POS)) {
                 typeData.Append(static_cast<unsigned int>(t));
