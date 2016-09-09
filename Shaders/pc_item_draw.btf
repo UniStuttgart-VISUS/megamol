@@ -10,19 +10,19 @@ flat uint worldSpaceAxis;
 flat uint dataDimension;
 flat uint dataID;
 flat vec4 color;
-	  ]]>
+    ]]>
   </snippet>
 
   <snippet name="uniforms" type="string">
     <![CDATA[
 layout(binding = 0) uniform sampler1D transferFunction;
-	  ]]>
+    ]]>
   </snippet>
   
   <snippet name="tessuniforms" type="string">
     <![CDATA[
 uniform int isoLinesPerInvocation;
-	  ]]>
+    ]]>
   </snippet>
 
   <snippet name="vertexShaderMain" type="string">
@@ -35,39 +35,39 @@ void main()
 
 #ifdef DOSTRIPS
   uint instanceID = gl_InstanceID; //getInstanceID();
- 	out_.itemID = instanceID;
+  out_.itemID = instanceID;
 
 #ifdef DOLINES // line strip
-	uint theID = gl_VertexID;
+  uint theID = gl_VertexID;
 #else          // triangle strip
-	uint theID = gl_VertexID / 2;
+  uint theID = gl_VertexID / 2;
 #endif
 
 #else // no strips
 #ifdef DOLINES // single lines
   uint instanceID = gl_VertexID / ((dimensionCount - 1) * 2);
- 	out_.itemID = instanceID;
-	uint theID = gl_VertexID % ((dimensionCount - 1) * 2);
-	theID = (theID + 1) / 2;
+  out_.itemID = instanceID;
+  uint theID = gl_VertexID % ((dimensionCount - 1) * 2);
+  theID = (theID + 1) / 2;
 #else          // single triangles
   uint instanceID = gl_VertexID / ((dimensionCount - 1) * 6);
- 	out_.itemID = instanceID;
-	uint theID = gl_VertexID % ((dimensionCount - 1) * 6);
-	theID = (theID / 6) + ((theID % 6) / 2) - ((theID % 6) / 3);
+  out_.itemID = instanceID;
+  uint theID = gl_VertexID % ((dimensionCount - 1) * 6);
+  theID = (theID / 6) + ((theID % 6) / 2) - ((theID % 6) / 3);
 #endif
 #endif
 
-	out_.dataDimension = pc_dimension(theID);
-	out_.worldSpaceAxis = theID;
- 	
-	out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
+  out_.dataDimension = pc_dimension(theID);
+  out_.worldSpaceAxis = theID;
+  
+  out_.dataID = pc_item_dataID(out_.itemID, out_.dataDimension);
   
   float value = out_.itemID / float(itemCount);//pc_item_dataValue(pc_item_dataID(out_.itemID, 0), 0);
   out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
 
-	vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
+  vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
 #ifndef DOLINES // triangles need to be "less degenerate"
-	vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
+  vertex.y += (gl_VertexID % 2) * axisHeight * 0.002;
 #endif
 
 #if 0
@@ -81,7 +81,7 @@ void main()
 
   gl_Position = projection * modelView * vertex;
 }
-		]]>
+    ]]>
   </snippet>
 
   <namespace name="discrete">
@@ -368,7 +368,7 @@ void main()
   
   for (uint dimension = 0; dimension < dimensions; ++dimension)
   {
-	  float axis = scaling.x * abscissae[dimension];
+    float axis = scaling.x * abscissae[dimension];
   }
 #endif
 
@@ -418,24 +418,24 @@ out Interface
       <snippet type="string">
         <![CDATA[
 void main() {
-    	uint instanceID = gl_VertexID / 6;
- 			out_.itemID = instanceID;
- 			float value = out_.itemID / float(itemCount);
-  		out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
+      uint instanceID = gl_VertexID / 6;
+      out_.itemID = instanceID;
+      float value = out_.itemID / float(itemCount);
+      out_.color = mix(color, texture(transferFunction, value), tfColorFactor);
 
-			uint local = gl_VertexID % 6;
-			uint x = local / 2 - local / 3;
-			uint y = local % 2;
-			vec4 vertex = vec4(
-		  	margin.x + axisDistance * (dimensionCount - 1) * x,
-    		margin.y + y * axisHeight,
-    		pc_item_defaultDepth,
-    		1.0);
+      uint local = gl_VertexID % 6;
+      uint x = local / 2 - local / 3;
+      uint y = local % 2;
+      vec4 vertex = vec4(
+        margin.x + axisDistance * (dimensionCount - 1) * x,
+        margin.y + y * axisHeight,
+        pc_item_defaultDepth,
+        1.0);
 
-			gl_Position = projection * modelView * vertex;
+      gl_Position = projection * modelView * vertex;
 }
       ]]>
-     	</snippet>
+      </snippet>
     </shader>
 
     <shader name="frag">
@@ -508,8 +508,8 @@ void main()
       <!-- END Output data -->
       <snippet type="string">
 void main(void) {
-	//out_.baseItemID = gl_InstanceID * isoLinesPerInvocation;
-	gl_Position = vec4(1);
+  //out_.baseItemID = gl_InstanceID * isoLinesPerInvocation;
+  gl_Position = vec4(1);
 }
       </snippet>
     </shader>
@@ -534,23 +534,23 @@ layout (vertices = 1) out;
 //} in_[];
 patch out InterfaceO
 {
-	flat uint baseItemID;
-	flat uint generatedLines;
+  flat uint baseItemID;
+  flat uint generatedLines;
 } out_;
         ]]>
       </snippet>
       <!-- END Output data -->
       <snippet type="string">
 void main(void) {
-	if (gl_InvocationID == 0) {
-		unsigned int baseItemID = gl_PrimitiveID * isoLinesPerInvocation;
-		unsigned int remaining = max(itemCount - baseItemID, 0);
-		out_.baseItemID = baseItemID;
-		out_.generatedLines = remaining;
-		gl_TessLevelOuter[0] = remaining;
-		gl_TessLevelOuter[1] = dimensionCount;
-	}
-	gl_out[gl_InvocationID].gl_Position = vec4(1.0);
+  if (gl_InvocationID == 0) {
+    unsigned int baseItemID = gl_PrimitiveID * isoLinesPerInvocation;
+    unsigned int remaining = max(itemCount - baseItemID, 0);
+    out_.baseItemID = baseItemID;
+    out_.generatedLines = remaining;
+    gl_TessLevelOuter[0] = remaining;
+    gl_TessLevelOuter[1] = dimensionCount;
+  }
+  gl_out[gl_InvocationID].gl_Position = vec4(1.0);
 }
       </snippet>
     </shader>
@@ -571,39 +571,39 @@ void main(void) {
 layout(isolines, equal_spacing) in;
 patch in InterfaceI
 {
-	flat uint baseItemID;
-	flat uint generatedLines;
+  flat uint baseItemID;
+  flat uint generatedLines;
 } in_;
 out InterfaceO
 {
-	flat uint itemID;
-	flat vec4 color;
+  flat uint itemID;
+  flat vec4 color;
 } out_;
         ]]>
       </snippet>
       <!-- END Output data -->
       <snippet type="string">
 void main(void) {
-	uint itemID = int(round(in_.baseItemID + gl_TessCoord.y * in_.generatedLines));
-	uint worldSpaceAxis = uint(gl_TessCoord.x * 5); //int(round(gl_TessCoord.x * dimensionCount));
-	uint dataDimension = pc_dimension(worldSpaceAxis);
-	uint dataID = pc_item_dataID(itemID, dataDimension);
-	out_.itemID = itemID;
-	
-	float value = itemID / float(itemCount);
-	out_.color = texture(transferFunction, value); //vec4(vec3(gl_TessCoord.x),1.0); //
-	out_.color = vec4(1.0, 0.0, 0.0, 1.0);
+  uint itemID = int(round(in_.baseItemID + gl_TessCoord.y * in_.generatedLines));
+  uint worldSpaceAxis = uint(gl_TessCoord.x * 5); //int(round(gl_TessCoord.x * dimensionCount));
+  uint dataDimension = pc_dimension(worldSpaceAxis);
+  uint dataID = pc_item_dataID(itemID, dataDimension);
+  out_.itemID = itemID;
+  
+  float value = itemID / float(itemCount);
+  out_.color = texture(transferFunction, value); //vec4(vec3(gl_TessCoord.x),1.0); //
+  out_.color = vec4(1.0, 0.0, 0.0, 1.0);
 
-	vec4 vertex = pc_item_vertex(itemID, dataID, dataDimension, worldSpaceAxis);
-	//vertex = vec4(
-	//	margin.x + axisDistance * gl_TessCoord.x * 100
-	//	, margin.y + axisHeight * gl_TessCoord.y * 100
-	//  , pc_item_defaultDepth
-	//  , 1.0
-	//);
-	//out_.color = vec4(1.0, 0.0, 0.0, 1.0);
+  vec4 vertex = pc_item_vertex(itemID, dataID, dataDimension, worldSpaceAxis);
+  //vertex = vec4(
+  //	margin.x + axisDistance * gl_TessCoord.x * 100
+  //	, margin.y + axisHeight * gl_TessCoord.y * 100
+  //  , pc_item_defaultDepth
+  //  , 1.0
+  //);
+  //out_.color = vec4(1.0, 0.0, 0.0, 1.0);
 
-	gl_Position = projection * modelView * vertex;
+  gl_Position = projection * modelView * vertex;
 }
       </snippet>
     </shader>
@@ -624,8 +624,8 @@ void main(void) {
         <![CDATA[
 in Interface
 {
-	flat uint itemID;
-	flat vec4 color;
+  flat uint itemID;
+  flat vec4 color;
 } in_;
         ]]>
       </snippet>
