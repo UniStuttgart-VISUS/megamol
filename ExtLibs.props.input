@@ -3,9 +3,7 @@
   <PropertyGroup Label="UserMacros">
     <OutputBin>%outbin%</OutputBin>
     <VISlibPath>%vislib%</VISlibPath>
-    <VisGlutPath>%visglutPath%</VisGlutPath>
     <MegaMolCorePath>%mmcorePath%</MegaMolCorePath>
-    <ExpatPath>%expatPath%</ExpatPath>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -17,14 +15,8 @@
     <BuildMacro Include="VISlibPath">
       <Value>$(VISlibPath)</Value>
     </BuildMacro>
-    <BuildMacro Include="VisGlutPath">
-      <Value>$(VisGlutPath)</Value>
-    </BuildMacro>
     <BuildMacro Include="MegaMolCorePath">
       <Value>$(MegaMolCorePath)</Value>
-    </BuildMacro>
-    <BuildMacro Include="ExpatPath">
-      <Value>$(ExpatPath)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>
