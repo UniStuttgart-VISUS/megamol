@@ -161,13 +161,13 @@ void view::special::ChronoGraph::renderInfoCircle(float time, float x, float y, 
     ::glVertex2f(cx, cy);
     px = rad * ::cosf(a);
     py = rad * ::sinf(a);
-    if (::abs(px) > w) {
-        rad = ::abs(w / ::cosf(a));
+    if (std::abs(px) > w) {
+        rad = std::abs(w / ::cosf(a));
         px = rad * ::cosf(a);
         py = rad * ::sinf(a);
     }
-    if (::abs(py) > h) {
-        rad = ::abs(h / ::sinf(a));
+    if (std::abs(py) > h) {
+        rad = std::abs(h / ::sinf(a));
         px = rad * ::cosf(a);
         py = rad * ::sinf(a);
     }
