@@ -163,7 +163,6 @@ void ProteinExploder::release(void) {
  */
 void ProteinExploder::computeMainDirectionPCA(MolecularDataCall& call) {
 
-	std::vector<float> colors(call.AtomCount(), 0.0f);
 	vislib::math::Matrix<float, 3, vislib::math::ROW_MAJOR> covMat;
 	covMat.SetNull();
 

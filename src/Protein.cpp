@@ -55,7 +55,6 @@
 #include "CoarseGrainDataLoader.h"
 #include "FrodockLoader.h"
 #include "XYZLoader.h"
-#include "Filter.h"
 #include "SolventDataGenerator.h"
 #include "GROLoader.h"
 #include "CrystalStructureDataSource.h"
