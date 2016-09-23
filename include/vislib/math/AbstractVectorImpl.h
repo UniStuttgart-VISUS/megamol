@@ -53,7 +53,7 @@ namespace math {
      *    implementation to create the required return values.
      */
     template<class T, unsigned int D, class S, 
-            template<class T, unsigned int D, class S> class C> 
+            template<class Tc, unsigned int Dc, class Sc> class C> 
             class AbstractVectorImpl {
 
     public:
@@ -412,7 +412,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::~AbstractVectorImpl
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     AbstractVectorImpl<T, D, S, C>::~AbstractVectorImpl(void) {
     }
 
@@ -421,7 +421,7 @@ namespace math {
      * AbstractVectorImpl<T, D, S, C>::Angle
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     AngleRad AbstractVectorImpl<T, D, S, C>::Angle(const C<T, D, S>& rhs) const {
         C<T, D, T[D]> v1;
         C<T, D, T[D]> v2;
@@ -442,7 +442,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::Dot
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractVectorImpl<T, D, S, C>::Dot(const C<T, D, S>& rhs) const {
         T retval = static_cast<T>(0);
 
@@ -458,7 +458,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::IsNull
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     bool AbstractVectorImpl<T, D, S, C>::IsNull(void) const {
         for (unsigned int d = 0; d < D; d++) {
             if (!IsEqual<T>(this->components[d], static_cast<T>(0))) {
@@ -475,7 +475,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::IsParallel
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, class Sp>
     bool AbstractVectorImpl<T, D, S, C>::IsParallel(
             const C<Tp, D, Sp>& rhs) const {
@@ -519,7 +519,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::Length
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractVectorImpl<T, D, S, C>::Length(void) const {
         T retval = static_cast<T>(0);
 
@@ -535,7 +535,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::MaxNorm
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractVectorImpl<T, D, S, C>::MaxNorm(void) const {
 #ifdef _MSC_VER
 #pragma push_macro("min")
@@ -564,7 +564,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::Normalise
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractVectorImpl<T, D, S, C>::Normalise(void) {
         T length = this->Length();
 
@@ -587,7 +587,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::SetNull
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     void AbstractVectorImpl<T, D, S, C>::SetNull(void) {
         for (unsigned int d = 0; d < D; d++) {
             this->components[d] = static_cast<T>(0);
@@ -599,7 +599,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::ScaleToLength
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractVectorImpl<T, D, S, C>::ScaleToLength(const T newLength) {
         T retval = this->Length();
 
@@ -619,7 +619,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::SquareLength
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractVectorImpl<T, D, S, C>::SquareLength(void) const {
         T retval = static_cast<T>(0);
 
@@ -635,7 +635,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::TaxicabNorm
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractVectorImpl<T, D, S, C>::TaxicabNorm(void) const {
         T retval = static_cast<T>(0);
 
@@ -651,7 +651,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator =
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator =(
             const C<T, D, S>& rhs) {
 
@@ -667,7 +667,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator =
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, unsigned int Dp, class Sp>
     AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator =(
             const C<Tp, Dp, Sp>& rhs) {
@@ -689,7 +689,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator ==
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     bool AbstractVectorImpl<T, D, S, C>::operator ==(
             const C<T, D, S>& rhs) const {
 
@@ -707,7 +707,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator ==
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, unsigned int Dp, class Sp>
     bool AbstractVectorImpl<T, D, S, C>::operator ==(
             const C<Tp, Dp, Sp>& rhs) const {
@@ -729,7 +729,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator -
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     C<T, D, S> AbstractVectorImpl<T, D, S, C>::operator -(void) const {
         C<T, D, S> retval;
 
@@ -745,7 +745,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator +
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, class Sp>
     C<T, D, T[D]> AbstractVectorImpl<T, D, S, C>::operator +(
             const C<Tp, D, Sp>& rhs) const {
@@ -763,7 +763,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator +=
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, class Sp>
     AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator +=(
             const C<Tp, D, Sp>& rhs) {
@@ -780,7 +780,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator -
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, class Sp>
     C<T, D, T[D]> AbstractVectorImpl<T, D, S, C>::operator -(
             const C<Tp, D, Sp>& rhs) const {
@@ -798,7 +798,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator -=
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, class Sp>
     AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator -=(
             const C<Tp, D, Sp>& rhs) {
@@ -815,7 +815,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator *
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     C<T, D, T[D]> AbstractVectorImpl<T, D, S, C>::operator *(
             const T rhs) const {
         C<T, D, T[D]> retval;
@@ -832,7 +832,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator *=
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator *=(
             const T rhs) {
 
@@ -848,7 +848,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator /
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     C<T, D, T[D]> AbstractVectorImpl<T, D, S, C>::operator /(
             const T rhs) const {
         C<T, D, T[D]> retval;
@@ -865,7 +865,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator /=
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator /=(
             const T rhs) {
 
@@ -881,7 +881,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator *
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, class Sp>
     C<T, D, T[D]> AbstractVectorImpl<T, D, S, C>::operator *(
             const C<Tp, D, Sp>& rhs) const {
@@ -899,7 +899,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator *=
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, class Sp>
     AbstractVectorImpl<T, D, S, C>& AbstractVectorImpl<T, D, S, C>::operator *=(
             const C<Tp, D, Sp>& rhs) {
@@ -916,7 +916,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator []
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T& AbstractVectorImpl<T, D, S, C>::operator [](const int i) {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];
@@ -930,7 +930,7 @@ namespace math {
      * vislib::math::AbstractVectorImpl<T, D, S, C>::operator []
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     const T& AbstractVectorImpl<T, D, S, C>::operator [](const int i) const {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->components[i];

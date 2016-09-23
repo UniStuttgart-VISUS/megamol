@@ -30,7 +30,7 @@ namespace math {
      * TODO: comment class
      */
     template<class T, unsigned int D, class S, 
-            template<class T, unsigned int D, class S> class C> 
+            template<class Tc, unsigned int Dc, class Sc> class C> 
             class AbstractPointImpl {
 
     public:
@@ -292,7 +292,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::~AbstractPointImpl
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     AbstractPointImpl<T, D, S, C>::~AbstractPointImpl(void) {
     }
 
@@ -301,7 +301,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::Distance
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp>
     T AbstractPointImpl<T, D, S, C>::Distance(
             const C<Tp, D, Sp>& toPoint) const {
@@ -314,7 +314,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S, C>::Halfspace
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tpp, class Spp, class Tpv, class Spv>
     HalfSpace AbstractPointImpl<T, D, S, C>::Halfspace(
             const AbstractVector<Tpv, D, Spv>& normal,
@@ -346,7 +346,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::Interpolate
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp, class Tp2>
     C<T, D, T[D]> AbstractPointImpl<T, D, S, C>::Interpolate(
             const C<Tp, D, Sp>& rhs, Tp2 t) const {
@@ -367,7 +367,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S, C>::IsOrigin
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     bool AbstractPointImpl<T, D, S, C>::IsOrigin(void) const {
         for (unsigned int i = 0; i < D; i++) {
             if (!IsEqual<T>(this->coordinates[i], 0)) {
@@ -383,7 +383,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::SquareDistance
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp>
     T AbstractPointImpl<T, D, S, C>::SquareDistance(
             const C<Tp, D, Sp>& toPoint) const {
@@ -401,7 +401,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator =
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     AbstractPointImpl<T, D, S, C>& AbstractPointImpl<T, D, S, C>::operator =(
             const C<T, D, S>& rhs) {
         if (this != &rhs) {
@@ -416,7 +416,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator =
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, unsigned int Dp, class Sp>
     AbstractPointImpl<T, D, S, C>& AbstractPointImpl<T, D, S, C>::operator =(
            const C<Tp, Dp, Sp>& rhs) {
@@ -438,7 +438,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator ==
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     bool AbstractPointImpl<T, D, S, C>::operator ==(
             const C<T, D, S>& rhs) const {
 
@@ -456,7 +456,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator ==
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, unsigned int Dp, class Sp>
     bool AbstractPointImpl<T, D, S, C>::operator ==(
             const C<Tp, Dp, Sp>& rhs) const {
@@ -479,7 +479,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator +
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp>
     C<T, D, T[D]> AbstractPointImpl<T, D, S, C>::operator +(
             const AbstractVector<Tp, D, Sp>& rhs) const {
@@ -498,7 +498,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator +=
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp>
     AbstractPointImpl<T, D, S, C>& AbstractPointImpl<T, D, S, C>::operator +=(
            const AbstractVector<Tp, D, Sp>& rhs) {
@@ -514,7 +514,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator -
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp>
     C<T, D, T[D]> AbstractPointImpl<T, D, S, C>::operator -(
            const AbstractVector<Tp, D, Sp>& rhs) const {
@@ -533,7 +533,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator -=
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp>
     AbstractPointImpl<T, D, S, C>& AbstractPointImpl<T, D, S, C>::operator -=(
            const AbstractVector<Tp, D, Sp>& rhs) {
@@ -549,7 +549,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator -
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, class Sp>
     Vector<T, D> AbstractPointImpl<T, D, S, C>::operator -(
            const C<Tp, D, Sp>& rhs) const {
@@ -568,7 +568,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator []
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     T& AbstractPointImpl<T, D, S, C>::operator [](const int i) {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->coordinates[i];
@@ -582,7 +582,7 @@ namespace math {
      * vislib::math::AbstractPointImpl<T, D, S>::operator []
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     T AbstractPointImpl<T, D, S, C>::operator [](const int i) const {
         if ((i >= 0) && (i < static_cast<int>(D))) {
             return this->coordinates[i];

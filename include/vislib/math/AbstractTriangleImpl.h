@@ -26,7 +26,7 @@ namespace math {
      * Implementation dump for AbstractTriangle.
      */
 	template <class T, class S, 
-			  template<class T, class S> class C>
+			  template<class Tc, class Sc> class C>
 			  class AbstractTriangleImpl {
 
     public:
@@ -203,7 +203,7 @@ namespace math {
     /*
      * vislib::math::AbstractTriangleImpl<T, S, C>::~AbstractTriangleImpl
      */
-    template<class T, class S, template<class T, class S> class C>
+    template<class T, class S, template<class Tc, class Sc> class C>
 	AbstractTriangleImpl<T, S, C>::~AbstractTriangleImpl(void) {
 	}
 
@@ -211,7 +211,7 @@ namespace math {
 	/*
      * vislib::math::AbstractTriangleImpl<T, S, C>::operator []
      */
-	template<class T, class S, template<class T, class S> class C>
+	template<class T, class S, template<class Tc, class Sc> class C>
 	T& AbstractTriangleImpl<T, S, C>::operator [](const int i) {
 		if ((i >= 0) && (i < 3)) {
 			return this->vertices[i];
@@ -224,7 +224,7 @@ namespace math {
 	/*
      * vislib::math::AbstractTriangleImpl<T, S, C>::operator []
      */
-	template<class T, class S, template<class T, class S> class C>
+	template<class T, class S, template<class Tc, class Sc> class C>
 	const T& AbstractTriangleImpl<T, S, C>::operator [](const int i) const {
 		if ((i >= 0) && (i < 3)) {
 			return this->vertices[i];
@@ -237,7 +237,7 @@ namespace math {
     /*
      * vislib::math::AbstractTriangleImpl<T, S, C>::operator =
      */
-    template<class T, class S, template<class T, class S> class C> 
+    template<class T, class S, template<class Tc, class Sc> class C> 
     AbstractTriangleImpl<T, S, C>& AbstractTriangleImpl<T, S, C>::operator =(
         const C<T, S>& rhs) {
             if (this != &rhs) {
@@ -252,7 +252,7 @@ namespace math {
     /*
      * vislib::math::AbstractTriangleImpl<T, D, S>::operator =
      */
-    template<class T, class S, template<class T, class S> class C> 
+    template<class T, class S, template<class Tc, class Sc> class C> 
     template<class Tp, class Sp>
     AbstractTriangleImpl<T, S, C>& AbstractTriangleImpl<T, S, C>::operator =(
            const C<Tp, Sp>& rhs) {

@@ -42,7 +42,7 @@ namespace math {
      *    instantiations are inherently dangerous and should never be used.
      */
     template<class T, unsigned int D, class S, 
-            template<class T, unsigned int D, class S> class C> 
+            template<class Tc, unsigned int Dc, class Sc> class C> 
             class AbstractDimensionImpl {
 
     public:
@@ -181,7 +181,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl(void) {
     }
 
@@ -190,7 +190,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::Scale
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     void AbstractDimensionImpl<T, D, S, C>::Scale(const double factor) {
         for (unsigned int d = 0; d < D; d++) {
             this->dimension[d] = static_cast<T>(factor 
@@ -203,7 +203,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::operator =
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     AbstractDimensionImpl<T, D, S, C>& 
     AbstractDimensionImpl<T, D, S, C>::operator =(const C<T, D, S>& rhs) {
 
@@ -219,7 +219,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::operator =
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, unsigned int Dp, class Sp> 
     AbstractDimensionImpl<T, D, S, C>& 
     AbstractDimensionImpl<T, D, S, C>::operator =(const C<Tp, Dp, Sp>& rhs) {
@@ -241,7 +241,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::operator ==
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     bool AbstractDimensionImpl<T, D, S, C>::operator ==(
             const C<T, D, S>& rhs) const {
         for (unsigned int d = 0; d < D; d++) {
@@ -259,7 +259,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::operator ==
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     template<class Tp, unsigned int Dp, class Sp>
     bool AbstractDimensionImpl<T, D, S, C>::operator ==(
             const C<Tp, Dp, Sp>& rhs) const {
@@ -283,7 +283,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::operator []
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     T& AbstractDimensionImpl<T, D, S, C>::operator [](const int i) {
         ASSERT(0 <= i);
         ASSERT(i < static_cast<int>(D));
@@ -300,7 +300,7 @@ namespace math {
      * vislib::math::AbstractDimensionImpl<T, D, S, C>::operator []
      */
     template<class T, unsigned int D, class S, 
-        template<class T, unsigned int D, class S> class C> 
+        template<class Tc, unsigned int Dc, class Sc> class C> 
     const T& AbstractDimensionImpl<T, D, S, C>::operator [](const int i) const {
         ASSERT(0 <= i);
         ASSERT(i < static_cast<int>(D));

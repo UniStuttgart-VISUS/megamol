@@ -62,7 +62,7 @@ namespace math {
      * C Deriving subclass.
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-            template<class T, unsigned int D, MatrixLayout L, class S> class C>
+            template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     class AbstractMatrixImpl {
 
     public:
@@ -734,7 +734,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::~AbstractMatrixImpl
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     AbstractMatrixImpl<T, D, L, S, C>::~AbstractMatrixImpl(void) {
     }
 
@@ -743,7 +743,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::Dump
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>   
     void AbstractMatrixImpl<T, D, L, S, C>::Dump(std::ostream& out) const {
         out << std::setiosflags(std::ios::fixed) << std::setprecision(3) 
             << std::setfill(' ');
@@ -769,7 +769,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::GetColumn
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>   
     Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::GetColumn(
             const int col) const {
         Vector<T, D> retval;
@@ -786,7 +786,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::GetRow
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>   
     Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::GetRow(
             const int row) const {
         Vector<T, D> retval;
@@ -803,7 +803,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::Invert
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>    
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>    
     bool AbstractMatrixImpl<T, D, L, S, C>::Invert(void) {
 #define A(r, c) a[(r) * 2 * D + (c)]
         double a[2 * D * D];    // input matrix for algorithm
@@ -886,7 +886,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::IsIdentity
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>    
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>    
     bool AbstractMatrixImpl<T, D, L, S, C>::IsIdentity(void) const {
         for (unsigned int r = 0; r < D; r++) {
             for (unsigned int c = 0; c < D; c++) {
@@ -905,7 +905,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::IsNull
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>   
     bool AbstractMatrixImpl<T, D, L, S, C>::IsNull(void) const {
         for (unsigned int c = 0; c < CNT_COMPONENTS; c++) {
             if (!IsEqual(this->components[c], static_cast<T>(0))) {
@@ -921,7 +921,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::IsOrthogonal
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>   
     bool AbstractMatrixImpl<T, D, L, S, C>::IsOrthogonal(void) const {
         // Test: A * A^T = I
 
@@ -946,7 +946,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::IsSymmetric
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>   
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>   
     bool AbstractMatrixImpl<T, D, L, S, C>::IsSymmetric(void) const {
         for (unsigned int r = 1; r < D; r++) {
             for (unsigned int c = 0; c < r; c++) {
@@ -964,7 +964,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::SetAt
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     void AbstractMatrixImpl<T, D, L, S, C>::SetAt(const int row, const int col,
             const T value) {
 
@@ -984,7 +984,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::SetIdentity
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     void AbstractMatrixImpl<T, D, L, S, C>::SetIdentity(void) {
         for (unsigned int r = 0; r < D; r++) {
             for (unsigned int c = 0; c < D; c++) {
@@ -999,7 +999,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::SetNull
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     void AbstractMatrixImpl<T, D, L, S, C>::SetNull(void) {
         for (unsigned int i = 0; i < CNT_COMPONENTS; i++) {
             this->components[i] = static_cast<T>(0);
@@ -1011,7 +1011,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::Trace
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     T AbstractMatrixImpl<T, D, L, S, C>::Trace(void) const {
         T retval = static_cast<T>(0);
 
@@ -1027,7 +1027,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::Transpose
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     void AbstractMatrixImpl<T, D, L, S, C>::Transpose(void) {
         T tmp;
         int idx1, idx2;
@@ -1048,7 +1048,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator +=
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     template<class Sp>
     AbstractMatrixImpl<T, D, L, S, C>& 
     AbstractMatrixImpl<T, D, L, S, C>::operator +=(const C<T, D, L, Sp>& rhs) {
@@ -1064,7 +1064,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator -=
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     template<class Sp>
     AbstractMatrixImpl<T, D, L, S, C>& 
     AbstractMatrixImpl<T, D, L, S, C>::operator -=(const C<T, D, L, Sp>& rhs) {
@@ -1080,7 +1080,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator *
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     template<class Sp>
     typename AbstractMatrixImpl<T, D, L, S, C>::DeepStorageMatrix
     AbstractMatrixImpl<T, D, L, S, C>::operator *(
@@ -1110,7 +1110,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator *=
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     AbstractMatrixImpl<T, D, L, S, C>& 
     AbstractMatrixImpl<T, D, L, S, C>::operator *=(const T rhs) {
         for (unsigned int c = 0; c < CNT_COMPONENTS; c++) {
@@ -1125,7 +1125,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator /=
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     AbstractMatrixImpl<T, D, L, S, C>& 
     AbstractMatrixImpl<T, D, L, S, C>::operator /=(const T rhs) {
         for (unsigned int c = 0; c < CNT_COMPONENTS; c++) {
@@ -1140,7 +1140,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator *
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>  
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>  
     template<class Sp>
     Vector<T, D> AbstractMatrixImpl<T, D, L, S, C>::operator *(
             const AbstractVector<T, D, Sp>& rhs) const {
@@ -1161,7 +1161,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator *
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     template<class Sp>
     Vector<T, D - 1> AbstractMatrixImpl<T, D, L, S, C>::operator *(
             const AbstractVector<T, D - 1, Sp>& rhs) const {
@@ -1190,7 +1190,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator =
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     AbstractMatrixImpl<T, D, L, S, C>& 
     AbstractMatrixImpl<T, D, L, S, C>::operator =(const C<T, D, L, S>& rhs) {
 
@@ -1207,7 +1207,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator ==
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     bool AbstractMatrixImpl<T, D, L, S, C>::operator ==(
             const C<T, D, L, S>& rhs) const {
 
@@ -1225,7 +1225,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator ==
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
     bool AbstractMatrixImpl<T, D, L, S, C>::operator ==(
             const C<Tp, Dp, Lp, Sp>& rhs) const {
@@ -1249,7 +1249,7 @@ namespace math {
     // * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator []
     // */
     //template<class T, unsigned int D, MatrixLayout L, class S,
-    //    template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    //    template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     //T& AbstractMatrixImpl<T, D, L, S, C>::operator [](const int i) {
 
     //    if ((i >= 0) && (i < static_cast<int>(CNT_COMPONENTS))) {
@@ -1264,7 +1264,7 @@ namespace math {
     // * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::operator []
     // */
     //template<class T, unsigned int D, MatrixLayout L, class S,
-    //    template<class T, unsigned int D, MatrixLayout L, class S> class C>
+    //    template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     //T AbstractMatrixImpl<T, D, L, S, C>::operator [](const int i) const {
 
     //    if ((i >= 0) && (i < static_cast<int>(CNT_COMPONENTS))) {
@@ -1278,7 +1278,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::operator ()
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     T AbstractMatrixImpl<T, D, L, S, C>::operator ()(const int row, 
             const int col) const {
 
@@ -1297,7 +1297,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::operator ()
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     T& AbstractMatrixImpl<T, D, L, S, C>::operator ()(const int row, 
             const int col) {
         int idx = indexOf(row, col);
@@ -1315,7 +1315,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::CNT_COMPONENTS
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     const unsigned int AbstractMatrixImpl<T, D, L, S, C>::CNT_COMPONENTS 
         = D * D;
 
@@ -1324,7 +1324,7 @@ namespace math {
      * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::assign
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     template<class Tp, unsigned int Dp, MatrixLayout Lp, class Sp>
     void AbstractMatrixImpl<T, D, L, S, C>::assign(
             const C<Tp, Dp, Lp, Sp>& rhs) {
@@ -1348,7 +1348,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::characteristicPolynom
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     Polynom<T, D>
     AbstractMatrixImpl<T, D, L, S, C>::characteristicPolynom(void) const {
         // method of Faddejew-Leverrier
@@ -1393,7 +1393,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::determinant2x2
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     T AbstractMatrixImpl<T, D, L, S, C>::determinant2x2(const T& a00,
             const T& a10, const T& a01, const T& a11) {
         return a00 * a11 - a01 * a10;
@@ -1404,7 +1404,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::determinant3x3
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     T AbstractMatrixImpl<T, D, L, S, C>::determinant3x3(const T& a00,
             const T& a10, const T& a20, const T& a01, const T& a11,
             const T& a21, const T& a02, const T& a12, const T& a22) {
@@ -1418,7 +1418,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::determinant4x4
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     T AbstractMatrixImpl<T, D, L, S, C>::determinant4x4(const T& a00,
             const T& a10, const T& a20, const T& a30, const T& a01,
             const T& a11, const T& a21, const T& a31, const T& a02,
@@ -1440,7 +1440,7 @@ namespace math {
      * AbstractMatrixImpl<T, D, L, S, C>::findEigenvaluesSym
      */
     template<class T, unsigned int D, MatrixLayout L, class S,
-        template<class T, unsigned int D, MatrixLayout L, class S> class C>
+        template<class Tc, unsigned int Dc, MatrixLayout Lc, class Sc> class C>
     unsigned int AbstractMatrixImpl<T, D, L, S, C>::findEigenvaluesSym(T *outEigenvalues,
             Vector<T, D> *outEigenvectors, unsigned int size) const {
 

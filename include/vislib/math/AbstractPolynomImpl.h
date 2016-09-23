@@ -43,7 +43,7 @@ namespace math {
      * C Deriving subclass.
      */
     template<class T, unsigned int D, class S,
-            template<class T, unsigned int D, class S> class C>
+            template<class Tc, unsigned int Dc, class Sc> class C>
     class AbstractPolynomImpl {
     public:
 
@@ -329,7 +329,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::~AbstractPolynomImpl
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     AbstractPolynomImpl<T, D, S, C>::~AbstractPolynomImpl(void) {
         // intentionally empty
     }
@@ -339,7 +339,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::Clear
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     void AbstractPolynomImpl<T, D, S, C>::Clear(void) {
         for (unsigned int i = 0; i <= D; i++) {
             this->coefficients[i] = static_cast<T>(0);
@@ -351,7 +351,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::Derivative
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     C<T, D - 1, T[D]> AbstractPolynomImpl<T, D, S, C>::Derivative(void) const {
         C<T, D - 1, T[D]> rv;
 
@@ -367,7 +367,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::EffectiveDegree
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::EffectiveDegree(void) const {
         for (unsigned int i = D; i > 0; i--) {
             if (!vislib::math::IsEqual(this->coefficients[i],
@@ -383,7 +383,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::IsZero
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     bool AbstractPolynomImpl<T, D, S, C>::IsZero(void) const {
         for (unsigned int i = 0; i <= D; i++) {
             if (!vislib::math::IsEqual(this->coefficients[i],
@@ -399,7 +399,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::operator()
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     T AbstractPolynomImpl<T, D, S, C>::operator()(T x) {
         T val = this->coefficients[0];
         T xp = static_cast<T>(1);
@@ -417,7 +417,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::operator=
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, unsigned int Dp, class Sp>
     AbstractPolynomImpl<T, D, S, C>&
     AbstractPolynomImpl<T, D, S, C>::operator=(const C<Tp, Dp, Sp>& rhs) {
@@ -441,7 +441,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::operator==
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     template<class Tp, unsigned int Dp, class Sp>
     bool AbstractPolynomImpl<T, D, S, C>::operator==(
             const C<Tp, Dp, Sp>& rhs) const {
@@ -473,7 +473,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::findRootsDeg1
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg1(const T& a0,
             const T& a1, T *outRoots, unsigned int size) {
         ASSERT(!IsEqual(a1, static_cast<T>(0)));
@@ -489,7 +489,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::findRootsDeg2
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg2(const T& a0,
             const T& a1, const T& a2, T *outRoots, unsigned int size) {
         ASSERT(!IsEqual(a2, static_cast<T>(0)));
@@ -521,7 +521,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::findRootsDeg3
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg3(const T& a0,
             const T& a1, const T& a2, const T& a3, T *outRoots,
             unsigned int size) {
@@ -615,7 +615,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::findRootsDeg4
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::findRootsDeg4(const T& a0,
             const T& a1, const T& a2, const T& a3, const T& a4, T *outRoots,
             unsigned int size) {
@@ -723,7 +723,7 @@ namespace math {
      * AbstractPolynomImpl<T, D, S, C>::uniqueRoots
      */
     template<class T, unsigned int D, class S,
-        template<class T, unsigned int D, class S> class C>
+        template<class Tc, unsigned int Dc, class Sc> class C>
     unsigned int AbstractPolynomImpl<T, D, S, C>::uniqueRoots(T *outRoots,
             unsigned int size) {
         if (size <= 1) return size;

@@ -11,7 +11,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix4.h"
 #include <climits>
-
+#include <cmath>
 
 /*
  * vislib::graphics::CameraAdjust3D::CameraAdjust3D
@@ -88,23 +88,23 @@ void vislib::graphics::CameraAdjust3D::Trigger(
             SceneSpaceType max = translateVector.GetX();
             int axis = 0;
             // get the largest value and set the axis
-            if (abs(max) < abs(translateVector.GetY())) {
+            if (std::abs(max) < std::abs(translateVector.GetY())) {
                 max = translateVector.GetY();
                 axis = 1;
             }
-            if (abs(max) < abs(translateVector.GetZ())) {
+            if (std::abs(max) < std::abs(translateVector.GetZ())) {
                 max = translateVector.GetZ();
                 axis = 2;
             }
-            if (abs(max) < abs(rotateVector.GetX())) {
+            if (std::abs(max) < std::abs(rotateVector.GetX())) {
                 max = rotateVector.GetX();
                 axis = 3;
             }
-            if (abs(max) < abs(rotateVector.GetY())) {
+            if (std::abs(max) < std::abs(rotateVector.GetY())) {
                 max = rotateVector.GetY();
                 axis = 4;
             }
-            if (abs(max) < abs(rotateVector.GetZ())) {
+            if (std::abs(max) < std::abs(rotateVector.GetZ())) {
                 max = rotateVector.GetZ();
                 axis = 5;
             }
