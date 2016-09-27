@@ -21,6 +21,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/math/Vector.h"
 #include <map>
+#include <cfloat>
 
 using namespace megamol;
 using namespace megamol::trisoup;

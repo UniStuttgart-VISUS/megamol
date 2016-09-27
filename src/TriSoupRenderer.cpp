@@ -488,7 +488,9 @@ bool TriSoupRenderer::Render(Call& call) {
         ::glEnd();
     }
 
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
     ::GetLastError();
+#endif
     ::glCullFace(cfm);
     ::glFrontFace(twr);
     ::glDisableClientState(GL_VERTEX_ARRAY);
