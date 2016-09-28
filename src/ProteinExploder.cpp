@@ -24,6 +24,7 @@
 #include "vislib/SHA1HashProvider.h"
 
 #include <algorithm>
+#include <cfloat>
 
 using namespace megamol;
 using namespace megamol::core;
