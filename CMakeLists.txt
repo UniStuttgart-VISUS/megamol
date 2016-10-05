@@ -28,9 +28,11 @@ if (USE_MEGAMOLCORE_INSTALL_PREFIX)
 	message(STATUS "Using MegaMolCore install prefix")
 endif()
 find_package(vislib REQUIRED HINTS ${MegaMolCore_vislib_DIR})
+find_package(protein_calls REQUIRED)
+find_package(TriSoup REQUIRED)
 
-set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES})
-include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS})
+set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES} ${protein_calls_LIBRARIES} ${TriSoup_LIBRARIES})
+include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS} ${protein_calls_INCLUDE_DIRS} ${TriSoup_INCLUDE_DIRS})
 
 
 # processor word size detection

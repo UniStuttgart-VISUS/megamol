@@ -58,7 +58,7 @@ static float getElementWeightBySymbolString(const vislib::StringA& elementString
 	// TODO extend to whole periodic table
 	// TODO use switch with constexpr (only possible with VS 2015)
 
-	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unknown element detected (%c)", es);
+	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Unknown element detected (%c)", es.PeekBuffer());
 	return 0.0f;
 }
 
