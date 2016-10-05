@@ -5,7 +5,7 @@
 #
 cmake_minimum_required(VERSION 2.8.12)
 
-project(Protein_Calls)
+project(protein_calls)
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
 	message(STATUS "You should always specify a build type! Defaulting build type to 'Release'")
