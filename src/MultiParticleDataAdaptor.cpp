@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\include\mmstd_datatools\MultiParticleDataAdaptor.h"
+#include "../include/mmstd_datatools/MultiParticleDataAdaptor.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;

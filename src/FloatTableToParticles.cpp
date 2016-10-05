@@ -148,7 +148,7 @@ std::string FloatTableToParticles::cleanUpColumnHeader(const vislib::TString& he
     vislib::TString h(header);
     h.TrimSpaces();
     h.ToLowerCase();
-    return std::string(W2A(h.PeekBuffer()));
+    return std::string(T2A(h.PeekBuffer()));
 }
 
 bool FloatTableToParticles::pushColumnIndex(std::vector<size_t>& cols, const vislib::TString& colName) {

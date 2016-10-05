@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "mmstd_datatools\ParticleFilterMapDataCall.h"
+#include "mmstd_datatools/ParticleFilterMapDataCall.h"
 
 using namespace megamol;
 using namespace megamol::stdplugin;
