@@ -20,6 +20,9 @@ The general workflow of the algorithm is:
   * Weight the local lighting with the ambient occlusion term
 
 ## Building
+
+Remember to git clone recursive. Otherwise, you need to fetch the submodules as well.
+
 To run this plugin, you need:
 * Linux or Windows
 * An installation of MegaMol (at least version 1.1), see [here](https://svn.vis.uni-stuttgart.de/trac/megamol/wiki/HowToBuild11) how to build one
