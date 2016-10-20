@@ -335,18 +335,18 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="packages\glfw.redist.3.2\build\native\glfw.redist.targets" Condition="Exists('packages\glfw.redist.3.2\build\native\glfw.redist.targets')" />
-    <Import Project="packages\glfw.3.2\build\native\glfw.targets" Condition="Exists('packages\glfw.3.2\build\native\glfw.targets')" />
     <Import Project="packages\AntTweakBar.redist.1.16.3\build\native\AntTweakBar.redist.targets" Condition="Exists('packages\AntTweakBar.redist.1.16.3\build\native\AntTweakBar.redist.targets')" />
     <Import Project="packages\AntTweakBar.1.16.3\build\native\AntTweakBar.targets" Condition="Exists('packages\AntTweakBar.1.16.3\build\native\AntTweakBar.targets')" />
+    <Import Project="packages\glfw.redist.3.2.1\build\native\glfw.redist.targets" Condition="Exists('packages\glfw.redist.3.2.1\build\native\glfw.redist.targets')" />
+    <Import Project="packages\glfw.3.2.1\build\native\glfw.targets" Condition="Exists('packages\glfw.3.2.1\build\native\glfw.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\glfw.redist.3.2\build\native\glfw.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glfw.redist.3.2\build\native\glfw.redist.targets'))" />
-    <Error Condition="!Exists('packages\glfw.3.2\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glfw.3.2\build\native\glfw.targets'))" />
     <Error Condition="!Exists('packages\AntTweakBar.redist.1.16.3\build\native\AntTweakBar.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\AntTweakBar.redist.1.16.3\build\native\AntTweakBar.redist.targets'))" />
     <Error Condition="!Exists('packages\AntTweakBar.1.16.3\build\native\AntTweakBar.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\AntTweakBar.1.16.3\build\native\AntTweakBar.targets'))" />
+    <Error Condition="!Exists('packages\glfw.redist.3.2.1\build\native\glfw.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glfw.redist.3.2.1\build\native\glfw.redist.targets'))" />
+    <Error Condition="!Exists('packages\glfw.3.2.1\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glfw.3.2.1\build\native\glfw.targets'))" />
   </Target>
 </Project>
