@@ -323,7 +323,7 @@ std::shared_ptr<GLSLShader> NGSphereRenderer::makeShader(vislib::SmartPtr<Shader
         if (!sh->Create(vert->Code(), vert->Count(), frag->Code(), frag->Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
                 "Unable to compile sphere shader: Unknown error\n");
-            return false;
+            return nullptr;
         }
 
     }
@@ -332,17 +332,17 @@ std::shared_ptr<GLSLShader> NGSphereRenderer::makeShader(vislib::SmartPtr<Shader
             "Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()), ce.GetMsgA());
-        return false;
+        return nullptr;
     }
     catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to compile sphere shader: %s\n", e.GetMsgA());
-        return false;
+        return nullptr;
     }
     catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
             "Unable to compile sphere shader: Unknown exception\n");
-        return false;
+        return nullptr;
     }
     return sh;
 }
