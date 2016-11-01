@@ -18,10 +18,11 @@ endif()
 set(CMAKE_THREAD_PREFER_PTHREAD)
 find_package(Threads REQUIRED)
 find_package(X11 REQUIRED)
+set(CURSES_NEED_NCURSES True)
 find_package(Curses REQUIRED)
 find_package(UUID REQUIRED)
 find_package(OpenGL REQUIRED)
-set(LIBS ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} ${CURSES_LIBRARIES} -lrt -lcrypt ${UUID_LIBRARIES} ${OPENGL_LIBRARIES})
+set(LIBS ${CMAKE_THREAD_LIBS_INIT} ${X11_LIBRARIES} -lrt -lcrypt ${UUID_LIBRARIES} ${OPENGL_LIBRARIES} ${CURSES_LIBRARIES})
 include_directories(${OPENGL_INCLUDE_DIR})
 
 # processor word size detection
