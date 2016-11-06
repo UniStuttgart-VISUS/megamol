@@ -1,6 +1,6 @@
 /*
  * Protein_Uncertainty.h
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2009-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef PROTEIN_UNCERTAINTY_H_INCLUDED
