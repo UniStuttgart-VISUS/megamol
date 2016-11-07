@@ -1,6 +1,6 @@
 /*
  * Protein_Uncertainty.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2009-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -10,7 +10,17 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
+
 #include "vislib/vislibversion.h"
+
+
+// Modules
+#include "UncertaintySequenceRenderer.h"
+#include "UncertaintyCartoonRenderer.h"
+//#include "UncertaintyDataLoader.h"
+
+// Calls
+//#include "UncertaintyDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -23,10 +33,10 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "Protein_Uncertainty", // TODO: Change this!
+                "Protein_Uncertainty", 
 
                 /* human-readable plugin description */
-                "Describing Protein_Uncertainty (TODO: Change this!)") {
+                "Plugin for rendering uncertainty of protein secondary strucutre.") {
 
             // here we could perform addition initialization
         };
@@ -39,23 +49,16 @@ namespace {
 
             // register modules here:
 
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::Protein_Uncertainty::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::Protein_Uncertainty::MyModule2>();
-            //   ...
-            //
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintySequenceRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyCartoonRenderer>();
+			//this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataLoader>();
+
 
             // register calls here:
 
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::Protein_Uncertainty::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::Protein_Uncertainty::MyCall2>();
-            //   ...
-            //
+            // this->call_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataCall>();
+
+
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
