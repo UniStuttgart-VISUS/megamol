@@ -10,6 +10,7 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -24,7 +25,8 @@ SecStructFlattener::SecStructFlattener(void) :
 	getDataSlot("getData", "Calls molecular data"),
 	dataOutSlot("dataOut", "Provides the flattened molecular data"),
 	playParam("animation::play", "Should the animation be played?"),
-	playButtonParam("animation::playButton", "Button to toggle animation") {
+	playButtonParam("animation::playButton", "Button to toggle animation"),
+	flatPlaneMode("flatPlaneMode", "The plane the protein gets flattened to") {
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -41,6 +43,15 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->playButtonParam << new param::ButtonParam('p');
 	this->playButtonParam.SetUpdateCallback(this, &SecStructFlattener::onPlayToggleButton);
 	this->MakeSlotAvailable(&this->playButtonParam);
+
+	param::EnumParam * fpParam = new param::EnumParam(int(FlatPlane::XY_PLANE));
+	FlatPlane fp;
+	for (int i = 0; i < getFlatPlaneModeNumber(); i++) {
+		fp = getFlatPlaneByIndex(i);
+		fpParam->SetTypePair(fp, getFlatPlaneName(fp).c_str());
+	}
+	this->flatPlaneMode << fpParam;
+	this->MakeSlotAvailable(&this->flatPlaneMode);
 
 	this->atomPositions = NULL;
 	this->atomPositionsSize = 0;
@@ -72,13 +83,82 @@ void SecStructFlattener::release(void) {
 }
 
 /*
+ *	SecStructFlattener::flatten
+ */
+void SecStructFlattener::flatten(void) {
+
+	auto bbCenter = this->boundingBox.CalcCenter();
+
+	switch (this->flatPlaneMode.Param<param::EnumParam>()->Value()) {
+	case XY_PLANE: 
+		for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+			this->atomPositions[i * 3 + 2] = bbCenter.GetZ();
+		}
+		break;
+	case XZ_PLANE: 
+		for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+			this->atomPositions[i * 3 + 1] = bbCenter.GetY();
+		}
+		break;
+	case YZ_PLANE: 
+		for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+			this->atomPositions[i * 3 + 0] = bbCenter.GetX();
+		}
+		break;
+	case LEAST_COMMON: 
+		break;
+	case ARBITRARY: 
+		break;
+	default: 
+		break;
+	}
+}
+
+/*
+ *	SecStructFlattener::getFlatPlaneByIndex
+ */
+SecStructFlattener::FlatPlane SecStructFlattener::getFlatPlaneByIndex(unsigned int idx) {
+	switch (idx) {
+		case 0:		return FlatPlane::XY_PLANE;
+		case 1:		return FlatPlane::XZ_PLANE;
+		case 2:		return FlatPlane::YZ_PLANE;
+		case 3:		return FlatPlane::LEAST_COMMON;
+		case 4:		return FlatPlane::ARBITRARY;
+		default:	return FlatPlane::XY_PLANE;
+	}
+}
+
+/*
+ *	SecStructFlattener::getFlatPlaneModeNumber
+ */
+int SecStructFlattener::getFlatPlaneModeNumber(void) {
+	return 5;
+}
+
+/*
+ *	SecStructFlattener::getFlatPlaneName
+ */
+std::string SecStructFlattener::getFlatPlaneName(SecStructFlattener::FlatPlane fp) {
+	switch (fp) {
+		case XY_PLANE		: return "XY Plane";
+		case XZ_PLANE		: return "XZ Plane";
+		case YZ_PLANE		: return "YZ Plane";
+		case LEAST_COMMON	: return "Least Common";
+		case ARBITRARY		: return "Arbitrary";
+		default				: return "";
+	}
+}
+
+/*
  *	SecStructFlattener::getData
  */
 bool SecStructFlattener::getData(core::Call& call) {
 	MolecularDataCall * outCall = dynamic_cast<MolecularDataCall*>(&call);
 	if (outCall == NULL) return false;
 
-	//outCall->SetAtomPositions(this->atomPositions);
+	flatten();
+
+	outCall->SetAtomPositions(this->atomPositions);
 	return true;
 }
 
@@ -96,7 +176,25 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 	if (!(*mdc)(1)) return false;
 	if (!(*mdc)(0)) return false;
 
+	this->boundingBox = mdc->AccessBoundingBoxes().ObjectSpaceBBox();
+
 	agdc->operator=(*mdc); // deep copy
+
+	// copy the atom positions to the array used here
+	if (atomPositions != NULL) {
+		delete[] this->atomPositions;
+		this->atomPositions = NULL;
+		this->atomPositionsSize = 0;
+	}
+
+	atomPositions = new float[mdc->AtomCount() * 3];
+	atomPositionsSize = mdc->AtomCount() * 3;
+
+	for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
+		atomPositions[i * 3 + 0] = mdc->AtomPositions()[i * 3 + 0];
+		atomPositions[i * 3 + 1] = mdc->AtomPositions()[i * 3 + 1];
+		atomPositions[i * 3 + 2] = mdc->AtomPositions()[i * 3 + 2];
+	}
 
 	return true;
 }

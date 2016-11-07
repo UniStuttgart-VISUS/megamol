@@ -13,6 +13,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/math/Cuboid.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -80,6 +81,45 @@ namespace protein_cuda {
 	private:
 
 		/**
+		 *	Enum for the plane the protein should be flattened to.
+		 */
+		enum FlatPlane{
+			XY_PLANE = 0,
+			XZ_PLANE = 1,
+			YZ_PLANE = 2,
+			LEAST_COMMON = 3,
+			ARBITRARY = 4
+		};
+
+		/**
+		 *	Returns the name of the plane the protein gets flattened to.
+		 *
+		 *	@param fp The flat plane
+		 *	@return The name of the flat plane
+		 */
+		std::string getFlatPlaneName(FlatPlane fp);
+
+		/**
+		 *	Returns the flat plane with the given index.
+		 *	
+		 *	@param idx The index of the flat plane.
+		 *	@return The flat plane with the given index.
+		 */
+		FlatPlane getFlatPlaneByIndex(unsigned int idx);
+
+		/**
+		 *	Returns the number of flat plane modes.
+		 *
+		 *	@return The number of flat plane modes.
+		 */
+		int getFlatPlaneModeNumber(void);
+
+		/**
+		 *	Flattens the secondary structure of the protein progressively.
+		 */
+		void flatten(void);
+
+		/**
 		 *	Callback function for the animation play button.
 		 *
 		 *	@param p The button parameter
@@ -99,11 +139,17 @@ namespace protein_cuda {
 		/** button that toggles the play of the animation */
 		megamol::core::param::ParamSlot playButtonParam;
 
+		/** the flat plane mode */
+		megamol::core::param::ParamSlot flatPlaneMode;
+
 		/** The current atom positions */
 		float * atomPositions;
 
 		/** The size of the atom positions array */
 		unsigned int atomPositionsSize;
+
+		/** The bounding box of the data */
+		vislib::math::Cuboid<float> boundingBox;
 	};
 
 } /* end namespace protein_cuda */
