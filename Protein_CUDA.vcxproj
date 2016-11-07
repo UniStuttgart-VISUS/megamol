@@ -261,6 +261,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\QuickSurfRenderer.h" />
     <ClInclude Include="src\QuickSurfRenderer2.h" />
     <ClInclude Include="src\RMS.h" />
+    <ClInclude Include="src\SecStructFlattener.h" />
     <ClInclude Include="src\slicing.h" />
     <ClInclude Include="src\sort_triangles.cuh" />
     <ClInclude Include="src\SplitMergeFeature.h" />
@@ -315,6 +316,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\QuickSurfRenderer.cpp" />
     <ClCompile Include="src\QuickSurfRenderer2.cpp" />
     <ClCompile Include="src\RMS.cpp" />
+    <ClCompile Include="src\SecStructFlattener.cpp" />
     <ClCompile Include="src\slicing.cpp" />
     <ClCompile Include="src\SplitMergeFeature.cpp" />
     <ClCompile Include="src\stdafx.cpp" />

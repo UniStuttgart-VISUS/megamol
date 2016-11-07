@@ -39,6 +39,7 @@
 // other modules (filter etc)
 #include "PotentialCalculator.h"
 #include "ProteinVariantMatch.h"
+#include "SecStructFlattener.h"
 #include "ParticlesToMeshConverter.h"
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -135,8 +136,9 @@ PROTEIN_CUDA_API void* mmplgModuleDescription(int idx) {
         case HAPTICS_OFFSET + 12 : return new factories::ModuleAutoDescription<protein_cuda::ComparativeFieldTopologyRenderer>();
         case HAPTICS_OFFSET + 13 : return new factories::ModuleAutoDescription<protein_cuda::ProteinVariantMatch>();
 		case HAPTICS_OFFSET + 14 : return new factories::ModuleAutoDescription<protein_cuda::QuickSurfRaycaster>();
-        case HAPTICS_OFFSET + 15 : return new factories::ModuleAutoDescription<protein_cuda::ParticlesToMeshConverter>();
-        #define CUDA_OFFSET 16
+		case HAPTICS_OFFSET + 15 : return new factories::ModuleAutoDescription<protein_cuda::SecStructFlattener>();
+        case HAPTICS_OFFSET + 16 : return new factories::ModuleAutoDescription<protein_cuda::ParticlesToMeshConverter>();
+        #define CUDA_OFFSET 17
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
