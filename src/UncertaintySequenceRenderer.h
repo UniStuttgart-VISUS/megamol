@@ -35,6 +35,8 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/BindingSiteCall.h"
 
+#include "UncertaintyDataCall.h"
+
 
 namespace megamol {
 namespace protein_uncertainty {
@@ -154,6 +156,9 @@ namespace protein_uncertainty {
         core::CallerSlot bindingSiteCallerSlot;
         /** residue selection caller slot */
         core::CallerSlot resSelectionCallerSlot;
+		
+	    /** The call for uncertainty data */
+        core::CallerSlot uncertaintyDataSlot;		
         
         // the number of residues in one row
         megamol::core::param::ParamSlot resCountPerRowParam;

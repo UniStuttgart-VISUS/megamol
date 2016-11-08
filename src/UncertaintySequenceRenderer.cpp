@@ -41,7 +41,8 @@ using vislib::sys::Log;
  * UncertaintySequenceRenderer::UncertaintySequenceRenderer (CTOR)
  */
 UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DModule (),
-        dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),
+        uncertaintyDataSlot( "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage." ),
+		dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),		
         bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
         resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
         resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
@@ -55,6 +56,11 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
         markerTextures(0), resSelectionCall(nullptr), leftMouseDown(false)
     {
 
+
+    // uncertainty data caller slot
+    this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
+    this->MakeSlotAvailable(&this->uncertaintyDataSlot);
+	
     // molecular data caller slot
     this->dataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
@@ -176,6 +182,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
     if( mol == NULL ) return false;
     // execute the call
     if( !(*mol)(MolecularDataCall::CallForGetData) ) return false;
+	
+	// get pointer to UncertaintyDataCall
+    UncertaintyDataCall *uncertaintyData = this->dataCallerSlot.CallAs<UncertaintyDataCall>();
+    if( uncertaintyData == NULL ) return false;
+    // execute the call
+    if( !(*uncertaintyData)(UncertaintyDataCall::CallForGetData)) return false;
+	
     
     
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();

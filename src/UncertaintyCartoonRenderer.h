@@ -163,9 +163,6 @@ namespace protein_uncertainty {
 		bool firstFrame;
 #endif
 
-        /** The sphere shader */
-        //vislib::graphics::gl::GLSLShader sphereShader;
-
         GLuint vertArray;
         std::vector<GLsync> fences;
 		GLuint theSingleBuffer;
