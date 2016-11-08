@@ -1,21 +1,23 @@
 /*
  * UncertaintySequenceRenderer.h
  *
- * Author: Matthias Braun (Michael Krone)
+ * Author: Matthias Braun
  * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  *
- * This module is based on the source code of "SequenceRenderere" in protein plugin (svn revision 1500).
+ * This module is based on the source code of "SequenceRenderer" in megamol protein plugin (svn revision 1500).
  *
  */
 
-#ifndef PROTEIN_UNCERTAINTY_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED
-#define PROTEIN_UNCERTAINTY_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED
+
+#ifndef MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED
+#define MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#define USE_SIMPLE_FONT
+
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -39,7 +41,7 @@
 
 
 namespace megamol {
-namespace protein_uncertainty {
+	namespace protein_uncertainty {
 
     class UncertaintySequenceRenderer : public megamol::core::view::Renderer2DModule {
     public:
@@ -233,7 +235,7 @@ namespace protein_uncertainty {
 		protein_calls::ResidueSelectionCall *resSelectionCall;
     };
 
-} /* end namespace protein_uncertainty */
+	} /* end namespace protein_uncertainty */
 } /* end namespace megamol */
 
-#endif // PROTEIN_UNCERTAINTY_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED
+#endif // MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED

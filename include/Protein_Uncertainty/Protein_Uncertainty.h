@@ -1,8 +1,13 @@
 /*
  * Protein_Uncertainty.h
- * Copyright (C) 2009-2016 by MegaMol Team
- * Alle Rechte vorbehalten.
+ *
+ * Author: Matthias Braun
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
+ *
  */
+
+
 #ifndef PROTEIN_UNCERTAINTY_H_INCLUDED
 #define PROTEIN_UNCERTAINTY_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -26,12 +31,15 @@
 #define PROTEIN_UNCERTAINTY_API
 #endif /* _WIN32 */
 
+
 #include "mmcore/utility/plugins/Plugin200Instance.h"
+
 
 #ifdef PROTEIN_UNCERTAINTY_EXPORTS
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 /**
  * Returns the version of the MegaMol™ plugin api used by this plugin.

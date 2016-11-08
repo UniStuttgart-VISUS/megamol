@@ -1,15 +1,16 @@
 /*
  * UncertaintyCartoonRenderer.cpp
  *
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+ * Author: Matthias Braun
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  *
- * This module is based on the source code of "CartoonTessellationRenderer" in protein plugin (svn revision 1500).
+ * This module is based on the source code of "CartoonTessellationRenderer" in megamol protein plugin (svn revision 1500).
  *
  */
 
-#include "stdafx.h"
 
+#include "stdafx.h"
 #include "UncertaintyCartoonRenderer.h"
 
 #include <inttypes.h>
@@ -28,8 +29,6 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
-
-#include "protein_calls/MolecularDataCall.h"
 
 
 using namespace megamol::core;
@@ -124,20 +123,26 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * moldyn::UncertaintyCartoonRenderer::UncertaintyCartoonRenderer
  */
 UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(),
-    getDataSlot("getdata", "Connects to the data source"),
-    fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
-    scalingParam("scaling", "scaling factor for particle radii"),
-	sphereParam("spheres", "render atoms as spheres"),
-	lineParam("lines", "render backbone as GL_LINE"),
-	backboneParam("backbone", "render backbone as tubes"),
-	backboneWidthParam("backbone width", "the width of the backbone"),
-	materialParam("material", "ambient, diffuse, specular components + exponent"),
-	lineDebugParam("wireframe", "render in wireframe mode"),
-	buttonParam("reload shaders", "reload the shaders"),
-	colorInterpolationParam("color interpolation", "should the colors be interpolated?"),
-    // this variant should not need the fence
-    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
-    singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) {
+		uncertaintyDataSlot("uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage."),
+		getDataSlot("getdata", "Connects to the data source"),
+		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
+		scalingParam("scaling", "scaling factor for particle radii"),
+		sphereParam("spheres", "render atoms as spheres"),
+		lineParam("lines", "render backbone as GL_LINE"),
+		backboneParam("backbone", "render backbone as tubes"),
+		backboneWidthParam("backbone width", "the width of the backbone"),
+		materialParam("material", "ambient, diffuse, specular components + exponent"),
+		lineDebugParam("wireframe", "render in wireframe mode"),
+		buttonParam("reload shaders", "reload the shaders"),
+		colorInterpolationParam("color interpolation", "should the colors be interpolated?"),
+		// this variant should not need the fence
+		singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
+		singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) 
+	{
+
+	// uncertainty data caller slot
+	this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
+	this->MakeSlotAvailable(&this->uncertaintyDataSlot);
 
     this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -492,6 +497,13 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
     float scaling = 1.0f;
     MolecularDataCall *mol = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
     if (mol == NULL) return false;
+
+	// get pointer to UncertaintyDataCall
+	UncertaintyDataCall *uncertaintyData = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
+	if (uncertaintyData == NULL) return false;
+	// execute the call
+	if (!(*uncertaintyData)(UncertaintyDataCall::CallForGetData)) return false;
+
 
 	if (this->buttonParam.IsDirty()) {
 		this->buttonParam.ResetDirty();

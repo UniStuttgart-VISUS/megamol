@@ -1,15 +1,17 @@
 /*
  * UncertaintyColor.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+ * Author: Matthias Braun
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  *
- * This module is based on the source code of "Color" in protein plugin (svn revision 1500).
+ * This module is based on the source code of "Color" in megamol protein plugin (svn revision 1500).
  *
  */
 
-#ifndef PROTEIN_UNCERTAINTY_UNCERTAINTYCOLOR_H_INCLUDED
-#define PROTEIN_UNCERTAINTY_UNCERTAINTYCOLOR_H_INCLUDED
+
+#ifndef MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCOLOR_H_INCLUDED
+#define MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCOLOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -21,7 +23,7 @@
 
 
 namespace megamol {
-namespace protein_uncertainty {
+	namespace protein_uncertainty {
 
 	class UncertaintyColor {
 
@@ -228,7 +230,7 @@ namespace protein_uncertainty {
 
     };
 
-} /* end namespace protein_uncertainty */
+	} /* end namespace protein_uncertainty */
 } /* end namespace megaMol */
 
-#endif /* PROTEIN_UNCERTAINTY_UNCERTAINTYCOLOR_H_INCLUDED */
+#endif /* MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCOLOR_H_INCLUDED */

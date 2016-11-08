@@ -1,7 +1,10 @@
 /*
  * Protein_Uncertainty.cpp
- * Copyright (C) 2009-2016 by MegaMol Team
- * Alle Rechte vorbehalten.
+ *
+ * Author: Matthias Braun
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
+ *
  */
 
 #include "stdafx.h"
@@ -17,10 +20,10 @@
 // Modules
 #include "UncertaintySequenceRenderer.h"
 #include "UncertaintyCartoonRenderer.h"
-//#include "UncertaintyDataLoader.h"
+#include "UncertaintyDataLoader.h"
 
 // Calls
-//#include "UncertaintyDataCall.h"
+#include "UncertaintyDataCall.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -51,14 +54,12 @@ namespace {
 
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintySequenceRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyCartoonRenderer>();
-			//this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataLoader>();
 
 
             // register calls here:
 
-            // this->call_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataCall>();
-
-
+            this->call_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

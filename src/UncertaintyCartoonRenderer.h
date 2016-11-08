@@ -1,18 +1,21 @@
 /*
  * UncertaintyCartoonRenderer.h
  *
- * Copyright (C) 2016 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+ * Author: Matthias Braun
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved.
  *
- * This module is based on the source code of "CartoonTessellationRenderer" in protein plugin (svn revision 1500).
+ * This module is based on the source code of "CartoonTessellationRenderer" in megamol protein plugin (svn revision 1500).
  *
  */
 
-#ifndef PROTEIN_UNCERTAINTY_UNCERTAINTYCARTOONRENDERER_H_INCLUDED
-#define PROTEIN_UNCERTAINTY_UNCERTAINTYCARTOONRENDERER_H_INCLUDED
+
+#ifndef MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCARTOONRENDERER_H_INCLUDED
+#define MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCARTOONRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
 
 #include <map>
 #include <utility>
@@ -28,12 +31,14 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include "protein_calls/MolecularDataCall.h"
+#include "UncertaintyDataCall.h"
 
 
 //#define FIRSTFRAME_CHECK
 
+
 namespace megamol {
-namespace protein_uncertainty {
+	namespace protein_uncertainty {
 
 	using namespace megamol::core;
 	using namespace megamol::protein_calls;
@@ -150,6 +155,9 @@ namespace protein_uncertainty {
         /** The call for data */
         CallerSlot getDataSlot;
 
+		/** The call for uncertainty data */
+		core::CallerSlot uncertaintyDataSlot;
+
         void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
 			unsigned int &colStride, unsigned int &vertStride);
@@ -199,7 +207,7 @@ namespace protein_uncertainty {
 		std::vector<CAlpha> mainchain;
     };
 
-} /* end namespace protein_uncertainty */
+	} /* end namespace protein_uncertainty */
 } /* end namespace megamol */
 
-#endif /* PROTEIN_UNCERTAINTY_UNCERTAINTYCARTOONRENDERER_H_INCLUDED */
+#endif /* MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCARTOONRENDERER_H_INCLUDED */

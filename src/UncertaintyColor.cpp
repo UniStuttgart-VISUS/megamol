@@ -1,15 +1,16 @@
 /*
  * UncertaintyColor.cpp
  *
- * Copyright (C) 2010 by Universitaet Stuttgart (VISUS).
+ * Author: Matthias Braun
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  *
- * This module is based on the source code of "Color" in protein plugin (svn revision 1500).
+ * This module is based on the source code of "Color" in megamol protein plugin (svn revision 1500).
  *
  */
 
-#include "stdafx.h"
 
+#include "stdafx.h"
 #include "UncertaintyColor.h"
 
 #include <string>

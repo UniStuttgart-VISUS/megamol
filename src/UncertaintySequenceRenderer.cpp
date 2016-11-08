@@ -1,9 +1,14 @@
 /*
 * UncertaintySequenceRenderer.cpp
 *
-* This module is based on the source code of "SequenceRenderere" in protein plugin (svn revision 1500).
+* Author: Matthias Braun
+* Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+* All rights reserved.
+*
+* This module is based on the source code of "SequenceRenderer" in megamol protein plugin (svn revision 1500).
 *
 */
+
 
 #include "stdafx.h"
 #include "UncertaintySequenceRenderer.h"
@@ -55,7 +60,6 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 #endif // USE_SIMPLE_FONT
         markerTextures(0), resSelectionCall(nullptr), leftMouseDown(false)
     {
-
 
     // uncertainty data caller slot
     this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
@@ -184,7 +188,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
     if( !(*mol)(MolecularDataCall::CallForGetData) ) return false;
 	
 	// get pointer to UncertaintyDataCall
-    UncertaintyDataCall *uncertaintyData = this->dataCallerSlot.CallAs<UncertaintyDataCall>();
+	UncertaintyDataCall *uncertaintyData = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
     if( uncertaintyData == NULL ) return false;
     // execute the call
     if( !(*uncertaintyData)(UncertaintyDataCall::CallForGetData)) return false;
