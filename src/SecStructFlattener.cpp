@@ -11,6 +11,11 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/Vector3fParam.h"
+
+#include "vislib/math/Matrix.h"
+#include "vislib/math/ShallowVector.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -26,7 +31,10 @@ SecStructFlattener::SecStructFlattener(void) :
 	dataOutSlot("dataOut", "Provides the flattened molecular data"),
 	playParam("animation::play", "Should the animation be played?"),
 	playButtonParam("animation::playButton", "Button to toggle animation"),
-	flatPlaneMode("flatPlaneMode", "The plane the protein gets flattened to") {
+	flatPlaneMode("plane::flatPlaneMode", "The plane the protein gets flattened to"),
+	arbPlaneCenterParam("plane::planeOrigin", "The plane origin for the arbitrary plane mode"),
+	arbPlaneNormalParam("plane::planeNormal", "The plane normal for the arbitrary plane mode"),
+	oxygenOffsetParam("plane::preserveDirections", "Should the directions between c alpha and oxygen atoms be preserved?"){
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -53,8 +61,29 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->flatPlaneMode << fpParam;
 	this->MakeSlotAvailable(&this->flatPlaneMode);
 
+	const vislib::math::Vector<float, 3> orig(0.0f, 0.0f, 0.0f);
+	this->arbPlaneCenterParam.SetParameter(new param::Vector3fParam(orig));
+	this->MakeSlotAvailable(&this->arbPlaneCenterParam);
+
+	const vislib::math::Vector<float, 3> orig2(0.0f, 0.0f, 1.0f);
+	this->arbPlaneNormalParam.SetParameter(new param::Vector3fParam(orig2));
+	this->MakeSlotAvailable(&this->arbPlaneNormalParam);
+
+	this->oxygenOffsetParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->oxygenOffsetParam);
+
 	this->atomPositions = NULL;
 	this->atomPositionsSize = 0;
+
+	this->lastHash = 0;
+	this->hashOffset = 0;
+	this->myHash = 0;
+	this->firstFrame = true;
+
+	this->lastPlaneMode = XY_PLANE;
+
+	this->flatPlaneMode.ForceSetDirty();
+	this->mainDirections.resize(3);
 }
 
 /*
@@ -83,34 +112,120 @@ void SecStructFlattener::release(void) {
 }
 
 /*
+ *	SecStructFlattener::computeMainDirectionPCA
+ */
+void SecStructFlattener::computeMainDirectionPCA(void) {
+	vislib::math::Matrix<float, 3, vislib::math::ROW_MAJOR> covMat;
+	covMat.SetNull();
+
+	// compute the midpoint of the data set
+	vislib::math::Vector<float, 3> midpoint(0.0f, 0.0f, 0.0f);
+	for (unsigned int k = 0; k < cAlphaIndices.size(); k++) {
+		vislib::math::ShallowVector<const float, 3> p1(&this->atomPositions[this->cAlphaIndices[k] * 3]);
+		midpoint += p1;
+	}
+	midpoint /= static_cast<float>(cAlphaIndices.size());
+
+	// compute covariance matrix
+	for (unsigned int x = 0; x < 3; x++) {
+		for (unsigned int y = 0; y < 3; y++) {
+			for (unsigned int k = 0; k < cAlphaIndices.size(); k++) {
+				vislib::math::ShallowVector<const float, 3> p1(&this->atomPositions[this->cAlphaIndices[k] * 3]);
+				covMat(x, y) += (p1[x] - midpoint[x]) * (p1[y] - midpoint[y]);
+			}
+			covMat(x, y) /= static_cast<float>(cAlphaIndices.size() - 1);
+		}
+	}
+	//covMat.Dump(std::cout);
+
+	float eigenVals[3];
+	vislib::math::Vector<float, 3> eigenVectors[3];
+	covMat.FindEigenvalues(eigenVals, eigenVectors, 3);
+	std::vector<unsigned int> indexVec = { 0, 1, 2 };
+
+	std::sort(indexVec.begin(), indexVec.end(), [&eigenVals](const unsigned int& a, const unsigned int& b) {
+		return eigenVals[a] > eigenVals[b];
+	});
+
+	for (int i = 0; i < 3; i++) {
+		mainDirections[i] = eigenVectors[indexVec[i]];
+		mainDirections[i].Normalise();
+	}
+}
+
+/*
  *	SecStructFlattener::flatten
  */
 void SecStructFlattener::flatten(void) {
 
 	auto bbCenter = this->boundingBox.CalcCenter();
+	vislib::math::Vector<float, 3> bbCenterVec(bbCenter.GetX(), bbCenter.GetY(), bbCenter.GetZ());
 
-	switch (this->flatPlaneMode.Param<param::EnumParam>()->Value()) {
-	case XY_PLANE: 
-		for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
-			this->atomPositions[i * 3 + 2] = bbCenter.GetZ();
+	if (this->firstFrame) {
+		this->arbPlaneCenterParam.Param<param::Vector3fParam>()->SetValue(bbCenterVec);
+		this->firstFrame = false;
+	} else {
+		bbCenterVec = this->arbPlaneCenterParam.Param<param::Vector3fParam>()->Value();
+	}
+
+	if (this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty() || this->oxygenOffsetParam.IsDirty()) {
+		this->flatPlaneMode.ResetDirty();
+		this->arbPlaneCenterParam.ResetDirty();
+		this->arbPlaneNormalParam.ResetDirty();
+		this->oxygenOffsetParam.ResetDirty();
+		this->hashOffset++;
+
+		vislib::math::Vector<float, 3> n = this->arbPlaneNormalParam.Param<param::Vector3fParam>()->Value();
+		n.Normalise();
+
+		switch (this->flatPlaneMode.Param<param::EnumParam>()->Value()) {
+			case XY_PLANE:
+				for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+					this->atomPositions[i * 3 + 2] = bbCenterVec.GetZ();
+				}
+				break;
+			case XZ_PLANE:
+				for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+					this->atomPositions[i * 3 + 1] = bbCenterVec.GetY();
+				}
+				break;
+			case YZ_PLANE:
+				for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+					this->atomPositions[i * 3 + 0] = bbCenterVec.GetX();
+				}
+				break;
+			case LEAST_COMMON:
+				computeMainDirectionPCA();
+				// project points onto plane
+				for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+					vislib::math::ShallowVector<float, 3> atomPos(&this->atomPositions[i * 3]);
+					vislib::math::Vector<float, 3> v(&this->atomPositions[i * 3]);
+					v = v - bbCenterVec;
+					float dist = v.Dot(mainDirections[2]);
+					atomPos = atomPos - dist * mainDirections[2];
+				}
+				break;
+			case ARBITRARY:
+				// project points onto plane
+				for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
+					vislib::math::ShallowVector<float, 3> atomPos(&this->atomPositions[i * 3]);
+					vislib::math::Vector<float, 3> v(&this->atomPositions[i * 3]);
+					v = v - bbCenterVec;
+					float dist = v.Dot(n);
+					atomPos = atomPos - dist * n;
+				}
+				break;
+			default:
+				break;
 		}
-		break;
-	case XZ_PLANE: 
-		for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
-			this->atomPositions[i * 3 + 1] = bbCenter.GetY();
+
+		if (this->oxygenOffsetParam.Param<param::BoolParam>()->Value()) {
+			for (unsigned int i = 0; i < this->oxygenOffsets.size(); i++) {
+				vislib::math::ShallowVector<float, 3> oPos(&this->atomPositions[oIndices[i] * 3]);
+				vislib::math::ShallowVector<float, 3> cPos(&this->atomPositions[cAlphaIndices[i] * 3]);
+				oPos = cPos + oxygenOffsets[i];
+			}
 		}
-		break;
-	case YZ_PLANE: 
-		for (unsigned int i = 0; i < this->atomPositionsSize / 3; i++) {
-			this->atomPositions[i * 3 + 0] = bbCenter.GetX();
-		}
-		break;
-	case LEAST_COMMON: 
-		break;
-	case ARBITRARY: 
-		break;
-	default: 
-		break;
 	}
 }
 
@@ -156,9 +271,14 @@ bool SecStructFlattener::getData(core::Call& call) {
 	MolecularDataCall * outCall = dynamic_cast<MolecularDataCall*>(&call);
 	if (outCall == NULL) return false;
 
-	flatten();
+	this->myHash = this->lastHash + this->hashOffset;
 
+	outCall->SetDataHash(this->myHash);
 	outCall->SetAtomPositions(this->atomPositions);
+
+	outCall->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
+	outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
+
 	return true;
 }
 
@@ -176,25 +296,78 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 	if (!(*mdc)(1)) return false;
 	if (!(*mdc)(0)) return false;
 
-	this->boundingBox = mdc->AccessBoundingBoxes().ObjectSpaceBBox();
-
 	agdc->operator=(*mdc); // deep copy
 
-	// copy the atom positions to the array used here
-	if (atomPositions != NULL) {
-		delete[] this->atomPositions;
-		this->atomPositions = NULL;
-		this->atomPositionsSize = 0;
+	std::vector<float> atomRadii(mdc->AtomCount(), 0.0f);
+
+	if (lastHash != mdc->DataHash() || this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty()) {
+		lastHash = mdc->DataHash();
+		this->boundingBox = mdc->AccessBoundingBoxes().ObjectSpaceBBox();
+
+		// copy the atom positions to the array used here
+		if (atomPositions != NULL) {
+			delete[] this->atomPositions;
+			this->atomPositions = NULL;
+			this->atomPositionsSize = 0;
+		}
+
+		atomPositions = new float[mdc->AtomCount() * 3];
+		atomPositionsSize = mdc->AtomCount() * 3;
+		cAlphaIndices.clear();
+		oIndices.clear();
+
+		for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
+			atomPositions[i * 3 + 0] = mdc->AtomPositions()[i * 3 + 0];
+			atomPositions[i * 3 + 1] = mdc->AtomPositions()[i * 3 + 1];
+			atomPositions[i * 3 + 2] = mdc->AtomPositions()[i * 3 + 2];
+			atomRadii[i] = mdc->AtomTypes()[mdc->AtomTypeIndices()[i]].Radius();
+
+			// check the relevant atom types
+			vislib::StringA elName = mdc->AtomTypes()[mdc->AtomTypeIndices()[i]].Name();
+			elName.ToLowerCase();
+			elName.TrimSpaces();
+			if (elName.StartsWith("ca")) cAlphaIndices.push_back(i);
+			if (elName.StartsWith("o") && elName.Length() == 1) oIndices.push_back(i); // cut out all o atoms besides the first per aminoacid
+		}
+
+		if (cAlphaIndices.size() != oIndices.size()) {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+				"Malformed molecule (different number of c alpha and primary oxygen atoms)\n");
+		}
+
+		this->oxygenOffsets.resize(cAlphaIndices.size());
+		for (unsigned int i = 0; i < cAlphaIndices.size(); i++) {
+			vislib::math::ShallowVector<float, 3> cPos(&atomPositions[cAlphaIndices[i] * 3]);
+			vislib::math::ShallowVector<float, 3> oPos(&atomPositions[oIndices[i] * 3]);
+			this->oxygenOffsets[i] = oPos - cPos;
+		}
 	}
 
-	atomPositions = new float[mdc->AtomCount() * 3];
-	atomPositionsSize = mdc->AtomCount() * 3;
+	this->myHash = this->lastHash + this->hashOffset;
+	agdc->SetDataHash(this->myHash);
 
-	for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
-		atomPositions[i * 3 + 0] = mdc->AtomPositions()[i * 3 + 0];
-		atomPositions[i * 3 + 1] = mdc->AtomPositions()[i * 3 + 1];
-		atomPositions[i * 3 + 2] = mdc->AtomPositions()[i * 3 + 2];
+	flatten();
+
+	// compute the new bounding box
+	vislib::math::Cuboid<float> newbb;
+	if (mdc->AtomCount() != 0) {
+		vislib::math::Vector<float, 3> p(&atomPositions[0]);
+		float r = atomRadii[0];
+		newbb = vislib::math::Cuboid<float>(p[0] - r, p[1] - r, p[2] - r, p[0] + r, p[1] + r, p[2] + r);
 	}
+
+	for (unsigned int i = 1; i < mdc->AtomCount(); i++) {
+		vislib::math::Vector<float, 3> p(&atomPositions[i * 3]);
+		float r = atomRadii[i];
+		vislib::math::Cuboid<float> b(p[0] - r, p[1] - r, p[2] - r, p[0] + r, p[1] + r, p[2] + r);
+		newbb.Union(b);
+	}
+
+	newbb.Grow(3.0f);
+
+	this->boundingBox.Union(newbb);
+	agdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
+	agdc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
 
 	return true;
 }

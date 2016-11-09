@@ -14,6 +14,9 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/Array.h"
+
+#include <vector>
 
 namespace megamol {
 namespace protein_cuda {
@@ -127,6 +130,11 @@ namespace protein_cuda {
 		 */
 		bool onPlayToggleButton(megamol::core::param::ParamSlot& p);
 
+		/**
+		 *	Computes the three main directions of the c alpha atoms
+		 */
+		void computeMainDirectionPCA(void);
+
 		/** data caller slot */
 		megamol::core::CallerSlot getDataSlot;
 
@@ -142,6 +150,15 @@ namespace protein_cuda {
 		/** the flat plane mode */
 		megamol::core::param::ParamSlot flatPlaneMode;
 
+		/** the normal of the arbitrary plane */
+		megamol::core::param::ParamSlot arbPlaneNormalParam;
+												
+		/** the origin of the arbitrary plane */
+		megamol::core::param::ParamSlot arbPlaneCenterParam;
+
+		/** Preserve the offset of the oxygen atoms relative to the c alphas? */
+		megamol::core::param::ParamSlot oxygenOffsetParam;
+
 		/** The current atom positions */
 		float * atomPositions;
 
@@ -150,6 +167,33 @@ namespace protein_cuda {
 
 		/** The bounding box of the data */
 		vislib::math::Cuboid<float> boundingBox;
+
+		/** The indices of the c alpha atoms */
+		std::vector<unsigned int> cAlphaIndices;
+
+		/** The indices of the oxygen atoms */
+		std::vector<unsigned int> oIndices;
+
+		/** The last hash of the used data set */
+		SIZE_T lastHash;
+
+		/** The current hash of the data emitted by this module */
+		SIZE_T myHash;
+
+		/** The offset to the hash from the data set hash */
+		SIZE_T hashOffset;
+
+		/** The lastly used plane mode */
+		FlatPlane lastPlaneMode;
+
+		/** The main directions of the c alpha atoms of the data set, ordered by significance */
+		std::vector<vislib::math::Vector<float, 3>> mainDirections;
+
+		/** Indicator for the first frame */
+		bool firstFrame;
+
+		/** The distance vectors from the c alpha atoms to the corresponding oxygen atoms */
+		std::vector<vislib::math::Vector<float, 3>> oxygenOffsets;
 	};
 
 } /* end namespace protein_cuda */
