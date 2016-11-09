@@ -868,7 +868,7 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 		float minC = 0.0f, maxC = 0.0f;
 		unsigned int colTabSize = 0;
 		glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-		auto v = this->materialParam.Param<param::Vector4fParam>()->Value();
+		//auto v = this->materialParam.Param<param::Vector4fParam>()->Value();
 		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
