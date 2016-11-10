@@ -341,6 +341,8 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 			vislib::math::ShallowVector<float, 3> oPos(&atomPositions[oIndices[i] * 3]);
 			this->oxygenOffsets[i] = oPos - cPos;
 		}
+
+		transferAtomData(this->atomPositions, this->atomPositionsSize / 3, this->cAlphaIndices.data(), (unsigned int)this->cAlphaIndices.size(), this->oIndices.data(), (unsigned int)this->oIndices.size());
 	}
 
 	this->myHash = this->lastHash + this->hashOffset;

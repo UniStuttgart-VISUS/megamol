@@ -439,5 +439,8 @@
     <CudaCompile Include="src\CUDAQuickSurfAlternative.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
+    <CudaCompile Include="src\SecStructFlattener.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

@@ -399,6 +399,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="src\PotentialCalculator.cu" />
+    <CudaCompile Include="src\SecStructFlattener.cu" />
     <CudaCompile Include="src\sort_triangles.cu" />
     <CudaCompile Include="src\VolumeMeshRenderer-sort.cu" />
     <CudaCompile Include="src\VolumeMeshRenderer.cu" />

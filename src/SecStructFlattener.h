@@ -18,6 +18,8 @@
 
 #include <vector>
 
+extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas, unsigned int * h_oIndices, unsigned int numOs);
+
 namespace megamol {
 namespace protein_cuda {
 
