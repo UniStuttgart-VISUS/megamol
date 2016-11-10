@@ -9,15 +9,19 @@
 *
 */
 
-
 #include "stdafx.h"
+
 #include "UncertaintyDataLoader.h"
 
+#include "Python.h"
+
+#include <cstdlib> // for: mbstowcs() - multi byte string to wide char string
 #include <math.h>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/StringParam.h"
 
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/BufferedFile.h"
@@ -37,9 +41,13 @@ using namespace megamol::protein_uncertainty;
  */
 UncertaintyDataLoader::UncertaintyDataLoader( void ) : megamol::core::Module(),
         dataOutSlot( "dataout", "The slot providing the uncertainty data"),
+		pdbIDSlot("PDB-ID", "The PDB ID ..."),
         pdbFilenameSlot( "pdbFilename", "The PDB file containing the binding site information"),
         colorTableFileParam( "ColorTableFilename", "The filename of the color table.") {
-            
+      
+	this->pdbIDSlot << new param::StringParam("");
+	this->MakeSlotAvailable(&this->pdbIDSlot);
+
     this->pdbFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable( &this->pdbFilenameSlot);
     
@@ -81,25 +89,33 @@ void UncertaintyDataLoader::release() {
 bool UncertaintyDataLoader::getData( Call& call) {
     using vislib::sys::Log;
 
+	// ...
+	UncertaintyDataCall *udc = dynamic_cast<UncertaintyDataCall*>(&call);
+    if ( !udc ) return false;
 
-	UncertaintyDataCall *site = dynamic_cast<UncertaintyDataCall*>(&call);
-    if ( !site ) return false;
+	// try to load run python script, if necessary
+	if (this->pdbIDSlot.IsDirty()) {
+		this->pdbIDSlot.ResetDirty();
+		this->runPythonScript(this->pdbIDSlot.Param<core::param::StringParam>()->Value());
+	}
 
+	return true;
 
     // read and update the color table, if necessary
-    if( this->colorTableFileParam.IsDirty() ) {
+    /*if( this->colorTableFileParam.IsDirty() ) {
         UncertaintyColor::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
-    }
+    }*/
     
+
     // try to load file, if necessary
-    if ( this->pdbFilenameSlot.IsDirty() ) {
+    /*if ( this->pdbFilenameSlot.IsDirty() ) {
         this->pdbFilenameSlot.ResetDirty();
         this->loadPDBFile( this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value());
-    }
+    }*/
 
     // pass data to call, if available
-    if( this->bindingSites.IsEmpty() ) {
+    /*if( this->bindingSites.IsEmpty() ) {
         return false;
     } else {
         //site->SetDataHash( this->datahash);
@@ -109,8 +125,68 @@ bool UncertaintyDataLoader::getData( Call& call) {
         //site->SetBindingSite( &this->bindingSites);
         //site->SetBindingSiteColors( &this->bindingSiteColors);
         return true;
-    } 
+    } */
 }
+
+/*
+* UncertaintyDataLoader::runPythonScript
+*/
+void UncertaintyDataLoader::runPythonScript(const vislib::StringA &pdbid) {
+	using vislib::sys::Log;
+
+
+	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Starting \"runPythonScript\" for %s", pdbid); // DEBUG
+
+
+	vislib::StringA PythonArg0_Script = "UncertaintyInputData.py";
+	vislib::StringA PythonArg1_PDB    = pdbid;
+	vislib::StringA PythonArg2_d      = "-d";
+
+	wchar_t *wPythonArg0 = new wchar_t[PythonArg2_d.Length()];
+	wchar_t *wPythonArg1 = new wchar_t[PythonArg1_PDB.Length()];
+	wchar_t *wPythonArg2 = new wchar_t[PythonArg2_d.Length()];
+	mbstowcs(&wPythonArg0[0], PythonArg0_Script, sizeof(wPythonArg0));
+	mbstowcs(&wPythonArg1[0], PythonArg1_PDB, sizeof(wPythonArg1));
+	mbstowcs(&wPythonArg2[0], PythonArg2_d, sizeof(wPythonArg2));
+
+	wchar_t* wPythonArgv[] = {&wPythonArg0[0], &wPythonArg1[0], &wPythonArg2[0], NULL};
+	int wPythonArgc = (int)(sizeof(wPythonArgv) / sizeof(wPythonArgv[0])) - 1;
+
+	/*
+	// initialize the embedded python interpreter
+	Py_SetProgramName(wPythonArgv[0]);
+	Py_Initialize();
+	PySys_SetArgv(wPythonArgc, wPythonArgv);
+
+	
+	// open script file
+	FILE *ScriptFile;
+	fopen_s(&ScriptFile, PythonArg0_Script, "r");
+	if (ScriptFile != NULL) {
+		// call python script with interpreter
+		PyRun_SimpleFileEx(ScriptFile, PythonArg0_Script, 1); // last parameter == 1 means to close the file before returning.
+		// DON'T call: fclose(ScriptFile);
+
+	}
+	else {
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ">>> ERROR: Couldn't find/open file: \"%s\"", PythonArg0_Script); // DEBUG
+	}
+	
+
+	// end the python interpreter
+	Py_Finalize();
+	*/
+
+	delete wPythonArg0;
+	delete wPythonArg1;
+	delete wPythonArg2;
+
+
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "End of \"runPythonScript\" for %s", pdbid); // DEBUG
+
+}
+
+
 
 /*
  * UncertaintyDataLoader::loadPDBFile

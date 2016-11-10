@@ -16,6 +16,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -28,6 +29,7 @@
 
 namespace megamol {
 	namespace protein_uncertainty {
+
 
 		class UncertaintyDataLoader : public megamol::core::Module {
 		public:
@@ -89,6 +91,14 @@ namespace megamol {
 			bool getData(megamol::core::Call& call);
 
 		private:
+
+			/**
+			* Run python script to generate uncertainty data input file.
+			*
+			* @param pdbID The PDB ID.
+			*/
+			void runPythonScript(const vislib::StringA &pdbid);
+
 			/**
 			* Load information about amino acids and residues from a PDB file.
 			*
@@ -96,11 +106,17 @@ namespace megamol {
 			*/
 			void loadPDBFile(const vislib::TString &filename);
 
+
 			/** The data callee slot */
 			core::CalleeSlot dataOutSlot;
 
+
+			/** the parameter slot for the pdb id */
+			core::param::ParamSlot pdbIDSlot;
+
 			/** the parameter slot for the binding site file (PDB) */
 			core::param::ParamSlot pdbFilenameSlot;
+
 			// the file name for the color table
 			megamol::core::param::ParamSlot colorTableFileParam;
 
