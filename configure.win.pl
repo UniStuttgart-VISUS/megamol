@@ -66,7 +66,7 @@ $a = PathParameter->new();
     $a->id("trisoup");
     $a->description("Path to the trisoup plugin directory");
     $a->placeholder("%trisoup%");
-    $a->markerFile("TriSoup.sln");
+    $a->markerFile("mmstd_trisoup.sln");
     $a->relativeLocation("./");
     $a->autoDetect(1);
     push @pps, $a;
