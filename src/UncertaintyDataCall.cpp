@@ -24,16 +24,16 @@ const unsigned int UncertaintyDataCall::CallForGetData = 0;
 
 
 UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
-bindingSites(NULL), bindingSiteResNames(NULL), bindingSiteNames(NULL),
-bindingSiteDescriptions(NULL), bindingSiteColors(NULL) {
+                                                 dsspSecStructure(NULL), strideSecStructure(NULL), pdbSecStructure(NULL),
+                                                 indexAminoAcidchainID(NULL) {
 
 }
 
 
 UncertaintyDataCall::~UncertaintyDataCall(void) {
-	this->bindingSites = NULL;
-	this->bindingSiteResNames = NULL;
-	this->bindingSiteNames = NULL;
-	this->bindingSiteDescriptions = NULL;
-	this->bindingSiteColors = NULL;
+    this->dsspSecStructure = NULL;
+    this->strideSecStructure = NULL;
+    this->pdbSecStructure = NULL,
+    this->indexAminoAcidchainID = NULL;
+
 }

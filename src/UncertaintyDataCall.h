@@ -83,155 +83,167 @@ namespace megamol {
 			return "";
 		}
 
+        UncertaintyDataCall(void);
+
+        ~UncertaintyDataCall(void);
+
+
+        // ------------------ GET functions ------------------- 
+
 		/**
-		* Get the number of binding sites.
+		* Get the number of amino-acids.
 		*
-		* @return The binding site count.
+		* @return The amino-acid count.
 		*/
-		inline unsigned int GetBindingSiteCount(void) const {
-			if (!this->bindingSites)
+		inline unsigned int GetAminoAcidCount(void) const {
+            if (!this->indexAminoAcidchainID)
 				return 0;
 			else
-				return static_cast<unsigned int>(this->bindingSites->Count());
+                return static_cast<unsigned int>(this->indexAminoAcidchainID->Count());
 		}
 
-		/**
-		* Get the residue and chain indices of a binding site.
-		*
-		* @param i The index of the residue.
-		* @return Pointer to the array of residue indices.
-		*/
-		inline vislib::Array<vislib::Pair<char, unsigned int> > *GetBindingSite(unsigned int i) const {
-			if (!this->bindingSites)
-				return 0;
-			else if (this->bindingSites->Count() <= i)
-				return 0;
-			else
-				//return &(*this->bindingSites)[i];
-				return &(this->bindingSites->operator[](i));
-		}
+        /**
+        * Get the pdb amino-acid index.
+        *
+        * @return The pdb amino-acid index.
+        */
+        inline int GetPDBAminoAcidIndex(unsigned int i) const {
+            if (!this->indexAminoAcidchainID)
+                return 0;
+            else if (this->indexAminoAcidchainID->Count() <= i)
+                return 0;
+            else
+                return (this->indexAminoAcidchainID->operator[](i).First());
+        }
 
-		/**
-		* Set the binding sites pointer (residue and chain indices).
-		*
-		* @param bsPtr The pointer.
-		*/
-		inline void SetBindingSite(vislib::Array<vislib::Array<vislib::Pair<char, unsigned int> > > *bsPtr) {
-			this->bindingSites = bsPtr;
-		}
+        /**
+        * Get the amino-acid chain id.
+        *
+        * @return The amino-acid index.
+        */
+        inline char GetAminoAcidChainID(unsigned int i) const {
+            if (!this->indexAminoAcidchainID)
+                return 0;
+            else if (this->indexAminoAcidchainID->Count() <= i)
+                return 0;
+            else
+                return (this->indexAminoAcidchainID->operator[](i).Second().Second());
+        }
 
-		/**
-		* Get the residue names of a binding site.
-		*
-		* @param i The index of the residue.
-		* @return Pointer to the array of residue names.
-		*/
-		inline vislib::Array<vislib::StringA> *GetBindingSiteResNames(unsigned int i) const {
-			if (!this->bindingSiteResNames)
-				return 0;
-			else if (this->bindingSiteResNames->Count() <= i)
-				return 0;
-			else
-				//return &(*this->bindingSites)[i];
-				return &(this->bindingSiteResNames->operator[](i));
-		}
+        /**
+        * Get the amino-acid in three letter code.
+        *
+        * @return The amino-acid index.
+        */
+        inline vislib::StringA GetAminoAcid(unsigned int i) const {
+            if (!this->indexAminoAcidchainID)
+                return 0;
+            else if (this->indexAminoAcidchainID->Count() <= i)
+                return 0;
+            else
+                return (this->indexAminoAcidchainID->operator[](i).Second().First());
+        }
 
-		/**
-		* Set the pointer to the residue names of the binding site.
-		*
-		* @param rnPtr The pointer.
-		*/
-		inline void SetBindingSiteResNames(vislib::Array<vislib::Array<vislib::StringA> > *rnPtr) {
-			this->bindingSiteResNames = rnPtr;
-		}
+        /**
+        * Get the information of the DSSP secondary structure.
+        *
+        * @param i The index of the amino-acid.
+        * @return Pointer to the array of DSSP secondary structure information.
+        */
+        inline char GetDsspSecStructure(unsigned int i) const {
+            if (!this->dsspSecStructure)
+                return static_cast<char>(' ');
+            else if (this->dsspSecStructure->Count() <= i)
+                return static_cast<char>(' ');
+            else
+                return (this->dsspSecStructure->operator[](i));
+        }
 
-		/**
-		* Get the name of a binding site.
-		*
-		* @param i The index of the residue.
-		* @return Pointer to the array of residue names.
-		*/
-		inline vislib::StringA GetBindingSiteName(unsigned int i) const {
-			if (!this->bindingSiteNames)
-				return "";
-			else if (this->bindingSiteNames->Count() <= i)
-				return "";
-			else
-				return (this->bindingSiteNames->operator[](i));
-		}
+        /**
+        * Get the information of the STRIDE secondary structure.
+        *
+        * @param i The index of the amino-acid.
+        * @return Pointer to the array of STRIDE secondary structure information.
+        */
+        inline char GetStrideSecStructure(unsigned int i) const {
+            if (!this->strideSecStructure)
+                return static_cast<char>(' ');
+            else if (this->strideSecStructure->Count() <= i)
+                return static_cast<char>(' ');
+            else
+                return (this->strideSecStructure->operator[](i));
+        }
 
-		/**
-		* Set the pointer to the names of a binding sites.
-		*
-		* @param nPtr The pointer.
-		*/
-		inline void SetBindingSiteNames(vislib::Array<vislib::StringA> *nPtr) {
-			this->bindingSiteNames = nPtr;
-		}
+        /**
+        * Get the information of the PDB secondary structure.
+        *
+        * @param i The index of the amino-acid.
+        * @return Pointer to the array of PDB secondary structure information.
+        */
+        inline char GetPDBSecStructure(unsigned int i) const {
+            if (!this->pdbSecStructure)
+                return static_cast<char>(' ');
+            else if (this->pdbSecStructure->Count() <= i)
+                return static_cast<char>(' ');
+            else
+                return (this->pdbSecStructure->operator[](i));
+        }
 
-		/**
-		* Get the description of a binding site.
-		*
-		* @param i The index of the residue.
-		* @return Pointer to the array of binding site descriptions.
-		*/
-		inline vislib::StringA GetBindingSiteDescription(unsigned int i) const {
-			if (!this->bindingSiteDescriptions)
-				return "";
-			else if (this->bindingSiteDescriptions->Count() <= i)
-				return "";
-			else
-				return (this->bindingSiteDescriptions->operator[](i));
-		}
 
-		/**
-		* Set the pointer to the descriptions of a binding sites.
-		*
-		* @param nPtr The pointer.
-		*/
-		inline void SetBindingSiteDescriptions(vislib::Array<vislib::StringA> *nPtr) {
-			this->bindingSiteDescriptions = nPtr;
-		}
+        // ------------------ SET functions ------------------- 
 
-		/**
-		* Get the color of a binding site.
-		*
-		* @param i The index of the residue.
-		* @return Pointer to the array of binding site descriptions.
-		*/
-		inline vislib::math::Vector<float, 3> GetBindingSiteColor(unsigned int i) const {
-			if (!this->bindingSiteColors)
-				return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
-			else if (this->bindingSiteColors->Count() <= i)
-				return vislib::math::Vector<float, 3>(0.5f, 0.5f, 0.5f);
-			else
-				return (this->bindingSiteColors->operator[](i));
-		}
+        /**
+        * Set the pointer to the DSSP secondary structure information.
+        *
+        * @param rnPtr The pointer.
+        */
+        inline void SetDsspSecStructure(vislib::Array<char> *rnPtr) {
+            this->dsspSecStructure = rnPtr;
+        }
 
-		/**
-		* Set the pointer to the colors of a binding sites.
-		*
-		* @param nPtr The pointer.
-		*/
-		inline void SetBindingSiteColors(vislib::Array<vislib::math::Vector<float, 3> > *nPtr) {
-			this->bindingSiteColors = nPtr;
-		}
+        /**
+        * Set the pointer to the STRIDE secondary structure information.
+        *
+        * @param rnPtr The pointer.
+        */
+        inline void SetStrideSecStructure(vislib::Array<char> *rnPtr) {
+            this->strideSecStructure = rnPtr;
+        }
 
-		UncertaintyDataCall(void);
+        /**
+        * Set the pointer to the PDB secondary structure information.
+        *
+        * @param rnPtr The pointer.
+        */
+        inline void SetPdbSecStructure(vislib::Array<char> *rnPtr) {
+            this->pdbSecStructure = rnPtr;
+        }
 
-		~UncertaintyDataCall(void);
+        /**
+        * Set the pointer to the DSSP secondary structure information.
+        *
+        * @param rnPtr The pointer.
+        */
+        inline void SetIndexAminoAcidchainID(vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > *rnPtr) {
+            this->indexAminoAcidchainID = rnPtr;
+        }
+
 
 	private:
-		/** Pointer to binding site array */
-		vislib::Array<vislib::Array<vislib::Pair<char, unsigned int> > > *bindingSites;
-		/** Pointer to binding site residue name array */
-		vislib::Array<vislib::Array<vislib::StringA> > *bindingSiteResNames;
-		/** The binding site name */
-		vislib::Array<vislib::StringA> *bindingSiteNames;
-		/** The binding site name */
-		vislib::Array<vislib::StringA> *bindingSiteDescriptions;
-		// color table
-		vislib::Array<vislib::math::Vector<float, 3> > *bindingSiteColors;
+
+        // ------------------ variables ------------------- 
+
+        /** Pointer to the DSSP secondary structure information */
+        vislib::Array<char> *dsspSecStructure;
+
+        /** Pointer to the STRIDE secondary structure information */
+        vislib::Array<char> *strideSecStructure;
+
+        /** Pointer to the PDB secondary structure information */
+        vislib::Array<char> *pdbSecStructure;
+
+        /** Pointer to the pdb index with amino-acid three letter code and chain ID*/
+        vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > *indexAminoAcidchainID;
 
     };
 

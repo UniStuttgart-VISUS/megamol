@@ -821,14 +821,17 @@ class UncertaintyInputData:
         
         # Adding column numbers to buffer lines 5 and 6 - Index is starting with 0!
         logging.debug('  Writing column numbers to buffer lines 5 and 6')
-        for x in range(8, len(OutFileBuffer[2])):                                              # Length of buffer line 2 is reference
+        for x in range(0, (len(OutFileBuffer[2])-8)):                                          # Length of buffer line 2 is reference and starting
             OutFileBuffer[5] += str(x%10)                                                      # Repeating digits 0-9
-            if (x%10 == 0):                                                                    # x modulo 10
-                OutFileBuffer[6] += '  '+str(x)                                                # Two leading space because index starts with 8
-                if x < 100:
-                    OutFileBuffer[6] += '      '
-                else:
-                    OutFileBuffer[6] += '     '
+            if (x == 0):
+                OutFileBuffer[6] += '          '
+            else:
+                if (x%10 == 0):                                                                # x modulo 10, skip 0
+                    OutFileBuffer[6] += str(x)                                                 # ...
+                    if x < 100:
+                        OutFileBuffer[6] += '        '
+                    else:
+                        OutFileBuffer[6] += '       '
         
         # Creating output file
         logging.debug('  Creating output file \"{0}\"'.format(Param_OutFile))
@@ -840,7 +843,8 @@ class UncertaintyInputData:
             return False
             
         # Append EOL to all buffered lines and write buffer to file
-        logging.debug('  Adding file ending and writing buffer to output file')
+        logging.debug('  Adding line endings, file END tag and writing buffer to output file')
+        OutFileBuffer.append('END')
         for BufferLine in OutFileBuffer:
             BufferLine += '\n'                                                                 # Line ending
             OutFile.write(BufferLine)   
