@@ -15,8 +15,8 @@
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "TriSoup/CallTriMeshData.h"
-#include "TriSoup/LinesDataCall.h"
+#include "mmstd_trisoup/CallTriMeshData.h"
+#include "mmstd_trisoup/LinesDataCall.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/String.h"
@@ -56,7 +56,7 @@ namespace trisoup {
          */
         virtual bool create(void);
 
-		/**
+        /**
          * Gets the data from the source.
          *
          * @param caller The calling call.
@@ -97,7 +97,7 @@ namespace trisoup {
         /** The data update hash */
         SIZE_T datahash;
 
-	private:
+    private:
 
         /** The slot for requesting data */
         core::CalleeSlot getDataSlot;

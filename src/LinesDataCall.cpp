@@ -6,7 +6,7 @@
  */
 
 #include "stdafx.h"
-#include "TriSoup/LinesDataCall.h"
+#include "mmstd_trisoup/LinesDataCall.h"
 
 using namespace megamol;
 using namespace megamol::core;

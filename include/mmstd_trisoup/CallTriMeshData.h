@@ -10,7 +10,7 @@
 #define MEGAMOL_TRISOUP_CALLTRIMESHDATA_H_INCLUDED
 #pragma once
 
-#include "TriSoup/TriSoup.h"
+#include "mmstd_trisoup/mmstd_trisoup.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
@@ -25,13 +25,13 @@ namespace trisoup {
     /**
      * Call transporting tri soup mesh data
      */
-    class TRISOUP_API CallTriMeshData : public core::AbstractGetData3DCall {
+    class MMSTD_TRISOUP_API CallTriMeshData : public core::AbstractGetData3DCall {
     public:
 
         /**
          * Subclass storing material information
          */
-        class TRISOUP_API Material {
+        class MMSTD_TRISOUP_API Material {
         public:
 
             /** Possible values for the illumination modell */
@@ -394,7 +394,7 @@ namespace trisoup {
         /**
          * Subclass storing the pointers to the mesh data
          */
-        class TRISOUP_API Mesh {
+        class MMSTD_TRISOUP_API Mesh {
         public:
 
             /** Possible data types */

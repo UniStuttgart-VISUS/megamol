@@ -12,23 +12,23 @@
 
 #ifdef _WIN32
 // The following ifdef block is the standard way of creating macros which make exporting 
-// from a DLL simpler. All files within this DLL are compiled with the TRISOUP_EXPORTS
+// from a DLL simpler. All files within this DLL are compiled with the MMSTD_TRISOUP_EXPORTS
 // symbol defined on the command line. this symbol should not be defined on any project
 // that uses this DLL. This way any other project whose source files include this file see 
-// TRISOUP_API functions as being imported from a DLL, whereas this DLL sees symbols
+// MMSTD_TRISOUP_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#ifdef TRISOUP_EXPORTS
-#define TRISOUP_API __declspec(dllexport)
+#ifdef MMSTD_TRISOUP_EXPORTS
+#define MMSTD_TRISOUP_API __declspec(dllexport)
 #else
-#define TRISOUP_API __declspec(dllimport)
+#define MMSTD_TRISOUP_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define TRISOUP_API
+#define MMSTD_TRISOUP_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
-#ifdef TRISOUP_EXPORTS
+#ifdef MMSTD_TRISOUP_EXPORTS
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +39,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-TRISOUP_API int mmplgPluginAPIVersion(void);
+MMSTD_TRISOUP_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -52,7 +52,7 @@ TRISOUP_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-TRISOUP_API
+MMSTD_TRISOUP_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -63,7 +63,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-TRISOUP_API void mmplgReleasePluginCompatibilityInfo(
+MMSTD_TRISOUP_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -76,7 +76,7 @@ TRISOUP_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-TRISOUP_API
+MMSTD_TRISOUP_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -87,13 +87,13 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-TRISOUP_API void mmplgReleasePluginInstance(
+MMSTD_TRISOUP_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif TRISOUP_EXPORTS
+#endif MMSTD_TRISOUP_EXPORTS
 
 #endif /* TRISOUP_H_INCLUDED */

@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "volumetrics/IsoSurface.h"
 #include "mmcore/CallVolumeData.h"
-#include "TriSoup/CallTriMeshData.h"
+#include "mmstd_trisoup/CallTriMeshData.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/FloatParam.h"
 #include <climits>

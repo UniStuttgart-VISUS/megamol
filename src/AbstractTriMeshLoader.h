@@ -15,7 +15,7 @@
 #include "AbstractTriMeshDataSource.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "TriSoup/CallTriMeshData.h"
+#include "mmstd_trisoup/CallTriMeshData.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/String.h"

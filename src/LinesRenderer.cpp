@@ -9,7 +9,7 @@
 //#define _USE_MATH_DEFINES
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "LinesRenderer.h"
-#include "TriSoup/LinesDataCall.h"
+#include "mmstd_trisoup/LinesDataCall.h"
 #include "mmcore/view/CallRender3D.h"
 //#include <cmath>
 

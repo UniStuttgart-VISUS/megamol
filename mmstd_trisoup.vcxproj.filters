@@ -63,7 +63,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\TriSoup\TriSoup.h">
+    <ClInclude Include="include\mmstd_trisoup\mmstd_trisoup.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
@@ -129,10 +129,10 @@
     <ClInclude Include="src\ScreenSpaceEdgeRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\TriSoup\CallTriMeshData.h">
+    <ClInclude Include="include\mmstd_trisoup\CallTriMeshData.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\TriSoup\LinesDataCall.h">
+    <ClInclude Include="include\mmstd_trisoup\LinesDataCall.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\LinesRenderer.h">
@@ -143,7 +143,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\TriSoup.cpp">
+    <ClCompile Include="src\mmstd_trisoup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">

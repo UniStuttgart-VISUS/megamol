@@ -6,7 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "TriSoup/CallTriMeshData.h"
+#include "mmstd_trisoup/CallTriMeshData.h"
 //#include <GL/gl.h>
 #include <GL/glu.h>
 #include "vislib/graphics/BitmapCodecCollection.h"

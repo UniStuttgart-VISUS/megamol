@@ -17,7 +17,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/RawStorage.h"
-#include "TriSoup/CallTriMeshData.h"
+#include "mmstd_trisoup/CallTriMeshData.h"
 #include "vislib/math/Point.h"
 
 

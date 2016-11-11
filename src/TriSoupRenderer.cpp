@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "TriSoupRenderer.h"
-#include "TriSoup/CallTriMeshData.h"
+#include "mmstd_trisoup/CallTriMeshData.h"
 #include "CallVolumetricData.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -30,8 +30,6 @@
 
 using namespace megamol;
 using namespace megamol::trisoup;
-
-
 
 using namespace megamol::core;
 
@@ -206,6 +204,18 @@ bool TriSoupRenderer::Render(Call& call) {
     ::glBindTexture(GL_TEXTURE_2D, 0);
     ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     ::glEnable(GL_NORMALIZE);
+
+    //GLsizei** oldbind = new GLsizei*[16];
+    //for (int i = 0; i < 16; i++) {
+    //    oldbind[i] = new GLsizei();
+    //}
+    ////glGetVertexAttribPointerv(0, GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
+    //glGetPointerv(GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
+    glVertexAttribPointer(0, 0, GL_FLOAT, GL_FALSE, 0, nullptr);
+    //glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &oldbind);
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindVertexArray(0);
+
 
     GLint cfm;
     ::glGetIntegerv(GL_CULL_FACE_MODE, &cfm);

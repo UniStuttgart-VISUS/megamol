@@ -1,11 +1,11 @@
 /*
- * TriSoup.cpp
+ * mmstd_trisoup.cpp
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "TriSoup/TriSoup.h"
+#include "mmstd_trisoup/mmstd_trisoup.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -26,8 +26,8 @@
 #include "CallVolumetricData.h"
 #include "ScreenSpaceEdgeRenderer.h"
 #include "vislib/Trace.h"
-#include "TriSoup/CallTriMeshData.h"
-#include "TriSoup/LinesDataCall.h"
+#include "mmstd_trisoup/CallTriMeshData.h"
+#include "mmstd_trisoup/LinesDataCall.h"
 #include "LinesRenderer.h"
 
 
@@ -41,7 +41,7 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "TriSoup",
+                "mmstd_trisoup",
 
                 /* human-readable plugin description */
                 "Plugin for rendering TriSoup mesh data") {
@@ -60,7 +60,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TriSoupDataSource>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjDataSource>();
-			this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::WavefrontObjWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::BlockVolumeMesh>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
             this->module_descriptions.RegisterAutoDescription<megamol::quartz::OSCBFix>();
@@ -85,7 +85,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-TRISOUP_API int mmplgPluginAPIVersion(void) {
+MMSTD_TRISOUP_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -93,7 +93,7 @@ TRISOUP_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-TRISOUP_API
+MMSTD_TRISOUP_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -135,7 +135,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-TRISOUP_API
+MMSTD_TRISOUP_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -146,7 +146,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-TRISOUP_API
+MMSTD_TRISOUP_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -157,7 +157,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-TRISOUP_API
+MMSTD_TRISOUP_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
