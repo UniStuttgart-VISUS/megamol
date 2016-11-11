@@ -62,10 +62,10 @@ trisoup::LinesDataCall::~LinesDataCall(void) {
  */
 void trisoup::LinesDataCall::SetData(unsigned int count,
         const trisoup::LinesDataCall::Lines *lines,
-		const float time) {
+        const float time) {
     this->count = (lines == NULL) ? 0 : count;
     this->lines = lines;
-	this->time = time;
+    this->time = time;
 }
 
 
@@ -77,6 +77,6 @@ trisoup::LinesDataCall& trisoup::LinesDataCall::operator=(
     AbstractGetData3DCall::operator =(rhs);
     this->count = rhs.count;
     this->lines = rhs.lines;
-	this->time = rhs.time;
+    this->time = rhs.time;
     return *this;
 }
