@@ -39,10 +39,10 @@ using namespace megamol::protein_uncertainty;
  */
 UncertaintyDataLoader::UncertaintyDataLoader( void ) : megamol::core::Module(),
 													   dataOutSlot( "dataout", "The slot providing the uncertainty data"),
-													   pdbIDSlot("PDB-ID", "The PDB ID for which the uncertainty data should be generated.") {
+													   filenameSlot("filename (uid)", "The filename of the uncertainty input data file.") {
       
-	this->pdbIDSlot << new param::StringParam("");
-	this->MakeSlotAvailable(&this->pdbIDSlot);
+	this->filenameSlot << new param::FilePathParam("");
+	this->MakeSlotAvailable(&this->filenameSlot);
     
 	this->dataOutSlot.SetCallback(UncertaintyDataCall::ClassName(), UncertaintyDataCall::FunctionName(UncertaintyDataCall::CallForGetData), &UncertaintyDataLoader::getData);
     this->MakeSlotAvailable( &this->dataOutSlot);
@@ -87,13 +87,13 @@ bool UncertaintyDataLoader::getData(Call& call) {
 	UncertaintyDataCall *udc = dynamic_cast<UncertaintyDataCall*>(&call);
     if ( !udc ) return false;
 
-	// try to load run python script, if necessary
-	if (this->pdbIDSlot.IsDirty()) {
-		this->pdbIDSlot.ResetDirty();
-		this->readInputFile(this->pdbIDSlot.Param<core::param::StringParam>()->Value());
+	// if new filename is set ... read new file and calculate uncertainty
+	if (this->filenameSlot.IsDirty()) {
+		this->filenameSlot.ResetDirty();
+		this->readInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
         // ...
 	}
-
+    
     // pass data to call, if available
     if( this->indexAminoAcidchainID.IsEmpty() ) {
         return false;
@@ -112,38 +112,34 @@ bool UncertaintyDataLoader::getData(Call& call) {
 /*
 * UncertaintyDataLoader::readInputFile
 */
-void UncertaintyDataLoader::readInputFile(const vislib::StringA &pdbid) {
+void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 	using vislib::sys::Log;
 
 	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - BEGIN"); // DEBUG
 
-	// temp variables
-	unsigned int lineCnt;
-	vislib::sys::ASCIIFileBuffer file;
-	vislib::StringA line;
-	vislib::StringA tmpLine;
-    const unsigned int arrayCapacity = 10000;
 
-	vislib::StringA filename = this->fileLocation + pdbid + this->fileEnding;
+	// temp variables
+	unsigned int                 lineCnt;                               // line count of file
+	vislib::sys::ASCIIFileBuffer file;                                  // ascii buffer of file
+	vislib::StringA              line;                                  // current line of file
+    const unsigned int           arrayCapacity = 1000;                  // default capacity of arrays (why 1000?)
+
 
 	// reset data
 	this->indexAminoAcidchainID.Clear();
     this->indexAminoAcidchainID.AssertCapacity(arrayCapacity);
-
 	this->dsspSecStructure.Clear();
     this->dsspSecStructure.AssertCapacity(arrayCapacity);
-
 	this->strideSecStructure.Clear();
     this->strideSecStructure.AssertCapacity(arrayCapacity);
-
-
 	this->pdbSecStructure.Clear();
     this->pdbSecStructure.AssertCapacity(arrayCapacity);
 
-	// try to load the file
-	if (file.LoadFile(filename)) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - Opened file: \"%s\"", filename); // DEBUG
+	// try to load the file
+	if (file.LoadFile( T2A(filename) )) {
+
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - Opened file: \"%s\"", T2A(filename)); // DEBUG
 
 		// file successfully loaded, read first frame
 		lineCnt = 0;
@@ -152,22 +148,31 @@ void UncertaintyDataLoader::readInputFile(const vislib::StringA &pdbid) {
 			line = file.Line(lineCnt);
             
             if (line.StartsWith("DATA")) {
-			    // extract data from line
-			    tmpLine = line.Substring(8); // cut tag so column indices match with column numbers in input file
+                
+			    line = line.Substring(8); // cut tag so line indices match with column indices given in input file
 
+                if (this->indexAminoAcidchainID.Count() == arrayCapacity) {
+                    atomEntriesCapacity += 10000;
+                    atomEntries.AssertCapacity(atomEntriesCapacity);
+                }
+                    
                 this->indexAminoAcidchainID.Add(vislib::Pair<int, vislib::Pair<vislib::StringA, char>>());
+                
                 // PDB index of amino-acids is defined as number in columns 28 to 33 (range 6)
-                this->indexAminoAcidchainID.Last().First() = std::atoi(tmpLine.Substring(28, 6)); // first parameter of substring is start, second parameter is range
+                this->indexAminoAcidchainID.Last().First() = std::atoi(line.Substring(32, 6)); // first parameter of substring is start, second parameter is range
                 // PDB three letter code of amino-acids is given in columns 10,11 and 12
-                this->indexAminoAcidchainID.Last().Second().First() = tmpLine.Substring(10, 3); 
+                this->indexAminoAcidchainID.Last().Second().First() = line.Substring(10, 3); 
                 // PDB one letter chain id is defined at column 22
-                this->indexAminoAcidchainID.Last().Second().Second() = tmpLine[22];
+                this->indexAminoAcidchainID.Last().Second().Second() = line[22];
+                
                 // take DSSP one letter secondary structure summary which is defined at column 221
-                this->dsspSecStructure.Add(tmpLine[221]);
+                this->dsspSecStructure.Add(line[228]);
+                
                 // STRIDE one letter secondary structure is defined at column 150
-                this->strideSecStructure.Add(tmpLine[150]);
+                this->strideSecStructure.Add(line[157]);
+                
                 // take first letter of PDB secondary structure definition at column 40
-                this->pdbSecStructure.Add(tmpLine[40]);
+                this->pdbSecStructure.Add(line[44]);
 
                 // std::cout << "Chain:" << this->indexAminoAcidchainID.Last().Second().Second() << "- Index:" << this->indexAminoAcidchainID.Last().Second().First() << "- Amino-acid:" << this->indexAminoAcidchainID.Last().First() << std::endl;
                 // std::cout << "DSSP: " << this->dsspSecStructure.Last() << " - STRIDE: " << this->strideSecStructure.Last() << " - PDB: " << this->pdbSecStructure.Last() << std::endl;

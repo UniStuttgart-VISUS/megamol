@@ -475,14 +475,14 @@ class UncertaintyInputData:
     def ParseDataAndCreateOutputFile(self, Param_PDBFile, Param_STRIDEFile, Param_DSSPFile, Param_OutFile):
         
         # Init list buffer of output file lines
-        OutFileBuffer =    [('REMARK | PDB-ID: '+(Param_OutFile[-8:-4]).upper())]     # line 0
-        OutFileBuffer.append('REMARK | Date:   '+date.today().strftime('%d.%m.%Y')) # line 1
-        OutFileBuffer.append('REMARK |')                                            # line 2
-        OutFileBuffer.append('REMARK |')                                            # line 3
-        OutFileBuffer.append('INFO   |')                                            # line 4
-        OutFileBuffer.append('COLUMN |')                                            # line 5
-        OutFileBuffer.append('COLUMN |')                                            # line 6     
-        OutFileBuffer.append('REMARK |')                                            # line 7
+        OutFileBuffer =    [('PDB-ID | '+(Param_OutFile[-8:-4]).upper())]   # line 0
+        OutFileBuffer.append('DATE   | '+date.today().strftime('%d.%m.%Y')) # line 1
+        OutFileBuffer.append('REMARK |')                                    # line 2
+        OutFileBuffer.append('METHOD |')                                    # line 3
+        OutFileBuffer.append('INFO   |')                                    # line 4
+        OutFileBuffer.append('COLUMN |')                                    # line 5
+        OutFileBuffer.append('COLUMN |')                                    # line 6     
+        OutFileBuffer.append('REMARK |')                                    # line 7
         LineOffset = 8  # Buffer line offset for next 'empty' line index (index starting with 0)
 
         # Parsing PDB file ----------------------------------------------------
@@ -501,11 +501,11 @@ class UncertaintyInputData:
                 return False
            
             # Init list buffer with PDB header
-            OutFileBuffer[2] += ('---------------------------------------------------------------------------------------------------------------------------|')
-            OutFileBuffer[3] += ('---PDB --------------------------------------------------------------------------------------------------------------------|')
-            OutFileBuffer[4] += ('-Nr----|--AA--|-ChainID-|-Index----|-Structure-|-ID---|-Helix-Class--|-Count-|-Sense-|-Start-AA-|-Start-#-|-End-AA-|-End-#-|')                                                                                                       # line 5
-            OutFileBuffer[7] += ('-------|------|---------|----------|-----------|------|--------------|-------|-------|----------|---------|--------|-------|')
-            # Length of columns:    7       6       9        10         11          6        14           7        7        10         9         8        7
+            OutFileBuffer[2] += ('----------------------------------------------------------------------------------------------------------------------------------|')
+            OutFileBuffer[3] += ('---PDB ---------------------------------------------------------------------------------------------------------------------------|')
+            OutFileBuffer[4] += ('-Nr----|--AA--|-ChainID-|-X-|-Index----|-Structure-|-ID---|-SerNr-|-Count-|-H-Class-|-Sense-|-Start-AA-|-StartNr-|-End-AA-|-EndNr-|')                                                                                                       # line 5
+            OutFileBuffer[7] += ('-------|------|---------|---|----------|-----------|------|-------|-------|---------|-------|----------|---------|--------|-------|')
+            # Length of columns:    7       6       9       3     10         11         6        7      7        9        7        10         9         8        7
                         
             # REMARK on missing amino-acids:
             #     Those amino-acids considered in STRIDE and DSSP are those who are listed in the ATOM section of the PDB file.
@@ -582,16 +582,16 @@ class UncertaintyInputData:
                     if (AAIndex in MissingAADict[ChainID]):                                    # Mark further missing amino-acids coming after starting index of first amino-acid in ATOM
                         MissingFlag = 'M'
             
-                OutFileBuffer[x] += (' '+MissingFlag+' '+str(AAIndex).rjust(6)+' |')           # Writing flag and amino-acid index to corresponding buffer line   
+                OutFileBuffer[x] += (' '+MissingFlag+' |   '+str(AAIndex).rjust(6)+' |')         # Writing flag and amino-acid index to corresponding buffer line   
                 ChainIndex += 1
                 
             # Lookup table for column width of PDB file entries
             #   - First Index of substring indices -1 because here index starts from 0 
             #   - Second Index +1 because range() is exclusive last index in range
-            #   - Structure  ID    H-Class   Count   Sense  Start-AA  Start-#   End-AA    End-#  
-            #   - #: 6       3       2       5/2       2       3        4        3        4   
-            CWh = [[0,6], [7,10], [38,40], [71,76],          [15,18], [21,25], [27,30], [33,37]]  # For helix
-            CWs = [[0,6], [7,10],          [14,16], [38,40], [17,20], [22,26], [28,31], [33,37]]  # For sheet   
+            #   - Structure  ID    SerNr   Count    H-Class  Sense   Start-AA  Start-#   End-AA    End-#  
+            #   - #: 6       3       3       5         2       2        3        4        3        4   
+            CWh = [[0,6], [11,14], [7,10], [71,76], [38,40],          [15,18], [21,25], [27,30], [33,37]]  # For helix
+            CWs = [[0,6], [11,14], [7,10], [14,16],          [38,40], [17,20], [22,26], [28,31], [33,37]]  # For sheet   
             
             # Second: Read file for assigning the secondary structure to the right amino-acid indices
             logging.debug('  Reading PDB file for assigning the secondary structure to the right amino-acid indices')
@@ -609,34 +609,34 @@ class UncertaintyInputData:
                         # Determining starting index of HELIX in chain
                         for x in range(LineOffset, len(OutFileBuffer)):
                             if (OutFileBuffer[x][30:31] == FileLine[19:20]):                   # Chain ID == chain ID HELIX
-                                if (int(OutFileBuffer[x][36:42])== int(FileLine[CWh[5][0]:CWh[5][1]])): # Amino-acid number of chain  == amino-acid start number of HELIX in chain               
+                                if (int(OutFileBuffer[x][39:46])== int(FileLine[CWh[6][0]:CWh[6][1]])): # Amino-acid number of chain  == amino-acid start number of HELIX in chain               
                                     LineOffset = x
                                     break                                 
                                     
-                        AARange = int(FileLine[CWh[7][0]:CWh[7][1]]) - int(FileLine[CWh[5][0]:CWh[5][1]]) # Index range of HELIX = ending index of HELIX - starting index of HELIX  
+                        AARange = int(FileLine[CWh[8][0]:CWh[8][1]]) - int(FileLine[CWh[6][0]:CWh[6][1]]) # Index range of HELIX = ending index of HELIX - starting index of HELIX  
                         for x in range(LineOffset, LineOffset+AARange+1):                      # +1 because range() is excluding last index                     
-                            OutFileBuffer[x] += ('    '+FileLine[CWh[0][0]:CWh[0][1]]+' |  '+FileLine[CWh[1][0]:CWh[1][1]]+' |           '+
-                                                 FileLine[CWh[2][0]:CWh[2][1]]+' | '+FileLine[CWh[3][0]:CWh[3][1]]+' |       |      '+
-                                                 FileLine[CWh[4][0]:CWh[4][1]]+' |    '+FileLine[CWh[5][0]:CWh[5][1]]+' |    '+
-                                                 FileLine[CWh[6][0]:CWh[6][1]]+' |  '+FileLine[CWh[7][0]:CWh[7][1]]+' |')
+                            OutFileBuffer[x] += ('    '+FileLine[CWh[0][0]:CWh[0][1]]+' |  '+FileLine[CWh[1][0]:CWh[1][1]]+' |   '+FileLine[CWh[2][0]:CWh[2][1]]+' | '+
+                                                 FileLine[CWh[3][0]:CWh[3][1]]+' |      '+FileLine[CWh[4][0]:CWh[4][1]]+' |       |      '+
+                                                 FileLine[CWh[5][0]:CWh[5][1]]+' |    '+FileLine[CWh[6][0]:CWh[6][1]]+' |    '+
+                                                 FileLine[CWh[7][0]:CWh[7][1]]+' |  '+FileLine[CWh[8][0]:CWh[8][1]]+' |')
 
                     elif (PDBCode == 'SHEET'):
                         LineOffset = 8 
                         # Determining starting index of SHEET in chain
                         for x in range(LineOffset, len(OutFileBuffer)):
                             if (OutFileBuffer[x][30:31] == FileLine[21:22]):                   # Chain ID == chain ID SHEET
-                                if (int(OutFileBuffer[x][36:42]) == int(FileLine[CWs[5][0]:CWs[5][1]])): # Amino-acid number of chain  == amino-acid start number of SHEET in chain              
+                                if (int(OutFileBuffer[x][39:46]) == int(FileLine[CWs[6][0]:CWs[6][1]])): # Amino-acid number of chain  == amino-acid start number of SHEET in chain              
                                     LineOffset = x
                                     break
 
-                        AARange = int(FileLine[CWs[7][0]:CWs[7][1]]) - int(FileLine[CWs[5][0]:CWs[5][1]])        
+                        AARange = int(FileLine[CWs[8][0]:CWs[8][1]]) - int(FileLine[CWs[6][0]:CWs[6][1]])        
                         for x in range(LineOffset, LineOffset+AARange+1):                      # +1 because range() is excluding last index                     
                             # IGNORING if same strand belongs to different sheets -> only one SHEET ID is assigned
                             if (len(OutFileBuffer[x]) < len(OutFileBuffer[2])-1):              # Determined by chacking if buffer line is alredy 'filled'                
-                                OutFileBuffer[x] += ('    '+FileLine[CWs[0][0]:CWs[0][1]]+' |  '+FileLine[CWs[1][0]:CWs[1][1]]+' |              |    '+
-                                                     FileLine[CWs[2][0]:CWs[2][1]]+' |    '+FileLine[CWs[3][0]:CWs[3][1]]+' |      '+
-                                                     FileLine[CWs[4][0]:CWs[4][1]]+' |    '+FileLine[CWs[5][0]:CWs[5][1]]+' |    '+
-                                                     FileLine[CWs[6][0]:CWs[6][1]]+' |  '+FileLine[CWs[7][0]:CWs[7][1]]+' |')
+                                OutFileBuffer[x] += ('    '+FileLine[CWs[0][0]:CWs[0][1]]+' |  '+FileLine[CWs[1][0]:CWs[1][1]]+' |   '+
+                                                     FileLine[CWs[2][0]:CWs[2][1]]+' |    '+FileLine[CWs[3][0]:CWs[3][1]]+' |         |    '+FileLine[CWs[4][0]:CWs[4][1]]+' |      '+
+                                                     FileLine[CWs[5][0]:CWs[5][1]]+' |    '+FileLine[CWs[6][0]:CWs[6][1]]+' |    '+
+                                                     FileLine[CWs[7][0]:CWs[7][1]]+' |  '+FileLine[CWs[8][0]:CWs[8][1]]+' |')
                     elif (PDBCode == 'ATOM '):                                                 # Stop reading file when PDB code ATOM is read ...ATOM comes after HELIX and SHEET
                         break 
                         
@@ -645,7 +645,7 @@ class UncertaintyInputData:
             for x in range(LineOffset, len(OutFileBuffer)):
                 LengthDiff = len(OutFileBuffer[2]) - len(OutFileBuffer[x])                     # Length of line 2 as reference 
                 if LengthDiff > 0:
-                    OutFileBuffer[x] += ('           |      |              |       |       |          |         |        |       |')
+                    OutFileBuffer[x] += ('           |      |       |       |         |       |          |         |        |       |')
                         
             PDBFile.close()   
             logging.debug('  Completed to parse file \"{0}\"'.format(Param_PDBFile))  
@@ -702,9 +702,9 @@ class UncertaintyInputData:
                                     LineOffset = x
                                     break
                             # ... and starting index of first amino-acid in ATOM 
-                            if (int(OutFileBuffer[LineOffset][36:42]) != FirstAADict[ChainID]):                            
+                            if (int(OutFileBuffer[LineOffset][39:46]) != FirstAADict[ChainID]):                            
                                 for y in range(x, len(OutFileBuffer)):
-                                    if (int(OutFileBuffer[y][36:42]) == FirstAADict[ChainID]):  # PDB amino-acid index == Index of first amino-acid in ATOM 
+                                    if (int(OutFileBuffer[y][39:46]) == FirstAADict[ChainID]):  # PDB amino-acid index == Index of first amino-acid in ATOM 
                                         LineOffset = y
                                         break
                              
@@ -783,9 +783,9 @@ class UncertaintyInputData:
                                     LineOffset = x
                                     break
                             # ... and starting index of first amino-acid in ATOM 
-                            if (int(OutFileBuffer[LineOffset][36:42]) != FirstAADict[ChainID]):                            
+                            if (int(OutFileBuffer[LineOffset][39:46]) != FirstAADict[ChainID]):                            
                                 for y in range(x, len(OutFileBuffer)):
-                                    if (int(OutFileBuffer[y][36:42]) == FirstAADict[ChainID]):  # PDB amino-acid index == Index of first amino-acid in ATOM 
+                                    if (int(OutFileBuffer[y][39:46]) == FirstAADict[ChainID]):  # PDB amino-acid index == Index of first amino-acid in ATOM 
                                         LineOffset = y
                                         break
                                         
@@ -822,16 +822,16 @@ class UncertaintyInputData:
         # Adding column numbers to buffer lines 5 and 6 - Index is starting with 0!
         logging.debug('  Writing column numbers to buffer lines 5 and 6')
         for x in range(0, (len(OutFileBuffer[2])-8)):                                          # Length of buffer line 2 is reference and starting
-            OutFileBuffer[5] += str(x%10)                                                      # Repeating digits 0-9
+            OutFileBuffer[6] += str(x%10)                                                      # Repeating digits 0-9
             if (x == 0):
-                OutFileBuffer[6] += '          '
+                OutFileBuffer[5] += '          '
             else:
                 if (x%10 == 0):                                                                # x modulo 10, skip 0
-                    OutFileBuffer[6] += str(x)                                                 # ...
+                    OutFileBuffer[5] += str(x)                                                 # ...
                     if x < 100:
-                        OutFileBuffer[6] += '        '
+                        OutFileBuffer[5] += '        '
                     else:
-                        OutFileBuffer[6] += '       '
+                        OutFileBuffer[5] += '       '
         
         # Creating output file
         logging.debug('  Creating output file \"{0}\"'.format(Param_OutFile))
