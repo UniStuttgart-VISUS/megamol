@@ -81,21 +81,22 @@ void UncertaintyDataLoader::release() {
 bool UncertaintyDataLoader::getData(Call& call) {
     using vislib::sys::Log;
 
-	// Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::getData - BEGIN"); // DEBUG
-
-	// ...
+	// get pointer to data call
 	UncertaintyDataCall *udc = dynamic_cast<UncertaintyDataCall*>(&call);
     if ( !udc ) return false;
 
 	// if new filename is set ... read new file and calculate uncertainty
 	if (this->filenameSlot.IsDirty()) {
 		this->filenameSlot.ResetDirty();
-		this->readInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
-        // ...
+        
+		if(this->readInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value())) {
+            // recompute uncertainty ...
+            
+        }
 	}
     
     // pass data to call, if available
-    if( this->indexAminoAcidchainID.IsEmpty() ) {
+    if( this->indexAminoAcidchainID.IsEmpty() ) { // assistant example
         return false;
     } else {
         udc->SetDsspSecStructure(&this->dsspSecStructure);
@@ -104,8 +105,6 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetIndexAminoAcidchainID(&this->indexAminoAcidchainID);
         return true;
     }
-
-	// Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::getData - END"); // DEBUG
 }
 
 
@@ -115,65 +114,63 @@ bool UncertaintyDataLoader::getData(Call& call) {
 void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 	using vislib::sys::Log;
 
-	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - BEGIN"); // DEBUG
-
+	//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "BEGIN: readInputFile"); // DEBUG
 
 	// temp variables
-	unsigned int                 lineCnt;                               // line count of file
-	vislib::sys::ASCIIFileBuffer file;                                  // ascii buffer of file
-	vislib::StringA              line;                                  // current line of file
-    const unsigned int           arrayCapacity = 1000;                  // default capacity of arrays (why 1000?)
+	unsigned int                 lineCnt;              // line count of file
+	vislib::sys::ASCIIFileBuffer file;                 // ascii buffer of file
+	vislib::StringA              line;                 // current line of file
 
-
-	// reset data
-	this->indexAminoAcidchainID.Clear();
-    this->indexAminoAcidchainID.AssertCapacity(arrayCapacity);
-	this->dsspSecStructure.Clear();
-    this->dsspSecStructure.AssertCapacity(arrayCapacity);
-	this->strideSecStructure.Clear();
-    this->strideSecStructure.AssertCapacity(arrayCapacity);
-	this->pdbSecStructure.Clear();
-    this->pdbSecStructure.AssertCapacity(arrayCapacity);
-
-
+    // reset data (or just if new file can be loaded?)
+    this->indexAminoAcidchainID.Clear()
+    this->dsspSecStructure.Clear();
+    this->strideSecStructure.Clear();
+    this->pdbSecStructure.Clear();
+        
 	// try to load the file
 	if (file.LoadFile( T2A(filename) )) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - Opened file: \"%s\"", T2A(filename)); // DEBUG
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Opened uncertainty input datafile: \"%s\"", T2A(filename)); // INFO
 
-		// file successfully loaded, read first frame
+        // reset array size
+        // (maximum number of entries in data arrays is ~9 less than line count of file)
+        this->pdbSecStructure.AssertCapacity(file.Count());
+        this->strideSecStructure.AssertCapacity(file.Count());
+        this->dsspSecStructure.AssertCapacity(file.Count());
+        this->indexAminoAcidchainID.AssertCapacity(file.Count());
+            
+		// run through file lines
 		lineCnt = 0;
 		while (lineCnt < file.Count() && !line.StartsWith("END")) {
-			// get the current DATA line from the file
+            
 			line = file.Line(lineCnt);
             
+            // just read DATA lines
             if (line.StartsWith("DATA")) {
                 
-			    line = line.Substring(8); // cut tag so line indices match with column indices given in input file
+                // truncate line beginning (first 8 charachters) so character 
+                // indices of line matches column indices given in input file
+			    line = line.Substring(8); 
 
-                if (this->indexAminoAcidchainID.Count() == arrayCapacity) {
-                    atomEntriesCapacity += 10000;
-                    atomEntries.AssertCapacity(atomEntriesCapacity);
-                }
-                    
+                // add new empty element
                 this->indexAminoAcidchainID.Add(vislib::Pair<int, vislib::Pair<vislib::StringA, char>>());
+                // PDB index of amino-acids 
+                this->indexAminoAcidchainID.Last().Key() = std::atoi(line.Substring(32,6)); // first parameter of substring is start (beginning with 0), second parameter is range
+                // PDB three letter code of amino-acids
+                this->indexAminoAcidchainID.Last().Value().First() = line.Substring(10,3); 
+                // PDB one letter chain id 
+                this->indexAminoAcidchainID.Last().Value().Second() = line[22];
                 
-                // PDB index of amino-acids is defined as number in columns 28 to 33 (range 6)
-                this->indexAminoAcidchainID.Last().First() = std::atoi(line.Substring(32, 6)); // first parameter of substring is start, second parameter is range
-                // PDB three letter code of amino-acids is given in columns 10,11 and 12
-                this->indexAminoAcidchainID.Last().Second().First() = line.Substring(10, 3); 
-                // PDB one letter chain id is defined at column 22
-                this->indexAminoAcidchainID.Last().Second().Second() = line[22];
-                
-                // take DSSP one letter secondary structure summary which is defined at column 221
+                // take DSSP one letter secondary structure summary 
                 this->dsspSecStructure.Add(line[228]);
                 
-                // STRIDE one letter secondary structure is defined at column 150
+                // STRIDE one letter secondary structure
                 this->strideSecStructure.Add(line[157]);
                 
-                // take first letter of PDB secondary structure definition at column 40
+                // take first letter of PDB secondary structure definition
                 this->pdbSecStructure.Add(line[44]);
 
+                // DEBUG
                 // std::cout << "Chain:" << this->indexAminoAcidchainID.Last().Second().Second() << "- Index:" << this->indexAminoAcidchainID.Last().Second().First() << "- Amino-acid:" << this->indexAminoAcidchainID.Last().First() << std::endl;
                 // std::cout << "DSSP: " << this->dsspSecStructure.Last() << " - STRIDE: " << this->strideSecStructure.Last() << " - PDB: " << this->pdbSecStructure.Last() << std::endl;
             }
@@ -181,13 +178,15 @@ void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 			// next line
 			lineCnt++;
 		}
+        //Clear ascii file buffer
 		file.Clear();
-		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - Read secondary structure for %i amino-acids.", indexAminoAcidchainID.Count()); // DEBUG
+        
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Secondary structure read for %i amino-acids.", indexAminoAcidchainID.Count()); // INFO
+        return true;
 	}
 	else {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - Coudn't find input file: \"%s\"", filename); // DEBUG
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Coudn't find uncertainty input data file: \"%s\"", T2A(filename)); // INFO
+        return false;
 	}
-
-	Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "FUNC: UncertaintyDataLoader::readInputFile - END"); // DEBUG
 }
 
