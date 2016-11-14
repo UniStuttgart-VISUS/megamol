@@ -32,12 +32,17 @@ namespace megamol {
 	namespace protein_uncertainty {
 
 
-	/**
-	* Class for binding site calls and data interfaces.
-	*/
+	class PROTEIN_UNCERTAINTY_API UncertaintyDataCall : public megamol::core::Call {
 
-		class PROTEIN_UNCERTAINTY_API UncertaintyDataCall : public megamol::core::Call {
 	public:
+
+        // ------------------ class for uncertainty -------------------
+
+        // ...
+
+
+        // ------------------ class functions ------------------- 
+
 		/**
 		* Answer the name of the objects of this description.
 		*
@@ -189,6 +194,22 @@ namespace megamol {
                 return (this->pdbSecStructure->operator[](i));
         }
 
+        /**
+        * Get the information of the secondary structure probabilities.
+        *
+        * @param i The index of the amino-acid.
+        * @return Pointer to the array of secondary structure probabilities.
+        */
+        /*
+        inline UncertaintyDataCall::Prob GetSecStructProb(unsigned int i) const {
+            if (!this->secStructProb)
+                return UncertaintyDataCall::Prob{ 0.0f, 0.0f, 0.0f };
+            else if (this->secStructProb->Count() <= i)
+                return UncertaintyDataCall::Prob{ 0.0f, 0.0f, 0.0f };
+            else
+                return (this->secStructProb->operator[](i));
+        }
+        */
 
         // ------------------ SET functions ------------------- 
 
@@ -228,6 +249,16 @@ namespace megamol {
             this->indexAminoAcidchainID = rnPtr;
         }
 
+        /**
+        * Set the pointer to the secondary structure probabilities.
+        *
+        * @param rnPtr The pointer.
+        */
+        /*
+        inline void SetSecStructProb(vislib::Array<UncertaintyDataCall::Prob> *rnPtr) {
+            this->secStructProb = rnPtr;
+        }
+        */
 
 	private:
 
@@ -244,6 +275,9 @@ namespace megamol {
 
         /** Pointer to the pdb index with amino-acid three letter code and chain ID*/
         vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > *indexAminoAcidchainID;
+
+        /** The probabilities of the different secondary structures */
+        // vislib::Array<UncertaintyDataCall::Prob> *secStructProb;
 
     };
 

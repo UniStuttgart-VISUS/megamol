@@ -44,6 +44,7 @@ namespace megamol {
 	namespace protein_uncertainty {
 
     class UncertaintySequenceRenderer : public megamol::core::view::Renderer2DModule {
+
     public:
 
         /**
@@ -228,7 +229,7 @@ namespace megamol {
         // mouse hover
         vislib::math::Vector<float, 2> mousePos;
         int mousePosResIdx;
-        bool leftMouseDown;
+        bool rightMouseDown;
         bool initialClickSelection;
         // selection 
         vislib::Array<bool> selection;

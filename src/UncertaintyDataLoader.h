@@ -33,12 +33,15 @@
 #include "vislib/String.h"
 #include "vislib/math/Vector.h"
 
+#include "UncertaintyDataCall.h"
+
 
 namespace megamol {
 	namespace protein_uncertainty {
 
 
 		class UncertaintyDataLoader : public megamol::core::Module {
+
 		public:
 
 			/**
@@ -106,13 +109,20 @@ namespace megamol {
 			*/
 			void readInputFile(const vislib::TString& filename);
 
+            /**
+            * Compute Uncertainty on current secondary structure data.
+            *
+            * @param -
+            */
+            void computeUncertainty(void);
+
 
 			// ------------------ variables ------------------- 
 
 			/** The data callee slot */
 			core::CalleeSlot dataOutSlot;
 
-			/** the parameter slot for the pdb id */
+			/** The parameter slot for the uid filename */
 			core::param::ParamSlot filenameSlot;
 
 
@@ -127,6 +137,9 @@ namespace megamol {
 
 			/** The pdb index with amino-acid three letter code and chain ID*/
 			vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > indexAminoAcidchainID;
+
+            /** The probabilities of the different secondary structures */
+            // vislib::Array<UncertaintyDataCall::Prob> secStructProb;
 
 		};
 	} /* end namespace protein_uncertainty */

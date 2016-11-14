@@ -58,7 +58,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 #ifndef USE_SIMPLE_FONT
         theFont(FontInfo_Verdana), 
 #endif // USE_SIMPLE_FONT
-        markerTextures(0), resSelectionCall(nullptr), leftMouseDown(false)
+        markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false)
     {
 
     // uncertainty data caller slot
@@ -475,10 +475,10 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
         return consumeEvent;
     }
     
-    // left click
-    if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
+    // right click
+    if (flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) {
         if (flags & view::MOUSEFLAG_MODKEY_ALT_DOWN) {
-            if( !this->leftMouseDown ) {
+            if( !this->rightMouseDown ) {
                 this->initialClickSelection = !this->selection[this->mousePosResIdx];
             }
             this->selection[this->mousePosResIdx] = this->initialClickSelection;
@@ -488,9 +488,9 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
                 this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
             }
         }
-        this->leftMouseDown = true;
+        this->rightMouseDown = true;
     } else {
-        this->leftMouseDown = false;
+        this->rightMouseDown = false;
     }
     
     // propagate selection to selection module
