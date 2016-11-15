@@ -46,20 +46,19 @@ using vislib::sys::Log;
  * UncertaintySequenceRenderer::UncertaintySequenceRenderer (CTOR)
  */
 UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DModule (),
-        uncertaintyDataSlot( "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage." ),
-		dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),		
-        bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
-        resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
-        resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
-        colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
-        toggleKeyParam( "ToggleKeyDrawing", "Turns the drawing of the binding site key/legend on and off."),
-        clearResSelectionParam( "clearResidueSelection", "Clears the current selection (everything will be deselected)."),
-        dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f), 
+            uncertaintyDataSlot( "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage." ),
+		    dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),		
+            bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
+            resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
+            resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
+            colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
+            toggleKeyParam( "ToggleKeyDrawing", "Turns the drawing of the binding site key/legend on and off."),
+            clearResSelectionParam( "clearResidueSelection", "Clears the current selection (everything will be deselected)."),
+            dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f), 
 #ifndef USE_SIMPLE_FONT
-        theFont(FontInfo_Verdana), 
+            theFont(FontInfo_Verdana), 
 #endif // USE_SIMPLE_FONT
-        markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false)
-    {
+            markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false) {
 
     // uncertainty data caller slot
     this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
@@ -123,9 +122,15 @@ bool UncertaintySequenceRenderer::create() {
  * UncertaintySequenceRenderer::release
  */
 void UncertaintySequenceRenderer::release() {
+    /** intentionally left empty ... */
 }
 
+
+/*
+* UncertaintySequenceRenderer::GetExtents
+*/
 bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
+
     // check molecular data
     MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
@@ -181,6 +186,7 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
  * UncertaintySequenceRenderer::Render
  */
 bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
+
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if( mol == NULL ) return false;
@@ -516,7 +522,7 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
 
 
 /*
- *
+ * UncertaintySequenceRenderer::PrepareData
  */
 bool UncertaintySequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs) {
     if( !mol ) return false;
@@ -529,27 +535,40 @@ bool UncertaintySequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSi
     // initialization
     unsigned int oldResCount = this->resCount;
     this->resCount = 0;
+
     this->vertices.Clear();
     this->vertices.AssertCapacity( mol->ResidueCount() * 2);
+
     this->chainVertices.Clear();
     this->chainVertices.AssertCapacity( mol->ResidueCount() * 2);
+
     this->chainSeparatorVertices.Clear();
     this->chainSeparatorVertices.AssertCapacity( mol->ChainCount() * 4);
+
     this->chainColors.Clear();
     this->chainColors.AssertCapacity( mol->ResidueCount() * 3);
+
     this->bsVertices.Clear();
     this->bsVertices.AssertCapacity( mol->ResidueCount() * 2);
+
     this->bsIndices.Clear();
     this->bsIndices.AssertCapacity( mol->ResidueCount());
+
     this->bsColors.Clear();
+
     this->resIndex.Clear();
     this->resIndex.AssertCapacity( mol->ResidueCount());
+
     this->resCols = static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value());
+
     this->aminoAcidStrings.Clear();
     this->aminoAcidStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
+
     this->aminoAcidIndexStrings.Clear();
     this->aminoAcidIndexStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
+
     this->bindingSiteDescription.Clear();
+
     this->bindingSiteNames.Clear();
     if( bs ) {
         this->bindingSiteDescription.SetCount( bs->GetBindingSiteCount());
@@ -690,6 +709,7 @@ bool UncertaintySequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSi
     return true;
 }
 
+
 /*
  * Check if the residue is an amino acid.
  */
@@ -728,6 +748,9 @@ char UncertaintySequenceRenderer::GetAminoAcidOneLetterCode( vislib::StringA res
 }
 
 
+/*
+* UncertaintySequenceRenderer::LoadTexture
+*/
 bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
     static vislib::graphics::BitmapImage img;
     static sg::graphics::PngBitmapCodec pbc;

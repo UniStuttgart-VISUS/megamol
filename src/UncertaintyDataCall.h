@@ -36,10 +36,17 @@ namespace megamol {
 
 	public:
 
-        // ------------------ class for uncertainty -------------------
+        // ------------------ secondary structure enum -------------------
 
-        // ...
-
+        /**
+        * Enumeration of secondary structure types.
+        */
+        enum secStructure {
+            HELIX = 0,
+            STRAND = 1,
+            COIL = 2,
+            NOTDEFINED = 3
+        };
 
         // ------------------ class functions ------------------- 
 
@@ -102,7 +109,7 @@ namespace megamol {
 		*/
 		inline unsigned int GetAminoAcidCount(void) const {
             if (!this->indexAminoAcidchainID)
-				return 0;
+                return static_cast<unsigned int>(0);
 			else
                 return static_cast<unsigned int>(this->indexAminoAcidchainID->Count());
 		}
@@ -114,9 +121,9 @@ namespace megamol {
         */
         inline int GetPDBAminoAcidIndex(unsigned int i) const {
             if (!this->indexAminoAcidchainID)
-                return 0;
+                return static_cast<int>(0);
             else if (this->indexAminoAcidchainID->Count() <= i)
-                return 0;
+                return static_cast<int>(0);
             else
                 return (this->indexAminoAcidchainID->operator[](i).First());
         }
@@ -124,13 +131,13 @@ namespace megamol {
         /**
         * Get the amino-acid chain id.
         *
-        * @return The amino-acid index.
+        * @return The amino-acid chain id.
         */
         inline char GetAminoAcidChainID(unsigned int i) const {
             if (!this->indexAminoAcidchainID)
-                return 0;
+                return static_cast<char>(' ');
             else if (this->indexAminoAcidchainID->Count() <= i)
-                return 0;
+                return static_cast<char>(' ');
             else
                 return (this->indexAminoAcidchainID->operator[](i).Second().Second());
         }
@@ -138,13 +145,13 @@ namespace megamol {
         /**
         * Get the amino-acid in three letter code.
         *
-        * @return The amino-acid index.
+        * @return The amino-acid three letter code.
         */
         inline vislib::StringA GetAminoAcid(unsigned int i) const {
             if (!this->indexAminoAcidchainID)
-                return 0;
+                return static_cast<vislib::StringA>("");
             else if (this->indexAminoAcidchainID->Count() <= i)
-                return 0;
+                return static_cast<vislib::StringA>("");
             else
                 return (this->indexAminoAcidchainID->operator[](i).Second().First());
         }
@@ -153,13 +160,13 @@ namespace megamol {
         * Get the information of the DSSP secondary structure.
         *
         * @param i The index of the amino-acid.
-        * @return Pointer to the array of DSSP secondary structure information.
+        * @return The DSSP secondary structure information.
         */
-        inline char GetDsspSecStructure(unsigned int i) const {
+        inline secStructure GetDsspSecStructure(unsigned int i) const {
             if (!this->dsspSecStructure)
-                return static_cast<char>(' ');
+                return static_cast<secStructure>(secStructure::NOTDEFINED);
             else if (this->dsspSecStructure->Count() <= i)
-                return static_cast<char>(' ');
+                return static_cast<secStructure>(secStructure::NOTDEFINED);
             else
                 return (this->dsspSecStructure->operator[](i));
         }
@@ -168,13 +175,13 @@ namespace megamol {
         * Get the information of the STRIDE secondary structure.
         *
         * @param i The index of the amino-acid.
-        * @return Pointer to the array of STRIDE secondary structure information.
+        * @return The STRIDE secondary structure information.
         */
-        inline char GetStrideSecStructure(unsigned int i) const {
+        inline secStructure GetStrideSecStructure(unsigned int i) const {
             if (!this->strideSecStructure)
-                return static_cast<char>(' ');
+                return static_cast<secStructure>(secStructure::NOTDEFINED);
             else if (this->strideSecStructure->Count() <= i)
-                return static_cast<char>(' ');
+                return static_cast<secStructure>(secStructure::NOTDEFINED);
             else
                 return (this->strideSecStructure->operator[](i));
         }
@@ -183,33 +190,42 @@ namespace megamol {
         * Get the information of the PDB secondary structure.
         *
         * @param i The index of the amino-acid.
-        * @return Pointer to the array of PDB secondary structure information.
+        * @return The PDB secondary structure information.
         */
-        inline char GetPDBSecStructure(unsigned int i) const {
+        inline secStructure GetPDBSecStructure(unsigned int i) const {
             if (!this->pdbSecStructure)
-                return static_cast<char>(' ');
+                return static_cast<secStructure>(secStructure::NOTDEFINED);
             else if (this->pdbSecStructure->Count() <= i)
-                return static_cast<char>(' ');
+                return static_cast<secStructure>(secStructure::NOTDEFINED);
             else
                 return (this->pdbSecStructure->operator[](i));
         }
 
         /**
-        * Get the information of the secondary structure probabilities.
+        * Get the information of the secondary structure uncertainty.
         *
         * @param i The index of the amino-acid.
-        * @return Pointer to the array of secondary structure probabilities.
+        * @return The array of secondary structure uncertainty.
         */
-        /*
-        inline UncertaintyDataCall::Prob GetSecStructProb(unsigned int i) const {
-            if (!this->secStructProb)
-                return UncertaintyDataCall::Prob{ 0.0f, 0.0f, 0.0f };
-            else if (this->secStructProb->Count() <= i)
-                return UncertaintyDataCall::Prob{ 0.0f, 0.0f, 0.0f };
+        inline vislib::math::Vector<float, 4> GetSecStructUncertainty(unsigned int i) const {
+            if (!this->secStructUncertainty)
+                return vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f);
+            else if (this->secStructUncertainty->Count() <= i)
+                return vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f);
             else
-                return (this->secStructProb->operator[](i));
+                return (this->secStructUncertainty->operator[](i));
         }
+
+        /**
+        * Get the most likely (maximum) secondary structure.
+        *
+        * @param i The index of the amino-acid.
+        * @return The secondary structure and its uncertainty.
         */
+        inline vislib::Pair<secStructure, float> GetMostLikelySecStructure(unsigned int i) {
+            return this->mostLikelySecStructure(i);
+        }
+
 
         // ------------------ SET functions ------------------- 
 
@@ -218,7 +234,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetDsspSecStructure(vislib::Array<char> *rnPtr) {
+        inline void SetDsspSecStructure(vislib::Array<secStructure> *rnPtr) {
             this->dsspSecStructure = rnPtr;
         }
 
@@ -227,7 +243,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetStrideSecStructure(vislib::Array<char> *rnPtr) {
+        inline void SetStrideSecStructure(vislib::Array<secStructure> *rnPtr) {
             this->strideSecStructure = rnPtr;
         }
 
@@ -236,7 +252,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetPdbSecStructure(vislib::Array<char> *rnPtr) {
+        inline void SetPdbSecStructure(vislib::Array<secStructure> *rnPtr) {
             this->pdbSecStructure = rnPtr;
         }
 
@@ -250,34 +266,42 @@ namespace megamol {
         }
 
         /**
-        * Set the pointer to the secondary structure probabilities.
+        * Set the pointer to the secondary structure uncertainty.
         *
         * @param rnPtr The pointer.
         */
-        /*
-        inline void SetSecStructProb(vislib::Array<UncertaintyDataCall::Prob> *rnPtr) {
-            this->secStructProb = rnPtr;
+        inline void SetSecStructUncertainty(vislib::Array<vislib::math::Vector<float, 4> > *rnPtr) {
+            this->secStructUncertainty = rnPtr;
         }
-        */
+
 
 	private:
+
+        /**
+        * Calculate the most likely (maximum) secondary structure.
+        *
+        * @param i The index of the amino-acid.
+        * @return The secondary structure and its uncertainty.
+        */
+        vislib::Pair<secStructure, float> mostLikelySecStructure(unsigned int i);
+
 
         // ------------------ variables ------------------- 
 
         /** Pointer to the DSSP secondary structure information */
-        vislib::Array<char> *dsspSecStructure;
+        vislib::Array<secStructure> *dsspSecStructure;
 
         /** Pointer to the STRIDE secondary structure information */
-        vislib::Array<char> *strideSecStructure;
+        vislib::Array<secStructure> *strideSecStructure;
 
         /** Pointer to the PDB secondary structure information */
-        vislib::Array<char> *pdbSecStructure;
+        vislib::Array<secStructure> *pdbSecStructure;
 
         /** Pointer to the pdb index with amino-acid three letter code and chain ID*/
         vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > *indexAminoAcidchainID;
 
         /** The probabilities of the different secondary structures */
-        // vislib::Array<UncertaintyDataCall::Prob> *secStructProb;
+        vislib::Array<vislib::math::Vector<float, 4> > *secStructUncertainty;
 
     };
 

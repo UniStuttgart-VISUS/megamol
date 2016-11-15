@@ -12,7 +12,7 @@
 
 /**
 * TODO:
-* - param pdb-id -> filename ...
+*     - ...
 *
 */
 
@@ -106,15 +106,19 @@ namespace megamol {
 			* Read the input file containing secondary structure data collected by the the python script.
 			*
 			* @param filename The filename of the uncertainty input data file.
+            *
+            *@return True on success
 			*/
-			void readInputFile(const vislib::TString& filename);
+			bool readInputFile(const vislib::TString& filename);
 
             /**
             * Compute Uncertainty on current secondary structure data.
             *
             * @param -
+            *
+            *@return True on success
             */
-            void computeUncertainty(void);
+            bool computeUncertainty(void);
 
 
 			// ------------------ variables ------------------- 
@@ -127,19 +131,19 @@ namespace megamol {
 
 
 			/** The DSSP secondary structure information */
-            vislib::Array<char> dsspSecStructure;
+            vislib::Array<UncertaintyDataCall::secStructure> dsspSecStructure;
 			
 			/** The STRIDE secondary structure information */
-            vislib::Array<char> strideSecStructure;
+            vislib::Array<UncertaintyDataCall::secStructure> strideSecStructure;
 
 			/** The PDB secondary structure information */
-            vislib::Array<char> pdbSecStructure;
+            vislib::Array<UncertaintyDataCall::secStructure> pdbSecStructure;
 
 			/** The pdb index with amino-acid three letter code and chain ID*/
 			vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > indexAminoAcidchainID;
 
             /** The probabilities of the different secondary structures */
-            // vislib::Array<UncertaintyDataCall::Prob> secStructProb;
+            vislib::Array<vislib::math::Vector<float, 4> > secStructUncertainty;
 
 		};
 	} /* end namespace protein_uncertainty */

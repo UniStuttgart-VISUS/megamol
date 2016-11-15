@@ -26,7 +26,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/math/mathfunctions.h"
 
-#include <iostream>
+#include <iostream> // DEBUG
 
 
 using namespace megamol::core;
@@ -39,13 +39,11 @@ using namespace megamol::protein_uncertainty;
 UncertaintyDataLoader::UncertaintyDataLoader( void ) : megamol::core::Module(),
 													   dataOutSlot( "dataout", "The slot providing the uncertainty data"),
 													   filenameSlot("uidFilename", "The filename of the uncertainty input data file.") {
-      
 	this->filenameSlot << new param::FilePathParam("");
 	this->MakeSlotAvailable(&this->filenameSlot);
     
 	this->dataOutSlot.SetCallback(UncertaintyDataCall::ClassName(), UncertaintyDataCall::FunctionName(UncertaintyDataCall::CallForGetData), &UncertaintyDataLoader::getData);
     this->MakeSlotAvailable( &this->dataOutSlot);
-    
 }
 
 
@@ -61,7 +59,6 @@ UncertaintyDataLoader::~UncertaintyDataLoader( void ) {
  * UncertaintyDataLoader::create
  */
 bool UncertaintyDataLoader::create() {
-    
     return true;
 }
 
@@ -70,7 +67,7 @@ bool UncertaintyDataLoader::create() {
  * UncertaintyDataLoader::release
  */
 void UncertaintyDataLoader::release() {
-
+    /** intentionally left empty ... */
 }
 
 
@@ -84,14 +81,39 @@ bool UncertaintyDataLoader::getData(Call& call) {
 	UncertaintyDataCall *udc = dynamic_cast<UncertaintyDataCall*>(&call);
     if ( !udc ) return false;
 
+
 	// If new filename is set ... read new file and calculate uncertainty
 	if (this->filenameSlot.IsDirty()) {
 		this->filenameSlot.ResetDirty();
         
-		this->readInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value());   
-	}
-    
-    // Pass data to call, if available
+		if(!this->readInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value())) {
+            return false;
+        }
+        if (!this->computeUncertainty()) {
+            return false;
+        }
+
+        // DEBUG
+        /*
+        udc->SetDsspSecStructure(&this->dsspSecStructure);
+        udc->SetStrideSecStructure(&this->strideSecStructure);
+        udc->SetPdbSecStructure(&this->pdbSecStructure);
+        udc->SetIndexAminoAcidchainID(&this->indexAminoAcidchainID);
+        udc->SetSecStructUncertainty(&this->secStructUncertainty);
+
+        for (int i = 0; i < this->indexAminoAcidchainID.Count(); i++) {
+            std::cout << "DSSP: " << this->dsspSecStructure[i] << " - STRIDE: " << this->strideSecStructure[i] << " - PDB: " << this->pdbSecStructure[i] << std::endl;
+            std::cout << "HELIX:   " << this->secStructUncertainty[i][UncertaintyDataCall::secStructure::HELIX] << std::endl;
+            std::cout << "STRAND:  " << this->secStructUncertainty[i][UncertaintyDataCall::secStructure::STRAND] << std::endl;
+            std::cout << "COIL:    " << this->secStructUncertainty[i][UncertaintyDataCall::secStructure::COIL] << std::endl;
+            std::cout << "NOT DEF: " << this->secStructUncertainty[i][UncertaintyDataCall::secStructure::NOTDEFINED] << std::endl;
+            std::cout << "MAX:     " << udc->GetMostLikelySecStructure(i).First() << " - " << udc->GetMostLikelySecStructure(i).Second() << std::endl;
+        }
+        */
+    }
+   
+
+    // Pass secondary strucutre data to call, if available
     if( this->indexAminoAcidchainID.IsEmpty() ) { // ... Assistant example
         return false;
     } else {
@@ -99,7 +121,9 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetStrideSecStructure(&this->strideSecStructure);
         udc->SetPdbSecStructure(&this->pdbSecStructure);
         udc->SetIndexAminoAcidchainID(&this->indexAminoAcidchainID);
-        // udc->SetSecStructProb(&this->secStructProb);
+
+        udc->SetSecStructUncertainty(&this->secStructUncertainty);
+
         return true;
     }
 }
@@ -108,15 +132,17 @@ bool UncertaintyDataLoader::getData(Call& call) {
 /*
 * UncertaintyDataLoader::readInputFile
 */
-void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
+bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 	using vislib::sys::Log;
 
 	//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "BEGIN: readInputFile"); // DEBUG
 
 	// Temp variables
-	unsigned int                 lineCnt;              // line count of file
-	vislib::sys::ASCIIFileBuffer file;                 // ascii buffer of file
-	vislib::StringA              line;                 // current line of file
+	unsigned int                 lineCnt;       // line count of file
+	vislib::StringA              line;          // current line of file
+    char                         tmpSecStruct;  // ...
+    vislib::sys::ASCIIFileBuffer file;          // ascii buffer of file
+
 
     // Reset data (or just if new file can be loaded?)
     this->indexAminoAcidchainID.Clear();
@@ -125,9 +151,12 @@ void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
     this->pdbSecStructure.Clear();
     // this->secStructProb.Clear();
 
-        
+    // TODO: check if filename ends with '.uid' ...
+
 	// Try to load the file
 	if (file.LoadFile( T2A(filename) )) {
+
+        // TODO: check is file contains valid data ...
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Opened uncertainty input data file: \"%s\"", T2A(filename)); // INFO
 
@@ -161,14 +190,50 @@ void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                 // PDB one letter chain id 
                 this->indexAminoAcidchainID.Last().Second().Second() = line[22];
                 
-                // Take DSSP one letter secondary structure summary 
-                this->dsspSecStructure.Add(line[228]);
-                
-                // STRIDE one letter secondary structure
-                this->strideSecStructure.Add(line[157]);
-                
-                // Take first letter of PDB secondary structure definition
-                this->pdbSecStructure.Add(line[44]);
+                // Translate DSSP one letter secondary structure summary 
+                tmpSecStruct = line[228];
+                if ((tmpSecStruct == 'H') || (tmpSecStruct == 'G') || (tmpSecStruct == 'I')) {
+                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::HELIX);
+                }
+                else if (tmpSecStruct == 'E') {
+                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::STRAND);
+                }
+                else if ((tmpSecStruct == 'B') || (tmpSecStruct == 'T') || (tmpSecStruct == 'C')) {
+                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::COIL);
+                }
+                else {
+                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED);
+                }
+
+                // Translate STRIDE one letter secondary structure
+                tmpSecStruct = line[157];
+                if ((tmpSecStruct == 'H') || (tmpSecStruct == 'G') || (tmpSecStruct == 'I')) {
+                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::HELIX);
+                }
+                else if (tmpSecStruct == 'E') {
+                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::STRAND);
+                }
+                else if ((tmpSecStruct == 'B') || (tmpSecStruct == 'T') || (tmpSecStruct == 'C')) {
+                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::COIL);
+                }
+                else {
+                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED);
+                }
+
+                // Translate first letter of PDB secondary structure definition
+                tmpSecStruct = line[44];
+                if (tmpSecStruct == 'H') {
+                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::HELIX);
+                }
+                else if (tmpSecStruct == 'S') {
+                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::STRAND);
+                }
+                else if (tmpSecStruct == ' ') {
+                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::COIL);
+                } 
+                else {
+                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED);
+                }
 
                 // DEBUG
                 // std::cout << "Chain:" << this->indexAminoAcidchainID.Last().Second().Second() << "- Index:" << this->indexAminoAcidchainID.Last().First() << "- Amino-acid:" << this->indexAminoAcidchainID.Last().Second().First() << std::endl;
@@ -180,13 +245,12 @@ void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 		}
         //Clear ascii file buffer
 		file.Clear();
-		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Read secondary structure for %i amino-acids.", indexAminoAcidchainID.Count()); // INFO
-
-        // recompute uncertainty for new data
-        this->computeUncertainty();
+		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Read secondary structure for %i amino-acids.", this->indexAminoAcidchainID.Count()); // INFO
+        return true;
 	}
 	else {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Coudn't find uncertainty input data file: \"%s\"", T2A(filename)); // INFO
+        return false;
 	}
 }
 
@@ -194,25 +258,29 @@ void UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 /*
 * UncertaintyDataLoader::computeUncertainty
 */
-void UncertaintyDataLoader::computeUncertainty(void) {
+bool UncertaintyDataLoader::computeUncertainty(void) {
     using vislib::sys::Log;
 
-    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "BEGIN: computeUncertainty"); // DEBUG
-    /*
-    if(this->secStructProb == NULL) {
-        return;
+    // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "BEGIN: computeUncertainty"); // DEBUG
+
+    // Reset uncertainty data 
+    this->secStructUncertainty.Clear();
+
+    if (this->indexAminoAcidchainID.Count() == 0) { // If no data is present ...
+        return false;
     }
-    */
+    this->secStructUncertainty.AssertCapacity(this->indexAminoAcidchainID.Count());
 
+    // Initialize and calculate uncertainty data
+    // Using secStructure (HELIX = 0, STRAND = 1,  COIL = 2, NOTDEFINED = 3) as index for vector:
+    for (int i = 0; i < this->indexAminoAcidchainID.Count(); i++) {
+        this->secStructUncertainty.Add(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f));
 
+        this->secStructUncertainty[i][pdbSecStructure[i]] += 0.33333333f;
+        this->secStructUncertainty[i][strideSecStructure[i]] += 0.33333333f;
+        this->secStructUncertainty[i][dsspSecStructure[i]] += 0.33333333f;
+    }
 
-
-
-
-
-
-
-
-
-    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "END: computeUncertainty"); // DEBUG
+    // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "END: computeUncertainty"); // DEBUG
+    return true;
 }
