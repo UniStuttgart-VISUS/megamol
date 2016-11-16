@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "SecStructFlattener.h"
+#include "PlaneDataCall.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -29,6 +30,7 @@ SecStructFlattener::SecStructFlattener(void) :
 	Module(),
 	getDataSlot("getData", "Calls molecular data"),
 	dataOutSlot("dataOut", "Provides the flattened molecular data"),
+	planeOutSlot("planeOut", "Provides the necessary plane data for 2D renderings"),
 	playParam("animation::play", "Should the animation be played?"),
 	playButtonParam("animation::playButton", "Button to toggle animation"),
 	flatPlaneMode("plane::flatPlaneMode", "The plane the protein gets flattened to"),
@@ -44,6 +46,10 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(0), &SecStructFlattener::getData);
 	this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(), MolecularDataCall::FunctionName(1), &SecStructFlattener::getExtent);
 	this->MakeSlotAvailable(&this->dataOutSlot);
+
+	this->planeOutSlot.SetCallback(PlaneDataCall::ClassName(), PlaneDataCall::FunctionName(0), &SecStructFlattener::getPlaneData);
+	this->planeOutSlot.SetCallback(PlaneDataCall::ClassName(), PlaneDataCall::FunctionName(1), &SecStructFlattener::getPlaneExtent);
+	this->MakeSlotAvailable(&this->planeOutSlot);
 
 	this->playParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->playParam);
@@ -78,6 +84,7 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->lastHash = 0;
 	this->hashOffset = 0;
 	this->myHash = 0;
+	this->planeHash = 0;
 	this->firstFrame = true;
 
 	this->lastPlaneMode = XY_PLANE;
@@ -160,9 +167,10 @@ void SecStructFlattener::flatten(void) {
 
 	auto bbCenter = this->boundingBox.CalcCenter();
 	vislib::math::Vector<float, 3> bbCenterVec(bbCenter.GetX(), bbCenter.GetY(), bbCenter.GetZ());
+	vislib::math::Vector<float, 3> origin(0.0f, 0.0f, 0.0f);
 
 	if (this->firstFrame) {
-		this->arbPlaneCenterParam.Param<param::Vector3fParam>()->SetValue(bbCenterVec);
+		this->arbPlaneCenterParam.Param<param::Vector3fParam>()->SetValue(origin);
 		this->firstFrame = false;
 	} else {
 		bbCenterVec = this->arbPlaneCenterParam.Param<param::Vector3fParam>()->Value();
@@ -226,6 +234,8 @@ void SecStructFlattener::flatten(void) {
 				oPos = cPos + oxygenOffsets[i];
 			}
 		}
+
+		planeHash++;
 	}
 }
 
@@ -370,6 +380,60 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 	this->boundingBox.Union(newbb);
 	agdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->boundingBox);
 	agdc->AccessBoundingBoxes().SetObjectSpaceClipBox(this->boundingBox);
+
+	return true;
+}
+
+/*
+ *	SecStructFlattener::getPlaneData
+ */
+bool SecStructFlattener::getPlaneData(core::Call& call) {
+	PlaneDataCall * pdc = dynamic_cast<PlaneDataCall*>(&call);
+	if (pdc == NULL) return false;
+
+	vislib::math::Vector<float, 3> pointVector;
+	vislib::math::Vector<float, 3> normal;
+	pointVector = this->arbPlaneCenterParam.Param<param::Vector3fParam>()->Value();
+	vislib::math::Point<float, 3> point(pointVector.GetX(), pointVector.GetY(), pointVector.GetZ());
+
+	switch (this->flatPlaneMode.Param<param::EnumParam>()->Value()) {
+		case XY_PLANE:
+			normal = vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f);
+			break;
+		case XZ_PLANE:
+			normal = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
+			break;
+		case YZ_PLANE:
+			normal = vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f);
+			break;
+		case LEAST_COMMON:
+			normal = this->mainDirections[2];
+			normal.Normalise();
+			break;
+		case ARBITRARY:
+			normal = this->arbPlaneNormalParam.Param<param::Vector3fParam>()->Value();
+			normal.Normalise();
+			break;
+		default:
+			normal = vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f);
+			break;
+	}
+
+	this->currentPlane = vislib::math::Plane<float>(point, normal);
+	pdc->SetPlaneData(&this->currentPlane);
+
+	return true;
+}
+
+/*
+ *	SecStructFlattener::getPlaneExtent
+ */
+bool SecStructFlattener::getPlaneExtent(core::Call& call) {
+	PlaneDataCall * pdc = dynamic_cast<PlaneDataCall*>(&call);
+	if (pdc == NULL) return false;
+
+	pdc->SetPlaneCnt(1); // always one plane
+	pdc->SetDataHash(this->planeHash);
 
 	return true;
 }

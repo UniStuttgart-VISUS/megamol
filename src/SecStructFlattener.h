@@ -15,6 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/Array.h"
+#include "vislib/math/Plane.h"
 
 #include <vector>
 
@@ -27,27 +28,27 @@ namespace protein_cuda {
 	public:
 
 		/**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
+         *	Answer the name of this module.
+         *	
+         *	@return The name of this module.
          */
 		static const char *ClassName(void) {
 			return "SecStructFlattener";
 		}
 
 		/**
-         * Answer a human readable description of this module.
+         *	Answer a human readable description of this module.
          *
-         * @return A human readable description of this module.
+         *	@return A human readable description of this module.
          */
 		static const char *Description(void) {
 			return "Flattens the secondary structure of a protein into a 2D plane";
 		}
 
 		/**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
+         *	Answers whether this module is available on the current system.
+         *	
+         *	@return 'true' if the module is available, 'false' otherwise.
          */
 		static bool IsAvailable(void) {
 			return true;
@@ -62,26 +63,36 @@ namespace protein_cuda {
 	protected:
 
 		/**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
+         *	Implementation of 'Create'.
+         *	
+         *	@return 'true' on success, 'false' otherwise.
          */
 		virtual bool create(void);
 
 		/**
-         * Implementation of 'release'.
+         *	Implementation of 'release'.
          */
 		virtual void release(void);
 
 		/**
-         * Call for get data.
+         *	Call for get data.
          */
 		bool getData(megamol::core::Call& call);
 
 		/**
-         * Call for get extent.
+         *	Call for get extent.
          */
 		bool getExtent(megamol::core::Call& call);
+
+		/**
+		 *	Call for get plane data.
+		 */
+		bool getPlaneData(megamol::core::Call& call);
+
+		/**
+		 *	Call for get plane extent.
+		 */
+		bool getPlaneExtent(megamol::core::Call& call);
 
 	private:
 
@@ -143,6 +154,9 @@ namespace protein_cuda {
 		/** slot for outgoing data */
 		megamol::core::CalleeSlot dataOutSlot;
 
+		/** slot for outgoing plane data */
+		megamol::core::CalleeSlot planeOutSlot;
+
 		/** toggles the play of the animation */
 		megamol::core::param::ParamSlot playParam;
 
@@ -185,6 +199,9 @@ namespace protein_cuda {
 		/** The offset to the hash from the data set hash */
 		SIZE_T hashOffset;
 
+		/** The current plane hash */
+		SIZE_T planeHash;
+
 		/** The lastly used plane mode */
 		FlatPlane lastPlaneMode;
 
@@ -196,6 +213,9 @@ namespace protein_cuda {
 
 		/** The distance vectors from the c alpha atoms to the corresponding oxygen atoms */
 		std::vector<vislib::math::Vector<float, 3>> oxygenOffsets;
+
+		/** The currently used projection plane */
+		vislib::math::Plane<float> currentPlane;
 	};
 
 } /* end namespace protein_cuda */

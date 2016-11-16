@@ -141,7 +141,7 @@ public:
      *
      * @return The voxel count
      */
-    unsigned int GetVoxelCount() { return numVoxels; }
+    unsigned int GetVoxelCount() { return static_cast<unsigned int>(numVoxels); }
 
     /**
      * Returns wether a color table was computed for the surface or not.

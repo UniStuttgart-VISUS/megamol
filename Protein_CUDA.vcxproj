@@ -252,6 +252,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\MoleculeVolumeCudaRenderer.h" />
     <ClInclude Include="src\ogl_error_check.h" />
     <ClInclude Include="src\ParticlesToMeshConverter.h" />
+    <ClInclude Include="src\PlaneDataCall.h" />
     <ClInclude Include="src\PotentialCalculator.cuh" />
     <ClInclude Include="src\PotentialCalculator.h" />
     <ClInclude Include="src\PotentialVolumeRaycaster.h" />
@@ -262,6 +263,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\QuickSurfRenderer2.h" />
     <ClInclude Include="src\RMS.h" />
     <ClInclude Include="src\SecStructFlattener.h" />
+    <ClInclude Include="src\SecStructRenderer2D.h" />
     <ClInclude Include="src\slicing.h" />
     <ClInclude Include="src\sort_triangles.cuh" />
     <ClInclude Include="src\SplitMergeFeature.h" />
@@ -307,6 +309,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\MoleculeCudaSESRenderer.cpp" />
     <ClCompile Include="src\MoleculeVolumeCudaRenderer.cpp" />
     <ClCompile Include="src\ParticlesToMeshConverter.cpp" />
+    <ClCompile Include="src\PlaneDataCall.cpp" />
     <ClCompile Include="src\PotentialCalculator.cpp" />
     <ClCompile Include="src\PotentialVolumeRaycaster.cpp" />
     <ClCompile Include="src\Protein_CUDA.cpp" />
@@ -317,6 +320,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\QuickSurfRenderer2.cpp" />
     <ClCompile Include="src\RMS.cpp" />
     <ClCompile Include="src\SecStructFlattener.cpp" />
+    <ClCompile Include="src\SecStructRenderer2D.cpp" />
     <ClCompile Include="src\slicing.cpp" />
     <ClCompile Include="src\SplitMergeFeature.cpp" />
     <ClCompile Include="src\stdafx.cpp" />

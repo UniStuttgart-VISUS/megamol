@@ -231,6 +231,12 @@
     <ClInclude Include="src\ParticlesToMeshConverter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\SecStructRenderer2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlaneDataCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
@@ -360,6 +366,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ParticlesToMeshConverter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SecStructRenderer2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlaneDataCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -29,12 +29,16 @@
 #include "StreamlineRenderer.h"
 #include "ComparativeMolSurfaceRenderer.h"
 
+// 2D renderers
+#include "SecStructRenderer2D.h"
+
 // data sources
 #include "Filter.h"
 
 // data interfaces (calls)
 #include "mmcore/CallVolumeData.h"
 #include "VBODataCall.h"
+#include "PlaneDataCall.h"
 
 // other modules (filter etc)
 #include "PotentialCalculator.h"
@@ -95,7 +99,7 @@ PROTEIN_CUDA_API const void * mmplgCoreCompatibilityValue(void) {
 PROTEIN_CUDA_API int mmplgModuleCount(void) {
 	int moduleCount = 4;
 #ifdef WITH_CUDA
-    moduleCount+=15;
+    moduleCount+=18;
 #endif // WITH_CUDA
 #ifdef WITH_OPENHAPTICS
     moduleCount+=1;
@@ -138,7 +142,8 @@ PROTEIN_CUDA_API void* mmplgModuleDescription(int idx) {
 		case HAPTICS_OFFSET + 14 : return new factories::ModuleAutoDescription<protein_cuda::QuickSurfRaycaster>();
 		case HAPTICS_OFFSET + 15 : return new factories::ModuleAutoDescription<protein_cuda::SecStructFlattener>();
         case HAPTICS_OFFSET + 16 : return new factories::ModuleAutoDescription<protein_cuda::ParticlesToMeshConverter>();
-        #define CUDA_OFFSET 17
+		case HAPTICS_OFFSET + 17 : return new factories::ModuleAutoDescription<protein_cuda::SecStructRenderer2D>();
+        #define CUDA_OFFSET 18
 #else
         #define CUDA_OFFSET 0
 #endif // WITH_CUDA
@@ -161,7 +166,7 @@ PROTEIN_CUDA_API void* mmplgModuleDescription(int idx) {
  * mmplgCallCount
  */
 PROTEIN_CUDA_API int mmplgCallCount(void) {
-	return 1;
+	return 2;
 }
 
 
@@ -171,6 +176,7 @@ PROTEIN_CUDA_API int mmplgCallCount(void) {
 PROTEIN_CUDA_API void* mmplgCallDescription(int idx) {
     switch (idx) {
 		case 0: return new megamol::core::factories::CallAutoDescription<megamol::protein_cuda::VBODataCall>();
+		case 1: return new megamol::core::factories::CallAutoDescription<megamol::protein_cuda::PlaneDataCall>();
         default: return NULL;
     }
     return NULL;
