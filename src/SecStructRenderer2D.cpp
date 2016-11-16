@@ -356,7 +356,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 
 
 		for (unsigned int i = 0; i < this->cAlphas.size(); i++) {
-			this->cAlphas[i].pos[0] = (2.0f * this->bbRect.AspectRatio() * (this->cAlphas[i].pos[0] - this->bbRect.Left()) / this->bbRect.Width()) - 1.0f * this->bbRect.AspectRatio();
+			this->cAlphas[i].pos[0] = (2.0f * static_cast<float>(this->bbRect.AspectRatio()) * (this->cAlphas[i].pos[0] - this->bbRect.Left()) / this->bbRect.Width()) - 1.0f * static_cast<float>(this->bbRect.AspectRatio());
 			this->cAlphas[i].pos[1] = (2.0f * (this->cAlphas[i].pos[1] - this->bbRect.Bottom()) / this->bbRect.Height()) - 1.0f;
 		}
 
@@ -366,7 +366,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 		glBufferData(GL_SHADER_STORAGE_BUFFER, this->cAlphas.size() * sizeof(CAlpha), this->cAlphas.data(), GL_DYNAMIC_COPY);
 	}
 
-	float ar = this->bbRect.AspectRatio();
+	float ar = static_cast<float>(this->bbRect.AspectRatio());
 
 	call.SetBoundingBox(vislib::math::Rectangle<float>(-1.0f * ar, -1.0f, 1.0f * ar, 1.0f));
 
@@ -393,8 +393,6 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 	
 	PlaneDataCall * pdc = this->planeInSlot.CallAs<PlaneDataCall>();
 	if (pdc == nullptr) return false;
-
-	
 
 	glDisable(GL_BLEND);
 
