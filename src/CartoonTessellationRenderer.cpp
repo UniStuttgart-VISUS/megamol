@@ -622,7 +622,6 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 	mainchain.clear();
 
 	CAlpha lastCalpha;
-	bool firstset = false;
 
 	int molCount = mol->MoleculeCount();
 	std::vector<int> molSizes;
@@ -632,6 +631,8 @@ bool CartoonTessellationRenderer::Render(Call& call) {
 
 		MolecularDataCall::Molecule chain = mol->Molecules()[molIdx];
 		molSizes.push_back(0);
+
+		bool firstset = false;
 
 		// is the first residue an aminoacid?
 		if (mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID) {
