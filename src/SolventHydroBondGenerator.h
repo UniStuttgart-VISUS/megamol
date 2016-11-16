@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_SolventDataGenerator_H_INCLUDED
-#define MMPROTEINPLUGIN_SolventDataGenerator_H_INCLUDED
+#ifndef MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED
+#define MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -32,14 +32,14 @@ namespace protein {
 	 * this class can be put in place between PDBLoader and a molecule renderer (SolventVolumeRenderer for example)...
      */
 
-    class SolventDataGenerator : public megamol::core::/*view::AnimData*/Module {
+    class SolventHydroBondGenerator : public megamol::core::/*view::AnimData*/Module {
     public:
 
         /** Ctor */
-        SolventDataGenerator(void);
+		SolventHydroBondGenerator(void);
 
         /** Dtor */
-        virtual ~SolventDataGenerator(void);
+		virtual ~SolventHydroBondGenerator(void);
 
         /**
          * Answer the name of this module.
@@ -47,7 +47,7 @@ namespace protein {
          * @return The name of this module.
          */
         static const char *ClassName(void)  {
-            return "SolventDataGenerator";
+            return "SolventHydroBondGenerator";
         }
 
         /**
@@ -214,4 +214,4 @@ namespace protein {
 } /* end namespace protein */
 } /* end namespace megamol */
 
-#endif // MMPROTEINPLUGIN_SolventDataGenerator_H_INCLUDED
+#endif // MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED

@@ -55,7 +55,7 @@
 #include "CoarseGrainDataLoader.h"
 #include "FrodockLoader.h"
 #include "XYZLoader.h"
-#include "SolventDataGenerator.h"
+#include "SolventHydroBondGenerator.h"
 #include "GROLoader.h"
 #include "CrystalStructureDataSource.h"
 #include "VTILoader.h"
@@ -146,7 +146,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::XYZLoader>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::ElectrostaticsRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventVolumeRenderer>();
-			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventDataGenerator>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventHydroBondGenerator>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::View3DSpaceMouse>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::GROLoader>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::SSAORendererDeferred>();

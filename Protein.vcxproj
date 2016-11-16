@@ -272,7 +272,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\SolPathDataCall.h" />
     <ClInclude Include="src\SolPathDataSource.h" />
     <ClInclude Include="src\SolPathRenderer.h" />
-    <ClInclude Include="src\SolventDataGenerator.h" />
+    <ClInclude Include="src\SolventHydroBondGenerator.h" />
     <ClInclude Include="src\SolventVolumeRenderer.h" />
     <ClInclude Include="src\SphereDataCall.h" />
     <ClInclude Include="src\SphereRenderer.h" />
@@ -372,7 +372,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\SolPathDataCall.cpp" />
     <ClCompile Include="src\SolPathDataSource.cpp" />
     <ClCompile Include="src\SolPathRenderer.cpp" />
-    <ClCompile Include="src\SolventDataGenerator.cpp" />
+    <ClCompile Include="src\SolventHydroBondGenerator.cpp" />
     <ClCompile Include="src\SolventVolumeRenderer.cpp" />
     <ClCompile Include="src\SphereDataCall.cpp" />
     <ClCompile Include="src\SphereRenderer.cpp" />

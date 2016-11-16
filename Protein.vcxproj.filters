@@ -222,9 +222,6 @@
     <ClInclude Include="src\SolPathRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\SolventDataGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\SolventVolumeRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -310,6 +307,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\AtomWeights.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SolventHydroBondGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -479,9 +479,6 @@
     <ClCompile Include="src\SolPathRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SolventDataGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\SolventVolumeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -567,6 +564,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MolecularNeighborhood.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SolventHydroBondGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
