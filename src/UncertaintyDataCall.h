@@ -42,10 +42,16 @@ namespace megamol {
         * Enumeration of secondary structure types.
         */
         enum secStructure {
-            HELIX = 0,
-            STRAND = 1,
-            COIL = 2,
-            NOTDEFINED = 3
+            H_ALPHA_HELIX = 0,
+            G_310_HELIX   = 1,
+            I_PI_HELIX    = 2,
+            E_EXT_STRAND  = 3,
+            T_H_TURN      = 4,
+            B_BRIDGE      = 5,
+            S_BEND        = 6,
+            C_COIL        = 7,
+            NOTDEFINED    = 8,
+            NoE           = 9   // number of elements, always last index!
         };
 
         // ------------------ class functions ------------------- 
@@ -164,9 +170,9 @@ namespace megamol {
         */
         inline secStructure GetDsspSecStructure(unsigned int i) const {
             if (!this->dsspSecStructure)
-                return static_cast<secStructure>(secStructure::NOTDEFINED);
+                return secStructure::NOTDEFINED;
             else if (this->dsspSecStructure->Count() <= i)
-                return static_cast<secStructure>(secStructure::NOTDEFINED);
+                return secStructure::NOTDEFINED;
             else
                 return (this->dsspSecStructure->operator[](i));
         }
@@ -179,9 +185,9 @@ namespace megamol {
         */
         inline secStructure GetStrideSecStructure(unsigned int i) const {
             if (!this->strideSecStructure)
-                return static_cast<secStructure>(secStructure::NOTDEFINED);
+                return secStructure::NOTDEFINED;
             else if (this->strideSecStructure->Count() <= i)
-                return static_cast<secStructure>(secStructure::NOTDEFINED);
+                return secStructure::NOTDEFINED;
             else
                 return (this->strideSecStructure->operator[](i));
         }
@@ -194,9 +200,9 @@ namespace megamol {
         */
         inline secStructure GetPDBSecStructure(unsigned int i) const {
             if (!this->pdbSecStructure)
-                return static_cast<secStructure>(secStructure::NOTDEFINED);
+                return secStructure::NOTDEFINED;
             else if (this->pdbSecStructure->Count() <= i)
-                return static_cast<secStructure>(secStructure::NOTDEFINED);
+                return secStructure::NOTDEFINED;
             else
                 return (this->pdbSecStructure->operator[](i));
         }
@@ -207,11 +213,15 @@ namespace megamol {
         * @param i The index of the amino-acid.
         * @return The array of secondary structure uncertainty.
         */
-        inline vislib::math::Vector<float, 4> GetSecStructUncertainty(unsigned int i) const {
+        inline vislib::math::Vector<float, static_cast<unsigned int>(secStructure::NoE)> GetSecStructUncertainty(unsigned int i) const {
+            vislib::math::Vector<float, static_cast<unsigned int>(secStructure::NoE)> default;
+            for (int x = 0; x < static_cast<int>(secStructure::NoE); x++) {
+                default[x] = 0.0f;
+            }
             if (!this->secStructUncertainty)
-                return vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f);
+                return default;
             else if (this->secStructUncertainty->Count() <= i)
-                return vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f);
+                return default;
             else
                 return (this->secStructUncertainty->operator[](i));
         }
@@ -222,9 +232,16 @@ namespace megamol {
         * @param i The index of the amino-acid.
         * @return The secondary structure and its uncertainty.
         */
-        inline vislib::Pair<secStructure, float> GetMostLikelySecStructure(unsigned int i) {
-            return this->mostLikelySecStructure(i);
-        }
+        vislib::Pair<secStructure, float> GetMostLikelySecStructure(unsigned int i);
+  
+        /**
+        * Get the sorted secondary structure uncertainties.
+        *
+        * @param i The index of the amino-acid.
+        * @return The sorted uncertainties and their corrsponding secondary structure .
+        */
+        vislib::Pair<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NoE)>, vislib::math::Vector<float, static_cast<int>(secStructure::NoE)> > 
+            GetSortedSecStructureUncertainties(unsigned int i);
 
 
         // ------------------ SET functions ------------------- 
@@ -270,7 +287,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetSecStructUncertainty(vislib::Array<vislib::math::Vector<float, 4> > *rnPtr) {
+        inline void SetSecStructUncertainty(vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::NoE)> > *rnPtr) {
             this->secStructUncertainty = rnPtr;
         }
 
@@ -278,12 +295,15 @@ namespace megamol {
 	private:
 
         /**
-        * Calculate the most likely (maximum) secondary structure.
+        * Quicksort for uncertainties and corresponding secondary structure.
         *
-        * @param i The index of the amino-acid.
-        * @return The secondary structure and its uncertainty.
+        * @param structArr The pointer to the vector storing the structure data.
+        * @param uncerArr  The pointer to the vector storing the uncertainties.
+        * @param left      The left index.
+        * @param right     The right index.
         */
-        vislib::Pair<secStructure, float> mostLikelySecStructure(unsigned int i);
+        void quickSortUncertainties(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *structArr,
+                                    vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *uncerArr, int left, int right);
 
 
         // ------------------ variables ------------------- 
@@ -301,7 +321,7 @@ namespace megamol {
         vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > *indexAminoAcidchainID;
 
         /** The probabilities of the different secondary structures */
-        vislib::Array<vislib::math::Vector<float, 4> > *secStructUncertainty;
+        vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::NoE)> > *secStructUncertainty;
 
     };
 

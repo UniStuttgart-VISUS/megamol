@@ -191,48 +191,53 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                 this->indexAminoAcidchainID.Last().Second().Second() = line[22];
                 
                 // Translate DSSP one letter secondary structure summary 
-                tmpSecStruct = line[228];
-                if ((tmpSecStruct == 'H') || (tmpSecStruct == 'G') || (tmpSecStruct == 'I')) {
-                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::HELIX);
-                }
-                else if (tmpSecStruct == 'E') {
-                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::STRAND);
-                }
-                else if ((tmpSecStruct == 'B') || (tmpSecStruct == 'T') || (tmpSecStruct == 'C')) {
-                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::COIL);
-                }
-                else {
-                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED);
+                switch (line[228]) {
+                    case 'H': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
+                    case 'G': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
+                    case 'I': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
+                    case 'E': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
+                    case 'B': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+                    case 'T': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
+                    case 'S': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::S_BEND); break;
+                    case ' ': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+                    default:  this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
 
                 // Translate STRIDE one letter secondary structure
-                tmpSecStruct = line[157];
-                if ((tmpSecStruct == 'H') || (tmpSecStruct == 'G') || (tmpSecStruct == 'I')) {
-                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::HELIX);
-                }
-                else if (tmpSecStruct == 'E') {
-                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::STRAND);
-                }
-                else if ((tmpSecStruct == 'B') || (tmpSecStruct == 'T') || (tmpSecStruct == 'C')) {
-                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::COIL);
-                }
-                else {
-                    this->strideSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED);
+                switch (line[157]) {
+                    case 'H': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
+                    case 'G': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
+                    case 'I': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
+                    case 'E': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
+                    case 'B': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+                    case 'b': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+                    case 'T': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
+                    case 'C': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::C_COIL); break;
+                    default:  this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
 
                 // Translate first letter of PDB secondary structure definition
                 tmpSecStruct = line[44];
                 if (tmpSecStruct == 'H') {
-                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::HELIX);
+                    switch (line[82]) {
+                        case '1': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;  // right-handed-alpha
+                        case '2': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // right-handed omega
+                        case '3': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;     // right-handed pi
+                        case '4': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // right-handed gamma
+                        case '5': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;    // right-handed 310
+                        case '6': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;  // left-handed alpha
+                        case '7': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // left-handed omega
+                        case '8': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // left-handed gamma
+                        case '9': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // 27 ribbon/helix
+                        case '0': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // Polyproline 
+                        default:  this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+                    }
                 }
-                else if (tmpSecStruct == 'S') {
-                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::STRAND);
+                else if (tmpSecStruct == 'S'){
+                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::E_EXT_STRAND);
                 }
-                else if (tmpSecStruct == ' ') {
-                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::COIL);
-                } 
                 else {
-                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED);
+                    this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); 
                 }
 
                 // DEBUG
@@ -263,6 +268,11 @@ bool UncertaintyDataLoader::computeUncertainty(void) {
 
     // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "BEGIN: computeUncertainty"); // DEBUG
 
+    // initialize structure factors for all three methods
+    float pdbStructFactor[UncertaintyDataCall::secStructure::NoE]    = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+    float strideStructFactor[UncertaintyDataCall::secStructure::NoE] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+    float dsspStructFactor[UncertaintyDataCall::secStructure::NoE]   = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+                                                                      //  H     G     I     E     T     B     S     C     ND  
     // Reset uncertainty data 
     this->secStructUncertainty.Clear();
 
@@ -272,14 +282,46 @@ bool UncertaintyDataLoader::computeUncertainty(void) {
     this->secStructUncertainty.AssertCapacity(this->indexAminoAcidchainID.Count());
 
     // Initialize and calculate uncertainty data
-    // Using secStructure (HELIX = 0, STRAND = 1,  COIL = 2, NOTDEFINED = 3) as index for vector:
     for (int i = 0; i < this->indexAminoAcidchainID.Count(); i++) {
-        this->secStructUncertainty.Add(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f));
 
-        this->secStructUncertainty[i][pdbSecStructure[i]] += 0.33333333f;
-        this->secStructUncertainty[i][strideSecStructure[i]] += 0.33333333f;
-        this->secStructUncertainty[i][dsspSecStructure[i]] += 0.33333333f;
+        // create new entry for amino-acid
+        this->secStructUncertainty.Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)>());
+        // initialise new entry
+        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NoE); j++) {
+            this->secStructUncertainty.Last()[j] = 0.0f;
+        }
+
+        // loop over all possible secondary strucutres
+        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NoE); j++) {
+            // apply individual factor
+            // PDB
+            if (pdbSecStructure[i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
+                this->secStructUncertainty[i][j] = pdbStructFactor[j];
+            }
+            else {
+                this->secStructUncertainty[i][i] = (1.0f - pdbStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NoE) - 1.0f);
+            }
+            // STRIDE
+            if (strideSecStructure[i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
+                this->secStructUncertainty[i][j] = strideStructFactor[j];
+            }
+            else {
+                this->secStructUncertainty[i][i] = (1.0f - strideStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NoE) - 1.0f);
+            }
+            //DSSP
+            if (dsspSecStructure[i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
+                this->secStructUncertainty[i][j] = dsspStructFactor[j];
+            }
+            else {
+                this->secStructUncertainty[i][i] = (1.0f - dsspStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NoE) - 1.0f);
+            }
+
+            // normalise
+            this->secStructUncertainty[i][j] /= 3.0f;
+        }
     }
+
+
 
     // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "END: computeUncertainty"); // DEBUG
     return true;

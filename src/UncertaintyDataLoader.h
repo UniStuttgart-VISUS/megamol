@@ -143,7 +143,7 @@ namespace megamol {
 			vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > indexAminoAcidchainID;
 
             /** The probabilities of the different secondary structures */
-            vislib::Array<vislib::math::Vector<float, 4> > secStructUncertainty;
+            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> > secStructUncertainty;
 
 		};
 	} /* end namespace protein_uncertainty */
