@@ -32,12 +32,15 @@
 
 #include "UncertaintyColor.h" 
 
+#include <iostream> // DEBUG
+
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::protein_uncertainty;
-using namespace vislib::graphics::gl;
 using namespace megamol::protein_calls;
+using namespace megamol::protein_uncertainty;
+
+using namespace vislib::graphics::gl;
 
 using vislib::sys::Log;
 
@@ -47,37 +50,37 @@ using vislib::sys::Log;
  */
 UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DModule (),
             uncertaintyDataSlot( "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage." ),
-		    dataCallerSlot( "getData", "Connects the sequence diagram rendering with data storage." ),		
             bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
             resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
             resCountPerRowParam( "ResiduesPerRow", "The number of residues per row" ),
             colorTableFileParam( "ColorTableFilename", "The filename of the color table."),
-            toggleKeyParam( "ToggleKeyDrawing", "Turns the drawing of the binding site key/legend on and off."),
+            toggleLegendParam( "ToggleLegendDrawing", "Show/hide row legend/key on the left."),
             clearResSelectionParam( "clearResidueSelection", "Clears the current selection (everything will be deselected)."),
-            dataPrepared(false), atomCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight( 3.0f), 
+            togglePdbParam("TogglePDB", "Show/hide PDB secondary structure row." ),
+            toggleStrideParam("ToggleSTRIDE", "Show/hide STRIDE secondary structure row"),
+            toggleDsspParam("ToggleDSSP", "Show/hide DSSP secondary structure row"),
+            dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCount(0), resCols(0), resRows(0), rowHeight(3.0f), 
+            markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), 
 #ifndef USE_SIMPLE_FONT
-            theFont(FontInfo_Verdana), 
+            theFont(FontInfo_Verdana)
 #endif // USE_SIMPLE_FONT
-            markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false) {
+             {
 
     // uncertainty data caller slot
     this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
     this->MakeSlotAvailable(&this->uncertaintyDataSlot);
-	
-    // molecular data caller slot
-    this->dataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
-    this->MakeSlotAvailable(&this->dataCallerSlot);
 
     // binding site data caller slot
     this->bindingSiteCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bindingSiteCallerSlot);
-    
+   
     // residue selection caller slot
     this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
     this->MakeSlotAvailable(&this->resSelectionCallerSlot);
     
+
     // param slot for number of residues per row
-    this->resCountPerRowParam.SetParameter( new param::IntParam( 50, 1));
+    this->resCountPerRowParam.SetParameter( new param::IntParam(50, 1));
     this->MakeSlotAvailable( &this->resCountPerRowParam);
     
     // fill color table with default values and set the filename param
@@ -86,10 +89,22 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->MakeSlotAvailable( &this->colorTableFileParam);
     UncertaintyColor::ReadColorTableFromFile( T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
     
-    // param slot for key toggling
-    this->toggleKeyParam.SetParameter( new param::BoolParam(true));
-    this->MakeSlotAvailable( &this->toggleKeyParam);
+    // param slot for key/legend toggling
+    this->toggleLegendParam.SetParameter( new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->toggleLegendParam);
     
+    // param slot for PDB toggling
+    this->togglePdbParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->togglePdbParam);
+
+    // param slot for STRIDE toggling
+    this->toggleStrideParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->toggleStrideParam);
+
+    // param slot for DSSP toggling
+    this->toggleDsspParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->toggleDsspParam);
+
     // param slot for key toggling
     this->clearResSelectionParam.SetParameter( new param::ButtonParam('c'));
     this->MakeSlotAvailable( &this->clearResSelectionParam);
@@ -100,20 +115,20 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
  * UncertaintySequenceRenderer::~UncertaintySequenceRenderer (DTOR)
  */
 UncertaintySequenceRenderer::~UncertaintySequenceRenderer( void ) {
-    this->Release();
+    this->Release(); // DON'T change !
 }
 
 /*
  * UncertaintySequenceRenderer::create
  */
 bool UncertaintySequenceRenderer::create() {
-    this->LoadTexture("stride-white.png");
-    this->LoadTexture("stride-coil.png");
-    this->LoadTexture("stride-sheet.png");
-    this->LoadTexture("stride-arrow.png");
-    this->LoadTexture("stride-helix-left.png");
-    this->LoadTexture("stride-helix2.png");
-    this->LoadTexture("stride-helix-right.png");
+    this->LoadTexture("secStruct-white.png");
+    this->LoadTexture("secStruct-coil.png");
+    this->LoadTexture("secStruct-sheet.png");
+    this->LoadTexture("secStruct-arrow.png");
+    this->LoadTexture("secStruct-helix-left.png");
+    this->LoadTexture("secStruct-helix2.png");
+    this->LoadTexture("secStruct-helix-right.png");
 
     return true;
 }
@@ -131,11 +146,12 @@ void UncertaintySequenceRenderer::release() {
 */
 bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
 
-    // check molecular data
-    MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
-    if( mol == NULL ) return false;
-    if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
-    
+    // get pointer to UncertaintyDataCall
+    UncertaintyDataCall *udc = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
+    if (udc == NULL) return false;
+    // execute the call
+    if (!(*udc)(UncertaintyDataCall::CallForGetData)) return false;
+
     // get pointer to BindingSiteCall
     BindingSiteCall *bs = this->bindingSiteCallerSlot.CallAs<BindingSiteCall>();
     if( bs != NULL ) {
@@ -146,36 +162,35 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
     }
     
     // check whether the number of residues per row or the number of atoms was changed
-    if( this->resCountPerRowParam.IsDirty() ||
-        this->atomCount != mol->AtomCount() ) {
+    if((this->resCountPerRowParam.IsDirty()) || (this->aminoAcidCount != udc->GetAminoAcidCount())) {
         this->dataPrepared = false;
     }
 
     // check whether the number of binding sites has changed
-    if( bs && this->bindingSiteCount != bs->GetBindingSiteCount() ) {
+    if( bs && (this->bindingSiteCount != bs->GetBindingSiteCount())) {
         this->dataPrepared = false;
     }
 
     // prepare the data
     if( !this->dataPrepared ) {
         unsigned int oldRowHeight = (unsigned int)this->rowHeight;
-        this->dataPrepared = this->PrepareData( mol, bs);
-        if( oldRowHeight != this->rowHeight ) {
-            this->dataPrepared = this->PrepareData( mol, bs);
+        this->dataPrepared = this->PrepareData(udc, bs);
+        // when new bindingsites change rowHeight - do it again ...
+        if(oldRowHeight != this->rowHeight) {
+            this->dataPrepared = this->PrepareData(udc, bs);
         }
 
         if( this->dataPrepared ) {
             // the data has been prepared for the current number of residues per row
             this->resCountPerRowParam.ResetDirty();
             // store the number of atoms for which the data was prepared
-            this->atomCount = mol->AtomCount();
+            this->aminoAcidCount = udc->GetAminoAcidCount();
             //store the number of binding sites
             bs ? this->bindingSiteCount = bs->GetBindingSiteCount() : this->bindingSiteCount = 0;
         }
     }
         
-    // set the bounding box
-    //call.SetBoundingBox( 0.0f, 0.0f, static_cast<float>(this->resCols), static_cast<float>(this->resRows));
+    // set the bounding box (minX, minY, maxX, maxY) -> (0,0) is in the upper left corner
     call.SetBoundingBox( 0.0f, -static_cast<float>(this->resRows) * this->rowHeight, static_cast<float>(this->resCols), 0.0f);
 
     return true;
@@ -187,52 +202,55 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
  */
 bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 
-    // get pointer to MolecularDataCall
-    MolecularDataCall *mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
-    if( mol == NULL ) return false;
-    // execute the call
-    if( !(*mol)(MolecularDataCall::CallForGetData) ) return false;
-	
 	// get pointer to UncertaintyDataCall
-	UncertaintyDataCall *uncertaintyData = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
-    if( uncertaintyData == NULL ) return false;
+	UncertaintyDataCall *ud = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
+    if( ud == NULL ) return false;
     // execute the call
-    if( !(*uncertaintyData)(UncertaintyDataCall::CallForGetData)) return false;
-	
-    
-    
+    if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
+  
+
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
+
     if (this->resSelectionCall != NULL) {
         (*this->resSelectionCall)(ResidueSelectionCall::CallForGetSelection);
+
+        // clear selection
         if( this->clearResSelectionParam.IsDirty() ) {
             this->resSelectionCall->GetSelectionPointer()->Clear();
             this->clearResSelectionParam.ResetDirty();
         }
-        unsigned int cnt = 0;
-        vislib::Array<ResidueSelectionCall::Residue> *resSelPtr = resSelectionCall->GetSelectionPointer();
-        for( unsigned int i = 0; i < aminoAcidIndexStrings.Count(); i++) {
-            for( unsigned int j = 0; j < aminoAcidIndexStrings[i].Count(); j++) {
-                this->selection[cnt] = false;
-                if( resSelPtr ) {
-                    // loop over selections and try to match wit the current amino acid
-                    for( unsigned int k = 0; k < resSelPtr->Count(); k++ ) {
-                        if( (*resSelPtr)[k].chainID == aminoAcidIndexStrings[i][j].First() &&
-                            (*resSelPtr)[k].resNum == aminoAcidIndexStrings[i][j].Second() )
-                        {
-                            this->selection[cnt] = true;
-                        }
+
+        vislib::Array<ResidueSelectionCall::Residue> *resSelPtr = this->resSelectionCall->GetSelectionPointer();
+        for(unsigned int i = 0; i < this->aminoAcidCount; i++) {
+            this->selection[i] = false;
+            if(resSelPtr != NULL) {
+                // loop over selections and try to match wit the current amino acid
+                for( unsigned int j = 0; j < resSelPtr->Count(); j++) {
+                    if((*resSelPtr)[j].chainID == this->chainID[i] && (*resSelPtr)[j].resNum == i)
+                    {
+                        this->selection[i] = true;
                     }
                 }
-                cnt++;
             }
         }
     }
+    else { 
+        // when no selection call is present clear selection too ...
+        if (this->clearResSelectionParam.IsDirty()) {
+            this->clearResSelectionParam.ResetDirty();
+            for (int i = 0; i < this->selection.Count(); i++) {
+                this->selection[i] = false;
+            }
+        }
+    }
+
 
     // read and update the color table, if necessary
     if( this->colorTableFileParam.IsDirty() ) {
 		UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
+
     
     glDisable( GL_CULL_FACE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -252,28 +270,34 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         //draw tiles for structure
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
-        for( unsigned int i = 0; i < this->resIndex.Count(); i++ ) {
+        for( unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
             markerTextures[0]->Bind();
-            if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX ) {
+            if (this->strideSecStructure[i] == UncertaintyDataCall::secStructure::H_ALPHA_HELIX) {
                 glColor3f( 1.0f, 0.0f, 0.0f);
-                if( i > 0 && this->resSecStructType[i-1] != this->resSecStructType[i] ) {
+                if (i > 0 && this->strideSecStructure[i - 1] != this->strideSecStructure[i]) {
                     markerTextures[4]->Bind();
-                } else if( (i + 1) < this->resIndex.Count() && this->resSecStructType[i+1] != this->resSecStructType[i] ) {
+                } 
+                else if ((i + 1) < this->aminoAcidCount && this->strideSecStructure[i + 1] != this->strideSecStructure[i]) {
                     markerTextures[6]->Bind();
-                } else {
+                } 
+                else {
                     markerTextures[5]->Bind();
                 }
-            } else if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET ) {
+            } 
+            else if (this->strideSecStructure[i] == UncertaintyDataCall::secStructure::E_EXT_STRAND) {
                 glColor3f( 0.0f, 0.0f, 1.0f);
-                if( (i + 1) < this->resIndex.Count() && this->resSecStructType[i+1] != this->resSecStructType[i] ) {
+                if ((i + 1) < this->aminoAcidCount && this->strideSecStructure[i + 1] != this->strideSecStructure[i]) {
                     markerTextures[3]->Bind();
-                } else {
+                } 
+                else {
                     markerTextures[2]->Bind();
                 }
-            } else if( this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN ) {
+            } 
+            else if (this->strideSecStructure[i] == UncertaintyDataCall::secStructure::T_H_TURN) {
                 glColor3f( 1.0f, 1.0f, 0.0f);
                 markerTextures[1]->Bind();
-            } else { // TYPE_COIL
+            } 
+            else { // TYPE_COIL
                 glColor3f( 0.5f, 0.5f, 0.5f);
                 markerTextures[1]->Bind();
             }
@@ -292,10 +316,10 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         }
         glDisable( GL_BLEND);
         glDisable( GL_TEXTURE_2D);
+
         // draw tiles for binding sites
         glBegin( GL_QUADS);
         for( unsigned int i = 0; i < this->bsIndices.Count(); i++ ) {
-            //glColor3fv( this->colorTable[this->bsIndices[i] + mol->ChainCount()].PeekComponents());
             glColor3fv( this->bsColors[this->bsIndices[i]].PeekComponents());
             glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1]);
             glVertex2f( this->bsVertices[2*i] + 0.1f, -this->bsVertices[2*i+1] - 0.4f);
@@ -303,6 +327,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             glVertex2f( this->bsVertices[2*i] + 0.9f, -this->bsVertices[2*i+1]);
         }
         glEnd();
+
         // draw tiles for chains
         glBegin( GL_QUADS);
         for( unsigned int i = 0; i < this->chainVertices.Count() / 2; i++ ) {
@@ -318,29 +343,30 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         glColor3fv( fgColor);
         glEnable( GL_VERTEX_ARRAY);
         glVertexPointer( 2, GL_FLOAT, 0, this->chainSeparatorVertices.PeekElements());
-        glDrawArrays( GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.Count() / 2 - 2);
+        glDrawArrays( GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.Count() / 2 );
         glDisable( GL_VERTEX_ARRAY);
 
         // labeling
         glColor3fv( fgColor);
+        float resRow = -1.0f;
         if( theFont.Initialise() ) {
-            for( unsigned int i = 0; i < this->aminoAcidStrings.Count(); i++ ) {
-                for( unsigned int j = 0; j < (unsigned int)this->aminoAcidStrings[i].Length(); j++ ) {
-                    // draw the one-letter amino acid code
-                    theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight), 1.0f, -1.0f,
-                        1.0f, true, this->aminoAcidStrings[i].Substring(j, 1), vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
-                    // draw the chain name and amino acid index
-                    //theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + this->rowHeight - 0.5f), 1.0f, 0.5f,
-                    tmpStr.Format("%c %i", this->aminoAcidIndexStrings[i][j].First(), this->aminoAcidIndexStrings[i][j].Second());
-                    theFont.DrawString( static_cast<float>(j), -( static_cast<float>(i) * this->rowHeight + 2.5f), 1.0f, 0.5f,
-                        0.35f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-                        //0.35f, true, this->aminoAcidIndexStrings[i][j], vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                if ((i%this->resCols) == 0) {
+                    resRow += 1.0f;
                 }
+                // draw the one-letter amino acid code
+                tmpStr.Format("%c", this->aminoAcidName[i]);
+                theFont.DrawString(static_cast<float>(i%this->resCols), -(resRow*this->rowHeight), 1.0f, -1.0f,
+                    1.0f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+                // draw the chain name and amino acid index
+                tmpStr.Format("%c %i", this->chainID[i], this->aminoAcidIndex[i]);
+                theFont.DrawString(static_cast<float>(i%this->resCols), -(resRow * this->rowHeight + 2.5f), 1.0f, 0.5f,
+                                    0.35f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
             }
         }
         
-        // draw legend / key
-        if( this->toggleKeyParam.Param<param::BoolParam>()->Value() ) {
+        // draw legend/key
+        if(this->toggleLegendParam.Param<param::BoolParam>()->Value()) {
             glColor3fv( fgColor);
             float wordlength;
             float fontSize = 1.0f;
@@ -364,11 +390,12 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                             fontSize * 0.5f, true, this->bindingSiteDescription[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
                     }
                 }
+
                 // draw diagram legend
                 glColor3fv( fgColor);
                 fontSize = 0.5f;
                 tmpStr = "STRIDE";
-                wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
+                wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                 theFont.DrawString( -wordlength,-1.0f, 
                     wordlength, 1.0f,
                     fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
@@ -398,6 +425,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         }
         
         glDisable(GL_DEPTH_TEST);
+
         // draw overlays for selected amino acids
         vislib::math::Vector<float, 2> pos;
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -417,6 +445,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             }
         }
         glDisable(GL_BLEND);
+
         // draw frames for selected amino acids
         fgColor[3] = 1.0f;
         glColor3fv( fgColor);
@@ -448,7 +477,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         // render mouse hover
         if( this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
             this->mousePos.Y() >  0.0f && this->mousePos.Y() < static_cast<float>(this->resRows+1) &&
-            this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount)
+            this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->aminoAcidCount)
         {
             glColor3f( 1.0f, 0.75f, 0.0f);
             glBegin( GL_LINE_STRIP);
@@ -490,7 +519,7 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
             this->selection[this->mousePosResIdx] = this->initialClickSelection;
             consumeEvent = true;
         } else {
-            if( this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->resCount) {
+            if( this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->aminoAcidCount) {
                 this->selection[this->mousePosResIdx] = !this->selection[this->mousePosResIdx];
             }
         }
@@ -504,18 +533,15 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
         vislib::Array<ResidueSelectionCall::Residue> selectedRes;
         for (unsigned int i = 0; i < this->selection.Count(); i++) {
             if (this->selection[i]) {
-                unsigned int x = i % this->resCols;
-                unsigned int y = i / this->resCols;
                 selectedRes.Add( ResidueSelectionCall::Residue());
-                selectedRes.Last().chainID = this->aminoAcidIndexStrings[y][x].First();
-                selectedRes.Last().resNum = this->aminoAcidIndexStrings[y][x].Second();
+                selectedRes.Last().chainID = this->chainID[i];
+                selectedRes.Last().resNum = i;
                 selectedRes.Last().id = -1;
             }
         }
         this->resSelectionCall->SetSelectionPointer(&selectedRes);
         (*this->resSelectionCall)(ResidueSelectionCall::CallForSetSelection);
     }
-
 
     return consumeEvent;
 }
@@ -524,48 +550,55 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
 /*
  * UncertaintySequenceRenderer::PrepareData
  */
-bool UncertaintySequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSiteCall *bs) {
-    if( !mol ) return false;
+bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingSiteCall *bs) {
 
-    // temporary variables
-    unsigned int firstStruct;
-    unsigned int firstMol;
-    vislib::StringA tmpStr;
+    if( !udc ) return false;
 
     // initialization
-    unsigned int oldResCount = this->resCount;
-    this->resCount = 0;
-
-    this->vertices.Clear();
-    this->vertices.AssertCapacity( mol->ResidueCount() * 2);
-
-    this->chainVertices.Clear();
-    this->chainVertices.AssertCapacity( mol->ResidueCount() * 2);
-
-    this->chainSeparatorVertices.Clear();
-    this->chainSeparatorVertices.AssertCapacity( mol->ChainCount() * 4);
-
-    this->chainColors.Clear();
-    this->chainColors.AssertCapacity( mol->ResidueCount() * 3);
-
-    this->bsVertices.Clear();
-    this->bsVertices.AssertCapacity( mol->ResidueCount() * 2);
-
-    this->bsIndices.Clear();
-    this->bsIndices.AssertCapacity( mol->ResidueCount());
-
-    this->bsColors.Clear();
-
-    this->resIndex.Clear();
-    this->resIndex.AssertCapacity( mol->ResidueCount());
+    this->aminoAcidCount = udc->GetAminoAcidCount();
 
     this->resCols = static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value());
 
-    this->aminoAcidStrings.Clear();
-    this->aminoAcidStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
+    this->dsspSecStructure.Clear(),
+    this->dsspSecStructure.AssertCapacity(this->aminoAcidCount);
 
-    this->aminoAcidIndexStrings.Clear();
-    this->aminoAcidIndexStrings.AssertCapacity( mol->ResidueCount() / this->resCols + 1);
+    this->strideSecStructure.Clear();
+    this->strideSecStructure.AssertCapacity(this->aminoAcidCount);
+
+    this->pdbSecStructure.Clear();
+    this->pdbSecStructure.AssertCapacity(this->aminoAcidCount);
+
+    this->selection.Clear();
+    this->selection.AssertCapacity(this->aminoAcidCount);
+
+    this->vertices.Clear();
+    this->vertices.AssertCapacity(this->aminoAcidCount * 2);
+
+    this->chainVertices.Clear();
+    this->chainVertices.AssertCapacity(this->aminoAcidCount * 2);
+
+    this->chainSeparatorVertices.Clear();
+    this->chainSeparatorVertices.AssertCapacity(this->aminoAcidCount * 4);
+
+    this->chainColors.Clear();
+    this->chainColors.AssertCapacity(this->aminoAcidCount * 3);
+
+    this->bsVertices.Clear();
+    this->bsVertices.AssertCapacity(this->aminoAcidCount * 2);
+
+    this->bsIndices.Clear();
+    this->bsIndices.AssertCapacity(this->aminoAcidCount);
+
+    this->bsColors.Clear();
+
+    this->aminoAcidName.Clear();
+    this->aminoAcidName.AssertCapacity(this->aminoAcidCount);
+
+    this->chainID.Clear();
+    this->chainID.AssertCapacity(this->aminoAcidCount);
+
+    this->aminoAcidIndex.Clear();
+    this->aminoAcidIndex.AssertCapacity(this->aminoAcidCount);
 
     this->bindingSiteDescription.Clear();
 
@@ -581,111 +614,101 @@ bool UncertaintySequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSi
             this->bsColors[i] = bs->GetBindingSiteColor(i);
         }
     }
-    unsigned int currentRow = 0;
+
+    // temporary variables
+    vislib::StringA tmpStr;
     unsigned int maxNumBindingSitesPerRes = 0;
+    unsigned int cCnt = 0;
+    char currentChainID = udc->GetChainID(0);
 
-    // count residues
-    for( unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++ ) {
-        firstMol = mol->Chains()[cCnt].FirstMoleculeIndex();
-        for( unsigned int mCnt = firstMol; mCnt < firstMol + mol->Chains()[cCnt].MoleculeCount(); mCnt++ ) {
-            firstStruct = mol->Molecules()[mCnt].FirstSecStructIndex();
-            for( unsigned int sCnt = 0; sCnt < mol->Molecules()[mCnt].SecStructCount(); sCnt++ ) {
-                for( unsigned int rCnt = 0; rCnt < mol->SecondaryStructures()[firstStruct + sCnt].AminoAcidCount(); rCnt++ ) {
-                    // store the original index of the current residue
-                    this->resIndex.Add( mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt);
-                    // store the secondary structure element type of the current residue
-                    this->resSecStructType.Add( mol->SecondaryStructures()[firstStruct + sCnt].Type());
-                    // compute the position of the residue icon
-                    if( this->resCount == 0 ) {
-                        // structure vertices
-                        this->vertices.Add( 0.0f);
-                        this->vertices.Add( 0.0f);
-                        this->aminoAcidStrings.Add("");
-                        //this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
-                        this->aminoAcidIndexStrings.Add(vislib::Array<vislib::Pair<char, int> >());
-                        // chain tile vertices and colors
-                        this->chainVertices.Add( 0.0f);
-                        //this->chainVertices.Add( this->rowHeight - 0.5f);
-                        this->chainVertices.Add( 2.5f);
-                        this->chainColors.Add( this->colorTable[cCnt].X());
-                        this->chainColors.Add( this->colorTable[cCnt].Y());
-                        this->chainColors.Add( this->colorTable[cCnt].Z());
-                    } else {
-                        if( this->resCount % static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()) != 0 ) {
-                            // structure vertices
-                            this->vertices.Add( this->vertices[this->resCount * 2 - 2] + 1.0f);
-                            this->vertices.Add( this->vertices[this->resCount * 2 - 1]);
-                            // chain tile vertices and colors
-                            this->chainVertices.Add( this->chainVertices[this->resCount * 2 - 2] + 1.0f);
-                            this->chainVertices.Add( this->chainVertices[this->resCount * 2 - 1]);
-                            this->chainColors.Add( this->colorTable[cCnt].X());
-                            this->chainColors.Add( this->colorTable[cCnt].Y());
-                            this->chainColors.Add( this->colorTable[cCnt].Z());
-                        } else {
-                            // structure vertices
-                            this->vertices.Add( 0.0f);
-                            this->vertices.Add( this->vertices[this->resCount * 2 - 1] + this->rowHeight);
-                            currentRow++;
-                            this->aminoAcidStrings.Add("");
-                            //this->aminoAcidIndexStrings.Add(vislib::Array<vislib::StringA>());
-                            this->aminoAcidIndexStrings.Add(vislib::Array<vislib::Pair<char, int> >());
-                            // chain tile vertices and colors
-                            this->chainVertices.Add( 0.0f);
-                            this->chainVertices.Add( this->chainVertices[this->resCount * 2 - 1] + this->rowHeight);
-                            this->chainColors.Add( this->colorTable[cCnt].X());
-                            this->chainColors.Add( this->colorTable[cCnt].Y());
-                            this->chainColors.Add( this->colorTable[cCnt].Z());
-                        }
-                    }
-                    // store the amino acid name
-                    this->aminoAcidStrings[currentRow].Append( this->GetAminoAcidOneLetterCode(mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()]));
-                    // store the chain name and residue index
-                    //tmpStr.Format("%c %i", mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex());
-                    //this->aminoAcidIndexStrings[currentRow].Add( tmpStr);
-                    this->aminoAcidIndexStrings[currentRow].Add( vislib::Pair<char, int>(mol->Chains()[cCnt].Name(), mol->Residues()[this->resIndex.Last()]->OriginalResIndex()));
-                    
-                    // try to match binding sites
-                    if( bs ) {
-                        vislib::Pair<char, unsigned int> bsRes;
-                        unsigned int numBS = 0;
-                        // loop over all binding sites
-                        for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
-                            for( unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++ ) {
-                                bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
-                                if( mol->Chains()[cCnt].Name() == bsRes.First() &&
-                                    mol->Residues()[this->resIndex.Last()]->OriginalResIndex() == bsRes.Second() &&
-                                    mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt) ) {
-                                        //this->aminoAcidIndexStrings[currentRow].Last().Append(" *");
-                                        this->bsVertices.Add( this->vertices[this->vertices.Count()-2]);
-                                        this->bsVertices.Add( this->vertices[this->vertices.Count()-1] + 3.0f + numBS * 0.5f);
-                                        this->bsIndices.Add( bsCnt);
-                                        if( !this->bindingSiteDescription[bsCnt].IsEmpty() ) {
-                                            this->bindingSiteDescription[bsCnt].Append( ", ");
-                                        }
-                                        this->bindingSiteDescription[bsCnt].Append( tmpStr);
-                                        numBS++;
-                                        maxNumBindingSitesPerRes = vislib::math::Max( maxNumBindingSitesPerRes, numBS);
-                                }
-                            }
-                        }
-                    }
+    // collect data from call
+    for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
 
-                    this->resCount++;
-                } // residues
-            } // secondary structures
-        } // molecules
-        // add chain separator vertices
-        this->chainSeparatorVertices.Add( this->vertices[this->vertices.Count()-2] + 1.0f);
-        this->chainSeparatorVertices.Add( -this->vertices[this->vertices.Count()-1]);
-        this->chainSeparatorVertices.Add( this->vertices[this->vertices.Count()-2] + 1.0f);
-        this->chainSeparatorVertices.Add( -(this->chainVertices[this->chainVertices.Count()-1] + 0.5f));
-    } // chains
-    
-    // check if residue count changed and adjust selection array
-    if( oldResCount != this->resCount ) {
-        this->selection.SetCount( this->resCount);
-        for( unsigned int i = 0; i < this->selection.Count(); i++ ) {
-            this->selection[i] = false;
+        // store the pdb index of the current amino-acid
+        this->aminoAcidIndex.Add(udc->GetPDBAminoAcidIndex(aa));
+        // store the secondary structure element type of the current amino-acid
+        this->strideSecStructure.Add(udc->GetStrideSecStructure(aa));
+        // store the amino-acid three letter code and convert it to the one letter code
+        this->aminoAcidName.Add(this->GetAminoAcidOneLetterCode(udc->GetAminoAcid(aa)));
+        // store the chainID
+        this->chainID.Add(udc->GetChainID(aa));
+        // init selection
+        this->selection.Add(false);
+        // store missing amino-acid flag
+        // ...
+
+        // count different chains and set seperator vertices
+        if (udc->GetChainID(aa) != currentChainID) {
+            currentChainID = udc->GetChainID(aa);
+            this->chainSeparatorVertices.Add(this->vertices[this->vertices.Count() - 2] + 1.0f);
+            this->chainSeparatorVertices.Add(-this->vertices[this->vertices.Count() - 1]);
+            this->chainSeparatorVertices.Add(this->vertices[this->vertices.Count() - 2] + 1.0f);
+            this->chainSeparatorVertices.Add(-(this->chainVertices[this->chainVertices.Count() - 1] + 0.5f));
+            cCnt++;
+        }
+
+        // compute the position of the amino-acid icon
+        if (aa == 0) {
+            // structure vertices
+            this->vertices.Add(0.0f);
+            this->vertices.Add(0.0f);
+            // chain tile vertices and colors
+            this->chainVertices.Add(0.0f);
+            this->chainVertices.Add(2.5f);
+            this->chainColors.Add(this->colorTable[cCnt].X());
+            this->chainColors.Add(this->colorTable[cCnt].Y());
+            this->chainColors.Add(this->colorTable[cCnt].Z());
+        }
+        else {
+            if (aa % static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()) != 0) {
+                // structure vertices
+                this->vertices.Add(this->vertices[aa * 2 - 2] + 1.0f);
+                this->vertices.Add(this->vertices[aa * 2 - 1]);
+                // chain tile vertices and colors
+                this->chainVertices.Add(this->chainVertices[aa * 2 - 2] + 1.0f);
+                this->chainVertices.Add(this->chainVertices[aa * 2 - 1]);
+                this->chainColors.Add(this->colorTable[cCnt].X());
+                this->chainColors.Add(this->colorTable[cCnt].Y());
+                this->chainColors.Add(this->colorTable[cCnt].Z());
+            }
+            else {
+                // structure vertices
+                this->vertices.Add(0.0f);
+                this->vertices.Add(this->vertices[aa * 2 - 1] + this->rowHeight);
+                // chain tile vertices and colors
+                this->chainVertices.Add(0.0f);
+                this->chainVertices.Add(this->chainVertices[aa * 2 - 1] + this->rowHeight);
+                this->chainColors.Add(this->colorTable[cCnt].X());
+                this->chainColors.Add(this->colorTable[cCnt].Y());
+                this->chainColors.Add(this->colorTable[cCnt].Z());
+            }
+        }
+
+        // try to match binding sites
+        if (bs) {
+            vislib::Pair<char, unsigned int> bsRes;
+            unsigned int numBS = 0;
+            // loop over all binding sites
+            for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
+                for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
+                    bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
+                    if (udc->GetChainID(aa) == bsRes.First() &&
+                        udc->GetPDBAminoAcidIndex(aa) == bsRes.Second() ) {
+
+                        // && mol->ResidueTypeNames()[mol->Residues()[this->resIndex.Last()]->Type()] == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt)) {
+
+                        this->bsVertices.Add(this->vertices[this->vertices.Count() - 2]);
+                        this->bsVertices.Add(this->vertices[this->vertices.Count() - 1] + 3.0f + numBS * 0.5f);
+                        this->bsIndices.Add(bsCnt);
+                        if (!this->bindingSiteDescription[bsCnt].IsEmpty()) {
+                            this->bindingSiteDescription[bsCnt].Append(", ");
+                        }
+                        this->bindingSiteDescription[bsCnt].Append(tmpStr);
+                        numBS++;
+                        maxNumBindingSitesPerRes = vislib::math::Max(maxNumBindingSitesPerRes, numBS);
+                    }
+                }
+            }
         }
     }
 
@@ -700,11 +723,11 @@ bool UncertaintySequenceRenderer::PrepareData( MolecularDataCall *mol, BindingSi
     this->rowHeight = 3.0f + maxNumBindingSitesPerRes * 0.5f + 0.5f;
     
     // set the number of columns
-    this->resCols = vislib::math::Min(this->resCount,
+    this->resCols = vislib::math::Min(this->aminoAcidCount,
         static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()));
     this->resCountPerRowParam.Param<param::IntParam>()->SetValue( this->resCols);
     // compute the number of rows
-    this->resRows = static_cast<unsigned int>( ceilf(static_cast<float>(this->resCount) / static_cast<float>(this->resCols)));
+    this->resRows = static_cast<unsigned int>( ceilf(static_cast<float>(this->aminoAcidCount) / static_cast<float>(this->resCols)));
     
     return true;
 }
@@ -776,7 +799,7 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
             markerTextures.Add( vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>());
             markerTextures.Last() = new vislib::graphics::gl::OpenGLTexture2D();
             if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-                Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
+                Log::DefaultLog.WriteError("Could not load %s texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);
                 return false;
             }
@@ -784,10 +807,10 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
             ARY_SAFE_DELETE(buf);
             return true;
         } else {
-            Log::DefaultLog.WriteError("could not read %s texture.", filename.PeekBuffer());
+            Log::DefaultLog.WriteError("Could not read %s texture.", filename.PeekBuffer());
         }
     } else {
-        Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer());
+        Log::DefaultLog.WriteError("Could not find %s texture.", filename.PeekBuffer());
     }
     return false;
 }

@@ -33,11 +33,9 @@
 #include "vislib/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 
-#include "protein_calls/ResidueSelectionCall.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "protein_calls/BindingSiteCall.h"
-
 #include "UncertaintyDataCall.h"
+#include "protein_calls/ResidueSelectionCall.h"
+#include "protein_calls/BindingSiteCall.h"
 
 
 namespace megamol {
@@ -109,7 +107,7 @@ namespace megamol {
          * @param mol The molecular data call.
          * @return true if preparation was successful, false otherwise
          */
-		bool PrepareData(megamol::protein_calls::MolecularDataCall *mol, protein_calls::BindingSiteCall *bs);
+        bool PrepareData(UncertaintyDataCall *udc, protein_calls::BindingSiteCall *bs);
         
         /**
          * TODO
@@ -124,7 +122,7 @@ namespace megamol {
          * @param resName The name of the residue as three letter code.
          * @return The single letter code for the amino acid.
          */
-        char GetAminoAcidOneLetterCode( vislib::StringA resName );
+        char GetAminoAcidOneLetterCode(vislib::StringA resName);
 
         /**********************************************************************
          * 'render'-functions
@@ -153,33 +151,38 @@ namespace megamol {
          * variables
          **********************************************************************/
         
-        /** pdb caller slot */
-        core::CallerSlot dataCallerSlot;
+	    /** The call for uncertainty data */
+        core::CallerSlot uncertaintyDataSlot;		
+        
         /** binding site caller slot */
         core::CallerSlot bindingSiteCallerSlot;
         /** residue selection caller slot */
         core::CallerSlot resSelectionCallerSlot;
-		
-	    /** The call for uncertainty data */
-        core::CallerSlot uncertaintyDataSlot;		
-        
+
         // the number of residues in one row
         megamol::core::param::ParamSlot resCountPerRowParam;
         // the file name for the color table
         megamol::core::param::ParamSlot colorTableFileParam;
-        // parameter to turn the binding site legend/key on/off
-        megamol::core::param::ParamSlot toggleKeyParam;
+        // parameter to show/hide row legend/key
+        megamol::core::param::ParamSlot toggleLegendParam;
         // clear the current residue selection
         megamol::core::param::ParamSlot clearResSelectionParam;
 
+        // parameter to show/hide pdb secondary structure 
+        megamol::core::param::ParamSlot togglePdbParam;
+        // parameter to show/hide stride secondary structure
+        megamol::core::param::ParamSlot toggleStrideParam;
+        // parameter to show/hide dssp secondary structure
+        megamol::core::param::ParamSlot toggleDsspParam;
+
         // data preparation flag
         bool dataPrepared;
-        // the total number of atoms
-        unsigned int atomCount;
-        // the total number of atoms
+        // the total number of amino-acids 
+        unsigned int aminoAcidCount;
+        // the total number of binding sites
         unsigned int bindingSiteCount;
 
-        // the number of residues
+        // the number of residues/amino-acids (= aminoAcidCount)
         unsigned int resCount;
         // the number of residue columns
         unsigned int resCols;
@@ -195,9 +198,12 @@ namespace megamol {
         vislib::graphics::gl::OutlineFont theFont;
 #endif
         // the array of amino acid 1-letter codes
-        vislib::Array<vislib::StringA> aminoAcidStrings;
-        // the array of amino acid chain name and index
-        vislib::Array<vislib::Array<vislib::Pair<char, int> > > aminoAcidIndexStrings;
+        vislib::Array<char> aminoAcidName;
+        // the array of pdb amino-acid indices
+        vislib::Array<int> aminoAcidIndex;
+        // the array of the chain IDs
+        vislib::Array<char> chainID;
+
         // the array of binding site names
         vislib::Array<vislib::StringA> bindingSiteNames;
         // the array of descriptons for the binding sites
@@ -211,19 +217,29 @@ namespace megamol {
         vislib::Array<float> chainColors;
         // the vertex buffer array for the chain separator lines
         vislib::Array<float> chainSeparatorVertices;
+
         // the vertex buffer array for the binding site tiles
         vislib::Array<float> bsVertices;
         // the index array for the binding site tiles
         vislib::Array<unsigned int> bsIndices;
         // the color array for the binding site tiles
         vislib::Array<vislib::math::Vector<float, 3> > bsColors;
-        // the index of the residue
-        vislib::Array<unsigned int> resIndex;
+
+
         // the secondary structure element type of the residue
-		vislib::Array<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
+		//vislib::Array<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
+
+        // The DSSP secondary structure type
+        vislib::Array<UncertaintyDataCall::secStructure> dsspSecStructure;
+        // The STRIDE secondary structure type
+        vislib::Array<UncertaintyDataCall::secStructure> strideSecStructure;
+        // The PDB secondary structure type
+        vislib::Array<UncertaintyDataCall::secStructure> pdbSecStructure;
+
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
         
+        // textures
         vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
         // mouse hover
@@ -231,6 +247,7 @@ namespace megamol {
         int mousePosResIdx;
         bool rightMouseDown;
         bool initialClickSelection;
+
         // selection 
         vislib::Array<bool> selection;
 		protein_calls::ResidueSelectionCall *resSelectionCall;

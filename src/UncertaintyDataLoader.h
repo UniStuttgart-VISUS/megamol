@@ -10,13 +10,6 @@
  */
 
 
-/**
-* TODO:
-*     - ...
-*
-*/
-
-
 #ifndef MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYDATALOADER_H_INCLUDED
 #define MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYDATALOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
@@ -114,12 +107,21 @@ namespace megamol {
             /**
             * Compute Uncertainty on current secondary structure data.
             *
-            * @param -
-            *
             *@return True on success
             */
             bool computeUncertainty(void);
 
+            /**
+            * Quick sorting of the corresponding types of the secondary structure uncertainties.
+            *
+            * @param valueArr  The pointer to the vector keeping the uncertainty values
+            * @param structArr The pointer to the vector keeping the structural indices
+            * @param left      The left index of the array
+            * @param right     The right index of the array
+            */
+            void quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *valueArr,  
+                                        vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *structArr,  
+                                        int left, int right);
 
 			// ------------------ variables ------------------- 
 
@@ -130,20 +132,34 @@ namespace megamol {
 			core::param::ParamSlot filenameSlot;
 
 
-			/** The DSSP secondary structure information */
+            /** The DSSP secondary structure type */
             vislib::Array<UncertaintyDataCall::secStructure> dsspSecStructure;
-			
-			/** The STRIDE secondary structure information */
+
+            /** The STRIDE secondary structure type */
             vislib::Array<UncertaintyDataCall::secStructure> strideSecStructure;
 
-			/** The PDB secondary structure information */
+            /** The PDB secondary structure type */
             vislib::Array<UncertaintyDataCall::secStructure> pdbSecStructure;
 
-			/** The pdb index with amino-acid three letter code and chain ID*/
-			vislib::Array<vislib::Pair<int, vislib::Pair<vislib::StringA, char> > > indexAminoAcidchainID;
+            /** The PDB index */
+            vislib::Array<int> pdbIndex;
 
-            /** The probabilities of the different secondary structures */
+            /** The chain ID */
+            vislib::Array<char> chainID;
+
+            /** The missing amino-acid flag */
+            vislib::Array<bool> missingFlag;
+
+            /** The amino-acid name */
+            vislib::Array<vislib::StringA> aminoAcidName;
+
+            /** The values of the secondary structure uncertainty for each amino-acid (index = secStructure) */
             vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> > secStructUncertainty;
+
+            /** The sorted structure types of the uncertainty values 
+            *   Values are sorted in ascending order -> maximum value in secStructUncertainty has last index
+            *   To get the uncertainty value: use secStructure given here as index in secStructUncertainty */
+            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> > sortedSecStructUncertainty;
 
 		};
 	} /* end namespace protein_uncertainty */
