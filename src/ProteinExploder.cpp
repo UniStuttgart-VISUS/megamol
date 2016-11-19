@@ -15,7 +15,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "TriSoup/LinesDataCall.h"
+#include "mmstd_trisoup/LinesDataCall.h"
 
 #include "vislib/math/Vector.h"
 #include "vislib/math/ShallowVector.h"

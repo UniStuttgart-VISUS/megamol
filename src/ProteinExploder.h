@@ -12,7 +12,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "TriSoup/LinesDataCall.h"
+#include "mmstd_trisoup/LinesDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include <chrono>
 

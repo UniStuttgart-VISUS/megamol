@@ -66,7 +66,7 @@ $a = PathParameter->new();
     $a->id("trisoup");
     $a->description("Path to the TriSoup plugin");
     $a->placeholder("%trisoup%");
-    $a->markerFile("include/TriSoup/TriSoup.h");
+    $a->markerFile("include/mmstd_trisoup/mmstd_trisoup.h");
     $a->relativeLocation("../../");
     $a->autoDetect(1);
     push @pps, $a;
