@@ -61,7 +61,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
             toggleDsspParam("Dssp", "Show/hide DSSP secondary structure row"),
             toggleDiffParam("Difference", "Show/hide row with disagreements in secondary structure assignment."),
             toggleUncertaintyParam("Uncertainty", "Show/hide row with uncertainty of secondary structure assignment."), 
-            uncertaintyVisualisationParam("Visualisation", "Choose uncertainty visualisation"),   
+            uncertaintyVisualizationParam("Visualization", "Choose uncertainty Visualization"),   
             dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), 
             markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), secStructRows(0), pdbID("")
 #ifndef USE_SIMPLE_FONT
@@ -122,15 +122,15 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->MakeSlotAvailable(&this->toggleUncertaintyParam);        
     
     
-    // param for uncertainty visualisation
-    this->currentVisualisation = STACK;
-    param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentVisualisation));
+    // param for uncertainty Visualization
+    this->currentVisualization = STACK;
+    param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentVisualization));
     
     tmpEnum->SetTypePair(STACK,     "Stack.");
     // tmpEnum->SetTypePair(..., "...");
     
-    this->uncertaintyVisualisationParam << tmpEnum;
-    this->MakeSlotAvailable(&this->uncertaintyVisualisationParam);       
+    this->uncertaintyVisualizationParam << tmpEnum;
+    this->MakeSlotAvailable(&this->uncertaintyVisualizationParam);       
 
 
     // setting initial row height, as if all secondary structure rows would be shown
@@ -291,10 +291,10 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
     // execute the call
     if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
   
-    // check if new visualisation was chosen
-	if (this->uncertaintyVisualisationParam.IsDirty()) {
-        this->uncertaintyVisualisationParam.ResetDirty();  
-        this->currentVisualisation = this->uncertaintyVisualisationParam.Param<core::param::EnumParam>()->Value();
+    // check if new Visualization was chosen
+	if (this->uncertaintyVisualizationParam.IsDirty()) {
+        this->uncertaintyVisualizationParam.ResetDirty();  
+        this->currentVisualization = this->uncertaintyVisualizationParam.Param<core::param::EnumParam>()->Value();
     }
       
     // updating selection
@@ -445,7 +445,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         ////////////////////////////////////////////////    
         // ...
         if(this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
-            switch (this->currentVisualisation) {
+            switch (this->currentVisualization) {
                 case (STACK): this->renderUncertaintyStack(yPos); break;
                 default: break;
             }

@@ -177,15 +177,15 @@ namespace megamol {
         vislib::math::Vector<float, 4> secStructureColor(UncertaintyDataCall::secStructure s);
     
         /**
-         * enumeration of available uncertainty visualisations
+         * enumeration of available uncertainty visualizations
          */
-        enum visualisation {
+        enum visualization {
             STACK     = 0,            
             DITHERING = 1
         };
         
         /**
-         * Renders the STACK uncertainty visualisation.
+         * Renders the STACK uncertainty visualization.
          *
          * @param yPos     The y position the rendering should start.
          * @param defColor The the default color
@@ -222,14 +222,14 @@ namespace megamol {
         megamol::core::param::ParamSlot toggleDsspParam;
         // parameter to show/hide disagreements in secondary structure assignment
         megamol::core::param::ParamSlot toggleDiffParam;
-        // parameter to show/hide secondary structure uncertainty visualisation
+        // parameter to show/hide secondary structure uncertainty visualization
         megamol::core::param::ParamSlot toggleUncertaintyParam;
                 
-        // parameter to choose secondary structure uncertainty visualisation
-        megamol::core::param::ParamSlot uncertaintyVisualisationParam;
+        // parameter to choose secondary structure uncertainty visualization
+        megamol::core::param::ParamSlot uncertaintyvisualizationParam;
         
-        // the current uncertainty visualisation
-        visualisation currentVisualisation;
+        // the current uncertainty visualization
+        visualization currentvisualization;
         
         // data preparation flag
         bool dataPrepared;
