@@ -104,12 +104,7 @@ namespace megamol {
 			*/
 			bool readInputFile(const vislib::TString& filename);
 
-            /**
-            * Compute Uncertainty on current secondary structure data.
-            *
-            *@return True on success
-            */
-            bool computeUncertainty(void);
+
 
             /**
             * Quick sorting of the corresponding types of the secondary structure uncertainties.
@@ -119,9 +114,23 @@ namespace megamol {
             * @param left      The left index of the array
             * @param right     The right index of the array
             */
-            void quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *valueArr,  
-                                        vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *structArr,  
+            void quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::EON)> *valueArr,  
+                                        vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::EON)> *structArr,  
                                         int left, int right);
+
+            /**
+             * enumeration of available uncertainty calculation methods. 
+             */
+             enum calculationMethod {
+                 AVERAGE = 0
+             };
+             
+            /**
+            * Compute uncertainty on current secondary structure data with method AVERAGE.
+            *
+            *@return True on success
+            */
+            bool calculateUncertaintyAverage(void);             
 
 			// ------------------ variables ------------------- 
 
@@ -131,7 +140,12 @@ namespace megamol {
 			/** The parameter slot for the uid filename */
 			core::param::ParamSlot filenameSlot;
 
-
+			/** The parameter slot for choosing uncertainty calculation method */
+			core::param::ParamSlot methodSlot;
+            
+            /** The currently used uncertainty calculation method */
+            calculationMethod currentMethod;
+            
             /** The DSSP secondary structure type */
             vislib::Array<UncertaintyDataCall::secStructure> dsspSecStructure;
 
@@ -154,12 +168,15 @@ namespace megamol {
             vislib::Array<vislib::StringA> aminoAcidName;
 
             /** The values of the secondary structure uncertainty for each amino-acid (index = secStructure) */
-            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> > secStructUncertainty;
+            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::EON)> > secStructUncertainty;
 
             /** The sorted structure types of the uncertainty values 
             *   Values are sorted in ascending order -> maximum value in secStructUncertainty has last index
             *   To get the uncertainty value: use secStructure given here as index in secStructUncertainty */
-            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> > sortedSecStructUncertainty;
+            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::EON)> > sortedSecStructUncertainty;
+            
+            /** The pdb id */
+            vislib::StringA pdbID;
 
 		};
 	} /* end namespace protein_uncertainty */

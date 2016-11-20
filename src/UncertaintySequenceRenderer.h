@@ -27,10 +27,10 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 #ifdef USE_SIMPLE_FONT
-#include "vislib/graphics/gl/SimpleFont.h"
+    #include "vislib/graphics/gl/SimpleFont.h"
 #else //  USE_SIMPLE_FONT
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
+    #include "vislib/graphics/gl/OutlineFont.h"
+    #include "vislib/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 
 #include "UncertaintyDataCall.h"
@@ -116,13 +116,7 @@ namespace megamol {
 
     private:
 
-        /**
-         * Returns the single letter code for an amino acid given the three letter code.
-         *
-         * @param resName The name of the residue as three letter code.
-         * @return The single letter code for the amino acid.
-         */
-        char GetAminoAcidOneLetterCode(vislib::StringA resName);
+
 
         /**********************************************************************
          * 'render'-functions
@@ -146,6 +140,49 @@ namespace megamol {
         * @return The return value of the function.
         */
         virtual bool Render(megamol::core::view::CallRender2D& call);
+
+        /**********************************************************************
+         * other functions
+         **********************************************************************/
+         
+        /**
+         * Returns the single letter code for an amino acid given the three letter code.
+         *
+         * @param resName The name of the residue as three letter code.
+         * @return The single letter code for the amino acid.
+         */
+        char GetAminoAcidOneLetterCode(vislib::StringA resName);
+        
+        /**
+         * Draws the texture tiles for the secondary structure types.
+         *
+         * @param secStructPre The secondary structure type on position i-1
+         * @param secStructi   The secondary structure type on position i
+         * @param secStructSuc The secondary structure type on position i+1
+         * @param m            The flag indicating if it is a missing amino-acid
+         * @param x            The x position
+         * @param y            The y position
+         * @param defColor     The the default color
+         */
+        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure> secStructPre, 
+                                       UncertaintyDataCall::secStructure> secStructi, 
+                                       UncertaintyDataCall::secStructure> secStructSuc, bool m, float x, float y, float defColor[4]) {
+
+        /**
+         * enumeration of available uncertainty visualisations
+         */
+        enum visualisation {
+            STACK     = 0,            
+            DITHERING = 1
+        };
+        
+        /**
+         * Renders the STACK uncertainty visualisation.
+         *
+         * @param yPos The y position the rendering should start.
+         */        
+        void renderUncertaintyStack(float yPos);
+        
 
         /**********************************************************************
          * variables
@@ -174,7 +211,17 @@ namespace megamol {
         megamol::core::param::ParamSlot toggleStrideParam;
         // parameter to show/hide dssp secondary structure
         megamol::core::param::ParamSlot toggleDsspParam;
-
+        // parameter to show/hide disagreements in secondary structure assignment
+        megamol::core::param::ParamSlot toggleDiffParam;
+        // parameter to show/hide secondary structure uncertainty visualisation
+        megamol::core::param::ParamSlot toggleUncertaintyParam;
+                
+        // parameter to choose secondary structure uncertainty visualisation
+        megamol::core::param::ParamSlot uncertaintyVisualisationParam;
+        
+        // the current uncertainty visualisation
+        visualisation currentVisualisation;
+        
         // data preparation flag
         bool dataPrepared;
         // the total number of amino-acids 
@@ -182,8 +229,8 @@ namespace megamol {
         // the total number of binding sites
         unsigned int bindingSiteCount;
 
-        // the number of residues/amino-acids (= aminoAcidCount)
-        unsigned int resCount;
+        // the number of secondary structure rows which can be shown/hidden
+        unsigned int secStructRows;
         // the number of residue columns
         unsigned int resCols;
         // the number of residue rows
@@ -203,7 +250,9 @@ namespace megamol {
         vislib::Array<int> aminoAcidIndex;
         // the array of the chain IDs
         vislib::Array<char> chainID;
-
+        // the array for the missing amin-acid flag
+        vislib::Array<bool> missingAminoAcids;
+ 
         // the array of binding site names
         vislib::Array<vislib::StringA> bindingSiteNames;
         // the array of descriptons for the binding sites
@@ -225,17 +274,17 @@ namespace megamol {
         // the color array for the binding site tiles
         vislib::Array<vislib::math::Vector<float, 3> > bsColors;
 
-
-        // the secondary structure element type of the residue
-		//vislib::Array<megamol::protein_calls::MolecularDataCall::SecStructure::ElementType> resSecStructType;
-
         // The DSSP secondary structure type
         vislib::Array<UncertaintyDataCall::secStructure> dsspSecStructure;
         // The STRIDE secondary structure type
         vislib::Array<UncertaintyDataCall::secStructure> strideSecStructure;
         // The PDB secondary structure type
         vislib::Array<UncertaintyDataCall::secStructure> pdbSecStructure;
-
+        // The values of the secondary structure uncertainty for each amino-acid 
+        vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
+        // The sorted structure types of the uncertainty values
+        vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
+                
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
         
@@ -251,6 +300,9 @@ namespace megamol {
         // selection 
         vislib::Array<bool> selection;
 		protein_calls::ResidueSelectionCall *resSelectionCall;
+        
+        // PDB ID 
+        vislib::StringA pdbID;
     };
 
 	} /* end namespace protein_uncertainty */

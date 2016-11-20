@@ -20,6 +20,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/EnumParam.h"
 
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/BufferedFile.h"
@@ -38,12 +39,25 @@ using namespace megamol::protein_uncertainty;
  */
 UncertaintyDataLoader::UncertaintyDataLoader( void ) : megamol::core::Module(),
 													   dataOutSlot( "dataout", "The slot providing the uncertainty data"),
-													   filenameSlot("uidFilename", "The filename of the uncertainty input data file.") {
+													   filenameSlot("uidFilename", "The filename of the uncertainty input data file."),
+                                                       methodSlot("calculationMethod", "Select a uncertainty calculation method.") {
+                                                           
+	this->dataOutSlot.SetCallback(UncertaintyDataCall::ClassName(), UncertaintyDataCall::FunctionName(UncertaintyDataCall::CallForGetData), &UncertaintyDataLoader::getData);
+    this->MakeSlotAvailable(&this->dataOutSlot);
+    
 	this->filenameSlot << new param::FilePathParam("");
 	this->MakeSlotAvailable(&this->filenameSlot);
+        
+        
+    this->currentMethod = AVERAGE;
+    param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentMethod));
     
-	this->dataOutSlot.SetCallback(UncertaintyDataCall::ClassName(), UncertaintyDataCall::FunctionName(UncertaintyDataCall::CallForGetData), &UncertaintyDataLoader::getData);
-    this->MakeSlotAvailable( &this->dataOutSlot);
+    tmpEnum->SetTypePair(AVERAGE,    "Just the stupid average.");
+    // tmpEnum->SetTypePair(..., "...");
+    
+    this->methodSlot << tmpEnum;
+    this->MakeSlotAvailable(&this->methodSlot);    
+
 }
 
 
@@ -77,42 +91,66 @@ void UncertaintyDataLoader::release() {
 bool UncertaintyDataLoader::getData(Call& call) {
     using vislib::sys::Log;
 
+    bool recalculate = false;
+    
 	// Get pointer to data call
 	UncertaintyDataCall *udc = dynamic_cast<UncertaintyDataCall*>(&call);
     if ( !udc ) return false;
 
+    // check if new method was chosen
+	if (this->methodSlot.IsDirty()) {
+        this->methodSlot.ResetDirty();  
+        this->currentMethod = this->methodSlot.Param<core::param::EnumParam>()->Value();
+        recalculate = true;
+    }
 
-	// If new filename is set ... read new file and calculate uncertainty
+	// check if new filename is set 
 	if (this->filenameSlot.IsDirty()) {
 		this->filenameSlot.ResetDirty();
-        
 		if(!this->readInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value())) {
             return false;
         }
-
-        if (!this->computeUncertainty()) {
-            return false;
+        recalculate = true;
+    }
+    
+    // calculate uncertainty if necessary
+    if(recalculate) {
+        switch(this->currentMethod) {
+            case (AVERAGE): 
+                            if (!this->calculateUncertaintyAverage()) {
+                                return false;
+                            }
+                            break;
+            case (LEVENSTEIN): 
+                            if (!this->calculateUncertaintyAverage()) {
+                                return false;
+                            }
+                            break;
+            case (ANOTHER): 
+                            if (!this->calculateUncertaintyAverage()) {
+                                return false;
+                            }
+                            break;          
+            default: return false;
         }
-
+        udc->SetRecalcFlag(true);
+        
         // DEBUG
-        /*
-        for (int i = 0; i < this->pdbIndex.Count(); i++) {
+        /* for (int i = 0; i < this->pdbIndex.Count(); i++) {
             std::cout << "U: ";
-            for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NoE); j++) {
+            for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::EON); j++) {
                 std::cout << this->secStructUncertainty[i][j] << " ";
             }
-            std::cout << std::endl;
-            std::cout << "S: ";
-            for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NoE); j++) {
+            std::cout << " - S: ";
+            for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::EON); j++) {
                 std::cout << this->sortedSecStructUncertainty[i][j] << " ";
             }
             std::cout << std::endl;
-        }
-        */
+        }*/
     }
-
-    // Pass secondary strucutre data to call, if available
-    if( this->pdbIndex.IsEmpty() ) { // ... Assistant example
+    
+    // pass secondary strucutre data to call, if available
+    if( this->pdbIndex.IsEmpty() ) { 
         return false;
     } else {
         udc->SetDsspSecStructure(&this->dsspSecStructure);
@@ -124,7 +162,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetMissingFlag(&this->missingFlag);
         udc->SetSecStructUncertainty(&this->secStructUncertainty);
         udc->SetSortedSecStructTypes(&this->sortedSecStructUncertainty);
-
+        udc->SetPdbID(this->pdbId);
         return true;
     }
 }
@@ -136,16 +174,14 @@ bool UncertaintyDataLoader::getData(Call& call) {
 bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 	using vislib::sys::Log;
 
-	//Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "BEGIN: readInputFile"); // DEBUG
-
-	// Temp variables
+	// temp variables
 	unsigned int                 lineCnt;       // line count of file
 	vislib::StringA              line;          // current line of file
     char                         tmpSecStruct;  // ...
     vislib::sys::ASCIIFileBuffer file;          // ascii buffer of file
 
 
-    // Reset data (or just if new file can be loaded?)
+    // reset data (or just if new file can be loaded?)
     this->pdbIndex.Clear();
     this->chainID.Clear();
     this->aminoAcidName.Clear();
@@ -154,16 +190,14 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
     this->strideSecStructure.Clear();
     this->pdbSecStructure.Clear();
 
-////////////////////////////////////////////////
-// TODO: check if filename ends with '.uid' ...
-////////////////////////////////////////////////
+    // check if file ending matches ".uid"
+    if(filname.SubString((filname.Length()-4), 4) != ".uid") {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Wrong file ending detected, must be \".uid\": \"%s\"", T2A(filename.PeekBuffer())); // ERROR
+        return false;
+    }
 
 	// Try to load the file
 	if (file.LoadFile( T2A(filename) )) {
-
-////////////////////////////////////////////////
-// TODO: check is file contains valid data ...
-////////////////////////////////////////////////
 
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Opened uncertainty input data file: \"%s\"", T2A(filename.PeekBuffer())); // INFO
 
@@ -183,7 +217,12 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
             
 			line = file.Line(lineCnt);
             
-            // Just read lines beginning with DATA
+            // get pdb id
+            if(line.StartsWith("PDB-ID")) {
+                this->pdbID = line.Substring(9,4);
+            }
+            
+            // parsing lines beginning with DATA
             if (line.StartsWith("DATA")) {
                 
                 // Truncate line beginning (first 8 charachters), so character 
@@ -211,7 +250,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                     case 'B': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
                     case 'T': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
                     case 'S': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::S_BEND); break;
-                    case ' ': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+                    case ' ': this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::C_COIL); break;
                     default:  this->dsspSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
 
@@ -249,12 +288,8 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                     this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::E_EXT_STRAND);
                 }
                 else {
-                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::NOTDEFINED);
+                    this->pdbSecStructure.Add(UncertaintyDataCall::secStructure::C_COIL);
                 }
-
-                // DEBUG
-                // std::cout << "Chain:" << this->chainID.Last() << " - Index:" << this->pdbIndex.Last() << " - Amino-acid:" << this->aminoAcidName.Last() << " - Missing: " << this->missingFlag.Last() << std::endl;
-                // std::cout << "DSSP: " << this->dsspSecStructure.Last() << " - STRIDE: " << this->strideSecStructure.Last() << " - PDB: " << this->pdbSecStructure.Last() << std::endl;
             }
 			// Next line
 			lineCnt++;
@@ -265,23 +300,23 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
         return true;
 	}
 	else {
-		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Coudn't find uncertainty input data file: \"%s\"", T2A(filename.PeekBuffer())); // INFO
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Coudn't find uncertainty input data file: \"%s\"", T2A(filename.PeekBuffer())); // ERROR
         return false;
 	}
 }
 
 
 /*
-* UncertaintyDataLoader::computeUncertainty
+* UncertaintyDataLoader::calculateUncertainty
 */
-bool UncertaintyDataLoader::computeUncertainty(void) {
+bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
     using vislib::sys::Log;
 
     // Reset uncertainty data 
     this->secStructUncertainty.Clear();
     this->sortedSecStructUncertainty.Clear();
 
-    if (this->pdbIndex.Count() == 0) { // If no data is present ...
+    if (this->pdbIndex.Empty()) { // If no data is present ...
         return false;
     }
     this->secStructUncertainty.AssertCapacity(this->pdbIndex.Count());
@@ -289,51 +324,49 @@ bool UncertaintyDataLoader::computeUncertainty(void) {
 
 
     // initialize structure factors for all three methods
-    float pdbStructFactor[UncertaintyDataCall::secStructure::NoE]    = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-    float strideStructFactor[UncertaintyDataCall::secStructure::NoE] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-    float dsspStructFactor[UncertaintyDataCall::secStructure::NoE]   = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+    float pdbStructFactor[UncertaintyDataCall::secStructure::EON]    = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+    float strideStructFactor[UncertaintyDataCall::secStructure::EON] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+    float dsspStructFactor[UncertaintyDataCall::secStructure::EON]   = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
                                                                       //  H     G     I     E     T     B     S     C     ND  
 
     // Initialize and calculate uncertainty data
     for (int i = 0; i < this->pdbIndex.Count(); i++) {
 
         // create new entry for amino-acid
-        this->secStructUncertainty.Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)>());
-        this->sortedSecStructUncertainty.Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NoE)>());
+        this->secStructUncertainty.Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::EON)>());
+        this->sortedSecStructUncertainty.Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::EON)>());
 
         // loop over all possible secondary strucutres
-        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NoE); j++) {
+        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::EON); j++) {
 
             // initialising
             this->secStructUncertainty[i][j] = 0.0f;
             this->sortedSecStructUncertainty[i][j] = static_cast<UncertaintyDataCall::secStructure>(j);
 
-            // apply individual factor
             // PDB
-
             if (this->pdbSecStructure[i] == static_cast<UncertaintyDataCall::secStructure>(j))
                 this->secStructUncertainty[i][j] += pdbStructFactor[j];
             else
-                this->secStructUncertainty[i][j] += ((1.0f - pdbStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NoE) - 1.0f));
+                this->secStructUncertainty[i][j] += ((1.0f - pdbStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::EON) - 1.0f));
 
             // STRIDE
             if (this->strideSecStructure[i] == static_cast<UncertaintyDataCall::secStructure>(j))
                 this->secStructUncertainty[i][j] += strideStructFactor[j];
             else
-                this->secStructUncertainty[i][j] += ((1.0f - strideStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NoE) - 1.0f));
+                this->secStructUncertainty[i][j] += ((1.0f - strideStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::EON) - 1.0f));
 
             //DSSP
             if (this->dsspSecStructure[i] == static_cast<UncertaintyDataCall::secStructure>(j))
                 this->secStructUncertainty[i][j] += dsspStructFactor[j];
             else
-                this->secStructUncertainty[i][j] += ((1.0f - dsspStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NoE) - 1.0f));
+                this->secStructUncertainty[i][j] += ((1.0f - dsspStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::EON) - 1.0f));
 
             // normalise
             this->secStructUncertainty[i][j] /= 3.0f; // because there are three methods
         }
 
         // using quicksort for sorting ...
-        this->quickSortUncertainties(&(this->secStructUncertainty[i]), &(this->sortedSecStructUncertainty[i]), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NoE)-1));
+        this->quickSortUncertainties(&(this->secStructUncertainty[i]), &(this->sortedSecStructUncertainty[i]), 0, (static_cast<int>(UncertaintyDataCall::secStructure::EON)-1));
     }
 
     return true;
@@ -343,8 +376,8 @@ bool UncertaintyDataLoader::computeUncertainty(void) {
 /*
 * UncertaintyDataLoader::quickSortUncertainties
 */
-void UncertaintyDataLoader::quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *valueArr,
-                                                   vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NoE)> *structArr,
+void UncertaintyDataLoader::quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::EON)> *valueArr,
+                                                   vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::EON)> *structArr,
                                                    int left, int right) {
     int i = left;
     int j = right;
@@ -355,9 +388,9 @@ void UncertaintyDataLoader::quickSortUncertainties(vislib::math::Vector<float, s
     // partition 
     while (i <= j) {
 
-        while (valueArr->operator[](static_cast<int>(structArr->operator[](i))) < pivot)
+        while (valueArr->operator[](static_cast<int>(structArr->operator[](i))) > pivot)
             i++;
-        while (valueArr->operator[](static_cast<int>(structArr->operator[](j))) > pivot)
+        while (valueArr->operator[](static_cast<int>(structArr->operator[](j))) < pivot)
             j--;
         if (i <= j) {
             // swap elements

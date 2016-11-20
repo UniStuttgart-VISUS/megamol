@@ -38,6 +38,8 @@ namespace megamol {
 
         /**
         * Enumeration of secondary structure types.
+        * 
+        * (!) Indices must be in the range from 0 to NOE.
         */
         enum secStructure {
             H_ALPHA_HELIX = 0,
@@ -49,7 +51,7 @@ namespace megamol {
             S_BEND        = 6,
             C_COIL        = 7,
             NOTDEFINED    = 8,
-            NoE           = 9   // Number of Elements -> must always be the last index!
+            NOE           = 9   // Number of Elements -> must always be the last index!
         };
 
         // ------------------ class functions ------------------- 
@@ -184,9 +186,9 @@ namespace megamol {
         */
         inline secStructure GetDsspSecStructure(unsigned int i) const {
             if (!this->dsspSecStructure)
-                return secStructure::NOTDEFINED;
+                return NOTDEFINED;
             else if (this->dsspSecStructure->Count() <= i)
-                return secStructure::NOTDEFINED;
+                return NOTDEFINED;
             else
                 return (this->dsspSecStructure->operator[](i));
         }
@@ -199,9 +201,9 @@ namespace megamol {
         */
         inline secStructure GetStrideSecStructure(unsigned int i) const {
             if (!this->strideSecStructure)
-                return secStructure::NOTDEFINED;
+                return NOTDEFINED;
             else if (this->strideSecStructure->Count() <= i)
-                return secStructure::NOTDEFINED;
+                return NOTDEFINED;
             else
                 return (this->strideSecStructure->operator[](i));
         }
@@ -214,9 +216,9 @@ namespace megamol {
         */
         inline secStructure GetPDBSecStructure(unsigned int i) const {
             if (!this->pdbSecStructure)
-                return secStructure::NOTDEFINED;
+                return NOTDEFINED;
             else if (this->pdbSecStructure->Count() <= i)
-                return secStructure::NOTDEFINED;
+                return NOTDEFINED;
             else
                 return (this->pdbSecStructure->operator[](i));
         }
@@ -227,9 +229,9 @@ namespace megamol {
         * @param i The index of the amino-acid.
         * @return The array of secondary structure uncertainty.
         */
-        inline vislib::math::Vector<float, static_cast<unsigned int>(secStructure::NoE)> GetSecStructUncertainty(unsigned int i) const {
-            vislib::math::Vector<float, static_cast<unsigned int>(secStructure::NoE)> default;
-            for (int x = 0; x < static_cast<int>(secStructure::NoE); x++) {
+        inline vislib::math::Vector<float, static_cast<unsigned int>(secStructure::EON)> GetSecStructUncertainty(unsigned int i) const {
+            vislib::math::Vector<float, static_cast<unsigned int>(secStructure::EON)> default;
+            for (int x = 0; x < static_cast<int>(secStructure::EON); x++) {
                 default[x] = 0.0f;
             }
             if (!this->secStructUncertainty)
@@ -246,9 +248,9 @@ namespace megamol {
         * @param i The index of the amino-acid.
         * @return The sorted secondary strucutre types.
         */
-        inline vislib::math::Vector<secStructure, static_cast<int>(secStructure::NoE)> GetSortedSecStructureIndices(unsigned int i) const {
-            vislib::math::Vector<secStructure, static_cast<unsigned int>(secStructure::NoE)> default;
-            for (int x = 0; x < static_cast<int>(secStructure::NoE); x++) {
+        inline vislib::math::Vector<secStructure, static_cast<int>(secStructure::EON)> GetSortedSecStructureIndices(unsigned int i) const {
+            vislib::math::Vector<secStructure, static_cast<unsigned int>(secStructure::EON)> default;
+            for (int x = 0; x < static_cast<int>(secStructure::EON); x++) {
                 default[x] = static_cast<secStructure>(x);
             }
             if (!this->sortedSecStructUncertainty)
@@ -259,7 +261,25 @@ namespace megamol {
                 return (this->sortedSecStructUncertainty->operator[](i));
         }
 
+        /**
+        * Get the PDB ID.
+        *
+        * @return The pdb id.
+        */
+        inline vislib::StringA GetPdbID(void) {
+            return this->pdbID;
+        }  
 
+        /**
+        * Get the flag indicating if uncertainty has been recalculated.
+        *
+        * @return The unceratinty recalculation flag.
+        */
+        inline bool GetRecalcFlag(void) {
+            return this->recalcUncertainty;
+        }
+        
+        
         // ------------------ SET functions ------------------- 
 
         /**
@@ -330,7 +350,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetSecStructUncertainty(vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::NoE)> > *rnPtr) {
+        inline void SetSecStructUncertainty(vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::EON)> > *rnPtr) {
             this->secStructUncertainty = rnPtr;
         }
 
@@ -339,9 +359,28 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetSortedSecStructTypes(vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NoE)> > *rnPtr) {
+        inline void SetSortedSecStructTypes(vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::EON)> > *rnPtr) {
             this->sortedSecStructUncertainty = rnPtr;
         }
+        
+        /**
+        * Set the PDB ID.
+        *
+        * @param rnPtr The pdb id.
+        */
+        inline void SetPdbID(vislib::StringA rnData) {
+            this->pdbID = rnData;
+        }
+        
+        /**
+        * Set the flag indicating if uncertainty has been recalculated.
+        *
+        * @param flag The unceratinty recalculation flag.
+        */
+        inline void SetRecalcFlag(bool flag) {
+            this->recalcUncertainty = flag;
+        }
+
 
 	private:
 
@@ -369,11 +408,16 @@ namespace megamol {
         vislib::Array<vislib::StringA> *aminoAcidName;
 
         /** Pointer to the values of the secondary structure uncertainty for each amino-acid */
-        vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::NoE)> > *secStructUncertainty;
+        vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::EON)> > *secStructUncertainty;
 
         /** Pointer to the sorted structure types of the uncertainty values */
-        vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NoE)> > *sortedSecStructUncertainty;
-
+        vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::EON)> > *sortedSecStructUncertainty;
+        
+        /** Flag indicating that uncertainty was recalculated */
+        bool recalcUncertainty;
+                
+        /** The PDB ID */
+        vislib::StringA pdbID;
 
     };
 
