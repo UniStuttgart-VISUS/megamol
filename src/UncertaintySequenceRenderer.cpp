@@ -369,36 +369,41 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);      
 
+        yPos = 0.0f;
         //draw texture tiles for secondary structure
-        for( unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
-            
-            yPos = 0.0f;
-            if(this->togglePdbParam.Param<param::BoolParam>()->Value()) {
-                this->drawSecStructTextureTiles(((i > 0)?(pdbSecStructure[i-1]):(pdbSecStructure[i])), pdbSecStructure[i], 
-                                                ((i < this->aminoAcidCount)?(pdbSecStructure[i+1]):(pdbSecStructure[i])), 
-                                                this->missingAminoAcids[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);                
-                yPos += 1.0f;
-            }
-                
-            if(this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+        //STRIDE
+        if(this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
                 this->drawSecStructTextureTiles(((i > 0)?(strideSecStructure[i-1]):(strideSecStructure[i])), strideSecStructure[i], 
                                                 ((i < this->aminoAcidCount)?(strideSecStructure[i+1]):(strideSecStructure[i])), 
                                                 this->missingAminoAcids[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);
-                yPos += 1.0f;
-            }
-                
-            if(this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+            } 
+            yPos += 1.0f;
+        }
+        // DSSP
+        if(this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
                 this->drawSecStructTextureTiles(((i > 0)?(dsspSecStructure[i-1]):(dsspSecStructure[i])), dsspSecStructure[i], 
                                                 ((i < this->aminoAcidCount)?(dsspSecStructure[i+1]):(dsspSecStructure[i])), 
                                                 this->missingAminoAcids[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);                
-                yPos += 1.0f;
             }
+            yPos += 1.0f;
         }  
-        
+        // PDB - AUTHOR
+        if(this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
+                this->drawSecStructTextureTiles(((i > 0)?(pdbSecStructure[i-1]):(pdbSecStructure[i])), pdbSecStructure[i], 
+                                                ((i < this->aminoAcidCount)?(pdbSecStructure[i+1]):(pdbSecStructure[i])), 
+                                                this->missingAminoAcids[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);                
+            }
+            yPos += 1.0f;
+        }
+                
         // draw type legend textures
+        xPos = 2.0f;
         for (unsigned int i = 0; i < static_cast<int>(UncertaintyDataCall::secStructure::NoE); i++) {
             s = static_cast<UncertaintyDataCall::secStructure>(i);
-            this->drawSecStructTextureTiles(s, s, s, false, (static_cast<float>(this->resCols) + 1.0f + 2.0f), (static_cast<float>(i) + 2.0f), bgColor);  
+            this->drawSecStructTextureTiles(s, s, s, false, (static_cast<float>(this->resCols) + 1.0f + xPos), (static_cast<float>(i) + 2.0f), bgColor);  
         }
         
         glDisable(GL_BLEND);
@@ -413,15 +418,9 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 
                 // Max - Min:
                 // three assignment methods -> max three different sec structures: max=[0] - middle=[1] - min[2]
-                diff = 1.0f - (this->secUncertainty[this->sortedUncertainty[0]] - this->secUncertainty[this->sortedUncertainty[2]]); 
-                
-                /*if(pdbSecStructure[i] != dsspSecStructure[i])
-                    diff -= 1.0f/3.0f;
-                if(strideSecStructuree[i] != dsspSecStructuree[i])
-                    diff -= 1.0f/3.0f;
-                if(pdbSecStructuree[i] != strideSecStructuree[i])
-                    diff -= 1.0f/3.0f;*/
-                    
+                // assuming values are in range 0.0-1.0
+                diff = 1.0f - (this->secUncertainty[i][this->sortedUncertainty[0]] - this->secUncertainty[i][this->sortedUncertainty[2]]); 
+                   
                 if (diff < 1.0f) {
                     glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - diff);
                     glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f);
@@ -450,7 +449,6 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 case (STACK): this->renderUncertaintyStack(yPos); break;
                 default: break;
             }
-            
             yPos += 1.0f;
         }
         
@@ -585,25 +583,25 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 rowPos = 0.0f;
                 for (unsigned int i = 0; i < this->resRows; i++) {
                     if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "PDB";
-                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-                        theFont.DrawString( -wordlength, -(rowPos+yPos), wordlength, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                        yPos += 1.0f;
-                    }
-                    if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "STRIDE";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString( -wordlength, -(rowPos+yPos), wordlength, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
-                    if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                    if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "DSSP";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString( -wordlength, -(rowPos+yPos), wordlength, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
+                    if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                        tmpStr = "AUTHOR (PDB)";
+                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                        theFont.DrawString( -wordlength, -(rowPos+yPos), wordlength, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        yPos += 1.0f;
+                    }
                     if (this->toggleDiffParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "Difference";
+                        tmpStr = "Differences";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString( -wordlength, -(rowPos+yPos), wordlength, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
@@ -618,7 +616,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
                     theFont.DrawString( -wordlength,-(rowPos+yPos), wordlength, 1.0f,
                         fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                    tmpStr = "ChainID + PDB-Index";
+                    tmpStr = "Chain-ID + PDB-Index";
                     wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
                     theFont.DrawString( -wordlength,-(rowPos+yPos)-0.5f, wordlength, 0.5f,
                         fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
@@ -729,12 +727,41 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 /*
  * UncertaintySequenceRenderer::renderUncertaintyStack
  */
-void UncertaintySequenceRenderer::renderUncertaintyStack(float yPos) {
+void UncertaintySequenceRenderer::renderUncertaintyStack(float yPos, float defColor[4]) {
 
-
-
-
-
+    float uMax, uMid, uMin;
+   
+    // assuming sum of uncertainty values equals always 1.0
+    
+    glBegin(GL_QUADS);
+    for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+        
+        uMax = this->secUncertainty[i][this->sortedUncertainty[0]] 
+        
+        glColor3f(this->secStructureColor(this->sortedUncertainty[0]));
+        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f + uMax);
+        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f);
+        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - 1.0f);
+        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - 1.0f + uMax);
+    
+        uMid = uMax + this->secUncertainty[i][this->sortedUncertainty[1]] 
+        
+        glColor3f(this->secStructureColor(this->sortedUncertainty[1]));
+        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f + uMid);
+        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f + uMax);
+        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - 1.0f + uMax);
+        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - 1.0f + uMid);
+        
+        uMin = uMid + this->secUncertainty[i][this->sortedUncertainty[2]] 
+        
+        glColor3f(this->secStructureColor(this->sortedUncertainty[2]));
+        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f + uMin);
+        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f + uMid);
+        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - 1.0f + uMid);
+        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - 1.0f + uMin);
+    
+    }
+    glEnd();
 }
 
 
@@ -743,28 +770,17 @@ void UncertaintySequenceRenderer::renderUncertaintyStack(float yPos) {
  */
 void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall::secStructure> secStructPre, 
                                                             UncertaintyDataCall::secStructure> secStructi, 
-                                                            UncertaintyDataCall::secStructure> secStructSuc, bool m, float x, float y, float defColor[4]) {
-    /* INFO: 
-    this->LoadTexture("secStruct-white.png");       // markerTextures[0]
-    this->LoadTexture("secStruct-coil.png");        // markerTextures[1]
-    this->LoadTexture("secStruct-sheet.png");       // markerTextures[2]
-    this->LoadTexture("secStruct-arrow.png");       // markerTextures[3]
-    this->LoadTexture("secStruct-helix-left.png");  // markerTextures[4]
-    this->LoadTexture("secStruct-helix2.png");      // markerTextures[5]
-    this->LoadTexture("secStruct-helix-right.png"); // markerTextures[6]
-    */
-    
+                                                            UncertaintyDataCall::secStructure> secStructSuc, bool m, float x, float y, float defColor[4]) {    
     const float eps = 0.0f;
         
-    glColor4fv(defColor);
-                             
     if(m) {
+        glColor4fv(defColor);
         this->markerTextures[0]->Bind(); 
     }
     else {    
+        glColor3f(this->secStructureColor(secStructi)); 
         switch (secStructi) {
             case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
-                glColor3f( 1.0f, 0.0f, 0.0f);
                 if ((i > 0) && (secStructPre != secStructi)) {
                     this->markerTextures[4]->Bind();
                 } 
@@ -776,7 +792,6 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
                 }
                 break;
             case (UncertaintyDataCall::secStructure::G_310_HELIX) :        
-                glColor3f( 1.0f, 0.3f, 0.0f);
                 if ((i > 0) && (secStructPre != secStructi)) {
                     this->markerTextures[4]->Bind();
                 } 
@@ -788,7 +803,6 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
                 }
                 break;
             case (UncertaintyDataCall::secStructure::I_PI_HELIX) :        
-                glColor3f( 1.0f, 0.6f, 0.0f);
                 if ((i > 0) && (secStructPre != secStructi)) {
                     this->markerTextures[4]->Bind();
                 } 
@@ -800,7 +814,6 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
                 }
                 break;
             case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  
-                glColor3f( 0.0f, 0.0f, 1.0f);
                 if (((i + 1) < this->aminoAcidCount) && (secStructSuc != secStructi)) {
                     this->markerTextures[3]->Bind();
                 } 
@@ -809,17 +822,15 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
                 }
                 break;
             case (UncertaintyDataCall::secStructure::T_H_TURN) : 
-                glColor3f( 1.0f, 1.0f, 0.0f);
                 this->markerTextures[1]->Bind();
                 break;
-            case (UncertaintyDataCall::secStructure::B_BRIDGE) :        
-                this->markerTextures[0]->Bind(); 
+            case (UncertaintyDataCall::secStructure::B_BRIDGE) :   
+                this->markerTextures[1]->Bind(); 
                 break;
-            case (UncertaintyDataCall::secStructure::S_BEND) :        
-                this->markerTextures[0]->Bind(); 
+            case (UncertaintyDataCall::secStructure::S_BEND) :   
+                this->markerTextures[1]->Bind(); 
                 break;
             case (UncertaintyDataCall::secStructure::C_COIL) :  
-                glColor3f( 0.5f, 0.5f, 0.5f);
                 this->markerTextures[1]->Bind();        
                 break;
             default: this->markerTextures[0]->Bind(); break;
@@ -838,6 +849,29 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
         glTexCoord2f(1.0f -eps, eps);
         glVertex2f(  x + 1.0f , -y );
     glEnd();
+}
+
+
+/*
+* UncertaintySequenceRenderer::secStructureColor
+*/
+vislib::math::Vector<float, 4> UncertaintySequenceRenderer::secStructureColor(UncertaintyDataCall::secStructure s) {
+
+    vislib::math::Vector<float, 4> color;
+    color.Set(1.0f, 1.0f, 1.0f, 1.0f);
+    
+    switch (s) {
+        case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(1.0f, 0.0f, 0.0f); break;
+        case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(1.0f, 0.33f, 0.0f); break;
+        case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(1.0f, 0.66f, 0.0f); break;
+        case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.0f, 0.0f, 1.0f); break;
+        case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(1.0f, 1.0f, 0.0f); break;
+        case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.66f, 1.0f, 0.0f); break;
+        case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.33f, 1.0f, 0.0f); break;
+        case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.5f, 0.5f, 0.5f); break;
+        default: break; 
+    }
+    return color;
 }
 
 
@@ -890,6 +924,7 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
 
     return consumeEvent;
 }
+
 
 
 /*
@@ -1166,8 +1201,6 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
     }
     return false;
 }
-
-
 
 
 

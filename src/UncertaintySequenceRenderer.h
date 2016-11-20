@@ -169,6 +169,14 @@ namespace megamol {
                                        UncertaintyDataCall::secStructure> secStructSuc, bool m, float x, float y, float defColor[4]) {
 
         /**
+         * Returns the color to the corresponding secondary structure type.
+         *
+         * @param s The secondary structure type.
+         * @return The color for the given secondary structure type.
+         */
+        vislib::math::Vector<float, 4> secStructureColor(UncertaintyDataCall::secStructure s);
+    
+        /**
          * enumeration of available uncertainty visualisations
          */
         enum visualisation {
@@ -179,9 +187,10 @@ namespace megamol {
         /**
          * Renders the STACK uncertainty visualisation.
          *
-         * @param yPos The y position the rendering should start.
+         * @param yPos     The y position the rendering should start.
+         * @param defColor The the default color
          */        
-        void renderUncertaintyStack(float yPos);
+        void renderUncertaintyStack(float yPos, float defColor[4]);
         
 
         /**********************************************************************
