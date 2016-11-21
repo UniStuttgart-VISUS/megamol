@@ -237,6 +237,9 @@
     <ClInclude Include="src\PlaneDataCall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\CountingSortKernel.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">

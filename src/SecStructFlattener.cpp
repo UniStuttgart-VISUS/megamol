@@ -13,6 +13,8 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowVector.h"
@@ -31,12 +33,19 @@ SecStructFlattener::SecStructFlattener(void) :
 	getDataSlot("getData", "Calls molecular data"),
 	dataOutSlot("dataOut", "Provides the flattened molecular data"),
 	planeOutSlot("planeOut", "Provides the necessary plane data for 2D renderings"),
-	playParam("animation::play", "Should the animation be played?"),
-	playButtonParam("animation::playButton", "Button to toggle animation"),
+	playParam("simulation::play", "Should the simulation be played?"),
+	playButtonParam("simulation::playButton", "Button to toggle the simulation"),
 	flatPlaneMode("plane::flatPlaneMode", "The plane the protein gets flattened to"),
 	arbPlaneCenterParam("plane::planeOrigin", "The plane origin for the arbitrary plane mode"),
 	arbPlaneNormalParam("plane::planeNormal", "The plane normal for the arbitrary plane mode"),
-	oxygenOffsetParam("plane::preserveDirections", "Should the directions between c alpha and oxygen atoms be preserved?"){
+	oxygenOffsetParam("plane::preserveDirections", "Should the directions between c alpha and oxygen atoms be preserved?"),
+	timestepParam("simulation::timestepSize", "The length of single time step of the force directed simulation"),
+	timestepsPerFrameParam("simulation::timestepsPerFrame", "The number of simulation timesteps that are performed per frame"),
+	maxTimestepParam("simulation::maxTimestep", "The index of the last performed timestep. A negative number means infinite running."),
+	connectionSpringConstantParam("simulation::springs::conSpringConstant", "The spring constant for the atom connection springs."),
+	connectionFrictionParam("simulation::springs::conFriction", "The friction parameter for the atom connection springs."),
+	hbondSpringConstantParam("simulation::springs::hbondSpringConstant", "The spring constant for the h bond springs."),
+	hbondFrictionParam("simulation::springs::hbondFriction", "The friction parameter for the h bond springs.") {
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -50,6 +59,32 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->planeOutSlot.SetCallback(PlaneDataCall::ClassName(), PlaneDataCall::FunctionName(0), &SecStructFlattener::getPlaneData);
 	this->planeOutSlot.SetCallback(PlaneDataCall::ClassName(), PlaneDataCall::FunctionName(1), &SecStructFlattener::getPlaneExtent);
 	this->MakeSlotAvailable(&this->planeOutSlot);
+
+	this->timestepParam.SetParameter(new param::FloatParam(0.001f, 0.0f, 1.0f));
+	this->MakeSlotAvailable(&this->timestepParam);
+
+	this->timestepsPerFrameParam.SetParameter(new param::IntParam(1, 1, 100));
+	this->MakeSlotAvailable(&this->timestepsPerFrameParam);
+
+	this->maxTimestepParam.SetParameter(new param::IntParam(-1, -1, INT_MAX));
+	this->MakeSlotAvailable(&this->maxTimestepParam);
+
+	float minConstant = 0.0f;
+	float maxConstant = 2000.0f;
+	float minFriction = 0.0f;
+	float maxFriction = 2.0f;
+
+	this->connectionSpringConstantParam.SetParameter(new param::FloatParam(1.0f, minConstant, maxConstant));
+	this->MakeSlotAvailable(&this->connectionSpringConstantParam);
+
+	this->connectionFrictionParam.SetParameter(new param::FloatParam(0.5f, minFriction, maxFriction));
+	this->MakeSlotAvailable(&this->connectionFrictionParam);
+
+	this->hbondSpringConstantParam.SetParameter(new param::FloatParam(1.0f, minConstant, maxConstant));
+	this->MakeSlotAvailable(&this->hbondSpringConstantParam);
+
+	this->hbondFrictionParam.SetParameter(new param::FloatParam(1.0f, minFriction, maxFriction));
+	this->MakeSlotAvailable(&this->hbondFrictionParam);
 
 	this->playParam.SetParameter(new param::BoolParam(false));
 	this->MakeSlotAvailable(&this->playParam);
@@ -91,6 +126,8 @@ SecStructFlattener::SecStructFlattener(void) :
 
 	this->flatPlaneMode.ForceSetDirty();
 	this->mainDirections.resize(3);
+
+	this->currentTimestep = 0;
 }
 
 /*
@@ -163,7 +200,7 @@ void SecStructFlattener::computeMainDirectionPCA(void) {
 /*
  *	SecStructFlattener::flatten
  */
-void SecStructFlattener::flatten(void) {
+void SecStructFlattener::flatten(bool transferPositions) {
 
 	auto bbCenter = this->boundingBox.CalcCenter();
 	vislib::math::Vector<float, 3> bbCenterVec(bbCenter.GetX(), bbCenter.GetY(), bbCenter.GetZ());
@@ -176,12 +213,16 @@ void SecStructFlattener::flatten(void) {
 		bbCenterVec = this->arbPlaneCenterParam.Param<param::Vector3fParam>()->Value();
 	}
 
+	bool somethingDirty = false;
+
 	if (this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty() || this->oxygenOffsetParam.IsDirty()) {
 		this->flatPlaneMode.ResetDirty();
 		this->arbPlaneCenterParam.ResetDirty();
 		this->arbPlaneNormalParam.ResetDirty();
 		this->oxygenOffsetParam.ResetDirty();
 		this->hashOffset++;
+
+		somethingDirty = true;
 
 		vislib::math::Vector<float, 3> n = this->arbPlaneNormalParam.Param<param::Vector3fParam>()->Value();
 		n.Normalise();
@@ -236,6 +277,10 @@ void SecStructFlattener::flatten(void) {
 		}
 
 		planeHash++;
+	}
+
+	if (somethingDirty || transferPositions) {
+		transferAtomData(this->atomPositions, this->atomPositionsSize / 3, this->cAlphaIndices.data(), static_cast<unsigned int>(this->cAlphaIndices.size()));
 	}
 }
 
@@ -310,6 +355,34 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 
 	std::vector<float> atomRadii(mdc->AtomCount(), 0.0f);
 
+	// transfer new spring data if necessary
+	if (this->hbondFrictionParam.IsDirty() || this->hbondSpringConstantParam.IsDirty() || this->connectionFrictionParam.IsDirty() 
+		|| this->connectionSpringConstantParam.IsDirty() || lastHash != mdc->DataHash() /*important if input data changes*/) {
+
+		this->hbondFrictionParam.ResetDirty();
+		this->hbondSpringConstantParam.ResetDirty();
+		this->connectionFrictionParam.ResetDirty();
+		this->connectionSpringConstantParam.ResetDirty();
+
+		cAlphaIndices.clear();
+		oIndices.clear();
+		for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
+			// check the relevant atom types
+			vislib::StringA elName = mdc->AtomTypes()[mdc->AtomTypeIndices()[i]].Name();
+			elName.ToLowerCase();
+			elName.TrimSpaces();
+			if (elName.StartsWith("ca")) cAlphaIndices.push_back(i);
+			if (elName.StartsWith("o") && elName.Length() == 1) oIndices.push_back(i); // cut out all o atoms besides the first per aminoacid
+		}
+
+		// TODO calculate hbonds and tranfer them
+
+		transferSpringData(mdc->AtomPositions(), mdc->AtomCount(), this->cAlphaIndices.data(), static_cast<unsigned int>(this->cAlphaIndices.size()), 
+			this->oIndices.data(), static_cast<unsigned int>(this->oIndices.size()), this->connectionFrictionParam.Param<param::FloatParam>()->Value(),
+			this->connectionSpringConstantParam.Param<param::FloatParam>()->Value(), this->hbondFrictionParam.Param<param::FloatParam>()->Value(),
+			this->hbondSpringConstantParam.Param<param::FloatParam>()->Value());
+	}
+
 	if (lastHash != mdc->DataHash() || this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty()) {
 		lastHash = mdc->DataHash();
 		this->boundingBox = mdc->AccessBoundingBoxes().ObjectSpaceBBox();
@@ -351,14 +424,16 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 			vislib::math::ShallowVector<float, 3> oPos(&atomPositions[oIndices[i] * 3]);
 			this->oxygenOffsets[i] = oPos - cPos;
 		}
-
-		transferAtomData(this->atomPositions, this->atomPositionsSize / 3, this->cAlphaIndices.data(), (unsigned int)this->cAlphaIndices.size(), this->oIndices.data(), (unsigned int)this->oIndices.size());
 	}
 
 	this->myHash = this->lastHash + this->hashOffset;
 	agdc->SetDataHash(this->myHash);
 
 	flatten();
+
+	if (this->playParam.Param<param::BoolParam>()->Value()) {
+		runSimulation();
+	}
 
 	// compute the new bounding box
 	vislib::math::Cuboid<float> newbb;
@@ -446,4 +521,24 @@ bool SecStructFlattener::onPlayToggleButton(param::ParamSlot& p) {
 	bp->SetValue(!bp->Value());
 	bool play = bp->Value();
 	return true;
+}
+
+/*
+ *	SecStructFlattener::runSimulation
+ */
+void SecStructFlattener::runSimulation(void) {
+
+	unsigned int numTimesteps = static_cast<unsigned int>(this->timestepsPerFrameParam.Param<param::IntParam>()->Value());
+	float delta = this->timestepParam.Param<param::FloatParam>()->Value();
+	int maxTime = this->maxTimestepParam.Param<param::IntParam>()->Value();
+
+	if (maxTime - currentTimestep + 1 < numTimesteps && maxTime >= 0) {
+		numTimesteps = maxTime - currentTimestep + 1;
+	}
+
+	for (unsigned int i = 0; i < numTimesteps; i++) {
+		performTimestep(delta);
+	}
+
+	// get result from device
 }

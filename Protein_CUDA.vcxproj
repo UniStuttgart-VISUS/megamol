@@ -220,6 +220,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ComparativeSurfacePotentialRenderer.h" />
     <ClInclude Include="src\ComparativeSurfacePotentialRenderer_inline_device_functions.cuh" />
     <ClInclude Include="src\constantGridParams.cuh" />
+    <ClInclude Include="src\CountingSortKernel.cuh" />
     <ClInclude Include="src\CritPoints.h" />
     <ClInclude Include="src\CrystalStructureVolumeRenderer.h" />
     <ClInclude Include="src\CUDACurl.cuh" />

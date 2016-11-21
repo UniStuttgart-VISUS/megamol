@@ -19,7 +19,10 @@
 
 #include <vector>
 
-extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas, unsigned int * h_oIndices, unsigned int numOs);
+extern "C" void performTimestep(float timestepSize);
+extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas);
+extern "C" void transferSpringData(const float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas, 
+	unsigned int * h_oIndices, unsigned int numOs, float conFriction, float conConstant, float hFriction, float hConstant);
 
 namespace megamol {
 namespace protein_cuda {
@@ -132,8 +135,15 @@ namespace protein_cuda {
 
 		/**
 		 *	Flattens the secondary structure of the protein progressively.
+		 *
+		 *	@param tranferPositions Should the atom positions be tranferred to the cuda kernel?
 		 */
-		void flatten(void);
+		void flatten(bool transferPositions = false);
+
+		/**
+		 *	Runs the simulation based on the tranferred parameters.
+		 */
+		void runSimulation(void);
 
 		/**
 		 *	Callback function for the animation play button.
@@ -174,6 +184,27 @@ namespace protein_cuda {
 
 		/** Preserve the offset of the oxygen atoms relative to the c alphas? */
 		megamol::core::param::ParamSlot oxygenOffsetParam;
+
+		/** Duration of a single timestep */
+		megamol::core::param::ParamSlot timestepParam;
+
+		/** Maximal number of performed timesteps */
+		megamol::core::param::ParamSlot maxTimestepParam;
+
+		/** Number of performed timesteps per frame */
+		megamol::core::param::ParamSlot timestepsPerFrameParam;
+
+		/** The spring constant for the atom connection springs */
+		megamol::core::param::ParamSlot connectionSpringConstantParam;
+
+		/** The spring constant for the h bond springs */
+		megamol::core::param::ParamSlot hbondSpringConstantParam;
+
+		/** The friction parameter for the atom connection springs */
+		megamol::core::param::ParamSlot connectionFrictionParam;
+
+		/** The friction parameter for the h bond springs */
+		megamol::core::param::ParamSlot hbondFrictionParam;
 
 		/** The current atom positions */
 		float * atomPositions;
@@ -216,6 +247,9 @@ namespace protein_cuda {
 
 		/** The currently used projection plane */
 		vislib::math::Plane<float> currentPlane;
+
+		/** The index of the current timestep */
+		SIZE_T currentTimestep;
 	};
 
 } /* end namespace protein_cuda */
