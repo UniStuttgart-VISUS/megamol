@@ -27,10 +27,10 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 
 #ifdef USE_SIMPLE_FONT
-    #include "vislib/graphics/gl/SimpleFont.h"
+#include "vislib/graphics/gl/SimpleFont.h"
 #else //  USE_SIMPLE_FONT
-    #include "vislib/graphics/gl/OutlineFont.h"
-    #include "vislib/graphics/gl/Verdana.inc"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 #endif //  USE_SIMPLE_FONT
 
 #include "UncertaintyDataCall.h"
@@ -164,9 +164,9 @@ namespace megamol {
          * @param y            The y position
          * @param defColor     The the default color
          */
-        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure> secStructPre, 
-                                       UncertaintyDataCall::secStructure> secStructi, 
-                                       UncertaintyDataCall::secStructure> secStructSuc, bool m, float x, float y, float defColor[4]) {
+        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure secStructPre, 
+                                       UncertaintyDataCall::secStructure secStructi, 
+                                       UncertaintyDataCall::secStructure secStructSuc, bool m, float x, float y, float defColor[4]);
 
         /**
          * Returns the color to the corresponding secondary structure type.
@@ -226,10 +226,10 @@ namespace megamol {
         megamol::core::param::ParamSlot toggleUncertaintyParam;
                 
         // parameter to choose secondary structure uncertainty visualization
-        megamol::core::param::ParamSlot uncertaintyvisualizationParam;
+        megamol::core::param::ParamSlot uncertaintyVisualizationParam;
         
         // the current uncertainty visualization
-        visualization currentvisualization;
+        visualization currentVisualization;
         
         // data preparation flag
         bool dataPrepared;

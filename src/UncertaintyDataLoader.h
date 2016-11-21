@@ -114,15 +114,17 @@ namespace megamol {
             * @param left      The left index of the array
             * @param right     The right index of the array
             */
-            void quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::EON)> *valueArr,  
-                                        vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::EON)> *structArr,  
+            void quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *valueArr,  
+                                        vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *structArr,  
                                         int left, int right);
 
             /**
              * enumeration of available uncertainty calculation methods. 
              */
              enum calculationMethod {
-                 AVERAGE = 0
+                 AVERAGE    = 0,
+                 LEVENSTEIN = 1,
+                 ANOTHER    = 2
              };
              
             /**
@@ -168,12 +170,12 @@ namespace megamol {
             vislib::Array<vislib::StringA> aminoAcidName;
 
             /** The values of the secondary structure uncertainty for each amino-acid (index = secStructure) */
-            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::EON)> > secStructUncertainty;
+            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secStructUncertainty;
 
             /** The sorted structure types of the uncertainty values 
             *   Values are sorted in ascending order -> maximum value in secStructUncertainty has last index
             *   To get the uncertainty value: use secStructure given here as index in secStructUncertainty */
-            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::EON)> > sortedSecStructUncertainty;
+            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedSecStructUncertainty;
             
             /** The pdb id */
             vislib::StringA pdbID;

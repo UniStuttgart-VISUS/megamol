@@ -30,7 +30,7 @@ const unsigned int UncertaintyDataCall::CallForGetData = 0;
 UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
                                                  dsspSecStructure(NULL), strideSecStructure(NULL), pdbSecStructure(NULL),
                                                  sortedSecStructUncertainty(NULL), secStructUncertainty(NULL), pdbIndex(NULL), 
-                                                 chainID(NULL), missingFlag(NULL), aminoAcidName(NULL){
+                                                 chainID(NULL), missingFlag(NULL), aminoAcidName(NULL), pdbID(NULL) {
 }
 
 
