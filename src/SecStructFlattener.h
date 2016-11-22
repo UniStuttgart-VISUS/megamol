@@ -19,8 +19,10 @@
 
 #include <vector>
 
+extern "C" void getPositions(float * h_atomPositions, unsigned int numPositions);
 extern "C" void performTimestep(float timestepSize);
 extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas);
+extern "C" void transferPlane(vislib::math::Plane<float>& thePlane);
 extern "C" void transferSpringData(const float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas, 
 	unsigned int * h_oIndices, unsigned int numOs, float conFriction, float conConstant, float hFriction, float hConstant);
 
@@ -154,6 +156,14 @@ namespace protein_cuda {
 		bool onPlayToggleButton(megamol::core::param::ParamSlot& p);
 
 		/**
+		 *	Callback function for the single timestep button.
+		 *
+		 *	@param p The button parameter
+		 *	@return true
+		 */
+		bool onSingleStepButton(megamol::core::param::ParamSlot& p);
+
+		/**
 		 *	Computes the three main directions of the c alpha atoms
 		 */
 		void computeMainDirectionPCA(void);
@@ -172,6 +182,9 @@ namespace protein_cuda {
 
 		/** button that toggles the play of the animation */
 		megamol::core::param::ParamSlot playButtonParam;
+
+		/** button that triggers the computation of a single timestep */
+		megamol::core::param::ParamSlot singleStepButtonParam;
 
 		/** the flat plane mode */
 		megamol::core::param::ParamSlot flatPlaneMode;
@@ -250,6 +263,9 @@ namespace protein_cuda {
 
 		/** The index of the current timestep */
 		SIZE_T currentTimestep;
+
+		/** Should a single timestep be performed? */
+		bool oneStep;
 	};
 
 } /* end namespace protein_cuda */

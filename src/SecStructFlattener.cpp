@@ -35,6 +35,7 @@ SecStructFlattener::SecStructFlattener(void) :
 	planeOutSlot("planeOut", "Provides the necessary plane data for 2D renderings"),
 	playParam("simulation::play", "Should the simulation be played?"),
 	playButtonParam("simulation::playButton", "Button to toggle the simulation"),
+	singleStepButtonParam("simulation::singleStep", "Button for the computation of a single timestep"),
 	flatPlaneMode("plane::flatPlaneMode", "The plane the protein gets flattened to"),
 	arbPlaneCenterParam("plane::planeOrigin", "The plane origin for the arbitrary plane mode"),
 	arbPlaneNormalParam("plane::planeNormal", "The plane normal for the arbitrary plane mode"),
@@ -92,6 +93,10 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->playButtonParam << new param::ButtonParam('p');
 	this->playButtonParam.SetUpdateCallback(this, &SecStructFlattener::onPlayToggleButton);
 	this->MakeSlotAvailable(&this->playButtonParam);
+
+	this->singleStepButtonParam << new param::ButtonParam('o');
+	this->singleStepButtonParam.SetUpdateCallback(this, &SecStructFlattener::onSingleStepButton);
+	this->MakeSlotAvailable(&this->singleStepButtonParam);
 
 	param::EnumParam * fpParam = new param::EnumParam(int(FlatPlane::XY_PLANE));
 	FlatPlane fp;
@@ -276,6 +281,35 @@ void SecStructFlattener::flatten(bool transferPositions) {
 			}
 		}
 
+		// transfer the plane to the GPU if a new one is available
+		vislib::math::Vector<float, 3> normal;
+		switch (this->flatPlaneMode.Param<param::EnumParam>()->Value()) {
+			case XY_PLANE:
+				normal = vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f);
+				break;
+			case XZ_PLANE:
+				normal = vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f);
+				break;
+			case YZ_PLANE:
+				normal = vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f);
+				break;
+			case LEAST_COMMON:
+				normal = this->mainDirections[2];
+				normal.Normalise();
+				break;
+			case ARBITRARY:
+				normal = this->arbPlaneNormalParam.Param<param::Vector3fParam>()->Value();
+				normal.Normalise();
+				break;
+			default:
+				normal = vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f);
+				break;
+		}
+		auto pc = this->arbPlaneCenterParam.Param<param::Vector3fParam>()->Value();
+		vislib::math::Point<float, 3> p(pc.GetX(), pc.GetY(), pc.GetZ());
+		vislib::math::Plane<float> thePlane(p, normal);
+		transferPlane(thePlane);
+
 		planeHash++;
 	}
 
@@ -426,14 +460,20 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 		}
 	}
 
-	this->myHash = this->lastHash + this->hashOffset;
-	agdc->SetDataHash(this->myHash);
+	// get the plane and transfer it to the cuda kernel
 
+
+
+	// perform the flattening
 	flatten();
 
-	if (this->playParam.Param<param::BoolParam>()->Value()) {
+	// run the simulation
+	if (this->playParam.Param<param::BoolParam>()->Value() || this->oneStep) {
 		runSimulation();
 	}
+
+	this->myHash = this->lastHash + this->hashOffset;
+	agdc->SetDataHash(this->myHash);
 
 	// compute the new bounding box
 	vislib::math::Cuboid<float> newbb;
@@ -524,11 +564,27 @@ bool SecStructFlattener::onPlayToggleButton(param::ParamSlot& p) {
 }
 
 /*
+ *	SecStructFlattener::onSingleStepButton
+ */
+bool SecStructFlattener::onSingleStepButton(param::ParamSlot& p) {
+	this->oneStep = true;
+	return true;
+}
+
+/*
  *	SecStructFlattener::runSimulation
  */
 void SecStructFlattener::runSimulation(void) {
 
 	unsigned int numTimesteps = static_cast<unsigned int>(this->timestepsPerFrameParam.Param<param::IntParam>()->Value());
+
+	// case for a single timestep
+	if (!this->playParam.Param<param::BoolParam>()->Value() && oneStep) {
+		numTimesteps = 1;
+	}
+
+	oneStep = false;
+
 	float delta = this->timestepParam.Param<param::FloatParam>()->Value();
 	int maxTime = this->maxTimestepParam.Param<param::IntParam>()->Value();
 
@@ -541,4 +597,9 @@ void SecStructFlattener::runSimulation(void) {
 	}
 
 	// get result from device
+	getPositions(this->atomPositions, this->atomPositionsSize / 3);
+
+	if (numTimesteps > 0) {
+		this->hashOffset++;
+	}
 }

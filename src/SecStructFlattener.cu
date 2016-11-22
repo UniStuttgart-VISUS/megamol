@@ -8,7 +8,10 @@
 #include <vector>
 #include <thrust/device_vector.h>
 
-struct Spring {
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Plane.h"
+
+__host__ __device__ struct Spring {
 	uint source;
 	uint target;
 	float length;
@@ -26,6 +29,10 @@ struct Spring {
 	}
 };
 
+__host__ __device__ bool operator<(const Spring &lhs, const Spring &rhs) {
+	return lhs.source < rhs.source;
+}
+
 thrust::device_vector<float> d_atomPositions;
 thrust::device_vector<uint> d_cAlphaIndices;
 thrust::device_vector<uint> d_oIndices;
@@ -35,7 +42,84 @@ __device__ float3 d_PositionBoundingBoxMax;
 __device__ float3 d_CAlphaBoundingBoxMin;
 __device__ float3 d_CAlphaBoundingBoxMax;
 
+__device__ float3 d_planeNormal;
+__device__ float3 d_planeOrigin;
+
 thrust::device_vector<Spring> d_springs;
+
+typedef struct {
+	float4 m[4];
+} float4x4;
+
+float4x4 h_transMat;
+float4x4 h_invTransMat;
+
+// number of threads per block
+uint TpB = 256;
+
+/**
+ *	Performs a matrix vector multiplication
+ *	
+ *	@param M The 4x4 matrix.
+ *	@param v The vector with 4 entrys.
+ */
+__device__ float4 mul(const float4x4 &M, const float4 &v) {
+	float4 r;
+	r.x = dot(v, M.m[0]);
+	r.y = dot(v, M.m[1]);
+	r.z = dot(v, M.m[2]);
+	r.w = dot(v, M.m[3]);
+	return r;
+}
+
+/**
+ *	Kernel for applying a transformation matrix to all positions stored in the given pointer.
+ *
+ *	@param d_pos The given position array.
+ *	@param sizePos The size of the position array
+ *	@param mat The transformation matrix
+ */
+__global__ void applyMatrixToPositionsKernel(float * d_pos, uint sizePos, float4x4 mat) {
+	uint idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (idx >= sizePos) {
+		return;
+	}
+
+	float4 pos = make_float4(d_pos[idx * 3 + 0], d_pos[idx * 3 + 1], d_pos[idx * 3 + 2], 1.0f);
+	pos = mul(mat, pos);
+	d_pos[idx * 3 + 0] = pos.x;
+	d_pos[idx * 3 + 1] = pos.y;
+	d_pos[idx * 3 + 2] = pos.z;
+}
+
+/**
+ *	Kernel for running the force directed layouting of the atoms
+ *
+ *	@param d_pos The position array.
+ *	@param sizePos The number of available positions
+ *	@param d_ca Array of c alpha atom indices.
+ *	@param caSize Number of available c alpha indices.
+ *	@param d_springs Array of available spring connections between c alpha atoms
+ *	@param springSize The number of avaialable springs.
+ *	@param timestepSize The duration of a single timestep
+ */
+__global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, uint caSize, Spring * d_springs, uint springSize, float timestepSize) {
+	
+	uint idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (idx >= caSize) {
+		return;
+	}
+
+	uint caIdx = d_ca[idx];
+	float3 bbCenter = (d_CAlphaBoundingBoxMin + d_CAlphaBoundingBoxMax) * 0.5f;
+	float3 atPos = make_float3(d_pos[caIdx * 3 + 0], d_pos[caIdx * 3 + 1], d_pos[caIdx * 3 + 2]);
+	float3 vector = normalize(atPos - bbCenter) * timestepSize;
+	d_pos[caIdx * 3 + 0] += timestepSize;
+	d_pos[caIdx * 3 + 1] += 0.0f;
+	d_pos[caIdx * 3 + 2] += 0.0f;
+}
 
 /**
  *	Computes the bounding boxes for the uploaded data
@@ -113,7 +197,14 @@ void recomputeGrid() {
 extern "C"
 void performTimestep(float timestepSize) {
 	recomputeGrid();
-	printf("timestep with %f performed\n", timestepSize);
+	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
+	uint * d_ca = thrust::raw_pointer_cast(d_cAlphaIndices.data().get());
+	Spring * d_spring = thrust::raw_pointer_cast(d_springs.data().get());
+	uint N = static_cast<uint>(d_atomPositions.size());
+	uint NCa = static_cast<uint>(d_cAlphaIndices.size());
+	uint NSpring = static_cast <uint>(d_springs.size());
+	runSimulationKernel <<<(NCa + TpB - 1) / TpB, TpB >>>(d_pos, N, d_ca, NCa, d_spring, NSpring, timestepSize);
+	checkCudaErrors(cudaDeviceSynchronize());
 }
 
 /**
@@ -131,8 +222,99 @@ void transferAtomData(float * h_atomPositions, uint numPositions, uint * h_cAlph
 	d_atomPositions = thrust::device_vector<float>(h_atomPositions, h_atomPositions + numPositions * 3);
 	d_cAlphaIndices = thrust::device_vector<uint>(h_cAlphaIndices, h_cAlphaIndices + numCAlphas);
 
+	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
+	uint N = static_cast<uint>(d_atomPositions.size()) / 3;
+	applyMatrixToPositionsKernel << <(N + TpB - 1) / TpB, TpB >> >(d_pos, N * 3, h_transMat);
+
 	checkCudaErrors(cudaDeviceSynchronize());
 	computeBoundingBoxes();
+}
+
+/**
+ *	Transfers the computed atom positions back to the host.
+ *
+ *	@param h_atomPositions The pointer the position gets written to. The memory has to be allocated beforehand
+ *	@param numPositions The number of allocated atom positions.
+ */
+extern "C"
+void getPositions(float * h_atomPositions, uint numPositions) {
+	if (numPositions != d_atomPositions.size() / 3) {
+		printf("ERROR: Mismatching vector sizes in SecStructFlattener\n");
+		exit(-1);
+	}
+
+	// transform the positions back to 3d space
+	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
+	uint N = static_cast<uint>(d_atomPositions.size()) / 3;
+	applyMatrixToPositionsKernel << <(N + TpB - 1) / TpB, TpB >> >(d_pos, N, h_transMat);
+	checkCudaErrors(cudaDeviceSynchronize());
+
+	checkCudaErrors(cudaMemcpy(h_atomPositions, d_atomPositions.data().get(), d_atomPositions.size() * sizeof(float), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaDeviceSynchronize());
+}
+
+extern "C"
+void transferPlane(vislib::math::Plane<float>& thePlane) {
+	/**
+	*	http://math.stackexchange.com/questions/1167717/transform-a-plane-to-the-xy-plane
+	*/
+
+	// translate plane to origin
+	vislib::math::Matrix<float, 4, vislib::math::MatrixLayout::COLUMN_MAJOR> transMat;
+	transMat.SetIdentity();
+
+	if (abs(thePlane.C()) > 0.000000001) {
+		transMat.SetAt(2, 3, -(thePlane.D() / thePlane.C()));
+	}
+
+	// rotate plane to the xy plane
+	vislib::math::Matrix<float, 4, vislib::math::MatrixLayout::COLUMN_MAJOR> rotMat;
+	rotMat.SetIdentity();
+
+	vislib::math::Vector<float, 3> v(thePlane.A(), thePlane.B(), thePlane.C());
+	vislib::math::Vector<float, 3> k(0.0f, 0.0f, 1.0f);
+	float theta = acos(thePlane.C() / v.Length());
+
+	vislib::math::Vector<float, 3> u = v.Cross(k) / v.Length();
+	float ct = cos(theta);
+	float st = sin(theta);
+
+	// set matrix values
+	float val = ct + u[0] * u[0] * (1.0f - ct);
+	rotMat.SetAt(0, 0, val);
+	val = u[0] * u[1] * (1 - ct);
+	rotMat.SetAt(0, 1, val);
+	val = u[1] * st;
+	rotMat.SetAt(0, 2, val);
+	val = u[0] * u[1] * (1 - ct);
+	rotMat.SetAt(1, 0, val);
+	val = ct + u[1] * u[1] * (1.0f - ct);
+	rotMat.SetAt(1, 1, val);
+	val = -u[0] * st;
+	rotMat.SetAt(1, 2, val);
+	val = -u[1] * st;
+	rotMat.SetAt(2, 0, val);
+	val = u[0] * st;
+	rotMat.SetAt(2, 1, val);
+	val = ct;
+	rotMat.SetAt(2, 2, val);
+
+	// perform the translation to origin first
+	auto result = rotMat * transMat;
+	auto resultInverse = result;
+	bool q = resultInverse.Invert();
+	
+	if (!q) {
+		printf("ERROR: Matrix inversion not possible\n");
+		exit(-1);
+	}
+
+	// transfer matrices to global memory
+	result.Transpose();
+	memcpy(&h_transMat, result.PeekComponents(), 16 * sizeof(float));
+
+	resultInverse.Transpose();
+	memcpy(&h_invTransMat, resultInverse.PeekComponents(), 16 * sizeof(float));
 }
 
 /**
