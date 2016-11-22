@@ -181,7 +181,7 @@ namespace megamol {
          */
         enum visualization {
             STACK     = 0,            
-            DITHERING = 1
+            MORPHING  = 1
         };
         
         /**
@@ -193,6 +193,14 @@ namespace megamol {
         void renderUncertaintyStack(float yPos, float defColor[4]);
         
 
+        /**
+         * Renders the MORPHING uncertainty visualization.
+         *
+         * @param yPos     The y position the rendering should start.
+         * @param defColor The the default color
+         */        
+        void renderUncertaintyMorphing(float yPos, float defColor[4]);
+        
         /**********************************************************************
          * variables
          **********************************************************************/
