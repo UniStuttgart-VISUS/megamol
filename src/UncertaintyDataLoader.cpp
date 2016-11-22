@@ -57,7 +57,6 @@ UncertaintyDataLoader::UncertaintyDataLoader( void ) : megamol::core::Module(),
     
     this->methodSlot << tmpEnum;
     this->MakeSlotAvailable(&this->methodSlot);    
-
 }
 
 
@@ -220,7 +219,6 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
             // get pdb id
             if(line.StartsWith("PDB")) {
                 this->pdbID = line.Substring(9,4);
-                std::cout << this->pdbID << std::endl;
             }
             
             // parsing lines beginning with DATA

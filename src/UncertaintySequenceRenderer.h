@@ -310,6 +310,7 @@ namespace megamol {
 
         // mouse hover
         vislib::math::Vector<float, 2> mousePos;
+        vislib::math::Vector<float, 2> mousePosDetail;
         int mousePosResIdx;
         bool rightMouseDown;
         bool initialClickSelection;

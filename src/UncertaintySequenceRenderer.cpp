@@ -137,7 +137,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 
     // setting initial row height, as if all secondary structure rows would be shown
     this->secStructRows = 5;
-    this->rowHeight = 2.5f + static_cast<float>(this->secStructRows);   
+    this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);   
 
 }
 
@@ -247,10 +247,17 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->secStructRows++;
                 
         // set new row height
-        this->rowHeight = 2.5f + static_cast<float>(this->secStructRows);
-        
+        this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);
+              
+        unsigned int oldRowHeight = (unsigned int)this->rowHeight;
+
         this->dataPrepared = this->PrepareData(udc, bs);
-        
+
+        // row height might change because of bindinng sites
+        if (oldRowHeight != this->rowHeight) {
+            this->dataPrepared = this->PrepareData(udc, bs);
+        }
+
         if (this->dataPrepared) {
             // the data has been prepared for the current number of residues per row
             this->resCountPerRowParam.ResetDirty();
@@ -267,17 +274,7 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->toggleUncertaintyParam.ResetDirty();
 
             udc->SetRecalcFlag(false);
-
             this->pdbID = udc->GetPdbID();
-            
-            // DEBUG
-            /*std::cout << "Row Height: " << this->rowHeight << std::endl;
-            std::cout << "secStructRows: " << this->secStructRows << std::endl;
-            std::cout << "resCols: " << this->resCols << std::endl;
-            std::cout << "resRows: " << this->resRows << std::endl;*/
-        }
-        else {
-            return false; // ERROR: Coudn't prepare data ...
         }
     }
         
@@ -371,12 +368,34 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         float diff;
         UncertaintyDataCall::secStructure s;
         
-///// TEXTURING /////
+        yPos = 0.0f;
 
+        // draw uncertainty difference
+        if (this->toggleDiffParam.Param<param::BoolParam>()->Value()) {
+            glColor3fv(fgColor);
+            glBegin(GL_QUADS);
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                if (!this->missingAminoAcids[i]) {
+                    // uncertainty Max - Min:
+                    // three assignment methods -> max three different sec structures: max=[0] - middle=[1] - min=[2]
+                    // assuming values are in range 0.0-1.0
+                    diff = this->secUncertainty[i][this->sortedUncertainty[i][0]] - this->secUncertainty[i][this->sortedUncertainty[i][2]];
+
+                    if (diff < 1.0f) {
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos) - diff);
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos) - 1.0f);
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos) - 1.0f);
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos) - diff);
+                    }
+                }
+            }
+            glEnd();
+            yPos += 1.0f;
+        }
+        
+        //draw texture tiles for secondary structure
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);      
-        yPos = 0.0f;
-        //draw texture tiles for secondary structure
         //STRIDE
         if(this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
@@ -404,49 +423,9 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             }
             yPos += 1.0f;
         }
-                
-        // draw type legend textures
-        xPos = 10.0f;
-        for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
-            s = static_cast<UncertaintyDataCall::secStructure>(i);
-            this->drawSecStructTextureTiles(s, s, s, false, (static_cast<float>(this->resCols) + 1.0f + xPos), (static_cast<float>(i) + 2.0f), bgColor);  
-        }
         glDisable(GL_BLEND);
-        glDisable(GL_TEXTURE_2D); 
-        
-        
-///// GEOMETRY /////
-        
-        // draw uncertainty difference
-        if(this->toggleDiffParam.Param<param::BoolParam>()->Value()) {
-            glColor3fv(fgColor);
-            glBegin(GL_QUADS);
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {           
-                if(!this-missing[i]) {
-                    // uncertainty Max - Min:
-                    // three assignment methods -> max three different sec structures: max=[0] - middle=[1] - min=[2]
-                    // assuming values are in range 0.0-1.0
-                    diff = this->secUncertainty[i][this->sortedUncertainty[i][0]] - this->secUncertainty[i][this->sortedUncertainty[i][2]]; 
-                       
-                    if (diff < 1.0f) {
-                        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - diff);
-                        glVertex2f( this->vertices[2*i],        -(this->vertices[2*i+1]+yPos) - 1.0f);
-                        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - 1.0f);
-                        glVertex2f( this->vertices[2*i] + 1.0f, -(this->vertices[2*i+1]+yPos) - diff);
-                    }
-                }
-            }
-            glEnd();
-            glBegin(GL_LINES);
-            for (unsigned int i = 0; i < this->resRows; i++) {
-                glVertex2f(0.0f, -((static_cast<float>(i)*this->rowHeight)+yPos+1.0f));
-                glVertex2f(static_cast<float>(this->resCols), -((static_cast<float>(i)*this->rowHeight)+yPos+1.0f));
-            }
-            glEnd();
-            
-            yPos += 1.0f;
-        }
-  
+        glDisable(GL_TEXTURE_2D);
+
         // uncertainty visualization
         if(this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
             switch (this->currentVisualization) {
@@ -486,8 +465,31 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         glDrawArrays( GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.Count() / 2 );
         glDisable( GL_VERTEX_ARRAY);
         
-        
-///// TEXT /////
+        // draw type legend textures and lines
+        xPos = 6.0f;
+        if (this->toggleLegendParam.Param<param::BoolParam>()->Value()) {
+
+            glEnable(GL_TEXTURE_2D);
+            glEnable(GL_BLEND);
+            for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
+                s = static_cast<UncertaintyDataCall::secStructure>(i);
+                this->drawSecStructTextureTiles(s, s, s, false, (static_cast<float>(this->resCols) + 1.0f + xPos), (static_cast<float>(i)+1.5f), bgColor);
+            }
+            glDisable(GL_BLEND);
+            glDisable(GL_TEXTURE_2D);
+
+            glDisable(GL_DEPTH_TEST);
+
+            glColor3fv(fgColor);
+            for (unsigned int i = 0; i < (static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE)+1); i++) {
+                glBegin(GL_LINES);
+                glVertex2f((static_cast<float>(this->resCols) + 1.0f), -(static_cast<float>(i)+1.5f));
+                glVertex2f((static_cast<float>(this->resCols) + 2.0f + xPos), -(static_cast<float>(i)+1.5f));
+                glEnd();
+            }
+
+            glEnable(GL_DEPTH_TEST);
+        }
 
         // INFO: DrawString(float x, float y, float w, float h, float size, bool flipY, const char *txt, Alignment align = ALIGN_LEFT_TOP) 
         glColor3fv(fgColor);
@@ -499,8 +501,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             tmpStr = this->pdbID;
             tmpStr.Prepend("PDB-ID: ");
             wordlength = theFont.LineWidth(fontSize, tmpStr);
-            theFont.DrawString(0.0f, 0.5f, wordlength, 1.0f, 
-                               fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+            theFont.DrawString(0.0f, 0.5f, wordlength+1.0f, 1.0f, 
+                               fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
             
             // row labeling
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
@@ -556,13 +558,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         
                     wordlength = theFont.LineWidth( fontSize, tmpStr);
                     theFont.DrawString(static_cast<float>(this->resCols) + 1.0f, -(static_cast<float>(i) + 2.5f), wordlength, 1.0f,
-                                       fontSize * 0.5f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+                                       fontSize * 0.75f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                 }
                 
                 // draw binding site legend
                 if( !this->bindingSiteNames.IsEmpty() ) {
                     
-                    yPos = static_cast<float>(UncertaintyDataCall::secStructure::NOE) + 1.5f;
+                    yPos = static_cast<float>(UncertaintyDataCall::secStructure::NOE) + 3.5f;
                     
                     tmpStr = "Binding Sites: ";
                     wordlength = theFont.LineWidth( fontSize, tmpStr);
@@ -571,10 +573,10 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     for( unsigned int i = 0; i < this->bindingSiteNames.Count(); i++ ) {
                         // draw the binding site names
                         glColor3fv( this->bsColors[i].PeekComponents());
-                        theFont.DrawString(static_cast<float>(this->resCols) + 1.0f, -(yPos + static_cast<float>(i) * 2.0f + 2.0f), wordlength, 1.0f,
+                        theFont.DrawString(static_cast<float>(this->resCols) + 1.0f, -(yPos + static_cast<float>(i) * 2.0f + 1.5f), wordlength, 1.0f,
                                            fontSize, true, this->bindingSiteNames[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
                         wordlength = theFont.LineWidth( fontSize, this->bindingSiteDescription[i]);
-                        theFont.DrawString(static_cast<float>(this->resCols) + 1.0f, -(yPos + static_cast<float>(i) * 2.0f + 3.0f), wordlength, 1.0f,
+                        theFont.DrawString(static_cast<float>(this->resCols) + 1.0f, -(yPos + static_cast<float>(i) * 2.0f + 2.5f), wordlength, 1.0f,
                                            fontSize * 0.5f, true, this->bindingSiteDescription[i], vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
                     }
                 }
@@ -586,30 +588,30 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 fontSize = 0.5f;
                 yPos = 1.0f;
                 rowPos = 0.0f;
-                for (unsigned int i = 0; i < this->resRows; i++) {
-                    if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < 1; i++) { //0 ->this->resRows
+                    if (this->toggleDiffParam.Param<param::BoolParam>()->Value()) {
+                        tmpStr = "Differences";
+                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        yPos += 1.0f;
+                    }
+                    if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "STRIDE";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
-                    if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+                    if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "DSSP";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
-                    if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                    if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "AUTHOR (PDB)";
-                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
-                                           fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                        yPos += 1.0f;
-                    }
-                    if (this->toggleDiffParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "Differences";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
@@ -637,7 +639,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if( !this->bindingSiteNames.IsEmpty() ) {
                         tmpStr = "Binding Sites";
                         wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + this->rowHeight), wordlength, ((this->rowHeight) - (2.0f + static_cast<float>(this->secStructRows))),
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i + 1)*this->rowHeight), wordlength, (this->rowHeight - (2.0f + static_cast<float>(this->secStructRows))),
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                     }
                     
@@ -645,12 +647,9 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 }
             }
         }
+
+        glDisable(GL_DEPTH_TEST);        
         
-            
-///// GEOMETRY /////
-
-        glDisable(GL_DEPTH_TEST);
-
         // draw overlays for selected amino acids
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
@@ -699,30 +698,60 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         glEnd();
            
         // render mouse hover
-        if( this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
-            this->mousePos.Y() >  0.0f && this->mousePos.Y() < static_cast<float>(this->resRows+1) &&
-            this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->aminoAcidCount)
-        {
+        if( (this->mousePos.X() > -1.0f) && (this->mousePos.X() < static_cast<float>(this->resCols)) &&
+            (this->mousePos.Y() >  0.0f) && (this->mousePos.Y() < static_cast<float>(this->resRows+1)) &&
+            (this->mousePosResIdx > -1) && (this->mousePosResIdx < (int)this->aminoAcidCount)) {
             glColor3f( 1.0f, 0.75f, 0.0f);
             glBegin( GL_LINE_STRIP);
                 glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
-                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y()) + 0.5f);
-                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()) + 0.5f);
+                glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y()));
+                glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y()));
                 glVertex2f( this->mousePos.X() + 1.0f, -this->rowHeight * (this->mousePos.Y() - 1.0f));
                 glVertex2f( this->mousePos.X()       , -this->rowHeight * (this->mousePos.Y() - 1.0f));
             glEnd();
+
+            // draw tooltip with some information 
+
+            ////////////////////////////////////////////////
+            // TODO: draw tooltip ...
+            ////////////////////////////////////////////////  
+            // 1.0f =
+            glColor3fv(fgColor);
+            fontSize = 0.5f;
+            float perCentRow = 1.0f / this->rowHeight;
+            if (theFont.Initialise()) {
+
+                if (this->mousePosDetail.Y() > 0.0 && this->mousePosDetail.Y() < perCentRow) {
+
+                    glColor3fv(fgColor);
+                    glBegin(GL_QUADS);
+                    for (unsigned int i = 0; i < this->chainVertices.Count() / 2; i++) {
+                        glVertex2f(this->mousePos.X() + 1.0f,              -this->rowHeight*(this->mousePos.Y() - 1.0f));
+                        glVertex2f(this->mousePos.X() + 1.0f,              -this->rowHeight*(this->mousePos.Y() - 0.75f));
+                        glVertex2f(this->mousePos.X() + 1.0f + wordlength, -this->rowHeight*(this->mousePos.Y() - 0.75f));
+                        glVertex2f(this->mousePos.X() + 1.0f + wordlength, -this->rowHeight*(this->mousePos.Y() - 1.0f));
+                    }
+                    glEnd();
+
+                    glColor3fv(bgColor);
+                    tmpStr = "TEST";
+                    wordlength = theFont.LineWidth(fontSize, tmpStr);
+                    theFont.DrawString(this->mousePos.X() + 1.0f, -this->rowHeight*(this->mousePos.Y()-0.75f), wordlength, 0.5f,
+                        fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+
+                }
+
+            }
+
+
+
+
+
         }
 
-        ////////////////////////////////////////////////
-        // TODO: draw tooltip ...
-        ////////////////////////////////////////////////       
-        // draw tooltip with some information 
-        /*if( this->mousePos.X() > -1.0f && this->mousePos.X() < static_cast<float>(this->resCols) &&
-            this->mousePos.Y() >  0.0f && this->mousePos.Y() < static_cast<float>(this->resRows+1) &&
-            this->mousePosResIdx > -1 && this->mousePosResIdx < (int)this->aminoAcidCount)
-        {     
-            // ...
-        }*/
+     
+
+
         
         glEnable(GL_DEPTH_TEST);
         
@@ -758,7 +787,7 @@ void UncertaintySequenceRenderer::renderUncertaintyStack(float yPos, float defCo
     glBegin(GL_QUADS);
     for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
         
-        if(!this->missing[i]) {
+        if (!this->missingAminoAcids[i]) {
             uMax = this->secUncertainty[i][this->sortedUncertainty[i][0]];
             
             glColor3fv(this->secStructureColor(this->sortedUncertainty[i][0]).PeekComponents());
@@ -908,7 +937,9 @@ vislib::math::Vector<float, 4> UncertaintySequenceRenderer::secStructureColor(Un
  */
 bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     bool consumeEvent = false;
-    this->mousePos.Set( floorf(x), fabsf(floorf(y / this->rowHeight)));
+    this->mousePos.Set(floorf(x), -(floorf(y / this->rowHeight))); // this->mousePos.Set(floorf(x), fabsf(floorf(y / this->rowHeight)));
+    this->mousePosDetail.Set(x - floorf(x), ((-y/this->rowHeight) - floorf(-y/this->rowHeight)));
+
     this->mousePosResIdx = static_cast<int>(this->mousePos.X() + (this->resCols * (this->mousePos.Y()-1)));
     // do nothing else if mouse is outside bounding box
     if( this->mousePos.X() < 0.0f || this->mousePos.X() > this->resCols ||
@@ -952,7 +983,6 @@ bool UncertaintySequenceRenderer::MouseEvent(float x, float y, view::MouseFlags 
 
     return consumeEvent;
 }
-
 
 
 /*
@@ -1018,17 +1048,6 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
     this->bindingSiteDescription.Clear();
 
     this->bindingSiteNames.Clear();
-    if( bs ) {
-        this->bindingSiteDescription.SetCount( bs->GetBindingSiteCount());
-        this->bindingSiteNames.AssertCapacity( bs->GetBindingSiteCount());
-        this->bsColors.SetCount( bs->GetBindingSiteCount());
-        // copy binding site names
-        for( unsigned int i = 0; i < bs->GetBindingSiteCount(); i++ ) {
-            this->bindingSiteDescription[i].Clear();
-            this->bindingSiteNames.Add( bs->GetBindingSiteName( i));
-            this->bsColors[i] = bs->GetBindingSiteColor(i);
-        }
-    }
 
     // temporary variables
     vislib::StringA tmpStr;
@@ -1038,39 +1057,16 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 
     // handling binding sites
     if (bs) {
-        for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
-            // try to match binding sites
-            vislib::Pair<char, unsigned int> bsRes;
-            unsigned int numBS = 0;
-            // loop over all binding sites
-            for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
-                for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
-                    bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
-                    if (udc->GetChainID(aa) == bsRes.First() && udc->GetPDBAminoAcidIndex(aa) == bsRes.Second() ) {
-                        this->bsVertices.Add(this->vertices[this->vertices.Count() - 2]);
-                        this->bsVertices.Add(this->vertices[this->vertices.Count() - 1] + (this->rowHeight-0.5f) + numBS * 0.5f);
-                        this->bsIndices.Add(bsCnt);
-                        if (!this->bindingSiteDescription[bsCnt].IsEmpty()) {
-                            this->bindingSiteDescription[bsCnt].Append(", ");
-                        }
-                        this->bindingSiteDescription[bsCnt].Append(tmpStr);
-                        numBS++;
-                        maxNumBindingSitesPerRes = vislib::math::Max(maxNumBindingSitesPerRes, numBS);
-                    }
-                }
-            }
-        }
-        // loop over all binding sites and add binding site descriptions
-        for( unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++ ) {
-            this->bindingSiteDescription[bsCnt].Prepend( "\n");
-            this->bindingSiteDescription[bsCnt].Prepend( bs->GetBindingSiteDescription( bsCnt));
+        this->bindingSiteDescription.SetCount(bs->GetBindingSiteCount());
+        this->bindingSiteNames.AssertCapacity(bs->GetBindingSiteCount());
+        this->bsColors.SetCount(bs->GetBindingSiteCount());
+        // copy binding site names
+        for (unsigned int i = 0; i < bs->GetBindingSiteCount(); i++) {
+            this->bindingSiteDescription[i].Clear();
+            this->bindingSiteNames.Add(bs->GetBindingSiteName(i));
+            this->bsColors[i] = bs->GetBindingSiteColor(i);
         }
     }
-    
-
-    // set new row height
-    this->rowHeight = 2.5f + static_cast<float>(this->secStructRows) + maxNumBindingSitesPerRes * 0.5f;
-        
         
     // collect data from call
     for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
@@ -1142,7 +1138,42 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
                 this->chainColors.Add(this->colorTable[cCnt].Z());
             }
         }
+
+        if (bs) {
+            // try to match binding sites
+            vislib::Pair<char, unsigned int> bsRes;
+            unsigned int numBS = 0;
+            // loop over all binding sites
+            for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
+                for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
+                    bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
+                    if (udc->GetChainID(aa) == bsRes.First() && udc->GetPDBAminoAcidIndex(aa) == bsRes.Second()) {
+                        this->bsVertices.Add(this->vertices[this->vertices.Count() - 2]);
+                        this->bsVertices.Add(this->vertices[this->vertices.Count() - 1] + (2.0f + static_cast<float>(this->secStructRows)) + numBS*0.5f);
+                        this->bsIndices.Add(bsCnt);
+                        if (!this->bindingSiteDescription[bsCnt].IsEmpty()) {
+                            this->bindingSiteDescription[bsCnt].Append(", ");
+                        }
+                        this->bindingSiteDescription[bsCnt].Append(tmpStr);
+                        numBS++;
+                        maxNumBindingSitesPerRes = vislib::math::Max(maxNumBindingSitesPerRes, numBS);
+                    }
+                }
+            }
+        }
+
     }
+
+    if (bs) {
+        // loop over all binding sites and add binding site descriptions
+        for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
+            this->bindingSiteDescription[bsCnt].Prepend("\n");
+            this->bindingSiteDescription[bsCnt].Prepend(bs->GetBindingSiteDescription(bsCnt));
+        }
+    }
+
+    // set new row height
+    this->rowHeight = 2.0f + static_cast<float>(this->secStructRows) + maxNumBindingSitesPerRes * 0.5f;
 
     // set the number of columns
     this->resCols = vislib::math::Min(this->aminoAcidCount,
