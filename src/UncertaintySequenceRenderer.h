@@ -175,7 +175,28 @@ namespace megamol {
          * @return The color for the given secondary structure type.
          */
         vislib::math::Vector<float, 4> secStructureColor(UncertaintyDataCall::secStructure s);
-    
+   
+
+        /**
+        * Returns the description to the corresponding secondary structure type.
+        *
+        * @param s The secondary structure type.
+        * @return The description for the given secondary structure type.
+        */
+        vislib::StringA UncertaintySequenceRenderer::secStructureDesc(UncertaintyDataCall::secStructure s);
+
+        /**
+        * Renders a two lined tooltip text.
+        *
+        * @param start   The height the tooltip starts.
+        * @param end     The height the tooltip ends.
+        * @param str1    The string for the first line.
+        * @param str2    The string for the second line.
+        * @param fgColor The foreground color.
+        * @param bgColor The background color.
+        */
+        void renderToolTip(float start, float end, vislib::StringA str1, vislib::StringA str2, float fgColor[4], float bgColor[4]);
+
         /**
          * enumeration of available uncertainty visualizations
          */
@@ -188,19 +209,19 @@ namespace megamol {
          * Renders the STACK uncertainty visualization.
          *
          * @param yPos     The y position the rendering should start.
-         * @param defColor The the default color
          */        
-        void renderUncertaintyStack(float yPos, float defColor[4]);
+        void renderUncertaintyStack(float yPos);
         
 
         /**
          * Renders the MORPHING uncertainty visualization.
          *
          * @param yPos     The y position the rendering should start.
-         * @param defColor The the default color
          */        
-        void renderUncertaintyMorphing(float yPos, float defColor[4]);
+        void renderUncertaintyMorphing(float yPos);
         
+
+
         /**********************************************************************
          * variables
          **********************************************************************/
@@ -221,6 +242,9 @@ namespace megamol {
         megamol::core::param::ParamSlot toggleLegendParam;
         // clear the current residue selection
         megamol::core::param::ParamSlot clearResSelectionParam;
+
+        // parameter to show/hide tooltip 
+        megamol::core::param::ParamSlot toggleTooltipParam;
 
         // parameter to show/hide pdb secondary structure 
         megamol::core::param::ParamSlot togglePdbParam;
