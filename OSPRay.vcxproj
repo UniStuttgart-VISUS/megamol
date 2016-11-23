@@ -1,0 +1,280 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1C4E37FE-1BD9-427B-AC1A-2B0FA3B50B5C}</ProjectGuid>
+    <RootNamespace>OSPRay</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="$(VISlibPath)\VSProps\TargetRelease32.props" />
+    <Import Project="$(VISlibPath)\VSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="$(VISlibPath)\VSProps\TargetDebug32.props" />
+    <Import Project="$(VISlibPath)\VSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="$(VISlibPath)\VSProps\TargetRelease64.props" />
+    <Import Project="$(VISlibPath)\VSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="$(VISlibPath)\VSProps\TargetDebug64.props" />
+    <Import Project="$(VISlibPath)\VSProps\vislib.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutputBin)$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">OSPRay</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.mmplg</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">OSPRay</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.mmplg</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">OSPRay</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.mmplg</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OSPRay</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.mmplg</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ImportLibrary>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent />
+    <PostBuildEvent>
+      <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="cmake\ConfigInstall.cmake.in" />
+    <None Include="cmake\ConfigLocal.cmake.in" />
+    <None Include="cmake\ConfigVersion.cmake.in" />
+    <None Include="cmake_build.sh" />
+    <None Include="config.bat" />
+    <None Include="configure.win.pl" />
+    <None Include="ExtLibs.props.input" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\OSPRay\OSPRay.h" />
+    <ClInclude Include="src\OSPRayRenderer.h" />
+    <ClInclude Include="src\OSPRaySphereRenderer.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\OSPRay.cpp" />
+    <ClCompile Include="src\OSPRayRenderer.cpp" />
+    <ClCompile Include="src\OSPRaySphereRenderer.cpp" />
+    <ClCompile Include="src\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

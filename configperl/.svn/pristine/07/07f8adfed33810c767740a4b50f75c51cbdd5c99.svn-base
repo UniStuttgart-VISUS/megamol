@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project id="7cb69e0c-48bb-4ef2-9fe9-7c4ca90b51a7" kpf_version="5" name="configperl.komodoproject">
+<preference-set idref="7cb69e0c-48bb-4ef2-9fe9-7c4ca90b51a7" id="project" preftype="project">
+  <string id="import_exclude_matches">*.*~;*.bak;*.tmp;CVS;.#*;*.pyo;*.pyc;.svn;_svn;*%25*;tmp*.html;.DS_Store</string>
+  <string id="import_include_matches"></string>
+  <boolean id="import_live">1</boolean>
+  <boolean id="import_recursive">1</boolean>
+  <string id="import_type">useFolders</string>
+  <string id="lastInvocation">Project</string>
+  <string id="lastTestPlanName_pref">New test plan #1</string>
+  <string relative="path" id="perlExtraPaths"></string>
+  <boolean id="perl_lintOption_includeCurrentDirForLinter">1</boolean>
+<preference-set id="testPlans">
+<preference-set id="New test plan #1">
+  <string id="command_line"></string>
+  <string relative="url" id="directory"></string>
+  <string id="language">Perl - TAP (*.t)</string>
+</preference-set>
+</preference-set>
+</preference-set>
+</project>

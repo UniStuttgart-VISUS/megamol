@@ -1,0 +1,16 @@
+get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(ROOT_DIR "${SELF_DIR}/../../../" ABSOLUTE)
+
+include(${SELF_DIR}/@CMAKE_PROJECT_NAME@-target.cmake)
+
+set(@CMAKE_PROJECT_NAME@_LIBRARIES @CMAKE_PROJECT_NAME@)
+set(@CMAKE_PROJECT_NAME@_INCLUDE_DIRS "${ROOT_DIR}/include")
+set(@CMAKE_PROJECT_NAME@_SHADERS_DIRS "${ROOT_DIR}/share/megamol/@CMAKE_PROJECT_NAME@/Shaders")
+
+set(@CMAKE_PROJECT_NAME@_MegaMolCore_DIR "@cfg_MegaMolCore_DIR@")
+
+set(@CMAKE_PROJECT_NAME@_FOUND 1)
+
+get_property(self_target_location TARGET @CMAKE_PROJECT_NAME@ PROPERTY LOCATION_${CMAKE_BUILD_TYPE})
+message(STATUS "Found @CMAKE_PROJECT_NAME@: ${self_target_location}")
+
