@@ -1,5 +1,5 @@
 /*
- * SolventDataGenerator.cpp
+ * SolventHydroBondGenerator.cpp
  *
  * Copyright (C) 2011 by University of Stuttgart (VISUS).
  * All rights reserved.
