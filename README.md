@@ -1,0 +1,1 @@
+OSPRay Plugin README
