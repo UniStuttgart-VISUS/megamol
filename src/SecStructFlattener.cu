@@ -34,6 +34,7 @@ __host__ __device__ bool operator<(const Spring &lhs, const Spring &rhs) {
 }
 
 thrust::device_vector<float> d_atomPositions;
+thrust::device_vector<float> d_atomPositionsSave;
 thrust::device_vector<uint> d_cAlphaIndices;
 thrust::device_vector<uint> d_oIndices;
 
@@ -221,10 +222,11 @@ void transferAtomData(float * h_atomPositions, uint numPositions, uint * h_cAlph
 	// copy necessary values from host to device
 	d_atomPositions = thrust::device_vector<float>(h_atomPositions, h_atomPositions + numPositions * 3);
 	d_cAlphaIndices = thrust::device_vector<uint>(h_cAlphaIndices, h_cAlphaIndices + numCAlphas);
+	checkCudaErrors(cudaDeviceSynchronize());
 
 	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
-	uint N = static_cast<uint>(d_atomPositions.size()) / 3;
-	applyMatrixToPositionsKernel << <(N + TpB - 1) / TpB, TpB >> >(d_pos, N * 3, h_transMat);
+	uint N = static_cast<uint>(d_atomPositions.size());
+	applyMatrixToPositionsKernel << <(N + TpB - 1) / TpB, TpB >> >(d_pos, N, h_transMat);
 
 	checkCudaErrors(cudaDeviceSynchronize());
 	computeBoundingBoxes();
@@ -243,13 +245,20 @@ void getPositions(float * h_atomPositions, uint numPositions) {
 		exit(-1);
 	}
 
+	if (d_atomPositionsSave.size() != d_atomPositions.size()) {
+		d_atomPositionsSave.resize(d_atomPositions.size());
+	}
+
+	// copy the values on the device to the vector the conversion happens on
+	thrust::copy(d_atomPositions.begin(), d_atomPositions.end(), d_atomPositionsSave.begin());
+
 	// transform the positions back to 3d space
-	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
-	uint N = static_cast<uint>(d_atomPositions.size()) / 3;
-	applyMatrixToPositionsKernel << <(N + TpB - 1) / TpB, TpB >> >(d_pos, N, h_transMat);
+	float * d_pos = thrust::raw_pointer_cast(d_atomPositionsSave.data().get());
+	uint N = static_cast<uint>(d_atomPositionsSave.size()) / 3;
+	applyMatrixToPositionsKernel << <(N + TpB - 1) / TpB, TpB >> >(d_pos, N, h_invTransMat);
 	checkCudaErrors(cudaDeviceSynchronize());
 
-	checkCudaErrors(cudaMemcpy(h_atomPositions, d_atomPositions.data().get(), d_atomPositions.size() * sizeof(float), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(h_atomPositions, d_atomPositionsSave.data().get(), d_atomPositionsSave.size() * sizeof(float), cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaDeviceSynchronize());
 }
 
@@ -266,6 +275,8 @@ void transferPlane(vislib::math::Plane<float>& thePlane) {
 	if (abs(thePlane.C()) > 0.000000001) {
 		transMat.SetAt(2, 3, -(thePlane.D() / thePlane.C()));
 	}
+	auto transMatInverse = transMat;
+	transMatInverse.SetAt(2, 3, -transMat.GetAt(2, 3));
 
 	// rotate plane to the xy plane
 	vislib::math::Matrix<float, 4, vislib::math::MatrixLayout::COLUMN_MAJOR> rotMat;
@@ -301,8 +312,9 @@ void transferPlane(vislib::math::Plane<float>& thePlane) {
 
 	// perform the translation to origin first
 	auto result = rotMat * transMat;
-	auto resultInverse = result;
-	bool q = resultInverse.Invert();
+	auto rotMatInverse = rotMat;
+	bool q = rotMatInverse.Invert();
+	auto resultInverse = transMatInverse * rotMatInverse;
 	
 	if (!q) {
 		printf("ERROR: Matrix inversion not possible\n");
@@ -320,7 +332,7 @@ void transferPlane(vislib::math::Plane<float>& thePlane) {
 /**
  *	Transfers new atom connection (spring) data to the GPU.
  *
- *	@param h_atomPositions Pointer to the atom positions (order: xyzxyzxyz...).
+ *	@param h_atomPositions Pointer to the atom positions (order: xyzxyzxyz...). This has to be a pointer to the unflattened positions.
  *	@param numPositions Number of different atom positions (number of values in h_atomPositions / 3).
  *	@param h_cAlphaIndices Pointer to the indices of the c alpha atoms in the position vector.
  *	@param numCAlphas The number of available c alpha atoms / indices.
