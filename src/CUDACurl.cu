@@ -9,6 +9,7 @@
 
 #include "CUDACurl.cuh"
 #include "cuda_helper.h"
+#include "helper_cuda.h"
 
 using namespace megamol;
 
@@ -369,7 +370,7 @@ extern "C" {
  */
 cudaError_t protein_cuda::CUDASetCurlParams(CurlGridParams *hostParams) {
     // Copy parameters to constant memory
-    cutilSafeCall(cudaMemcpyToSymbol(curlParams, hostParams, sizeof(CurlGridParams)));
+    checkCudaErrors(cudaMemcpyToSymbol(curlParams, hostParams, sizeof(CurlGridParams)));
     return cudaGetLastError();
 }
 
@@ -387,8 +388,8 @@ cudaError_t protein_cuda::CudaGetCurlMagnitude(float *gridVecFieldD,
     uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set magnitude and curl vector to zero
-    cutilSafeCall(cudaMemset(gridCurlMagD, 0, nVoxels*sizeof(float)));
-    cutilSafeCall(cudaMemset(gridCurlD, 0, nVoxels*sizeof(float)*3));
+    checkCudaErrors(cudaMemset(gridCurlMagD, 0, nVoxels*sizeof(float)));
+    checkCudaErrors(cudaMemset(gridCurlD, 0, nVoxels*sizeof(float)*3));
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
@@ -429,16 +430,16 @@ cudaError_t CudaGetGradX(float *gridVecFieldD,
     uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
-    cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
+    checkCudaErrors(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
     protein_cuda::CudaGradX_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridGrad_D, hInvHalf);
-    cutilCheckMsg("protein_cuda::CudaGradX_D"); // DEBUG
+    //cutilCheckMsg("protein_cuda::CudaGradX_D"); // DEBUG
 
     // Copy result to host
-    cutilSafeCall(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
+    checkCudaErrors(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
             cudaMemcpyDeviceToHost));
 
     return cudaGetLastError();
@@ -458,16 +459,16 @@ cudaError_t CudaGetGradY(float *gridVecFieldD,
     uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
-    cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
+    checkCudaErrors(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
     protein_cuda::CudaGradY_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridGrad_D, hInvHalf);
-    cutilCheckMsg("protein_cuda::CudaGradY_D"); // DEBUG
+    //cutilCheckMsg("protein_cuda::CudaGradY_D"); // DEBUG
 
     // Copy result to host
-    cutilSafeCall(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
+    checkCudaErrors(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
             cudaMemcpyDeviceToHost));
 
     return cudaGetLastError();
@@ -487,16 +488,16 @@ cudaError_t CudaGetGradZ(float *gridVecFieldD,
     uint nBlocks  = (uint)ceil((float)nVoxels/(float)nThreadsPerBlock);
 
     // Set gradient to zero
-    cutilSafeCall(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
+    checkCudaErrors(cudaMemset(gridGrad_D, 0, nVoxels*sizeof(float)*3));
 
     float hInvHalf = 1.0f/(gridSpacing*2.0f);
 
     protein_cuda::CudaGradZ_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridGrad_D, hInvHalf);
-    cutilCheckMsg("protein_cuda::CudaGradZ_D"); // DEBUG
+    //cutilCheckMsg("protein_cuda::CudaGradZ_D"); // DEBUG
 
     // Copy result to host
-    cutilSafeCall(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
+    checkCudaErrors(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
             cudaMemcpyDeviceToHost));
 
     return cudaGetLastError();

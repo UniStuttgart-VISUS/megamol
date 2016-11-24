@@ -6,6 +6,8 @@
 //
 
 #include "cuda_helper.h"
+#include "helper_cuda.h"
+#include "helper_functions.h"
 
 
 // Shut up eclipse syntax error highlighting
@@ -1133,23 +1135,23 @@ extern "C" {
 /* SetGridParams */
 cudaError_t SetGridParams(uint3 dim_h, float3 org_h,  float3 maxCoord_h, 
         float3 spacing_h) {
-    cutilSafeCall(cudaMemcpyToSymbol(dim, &dim_h, sizeof(uint3)));
-    cutilSafeCall(cudaMemcpyToSymbol(org, &org_h, sizeof(float3)));
-    cutilSafeCall(cudaMemcpyToSymbol(maxCoord, &maxCoord_h, sizeof(float3)));
-    cutilSafeCall(cudaMemcpyToSymbol(spacing, &spacing_h, sizeof(float3)));
+    checkCudaErrors(cudaMemcpyToSymbol(dim, &dim_h, sizeof(uint3)));
+    checkCudaErrors(cudaMemcpyToSymbol(org, &org_h, sizeof(float3)));
+    checkCudaErrors(cudaMemcpyToSymbol(maxCoord, &maxCoord_h, sizeof(float3)));
+    checkCudaErrors(cudaMemcpyToSymbol(spacing, &spacing_h, sizeof(float3)));
     return cudaGetLastError();
 }
 
 /* SetStreamlineStepsize */
 cudaError_t  SetStreamlineParams(float stepsize_h, uint maxSteps) {
-    cutilSafeCall(cudaMemcpyToSymbol(streamlinesStep, &stepsize_h, sizeof(float)));
-    cutilSafeCall(cudaMemcpyToSymbol(streamlinesStepCnt, &maxSteps, sizeof(uint)));
+    checkCudaErrors(cudaMemcpyToSymbol(streamlinesStep, &stepsize_h, sizeof(float)));
+    checkCudaErrors(cudaMemcpyToSymbol(streamlinesStepCnt, &maxSteps, sizeof(uint)));
     return cudaGetLastError();
 }
 
 /* SetNumberOfPos */
 cudaError_t SetNumberOfPos(uint nPos_h) {
-    cutilSafeCall(cudaMemcpyToSymbol(nPos, &nPos_h, sizeof(uint)));
+    checkCudaErrors(cudaMemcpyToSymbol(nPos, &nPos_h, sizeof(uint)));
     return cudaGetLastError();
 }
 
@@ -1168,16 +1170,16 @@ cudaError_t UpdatePositionRK4(
     float3 *vecField_D, *pos_D;
 
     // Allocate device memory
-    cutilSafeCall(cudaMalloc((void **)&vecField_D, sizeof(float)*dim.x*dim.y*dim.z*3));
-    cutilSafeCall(cudaMalloc((void **)&pos_D, sizeof(float)*nPos*3));
+    checkCudaErrors(cudaMalloc((void **)&vecField_D, sizeof(float)*dim.x*dim.y*dim.z*3));
+    checkCudaErrors(cudaMalloc((void **)&pos_D, sizeof(float)*nPos*3));
 
     // Copy vec field data to device memory
-    cutilSafeCall(cudaMemcpy(vecField_D, vecField,
+    checkCudaErrors(cudaMemcpy(vecField_D, vecField,
             sizeof(float)*dim.x*dim.y*dim.z*3,
             cudaMemcpyHostToDevice));
             
     // Copy positions to device memory
-    cutilSafeCall(cudaMemcpy(pos_D, pos,
+    checkCudaErrors(cudaMemcpy(pos_D, pos,
             sizeof(float)*nPos*3,
             cudaMemcpyHostToDevice));
             
@@ -1203,13 +1205,13 @@ cudaError_t UpdatePositionRK4(
     }
              
     // Copy updated positions back to host memory
-    cutilSafeCall(cudaMemcpy(pos, pos_D,
+    checkCudaErrors(cudaMemcpy(pos, pos_D,
             sizeof(float)*nPos*3,
             cudaMemcpyDeviceToHost));
             
     // Cleanup device memory
-    cutilSafeCall(cudaFree(vecField_D));
-    cutilSafeCall(cudaFree(pos_D));
+    checkCudaErrors(cudaFree(vecField_D));
+    checkCudaErrors(cudaFree(pos_D));
 
     return cudaGetLastError();
 }
@@ -1230,11 +1232,11 @@ cudaError_t SearchNullPoints(
     float3 *vecField_D, *cellCoords_D;
 
     // Allocate device memory
-    cutilSafeCall(cudaMalloc((void **)&vecField_D, sizeof(float)*dim.x*dim.y*dim.z*3));
-    cutilSafeCall(cudaMalloc((void **)&cellCoords_D, sizeof(float)*n*3));
+    checkCudaErrors(cudaMalloc((void **)&vecField_D, sizeof(float)*dim.x*dim.y*dim.z*3));
+    checkCudaErrors(cudaMalloc((void **)&cellCoords_D, sizeof(float)*n*3));
 
     // Copy vec field data to device memory
-    cutilSafeCall(cudaMemcpy(vecField_D, vecField,
+    checkCudaErrors(cudaMemcpy(vecField_D, vecField,
             sizeof(float)*dim.x*dim.y*dim.z*3,
             cudaMemcpyHostToDevice));
 
@@ -1244,13 +1246,13 @@ cudaError_t SearchNullPoints(
              cellCoords_D);
              
     // Copy cell coords back to host memory
-    cutilSafeCall(cudaMemcpy(cellCoords, cellCoords_D,
+    checkCudaErrors(cudaMemcpy(cellCoords, cellCoords_D,
             sizeof(float)*n*3,
             cudaMemcpyDeviceToHost));
             
     // Cleanup device memory
-    cutilSafeCall(cudaFree(vecField_D));
-    cutilSafeCall(cudaFree(cellCoords_D));
+    checkCudaErrors(cudaFree(vecField_D));
+    checkCudaErrors(cudaFree(cellCoords_D));
 
     return cudaGetLastError();
 }
