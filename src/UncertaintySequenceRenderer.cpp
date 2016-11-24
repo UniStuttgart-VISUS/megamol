@@ -8,7 +8,17 @@
 * This module is based on the source code of "SequenceRenderer" in megamol protein plugin (svn revision 1500).
 *
 */
-
+//////////////////////////////////////////////////////////////////////////////////////////////
+//
+// TODO:
+//
+// - eigene Texturen: Helix, ...
+// - Loop (Textur, Geometrie) 2-5 Aminosäuren
+// - Morphing: - teilweise Vorberechung?
+//             - Animation!
+// -  
+//
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "UncertaintySequenceRenderer.h"
@@ -35,7 +45,7 @@
 
 #include <iostream> // DEBUG
 
-#define PI 3.14159265
+#define PI 3.14159265f
 
 using namespace megamol;
 using namespace megamol::core;
@@ -165,10 +175,6 @@ bool UncertaintySequenceRenderer::create() {
     this->LoadTexture("secStruct-helix-left.png");  // markerTextures[4]
     this->LoadTexture("secStruct-helix2.png");      // markerTextures[5]
     this->LoadTexture("secStruct-helix-right.png"); // markerTextures[6]
-
-////////////////////////////////////////////////
-// TODO: additional textures for: TURN (?), some new, higher resolution textures ? ....
-////////////////////////////////////////////////  
     
     return true;
 }
@@ -763,95 +769,102 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
  */
 void UncertaintySequenceRenderer::renderUncertaintyMorphing(float yPos) {
 
-    unsigned int samples;
-    float height;
-    float x;
-    float y;
-    float flip;
-    float dS;
-    float offset;
+    UncertaintyDataCall::secStructure sMax, sMid, sMin;        // structures
+    float uMax, uMid, uMin;                                    // uncertainty
+    float x, y, xUnc, yUnc;
+    vislib::math::Vector<float, 4> cMax, cMin, cMid;
+    UncertaintyDataCall::secStructure left, right, middle;
+    unsigned int vertexCount;
+    float temp;
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // GL_FILL - GL_FILL
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
 
     for (unsigned int i = 0; i < this->aminoAcidCount; i++) { // loop over all amino-acids
         if (!this->missingAminoAcids[i]) { // skip missing
 
-            UncertaintyDataCall::secStructure sMax = this->sortedUncertainty[i][0];
-            //this->secUncertainty[i][uMax];
+            // default
+            x = this->vertices[2 * i];
+            y = this->vertices[2 * i + 1] + yPos + 0.5f;
 
-            switch (sMax) {
-            case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
-            case (UncertaintyDataCall::secStructure::G_310_HELIX) :
-            case (UncertaintyDataCall::secStructure::I_PI_HELIX) :
-                height = 0.25f;
-                samples = 25;
-                break;
-            case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :
-            case (UncertaintyDataCall::secStructure::B_BRIDGE) :
-                height = 0.5f;
-                samples = 50;
-                break;
-            case (UncertaintyDataCall::secStructure::T_H_TURN) :
-                samples = 5;
-                height = 0.25f;
-                break;
+            sMax = this->sortedUncertainty[i][0];
+            sMid = this->sortedUncertainty[i][1];
+            sMin = this->sortedUncertainty[i][2];
+            uMax = this->secUncertainty[i][sMax];
+            uMid = this->secUncertainty[i][sMid];
+            uMin = this->secUncertainty[i][sMin];
+            cMax = this->secStructureColor(sMax);
+            cMid = this->secStructureColor(sMid);
+            cMin = this->secStructureColor(sMin);
 
-            case (UncertaintyDataCall::secStructure::S_BEND) :
-                height = 0.25f;
-                samples = 5;
-                break;
-            case (UncertaintyDataCall::secStructure::C_COIL) :
-                height = 0.25f;
-                samples = 5;
-                break;
-            case (UncertaintyDataCall::secStructure::NOTDEFINED) :
-                height = 0.1f;
-                samples = 5;
-                break;
-            default:
-                height = 0.0f;
-                samples = 5;
-                break;
+            // assigning sides ...
+            /*
+            left = sMax;
+            middle = sMid;
+            right = sMin;
+            if (i > 0) {
+                left = this->sortedUncertainty[i-1][0];
             }
+            if (i < this->aminoAcidCount - 1) {
+                right = this->sortedUncertainty[i+1][0];
+            }
+            if (sMax == left) {
+                if (sMin == right)
+                    middle = sMid;
+                else if (sMid == right)
+                    middle = left;
+            }
+            else if (sMid == left) {
+                if (sMax == right)
+                    middle = sMin;
+                else if (sMin = right)
+                    middle = sMax;
+            }
+            else if (sMin == left) {
+                if (sMax == right)
+                    middle = sMid;
+                else if (sMid = right)
+                    middle = sMax;
+            }
+            */
+
+            // check if end of strand is an arrow (the arrows vertices ae stored in BRIDGE )
+            if ((sMax == UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                (this->sortedUncertainty[i + 1][0] != UncertaintyDataCall::secStructure::E_EXT_STRAND)) {
+                sMax = UncertaintyDataCall::secStructure::B_BRIDGE;
+            }
+            if ((sMid == UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                (this->sortedUncertainty[i + 1][0] != UncertaintyDataCall::secStructure::E_EXT_STRAND)) {
+                sMid = UncertaintyDataCall::secStructure::B_BRIDGE;
+            }
+            if ((sMin == UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
+                (this->sortedUncertainty[i + 1][0] != UncertaintyDataCall::secStructure::E_EXT_STRAND)) {
+                sMin = UncertaintyDataCall::secStructure::B_BRIDGE;
+            }
+
+            vertexCount = this->secStructVertices[sMax].Count();
 
             glBegin(GL_TRIANGLE_STRIP);
+            for (unsigned int j = 0; j < vertexCount; j++) {
 
-            glColor3fv(this->secStructureColor(sMax).PeekComponents());
+                temp = (static_cast<float>(j) / static_cast<float>(vertexCount));
 
-            x = this->vertices[2 * i];
-            y = (this->vertices[2 * i + 1] + yPos) + 0.5f;
+                if (0 <= temp && temp < uMax)
+                    glColor3fv(cMax.PeekComponents());
+                else if (uMax <= temp && temp < (uMax + uMid))
+                    glColor3fv(cMid.PeekComponents());
+                else
+                    glColor3fv(cMin.PeekComponents());
 
-            glVertex2f(x, -(y -(height/2.0f)));
-            for (unsigned int j = 0; j < (samples+1); j++) { // loop over sample count
-           
-                flip = ((j % 2 == 0) ? (1.0f) : (-1.0f));
-                dS = static_cast<float>(j) / static_cast<float>(samples-1);
-                if (j == samples)
-                    dS = 1.0f;
+                //glColor3fv(this->secStructureColor(sMax).PeekComponents());
 
-                switch (sMax) {
-                case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
-                case (UncertaintyDataCall::secStructure::G_310_HELIX) :
-                case (UncertaintyDataCall::secStructure::I_PI_HELIX) :
-                    offset = sin(dS*2.0f*PI)*0.25f;
-                    break;
-                case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :
-                case (UncertaintyDataCall::secStructure::B_BRIDGE) :
-                    offset = ((dS > 0.5f) ? (flip*(0.75f - (height / 2.0f))*2.0f*(0.75f - dS)) : (0.0f));
-                    break;
-                default: offset = 0.0f;
-                }
+                xUnc = this->secStructVertices[sMax][j].X();
+                yUnc = uMax*this->secStructVertices[sMax][j].Y() + uMid*this->secStructVertices[sMid][j].Y() + uMin*this->secStructVertices[sMin][j].Y();
 
-                //glColor3f(1.0f - delta, 1.0f - delta, 1.0f - delta);
-                glVertex2f(x + dS, -(y + flip*(height/2.0f) + offset));
+                glVertex2f(x + xUnc, -(y + yUnc));
             }
-
             glEnd();
         }
     }
-    
-
-
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); //reset
 }
 
@@ -992,7 +1005,7 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
                 this->markerTextures[1]->Bind();
                 break;
             case (UncertaintyDataCall::secStructure::B_BRIDGE) :   
-                this->markerTextures[1]->Bind(); 
+                this->markerTextures[3]->Bind(); 
                 break;
             case (UncertaintyDataCall::secStructure::S_BEND) :   
                 this->markerTextures[1]->Bind(); 
@@ -1019,54 +1032,6 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
         glTexCoord2f(1.0f -eps, eps);
         glVertex2f(  x + 1.0f , -y );
     glEnd();
-}
-
-
-/*
-* UncertaintySequenceRenderer::secStructureColor
-*/
-vislib::math::Vector<float, 4> UncertaintySequenceRenderer::secStructureColor(UncertaintyDataCall::secStructure s) {
-
-    vislib::math::Vector<float, 4> color;
-    color.Set(1.0f, 1.0f, 1.0f, 1.0f);
-    
-    switch (s) {
-        case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(1.0f, 0.0f, 0.0f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(1.0f, 0.33f, 0.0f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(1.0f, 0.66f, 0.0f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.0f, 0.0f, 1.0f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(1.0f, 1.0f, 0.0f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.66f, 1.0f, 0.0f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.33f, 1.0f, 0.0f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.5f, 0.5f, 0.5f, 1.0f); break;
-        case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.2f, 0.2f, 0.2f, 1.0f); break;
-        default: break; 
-    }
-    return color;
-}
-
-
-/*
-* UncertaintySequenceRenderer::secStructureDesc
-*/
-vislib::StringA UncertaintySequenceRenderer::secStructureDesc(UncertaintyDataCall::secStructure s) {
-
-    vislib::StringA tmpStr;
-
-    switch (s) {
-        case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : tmpStr = "H - Alpha Helix"; break;
-        case (UncertaintyDataCall::secStructure::G_310_HELIX) :   tmpStr = "G - 3-10 Helix"; break;
-        case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    tmpStr = "I - Pi Helix"; break;
-        case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  tmpStr = "E - Strand"; break;
-        case (UncertaintyDataCall::secStructure::T_H_TURN) :      tmpStr = "T - Turn"; break;
-        case (UncertaintyDataCall::secStructure::B_BRIDGE) :      tmpStr = "B - Bridge"; break;
-        case (UncertaintyDataCall::secStructure::S_BEND) :        tmpStr = "S - Bend"; break;
-        case (UncertaintyDataCall::secStructure::C_COIL) :        tmpStr = "C - Random Coil"; break;
-        case (UncertaintyDataCall::secStructure::NOTDEFINED) :    tmpStr = "Not defined"; break;
-        default:                                                  tmpStr = "No description"; break;
-    }
-
-    return tmpStr;
 }
 
 
@@ -1132,6 +1097,11 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 
     // initialization
     this->aminoAcidCount = udc->GetAminoAcidCount();
+
+    for (unsigned int i = 0; i < this->secStructVertices.Count(); i++) {
+        this->secStructVertices[i].Clear();
+    }
+    this->secStructVertices.Clear();
 
     this->secUncertainty;
     this->secUncertainty.AssertCapacity(this->aminoAcidCount);
@@ -1302,6 +1272,54 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 
     }
 
+    // secondary strucutre vertices
+    // B_BRIDGE     = arrow    => end of strand, too 
+    // E_EXT_STRAND = quadrat
+    for (unsigned int i = 0; i < UncertaintyDataCall::secStructure::NOE; i++) {
+
+        UncertaintyDataCall::secStructure s = static_cast<UncertaintyDataCall::secStructure>(i);
+        vislib::math::Vector<float, 2 > pos;
+        float flip, dS, offset;
+        // default
+        unsigned int samples = 75;
+        float        height  = 0.075f;  // in range 0.0 - 1.0
+
+        this->secStructVertices.Add(vislib::Array<vislib::math::Vector<float, 2>>());
+
+        if ((s == UncertaintyDataCall::secStructure::E_EXT_STRAND) ||
+            (s == UncertaintyDataCall::secStructure::B_BRIDGE)) {
+            height = 0.6f;
+        }
+
+        pos.SetX(0.0f);
+        pos.SetY(-height/2.0f);
+        this->secStructVertices.Last().Add(pos);
+
+        for (unsigned int j = 0; j < (samples + 1); j++) { // loop over sample count
+            flip = ((j % 2 == 0) ? (1.0f) : (-1.0f));
+            offset = flip*(height / 2.0f);
+            dS = static_cast<float>(j) / static_cast<float>(samples - 1);
+
+            if (j == samples) // for last vertex
+                dS = 1.0f;
+
+            switch (s) {
+            case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
+            case (UncertaintyDataCall::secStructure::G_310_HELIX) :
+            case (UncertaintyDataCall::secStructure::I_PI_HELIX) :
+                 offset = flip*(height / 2.0f) + sin(dS*2.0f*PI)*0.25f;
+                break;
+            case (UncertaintyDataCall::secStructure::B_BRIDGE) :
+                offset = ((dS > 1.0f/7.0f) ? (flip*(0.5f-0.03525f)*(7.0f-dS*7.0f)/6.0f + flip*(0.03525f)) : (flip*(height/2.0f))); // 0.05f height/2.0 of coil
+                break;
+            default: break;
+            }
+            pos.SetX(dS);
+            pos.SetY(offset);
+            this->secStructVertices.Last().Add(pos);
+        }
+    }
+
     if (bs) {
         // loop over all binding sites and add binding site descriptions
         for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
@@ -1321,44 +1339,6 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
     this->resRows = static_cast<unsigned int>( ceilf(static_cast<float>(this->aminoAcidCount) / static_cast<float>(this->resCols)));
     
     return true;
-}
-
-
-/*
- * Check if the residue is an amino acid.
- */
-char UncertaintySequenceRenderer::GetAminoAcidOneLetterCode( vislib::StringA resName ) {
-    if( resName.Equals( "ALA" ) ) return 'A';
-    else if( resName.Equals( "ARG" ) ) return 'R';
-    else if( resName.Equals( "ASN" ) ) return 'N';
-    else if( resName.Equals( "ASP" ) ) return 'D';
-    else if( resName.Equals( "CYS" ) ) return 'C';
-    else if( resName.Equals( "GLN" ) ) return 'Q';
-    else if( resName.Equals( "GLU" ) ) return 'E';
-    else if( resName.Equals( "GLY" ) ) return 'G';
-    else if( resName.Equals( "HIS" ) ) return 'H';
-    else if( resName.Equals( "ILE" ) ) return 'I';
-    else if( resName.Equals( "LEU" ) ) return 'L';
-    else if( resName.Equals( "LYS" ) ) return 'K';
-    else if( resName.Equals( "MET" ) ) return 'M';
-    else if( resName.Equals( "PHE" ) ) return 'F';
-    else if( resName.Equals( "PRO" ) ) return 'P';
-    else if( resName.Equals( "SER" ) ) return 'S';
-    else if( resName.Equals( "THR" ) ) return 'T';
-    else if( resName.Equals( "TRP" ) ) return 'W';
-    else if( resName.Equals( "TYR" ) ) return 'Y';
-    else if( resName.Equals( "VAL" ) ) return 'V';
-    else if( resName.Equals( "ASH" ) ) return 'D';
-    else if( resName.Equals( "CYX" ) ) return 'C';
-    else if( resName.Equals( "CYM" ) ) return 'C';
-    else if( resName.Equals( "GLH" ) ) return 'E';
-    else if( resName.Equals( "HID" ) ) return 'H';
-    else if( resName.Equals( "HIE" ) ) return 'H';
-    else if( resName.Equals( "HIP" ) ) return 'H';
-    else if( resName.Equals( "MSE" ) ) return 'M';
-    else if( resName.Equals( "LYN" ) ) return 'K';
-    else if( resName.Equals( "TYM" ) ) return 'Y';
-    else return '?';
 }
 
 
@@ -1407,5 +1387,87 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
 }
 
 
+/*
+* Check if the residue is an amino acid.
+*/
+char UncertaintySequenceRenderer::GetAminoAcidOneLetterCode(vislib::StringA resName) {
+    if (resName.Equals("ALA")) return 'A';
+    else if (resName.Equals("ARG")) return 'R';
+    else if (resName.Equals("ASN")) return 'N';
+    else if (resName.Equals("ASP")) return 'D';
+    else if (resName.Equals("CYS")) return 'C';
+    else if (resName.Equals("GLN")) return 'Q';
+    else if (resName.Equals("GLU")) return 'E';
+    else if (resName.Equals("GLY")) return 'G';
+    else if (resName.Equals("HIS")) return 'H';
+    else if (resName.Equals("ILE")) return 'I';
+    else if (resName.Equals("LEU")) return 'L';
+    else if (resName.Equals("LYS")) return 'K';
+    else if (resName.Equals("MET")) return 'M';
+    else if (resName.Equals("PHE")) return 'F';
+    else if (resName.Equals("PRO")) return 'P';
+    else if (resName.Equals("SER")) return 'S';
+    else if (resName.Equals("THR")) return 'T';
+    else if (resName.Equals("TRP")) return 'W';
+    else if (resName.Equals("TYR")) return 'Y';
+    else if (resName.Equals("VAL")) return 'V';
+    else if (resName.Equals("ASH")) return 'D';
+    else if (resName.Equals("CYX")) return 'C';
+    else if (resName.Equals("CYM")) return 'C';
+    else if (resName.Equals("GLH")) return 'E';
+    else if (resName.Equals("HID")) return 'H';
+    else if (resName.Equals("HIE")) return 'H';
+    else if (resName.Equals("HIP")) return 'H';
+    else if (resName.Equals("MSE")) return 'M';
+    else if (resName.Equals("LYN")) return 'K';
+    else if (resName.Equals("TYM")) return 'Y';
+    else return '?';
+}
 
-        
+
+/*
+* UncertaintySequenceRenderer::secStructureColor
+*/
+vislib::math::Vector<float, 4> UncertaintySequenceRenderer::secStructureColor(UncertaintyDataCall::secStructure s) {
+
+    vislib::math::Vector<float, 4> color;
+    color.Set(1.0f, 1.0f, 1.0f, 1.0f);
+
+    switch (s) {
+    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(1.0f, 0.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) : color.Set(1.0f, 0.33f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) : color.Set(1.0f, 0.66f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) : color.Set(0.0f, 0.0f, 1.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::T_H_TURN) : color.Set(1.0f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) : color.Set(0.66f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::S_BEND) : color.Set(0.33f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::C_COIL) : color.Set(0.2f, 0.2f, 0.2f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) : color.Set(0.2f, 0.2f, 0.2f, 1.0f); break;
+    default: break;
+    }
+    return color;
+}
+
+
+/*
+* UncertaintySequenceRenderer::secStructureDesc
+*/
+vislib::StringA UncertaintySequenceRenderer::secStructureDesc(UncertaintyDataCall::secStructure s) {
+
+    vislib::StringA tmpStr;
+
+    switch (s) {
+    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : tmpStr = "H - Alpha Helix"; break;
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) : tmpStr = "G - 3-10 Helix"; break;
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) : tmpStr = "I - Pi Helix"; break;
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) : tmpStr = "E - Strand"; break;
+    case (UncertaintyDataCall::secStructure::T_H_TURN) : tmpStr = "T - Turn"; break;
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) : tmpStr = "B - Bridge"; break;
+    case (UncertaintyDataCall::secStructure::S_BEND) : tmpStr = "S - Bend"; break;
+    case (UncertaintyDataCall::secStructure::C_COIL) : tmpStr = "C - Random Coil"; break;
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) : tmpStr = "Not defined"; break;
+    default:                                                  tmpStr = "No description"; break;
+    }
+
+    return tmpStr;
+}

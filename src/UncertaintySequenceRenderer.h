@@ -301,6 +301,10 @@ namespace megamol {
         
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;
+
+        // the vertex buffer array secondary structure
+        vislib::Array<vislib::Array<vislib::math::Vector<float, 2> > >secStructVertices;
+
         // the vertex buffer array for the chain tiles
         vislib::Array<float> chainVertices;
         // the color buffer array for the chain tiles
