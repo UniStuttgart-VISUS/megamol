@@ -774,7 +774,6 @@ void UncertaintySequenceRenderer::renderUncertaintyMorphing(float yPos) {
     float x, y, xUnc, yUnc;
     vislib::math::Vector<float, 4> cMax, cMin, cMid;
     UncertaintyDataCall::secStructure left, right, middle;
-    unsigned int vertexCount;
     float temp;
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
@@ -797,35 +796,44 @@ void UncertaintySequenceRenderer::renderUncertaintyMorphing(float yPos) {
             cMin = this->secStructureColor(sMin);
 
             // assigning sides ...
-            /*
             left = sMax;
             middle = sMid;
             right = sMin;
-            if (i > 0) {
+            
+            if (i > 0)
                 left = this->sortedUncertainty[i-1][0];
-            }
-            if (i < this->aminoAcidCount - 1) {
+            else
+                left = sMin
+            
+            if (i < this->aminoAcidCount - 1)
                 right = this->sortedUncertainty[i+1][0];
-            }
+            else
+                right = sMin
+                
             if (sMax == left) {
-                if (sMin == right)
+                if (sMid == right)
+                    middle = sMin;
+                else {
                     middle = sMid;
-                else if (sMid == right)
-                    middle = left;
+                    right = sMin;
+                }
             }
             else if (sMid == left) {
                 if (sMax == right)
                     middle = sMin;
-                else if (sMin = right)
+                else {
                     middle = sMax;
+                    right = sMin;
+                }
             }
             else if (sMin == left) {
                 if (sMax == right)
                     middle = sMid;
-                else if (sMid = right)
+                else {
                     middle = sMax;
+                    right = sMid;
             }
-            */
+            
 
             // check if end of strand is an arrow (the arrows vertices ae stored in BRIDGE )
             if ((sMax == UncertaintyDataCall::secStructure::E_EXT_STRAND) &&
@@ -841,12 +849,10 @@ void UncertaintySequenceRenderer::renderUncertaintyMorphing(float yPos) {
                 sMin = UncertaintyDataCall::secStructure::B_BRIDGE;
             }
 
-            vertexCount = this->secStructVertices[sMax].Count();
-
             glBegin(GL_TRIANGLE_STRIP);
-            for (unsigned int j = 0; j < vertexCount; j++) {
+            for (unsigned int j = 0; j < this->secStructVertices[sMax].Count(); j++) {
 
-                temp = (static_cast<float>(j) / static_cast<float>(vertexCount));
+                temp = (static_cast<float>(j) / static_cast<float>(this->secStructVertices[sMax].Count()));
 
                 if (0 <= temp && temp < uMax)
                     glColor3fv(cMax.PeekComponents());
