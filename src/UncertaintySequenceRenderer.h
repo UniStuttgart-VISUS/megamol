@@ -257,6 +257,9 @@ namespace megamol {
         // parameter to show/hide secondary structure uncertainty visualization
         megamol::core::param::ParamSlot toggleUncertaintyParam;
                 
+        // parameter to turn animation of morphing visualization on/off
+        megamol::core::param::ParamSlot animateMorphing;
+
         // parameter to choose secondary structure uncertainty visualization
         megamol::core::param::ParamSlot uncertaintyVisualizationParam;
         
@@ -349,6 +352,9 @@ namespace megamol {
         
         // PDB ID 
         vislib::StringA pdbID;
+
+        // timer for animation of morphing visualization
+        clock_t animTimer;
     };
 
 	} /* end namespace protein_uncertainty */
