@@ -75,7 +75,7 @@ void param::Vector4fParam::Definition(vislib::RawStorage& outDef) const {
     *outDef.AsAt<float>(6) = this->minVal[0];
     *outDef.AsAt<float>(6 + sizeof(float)) = this->minVal[1];
     *outDef.AsAt<float>(6 + 2 * sizeof(float)) = this->minVal[2];
-    *outDef.AsAt<float>(6 + 3 * sizeof(float)) = this->maxVal[3];
+    *outDef.AsAt<float>(6 + 3 * sizeof(float)) = this->minVal[3];
     *outDef.AsAt<float>(6 + 4 * sizeof(float)) = this->maxVal[0];
     *outDef.AsAt<float>(6 + 5 * sizeof(float)) = this->maxVal[1];
     *outDef.AsAt<float>(6 + 6 * sizeof(float)) = this->maxVal[2];
