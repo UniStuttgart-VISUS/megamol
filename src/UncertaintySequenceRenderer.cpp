@@ -8,17 +8,22 @@
 * This module is based on the source code of "SequenceRenderer" in megamol protein plugin (svn revision 1500).
 *
 */
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 //
 // TODO:
 //
-// - eigene Texturen: Helix, ...
-// - Loop (Textur, Geometrie) 2-5 Aminosäuren
-// - Morphing: - teilweise Vorberechung?
-//             - Animation!
-// -  
-//
+// - eigene Texturen: Helix, ... ODER komplett Goemetrie?
+// - Turn, Bend: Textur, Geometrie (2-5 Aminosäuren)
+// - Morphing Vorberechnung in create() ?
+// - ANDERE Farben für Struktur-Typen
+// - Anordnung horizontal in Zeilen: "max" unten "min" oben 
+// - nur Strang-Ausschnitte zeigen, die sich unterscheiden
+// - Animation: gleiches Intervall zwischen Strukturtypen, aber prozentuale Skalierung der Geometrie
+// - 
+// 
 //////////////////////////////////////////////////////////////////////////////////////////////
+
 
 #include "stdafx.h"
 #include "UncertaintySequenceRenderer.h"
@@ -46,7 +51,9 @@
 
 #include <iostream> // DEBUG
 
-#define PI 3.14159265
+
+#define PI 3.1415926535
+
 
 using namespace megamol;
 using namespace megamol::core;
@@ -160,6 +167,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->secStructRows = 5;
     this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);   
 
+    // init animation timer
     this->animTimer = clock();
 }
 
@@ -451,17 +459,22 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         // uncertainty visualization
         if(this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
             switch (this->currentVisualization) {
-                case (STACK) :    this->renderUncertaintyStack(yPos); break;
+            case (STACK) : 
+              
+                this->renderUncertaintyStack(yPos); 
+                break;
 
-                case (MORPHING) : 
-                    if (this->toggleDiffParam.IsDirty()) {
-                        this->toggleDiffParam.ResetDirty();
-                        if (this->animateMorphing.Param<param::BoolParam>()->Value())
-                            this->animTimer = std::clock();
-                    }
-                    this->renderUncertaintyMorphing(yPos); 
-                    break;
-                default: break;
+            case (MORPHING) :
+            
+                if (this->toggleDiffParam.IsDirty()) {
+                    this->toggleDiffParam.ResetDirty();
+                    if (this->animateMorphing.Param<param::BoolParam>()->Value())
+                        this->animTimer = std::clock();
+                }
+                this->renderUncertaintyMorphing(yPos); 
+                break;
+                
+            default: break;
             }
             yPos += 1.0f;
         }
@@ -503,7 +516,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             glEnable(GL_BLEND);
             for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
                 s = static_cast<UncertaintyDataCall::secStructure>(i);
-                this->drawSecStructTextureTiles(s, s, UncertaintyDataCall::secStructure::NOTDEFINED, false, (static_cast<float>(this->resCols) + 1.0f + xPos), (static_cast<float>(i)+1.5f), bgColor);
+                this->drawSecStructTextureTiles(s, s, UncertaintyDataCall::secStructure::NOTDEFINED, false, 
+                                                (static_cast<float>(this->resCols) + 1.0f + xPos), (static_cast<float>(i)+1.5f), bgColor);
             }
             glDisable(GL_BLEND);
             glDisable(GL_TEXTURE_2D);
@@ -542,13 +556,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     
                 // draw the one-letter amino acid code
                 tmpStr.Format("%c", this->aminoAcidName[i]);
-                theFont.DrawString(static_cast<float>(i%this->resCols), -(resRow*this->rowHeight + (static_cast<float>(this->secStructRows)+1.0f)), 1.0f, 1.0f,
-                                   1.0f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+                theFont.DrawString(static_cast<float>(i%this->resCols), -(resRow*this->rowHeight + (static_cast<float>(this->secStructRows)+1.0f)), 
+                                   1.0f, 1.0f, 1.0f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
 
                 // draw the chain name and amino acid index                  
                 tmpStr.Format("%c %i", this->chainID[i], this->aminoAcidIndex[i]);
-                theFont.DrawString(static_cast<float>(i%this->resCols), -(resRow*this->rowHeight + (static_cast<float>(this->secStructRows)+1.5f)), 1.0f, 0.5f,
-                                   0.35f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+                theFont.DrawString(static_cast<float>(i%this->resCols), -(resRow*this->rowHeight + (static_cast<float>(this->secStructRows)+1.5f)), 
+                                   1.0f, 0.5f, 0.35f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
             }
         }
         
@@ -651,7 +665,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if( !this->bindingSiteNames.IsEmpty() ) {
                         tmpStr = "Binding Sites";
                         wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i + 1)*this->rowHeight), wordlength, (this->rowHeight - (2.0f + static_cast<float>(this->secStructRows))),
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i + 1)*this->rowHeight), wordlength, 
+                                           (this->rowHeight - (2.0f + static_cast<float>(this->secStructRows))),
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                     }
                     
@@ -734,7 +749,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleDiffParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "Difference:";
                         tmpStr2.Format("%.0f %%", (1.0f - (this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][0]] 
-                                                - this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][2]]))*100.0f);
+                                                   - this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][2]]))*100.0f);
                         this->renderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         start += perCentRow;
                         end += perCentRow;
@@ -762,9 +777,12 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                     if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "Uncertainty:";
-                        tmpStr2.Format("%s: %.0f %% | %s: %.0f %% | %s: %.0f %%", this->secStructureDesc(this->sortedUncertainty[mousePosResIdx][0]), this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][0]]*100.0f, 
-                                        this->secStructureDesc(this->sortedUncertainty[mousePosResIdx][1]), this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][1]]*100.0f,
-                                        this->secStructureDesc(this->sortedUncertainty[mousePosResIdx][2]), this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][2]]*100.0f);
+                        tmpStr2.Format("%s: %.0f %% | %s: %.0f %% | %s: %.0f %%", this->secStructureDesc(this->sortedUncertainty[mousePosResIdx][0]), 
+                                       this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][0]]*100.0f, 
+                                       this->secStructureDesc(this->sortedUncertainty[mousePosResIdx][1]), 
+                                       this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][1]]*100.0f,
+                                       this->secStructureDesc(this->sortedUncertainty[mousePosResIdx][2]), 
+                                       this->secUncertainty[mousePosResIdx][this->sortedUncertainty[mousePosResIdx][2]]*100.0f);
                         this->renderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                     }
                 }
@@ -923,7 +941,7 @@ void UncertaintySequenceRenderer::renderUncertaintyMorphing(float yPos) {
                 
                 glEnd();
                 
-                // draw structure type geometry
+
                 uLeft = this->secUncertainty[i][sLeft];
                 uMiddle = this->secUncertainty[i][sMiddle];
                 uRight = this->secUncertainty[i][sRight];
@@ -939,12 +957,13 @@ void UncertaintySequenceRenderer::renderUncertaintyMorphing(float yPos) {
                     sRight = UncertaintyDataCall::secStructure::B_BRIDGE;
                 }
 
+                // draw structure type geometry
                 glBegin(GL_TRIANGLE_STRIP);
                 glColor3f(0.0f, 0.0f, 0.0f);
                 if (this->animateMorphing.Param<param::BoolParam>()->Value()) {
                     // animation
 
-                    deltaXf = 2.0f; // animation speed: greater value means slower (= time interval)
+                    deltaXf = 1.0f; // animation speed: greater value means slower (= time interval)
 
                     timer = static_cast<float>((clock() - this->animTimer) / (deltaXf*CLOCKS_PER_SEC));
                     if (timer > deltaXf) {
@@ -958,74 +977,71 @@ void UncertaintySequenceRenderer::renderUncertaintyMorphing(float yPos) {
                     for (unsigned int j = 0; j < this->secStructVertices[sMax].Count(); j++) {
                         xTemp = this->secStructVertices[sMax][j].X();
 
-                        // yTemp = (1.0f - (timer -startTime) / endTime)*this->secStructVertices[sLeft][j].Y()+((timer - startTime) / (endTime))*this->secStructVertices[sMiddle][j].Y();
-                        // deltaTime = endTime - startTime
-                        if (uLeft > 0.0f) {
-                            if (uMiddle > 0.0f) {
-                                if (uRight > 0.0f) {
-                                    if (timer < uLeft + uMiddle) {
-                                        startTime = 0.0f;
-                                        deltaTime = uLeft + uMiddle;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sLeft][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
-                                    }
-                                    else if (timer < uLeft + uMiddle + uRight) {
-                                        startTime = uLeft + uMiddle;
-                                        deltaTime = uRight;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sRight][j].Y();
-                                    }
-                                    else if (timer < uLeft + uMiddle + uRight + uRight) {
-                                        startTime = uLeft + uMiddle + uRight;
-                                        deltaTime = uRight;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sRight][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
-                                    }
-                                    else {
-                                        startTime = uLeft + uMiddle + uRight + uRight;
-                                        deltaTime = deltaXf - startTime;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sLeft][j].Y();
-                                    }
-                                }
-                                else {  // uRight == 0
-                                    if (timer < uLeft + uMiddle) {
-                                        startTime = 0.0f;
-                                        deltaTime = uLeft + uMiddle;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sLeft][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
-                                    }
-                                    else {
-                                        startTime = uLeft + uMiddle;
-                                        deltaTime = deltaXf - startTime;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sLeft][j].Y();
-                                    }
-                                }
+                        if ((uLeft > 0.0f) && (uMiddle > 0.0f) && (uRight > 0.0f)) {
+                            if (timer < uLeft + uMiddle) {
+                                startTime = 0.0f;
+                                deltaTime = uLeft + uMiddle;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sLeft][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
                             }
-                            else { // uMiddle == 0
-                                if (uRight > 0.0f) {
-                                    if (timer < uLeft+uRight) {
-                                        startTime = 0.0f;
-                                        deltaTime = uLeft + uRight;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sLeft][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sRight][j].Y();
-                                    }
-                                    else{
-                                        startTime = uLeft + uRight;
-                                        deltaTime = deltaXf - startTime;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sRight][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sLeft][j].Y();
-                                    }
-                                }
+                            else if (timer < uLeft + uMiddle + uRight) {
+                                startTime = uLeft + uMiddle;
+                                deltaTime = uRight;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sRight][j].Y();
+                            }
+                            else if (timer < uLeft + uMiddle + uRight + uRight) {
+                                startTime = uLeft + uMiddle + uRight;
+                                deltaTime = uRight;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sRight][j].Y() 
+                                        + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
+                            }
+                            else {
+                                startTime = uLeft + uMiddle + uRight + uRight;
+                                deltaTime = deltaXf - startTime;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sLeft][j].Y();
+                            }
+                        else if ((uLeft > 0.0f) && (uMiddle > 0.0f) && (uRight == 0.0f)) {
+                            if (timer < uLeft + uMiddle) {
+                                startTime = 0.0f;
+                                deltaTime = uLeft + uMiddle;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sLeft][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
+                            }
+                            else {
+                                startTime = uLeft + uMiddle;
+                                deltaTime = deltaXf - startTime;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sLeft][j].Y();
                             }
                         }
-                        else { // uLeft == 0
-                            if (uMiddle > 0.0f) {
-                                if (uRight > 0.0f) {
-                                    if (timer < uMiddle+uRight) {
-                                        startTime = 0.0f;
-                                        deltaTime = uMiddle + uRight;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sRight][j].Y();
-                                    }
-                                    else {
-                                        startTime = uMiddle + uRight;
-                                        deltaTime = deltaXf - startTime;
-                                        yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sRight][j].Y() + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
-                                    }
-                                }
+                        else if ((uLeft > 0.0f) && (uMiddle == 0.0f) && (uRight > 0.0f)) {
+                            if (timer < uLeft+uRight) {
+                                startTime = 0.0f;
+                                deltaTime = uLeft + uRight;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sLeft][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sRight][j].Y();
+                            }
+                            else{
+                                startTime = uLeft + uRight;
+                                deltaTime = deltaXf - startTime;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sRight][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sLeft][j].Y();
+                            }
+                        }
+                        else if ((uLeft == 0.0f) && (uMiddle > 0.0f) && (uRight > 0.0f)) {
+                            if (timer < uMiddle+uRight) {
+                                startTime = 0.0f;
+                                deltaTime = uMiddle + uRight;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sMiddle][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sRight][j].Y();
+                            }
+                            else {
+                                startTime = uMiddle + uRight;
+                                deltaTime = deltaXf - startTime;
+                                yTemp = (1.0f - (timer - startTime) / deltaTime)*this->secStructVertices[sRight][j].Y() 
+                                         + ((timer - startTime) / (deltaTime))*this->secStructVertices[sMiddle][j].Y();
                             }
                         }
                         glVertex2f(x + xTemp, -(y + yTemp));
@@ -1540,7 +1556,8 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
                  offset = flip*(height / 2.0f) + sin(dS*2.0f*PI)*0.25f;
                 break;
             case (UncertaintyDataCall::secStructure::B_BRIDGE) :
-                offset = ((dS > 1.0f/7.0f) ? (flip*(0.5f-0.03525f)*(7.0f-dS*7.0f)/6.0f + flip*(0.03525f)) : (flip*(height/2.0f))); // 0.05f height/2.0 of coil
+                // 03525f = default height/2.0 of coil
+                offset = ((dS > 1.0f/7.0f) ? (flip*(0.5f-0.03525f)*(7.0f-dS*7.0f)/6.0f + flip*(0.03525f)) : (flip*(height/2.0f))); 
                 break;
             default: break;
             }
@@ -1621,7 +1638,8 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
 * Check if the residue is an amino acid.
 */
 char UncertaintySequenceRenderer::GetAminoAcidOneLetterCode(vislib::StringA resName) {
-    if (resName.Equals("ALA")) return 'A';
+    
+    if      (resName.Equals("ALA")) return 'A';
     else if (resName.Equals("ARG")) return 'R';
     else if (resName.Equals("ASN")) return 'N';
     else if (resName.Equals("ASP")) return 'D';
@@ -1652,6 +1670,7 @@ char UncertaintySequenceRenderer::GetAminoAcidOneLetterCode(vislib::StringA resN
     else if (resName.Equals("LYN")) return 'K';
     else if (resName.Equals("TYM")) return 'Y';
     else return '?';
+    
 }
 
 
@@ -1665,14 +1684,14 @@ vislib::math::Vector<float, 4> UncertaintySequenceRenderer::secStructureColor(Un
 
     switch (s) {
     case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(1.0f, 0.0f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::G_310_HELIX) : color.Set(1.0f, 0.33f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::I_PI_HELIX) : color.Set(1.0f, 0.66f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) : color.Set(0.0f, 0.0f, 1.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::T_H_TURN) : color.Set(1.0f, 1.0f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::B_BRIDGE) : color.Set(0.66f, 1.0f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::S_BEND) : color.Set(0.33f, 1.0f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::C_COIL) : color.Set(0.2f, 0.2f, 0.2f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::NOTDEFINED) : color.Set(0.2f, 0.2f, 0.2f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(1.0f, 0.33f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(1.0f, 0.66f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.0f, 0.0f, 1.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(1.0f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.66f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.33f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.2f, 0.2f, 0.2f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.2f, 0.2f, 0.2f, 1.0f); break;
     default: break;
     }
     return color;
@@ -1684,19 +1703,19 @@ vislib::math::Vector<float, 4> UncertaintySequenceRenderer::secStructureColor(Un
 */
 vislib::StringA UncertaintySequenceRenderer::secStructureDesc(UncertaintyDataCall::secStructure s) {
 
-    vislib::StringA tmpStr;
+    vislib::StringA tmpStr = "No description";
 
     switch (s) {
     case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : tmpStr = "H - Alpha Helix"; break;
-    case (UncertaintyDataCall::secStructure::G_310_HELIX) : tmpStr = "G - 3-10 Helix"; break;
-    case (UncertaintyDataCall::secStructure::I_PI_HELIX) : tmpStr = "I - Pi Helix"; break;
-    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) : tmpStr = "E - Strand"; break;
-    case (UncertaintyDataCall::secStructure::T_H_TURN) : tmpStr = "T - Turn"; break;
-    case (UncertaintyDataCall::secStructure::B_BRIDGE) : tmpStr = "B - Bridge"; break;
-    case (UncertaintyDataCall::secStructure::S_BEND) : tmpStr = "S - Bend"; break;
-    case (UncertaintyDataCall::secStructure::C_COIL) : tmpStr = "C - Random Coil"; break;
-    case (UncertaintyDataCall::secStructure::NOTDEFINED) : tmpStr = "Not defined"; break;
-    default:                                                  tmpStr = "No description"; break;
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   tmpStr = "G - 3-10 Helix"; break;
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    tmpStr = "I - Pi Helix"; break;
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  tmpStr = "E - Strand"; break;
+    case (UncertaintyDataCall::secStructure::T_H_TURN) :      tmpStr = "T - Turn"; break;
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      tmpStr = "B - Bridge"; break;
+    case (UncertaintyDataCall::secStructure::S_BEND) :        tmpStr = "S - Bend"; break;
+    case (UncertaintyDataCall::secStructure::C_COIL) :        tmpStr = "C - Random Coil"; break;
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    tmpStr = "Not defined"; break;
+    default: break;
     }
 
     return tmpStr;
