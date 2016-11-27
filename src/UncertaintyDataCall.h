@@ -39,7 +39,7 @@ namespace megamol {
         /**
         * Enumeration of secondary structure types.
         * 
-        * (!) Indices must be in the range from 0 to NOE.
+        * (!) Indices must be in the range from 0 to NOE-1.
         */
         enum secStructure {
             H_ALPHA_HELIX = 0,
@@ -54,6 +54,18 @@ namespace megamol {
             NOE           = 9   // Number of Elements -> must always be the last index!
         };
 
+
+        /**
+        * Enumeration of assignment methods.
+        * 
+        * (!) Indices must be in the range from 0 to NOE-1.
+        */
+        enum assMethod {
+            PDB    = 0,
+            STRIDE = 1,
+            DSSP   = 2,
+            NOE    = 3   // Number ofElements/Methods -> must always be the last index!
+        };
         // ------------------ class functions ------------------- 
 
 		/**
@@ -179,48 +191,21 @@ namespace megamol {
         }
 
         /**
-        * Get the type of the DSSP secondary structure.
+        * Get the type of the secondary structure for an given method.
         *
+        * @param m The secondary structure assignment method.
         * @param i The index of the amino-acid.
         * @return The DSSP secondary structure type.
         */
-        inline secStructure GetDsspSecStructure(unsigned int i) const {
-            if (!this->dsspSecStructure)
+        inline secStructure GetSecStructure(assMethod m, unsigned int i) const {
+            if (!this->secStructAssignment)
                 return NOTDEFINED;
-            else if (this->dsspSecStructure->Count() <= i)
+            else if (this->secStructAssignment->Count() <= m)
                 return NOTDEFINED;
+            else if (this->secStructAssignment->opertator[](m) <= i)
+                return NOTDEFINED;                
             else
-                return (this->dsspSecStructure->operator[](i));
-        }
-
-        /**
-        * Get the type of the STRIDE secondary structure.
-        *
-        * @param i The index of the amino-acid.
-        * @return The STRIDE secondary structure type.
-        */
-        inline secStructure GetStrideSecStructure(unsigned int i) const {
-            if (!this->strideSecStructure)
-                return NOTDEFINED;
-            else if (this->strideSecStructure->Count() <= i)
-                return NOTDEFINED;
-            else
-                return (this->strideSecStructure->operator[](i));
-        }
-
-        /**
-        * Get the type of the PDB secondary structure.
-        *
-        * @param i The index of the amino-acid.
-        * @return The PDB secondary structure type.
-        */
-        inline secStructure GetPDBSecStructure(unsigned int i) const {
-            if (!this->pdbSecStructure)
-                return NOTDEFINED;
-            else if (this->pdbSecStructure->Count() <= i)
-                return NOTDEFINED;
-            else
-                return (this->pdbSecStructure->operator[](i));
+                return (this->secStructAssignment->opertator[](m)->operator[](i));
         }
 
         /**
@@ -279,34 +264,32 @@ namespace megamol {
             return this->recalcUncertainty;
         }
         
+        /**
+         * Get the color to the corresponding secondary structure type.
+         *
+         * @param s The secondary structure type.
+         * @return The color for the given secondary structure type.
+         */
+        vislib::StringA GetSecStructDesc(UncertaintyDataCall::secStructure s);
+            
+        /**
+        * Get the description to the corresponding secondary structure type.
+        *
+        * @param s The secondary structure type.
+        * @return The description for the given secondary structure type.
+        * 
+        */
+        vislib::math::Vector<float, 4> GetSecStructColor(UncertaintyDataCall::secStructure s);            
         
         // ------------------ SET functions ------------------- 
 
         /**
-        * Set the pointer to the DSSP secondary structure type.
+        * Set the pointer to the secondary structure type.
         *
         * @param rnPtr The pointer.
         */
-        inline void SetDsspSecStructure(vislib::Array<secStructure> *rnPtr) {
-            this->dsspSecStructure = rnPtr;
-        }
-
-        /**
-        * Set the pointer to the STRIDE secondary structure type.
-        *
-        * @param rnPtr The pointer.
-        */
-        inline void SetStrideSecStructure(vislib::Array<secStructure> *rnPtr) {
-            this->strideSecStructure = rnPtr;
-        }
-
-        /**
-        * Set the pointer to the PDB secondary structure type.
-        *
-        * @param rnPtr The pointer.
-        */
-        inline void SetPdbSecStructure(vislib::Array<secStructure> *rnPtr) {
-            this->pdbSecStructure = rnPtr;
+        inline void SetSecStructure(vislib::Array<vislib::Array<secStruture> > *rnPtr) {
+            this->secStructAssignment = rnPtr;
         }
 
         /**
@@ -386,15 +369,9 @@ namespace megamol {
 
         // ------------------ variables ------------------- 
 
-        /** Pointer to the DSSP secondary structure type */
-        vislib::Array<secStructure> *dsspSecStructure;
-
-        /** Pointer to the STRIDE secondary structure type */
-        vislib::Array<secStructure> *strideSecStructure;
-
-        /** Pointer to the PDB secondary structure type */
-        vislib::Array<secStructure> *pdbSecStructure;
-
+        /** Pointer to the secondary structure assignment methods and their secondary structure type assignments */
+        vislib::Array<vislib::Array<secStruture> > *secStructAssignment;
+        
         /** Pointer to the PDB index */
         vislib::Array<int> *pdbIndex;
 

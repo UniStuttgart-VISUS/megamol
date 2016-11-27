@@ -169,23 +169,6 @@ namespace megamol {
                                        UncertaintyDataCall::secStructure secStructSuc, bool m, float x, float y, float defColor[4]);
 
         /**
-         * Returns the color to the corresponding secondary structure type.
-         *
-         * @param s The secondary structure type.
-         * @return The color for the given secondary structure type.
-         */
-        vislib::math::Vector<float, 4> secStructureColor(UncertaintyDataCall::secStructure s);
-   
-
-        /**
-        * Returns the description to the corresponding secondary structure type.
-        *
-        * @param s The secondary structure type.
-        * @return The description for the given secondary structure type.
-        */
-        vislib::StringA UncertaintySequenceRenderer::secStructureDesc(UncertaintyDataCall::secStructure s);
-
-        /**
         * Renders a two lined tooltip text.
         *
         * @param start   The height the tooltip starts.
@@ -202,7 +185,7 @@ namespace megamol {
          */
         enum visualization {
             STACK     = 0,            
-            MORPHING  = 1
+            MORPHING  = 1,
         };
         
         /**
@@ -220,7 +203,6 @@ namespace megamol {
          */        
         void renderUncertaintyMorphing(float yPos);
         
-
 
         /**********************************************************************
          * variables
@@ -322,12 +304,9 @@ namespace megamol {
         // the color array for the binding site tiles
         vislib::Array<vislib::math::Vector<float, 3> > bsColors;
 
-        // The DSSP secondary structure type
-        vislib::Array<UncertaintyDataCall::secStructure> dsspSecStructure;
-        // The STRIDE secondary structure type
-        vislib::Array<UncertaintyDataCall::secStructure> strideSecStructure;
-        // The PDB secondary structure type
-        vislib::Array<UncertaintyDataCall::secStructure> pdbSecStructure;
+        // The secondary structure assignment methods and their secondary structure type assignments
+        vislib::Array<vislib::Array<secStruture> > secStructAssignment;
+
         // The values of the secondary structure uncertainty for each amino-acid 
         vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
         // The sorted structure types of the uncertainty values

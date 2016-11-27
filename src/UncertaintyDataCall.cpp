@@ -28,8 +28,8 @@ const unsigned int UncertaintyDataCall::CallForGetData = 0;
 * UncertaintyDataCall::UncertaintyDataCall
 */
 UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
-                                                 dsspSecStructure(NULL), strideSecStructure(NULL), pdbSecStructure(NULL),
-                                                 sortedSecStructUncertainty(NULL), secStructUncertainty(NULL), pdbIndex(NULL), 
+                                                 secStructAssignment(NULL), sortedSecStructUncertainty(NULL), 
+                                                 secStructUncertainty(NULL), pdbIndex(NULL), 
                                                  chainID(NULL), missingFlag(NULL), aminoAcidName(NULL), pdbID(NULL) {
 }
 
@@ -38,9 +38,7 @@ UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
 * UncertaintyDataCall::~UncertaintyDataCall
 */
 UncertaintyDataCall::~UncertaintyDataCall(void) {
-    this->dsspSecStructure = NULL;
-    this->strideSecStructure = NULL;
-    this->pdbSecStructure = NULL,
+    this->secStructAssignment = NULL;
     this->pdbIndex = NULL;
     this->chainID = NULL;
     this->missingFlag = NULL;
@@ -49,3 +47,52 @@ UncertaintyDataCall::~UncertaintyDataCall(void) {
     this->sortedSecStructUncertainty = NULL;
 }
 
+
+/*
+* UncertaintyDataCall::secStructureColor
+*/
+// https://wiki.selfhtml.org/wiki/Grafik/Farbpaletten
+vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(UncertaintyDataCall::secStructure s) {
+
+    vislib::math::Vector<float, 4> color;
+    color.Set(1.0f, 1.0f, 1.0f, 1.0f);
+
+    switch (s) {
+    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(1.0f, 0.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(1.0f, 0.5f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(1.0f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.0f, 0.0f, 1.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(0.5f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.0f, 0.5f, 1.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.0f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.3f, 0.3f, 0.3f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.1f, 0.1f, 0.1f, 1.0f); break;
+    default: break;
+    }
+    
+    return color;
+}
+
+
+/*
+* UncertaintyDataCall::secStructureDesc
+*/
+vislib::StringA UncertaintyDataCall::GetSecStructDesc(UncertaintyDataCall::secStructure s) {
+
+    vislib::StringA tmpStr = "No description";
+
+    switch (s) {
+    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : tmpStr = "H - Alpha Helix"; break;
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   tmpStr = "G - 3-10 Helix"; break;
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    tmpStr = "I - Pi Helix"; break;
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  tmpStr = "E - Strand"; break;
+    case (UncertaintyDataCall::secStructure::T_H_TURN) :      tmpStr = "T - Turn"; break;
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      tmpStr = "B - Bridge"; break;
+    case (UncertaintyDataCall::secStructure::S_BEND) :        tmpStr = "S - Bend"; break;
+    case (UncertaintyDataCall::secStructure::C_COIL) :        tmpStr = "C - Random Coil"; break;
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    tmpStr = "Not defined"; break;
+    default: break;
+    }
+
+    return tmpStr;
+}

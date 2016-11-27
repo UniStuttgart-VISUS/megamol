@@ -148,14 +148,6 @@ namespace megamol {
             /** The currently used uncertainty calculation method */
             calculationMethod currentMethod;
             
-            /** The DSSP secondary structure type */
-            vislib::Array<UncertaintyDataCall::secStructure> dsspSecStructure;
-
-            /** The STRIDE secondary structure type */
-            vislib::Array<UncertaintyDataCall::secStructure> strideSecStructure;
-
-            /** The PDB secondary structure type */
-            vislib::Array<UncertaintyDataCall::secStructure> pdbSecStructure;
 
             /** The PDB index */
             vislib::Array<int> pdbIndex;
@@ -168,7 +160,10 @@ namespace megamol {
 
             /** The amino-acid name */
             vislib::Array<vislib::StringA> aminoAcidName;
-
+            
+            /** The secondary structure assignment methods and their secondary structure type assignments */
+            vislib::Array<vislib::Array<secStruture> > secStructAssignment;
+            
             /** The values of the secondary structure uncertainty for each amino-acid (index = secStructure) */
             vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secStructUncertainty;
 
