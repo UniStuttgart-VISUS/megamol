@@ -57,6 +57,7 @@
 #include "factories/CallClassRegistry.h"
 #include "factories/ModuleClassRegistry.h"
 #include "utility/plugins/PluginManager.h"
+#include "utility/ServiceManager.h"
 
 #include "vislib/Array.h"
 #include "vislib/sys/FastFile.h"
@@ -147,6 +148,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
     this->plugins = new utility::plugins::PluginManager();
+    this->services = new utility::ServiceManager(*this);
 
 #ifdef _WIN32
     WCHAR dll_path[MAX_PATH] = { 0 };
@@ -206,6 +208,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
         this->closeViewJob(mn);
     }
     this->namespaceRoot->ModuleGraphLock().UnlockExclusive();
+
+    delete this->services;
+    this->services = nullptr;
 
     // we need to manually clean up all data structures in the right order!
     // first view- and job-descriptions
@@ -2003,6 +2008,24 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
     outfile.Close();
 
     return true;
+}
+
+
+/*
+ * megamol::core::CoreInstance::InstallService
+ */
+unsigned int megamol::core::CoreInstance::InstallServiceObject(megamol::core::AbstractService* service, ServiceDeletor deletor) {
+    assert(services != nullptr);
+    return services->InstallServiceObject(service, deletor);
+}
+
+
+/*
+ * megamol::core::CoreInstance::GetInstalledService
+ */
+megamol::core::AbstractService* megamol::core::CoreInstance::GetInstalledService(unsigned int id) {
+    assert(services != nullptr);
+    return services->GetInstalledService(id);
 }
 
 

@@ -897,6 +897,12 @@
     <ClCompile Include="src\view\RendererRegistration.cpp">
       <Filter>view\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\AbstractService.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utility\ServiceManager.cpp">
+      <Filter>utility\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1519,6 +1525,12 @@
     </ClInclude>
     <ClInclude Include="include\mmcore\view\RendererRegistration.h">
       <Filter>view\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\AbstractService.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility\ServiceManager.h">
+      <Filter>utility\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -403,6 +403,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\AbstractGetDataCall.cpp" />
     <ClCompile Include="src\AbstractNamedObject.cpp" />
     <ClCompile Include="src\AbstractNamedObjectContainer.cpp" />
+    <ClCompile Include="src\AbstractService.cpp" />
     <ClCompile Include="src\AbstractSlot.cpp" />
     <ClCompile Include="src\ApiHandle.cpp" />
     <ClCompile Include="src\BoundingBoxes.cpp" />
@@ -541,6 +542,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\utility\plugins\PluginManager.cpp" />
     <ClCompile Include="src\utility\ProjectParser.cpp" />
     <ClCompile Include="src\utility\ResourceWrapper.cpp" />
+    <ClCompile Include="src\utility\ServiceManager.cpp" />
     <ClCompile Include="src\utility\ShaderSourceFactory.cpp" />
     <ClCompile Include="src\utility\xml\ConditionalParser.cpp" />
     <ClCompile Include="src\utility\xml\ConfigurationParser.cpp" />
@@ -611,6 +613,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\AbstractGetDataCall.h" />
     <ClInclude Include="include\mmcore\AbstractNamedObject.h" />
     <ClInclude Include="include\mmcore\AbstractNamedObjectContainer.h" />
+    <ClInclude Include="include\mmcore\AbstractService.h" />
     <ClInclude Include="include\mmcore\AbstractSlot.h" />
     <ClInclude Include="include\mmcore\ApiHandle.h" />
     <ClInclude Include="include\mmcore\api\MegaMolCore.h" />
@@ -812,6 +815,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\utility\plugins\Plugin100Instance.h" />
     <ClInclude Include="src\utility\plugins\PluginManager.h" />
+    <ClInclude Include="src\utility\ServiceManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

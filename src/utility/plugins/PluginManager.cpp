@@ -257,5 +257,8 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
         plugin->GetModuleDescriptionManager().Count(),
         plugin->GetCallDescriptionManager().Count());
 
+    // connect stuff to the core instance
+    plugin200->callRegisterAtCoreInstanceFunctions(coreInst);
+
     return rv;
 }

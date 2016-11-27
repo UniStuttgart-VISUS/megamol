@@ -81,6 +81,9 @@ namespace plugins {
             StackTrace
         };
 
+        /** Type declaration to register something at the core instance*/
+        typedef void(*registerAtCoreInstance_funcptrtype)(CoreInstance& inst);
+
         /** Dtor */
         virtual ~Plugin200Instance(void);
 
@@ -126,6 +129,14 @@ namespace plugins {
          */
         std::shared_ptr<vislib::sys::DynamicLinkLibrary> get_lib(void) const;
 
+        /**
+         * Calls all functions which want to register something at the core instance.
+         * Also clears that list.
+         *
+         * @param core The core instance
+         */
+        void callRegisterAtCoreInstanceFunctions(CoreInstance& core);
+
     protected:
 
         /**
@@ -145,6 +156,13 @@ namespace plugins {
          */
         Plugin200Instance(const char *asm_name, const char *description);
 
+        /**
+         * Adds a function to register something at the core instance
+         *
+         * @param func The function to register.
+         */
+        void addRegisterAtCoreInstanceFunction(registerAtCoreInstance_funcptrtype func);
+
     private:
 
         /** Ensures that registered classes was called */
@@ -159,6 +177,10 @@ namespace plugins {
         /** The plugin library object */
         VISLIB_MSVC_SUPPRESS_WARNING(4251)
         std::shared_ptr<vislib::sys::DynamicLinkLibrary> lib;
+
+        /** Functions to be called to register something at the core instance */
+        VISLIB_MSVC_SUPPRESS_WARNING(4251)
+        std::vector<registerAtCoreInstance_funcptrtype> regAtCoreFuncs;
 
         /** 
          * Flag whether or not the module and call classes have been registered

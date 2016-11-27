@@ -55,8 +55,17 @@ const factories::ModuleDescriptionManager& Plugin200Instance::GetModuleDescripti
  */
 Plugin200Instance::Plugin200Instance(const char *asm_name, const char *description)
         : AbstractPluginInstance(asm_name, description), lib(),
+        regAtCoreFuncs(),
         classes_registered(false) {
     // intentionally empty
+}
+
+
+/*
+ * Plugin200Instance::addRegisterAtCoreInstanceFunction
+ */
+void Plugin200Instance::addRegisterAtCoreInstanceFunction(registerAtCoreInstance_funcptrtype func) {
+    regAtCoreFuncs.push_back(func);
 }
 
 
@@ -75,6 +84,15 @@ void Plugin200Instance::store_lib(std::shared_ptr<vislib::sys::DynamicLinkLibrar
  */
 std::shared_ptr<vislib::sys::DynamicLinkLibrary> Plugin200Instance::get_lib(void) const {
     return this->lib;
+}
+
+
+/*
+ * Plugin200Instance::callRegisterAtCoreInstanceFunctions
+ */
+void Plugin200Instance::callRegisterAtCoreInstanceFunctions(CoreInstance& core) {
+    for (registerAtCoreInstance_funcptrtype f : regAtCoreFuncs) f(core);
+    regAtCoreFuncs.clear();
 }
 
 
