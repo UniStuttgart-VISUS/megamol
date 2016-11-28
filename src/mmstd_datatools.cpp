@@ -46,6 +46,7 @@
 #include "ParticleIColGradientField.h"
 #include "mmstd_datatools/ParticleFilterMapDataCall.h"
 #include "RemapIColValues.h"
+#include "mmstd_datatools/GraphDataCall.h"
 
 
 /*
@@ -161,6 +162,7 @@ namespace {
             // ...
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

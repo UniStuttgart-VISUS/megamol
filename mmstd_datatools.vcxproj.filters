@@ -151,6 +151,9 @@
     <ClCompile Include="src\RemapIColValues.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\GraphDataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -263,6 +266,9 @@
     </ClInclude>
     <ClInclude Include="src\RemapIColValues.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmstd_datatools\GraphDataCall.h">
+      <Filter>Public Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
