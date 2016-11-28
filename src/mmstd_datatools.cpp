@@ -47,6 +47,13 @@
 #include "mmstd_datatools/ParticleFilterMapDataCall.h"
 #include "RemapIColValues.h"
 #include "mmstd_datatools/GraphDataCall.h"
+#include "ParticleNeighborhoodGraph.h"
+#include "IColInverse.h"
+#include "IColAdd.h"
+#include "ModColIRange.h"
+#include "NullParticleWriter.h"
+#include "IColRangeFix.h"
+#include "IColRangeOverride.h"
 
 
 /*
@@ -158,6 +165,14 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorChannelSelect>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleIColGradientField>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::RemapIColValues>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhoodGraph>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColInverse>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColAdd>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ModColIRange>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::NullParticleWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeFix>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeOverride>();
+
             // register calls here:
             // ...
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
