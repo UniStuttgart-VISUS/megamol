@@ -282,8 +282,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\floattable\MMFTDataSource.cpp" />
     <ClCompile Include="src\floattable\MMFTDataWriter.cpp" />
     <ClCompile Include="src\GraphDataCall.cpp" />
+    <ClCompile Include="src\IColAdd.cpp" />
+    <ClCompile Include="src\IColInverse.cpp" />
+    <ClCompile Include="src\IColRangeFix.cpp" />
+    <ClCompile Include="src\IColRangeOverride.cpp" />
+    <ClCompile Include="src\ModColIRange.cpp" />
     <ClCompile Include="src\MultiParticleDataAdaptor.cpp" />
     <ClCompile Include="src\MultiParticleRelister.cpp" />
+    <ClCompile Include="src\NullParticleWriter.cpp" />
     <ClCompile Include="src\OverrideMultiParticleListGlobalColors.cpp" />
     <ClCompile Include="src\OverrideParticleBBox.cpp" />
     <ClCompile Include="src\ParticleBoxGeneratorDataSource.cpp" />
@@ -294,6 +300,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\ParticleFilterMapDataCall.cpp" />
     <ClCompile Include="src\ParticleIColFilter.cpp" />
     <ClCompile Include="src\ParticleIColGradientField.cpp" />
+    <ClCompile Include="src\ParticleNeighborhoodGraph.cpp" />
     <ClCompile Include="src\ParticleSortFixHack.cpp" />
     <ClCompile Include="src\RemapIColValues.cpp" />
   </ItemGroup>
@@ -324,7 +331,13 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\floattable\CSVDataSource.h" />
     <ClInclude Include="src\floattable\MMFTDataSource.h" />
     <ClInclude Include="src\floattable\MMFTDataWriter.h" />
+    <ClInclude Include="src\IColAdd.h" />
+    <ClInclude Include="src\IColInverse.h" />
+    <ClInclude Include="src\IColRangeFix.h" />
+    <ClInclude Include="src\IColRangeOverride.h" />
+    <ClInclude Include="src\ModColIRange.h" />
     <ClInclude Include="src\MultiParticleRelister.h" />
+    <ClInclude Include="src\NullParticleWriter.h" />
     <ClInclude Include="src\OverrideMultiParticleListGlobalColors.h" />
     <ClInclude Include="src\OverrideParticleBBox.h" />
     <ClInclude Include="src\ParticleBoxGeneratorDataSource.h" />
@@ -334,6 +347,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ParticleDataSequenceConcatenate.h" />
     <ClInclude Include="src\ParticleIColFilter.h" />
     <ClInclude Include="src\ParticleIColGradientField.h" />
+    <ClInclude Include="src\ParticleNeighborhoodGraph.h" />
     <ClInclude Include="src\ParticleSortFixHack.h" />
     <ClInclude Include="src\RemapIColValues.h" />
   </ItemGroup>

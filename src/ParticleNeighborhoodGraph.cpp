@@ -1,0 +1,442 @@
+#include "stdafx.h"
+#include "ParticleNeighborhoodGraph.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmstd_datatools/GraphDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmstd_datatools/MultiParticleDataAdaptor.h"
+#include <random>
+#include "vislib/math/ShallowPoint.h"
+#include "vislib/math/ShallowVector.h"
+#include <cfloat>
+#include "vislib/sys/Log.h"
+#include "mmcore/param/IntParam.h"
+#include <chrono>
+
+using namespace megamol;
+using namespace megamol::stdplugin::datatools;
+
+ParticleNeighborhoodGraph::ParticleNeighborhoodGraph() : Module(),
+        outGraphDataSlot("outGraphData", "Publishes graph edge data"),
+        inParticleDataSlot("inParticle", "Fetches particle data"),
+        radiusSlot("radius", "The neighborhood radius"),
+        autoRadiusSlot("autoRadius", "Flag to automatically assess the neighborhood radius"),
+        autoRadiusSamplesSlot("autoRadiusSamples", "Number of samples to determine the neighborhood radius"),
+        autoRadiusFactorSlot("autoRadiusFactor", "Increase factor for the determined neighborhood radius"),
+        forceConnectIsolatedSlot("forceConnectIsolated", "Forces to inter-connect isolated parts of the graph"),
+        frameId(0), inDataHash(0), outDataHash(0), edges() {
+
+    outGraphDataSlot.SetCallback("GraphDataCall", "GetData", &ParticleNeighborhoodGraph::getData);
+    outGraphDataSlot.SetCallback("GraphDataCall", "GetExtent", &ParticleNeighborhoodGraph::getExtent);
+    MakeSlotAvailable(&outGraphDataSlot);
+
+    inParticleDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    MakeSlotAvailable(&inParticleDataSlot);
+
+    autoRadiusSlot.SetParameter(new core::param::BoolParam(true));
+    MakeSlotAvailable(&autoRadiusSlot);
+
+    autoRadiusSamplesSlot.SetParameter(new core::param::IntParam(10, 1));
+    MakeSlotAvailable(&autoRadiusSamplesSlot);
+
+    autoRadiusFactorSlot.SetParameter(new core::param::FloatParam(1.9f, 1.0f));
+    MakeSlotAvailable(&autoRadiusFactorSlot);
+
+    radiusSlot.SetParameter(new core::param::FloatParam(0.01f, 0.0f));
+    MakeSlotAvailable(&radiusSlot);
+
+    forceConnectIsolatedSlot.SetParameter(new core::param::BoolParam(true));
+    MakeSlotAvailable(&forceConnectIsolatedSlot);
+
+}
+
+ParticleNeighborhoodGraph::~ParticleNeighborhoodGraph() {
+    Release();
+}
+
+bool ParticleNeighborhoodGraph::create(void) {
+    // intentionally empty
+    return true;
+}
+
+void ParticleNeighborhoodGraph::release(void) {
+    // intentionally empty
+}
+
+bool ParticleNeighborhoodGraph::getExtent(core::Call& c) {
+    using stdplugin::datatools::GraphDataCall;
+    GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
+    if (gdc == nullptr) return false;
+
+    core::moldyn::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (mpc == nullptr) return false;
+
+    mpc->SetFrameID(gdc->FrameID(), true);
+    if (!(*mpc)(1)) return false;
+
+    gdc->SetFrameCount(mpc->FrameCount());
+    gdc->SetFrameID(mpc->FrameID());
+    gdc->SetDataHash(mpc->DataHash());
+    gdc->SetUnlocker(nullptr);
+
+    return true;
+}
+
+bool ParticleNeighborhoodGraph::getData(core::Call& c) {
+    using stdplugin::datatools::GraphDataCall;
+    GraphDataCall *gdc = dynamic_cast<GraphDataCall*>(&c);
+    if (gdc == nullptr) return false;
+
+    core::moldyn::MultiParticleDataCall *mpc = inParticleDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (mpc == nullptr) return false;
+
+    mpc->SetFrameID(gdc->FrameID(), true);
+    if (!(*mpc)(0)) return false;
+
+    if ((mpc->DataHash() != inDataHash)
+            || (mpc->FrameID() != frameId)
+            || (frameId != gdc->FrameID())
+            || (inDataHash == 0)
+            || autoRadiusSlot.IsDirty()
+            || autoRadiusFactorSlot.IsDirty()
+            || autoRadiusSamplesSlot.IsDirty()
+            || radiusSlot.IsDirty()
+            || forceConnectIsolatedSlot.IsDirty()) {
+        // update data
+        inDataHash = mpc->DataHash();
+        frameId = mpc->FrameID();
+        autoRadiusFactorSlot.ResetDirty();
+        autoRadiusSamplesSlot.ResetDirty();
+        autoRadiusSlot.ResetDirty();
+        radiusSlot.ResetDirty();
+        forceConnectIsolatedSlot.ResetDirty();
+
+        edges.clear();
+
+        outDataHash++;
+
+        this->calcData(mpc);
+
+    }
+
+    // set data
+    gdc->SetDataHash(outDataHash);
+    gdc->SetFrameID(frameId);
+    gdc->Set(reinterpret_cast<const GraphDataCall::edge*>(edges.data()), edges.size() / 2, false);
+    gdc->SetUnlocker(mpc->GetUnlocker());
+    mpc->SetUnlocker(nullptr, false);
+
+    mpc->Unlock();
+    return true;
+}
+
+namespace {
+
+    struct graph_component {
+        unsigned int id;
+        size_t cnt;
+        vislib::math::Vector<double, 3> pos;
+    };
+
+}
+
+void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* data) {
+    stdplugin::datatools::MultiParticleDataAdaptor d(*data);
+    if (d.get_count() < 1) return;
+
+    using std::chrono::high_resolution_clock;
+    high_resolution_clock::time_point start = high_resolution_clock::now(), end;
+
+    float neiRad = this->radiusSlot.Param<core::param::FloatParam>()->Value();
+    if (this->autoRadiusSlot.Param<core::param::BoolParam>()->Value()) {
+        // automatically select a neighborhood radius
+
+        std::default_random_engine rnd_eng(1212);
+        std::uniform_int_distribution<size_t> rnd_dist(0, d.get_count() - 1);
+
+        int sample_cnt = autoRadiusSamplesSlot.Param<core::param::IntParam>()->Value();
+        float mean_dist = 0.0f;
+
+        for (int sample = 0; sample < sample_cnt; ++sample) {
+            size_t sample_idx = rnd_dist(rnd_eng);
+            vislib::math::ShallowPoint<float, 3> sample_pt(const_cast<float*>(d.get_position(sample_idx)));
+
+            float min_dist = FLT_MAX;
+
+            for (size_t i = 0; i < d.get_count(); ++i) {
+                if (i == sample_idx) continue;
+                vislib::math::ShallowPoint<float, 3> pt(const_cast<float*>(d.get_position(i)));
+                float dist = (pt - sample_pt).SquareLength();
+                if (dist < min_dist) min_dist = dist;
+            }
+
+            mean_dist += std::sqrt(min_dist);
+        }
+
+        mean_dist /= static_cast<float>(sample_cnt);
+
+        neiRad = autoRadiusFactorSlot.Param<core::param::FloatParam>()->Value() * mean_dist;
+
+        this->radiusSlot.Param<core::param::FloatParam>()->SetValue(neiRad, false);
+    }
+    float neiRadSq = neiRad * neiRad;
+
+    vislib::math::Cuboid<float> box(
+        vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(0))),
+        vislib::math::Dimension<float, 3>(0.0f, 0.0f, 0.0f));
+    for (size_t i = 1; i < d.get_count(); ++i) {
+        box.GrowToPoint(
+            vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(i)))
+            );
+    }
+
+    unsigned int x_size = static_cast<unsigned int>(std::ceil(box.Width() / neiRad));
+    unsigned int y_size = static_cast<unsigned int>(std::ceil(box.Height() / neiRad));
+    unsigned int z_size = static_cast<unsigned int>(std::ceil(box.Depth() / neiRad));
+
+#define _COORD(x, y, z) ((x) + ((y) + ((z) * y_size)) * x_size)
+
+    std::vector<size_t> grid(d.get_count());
+    std::vector<size_t*> gridCell(x_size * y_size * z_size);
+
+    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph search grid : (%u, %u, %u)", x_size, y_size, z_size);
+
+    std::vector<vislib::math::Vector<unsigned int, 3> > cell(d.get_count());
+    for (size_t i = 0; i < d.get_count(); ++i) {
+        vislib::math::Vector<float, 3> c = vislib::math::ShallowPoint<float, 3>(const_cast<float*>(d.get_position(i))) - box.GetLeftBottomBack();
+        cell[i] = c / neiRad;
+        if (cell[i].X() >= x_size) cell[i].SetX(x_size - 1);
+        if (cell[i].Y() >= y_size) cell[i].SetY(y_size - 1);
+        if (cell[i].Z() >= z_size) cell[i].SetZ(z_size - 1);
+        //assert(cell[i].X() < x_size);
+        //assert(cell[i].Y() < y_size);
+        //assert(cell[i].Z() < z_size);
+    }
+
+    std::vector<size_t> gridCellSize(x_size * y_size * z_size);
+    std::fill(gridCellSize.begin(), gridCellSize.end(), 0);
+    for (size_t i = 0; i < d.get_count(); ++i) {
+        gridCellSize[_COORD(cell[i].X(), cell[i].Y(), cell[i].Z())]++;
+    }
+
+    size_t * p = grid.data();
+    for (unsigned int gci = 0; gci < x_size * y_size * z_size; ++gci) {
+        if (gridCellSize[gci] == 0) {
+            gridCell[gci] = nullptr;
+        } else {
+            gridCell[gci] = p;
+            p += gridCellSize[gci];
+            gridCellSize[gci] = 0;
+        }
+    }
+    assert((p - grid.data()) == d.get_count());
+
+    for (size_t i = 0; i < d.get_count(); ++i) {
+        size_t idx = _COORD(cell[i].X(), cell[i].Y(), cell[i].Z());
+        *((gridCell[idx]) + gridCellSize[idx]) = i;
+        gridCellSize[idx]++;
+    }
+
+    end = high_resolution_clock::now();
+    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #1 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    start = end;
+
+    edges.reserve(d.get_count() * 2 * 4); // something
+
+    // iterate over cells
+    #pragma omp parallel for
+    for (int x = 0; x < static_cast<int>(x_size); ++x) {
+        unsigned int x1 = (x == 0) ? 0 : x - 1;
+        unsigned int x2 = (x == x_size - 1) ? x_size - 1 : x + 1;
+
+        for (unsigned int y = 0; y < y_size; ++y) {
+            unsigned int y1 = (y == 0) ? 0 : y - 1;
+            unsigned int y2 = (y == y_size - 1) ? y_size - 1 : y + 1;
+
+            for (unsigned int z = 0; z < z_size; ++z) {
+                unsigned int z1 = (z == 0) ? 0 : z - 1;
+                unsigned int z2 = (z == z_size - 1) ? z_size - 1 : z + 1;
+
+                size_t idx = _COORD(x, y, z);
+
+                for (size_t lpi = 0; lpi < gridCellSize[idx]; ++lpi) {
+                    size_t p_idx = gridCell[idx][lpi]; // detect neighbors for particle[p_idx]
+                    vislib::math::ShallowPoint<float, 3> p_pos(const_cast<float*>(d.get_position(p_idx)));
+
+                    for (unsigned int xi = x1; xi <= x2; ++xi) {
+                        for (unsigned int yi = y1; yi <= y2; ++yi) {
+                            for (unsigned int zi = z1; zi <= z2; ++zi) {
+                                size_t idx_j = _COORD(xi, yi, zi);
+                                for (size_t lpj = 0; lpj < gridCellSize[idx_j]; ++lpj) {
+                                    // we only add edges from smaller indices to larger indices
+                                    size_t p_j_idx = gridCell[idx_j][lpj];
+                                    if (p_j_idx <= p_idx) continue;
+
+                                    vislib::math::ShallowPoint<float, 3> p_j_pos(const_cast<float*>(d.get_position(p_j_idx)));
+                                    float len = (p_j_pos - p_pos).SquareLength();
+                                    if (len < neiRadSq) {
+                                        #pragma omp critical
+                                        {
+                                            edges.push_back(p_idx);
+                                            edges.push_back(p_j_idx);
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+            }
+        }
+    }
+
+    end = high_resolution_clock::now();
+    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #2 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    start = end;
+
+    if (forceConnectIsolatedSlot.Param<core::param::BoolParam>()->Value()) {
+        // 1. detect connected components
+
+        // TODO: This is slow!
+
+        std::vector<unsigned int> comp_id(d.get_count());
+        std::fill(comp_id.begin(), comp_id.end(), 0);
+
+        unsigned int next_comp = 1;
+        for (size_t i = 0; i < d.get_count(); ++i) {
+            if (comp_id[i] != 0) continue;
+            comp_id[i] = next_comp;
+
+            bool updated = true;
+            while (updated) {
+                updated = false;
+                for (size_t e = 0; e < edges.size(); e += 2) {
+                    size_t e1 = edges[e];
+                    unsigned int &c1 = comp_id[e1];
+                    size_t e2 = edges[e + 1];
+                    unsigned int &c2 = comp_id[e2];
+                    if ((c1 == next_comp) && (c2 == next_comp)) continue;
+                    if (c1 == next_comp)  {
+                        assert(c2 == 0);
+                        c2 = next_comp;
+                        updated = true;
+                    } else if (c2 == next_comp) {
+                        assert(c1 == 0);
+                        c1 = next_comp;
+                        updated = true;
+                    }
+                }
+            }
+
+            next_comp++;
+        }
+
+        end = high_resolution_clock::now();
+        vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #2.1 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+        start = end;
+
+        if (next_comp > 2) {
+
+            // TODO: This is slow!
+
+            // compute centroids for connected components
+            std::vector<std::shared_ptr<graph_component> > comps(next_comp - 1);
+            for (unsigned int ci = 1; ci < next_comp; ci++) {
+                comps[ci - 1] = std::make_shared<graph_component>();
+                comps[ci - 1]->id = ci;
+                comps[ci - 1]->cnt = 0;
+                comps[ci - 1]->pos.SetNull();
+            }
+            for (size_t i = 0; i < d.get_count(); ++i) {
+                comps[comp_id[i] - 1]->cnt++;
+                comps[comp_id[i] - 1]->pos += vislib::math::ShallowVector<float, 3>(const_cast<float*>(d.get_position(i)));
+            }
+            size_t maxVal = 0;
+            std::shared_ptr<graph_component> mainComp; // index of the biggest component to merge everything to
+            for (std::shared_ptr<graph_component> c: comps) {
+                 c->pos /= static_cast<double>(c->cnt);
+                 if (c->cnt > maxVal) {
+                     maxVal = c->cnt;
+                     mainComp = c;
+                 }
+            }
+            assert(mainComp);
+
+            // successively merge components into the biggest component
+            while (comps.size() > 1) {
+                // select the component closest to the biggest component
+                double dist = DBL_MAX;
+                std::shared_ptr<graph_component> selComp;
+                for (std::shared_ptr<graph_component> c : comps) {
+                    if (c == mainComp) continue;
+                    double d = (c->pos - mainComp->pos).Length();
+                    if (d < dist) {
+                        dist = d;
+                        selComp = c;
+                    }
+                }
+                assert(selComp);
+
+                // merge selComp into mainComp
+                // add an edge between the two nodes closest to the other centroid
+                size_t mainPId = static_cast<size_t>(-1);
+                double mainPDist = DBL_MAX;
+                for (size_t i = 0; i < d.get_count(); ++i) {
+                    vislib::math::ShallowVector<float, 3> p(const_cast<float*>(d.get_position(i)));
+                    if (comp_id[i] == mainComp->id) {
+                        double d = (selComp->pos - p).Length();
+                        if (d < mainPDist) {
+                            mainPDist = d;
+                            mainPId = i;
+                        }
+                    }
+                }
+                vislib::math::ShallowVector<float, 3> maincomp_pos(const_cast<float*>(d.get_position(mainPId)));
+
+                size_t selPId = static_cast<size_t>(-1);
+                double selPDist = DBL_MAX;
+                for (size_t i = 0; i < d.get_count(); ++i) {
+                    vislib::math::ShallowVector<float, 3> p(const_cast<float*>(d.get_position(i)));
+                    if (comp_id[i] == selComp->id) {
+                        double d = (maincomp_pos - p).Length();
+                        if (d < selPDist) {
+                            selPDist = d;
+                            selPId = i;
+                        }
+                    }
+                }
+                assert(mainPId != static_cast<size_t>(-1));
+                assert(selPId != static_cast<size_t>(-1));
+
+                edges.push_back(selPId);
+                edges.push_back(mainPId);
+
+                // remove old ids
+                for (size_t i = 0; i < d.get_count(); ++i) {
+                    if (comp_id[i] == selComp->id) {
+                        comp_id[i] = mainComp->id;
+                    }
+                }
+
+                // merge centroids
+                mainComp->pos *= static_cast<double>(mainComp->cnt);
+                selComp->pos *= static_cast<double>(selComp->cnt);
+                mainComp->pos += selComp->pos;
+                mainComp->cnt += selComp->cnt;
+                mainComp->pos /= static_cast<double>(mainComp->cnt);
+
+                comps.erase(std::find(comps.begin(), comps.end(), selComp));
+            }
+
+        }
+    }
+
+    edges.shrink_to_fit();
+
+    end = high_resolution_clock::now();
+    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #3 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+
+}
