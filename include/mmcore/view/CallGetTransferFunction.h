@@ -110,6 +110,15 @@ namespace view {
         }
 
         /**
+         * Answer the OpenGL texture data
+         *
+         * @return The OpenGL texture data
+         */
+        inline float*  GetTextureData(void) const {
+            return this->texData;
+        }
+
+        /**
          * Sets the 1D texture information
          *
          * @param id The OpenGL texture object id
@@ -126,6 +135,17 @@ namespace view {
             }
         }
 
+        inline void SetTexture(unsigned int id, unsigned int size, float* tex,
+            TextureFormat format = TEXTURE_FORMAT_RGB) {
+            this->texID = id;
+            this->texSize = size;
+            this->texFormat = format;
+            this->texData = tex;
+            if (this->texSize == 0) {
+                this->texSize = 1;
+            }
+        }
+
     private:
 
         /** The OpenGL texture object id */
@@ -133,6 +153,9 @@ namespace view {
 
         /** The size of the texture in texel */
         unsigned int texSize;
+
+        /** The texture data */
+        float* texData;
 
         /** The texture format */
         TextureFormat texFormat;

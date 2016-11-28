@@ -65,7 +65,7 @@ view::LinearTransferFunction::LinearTransferFunction(void) : Module(),
         pathSlot("filepath", "path for serializing the TF"),
         loadTFSlot("loadTF", "trigger loading from file"),
         storeTFSlot("storeTF", "trigger saving to file"),
-        texID(0), texSize(1),
+        texID(0), texSize(1), tex(NULL),
         texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGB),
         firstRequest(true) {
 
@@ -143,6 +143,7 @@ bool view::LinearTransferFunction::create(void) {
 void view::LinearTransferFunction::release(void) {
     ::glDeleteTextures(1, &this->texID);
     this->texID = 0;
+    this->tex = NULL;
 }
 
 
@@ -262,7 +263,7 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
         cols.Sort(&InterColourComparer);
 
         this->texSize = this->texSizeSlot.Param<param::IntParam>()->Value();
-        float *tex = new float[4 * this->texSize];
+        this->tex = new float[4 * this->texSize];
         int p1, p2;
 
         cx2 = cols[0];
@@ -280,10 +281,10 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
                 float al = static_cast<float>(p - p1) / static_cast<float>(p2 - p1);
                 float be = 1.0f - al;
 
-                tex[p * 4] = cx1[0] * be + cx2[0] * al;
-                tex[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
-                tex[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
-                tex[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
+                this->tex[p * 4] = cx1[0] * be + cx2[0] * al;
+                this->tex[p * 4 + 1] = cx1[1] * be + cx2[1] * al;
+                this->tex[p * 4 + 2] = cx1[2] * be + cx2[2] * al;
+                this->tex[p * 4 + 3] = cx1[3] * be + cx2[3] * al;
             }
         }
 
@@ -292,8 +293,6 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
         glBindTexture(GL_TEXTURE_1D, this->texID);
 
         glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, this->texSize, 0, GL_RGBA, GL_FLOAT, tex);
-
-        delete[] tex;
 
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -309,7 +308,7 @@ bool view::LinearTransferFunction::requestTF(Call& call) {
 
     }
 
-    cgtf->SetTexture(this->texID, this->texSize, this->texFormat);
+    cgtf->SetTexture(this->texID, this->texSize, this->tex, this->texFormat);
 
     return true;
 }

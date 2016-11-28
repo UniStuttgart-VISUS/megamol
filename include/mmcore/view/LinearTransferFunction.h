@@ -86,6 +86,7 @@ namespace view {
             /** The value slot */
             param::ParamSlot *valSlot;
 
+           
         } InterColour;
 
         /**
@@ -157,6 +158,9 @@ namespace view {
 
         /** The texture size in texel */
         unsigned int texSize;
+
+        /** The texture data */
+        float* tex;
 
         /** The texture format */
         CallGetTransferFunction::TextureFormat texFormat;
