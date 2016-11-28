@@ -64,7 +64,7 @@ namespace megamol {
             PDB    = 0,
             STRIDE = 1,
             DSSP   = 2,
-            NOE    = 3   // Number ofElements/Methods -> must always be the last index!
+            NOM    = 3   // Number of Methods -> must always be the last index!
         };
         // ------------------ class functions ------------------- 
 
@@ -202,10 +202,10 @@ namespace megamol {
                 return NOTDEFINED;
             else if (this->secStructAssignment->Count() <= m)
                 return NOTDEFINED;
-            else if (this->secStructAssignment->opertator[](m) <= i)
+            else if (this->secStructAssignment->operator[](m).Count() <= i)
                 return NOTDEFINED;                
             else
-                return (this->secStructAssignment->opertator[](m)->operator[](i));
+                return (this->secStructAssignment->operator[](m)[i]);
         }
 
         /**
@@ -288,7 +288,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetSecStructure(vislib::Array<vislib::Array<secStruture> > *rnPtr) {
+        inline void SetSecStructure(vislib::Array<vislib::Array<secStructure> > *rnPtr) {
             this->secStructAssignment = rnPtr;
         }
 
@@ -370,7 +370,7 @@ namespace megamol {
         // ------------------ variables ------------------- 
 
         /** Pointer to the secondary structure assignment methods and their secondary structure type assignments */
-        vislib::Array<vislib::Array<secStruture> > *secStructAssignment;
+        vislib::Array<vislib::Array<secStructure> > *secStructAssignment;
         
         /** Pointer to the PDB index */
         vislib::Array<int> *pdbIndex;

@@ -192,7 +192,7 @@ namespace megamol {
         /**
          * Renders the simple STACK uncertainty visualization.
          *
-         * @param yPos     The y position the rendering should start.
+         * @param yPos The y position the rendering should start.
          */        
         void renderUncertaintyStackSimple(float yPos);
         
@@ -200,14 +200,14 @@ namespace megamol {
         /**
          * Renders the extended STACK uncertainty visualization with horizontal ordered tiles.
          *
-         * @param yPos     The y position the rendering should start.
+         * @param yPos The y position the rendering should start.
          */        
         void renderUncertaintyStackHorizontal(float yPos);
         
         /**
          * Renders the extended STACK uncertainty visualization with vertical ordered tiles.
          *
-         * @param yPos     The y position the rendering should start.
+         * @param yPos The y position the rendering should start.
          */        
         void renderUncertaintyMorphingVertical(float yPos);
         
@@ -313,7 +313,7 @@ namespace megamol {
         vislib::Array<vislib::math::Vector<float, 3> > bsColors;
 
         // The secondary structure assignment methods and their secondary structure type assignments
-        vislib::Array<vislib::Array<secStruture> > secStructAssignment;
+        vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
 
         // The values of the secondary structure uncertainty for each amino-acid 
         vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;

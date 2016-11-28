@@ -124,26 +124,19 @@ bool UncertaintyDataLoader::getData(Call& call) {
     if(recalculate) {
         switch(this->currentMethod) {
             case (AVERAGE): 
-                            if (!this->calculateUncertaintyAverage()) {
-                                return false;
-                            }
-                            break;
-            case (LEVENSTEIN): 
-                            if (!this->calculateUncertaintyAverage()) {
-                                return false;
-                            }
-                            break;
-            case (ANOTHER): 
-                            if (!this->calculateUncertaintyAverage()) {
-                                return false;
-                            }
-                            break;          
+
+                if (!this->calculateUncertaintyAverage()) {
+                    return false;
+                }
+                break;
+                                    
             default: return false;
         }
         udc->SetRecalcFlag(true);
         
         // DEBUG
-        /*for (int i = 0; i < this->pdbIndex.Count(); i++) {
+        /*
+        for (int i = 0; i < this->pdbIndex.Count(); i++) {
             std::cout << "U: ";
             for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
                 std::cout << this->secStructUncertainty[i][j] << " ";
@@ -153,7 +146,8 @@ bool UncertaintyDataLoader::getData(Call& call) {
                 std::cout << this->sortedSecStructUncertainty[i][j] << " ";
             }
             std::cout << std::endl;
-        }*/
+        }
+        */
     }
     
     // pass secondary strucutre data to call, if available
@@ -195,9 +189,6 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
         this->secStructAssignment[i].Clear();
     }
     this->secStructAssignment.Clear();
-    
-    
-// UncertaintyDataCall::assMethod::NOE
 
     // check if file ending matches ".uid"
     if(!filenameA.Contains(".uid")) {
@@ -212,8 +203,8 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 
         // Reset array size
         // (maximum number of entries in data arrays is ~9 less than line count of file)
-        for (unsigned int i = 0; i < UncertaintyDataCall::assMethod::NOE; i++) {
-            this->secStructAssignment.Add(vislib::Array<secStruture> );
+        for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
+            this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
             this->secStructAssignment.Last().AssertCapacity(file.Count());
         }
         this->chainID.AssertCapacity(file.Count());
@@ -360,7 +351,7 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
                 this->secStructUncertainty[i][j] += ((1.0f - pdbStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
 
             // STRIDE
-            if (this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE] == static_cast<UncertaintyDataCall::secStructure>(j))
+            if (this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE][i] == static_cast<UncertaintyDataCall::secStructure>(j))
                 this->secStructUncertainty[i][j] += strideStructFactor[j];
             else
                 this->secStructUncertainty[i][j] += ((1.0f - strideStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
@@ -372,7 +363,7 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
                 this->secStructUncertainty[i][j] += ((1.0f - dsspStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
 
             // normalise
-            this->secStructUncertainty[i][j] /= static_cast<float>(UncertaintyDataCall::assMethod::NOE); // because there are three methods
+            this->secStructUncertainty[i][j] /= static_cast<float>(UncertaintyDataCall::assMethod::NOM);
         }
 
         // using quicksort for sorting ...
