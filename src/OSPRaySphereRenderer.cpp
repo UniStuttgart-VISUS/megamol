@@ -23,6 +23,7 @@
 
 #include "ospray/ospray.h"
 
+
 using namespace megamol;
 
 
@@ -41,9 +42,6 @@ ospray::OSPRaySphereRenderer::OSPRaySphereRenderer
 ospray::OSPRaySphereRenderer::OSPRaySphereRenderer(void) : core::moldyn::AbstractSimpleSphereRenderer(),
 osprayShader(),
 extraSamles("General::extraSamples", "Extra sampling when camera is not moved"),
-AOweight("AO::AOweight", "Amount of ambient occlusion added in shading"),
-AOsamples("AO::AOsamples", "Number of rays per sample to compute ambient occlusion"),
-AOdistance("AO::AOdistance", "Maximum distance to consider for ambient occlusion"),
 // General light parameters
 lightColor("Light::General::LightColor", "Sets the color of the Light"),
 shadows("Light::General::Shadows", "Enables/Disables computation of hard shadows"),
@@ -71,9 +69,23 @@ hdri_up("Light::HDRILight::up", ""),
 hdri_direction("Light::HDRILight::Direction", ""),
 hdri_evnfile("Light::HDRILight::EvironmentFile", ""),
 // general renderer parameters
-rd_epsilon("Renderer::Epsilon","Ray epsilon to avoid self-intersections"),
+rd_epsilon("Renderer::Epsilon", "Ray epsilon to avoid self-intersections"),
 rd_spp("Renderer::SamplesPerPixel", "Samples per pixel"),
-rd_maxRecursion("Renderer::maxRecursion", "Maximum ray recursion depth")
+rd_maxRecursion("Renderer::maxRecursion", "Maximum ray recursion depth"),
+rd_type("Renderer::Type", "Select between SciVis and PathTracer"),
+// scivis renderer parameters
+AOweight("Renderer::SciVis::AOweight", "Amount of ambient occlusion added in shading"),
+AOsamples("Renderer::SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion"),
+AOdistance("Renderer::SciVis::AOdistance", "Maximum distance to consider for ambient occlusion"),
+// pathtracer renderer parameters
+rd_ptBackground("Renderer::PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity"),
+// material parameteres
+mat_Kd("Material::OBJMaterial::DiffuseColor", "Diffuse color"),
+mat_Ks("Material::OBJMaterial::SpecularColor", "Specular color"),
+mat_Ns("Material::OBJMaterial::Shininess", "Phong exponent"),
+mat_d("Material::OBJMaterial::Opacity", "Opacity"),
+mat_Tf("Material::OBJMaterial::TransparencyFilterColor", "Transparency filter color"),
+mat_type("Material::Type", "Switches material types")
 {
     imgSize.x = 0;
     imgSize.y = 0;
@@ -88,6 +100,20 @@ rd_maxRecursion("Renderer::maxRecursion", "Maximum ray recursion depth")
     lt->SetTypePair(QUADLIGHT, "QuadLight");
     lt->SetTypePair(AMBIENTLIGHT, "AmbientLight");
     lt->SetTypePair(HDRILIGHT, "HDRILight");
+
+    core::param::EnumParam *rdt = new core::param::EnumParam(SCIVIS);
+    rdt->SetTypePair(SCIVIS, "SciVis");
+    rdt->SetTypePair(PATHTRACER, "PathTracer");
+
+    core::param::EnumParam *mt = new core::param::EnumParam(OBJMATERIAL);
+    mt->SetTypePair(OBJMATERIAL, "OBJMaterial");
+    mt->SetTypePair(GLASS, "Glass (only PathTracer)");
+    mt->SetTypePair(MATTE, "Matte (only PathTracer)");
+    mt->SetTypePair(METAL, "Metal (only PathTracer)");
+    mt->SetTypePair(METALLICPAINT, "MetallicPaint (only PathTracer)");
+    mt->SetTypePair(PLASTIC, "Plastic (only PathTracer)");
+    mt->SetTypePair(THINGLASS, "ThinGlass (only PathTracer)");
+    mt->SetTypePair(VELVET, "Velvet (only PathTracer)");
 
     // Ambient parameters
     this->AOweight << new core::param::FloatParam(0.25f);
@@ -152,12 +178,33 @@ rd_maxRecursion("Renderer::maxRecursion", "Maximum ray recursion depth")
     this->MakeSlotAvailable(&this->hdri_evnfile);
 
     // General Renderer
-    this->rd_epsilon << new core::param::FloatParam(1e-6f);
+    this->rd_epsilon << new core::param::FloatParam(1e-4f);
     this->rd_spp << new core::param::IntParam(1);
     this->rd_maxRecursion << new core::param::IntParam(10);
+    this->rd_type << rdt;
     this->MakeSlotAvailable(&this->rd_epsilon);
     this->MakeSlotAvailable(&this->rd_spp);
     this->MakeSlotAvailable(&this->rd_maxRecursion);
+    this->MakeSlotAvailable(&this->rd_type);
+
+    //PathTracer
+    this->rd_ptBackground << new core::param::FilePathParam("");
+    this->MakeSlotAvailable(&this->rd_ptBackground);
+
+    // Material
+    this->mat_Kd << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.8f));
+    this->mat_Ks << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+    this->mat_Ns << new core::param::FloatParam(10.0f);
+    this->mat_d << new core::param::FloatParam(1.0f);
+    this->mat_Tf << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+    this->mat_type << mt;
+    this->MakeSlotAvailable(&this->mat_Kd);
+    this->MakeSlotAvailable(&this->mat_Ks);
+    this->MakeSlotAvailable(&this->mat_Ns);
+    this->MakeSlotAvailable(&this->mat_d);
+    this->MakeSlotAvailable(&this->mat_Tf);
+    this->MakeSlotAvailable(&this->mat_type);
+
 }
 
 
@@ -208,8 +255,9 @@ bool ospray::OSPRaySphereRenderer::create() {
         return false;
     }
 
+    this->initOSPRay();
     this->setupTextureScreen(vaScreen, vbo, tex);
-    this->setupOSPRay(renderer, camera, world, spheres, "spheres");
+    this->setupOSPRay(renderer, camera, world, spheres, "spheres", "scivis");
 
     return true;
 }
@@ -224,7 +272,7 @@ void ospray::OSPRaySphereRenderer::release() {
     ospRelease(spheres);
     ospRelease(light);
     ospRelease(lightArray);
-    GLenum shaderError = this->osprayShader.Release();
+    //GLenum shaderError = this->osprayShader.Release();
     core::moldyn::AbstractSimpleSphereRenderer::release();
 }
 
@@ -241,8 +289,13 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     if (c2 == NULL)
         return false;
 
-
+    //TODO
+    float clipDat[4];
+    float clipCol[4];
+    this->getClipData(clipDat, clipCol);
     
+    
+
     if (camParams == NULL)
         camParams = new vislib::graphics::CameraParamsStore();
    
@@ -270,6 +323,28 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
     }
 
+    // if user wants to switch renderer
+    if (this->rd_type.IsDirty()) {
+        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+        case SCIVIS:
+            ospRelease(camera);
+            ospRelease(world);
+            ospRelease(renderer);
+            ospRelease(spheres);
+            this->setupOSPRay(renderer, camera, world, spheres, "spheres", "scivis");
+            break;
+        case PATHTRACER:
+            ospRelease(camera);
+            ospRelease(world);
+            ospRelease(renderer);
+            ospRelease(spheres);
+            this->setupOSPRay(renderer, camera, world, spheres, "spheres", "pathtracer");
+            break;
+        }
+        renderer_changed = true;
+        this->rd_type.ResetDirty();
+    }
+
     // setup camera
     ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
     ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
@@ -280,10 +355,9 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
-    if (data_has_changed || cam_has_changed || !(this->extraSamles.Param<core::param::BoolParam>()->Value()) || time != cr->Time() || this->AOsamples.IsDirty() || this->AOweight.IsDirty()) {
+    if (data_has_changed || cam_has_changed || !(this->extraSamles.Param<core::param::BoolParam>()->Value()) || time != cr->Time() || this->InterfaceIsDirty() || renderer_changed) {
         time = cr->Time();
-        this->AOsamples.ResetDirty();
-        this->AOweight.ResetDirty();
+        renderer_changed = false;
 
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
             core::moldyn::MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
@@ -373,33 +447,84 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             ospSetData(spheres, "color", colorData);
             ospSet1f(spheres, "radius", parts.GetGlobalRadius());
 
-            //OSPMaterial material = ospNewMaterial(renderer, "OBJMaterial");
-            //ospSet3fv(material, "");
+            // custom material settings
+            OSPMaterial material;
+            switch (this->mat_type.Param<core::param::EnumParam>()->Value()) {
+            case OBJMATERIAL:
+                material = ospNewMaterial(renderer, "OBJMaterial");
+                ospSetVec3f(material, "Kd", {
+                    this->mat_Kd.Param<core::param::Vector3fParam>()->Value().GetX(),
+                    this->mat_Kd.Param<core::param::Vector3fParam>()->Value().GetY(),
+                    this->mat_Kd.Param<core::param::Vector3fParam>()->Value().GetZ() });
+                ospSetVec3f(material, "Ks", {
+                    this->mat_Ks.Param<core::param::Vector3fParam>()->Value().GetX(),
+                    this->mat_Ks.Param<core::param::Vector3fParam>()->Value().GetY(),
+                    this->mat_Ks.Param<core::param::Vector3fParam>()->Value().GetZ() });
+                ospSet1f(material, "Ns", this->mat_Ns.Param<core::param::FloatParam>()->Value());
+                ospSet1f(material, "d", this->mat_d.Param<core::param::FloatParam>()->Value());
+                ospSetVec3f(material, "Tf", {
+                    this->mat_Tf.Param<core::param::Vector3fParam>()->Value().GetX(),
+                    this->mat_Tf.Param<core::param::Vector3fParam>()->Value().GetY(),
+                    this->mat_Tf.Param<core::param::Vector3fParam>()->Value().GetZ() });
+                break;
+            case GLASS:
+                material = ospNewMaterial(renderer, "Glass");
+                break;
+            case MATTE:
+                material = ospNewMaterial(renderer, "Matte");
+                break;
+            case METAL:
+                material = ospNewMaterial(renderer, "Metal");
+                break;
+            case METALLICPAINT:
+                material = ospNewMaterial(renderer, "MetallicPaint");
+                break;
+            case PLASTIC:
+                material = ospNewMaterial(renderer, "Plastic");
+                break;
+            case THINGLASS:
+                material = ospNewMaterial(renderer, "ThinGlass");
+                break;
+            case VELVET:
+                material = ospNewMaterial(renderer, "Velvet");
+                break;
+            }
 
+            ospCommit(material);
+            ospSetMaterial(spheres, material);
             ospCommit(spheres);
             ospCommit(world);
 
-            // general renderer
+            // general renderer settings
             ospSet1f(renderer, "epsilon", this->rd_epsilon.Param<core::param::FloatParam>()->Value());
             ospSet1i(renderer, "spp", this->rd_spp.Param<core::param::IntParam>()->Value());
             ospSet1i(renderer, "maxDepth", this->rd_maxRecursion.Param<core::param::IntParam>()->Value());
 
-            // scivis renderer settings
-            ospSet1f(renderer, "aoWeight", this->AOweight.Param<core::param::FloatParam>()->Value());
-            ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
-            ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
-            ospSet1f(renderer, "aoOcclusionDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
-            /* Unnecessary for user
-              ospSet1i(renderer, "oneSidedLighting", 0);
-              ospSet1i(renderer, "backgroundEnabled", 0);
-            */
-
-            GLfloat bgcolor[4];
-            glGetFloatv(GL_COLOR_CLEAR_VALUE, bgcolor);
-            ospSet3fv(renderer, "bgColor", bgcolor);
+            switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+            case SCIVIS:
+                // scivis renderer settings
+                ospSet1f(renderer, "aoWeight", this->AOweight.Param<core::param::FloatParam>()->Value());
+                ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
+                ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
+                ospSet1f(renderer, "aoOcclusionDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
+                GLfloat bgcolor[4];
+                glGetFloatv(GL_COLOR_CLEAR_VALUE, bgcolor);
+                ospSet3fv(renderer, "bgColor", bgcolor);
+                /* Not implemented
+                ospSet1i(renderer, "oneSidedLighting", 0);
+                ospSet1i(renderer, "backgroundEnabled", 0);
+                */
+                break;
+            case PATHTRACER:
+                if (this->rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
+                    OSPTexture2D bkgnd_tex = this->TextureFromFile(this->rd_ptBackground.Param<core::param::FilePathParam>()->Value());
+                    ospSetObject(renderer, "backplate", bkgnd_tex);
+                }
+                break;
+            }
 
             ospCommit(renderer);
-            
+
             // create custom ospray light
             switch (this->lightType.Param<core::param::EnumParam>()->Value()) {
             case NONE:
@@ -469,23 +594,27 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
                     this->hdri_direction.Param<core::param::Vector3fParam>()->Value().X(),
                     this->hdri_direction.Param<core::param::Vector3fParam>()->Value().Y(),
                     this->hdri_direction.Param<core::param::Vector3fParam>()->Value().Z() });
+                if (this->hdri_evnfile.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
+                    OSPTexture2D hdri_tex = this->TextureFromFile(this->hdri_evnfile.Param<core::param::FilePathParam>()->Value());
+                    ospSetObject(renderer, "backplate", hdri_tex);
+                }
                 break;
             case AMBIENTLIGHT:
                 light = ospNewLight(renderer, "ambient");
                 break;
             }
 
-            if (light != NULL) {
+            if (light == NULL) {
+                ospSetData(renderer, "lights", NULL);
+            } else {
                 ospSet1f(light, "intensity", this->lightIntensity.Param<core::param::FloatParam>()->Value());
                 vislib::math::Vector<float, 3> lc = this->lightColor.Param<core::param::Vector3fParam>()->Value();
                 ospSetVec3f(light, "color", { lc.X(), lc.Y(), lc.Z() });
                 ospCommit(light);
                 lightArray = ospNewData(1, OSP_OBJECT, &light, 0);
                 ospSetData(renderer, "lights", lightArray);
-                ospCommit(renderer);
             }
-           
-
+            ospCommit(renderer);
 
             
             // setup framebuffer
@@ -503,6 +632,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             ospUnmapFrameBuffer(fb, framebuffer);
             ospRelease(vertexData);
             ospRelease(colorData);
+            ospRelease(material);
 
             vd.clear();
             cd.clear();
@@ -522,4 +652,76 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 }
 
 
-
+bool ospray::OSPRaySphereRenderer::InterfaceIsDirty() {
+    if (this->AOsamples.IsDirty() ||
+        this->AOweight.IsDirty() ||
+        this->AOdistance.IsDirty() ||
+        this->extraSamles.IsDirty() ||
+        this->lightIntensity.IsDirty() ||
+        this->lightType.IsDirty() ||
+        this->lightColor.IsDirty() ||
+        this->shadows.IsDirty() ||
+        this->dl_angularDiameter.IsDirty() ||
+        this->dl_direction.IsDirty() ||
+        this->dl_eye_direction.IsDirty() ||
+        this->pl_position.IsDirty() ||
+        this->pl_radius.IsDirty() ||
+        this->sl_position.IsDirty() ||
+        this->sl_direction.IsDirty() ||
+        this->sl_openingAngle.IsDirty() ||
+        this->sl_penumbraAngle.IsDirty() ||
+        this->sl_radius.IsDirty() ||
+        this->ql_position.IsDirty() ||
+        this->ql_edgeOne.IsDirty() ||
+        this->ql_edgeTwo.IsDirty() ||
+        this->hdri_up.IsDirty() ||
+        this->hdri_direction.IsDirty() ||
+        this->hdri_evnfile.IsDirty() ||
+        this->rd_epsilon.IsDirty() ||
+        this->rd_spp.IsDirty() ||
+        this->rd_maxRecursion.IsDirty() ||
+        this->rd_ptBackground.IsDirty() ||
+        this->mat_Kd.IsDirty() ||
+        this->mat_Ks.IsDirty() ||
+        this->mat_Ns.IsDirty() ||
+        this->mat_d.IsDirty() ||
+        this->mat_Tf.IsDirty())
+    {
+        this->AOsamples.ResetDirty();
+        this->AOweight.ResetDirty();
+        this->AOdistance.ResetDirty();
+        this->extraSamles.ResetDirty();
+        this->lightIntensity.ResetDirty();
+        this->lightType.ResetDirty();
+        this->lightColor.ResetDirty();
+        this->shadows.ResetDirty();
+        this->dl_angularDiameter.ResetDirty();
+        this->dl_direction.ResetDirty();
+        this->dl_eye_direction.ResetDirty();
+        this->pl_position.ResetDirty();
+        this->pl_radius.ResetDirty();
+        this->sl_position.ResetDirty();
+        this->sl_direction.ResetDirty();
+        this->sl_openingAngle.ResetDirty();
+        this->sl_penumbraAngle.ResetDirty();
+        this->sl_radius.ResetDirty();
+        this->ql_position.ResetDirty();
+        this->ql_edgeOne.ResetDirty();
+        this->ql_edgeTwo.ResetDirty();
+        this->hdri_up.ResetDirty();
+        this->hdri_direction.ResetDirty();
+        this->hdri_evnfile.ResetDirty();
+        this->rd_epsilon.ResetDirty();
+        this->rd_spp.ResetDirty();
+        this->rd_maxRecursion.ResetDirty();
+        this->rd_ptBackground.ResetDirty();
+        this->mat_Kd.ResetDirty();
+        this->mat_Ks.ResetDirty();
+        this->mat_Ns.ResetDirty();
+        this->mat_d.ResetDirty();
+        this->mat_Tf.ResetDirty();
+        return true;
+    } else {
+        return false;
+    }
+}

@@ -117,8 +117,19 @@ namespace ospray {
         core::param::ParamSlot rd_epsilon;
         core::param::ParamSlot rd_spp;
         core::param::ParamSlot rd_maxRecursion;
+        core::param::ParamSlot rd_type;
+        core::param::ParamSlot rd_ptBackground;
+
+        core::param::ParamSlot mat_Kd;
+        core::param::ParamSlot mat_Ks;
+        core::param::ParamSlot mat_Ns;
+        core::param::ParamSlot mat_d;
+        core::param::ParamSlot mat_Tf;
+        core::param::ParamSlot mat_type;
 
 
+        // Interface dirty flag
+        bool InterfaceIsDirty();
 
         // rendering conditions
         bool data_has_changed;
@@ -157,6 +168,26 @@ namespace ospray {
             QUADLIGHT,
             AMBIENTLIGHT,
             HDRILIGHT };
+
+        // renderer type
+        enum rdenum {
+            SCIVIS,
+            PATHTRACER
+        };
+        bool renderer_changed;
+
+        // material
+        //OSPMaterial material;
+        enum material_type {
+            OBJMATERIAL,
+            GLASS,
+            MATTE,
+            METAL,
+            METALLICPAINT,
+            PLASTIC,
+            THINGLASS,
+            VELVET
+        };
 
         // data conversion
         size_t vertexLength;

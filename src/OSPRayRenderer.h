@@ -22,6 +22,11 @@ namespace ospray {
     protected:
     
         /**
+        * initializes OSPRay
+        */
+        void OSPRayRenderer::initOSPRay();
+
+        /**
         * helper function for rendering the OSPRay texture
         * @param GLSL shader
         * @param GL texture object
@@ -46,7 +51,7 @@ namespace ospray {
         * @param OSPRay camera object
         * @param OSPRay world object
         */
-        void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, OSPGeometry &geometry, const char * geometry_name);
+        void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, OSPGeometry &geometry, const char * geometry_name, const char * renderer_name);
 
         /** 
         * color transfer helper
@@ -56,7 +61,13 @@ namespace ospray {
         * @param target array (rgba)
         */
         void colorTransferGray(std::vector<float> &grayArray, float* transferTable, unsigned int &tableSize, std::vector<float> &rgbaArray);
-
+        
+        /**
+        * Texture from file importer
+        * @param file path
+        * @return 2
+        */
+        OSPTexture2D TextureFromFile(vislib::TString fileName);
     };
 
 } // end namespace ospray
