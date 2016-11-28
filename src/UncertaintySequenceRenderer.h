@@ -184,26 +184,34 @@ namespace megamol {
          * enumeration of available uncertainty visualizations
          */
         enum visualization {
-            STACK     = 0,            
-            MORPHING  = 1,
+            STACK_SIMPLE   = 0,  
+            STACK_EXT_VERT = 1,       
+            STACK_EXT_HORI = 2,
         };
         
         /**
-         * Renders the STACK uncertainty visualization.
+         * Renders the simple STACK uncertainty visualization.
          *
          * @param yPos     The y position the rendering should start.
          */        
-        void renderUncertaintyStack(float yPos);
+        void renderUncertaintyStackSimple(float yPos);
         
 
         /**
-         * Renders the MORPHING uncertainty visualization.
+         * Renders the extended STACK uncertainty visualization with horizontal ordered tiles.
          *
          * @param yPos     The y position the rendering should start.
          */        
-        void renderUncertaintyMorphing(float yPos);
+        void renderUncertaintyStackHorizontal(float yPos);
         
-
+        /**
+         * Renders the extended STACK uncertainty visualization with vertical ordered tiles.
+         *
+         * @param yPos     The y position the rendering should start.
+         */        
+        void renderUncertaintyMorphingVertical(float yPos);
+        
+        
         /**********************************************************************
          * variables
          **********************************************************************/
