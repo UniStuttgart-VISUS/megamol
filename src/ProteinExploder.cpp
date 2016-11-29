@@ -367,13 +367,6 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 	float maxFactor = maxExplosionFactorParam.Param<param::FloatParam>()->Value();
 	displacedMoleculeMiddles = moleculeMiddles;
 
-#ifdef _MSC_VER
-#pragma push_macro("min")
-#undef min
-#pragma push_macro("max")
-#undef max
-#endif /* _MSC_VER */
-
 	auto myMid = midpoint;
 	if (useMassCenterParam.Param<param::BoolParam>()->Value())
 		myMid = massMidpoint;
@@ -476,11 +469,6 @@ void ProteinExploder::explodeMolecule(MolecularDataCall& call, ProteinExploder::
 
 	printf("%f %f %f\n", v1, v2, v3);*/
 
-#ifdef _MSC_VER
-#pragma pop_macro("min")
-#pragma pop_macro("max")
-#endif /* _MSC_VER */
-
 	vislib::math::Cuboid<float> newBB = currentBoundingBox;
 
 	if (computeBoundingBox) {
@@ -542,18 +530,8 @@ bool ProteinExploder::getExtent(core::Call& call) {
 
 	agdc->operator=(*mdc); // deep copy
 
-#ifdef _MSC_VER
-#pragma push_macro("min")
-#undef min
-#pragma push_macro("max")
-#undef max
-#endif /* _MSC_VER */
 	float theParam = std::min(this->explosionFactorParam.Param<param::FloatParam>()->Value(), 
 		this->maxExplosionFactorParam.Param<param::FloatParam>()->Value());
-#ifdef _MSC_VER
-#pragma pop_macro("min")
-#pragma pop_macro("max")
-#endif /* _MSC_VER */
 
 	bool play = this->playParam.Param<param::BoolParam>()->Value();
 	bool replay = this->replayParam.Param<param::BoolParam>()->Value();
