@@ -1144,6 +1144,8 @@ namespace protein_calls {
         const unsigned int* AtomHydrogenBondStatistics(void) const { return atomHydrogenBondStatistics; }
         unsigned int AtomSolventResidueCount(void) const { return atomSolventResCount; }
         void SetAtomHydrogenBondStatistics(const unsigned int*statistics /*, int solventResCount*/) { atomHydrogenBondStatistics = statistics; /*atomSolventResCount=solventResCount;*/ }
+		bool AtomHydrogenBondsFake(void) { return this->atomHydrogenBondsFake; }
+		void SetAtomHydrogenBondsFake(const bool fake) { this->atomHydrogenBondsFake = fake; }
         void SetSolventResidueIndices(unsigned int count, const unsigned int *residueIndices) {this->solventResidueIdx = residueIndices; atomSolventResCount = count; }
         const unsigned int* SolventResidueIndices(void) const { return solventResidueIdx; }
 
@@ -1484,6 +1486,7 @@ namespace protein_calls {
             this->atomHydrogenBondIdx = s.atomHydrogenBondIdx;
             this->atomHydrogenBondDistance = s.atomHydrogenBondDistance;
             this->atomHydrogenBondStatistics = s.atomHydrogenBondStatistics;
+			this->atomHydrogenBondsFake = s.atomHydrogenBondsFake;
             this->solventResidueIdx = s.solventResidueIdx;
             this->atomSolventResCount = s.atomSolventResCount;
             this->atomType = s.atomType;
@@ -1538,6 +1541,8 @@ namespace protein_calls {
         const int *atomHydrogenBondIdx;
         float atomHydrogenBondDistance;
         const unsigned int *atomHydrogenBondStatistics;
+		/** marks whether we use fake hydrogen bonds (calpha -> calpha) */
+		bool atomHydrogenBondsFake;
 
         const unsigned int *solventResidueIdx;
         unsigned int atomSolventResCount;
