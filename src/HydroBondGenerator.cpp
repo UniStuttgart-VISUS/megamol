@@ -322,6 +322,7 @@ bool HydroBondGenerator::getData(Call& call) {
 	outCall->SetAtomHydrogenBondDistance(this->hBondDistance.Param<param::FloatParam>()->Value());
 	outCall->SetAtomHydrogenBondStatistics(this->hBondStatistics.data());
 	outCall->SetAtomHydrogenBondIndices(this->hBondIndices.data());
+	outCall->SetAtomHydrogenBondsFake(this->cAlphaHBonds.Param<param::BoolParam>()->Value());
 
 	return true;
 }
