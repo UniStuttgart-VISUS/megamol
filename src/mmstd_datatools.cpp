@@ -55,6 +55,7 @@
 #include "IColRangeFix.h"
 #include "IColRangeOverride.h"
 #include "mmstd_datatools/MultiIndexListDataCall.h"
+#include "IndexListIndexColor.h"
 
 
 /*
@@ -173,6 +174,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::NullParticleWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeFix>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeOverride>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IndexListIndexColor>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

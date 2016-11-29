@@ -32,6 +32,14 @@ namespace datatools {
             index_t const* data;
             /** Number of index entry 'data' points to */
             length_t length;
+
+            index_t const* begin() const {
+                return data;
+            }
+            index_t const* end() const {
+                return data + length;
+            }
+
         } index_list_t;
 
         /** Possible call functions/intends */
@@ -91,6 +99,8 @@ namespace datatools {
         unsigned int frameID;
 
     };
+
+    typedef core::factories::CallAutoDescription<MultiIndexListDataCall> MultiIndexListDataCallDescription;
 
 }
 }
