@@ -117,7 +117,7 @@ namespace view {
          *
          * @return The OpenGL texture data
          */
-        inline float*  GetTextureData(void) const {
+        inline float const* GetTextureData(void) const {
             return this->texData;
         }
 
@@ -149,7 +149,7 @@ namespace view {
          *            is responsible for keeping the memory alive.
          * @param format The texture format
          */
-        inline void SetTexture(unsigned int id, unsigned int size, float* tex,
+        inline void SetTexture(unsigned int id, unsigned int size, float const* tex,
             TextureFormat format = TEXTURE_FORMAT_RGB) {
             this->texID = id;
             this->texSize = size;
@@ -169,7 +169,7 @@ namespace view {
         unsigned int texSize;
 
         /** The texture data */
-        float* texData;
+        float const* texData;
 
         /** The texture format */
         TextureFormat texFormat;
