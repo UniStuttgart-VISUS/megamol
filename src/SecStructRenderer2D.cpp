@@ -109,8 +109,12 @@ const GLuint SSBOBindingPoint = 2;
 SecStructRenderer2D::SecStructRenderer2D(void) : Renderer2DModule(),
 	dataInSlot("getData", "Connects the secondary structure renderer with data storage."),
 	planeInSlot("getPlane", "Connect the secondary structure renderer with a plane source."),
-	coilWidthParam("coilWidth", "Screen width of random coil."),
-	structureWidthParam("structureWidth", "Screen width of sheets and helices.") {
+	coilWidthParam("Dimensions::coilWidth", "Screen width of random coil."),
+	structureWidthParam("Dimensions::structureWidth", "Screen width of sheets and helices."),
+	showBackboneParam("Show::showBackbone", "Show the backbone of the main chain."),
+	showDirectConnectionsParam("Show::showDirectConnections", "Show the direct atom-atom connections between all atoms of the main chain."),
+	showAtomPositionsParam("Show::showAtomPositions", "Show the positions of the C-Alpha atoms."),
+	showHydrogenBondsParam("Show::showHydrogenBonds", "Show the hydrogen bonds.") {
 
 	this->dataInSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable(&this->dataInSlot);
@@ -123,6 +127,18 @@ SecStructRenderer2D::SecStructRenderer2D(void) : Renderer2DModule(),
 
 	this->structureWidthParam.SetParameter(new param::FloatParam(3.0f, 0.1f, 100.0f));
 	this->MakeSlotAvailable(&this->structureWidthParam);
+
+	this->showAtomPositionsParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->showAtomPositionsParam);
+
+	this->showBackboneParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->showBackboneParam);
+
+	this->showDirectConnectionsParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->showDirectConnectionsParam);
+
+	this->showHydrogenBondsParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->showHydrogenBondsParam);
 
 	this->lastDataHash = 0;
 	this->lastPlaneHash = 0;
@@ -249,6 +265,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 	if (mdc->DataHash() != this->lastDataHash) {
 		this->cAlphas.clear();
 		this->molSizes.clear();
+		this->cAlphaIndices.clear();
 
 		unsigned int firstResIdx = 0;
 		unsigned int lastResIdx = 0;
@@ -261,6 +278,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 		unsigned int lastAAIdx = 0;
 
 		CAlpha lastCalpha;
+		unsigned int lastCalphaIndex;
 
 		// loop over all molecules of the protein
 		for (unsigned int molIdx = 0; molIdx < mdc->MoleculeCount(); molIdx++) {
@@ -307,16 +325,20 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 					calpha.pos[2] = helpVec[2];
 
 					this->cAlphas.push_back(calpha);
+					this->cAlphaIndices.push_back(acid->CAlphaIndex());
 					//calpha.print(); std::cout << std::endl;
 
 					this->molSizes[molIdx]++;
 
 					lastCalpha = calpha;
+					lastCalphaIndex = acid->CAlphaIndex();
 
 					// add the first atom 3 times
 					if (!firstset) {
 						this->cAlphas.push_back(calpha);
 						this->cAlphas.push_back(calpha);
+						this->cAlphaIndices.push_back(acid->CAlphaIndex());
+						this->cAlphaIndices.push_back(acid->CAlphaIndex());
 						this->molSizes[molIdx] += 2;
 						firstset = true;
 					}
@@ -326,6 +348,8 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 			// add the last atom 3 times
 			this->cAlphas.push_back(lastCalpha);
 			this->cAlphas.push_back(lastCalpha);
+			this->cAlphaIndices.push_back(lastCalphaIndex);
+			this->cAlphaIndices.push_back(lastCalphaIndex);
 			this->molSizes[molIdx] += 2;
 		}
 
@@ -419,54 +443,34 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->ssbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, this->ssbo);
 
-	glUniformMatrix4fv(this->lineShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
-	glUniformMatrix4fv(this->lineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-	glUniformMatrix4fv(this->lineShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-	glUniformMatrix4fv(this->lineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-	glUniformMatrix4fv(this->lineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-	glUniformMatrix4fv(this->lineShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
-	glUniformMatrix4fv(this->lineShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+	this->lineShader.Enable();
 
-	glPointSize(5.0f);
-	glLineWidth(1.0f);
-	for (unsigned int i = 0; i < molSizes.size(); i++) {
-		glUniform1i(this->lineShader.ParameterLocation("instanceOffset"), 0);
-		glPatchParameteri(GL_PATCH_VERTICES, 1);
-		glDrawArrays(GL_PATCHES, 0, molSizes[i]);
+	if (this->showBackboneParam.Param<param::BoolParam>()->Value()) {
+
+		glUniformMatrix4fv(this->lineShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+		glUniformMatrix4fv(this->lineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->lineShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+		glUniformMatrix4fv(this->lineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->lineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+		glUniformMatrix4fv(this->lineShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+		glUniformMatrix4fv(this->lineShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+
+		glPointSize(5.0f);
+		glLineWidth(1.0f);
+		for (unsigned int i = 0; i < molSizes.size(); i++) {
+			glUniform1i(this->lineShader.ParameterLocation("instanceOffset"), 0);
+			glPatchParameteri(GL_PATCH_VERTICES, 1);
+			glDrawArrays(GL_PATCHES, 0, molSizes[i]);
+		}
 	}
-	
-	/*glBegin(GL_LINES);
-	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-	glVertex3f(0.0f, 0.5f, 0.0f);
-	glVertex3f(0.0f, -0.5f, 0.0f);
-	glEnd();*/
+
 	this->lineShader.Disable();
 	
-	glPointSize(5.0f);
-	glBegin(GL_POINTS);
-	for (unsigned int i = 0; i < this->cAlphas.size(); i++) {
-		switch (this->cAlphas[i].type)
-		{
-		case 0:
-			glColor4f(0.0f, 0.0f, 0.0f, 1.0f); break;
-		case 1:
-			glColor4f(0.0f, 0.0f, 1.0f, 1.0f); break;
-		case 2:
-			glColor4f(1.0f, 0.0f, 0.0f, 1.0f); break;
-		case 3:
-			glColor4f(0.0f, 1.0f, 0.0f, 1.0f); break;
-		default:
-			glColor4f(0.0f, 0.0f, 0.0f, 1.0f); break;
-		}
-		glVertex4f(cAlphas[i].pos[0], cAlphas[i].pos[1], 0.0f, 1.0f);
-	}
-	glEnd();
-
-	unsigned int start = 0;
-	for (unsigned int i = 0; i < this->molSizes.size(); i++) {
-		glBegin(GL_LINE_STRIP);
-		for (unsigned int j = start; j < start + this->molSizes[i]; j++) {
-			switch (this->cAlphas[j].type)
+	if (this->showAtomPositionsParam.Param<param::BoolParam>()->Value()) {
+		glPointSize(5.0f);
+		glBegin(GL_POINTS);
+		for (unsigned int i = 0; i < this->cAlphas.size(); i++) {
+			switch (this->cAlphas[i].type)
 			{
 			case 0:
 				glColor4f(0.0f, 0.0f, 0.0f, 1.0f); break;
@@ -479,11 +483,43 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 			default:
 				glColor4f(0.0f, 0.0f, 0.0f, 1.0f); break;
 			}
-			
-			glVertex4f(cAlphas[j].pos[0], cAlphas[j].pos[1], 0.0f, 1.0f);
+			glVertex4f(cAlphas[i].pos[0], cAlphas[i].pos[1], 0.0f, 1.0f);
 		}
 		glEnd();
-		start += molSizes[i];
+	}
+
+	if (this->showDirectConnectionsParam.Param<param::BoolParam>()->Value()) {
+		unsigned int start = 0;
+		for (unsigned int i = 0; i < this->molSizes.size(); i++) {
+			glBegin(GL_LINE_STRIP);
+			for (unsigned int j = start; j < start + this->molSizes[i]; j++) {
+				switch (this->cAlphas[j].type)
+				{
+				case 0:
+					glColor4f(0.0f, 0.0f, 0.0f, 1.0f); break;
+				case 1:
+					glColor4f(0.0f, 0.0f, 1.0f, 1.0f); break;
+				case 2:
+					glColor4f(1.0f, 0.0f, 0.0f, 1.0f); break;
+				case 3:
+					glColor4f(0.0f, 1.0f, 0.0f, 1.0f); break;
+				default:
+					glColor4f(0.0f, 0.0f, 0.0f, 1.0f); break;
+				}
+
+				glVertex4f(cAlphas[j].pos[0], cAlphas[j].pos[1], 0.0f, 1.0f);
+			}
+			glEnd();
+			start += molSizes[i];
+		}
+	}
+
+	if (this->showHydrogenBondsParam.Param<param::BoolParam>()->Value() && mdc->AtomHydrogenBondsFake()) {
+
+		// TODO render the hydrogen bonds
+
+	} else if (this->showHydrogenBondsParam.Param<param::BoolParam>()->Value() && !mdc->AtomHydrogenBondsFake()) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Trying to show fake hydrogen bonds where only real hydrogen bonds are available\n");
 	}
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->ssbo);

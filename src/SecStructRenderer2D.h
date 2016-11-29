@@ -136,6 +136,18 @@ namespace protein_cuda {
 		/** sheet or helix width parameter */
 		core::param::ParamSlot structureWidthParam;
 
+		/** shall the backbone be shown? */
+		core::param::ParamSlot showBackboneParam;
+
+		/** shall the direct atom connections be shown? */
+		core::param::ParamSlot showDirectConnectionsParam;
+
+		/** shall the atom positions be shown */
+		core::param::ParamSlot showAtomPositionsParam;
+
+		/** shall the hydrogen bonds be shown? */
+		core::param::ParamSlot showHydrogenBondsParam;
+
 		/** the mouse position */
 		vislib::math::Vector<float, 2> mousePos;
 
@@ -153,6 +165,9 @@ namespace protein_cuda {
 
 		/** The numbers of c alpha atoms for each different molecule */
 		std::vector<unsigned int> molSizes;
+
+		/** The indices in the main chain of each available c alpha atom */
+		std::vector<unsigned int> cAlphaIndices;
 
 		/** Handle for the c alpha ssbo */
 		GLuint ssbo;
