@@ -54,6 +54,7 @@
 #include "NullParticleWriter.h"
 #include "IColRangeFix.h"
 #include "IColRangeOverride.h"
+#include "mmstd_datatools/MultiIndexListDataCall.h"
 
 
 /*
@@ -174,10 +175,10 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeOverride>();
 
             // register calls here:
-            // ...
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleFilterMapDataCall>();
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiIndexListDataCall>();
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
     };

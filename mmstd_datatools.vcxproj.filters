@@ -175,6 +175,9 @@
     <ClCompile Include="src\IColInverse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MultiIndexListDataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -311,6 +314,9 @@
     </ClInclude>
     <ClInclude Include="src\IColAdd.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmstd_datatools\MultiIndexListDataCall.h">
+      <Filter>Public Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

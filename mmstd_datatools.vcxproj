@@ -287,6 +287,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\IColRangeFix.cpp" />
     <ClCompile Include="src\IColRangeOverride.cpp" />
     <ClCompile Include="src\ModColIRange.cpp" />
+    <ClCompile Include="src\MultiIndexListDataCall.cpp" />
     <ClCompile Include="src\MultiParticleDataAdaptor.cpp" />
     <ClCompile Include="src\MultiParticleRelister.cpp" />
     <ClCompile Include="src\NullParticleWriter.cpp" />
@@ -308,6 +309,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmstd_datatools\AbstractParticleManipulator.h" />
     <ClInclude Include="include\mmstd_datatools\floattable\CallFloatTableData.h" />
     <ClInclude Include="include\mmstd_datatools\GraphDataCall.h" />
+    <ClInclude Include="include\mmstd_datatools\MultiIndexListDataCall.h" />
     <ClInclude Include="include\mmstd_datatools\MultiParticleDataAdaptor.h" />
     <ClInclude Include="include\mmstd_datatools\ParticleFilterMapDataCall.h" />
     <ClInclude Include="src/DataFileSequence.h" />
