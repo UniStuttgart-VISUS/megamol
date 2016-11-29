@@ -110,7 +110,10 @@ namespace view {
         }
 
         /**
-         * Answer the OpenGL texture data
+         * Answer the OpenGL texture data. This is always an RGBA float color
+         * array, regardless the TextureFormat returned. If TextureFormat is
+         * RGB the A values stored, are simply meaningless. Thus, this pointer
+         * always points to TextureSize*4 floats.
          *
          * @return The OpenGL texture data
          */
@@ -130,11 +133,22 @@ namespace view {
             this->texID = id;
             this->texSize = size;
             this->texFormat = format;
+            this->texData = nullptr;
             if (this->texSize == 0) {
                 this->texSize = 1;
             }
         }
 
+        /**
+         * Sets the 1D texture information
+         *
+         * @param id The OpenGL texture object id
+         * @param size The size of the texture
+         * @param tex The float RGBA texture data, i.e. size*4 floats holding
+         *            the RGBA color data. The data is not copied. The caller
+         *            is responsible for keeping the memory alive.
+         * @param format The texture format
+         */
         inline void SetTexture(unsigned int id, unsigned int size, float* tex,
             TextureFormat format = TEXTURE_FORMAT_RGB) {
             this->texID = id;
