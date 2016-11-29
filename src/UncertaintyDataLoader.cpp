@@ -158,7 +158,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetPdbIndex(&this->pdbIndex);
         udc->SetAminoAcidName(&this->aminoAcidName);
         udc->SetChainID(&this->chainID);
-        udc->SetMissingFlag(&this->missingFlag);
+        udc->SetResidueFlag(&this->residueFlag);
         udc->SetSecStructUncertainty(&this->secStructUncertainty);
         udc->SetSortedSecStructTypes(&this->sortedSecStructUncertainty);
         udc->SetPdbID(&this->pdbID);
@@ -184,7 +184,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
     this->pdbIndex.Clear();
     this->chainID.Clear();
     this->aminoAcidName.Clear();
-    this->missingFlag.Clear();
+    this->residueFlag.Clear();
     for (unsigned int i = 0; i < secStructAssignment.Count(); i++) {
         this->secStructAssignment[i].Clear();
     }
@@ -209,7 +209,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
         }
         this->chainID.AssertCapacity(file.Count());
         this->aminoAcidName.AssertCapacity(file.Count());
-        this->missingFlag.AssertCapacity(file.Count());
+        this->residueFlag.AssertCapacity(file.Count());
         this->pdbIndex.AssertCapacity(file.Count());
 
 		// Run through file lines
@@ -238,9 +238,11 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                 this->chainID.Add(line[22]);
                 // The Missing amino-acid flag
                 if (line[26] == 'M')
-                    this->missingFlag.Add(true);
+                    this->residueFlag.Add(UncertaintyDataCall::addFlags::MISSING);
+                else if (line[26] == 'H')
+                    this->residueFlag.Add(UncertaintyDataCall::addFlags::HETEROGEN);
                 else
-                    this->missingFlag.Add(false);
+                    this->residueFlag.Add(UncertaintyDataCall::addFlags::NOTHING);
                 
                 // Translate DSSP one letter secondary structure summary 
                 switch (line[228]) {

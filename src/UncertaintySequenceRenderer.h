@@ -159,14 +159,15 @@ namespace megamol {
          * @param secStructPre The secondary structure type on position i-1
          * @param secStructi   The secondary structure type on position i
          * @param secStructSuc The secondary structure type on position i+1
-         * @param m            The flag indicating if it is a missing amino-acid
+         * @param f            The residue flag 
          * @param x            The x position
          * @param y            The y position
+         * @param ud           The pointer to the data call
          * @param defColor     The the default color
          */
-        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure secStructPre, 
-                                       UncertaintyDataCall::secStructure secStructi, 
-                                       UncertaintyDataCall::secStructure secStructSuc, bool m, float x, float y, float defColor[4]);
+        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure secStructPre, UncertaintyDataCall::secStructure secStructi, 
+                                       UncertaintyDataCall::secStructure secStructSuc, UncertaintyDataCall::addFlags f, float x, float y, 
+                                       float defColor[4], UncertaintyDataCall *ud);
 
         /**
         * Renders a two lined tooltip text.
@@ -193,23 +194,26 @@ namespace megamol {
          * Renders the simple STACK uncertainty visualization.
          *
          * @param yPos The y position the rendering should start.
+         * @param ud   The pointer to the data call
          */        
-        void renderUncertaintyStackSimple(float yPos);
+        void renderUncertaintyStackSimple(float yPos, UncertaintyDataCall *ud);
         
 
         /**
          * Renders the extended STACK uncertainty visualization with horizontal ordered tiles.
          *
          * @param yPos The y position the rendering should start.
+         * @param ud   The pointer to the data call
          */        
-        void renderUncertaintyStackHorizontal(float yPos);
+        void renderUncertaintyStackHorizontal(float yPos, UncertaintyDataCall *ud);
         
         /**
          * Renders the extended STACK uncertainty visualization with vertical ordered tiles.
          *
          * @param yPos The y position the rendering should start.
+         * @param ud   The pointer to the data call
          */        
-        void renderUncertaintyMorphingVertical(float yPos);
+        void renderUncertaintyMorphingVertical(float yPos, UncertaintyDataCall *ud;
         
         
         /**********************************************************************
@@ -284,8 +288,8 @@ namespace megamol {
         vislib::Array<int> aminoAcidIndex;
         // the array of the chain IDs
         vislib::Array<char> chainID;
-        // the array for the missing amin-acid flag
-        vislib::Array<bool> missingAminoAcids;
+        // the array for the residue flag
+        vislib::Array<UncertaintyDataCall::addFlags> residueFlag;
  
         // the array of binding site names
         vislib::Array<vislib::StringA> bindingSiteNames;

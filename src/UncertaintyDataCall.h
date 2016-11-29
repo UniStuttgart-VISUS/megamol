@@ -66,6 +66,16 @@ namespace megamol {
             DSSP   = 2,
             NOM    = 3   // Number of Methods -> must always be the last index!
         };
+        
+        /**
+        * Enumeration of additional residue flags.
+        */
+        enum addFlags {
+            NOTHING   = 0,
+            MISSING   = 1,
+            HETEROGEN = 2
+        };
+                
         // ------------------ class functions ------------------- 
 
 		/**
@@ -181,13 +191,13 @@ namespace megamol {
         *
         * @return The missing amino-acid flag.
         */
-        inline bool GetMissingFlag(unsigned int i) const {
-            if (!this->missingFlag)
+        inline addFlags getResidueFlag(unsigned int i) const {
+            if (!this->residueFlag)
                 return false;
-            else if (this->aminoAcidName->Count() <= i)
+            else if (this->residueFlag->Count() <= i)
                 return false;
             else
-                return (this->missingFlag->operator[](i));
+                return (this->residueFlag->operator[](i));
         }
 
         /**
@@ -320,12 +330,12 @@ namespace megamol {
         }
 
         /**
-        * Set the pointer to the missing amino-acid flag.
+        * Set the pointer to the residue flag.
         *
         * @param rnPtr The pointer.
         */
-        inline void SetMissingFlag(vislib::Array<bool> *rnPtr) {
-            this->missingFlag = rnPtr;
+        inline void SetResidueFlag(vislib::Array<addFlags> *rnPtr) {
+            this->residueFlag = rnPtr;
         }
 
         /**
@@ -378,8 +388,8 @@ namespace megamol {
         /** Pointer to the chain ID */
         vislib::Array<char> *chainID;
 
-        /** Pointer to the missing amino-acid flag */
-        vislib::Array<bool> *missingFlag;
+        /** Pointer to the flag giving additional information */
+        vislib::Array<addFlags> *residueFlag;
 
         /** Pointer to the amino-acid name */
         vislib::Array<vislib::StringA> *aminoAcidName;

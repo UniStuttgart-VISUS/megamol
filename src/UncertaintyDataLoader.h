@@ -122,9 +122,7 @@ namespace megamol {
              * enumeration of available uncertainty calculation methods. 
              */
              enum calculationMethod {
-                 AVERAGE    = 0,
-                 LEVENSTEIN = 1,
-                 ANOTHER    = 2
+                 AVERAGE    = 0
              };
              
             /**
@@ -155,8 +153,8 @@ namespace megamol {
             /** The chain ID */
             vislib::Array<char> chainID;
 
-            /** The missing amino-acid flag */
-            vislib::Array<bool> missingFlag;
+             /** The flag giving additional information */
+            vislib::Array<UncertaintyDataCall::addFlags> residueFlag;
 
             /** The amino-acid name */
             vislib::Array<vislib::StringA> aminoAcidName;
