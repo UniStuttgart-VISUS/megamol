@@ -181,6 +181,12 @@
     <ClCompile Include="src\IndexListIndexColor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\IColSelectClassify.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ErosionField.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -322,6 +328,12 @@
       <Filter>Public Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\IndexListIndexColor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IColSelectClassify.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ErosionField.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

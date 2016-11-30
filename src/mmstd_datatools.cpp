@@ -56,6 +56,8 @@
 #include "IColRangeOverride.h"
 #include "mmstd_datatools/MultiIndexListDataCall.h"
 #include "IndexListIndexColor.h"
+#include "IColSelectClassify.h"
+#include "ErosionField.h"
 
 
 /*
@@ -175,6 +177,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeFix>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColRangeOverride>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IndexListIndexColor>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColSelectClassify>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ErosionField>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

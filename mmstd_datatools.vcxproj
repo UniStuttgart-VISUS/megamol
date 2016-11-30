@@ -276,6 +276,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="src/TransferFunctionQuery.cpp" />
     <ClCompile Include="src\EnforceSymmetricParticleColorRanges.cpp" />
+    <ClCompile Include="src\ErosionField.cpp" />
     <ClCompile Include="src\FloatTableToParticles.cpp" />
     <ClCompile Include="src\floattable\CallFloatTableData.cpp" />
     <ClCompile Include="src\floattable\CSVDataSource.cpp" />
@@ -286,6 +287,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\IColInverse.cpp" />
     <ClCompile Include="src\IColRangeFix.cpp" />
     <ClCompile Include="src\IColRangeOverride.cpp" />
+    <ClCompile Include="src\IColSelectClassify.cpp" />
     <ClCompile Include="src\IndexListIndexColor.cpp" />
     <ClCompile Include="src\ModColIRange.cpp" />
     <ClCompile Include="src\MultiIndexListDataCall.cpp" />
@@ -330,6 +332,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src/targetver.h" />
     <ClInclude Include="src/TransferFunctionQuery.h" />
     <ClInclude Include="src\EnforceSymmetricParticleColorRanges.h" />
+    <ClInclude Include="src\ErosionField.h" />
     <ClInclude Include="src\FloatTableToParticles.h" />
     <ClInclude Include="src\floattable\CSVDataSource.h" />
     <ClInclude Include="src\floattable\MMFTDataSource.h" />
@@ -338,6 +341,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\IColInverse.h" />
     <ClInclude Include="src\IColRangeFix.h" />
     <ClInclude Include="src\IColRangeOverride.h" />
+    <ClInclude Include="src\IColSelectClassify.h" />
     <ClInclude Include="src\IndexListIndexColor.h" />
     <ClInclude Include="src\ModColIRange.h" />
     <ClInclude Include="src\MultiParticleRelister.h" />
