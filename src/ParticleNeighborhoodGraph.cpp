@@ -208,7 +208,11 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
         mean_dist /= static_cast<float>(sample_cnt);
         float dist_fac = autoRadiusFactorSlot.Param<core::param::FloatParam>()->Value();
         neiRad = dist_fac * mean_dist;
-        vislib::sys::Log::DefaultLog.WriteInfo("PNhG detecting radius %f * %f => %f", mean_dist, dist_fac, neiRad);
+        end = high_resolution_clock::now();
+        vislib::sys::Log::DefaultLog.WriteInfo("PNhG detecting radius (in %u ms) %f * %f => %f",
+            std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count(),
+            mean_dist, dist_fac, neiRad);
+        start = end;
 
         this->radiusSlot.Param<core::param::FloatParam>()->SetValue(neiRad, false);
     }
