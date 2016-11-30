@@ -62,7 +62,7 @@ namespace io {
                 unsigned char flags;
                 file->Read(&flags, 1);
                 isDirected = (flags & 1);
-                edges.resize((size - 1) / sizeof(GraphDataCall::edge));
+                edges.resize(static_cast<std::vector<GraphDataCall::edge>::size_type>((size - 1) / sizeof(GraphDataCall::edge)));
                 file->Read(edges.data(), edges.size() * sizeof(GraphDataCall::edge));
                 frame = idx;
                 return true;
