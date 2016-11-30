@@ -771,19 +771,15 @@ class UncertaintyInputData:
                 # Parsing file line ...                
                     if (FileLine[CW[0][0]:CW[0][1]] == 'ASG'):                                                      
                                 
-                        # Skip other as 'missing' flagged amino-acids 
-                        while (OutFileBuffer[LineOffset][34:35] == 'M'):   
-                            LineOffset += 1
-
-                        # skip heterogen residues which are marked by STRIDE as jumps in the STRIDE PDB-index numbering!
-                        #   stride pdb-index            pdb-index of last entry from pdb                         
-                        if (int(FileLine[11:15]) != int(OutFileBuffer[LineOffset][40:46])):
-                            LineOffset += (int(FileLine[11:15]) - int(OutFileBuffer[LineOffset-1][40:46]) -1)
-
+                        # Aligning PDB-Index of STRIDE file with (complete) PDB-Index in output file
+                        # Skipping missing amino-acids ('M'), heterogen residues ('H') and other irregularities in STRIDE calculation which lead to skipped amino-acids
+                        #    PDB-Index in STRIDE file    PDB-Index in ouputfile
+                        while (int(FileLine[11:15]) > int(OutFileBuffer[LineOffset][40:46])):          
+                            LineOffset += 1 
+                            
                         ChainID = FileLine[9:10]
                         # Search for matching chain ID                    
                         if (OutFileBuffer[LineOffset][30:31] != ChainID) :                     # PDB Chain ID != STRIDE chain ID  
-                            # ChainID = FileLine[9:10]
                             LineOffset = 8                                                     # Reset LineOffset and search for next chain ID from the beginning
                             for x in range(LineOffset, len(OutFileBuffer)):                    # Start search from the beginning
                                 if (OutFileBuffer[x][30:31] == ChainID) :                      # PDB Chain ID == STRIDE chain ID
@@ -859,24 +855,20 @@ class UncertaintyInputData:
                 elif StartParsing:
                     if (('!' and '*') in FileLine):                                            # Skip lines indicating chain break 
                         pass
-                    elif (('!' in FileLine) and ('*' not in FileLine)):                        # Leave empty lines indicating dicontinuity
+                    elif (('!' in FileLine) and ('*' not in FileLine)):                        # Skip lines indicating dicontinuity
                         pass
                     elif (('!' and  '*') not in FileLine):                                     
                     
-                        # print(LineOffset)
-                        # Skip other as 'missing' flagged amino-acids 
-                        while (OutFileBuffer[LineOffset][34:35] == 'M'):                       # Just skip missing amino-acids .. DSSP handles heterogen residues and marks them as X  
-                            LineOffset += 1
-                               
-                        # skip heterogen residues which are marked by STRIDE as jumps in the STRIDE PDB-index numbering!
-                        #   stride pdb-index            pdb-index of last entry from pdb                         
-                        if (int(FileLine[5:10]) != int(OutFileBuffer[LineOffset][40:46])):
-                            LineOffset += (int(FileLine[5:10]) - int(OutFileBuffer[LineOffset-1][40:46]) -1)
+                        # Aligning PDB-Index of DSSP file with (complete) PDB-Index in output file
+                        # Skipping missing amino-acids ('M') and other irregularities in DSSP ('!' or '*') calculation which lead to skipped amino-acids
+                        # Heterogen residues ('H') are handled by DSSP indicated by 'X' for the amino-acid name
+                        #    PDB-Index in DSSP file    PDB-Index in ouputfile
+                        while (int(FileLine[5:10]) > int(OutFileBuffer[LineOffset][40:46])):          
+                            LineOffset += 1                                   
                                                            
                         ChainID = FileLine[11:12]
                         # Search for matching chain ID                    
                         if (OutFileBuffer[LineOffset][30:31] != ChainID) :                     # PDB Chain ID != DSSP chain ID  
-                            # ChainID = FileLine[11:12]
                             LineOffset = 8                                                     # Reset LineOffset and search for next chain ID from the beginning
                             for x in range(LineOffset, len(OutFileBuffer)):                    # Start search from the beginning
                                 if (OutFileBuffer[x][30:31] == ChainID) :                      # PDB Chain ID == DSSP chain ID
@@ -888,6 +880,11 @@ class UncertaintyInputData:
                                     if (int(OutFileBuffer[y][39:46]) == ATOMChainsAndIndices[ChainID][0]):  # PDB amino-acid index == Index of first amino-acid in ATOM 
                                         LineOffset = y
                                         break
+                                        
+                        # mark empty (= ' ') secondary structure summary with 'C'
+                        # so it is possible to distinguish if an entry is 'handled' by DSSP to distiguish with entries which are completly skipped by DSSP
+                        if FileLine[CW[3][0]:(CW[3][0]+1)].isspace():
+                            FileLine = FileLine[:CW[3][0]]+'C'+FileLine[(CW[3][0]+1):]
                             
                         OutFileBuffer[LineOffset] += (' '+FileLine[CW[0][0]:CW[0][1]]+' |  '+FileLine[CW[1][0]:CW[1][1]]+' |       '+FileLine[CW[2][0]:CW[2][1]]+' | '+
                                                   FileLine[CW[3][0]:CW[3][1]]+' | '+FileLine[CW[4][0]:CW[4][1]]+' | '+FileLine[CW[5][0]:CW[5][1]]+' | '+

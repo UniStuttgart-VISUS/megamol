@@ -253,7 +253,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                     case 'B': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
                     case 'T': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
                     case 'S': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::S_BEND); break;
-                    case ' ': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::C_COIL); break;
+                    case 'C': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::C_COIL); break;
                     default:  this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
 
