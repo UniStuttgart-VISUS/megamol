@@ -131,8 +131,8 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     Log::DefaultLog.WriteInfo("Memory available: %u MB\n", static_cast<uint32_t>(memHere / (1024.0 * 1024.0)));
     double memWant = frameIdx.back() - frameIdx.front();
     Log::DefaultLog.WriteInfo("Memory required: %u MB for %u frames total\n", static_cast<uint32_t>(memWant / (1024.0 * 1024.0)), static_cast<uint32_t>(frameIdx.size()));
-
     uint32_t cacheSize = static_cast<uint32_t>((memHere / memWant) * static_cast<double>(frameIdx.size()) + 0.5);
+    Log::DefaultLog.WriteInfo("Cache set to %u frames\n", cacheSize);
 
     this->setFrameCount(frmCnt);
     this->initFrameCache(cacheSize);

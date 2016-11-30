@@ -64,6 +64,7 @@ namespace io {
                 isDirected = (flags & 1);
                 edges.resize((size - 1) / sizeof(GraphDataCall::edge));
                 file->Read(edges.data(), edges.size() * sizeof(GraphDataCall::edge));
+                frame = idx;
                 return true;
             }
             void SetData(GraphDataCall& call) {
