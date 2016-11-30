@@ -111,7 +111,13 @@ bool ParticleNeighborhoodGraph::getData(core::Call& c) {
     if (mpc == nullptr) return false;
 
     mpc->SetFrameID(gdc->FrameID(), true);
+    if (!(*mpc)(1)) return false;
+    core::BoundingBoxes bboxes = mpc->AccessBoundingBoxes();
+    mpc->Unlock();
+
+    mpc->SetFrameID(gdc->FrameID(), true);
     if (!(*mpc)(0)) return false;
+    mpc->AccessBoundingBoxes() = bboxes;
 
     if ((mpc->DataHash() != inDataHash)
             || (mpc->FrameID() != frameId)
@@ -231,9 +237,11 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     unsigned int y_size = static_cast<unsigned int>(std::ceil(box.Height() / neiRad));
     unsigned int z_size = static_cast<unsigned int>(std::ceil(box.Depth() / neiRad));
 
-    float bboxCentX = box.CalcCenter().X();
-    float bboxCentY = box.CalcCenter().Y(); // yes, I know. I don't care!
-    float bboxCentZ = box.CalcCenter().Z();
+    auto const& bboxR = data->AccessBoundingBoxes().ObjectSpaceBBox();
+    auto const bboxCent = bboxR.CalcCenter();
+    float bboxCentX = bboxCent.X();
+    float bboxCentY = bboxCent.Y();
+    float bboxCentZ = bboxCent.Z();
 
 #define _COORD(x, y, z) ((x) + ((y) + ((z) * y_size)) * x_size)
 
