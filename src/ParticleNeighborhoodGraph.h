@@ -11,6 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
+#include <cstdint>
 
 namespace megamol {
 namespace core {
@@ -24,6 +25,8 @@ namespace datatools {
 
     class ParticleNeighborhoodGraph : public core::Module {
     public:
+        typedef uint32_t index_t;
+
         static const char *ClassName(void) {
             return "ParticleNeighborhoodGraph";
         }
@@ -55,13 +58,17 @@ namespace datatools {
         core::param::ParamSlot autoRadiusSlot;
         core::param::ParamSlot autoRadiusSamplesSlot;
         core::param::ParamSlot autoRadiusFactorSlot;
+        core::param::ParamSlot autoRadiusSampleRndSeedSlot;
         core::param::ParamSlot forceConnectIsolatedSlot;
+        core::param::ParamSlot boundaryXCyclicSlot;
+        core::param::ParamSlot boundaryYCyclicSlot;
+        core::param::ParamSlot boundaryZCyclicSlot;
 
         unsigned int frameId;
         size_t inDataHash;
         size_t outDataHash;
 
-        std::vector<size_t> edges;
+        std::vector<index_t> edges;
 
     };
 

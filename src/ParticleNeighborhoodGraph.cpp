@@ -12,6 +12,8 @@
 #include "vislib/sys/Log.h"
 #include "mmcore/param/IntParam.h"
 #include <chrono>
+#include <omp.h>
+#include <set>
 
 using namespace megamol;
 using namespace megamol::stdplugin::datatools;
@@ -20,11 +22,17 @@ ParticleNeighborhoodGraph::ParticleNeighborhoodGraph() : Module(),
         outGraphDataSlot("outGraphData", "Publishes graph edge data"),
         inParticleDataSlot("inParticle", "Fetches particle data"),
         radiusSlot("radius", "The neighborhood radius"),
-        autoRadiusSlot("autoRadius", "Flag to automatically assess the neighborhood radius"),
-        autoRadiusSamplesSlot("autoRadiusSamples", "Number of samples to determine the neighborhood radius"),
-        autoRadiusFactorSlot("autoRadiusFactor", "Increase factor for the determined neighborhood radius"),
+        autoRadiusSlot("autoRadius::detect", "Flag to automatically assess the neighborhood radius"),
+        autoRadiusSamplesSlot("autoRadius::samples", "Number of samples to determine the neighborhood radius"),
+        autoRadiusSampleRndSeedSlot("autoRadius::randomSeed", "Seed for the random generator selecting the samples"),
+        autoRadiusFactorSlot("autoRadius::resultsFactor", "Increase factor for the determined neighborhood radius"),
         forceConnectIsolatedSlot("forceConnectIsolated", "Forces to inter-connect isolated parts of the graph"),
+        boundaryXCyclicSlot("boundary::XCyclic", "Activates connection over cyclic boundary conditions in x direction"),
+        boundaryYCyclicSlot("boundary::YCyclic", "Activates connection over cyclic boundary conditions in y direction"),
+        boundaryZCyclicSlot("boundary::ZCyclic", "Activates connection over cyclic boundary conditions in z direction"),
         frameId(0), inDataHash(0), outDataHash(0), edges() {
+
+    static_assert(sizeof(index_t) * 2 == sizeof(GraphDataCall::edge), "Index type error.");
 
     outGraphDataSlot.SetCallback("GraphDataCall", "GetData", &ParticleNeighborhoodGraph::getData);
     outGraphDataSlot.SetCallback("GraphDataCall", "GetExtent", &ParticleNeighborhoodGraph::getExtent);
@@ -39,14 +47,26 @@ ParticleNeighborhoodGraph::ParticleNeighborhoodGraph() : Module(),
     autoRadiusSamplesSlot.SetParameter(new core::param::IntParam(10, 1));
     MakeSlotAvailable(&autoRadiusSamplesSlot);
 
+    autoRadiusSampleRndSeedSlot.SetParameter(new core::param::IntParam(1212));
+    MakeSlotAvailable(&autoRadiusSampleRndSeedSlot);
+
     autoRadiusFactorSlot.SetParameter(new core::param::FloatParam(1.9f, 1.0f));
     MakeSlotAvailable(&autoRadiusFactorSlot);
 
     radiusSlot.SetParameter(new core::param::FloatParam(0.01f, 0.0f));
     MakeSlotAvailable(&radiusSlot);
 
+    boundaryXCyclicSlot.SetParameter(new core::param::BoolParam(false));
+    MakeSlotAvailable(&boundaryXCyclicSlot);
+
+    boundaryYCyclicSlot.SetParameter(new core::param::BoolParam(false));
+    MakeSlotAvailable(&boundaryYCyclicSlot);
+
+    boundaryZCyclicSlot.SetParameter(new core::param::BoolParam(false));
+    MakeSlotAvailable(&boundaryZCyclicSlot);
+
     forceConnectIsolatedSlot.SetParameter(new core::param::BoolParam(true));
-    MakeSlotAvailable(&forceConnectIsolatedSlot);
+    //MakeSlotAvailable(&forceConnectIsolatedSlot);
 
 }
 
@@ -100,15 +120,23 @@ bool ParticleNeighborhoodGraph::getData(core::Call& c) {
             || autoRadiusSlot.IsDirty()
             || autoRadiusFactorSlot.IsDirty()
             || autoRadiusSamplesSlot.IsDirty()
+            || autoRadiusSampleRndSeedSlot.IsDirty()
             || radiusSlot.IsDirty()
+            || boundaryXCyclicSlot.IsDirty()
+            || boundaryYCyclicSlot.IsDirty()
+            || boundaryZCyclicSlot.IsDirty()
             || forceConnectIsolatedSlot.IsDirty()) {
         // update data
         inDataHash = mpc->DataHash();
         frameId = mpc->FrameID();
         autoRadiusFactorSlot.ResetDirty();
         autoRadiusSamplesSlot.ResetDirty();
+        autoRadiusSampleRndSeedSlot.ResetDirty();
         autoRadiusSlot.ResetDirty();
         radiusSlot.ResetDirty();
+        boundaryXCyclicSlot.ResetDirty();
+        boundaryYCyclicSlot.ResetDirty();
+        boundaryZCyclicSlot.ResetDirty();
         forceConnectIsolatedSlot.ResetDirty();
 
         edges.clear();
@@ -151,10 +179,12 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     if (this->autoRadiusSlot.Param<core::param::BoolParam>()->Value()) {
         // automatically select a neighborhood radius
 
-        std::default_random_engine rnd_eng(1212);
+        std::default_random_engine rnd_eng(autoRadiusSampleRndSeedSlot.Param<core::param::IntParam>()->Value());
         std::uniform_int_distribution<size_t> rnd_dist(0, d.get_count() - 1);
 
         int sample_cnt = autoRadiusSamplesSlot.Param<core::param::IntParam>()->Value();
+        vislib::sys::Log::DefaultLog.WriteInfo("PNhG detecting radius from %d samples...", sample_cnt);
+
         float mean_dist = 0.0f;
 
         for (int sample = 0; sample < sample_cnt; ++sample) {
@@ -170,12 +200,15 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
                 if (dist < min_dist) min_dist = dist;
             }
 
+            if (min_dist == FLT_MAX) continue;
+
             mean_dist += std::sqrt(min_dist);
         }
 
         mean_dist /= static_cast<float>(sample_cnt);
-
-        neiRad = autoRadiusFactorSlot.Param<core::param::FloatParam>()->Value() * mean_dist;
+        float dist_fac = autoRadiusFactorSlot.Param<core::param::FloatParam>()->Value();
+        neiRad = dist_fac * mean_dist;
+        vislib::sys::Log::DefaultLog.WriteInfo("PNhG detecting radius %f * %f => %f", mean_dist, dist_fac, neiRad);
 
         this->radiusSlot.Param<core::param::FloatParam>()->SetValue(neiRad, false);
     }
@@ -194,12 +227,16 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     unsigned int y_size = static_cast<unsigned int>(std::ceil(box.Height() / neiRad));
     unsigned int z_size = static_cast<unsigned int>(std::ceil(box.Depth() / neiRad));
 
+    float bboxCentX = box.CalcCenter().X();
+    float bboxCentY = box.CalcCenter().Y(); // yes, I know. I don't care!
+    float bboxCentZ = box.CalcCenter().Z();
+
 #define _COORD(x, y, z) ((x) + ((y) + ((z) * y_size)) * x_size)
 
     std::vector<size_t> grid(d.get_count());
     std::vector<size_t*> gridCell(x_size * y_size * z_size);
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph search grid : (%u, %u, %u)", x_size, y_size, z_size);
+    vislib::sys::Log::DefaultLog.WriteInfo("PNhG search grid : (%u, %u, %u)", x_size, y_size, z_size);
 
     std::vector<vislib::math::Vector<unsigned int, 3> > cell(d.get_count());
     for (size_t i = 0; i < d.get_count(); ++i) {
@@ -238,205 +275,268 @@ void ParticleNeighborhoodGraph::calcData(core::moldyn::MultiParticleDataCall* da
     }
 
     end = high_resolution_clock::now();
-    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #1 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    vislib::sys::Log::DefaultLog.WriteInfo("PNhG search grid constructed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     start = end;
 
     edges.reserve(d.get_count() * 2 * 4); // something
 
+    bool cycX = boundaryXCyclicSlot.Param<core::param::BoolParam>()->Value();
+    bool cycY = boundaryYCyclicSlot.Param<core::param::BoolParam>()->Value();
+    bool cycZ = boundaryZCyclicSlot.Param<core::param::BoolParam>()->Value();
+
     // iterate over cells
+    int cellCnt = static_cast<int>(x_size * y_size * z_size);
+    int maxThreads = omp_get_max_threads();
+    std::vector<std::set<int> > neighborCellsMT(maxThreads); // all neighboring cells, from which particles need to be tested.
+    std::vector<std::vector<vislib::math::Point<float, 3> > > testPossMT(maxThreads); // all positions of this one particle to be tested.
+
+    float bboxSizeX = data->AccessBoundingBoxes().ObjectSpaceBBox().Width();
+    float bboxSizeY = data->AccessBoundingBoxes().ObjectSpaceBBox().Height();
+    float bboxSizeZ = data->AccessBoundingBoxes().ObjectSpaceBBox().Depth();
+
     #pragma omp parallel for
-    for (int x = 0; x < static_cast<int>(x_size); ++x) {
-        unsigned int x1 = (x == 0) ? 0 : x - 1;
-        unsigned int x2 = (x == x_size - 1) ? x_size - 1 : x + 1;
+    for (int cellIdx = 0; cellIdx < cellCnt; ++cellIdx) {
+        int mt = omp_get_thread_num();
+        std::set<int>& neighborCells = neighborCellsMT[mt];
+        std::vector<vislib::math::Point<float, 3> >& testPoss = testPossMT[mt];
+        neighborCells.clear();
 
-        for (unsigned int y = 0; y < y_size; ++y) {
-            unsigned int y1 = (y == 0) ? 0 : y - 1;
-            unsigned int y2 = (y == y_size - 1) ? y_size - 1 : y + 1;
+        // cell coordinate from cell index
+        int cellX = cellIdx % x_size;
+        int cellZ = (cellIdx - cellX) / x_size;
+        int cellY = cellZ % y_size;
+        cellZ = (cellZ - cellY) / y_size;
 
-            for (unsigned int z = 0; z < z_size; ++z) {
-                unsigned int z1 = (z == 0) ? 0 : z - 1;
-                unsigned int z2 = (z == z_size - 1) ? z_size - 1 : z + 1;
+        // collect neighboring cells
+        for (int dx = -1; dx <= 1; ++dx) {
+            int x = cellX + dx;
+            if (x < 0) {
+                if (cycX) x = x_size - 1; else continue; // skip this x
+            }
+            if (x >= static_cast<int>(x_size)) {
+                if (cycX) x = 0; else continue; // skip this x
+            }
+            for (int dy = -1; dy <= 1; ++dy) {
+                int y = cellY + dy;
+                if (y < 0) {
+                    if (cycY) y = y_size - 1; else continue; // skip this y
+                }
+                if (y >= static_cast<int>(y_size)) {
+                    if (cycY) y = 0; else continue; // skip this y
+                }
+                for (int dz = -1; dz <= 1; ++dz) {
+                    int z = cellZ + dz;
+                    if (z < 0) {
+                        if (cycZ) z = z_size - 1; else continue; // skip this z
+                    }
+                    if (z >= static_cast<int>(z_size)) {
+                        if (cycZ) z = 0; else continue; // skip this z
+                    }
+                    neighborCells.insert(_COORD(x, y, z));
+                }
+            }
+        }
 
-                size_t idx = _COORD(x, y, z);
+        // for all points in the current cell
+        for (size_t locPtIdx = 0; locPtIdx < gridCellSize[cellIdx]; ++locPtIdx) {
+            // point position
+            size_t ptIdx = gridCell[cellIdx][locPtIdx];
+            vislib::math::ShallowPoint<float, 3> ptOrigPos(const_cast<float*>(d.get_position(ptIdx)));
+            testPoss.clear();
 
-                for (size_t lpi = 0; lpi < gridCellSize[idx]; ++lpi) {
-                    size_t p_idx = gridCell[idx][lpi]; // detect neighbors for particle[p_idx]
-                    vislib::math::ShallowPoint<float, 3> p_pos(const_cast<float*>(d.get_position(p_idx)));
+            // multiply connections due to cyclic boundary tests
+            float x = ptOrigPos.X(), y, z;
+            for (int dx = 0; dx < (cycX ? 2 : 1); ++dx) {
+                y = ptOrigPos.Y();
+                for (int dy = 0; dy < (cycY ? 2 : 1); ++dy) {
+                    z = ptOrigPos.Z();
+                    for (int dz = 0; dz < (cycZ ? 2 : 1); ++dz) {
+                        testPoss.push_back(vislib::math::Point<float, 3>(x, y, z));
+                        if (dz == 0) {
+                            if (z < bboxCentZ) z += bboxSizeZ; else z -= bboxSizeZ;
+                        }
+                    }
+                    if (dy == 0) {
+                        if (y < bboxCentY) y += bboxSizeY; else y -= bboxSizeY;
+                    }
+                }
+                if (dx == 0) {
+                    if (x < bboxCentX) x += bboxSizeX; else x -= bboxSizeX;
+                }
+            }
 
-                    for (unsigned int xi = x1; xi <= x2; ++xi) {
-                        for (unsigned int yi = y1; yi <= y2; ++yi) {
-                            for (unsigned int zi = z1; zi <= z2; ++zi) {
-                                size_t idx_j = _COORD(xi, yi, zi);
-                                for (size_t lpj = 0; lpj < gridCellSize[idx_j]; ++lpj) {
-                                    // we only add edges from smaller indices to larger indices
-                                    size_t p_j_idx = gridCell[idx_j][lpj];
-                                    if (p_j_idx <= p_idx) continue;
+            for (int neiCellIdx : neighborCells) {
+                for (size_t locNPtIdx = 0; locNPtIdx < gridCellSize[neiCellIdx]; ++locNPtIdx) {
+                    // point to test
+                    size_t nPtIdx = gridCell[neiCellIdx][locNPtIdx];
 
-                                    vislib::math::ShallowPoint<float, 3> p_j_pos(const_cast<float*>(d.get_position(p_j_idx)));
-                                    float len = (p_j_pos - p_pos).SquareLength();
-                                    if (len < neiRadSq) {
-                                        #pragma omp critical
-                                        {
-                                            edges.push_back(p_idx);
-                                            edges.push_back(p_j_idx);
-                                        }
-                                    }
+                     if (ptIdx >= nPtIdx) continue; // we only every construct edges from small to large indices
 
-                                }
+                    vislib::math::ShallowPoint<float, 3> nPtPos(const_cast<float*>(d.get_position(nPtIdx)));
+                    for (vislib::math::Point<float, 3>& pt : testPoss) {
+                        float sqDist = pt.SquareDistance(nPtPos);
+                        if (sqDist < neiRadSq) {
+
+                            #pragma omp critical
+                            {
+                                edges.push_back(static_cast<index_t>(ptIdx));
+                                edges.push_back(static_cast<index_t>(nPtIdx));
                             }
+
+                            break;
                         }
                     }
 
                 }
-
             }
         }
+
     }
 
     end = high_resolution_clock::now();
-    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #2 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    vislib::sys::Log::DefaultLog.WriteInfo("PNhG edges computed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     start = end;
 
-    if (forceConnectIsolatedSlot.Param<core::param::BoolParam>()->Value()) {
-        // 1. detect connected components
+    //if (forceConnectIsolatedSlot.Param<core::param::BoolParam>()->Value()) {
+    //    // 1. detect connected components
 
-        // TODO: This is slow!
+    //    // TODO: This is slow!
 
-        std::vector<unsigned int> comp_id(d.get_count());
-        std::fill(comp_id.begin(), comp_id.end(), 0);
+    //    std::vector<unsigned int> comp_id(d.get_count());
+    //    std::fill(comp_id.begin(), comp_id.end(), 0);
 
-        unsigned int next_comp = 1;
-        for (size_t i = 0; i < d.get_count(); ++i) {
-            if (comp_id[i] != 0) continue;
-            comp_id[i] = next_comp;
+    //    unsigned int next_comp = 1;
+    //    for (size_t i = 0; i < d.get_count(); ++i) {
+    //        if (comp_id[i] != 0) continue;
+    //        comp_id[i] = next_comp;
 
-            bool updated = true;
-            while (updated) {
-                updated = false;
-                for (size_t e = 0; e < edges.size(); e += 2) {
-                    size_t e1 = edges[e];
-                    unsigned int &c1 = comp_id[e1];
-                    size_t e2 = edges[e + 1];
-                    unsigned int &c2 = comp_id[e2];
-                    if ((c1 == next_comp) && (c2 == next_comp)) continue;
-                    if (c1 == next_comp)  {
-                        assert(c2 == 0);
-                        c2 = next_comp;
-                        updated = true;
-                    } else if (c2 == next_comp) {
-                        assert(c1 == 0);
-                        c1 = next_comp;
-                        updated = true;
-                    }
-                }
-            }
+    //        bool updated = true;
+    //        while (updated) {
+    //            updated = false;
+    //            for (size_t e = 0; e < edges.size(); e += 2) {
+    //                size_t e1 = edges[e];
+    //                unsigned int &c1 = comp_id[e1];
+    //                size_t e2 = edges[e + 1];
+    //                unsigned int &c2 = comp_id[e2];
+    //                if ((c1 == next_comp) && (c2 == next_comp)) continue;
+    //                if (c1 == next_comp)  {
+    //                    assert(c2 == 0);
+    //                    c2 = next_comp;
+    //                    updated = true;
+    //                } else if (c2 == next_comp) {
+    //                    assert(c1 == 0);
+    //                    c1 = next_comp;
+    //                    updated = true;
+    //                }
+    //            }
+    //        }
 
-            next_comp++;
-        }
+    //        next_comp++;
+    //    }
 
-        end = high_resolution_clock::now();
-        vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #2.1 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-        start = end;
+    //    end = high_resolution_clock::now();
+    //    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #2.1 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    //    start = end;
 
-        if (next_comp > 2) {
+    //    if (next_comp > 2) {
 
-            // TODO: This is slow!
+    //        // TODO: This is slow!
 
-            // compute centroids for connected components
-            std::vector<std::shared_ptr<graph_component> > comps(next_comp - 1);
-            for (unsigned int ci = 1; ci < next_comp; ci++) {
-                comps[ci - 1] = std::make_shared<graph_component>();
-                comps[ci - 1]->id = ci;
-                comps[ci - 1]->cnt = 0;
-                comps[ci - 1]->pos.SetNull();
-            }
-            for (size_t i = 0; i < d.get_count(); ++i) {
-                comps[comp_id[i] - 1]->cnt++;
-                comps[comp_id[i] - 1]->pos += vislib::math::ShallowVector<float, 3>(const_cast<float*>(d.get_position(i)));
-            }
-            size_t maxVal = 0;
-            std::shared_ptr<graph_component> mainComp; // index of the biggest component to merge everything to
-            for (std::shared_ptr<graph_component> c: comps) {
-                 c->pos /= static_cast<double>(c->cnt);
-                 if (c->cnt > maxVal) {
-                     maxVal = c->cnt;
-                     mainComp = c;
-                 }
-            }
-            assert(mainComp);
+    //        // compute centroids for connected components
+    //        std::vector<std::shared_ptr<graph_component> > comps(next_comp - 1);
+    //        for (unsigned int ci = 1; ci < next_comp; ci++) {
+    //            comps[ci - 1] = std::make_shared<graph_component>();
+    //            comps[ci - 1]->id = ci;
+    //            comps[ci - 1]->cnt = 0;
+    //            comps[ci - 1]->pos.SetNull();
+    //        }
+    //        for (size_t i = 0; i < d.get_count(); ++i) {
+    //            comps[comp_id[i] - 1]->cnt++;
+    //            comps[comp_id[i] - 1]->pos += vislib::math::ShallowVector<float, 3>(const_cast<float*>(d.get_position(i)));
+    //        }
+    //        size_t maxVal = 0;
+    //        std::shared_ptr<graph_component> mainComp; // index of the biggest component to merge everything to
+    //        for (std::shared_ptr<graph_component> c: comps) {
+    //             c->pos /= static_cast<double>(c->cnt);
+    //             if (c->cnt > maxVal) {
+    //                 maxVal = c->cnt;
+    //                 mainComp = c;
+    //             }
+    //        }
+    //        assert(mainComp);
 
-            // successively merge components into the biggest component
-            while (comps.size() > 1) {
-                // select the component closest to the biggest component
-                double dist = DBL_MAX;
-                std::shared_ptr<graph_component> selComp;
-                for (std::shared_ptr<graph_component> c : comps) {
-                    if (c == mainComp) continue;
-                    double d = (c->pos - mainComp->pos).Length();
-                    if (d < dist) {
-                        dist = d;
-                        selComp = c;
-                    }
-                }
-                assert(selComp);
+    //        // successively merge components into the biggest component
+    //        while (comps.size() > 1) {
+    //            // select the component closest to the biggest component
+    //            double dist = DBL_MAX;
+    //            std::shared_ptr<graph_component> selComp;
+    //            for (std::shared_ptr<graph_component> c : comps) {
+    //                if (c == mainComp) continue;
+    //                double d = (c->pos - mainComp->pos).Length();
+    //                if (d < dist) {
+    //                    dist = d;
+    //                    selComp = c;
+    //                }
+    //            }
+    //            assert(selComp);
 
-                // merge selComp into mainComp
-                // add an edge between the two nodes closest to the other centroid
-                size_t mainPId = static_cast<size_t>(-1);
-                double mainPDist = DBL_MAX;
-                for (size_t i = 0; i < d.get_count(); ++i) {
-                    vislib::math::ShallowVector<float, 3> p(const_cast<float*>(d.get_position(i)));
-                    if (comp_id[i] == mainComp->id) {
-                        double d = (selComp->pos - p).Length();
-                        if (d < mainPDist) {
-                            mainPDist = d;
-                            mainPId = i;
-                        }
-                    }
-                }
-                vislib::math::ShallowVector<float, 3> maincomp_pos(const_cast<float*>(d.get_position(mainPId)));
+    //            // merge selComp into mainComp
+    //            // add an edge between the two nodes closest to the other centroid
+    //            size_t mainPId = static_cast<size_t>(-1);
+    //            double mainPDist = DBL_MAX;
+    //            for (size_t i = 0; i < d.get_count(); ++i) {
+    //                vislib::math::ShallowVector<float, 3> p(const_cast<float*>(d.get_position(i)));
+    //                if (comp_id[i] == mainComp->id) {
+    //                    double d = (selComp->pos - p).Length();
+    //                    if (d < mainPDist) {
+    //                        mainPDist = d;
+    //                        mainPId = i;
+    //                    }
+    //                }
+    //            }
+    //            vislib::math::ShallowVector<float, 3> maincomp_pos(const_cast<float*>(d.get_position(mainPId)));
 
-                size_t selPId = static_cast<size_t>(-1);
-                double selPDist = DBL_MAX;
-                for (size_t i = 0; i < d.get_count(); ++i) {
-                    vislib::math::ShallowVector<float, 3> p(const_cast<float*>(d.get_position(i)));
-                    if (comp_id[i] == selComp->id) {
-                        double d = (maincomp_pos - p).Length();
-                        if (d < selPDist) {
-                            selPDist = d;
-                            selPId = i;
-                        }
-                    }
-                }
-                assert(mainPId != static_cast<size_t>(-1));
-                assert(selPId != static_cast<size_t>(-1));
+    //            size_t selPId = static_cast<size_t>(-1);
+    //            double selPDist = DBL_MAX;
+    //            for (size_t i = 0; i < d.get_count(); ++i) {
+    //                vislib::math::ShallowVector<float, 3> p(const_cast<float*>(d.get_position(i)));
+    //                if (comp_id[i] == selComp->id) {
+    //                    double d = (maincomp_pos - p).Length();
+    //                    if (d < selPDist) {
+    //                        selPDist = d;
+    //                        selPId = i;
+    //                    }
+    //                }
+    //            }
+    //            assert(mainPId != static_cast<size_t>(-1));
+    //            assert(selPId != static_cast<size_t>(-1));
 
-                edges.push_back(selPId);
-                edges.push_back(mainPId);
+    //            edges.push_back(selPId);
+    //            edges.push_back(mainPId);
 
-                // remove old ids
-                for (size_t i = 0; i < d.get_count(); ++i) {
-                    if (comp_id[i] == selComp->id) {
-                        comp_id[i] = mainComp->id;
-                    }
-                }
+    //            // remove old ids
+    //            for (size_t i = 0; i < d.get_count(); ++i) {
+    //                if (comp_id[i] == selComp->id) {
+    //                    comp_id[i] = mainComp->id;
+    //                }
+    //            }
 
-                // merge centroids
-                mainComp->pos *= static_cast<double>(mainComp->cnt);
-                selComp->pos *= static_cast<double>(selComp->cnt);
-                mainComp->pos += selComp->pos;
-                mainComp->cnt += selComp->cnt;
-                mainComp->pos /= static_cast<double>(mainComp->cnt);
+    //            // merge centroids
+    //            mainComp->pos *= static_cast<double>(mainComp->cnt);
+    //            selComp->pos *= static_cast<double>(selComp->cnt);
+    //            mainComp->pos += selComp->pos;
+    //            mainComp->cnt += selComp->cnt;
+    //            mainComp->pos /= static_cast<double>(mainComp->cnt);
 
-                comps.erase(std::find(comps.begin(), comps.end(), selComp));
-            }
+    //            comps.erase(std::find(comps.begin(), comps.end(), selComp));
+    //        }
 
-        }
-    }
+    //    }
+    //}
 
     edges.shrink_to_fit();
 
     end = high_resolution_clock::now();
-    vislib::sys::Log::DefaultLog.WriteInfo("Neighborhood graph computed #3 in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+    vislib::sys::Log::DefaultLog.WriteInfo("PNhG completed in %u ms", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 
 }
