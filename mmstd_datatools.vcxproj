@@ -289,6 +289,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\IColRangeOverride.cpp" />
     <ClCompile Include="src\IColSelectClassify.cpp" />
     <ClCompile Include="src\IndexListIndexColor.cpp" />
+    <ClCompile Include="src\io\MMGDDDataSource.cpp" />
+    <ClCompile Include="src\io\MMGDDWriter.cpp" />
     <ClCompile Include="src\ModColIRange.cpp" />
     <ClCompile Include="src\MultiIndexListDataCall.cpp" />
     <ClCompile Include="src\MultiParticleDataAdaptor.cpp" />
@@ -343,6 +345,8 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\IColRangeOverride.h" />
     <ClInclude Include="src\IColSelectClassify.h" />
     <ClInclude Include="src\IndexListIndexColor.h" />
+    <ClInclude Include="src\io\MMGDDDataSource.h" />
+    <ClInclude Include="src\io\MMGDDWriter.h" />
     <ClInclude Include="src\ModColIRange.h" />
     <ClInclude Include="src\MultiParticleRelister.h" />
     <ClInclude Include="src\NullParticleWriter.h" />

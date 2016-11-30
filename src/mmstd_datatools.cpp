@@ -58,6 +58,8 @@
 #include "IndexListIndexColor.h"
 #include "IColSelectClassify.h"
 #include "ErosionField.h"
+#include "io/MMGDDWriter.h"
+#include "io/MMGDDDataSource.h"
 
 
 /*
@@ -179,6 +181,8 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IndexListIndexColor>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::IColSelectClassify>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ErosionField>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDWriter>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDDataSource>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

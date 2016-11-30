@@ -38,6 +38,15 @@
     <Filter Include="Public Header Files\floattable">
       <UniqueIdentifier>{06e59629-e1de-4b22-a589-3687683f78bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="io">
+      <UniqueIdentifier>{68ed324e-05b1-454d-b98a-9c973d8c0eb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io\Header Files">
+      <UniqueIdentifier>{26bdb2f6-3dde-423f-b225-0d2702aa21f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io\Source Files">
+      <UniqueIdentifier>{ab108395-48ba-4360-96a5-5024bb16e4ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/dllmain.cpp">
@@ -187,6 +196,12 @@
     <ClCompile Include="src\ErosionField.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\io\MMGDDWriter.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\MMGDDDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -335,6 +350,12 @@
     </ClInclude>
     <ClInclude Include="src\ErosionField.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMGDDWriter.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMGDDDataSource.h">
+      <Filter>io\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
