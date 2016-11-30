@@ -182,38 +182,63 @@ namespace megamol {
         void renderToolTip(float start, float end, vislib::StringA str1, vislib::StringA str2, float fgColor[4], float bgColor[4]);
 
         /**
-         * enumeration of available uncertainty visualizations
+         * block chart color for certain structure assignment
          */
-        enum visualization {
-            STACK_SIMPLE   = 0,  
-            STACK_EXT_VERT = 1,       
-            STACK_EXT_HORI = 2,
+        enum certainBlockChartColor {
+            CERTAIN_BC_NONE   = 0,            
+            CERTAIN_BC_COLORED = 1  
         };
-        
         /**
-         * Renders the simple STACK uncertainty visualization.
+         * structure color for certain structure assignment
+         */        
+        enum certainSructColor {
+            CERTAIN_STRUCT_NONE    = 0,              
+            CERTAIN_STRUCT_COLORED = 1,  
+            CERTAIN_STRUCT_GRAY    = 2             
+        };      
+        /**
+         * block chart color for uncertain structure assignment
+         */        
+        enum uncertainBlockChartColor {
+            UNCERTAIN_BC_NONE    = 0,            
+            UNCERTAIN_BC_COLORED = 1  
+        };
+        /**
+         * block chart orientation for uncertain structure assignment
+         */        
+        enum uncertainBlockChartOrientation {
+            UNCERTAIN_BC_VERTI = 0,            
+            UNCERTAIN_BC_HORIZ = 1  
+        };        
+        /**
+         * structure color for uncertain structure assignment
+         */        
+        enum uncertainSructColor {
+            UNCERTAIN_STRUCT_NONE    = 0,              
+            UNCERTAIN_STRUCT_COLORED = 1,  
+            UNCERTAIN_STRUCT_GRAY    = 2             
+        };  
+        /**
+         * structure geometry for uncertain structure assignment
+         */        
+        enum uncertainSructGeometry {
+            UNCERTAIN_STRUCT_STAT_VERTI = 0,              
+            UNCERTAIN_STRUCT_STAT_HORIZ = 1, 
+            UNCERTAIN_STRUCT_STAT_MORPH = 2,             
+            UNCERTAIN_STRUCT_DYN_TIME   = 3,  
+            UNCERTAIN_STRUCT_DYN_SPACE  = 4,  
+            UNCERTAIN_STRUCT_DYN_EQUAL  = 5,                       
+        };          
+                
+        /**
+         * Renders the uncertainty visualization.
          *
          * @param yPos The y position the rendering should start.
          * @param ud   The pointer to the data call
+         * @param fgColor The foreground color.
+         * @param bgColor The background color.
          */        
-        void renderUncertaintyStackSimple(float yPos, UncertaintyDataCall *ud);
-        
-
-        /**
-         * Renders the extended STACK uncertainty visualization with horizontal ordered tiles.
-         *
-         * @param yPos The y position the rendering should start.
-         * @param ud   The pointer to the data call
-         */        
-        void renderUncertaintyStackHorizontal(float yPos, UncertaintyDataCall *ud);
-        
-        /**
-         * Renders the extended STACK uncertainty visualization with vertical ordered tiles.
-         *
-         * @param yPos The y position the rendering should start.
-         * @param ud   The pointer to the data call
-         */        
-        void renderUncertaintyMorphingVertical(float yPos, UncertaintyDataCall *ud;
+        void renderUncertainty(float yPos, UncertaintyDataCall *ud, float fgColor[4], float bgColor[4]);
         
         
         /**********************************************************************
@@ -251,22 +276,22 @@ namespace megamol {
         // parameter to show/hide secondary structure uncertainty visualization
         megamol::core::param::ParamSlot toggleUncertaintyParam;
                 
-        // parameter to turn animation of morphing visualization on/off
-        megamol::core::param::ParamSlot animateMorphing;
+        // parameter to choose different visualizations        
+        megamol::core::param::ParamSlot certainBlockChartColorParam;
+        megamol::core::param::ParamSlot certainSructColorParam;
+        megamol::core::param::ParamSlot uncertainBlockChartColorParam;
+        megamol::core::param::ParamSlot uncertainBlockChartOrientationParam;        
+        megamol::core::param::ParamSlot uncertainSructColorParam;
+        megamol::core::param::ParamSlot uncertainSructGeometryParam;
 
-        // parameter to choose secondary structure uncertainty visualization
-        megamol::core::param::ParamSlot uncertaintyVisualizationParam;
+        // the current uncertainty visualization selection
+        certainBlockChartColor         currentCertainBlockChartColor;
+        certainSructColor              currentCertainSructColor;
+        uncertainBlockChartColor       currentUncertainBlockChartColor;
+        uncertainBlockChartOrientation currentUncertainBlockChartOrientation;
+        uncertainSructColor            currentUncertainSructColor;
+        uncertainSructGeometry         currentUncertainSructGeometry;
         
-        // the current uncertainty visualization
-        visualization currentVisualization;
-        
-        // data preparation flag
-        bool dataPrepared;
-        // the total number of amino-acids 
-        unsigned int aminoAcidCount;
-        // the total number of binding sites
-        unsigned int bindingSiteCount;
-
         // the number of secondary structure rows which can be shown/hidden
         unsigned int secStructRows;
         // the number of residue columns
@@ -275,13 +300,13 @@ namespace megamol {
         unsigned int resRows;
         // the height of a row
         float rowHeight;
-        
-        // font rendering
-#ifdef USE_SIMPLE_FONT
-        vislib::graphics::gl::SimpleFont theFont;
-#else
-        vislib::graphics::gl::OutlineFont theFont;
-#endif
+                
+        // data preparation flag
+        bool dataPrepared;
+        // the total number of amino-acids 
+        unsigned int aminoAcidCount;
+        // the total number of binding sites
+        unsigned int bindingSiteCount;
         // the array of amino acid 1-letter codes
         vislib::Array<char> aminoAcidName;
         // the array of pdb amino-acid indices
@@ -298,17 +323,14 @@ namespace megamol {
         
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;
-
         // the vertex buffer array secondary structure
         vislib::Array<vislib::Array<vislib::math::Vector<float, 2> > >secStructVertices;
-
         // the vertex buffer array for the chain tiles
         vislib::Array<float> chainVertices;
         // the color buffer array for the chain tiles
         vislib::Array<float> chainColors;
         // the vertex buffer array for the chain separator lines
         vislib::Array<float> chainSeparatorVertices;
-
         // the vertex buffer array for the binding site tiles
         vislib::Array<float> bsVertices;
         // the index array for the binding site tiles
@@ -318,7 +340,6 @@ namespace megamol {
 
         // The secondary structure assignment methods and their secondary structure type assignments
         vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
-
         // The values of the secondary structure uncertainty for each amino-acid 
         vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
         // The sorted structure types of the uncertainty values
@@ -337,6 +358,12 @@ namespace megamol {
         bool rightMouseDown;
         bool initialClickSelection;
 
+        // font rendering
+#ifdef USE_SIMPLE_FONT
+        vislib::graphics::gl::SimpleFont theFont;
+#else
+        vislib::graphics::gl::OutlineFont theFont;
+#endif
         // selection 
         vislib::Array<bool> selection;
 		protein_calls::ResidueSelectionCall *resSelectionCall;
