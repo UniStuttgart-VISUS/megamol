@@ -47,6 +47,10 @@ bool IndexListIndexColor::manipulateData(
         outHash++;
         frameID = inData.FrameID();
 
+        inListsPtr->Unlock();
+        inListsPtr->SetFrameID(inData.FrameID());
+        if (!(*inListsPtr)(MultiIndexListDataCall::GET_DATA)) return false;
+
         stdplugin::datatools::MultiParticleDataAdaptor p(inData);
         size_t pCnt = p.get_count();
         colors.resize(pCnt);
