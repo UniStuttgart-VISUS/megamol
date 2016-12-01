@@ -30,7 +30,7 @@ const unsigned int UncertaintyDataCall::CallForGetData = 0;
 UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
                                                  secStructAssignment(NULL), sortedSecStructUncertainty(NULL), 
                                                  secStructUncertainty(NULL), pdbIndex(NULL), 
-                                                 chainID(NULL), missingFlag(NULL), aminoAcidName(NULL), pdbID(NULL) {
+                                                 chainID(NULL), residueFlag(NULL), aminoAcidName(NULL), pdbID(NULL) {
 }
 
 
@@ -41,7 +41,7 @@ UncertaintyDataCall::~UncertaintyDataCall(void) {
     this->secStructAssignment = NULL;
     this->pdbIndex = NULL;
     this->chainID = NULL;
-    this->missingFlag = NULL;
+    this->residueFlag = NULL;
     this->aminoAcidName = NULL;
     this->secStructUncertainty = NULL;
     this->sortedSecStructUncertainty = NULL;

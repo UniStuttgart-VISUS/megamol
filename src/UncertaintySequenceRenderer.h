@@ -191,7 +191,7 @@ namespace megamol {
         /**
          * structure color for certain structure assignment
          */        
-        enum certainSructColor {
+        enum certainStructColor {
             CERTAIN_STRUCT_NONE    = 0,              
             CERTAIN_STRUCT_COLORED = 1,  
             CERTAIN_STRUCT_GRAY    = 2             
@@ -213,7 +213,7 @@ namespace megamol {
         /**
          * structure color for uncertain structure assignment
          */        
-        enum uncertainSructColor {
+        enum uncertainStructColor {
             UNCERTAIN_STRUCT_NONE    = 0,              
             UNCERTAIN_STRUCT_COLORED = 1,  
             UNCERTAIN_STRUCT_GRAY    = 2             
@@ -221,7 +221,7 @@ namespace megamol {
         /**
          * structure geometry for uncertain structure assignment
          */        
-        enum uncertainSructGeometry {
+        enum uncertainStructGeometry {
             UNCERTAIN_STRUCT_STAT_VERTI = 0,              
             UNCERTAIN_STRUCT_STAT_HORIZ = 1, 
             UNCERTAIN_STRUCT_STAT_MORPH = 2,             
@@ -278,19 +278,19 @@ namespace megamol {
                 
         // parameter to choose different visualizations        
         megamol::core::param::ParamSlot certainBlockChartColorParam;
-        megamol::core::param::ParamSlot certainSructColorParam;
+        megamol::core::param::ParamSlot certainStructColorParam;
         megamol::core::param::ParamSlot uncertainBlockChartColorParam;
         megamol::core::param::ParamSlot uncertainBlockChartOrientationParam;        
-        megamol::core::param::ParamSlot uncertainSructColorParam;
-        megamol::core::param::ParamSlot uncertainSructGeometryParam;
+        megamol::core::param::ParamSlot uncertainStructColorParam;
+        megamol::core::param::ParamSlot uncertainStructGeometryParam;
 
         // the current uncertainty visualization selection
         certainBlockChartColor         currentCertainBlockChartColor;
-        certainSructColor              currentCertainSructColor;
+        certainStructColor              currentCertainStructColor;
         uncertainBlockChartColor       currentUncertainBlockChartColor;
         uncertainBlockChartOrientation currentUncertainBlockChartOrientation;
-        uncertainSructColor            currentUncertainSructColor;
-        uncertainSructGeometry         currentUncertainSructGeometry;
+        uncertainStructColor            currentUncertainStructColor;
+        uncertainStructGeometry         currentUncertainStructGeometry;
         
         // the number of secondary structure rows which can be shown/hidden
         unsigned int secStructRows;

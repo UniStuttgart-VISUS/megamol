@@ -191,11 +191,11 @@ namespace megamol {
         *
         * @return The missing amino-acid flag.
         */
-        inline addFlags getResidueFlag(unsigned int i) const {
+        inline addFlags GetResidueFlag(unsigned int i) const {
             if (!this->residueFlag)
-                return false;
+                return addFlags::NOTHING;
             else if (this->residueFlag->Count() <= i)
-                return false;
+                return addFlags::NOTHING;
             else
                 return (this->residueFlag->operator[](i));
         }
