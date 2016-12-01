@@ -134,7 +134,8 @@ typedef enum _mmcInitValueEnum : int {
                              // the core instance IS NOT DEPRECATED
     MMC_INITVAL_LOGECHOFUNC, // The log echo function to use.
     MMC_INITVAL_VISLIB_STACKTRACEMANAGER, // The vislib StackTrace manager object
-    MMC_INITVAL_CORELOG // Returns the pointer to the core log
+    MMC_INITVAL_CORELOG, // Returns the pointer to the core log
+    MMC_INITVAL_CFGOVERRIDE // a config value to override from the command line
 } mmcInitValue;
 
 /** Possible input modifier values */

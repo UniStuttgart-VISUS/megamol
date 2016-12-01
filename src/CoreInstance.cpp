@@ -86,7 +86,8 @@
  */
 megamol::core::CoreInstance::PreInit::PreInit() : cfgFileSet(false), 
         logFileSet(false), logLevelSet(false), logEchoLevelSet(false), 
-        cfgFile(), logFile(), logLevel(0), logEchoLevel(0) {
+        cfgFile(), logFile(), logLevel(0), logEchoLevel(0),
+        cfgOverrides(), cfgOverridesSet(false) {
     // atm intentionally empty
 }
 
@@ -299,6 +300,22 @@ void megamol::core::CoreInstance::Initialise(void) {
         this->config.LoadConfig(this->preInit->GetConfigFile());
     } else {
         this->config.LoadConfig();
+    }
+
+    // config overrides from command line
+    if (this->preInit->IsConfigOverrideSet()) {
+        const vislib::StringW& overrides = this->preInit->GetConfigFileOverrides();
+        int pos = 0;
+        int next = overrides.Find('\b', pos);
+        if (next == vislib::StringW::INVALID_POS)
+            next = overrides.Length();
+        do {
+            auto& sub = overrides.Substring(pos, next - pos);
+            int split = sub.Find('\a');
+            if (split != vislib::StringW::INVALID_POS) {
+                this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, sub.Substring(0, split), sub.Substring(split + 1, sub.Length() - split));
+            }
+        } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS);
     }
 
     // loading plugins
@@ -583,6 +600,10 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key,
             case MMC_INITVAL_LOGECHOFUNC:
                 if (type != MMC_TYPE_VOIDP) { return MMC_ERR_TYPE; }
                 this->log.SetEchoTarget(new utility::LogEchoTarget(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
+                break;
+            case MMC_INITVAL_CFGOVERRIDE:
+                if (!utility::APIValueUtil::IsStringType(type)) { return MMC_ERR_TYPE; }
+                this->preInit->SetConfigFileOverrides(utility::APIValueUtil::AsStringW(type, value));
                 break;
             default:
                 return MMC_ERR_UNKNOWN;

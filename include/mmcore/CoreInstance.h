@@ -570,6 +570,15 @@ namespace plugins {
             }
 
             /**
+             * Answer the config file overrides.
+             *
+             * @return a '\b'-separated list of '\a'-separated key-value pairs
+             */
+            inline const vislib::StringW& GetConfigFileOverrides(void) const {
+                return this->cfgOverrides;
+            }
+
+            /**
              * Answer the log file to use.
              *
              * @return The log file to use.
@@ -603,6 +612,15 @@ namespace plugins {
              */
             inline bool IsConfigFileSet(void) const {
                 return this->cfgFileSet;
+            }
+
+            /**
+            * Answer whether the config file overrides have been set.
+            *
+            * @return 'true' if the config file overrides have been set.
+            */
+            inline bool IsConfigOverrideSet(void) const {
+                return this->cfgOverridesSet;
             }
 
             /**
@@ -643,6 +661,17 @@ namespace plugins {
             }
 
             /**
+             * Sets the config file overrides.
+             *
+             * @param cfgOverrides a '\b'-separated list of '\a'-separated
+             *                     key-value pairs
+             */
+            inline void SetConfigFileOverrides(const vislib::StringW& cfgOverrides) {
+                this->cfgOverrides = cfgOverrides;
+                this->cfgOverridesSet = true;
+            }
+
+            /**
              * Sets the log file to use.
              *
              * @param logFile The log file to use.
@@ -677,6 +706,9 @@ namespace plugins {
             /** Flag whether the config file has been set. */
             bool cfgFileSet : 1;
 
+            /** Flag whether the config file overrides have been set. */
+            bool cfgOverridesSet : 1;
+
             /** Flag whether the log file has been set. */
             bool logFileSet : 1;
 
@@ -691,6 +723,9 @@ namespace plugins {
 
             /** The log file name. */
             vislib::StringW logFile;
+
+            /** A serialized list of config key-value overrides */
+            vislib::StringW cfgOverrides;
 
             /** The log level. */
             unsigned int logLevel;
