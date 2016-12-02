@@ -754,7 +754,7 @@ PDBLoader::PDBLoader(void) : AnimDataModule(),
         forceDataCallerSlot( "getforcedata", "Connects the loader with force data storage"),
         dataOutSlot( "dataout", "The slot providing the loaded data"),
         maxFramesSlot( "maxFrames", "The maximum number of frames to be loaded"),
-        strideFlagSlot( "strideFlag", "The flag wether STRIDE should be used or not."),
+        strideFlagSlot( "strideFlag", "The flag whether STRIDE should be used or not."),
         solventResidues( "solventResidues", "slot to specify a ;-list of residues to be merged into separate chains"),
         calcBBoxPerFrameSlot("calcBBoxPerFrame", "Calculate the bounding box for each frame separately"),
         calcBondsSlot("calculateBonds", "Calculate covalent bonds when loading the file"),
@@ -956,7 +956,7 @@ bool PDBLoader::getData( core::Call& call) {
             this->strideFlagSlot.Param<param::BoolParam>()->Value() ) {
         time_t t = clock(); // DEBUG
         if( this->stride ) delete this->stride;
-        this->stride = new Stride( dc);
+        this->stride = new Stride( dc );
         this->stride->WriteToInterface( dc);
         this->secStructAvailable = true;
         Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Secondary Structure computed via STRIDE in %f seconds.", ( double( clock() - t) / double( CLOCKS_PER_SEC))); // DEBUG

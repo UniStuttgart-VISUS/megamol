@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <cstdio>
 #include <stdarg.h>
+#include <vector>
 #include "vislib/String.h"
 #include "vislib/math/Vector.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -285,8 +286,18 @@ public:
 	bool WriteToInterface(megamol::protein_calls::MolecularDataCall *mol);
 	
 protected:
+
+	typedef struct // OWNBOND
+	{
+		unsigned int donor;
+		unsigned int acceptor;
+	} OWNBOND;
+
 	void GetChains(megamol::protein_calls::MolecularDataCall *mol);
 	bool ComputeSecondaryStructure();
+
+	void PostProcessHBonds(megamol::protein_calls::MolecularDataCall *mol);
+	unsigned int GetMoleculeIndex(unsigned int ChainIdx, unsigned int ResidueIdx, unsigned int InternalIndex, megamol::protein_calls::MolecularDataCall *mol);
 	
 	void DefaultCmd( COMMAND *Cmd );
 	int ReadPDBFile( CHAIN **Chain, int *Cn, COMMAND *Cmd );
@@ -384,6 +395,7 @@ private:
 	int ProteinChainCnt;
 	HBOND **HydroBond;
 	int HydroBondCnt;
+	std::vector<OWNBOND> ownHydroBonds;
 	
 	// was the computation successful?
 	bool Successful;

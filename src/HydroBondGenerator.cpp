@@ -152,6 +152,7 @@ void HydroBondGenerator::computeHBonds(MolecularDataCall& mdc) {
 
 	if (this->hydrogenBonds.size() > 0) {
 		std::sort(this->hydrogenBonds.begin(), this->hydrogenBonds.end());
+
 		unsigned int lastVal = this->hydrogenBonds[0].donorIdx;
 		unsigned int counter = 1;
 		for (unsigned int i = 1; i < this->hydrogenBonds.size(); i++) {
@@ -362,6 +363,8 @@ bool HydroBondGenerator::getExtent(Call& call) {
  */
 bool HydroBondGenerator::isValidHBond(unsigned int donorIndex, unsigned int acceptorIndex, unsigned int hydrogenIndex, MolecularDataCall& mdc, float & angle) {
 
+	if (donorIndex == acceptorIndex) return false;
+
 	// shallow vectors do not work because of constness
 	vislib::math::Vector<float, 3> donorPos = vislib::math::Vector<float, 3>(&mdc.AtomPositions()[donorIndex * 3]);
 	vislib::math::Vector<float, 3> acceptorPos = vislib::math::Vector<float, 3>(&mdc.AtomPositions()[acceptorIndex * 3]);
@@ -454,15 +457,18 @@ void HydroBondGenerator::postProcessHBonds(MolecularDataCall& mdc) {
 
 	// copy the H-Bonds
 	for (unsigned int i = 0; i < static_cast<unsigned int>(this->hydrogenBonds.size()); i++) {
+		//this->hydrogenBonds[i].print();
 		if (copyVector[i]) {
 			HBond bond = this->hydrogenBonds[i];
 			if (fake) {
 				unsigned int donor = this->cAlphaIndicesPerAtom[bond.donorIdx];
 				unsigned int acceptor = this->cAlphaIndicesPerAtom[bond.acceptorIdx];
-				this->hBondStatistics[acceptor]++;
-				this->hBondStatistics[donor]++;
-				this->hBondIndices[acceptor] = bond.hydrogenIdx;
-				this->hBondIndices[donor] = bond.hydrogenIdx;
+				if (donor != acceptor) { // kill bonds inside a single aminoacid
+					this->hBondStatistics[acceptor]++;
+					this->hBondStatistics[donor]++;
+					this->hBondIndices[acceptor] = bond.hydrogenIdx;
+					this->hBondIndices[donor] = bond.hydrogenIdx;
+				}
 			} else {
 				this->hBondStatistics[bond.acceptorIdx]++;
 				this->hBondStatistics[bond.donorIdx]++;

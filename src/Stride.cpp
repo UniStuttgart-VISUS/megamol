@@ -31,7 +31,7 @@ Stride::Stride( MolecularDataCall *mol) :
 
     // set default values for command variable
     DefaultCmd( StrideCmd);
-    
+
     // do nothing if Protein Data Interface is not valid
     if( !mol ) return;
     
@@ -221,7 +221,12 @@ bool Stride::ComputeSecondaryStructure() {
         return false;
     }
 
-    NoDoubleHBond( HydroBond, HydroBondCnt );
+	NoDoubleHBond(HydroBond, HydroBondCnt);
+
+	for (int i = 0; i < HydroBondCnt; i++) {
+		printf("%i DRes %i DDRes %i DDIRes %i DAt %i DDAt %i DDIAt %i\n", HydroBond[i]->Dnr->Chain->ChainId, HydroBond[i]->Dnr->D_Res, HydroBond[i]->Dnr->DD_Res, HydroBond[i]->Dnr->DDI_Res, HydroBond[i]->Dnr->D_At, HydroBond[i]->Dnr->DD_At, HydroBond[i]->Dnr->DDI_At);
+		printf("%i ARes %i AARes %i AA2Res %i AAt %i AAAt %i AA2At %i\n\n", HydroBond[i]->Dnr->Chain->ChainId, HydroBond[i]->Acc->A_Res, HydroBond[i]->Acc->AA_Res, HydroBond[i]->Acc->AA2_Res, HydroBond[i]->Acc->A_At, HydroBond[i]->Acc->AA_At, HydroBond[i]->Acc->AA2_At);
+	}
     
     DiscrPhiPsi( ProteinChain, ProteinChainCnt, StrideCmd );
 
@@ -309,6 +314,9 @@ bool Stride::WriteToInterface( MolecularDataCall *mol) {
         for( i = 0; i < (int)sec.size(); ++i ) {
             mol->SetSecondaryStructure( i, sec[i]);
         }
+		/*for (int i = 0; i < HydroBondCnt; i++) {
+			printf("%i %i %i %i\n", HydroBond[i]->Dnr->D_Res, HydroBond[i]->Dnr->D_At, HydroBond[i]->Dnr->DD_At, HydroBond[i]->Dnr->DDI_At);
+		}*/
     } else {
         return false;
     }
@@ -3658,4 +3666,22 @@ float Stride::VectorProduct( float *Vector1, float *Vector2, float *Product )
     }
 
     return ( sqrt ( ProductLength ) );
+}
+
+void Stride::PostProcessHBonds(megamol::protein_calls::MolecularDataCall *mol) {
+	this->ownHydroBonds.resize(HydroBondCnt);
+
+	for (unsigned int bondIdx = 0; bondIdx < static_cast<unsigned int>(HydroBondCnt); bondIdx++) {
+		auto bond = HydroBond[bondIdx];
+		unsigned int donor = GetMoleculeIndex(bond->Dnr->Chain->ChainId, bond->Dnr->D_Res, bond->Dnr->D_At, mol);
+		unsigned int acceptor = GetMoleculeIndex(bond->Acc->Chain->ChainId, bond->Acc->A_Res, bond->Acc->A_At, mol);
+		OWNBOND b;
+		b.donor = donor;
+		b.acceptor = acceptor;
+		this->ownHydroBonds[bondIdx] = b;
+	}
+}
+
+unsigned int Stride::GetMoleculeIndex(unsigned int ChainIdx, unsigned int ResidueIdx, unsigned int InternalIdx, megamol::protein_calls::MolecularDataCall *mol) {
+	//mol->Chains()[ChainIdx].
 }
