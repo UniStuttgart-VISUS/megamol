@@ -177,6 +177,9 @@ namespace protein_cuda {
 
 		/** The bounding rectangle for the data */
 		vislib::math::Rectangle<float> bbRect;
+
+		/** Vector storing start and end indices of the hydrogen bonds */
+		std::vector<unsigned int> hydrogenBonds;
 	};
 
 } /* end namespace protein_cuda */

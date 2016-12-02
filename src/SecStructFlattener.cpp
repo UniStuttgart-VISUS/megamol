@@ -472,7 +472,7 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 		runSimulation();
 	}
 
-	this->myHash = this->lastHash + this->hashOffset;
+	this->myHash = mdc->DataHash() + this->hashOffset;
 	agdc->SetDataHash(this->myHash);
 
 	// compute the new bounding box
