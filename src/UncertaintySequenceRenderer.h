@@ -156,19 +156,32 @@ namespace megamol {
         /**
          * Draws the texture tiles for the secondary structure types.
          *
-         * @param secStructPre The secondary structure type on position i-1
-         * @param secStructi   The secondary structure type on position i
-         * @param secStructSuc The secondary structure type on position i+1
-         * @param f            The residue flag 
-         * @param x            The x position
-         * @param y            The y position
-         * @param ud           The pointer to the data call
-         * @param defColor     The the default color
+         * @param pre     The PREvious secondary structure type on position i-1
+         * @param cur     The CURrent secondary structure type on position i
+         * @param fol     The FOLlowing secondary structure type on position i+1
+         * @param f       The residue flag 
+         * @param x       The x position
+         * @param y       The y position
+         * @param ud      The pointer to the data call
+         * @param bgColor The the default color
          */
-        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure secStructPre, UncertaintyDataCall::secStructure secStructi, 
-                                       UncertaintyDataCall::secStructure secStructSuc, UncertaintyDataCall::addFlags f, float x, float y, 
-                                       float defColor[4], UncertaintyDataCall *ud);
+        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure pre, UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
+                                       UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4], UncertaintyDataCall *ud);
 
+        /**
+         * Draws the geometry tiles for the secondary structure types.
+         *
+         * @param cur     The CURrent secondary structure type on position i
+         * @param fol     The FOLlowing secondary structure type on position i+1
+         * @param f       The residue flag 
+         * @param x       The x position
+         * @param y       The y position
+         * @param ud      The pointer to the data call
+         * @param bgColor The the default color
+         */
+        void drawSecStructGeometryTiles(UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
+                                       UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4], UncertaintyDataCall *ud);
+                                       
         /**
         * Renders a two lined tooltip text.
         *
@@ -265,12 +278,17 @@ namespace megamol {
         // parameter to show/hide tooltip 
         megamol::core::param::ParamSlot toggleTooltipParam;
 
-        // parameter to show/hide pdb secondary structure 
-        megamol::core::param::ParamSlot togglePdbParam;
         // parameter to show/hide stride secondary structure
         megamol::core::param::ParamSlot toggleStrideParam;
         // parameter to show/hide dssp secondary structure
         megamol::core::param::ParamSlot toggleDsspParam;
+        // parameter to show/hide pdb secondary structure 
+        megamol::core::param::ParamSlot togglePdbParam;
+                
+        ///////////////////////////////////////////////
+        // INSERT CODE FROM OBOVE FOR NEW METHOD HER //
+        ///////////////////////////////////////////////        
+        
         // parameter to show/hide disagreements in secondary structure assignment
         megamol::core::param::ParamSlot toggleDiffParam;
         // parameter to show/hide secondary structure uncertainty visualization
@@ -286,11 +304,11 @@ namespace megamol {
 
         // the current uncertainty visualization selection
         certainBlockChartColor         currentCertainBlockChartColor;
-        certainStructColor              currentCertainStructColor;
+        certainStructColor             currentCertainStructColor;
         uncertainBlockChartColor       currentUncertainBlockChartColor;
         uncertainBlockChartOrientation currentUncertainBlockChartOrientation;
-        uncertainStructColor            currentUncertainStructColor;
-        uncertainStructGeometry         currentUncertainStructGeometry;
+        uncertainStructColor           currentUncertainStructColor;
+        uncertainStructGeometry        currentUncertainStructGeometry;
         
         // the number of secondary structure rows which can be shown/hidden
         unsigned int secStructRows;
