@@ -281,7 +281,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 		CAlpha lastCalpha;
 		unsigned int lastCalphaIndex;
 
-		std::vector<unsigned int> cAlphaMap(mdc->AtomCount(), 0);
+		this->cAlphaMap.resize(mdc->AtomCount(), 0);
 
 		// loop over all molecules of the protein
 		for (unsigned int molIdx = 0; molIdx < mdc->MoleculeCount(); molIdx++) {
@@ -337,7 +337,7 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 					lastAtomIdx = firstAtomIdx + acid->AtomCount();
 
 					for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++){
-						cAlphaMap[atomIdx] = static_cast<unsigned int>(this->cAlphas.size() - 1);
+						this->cAlphaMap[atomIdx] = static_cast<unsigned int>(this->cAlphas.size() - 1);
 					}
 
 					lastCalpha = calpha;
@@ -361,14 +361,6 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 			this->cAlphaIndices.push_back(lastCalphaIndex);
 			this->cAlphaIndices.push_back(lastCalphaIndex);
 			this->molSizes[molIdx] += 2;
-		}
-
-		this->hydrogenBonds.resize(mdc->HydrogenBondCount() * 2);
-		memcpy(this->hydrogenBonds.data(), mdc->GetHydrogenBonds(), mdc->HydrogenBondCount() * 2 * sizeof(unsigned int));
-
-		// map the hydrogen bonds to the c alphas
-		for (unsigned int i = 0; i < this->hydrogenBonds.size(); i++) {
-			this->hydrogenBonds[i] = cAlphaMap[this->hydrogenBonds[i]];
 		}
 
 		this->lastDataHash = mdc->DataHash();
@@ -536,9 +528,13 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 		glBegin(GL_LINES);
 		glColor4f(0.87f, 0.92f, 0.97f, 1.0f);
 
-		for (unsigned int i = 0; i < this->hydrogenBonds.size(); i++) {
-			unsigned int idx = this->hydrogenBonds[i];
-			glVertex4f(cAlphas[idx].pos[0], cAlphas[idx].pos[1], 0.0f, 1.0f);
+		if (mdc->AtomHydrogenBondsFake()) {
+			for (unsigned int i = 0; i < mdc->HydrogenBondCount() * 2; i++) {
+				unsigned int idx = this->cAlphaMap[mdc->GetHydrogenBonds()[i]];
+				glVertex4f(cAlphas[idx].pos[0], cAlphas[idx].pos[1], 0.0f, 1.0f);
+			}
+		} else {
+			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "One needs to have fake hydrogen bonds to render them correctly");
 		}
 
 		glEnd();
