@@ -39,6 +39,8 @@ Stride::Stride( MolecularDataCall *mol) :
     GetChains( mol);
     // try to compute the secondary structure
     ComputeSecondaryStructure();
+	// compute the indices of the hydrogen bonds
+	PostProcessHBonds(mol);
 }
 
 Stride::~Stride(void)
@@ -223,10 +225,12 @@ bool Stride::ComputeSecondaryStructure() {
 
 	NoDoubleHBond(HydroBond, HydroBondCnt);
 
-	for (int i = 0; i < HydroBondCnt; i++) {
+	/*for (int i = 0; i < HydroBondCnt; i++) {
 		printf("%i DRes %i DDRes %i DDIRes %i DAt %i DDAt %i DDIAt %i\n", HydroBond[i]->Dnr->Chain->ChainId, HydroBond[i]->Dnr->D_Res, HydroBond[i]->Dnr->DD_Res, HydroBond[i]->Dnr->DDI_Res, HydroBond[i]->Dnr->D_At, HydroBond[i]->Dnr->DD_At, HydroBond[i]->Dnr->DDI_At);
 		printf("%i ARes %i AARes %i AA2Res %i AAt %i AAAt %i AA2At %i\n\n", HydroBond[i]->Dnr->Chain->ChainId, HydroBond[i]->Acc->A_Res, HydroBond[i]->Acc->AA_Res, HydroBond[i]->Acc->AA2_Res, HydroBond[i]->Acc->A_At, HydroBond[i]->Acc->AA_At, HydroBond[i]->Acc->AA2_At);
-	}
+	}*/
+
+
     
     DiscrPhiPsi( ProteinChain, ProteinChainCnt, StrideCmd );
 
@@ -3669,19 +3673,21 @@ float Stride::VectorProduct( float *Vector1, float *Vector2, float *Product )
 }
 
 void Stride::PostProcessHBonds(megamol::protein_calls::MolecularDataCall *mol) {
-	this->ownHydroBonds.resize(HydroBondCnt);
+	this->ownHydroBonds.resize(HydroBondCnt * 2);
 
 	for (unsigned int bondIdx = 0; bondIdx < static_cast<unsigned int>(HydroBondCnt); bondIdx++) {
 		auto bond = HydroBond[bondIdx];
 		unsigned int donor = GetMoleculeIndex(bond->Dnr->Chain->ChainId, bond->Dnr->D_Res, bond->Dnr->D_At, mol);
 		unsigned int acceptor = GetMoleculeIndex(bond->Acc->Chain->ChainId, bond->Acc->A_Res, bond->Acc->A_At, mol);
-		OWNBOND b;
-		b.donor = donor;
-		b.acceptor = acceptor;
-		this->ownHydroBonds[bondIdx] = b;
+		this->ownHydroBonds[bondIdx * 2 + 0] = donor;
+		this->ownHydroBonds[bondIdx * 2 + 1] = acceptor;
 	}
+
+	mol->SetHydrogenBonds(this->ownHydroBonds.data(), static_cast<unsigned int>(HydroBondCnt));
 }
 
 unsigned int Stride::GetMoleculeIndex(unsigned int ChainIdx, unsigned int ResidueIdx, unsigned int InternalIdx, megamol::protein_calls::MolecularDataCall *mol) {
-	//mol->Chains()[ChainIdx].
+	unsigned int firstResidue = mol->Molecules()[ChainIdx].FirstResidueIndex();
+	unsigned int firstAtom = mol->Residues()[firstResidue + ResidueIdx]->FirstAtomIndex();
+	return firstAtom + InternalIdx;
 }

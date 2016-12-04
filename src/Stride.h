@@ -395,7 +395,7 @@ private:
 	int ProteinChainCnt;
 	HBOND **HydroBond;
 	int HydroBondCnt;
-	std::vector<OWNBOND> ownHydroBonds;
+	std::vector<unsigned int> ownHydroBonds;
 	
 	// was the computation successful?
 	bool Successful;
