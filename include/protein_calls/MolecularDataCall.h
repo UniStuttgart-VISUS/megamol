@@ -1133,21 +1133,112 @@ namespace protein_calls {
         //void SetAtomResidueIndices(const int*indices) { atomResidueIdx = indices; }
 
         /**
-         * Get the indices of atom hydrogen bonds.
+         * Get the indices of atom hydrogen bonds. 
+		 * DEPRECATED. ONLY LEFT IN BECAUSE OF BACKWARDS COMPATIBILITY
          *
          * @return The atom hydrogen bonds index array.
          */
         const int* AtomHydrogenBondIndices(void) const { return atomHydrogenBondIdx; }
+
+		/**
+         * Set the indices of atom hydrogen bonds. 
+		 * DEPRECATED. ONLY LEFT IN BECAUSE OF BACKWARDS COMPATIBILITY
+         *
+         * @param indices The atom hydrogen bonds index array.
+         */
         void SetAtomHydrogenBondIndices(const int*indices) { atomHydrogenBondIdx = indices; }
+
+		/**
+         * Get the maximal distance of atom hydrogen bonds.
+		 * DEPRECATED. ONLY LEFT IN BECAUSE OF BACKWARDS COMPATIBILITY
+         *
+         * @return The maximal distance of a atom hydrogen bond.
+         */
         float AtomHydrogenBondDistance(void) const { return atomHydrogenBondDistance; }
+
+		/**
+         * Set the maximal distance of atom hydrogen bonds.
+		 * DEPRECATED. ONLY LEFT IN BECAUSE OF BACKWARDS COMPATIBILITY
+         *
+         * @param dist The maximal distance of a atom hydrogen bond.
+         */
         void SetAtomHydrogenBondDistance(float dist) { atomHydrogenBondDistance = dist; }
+
+		/**
+         * Get the hydrogen bond statistics array (the number of hydrogen bonds per atom)
+		 * DEPRECATED. ONLY LEFT IN BECAUSE OF BACKWARDS COMPATIBILITY
+         *
+         * @return The statistics array
+         */
         const unsigned int* AtomHydrogenBondStatistics(void) const { return atomHydrogenBondStatistics; }
+
+		/**
+         * Get the number of solvent residues.
+         *
+         * @return The number of solvent residues.
+         */
         unsigned int AtomSolventResidueCount(void) const { return atomSolventResCount; }
+
+		/**
+         * Set the atom hydrogen bond statistics (the number of hydrogen bonds per atom)
+		 * DEPRECATED. ONLY LEFT IN BECAUSE OF BACKWARDS COMPATIBILITY
+         *
+         * @param statistics The statistics array.
+         */
         void SetAtomHydrogenBondStatistics(const unsigned int*statistics /*, int solventResCount*/) { atomHydrogenBondStatistics = statistics; /*atomSolventResCount=solventResCount;*/ }
+
+		/**
+		 *	Returns whether the set hydrogen bonds are fake ones, e. g. the point from c alpha atom to c alpha atom
+		 *
+		 *	@return True, if the hydrogen bonds are fake. False otherwise.
+		 */
 		bool AtomHydrogenBondsFake(void) { return this->atomHydrogenBondsFake; }
+
+		/**
+		 *	Sets whether the set hydrogen bonds are fake.
+		 *
+		 *	@param fake True, if the hydrogen bonds are fake. False otherwise
+		 */
 		void SetAtomHydrogenBondsFake(const bool fake) { this->atomHydrogenBondsFake = fake; }
+
+		/**
+		 *	Set the index array of the solvent residues.
+		 *
+		 *	@param count The number of solvent residues.
+		 *	@param residueIndex The index array itself
+		 */
         void SetSolventResidueIndices(unsigned int count, const unsigned int *residueIndices) {this->solventResidueIdx = residueIndices; atomSolventResCount = count; }
+
+		/**
+		 *	Returns the solvent residue index array.
+		 *
+		 *	@return The solvent residue index array.
+		 */
         const unsigned int* SolventResidueIndices(void) const { return solventResidueIdx; }
+
+		/**
+		 *	Sets the hydrogen bonds.
+		 *
+		 *	@param hydroBonds The hydrogen bonds array. Two atom indices per hydrogen bond (donor, acceptor, donor, acceptor, ...).
+		 *	@param count The number of hydrogen bonds (array size / 2).
+		 */
+		void SetHydrogenBonds(const unsigned int * hydroBonds, unsigned int count) { this->hydrogenBonds = hydroBonds; this->numHydrogenBonds = count; }
+
+		/**
+		 *	Returns the hydrogen bond array of the molecule.
+		 *	Every hydrogen bond consists of two unsigned int atom indices. 
+		 *	First Index: Donor. Second Index: Acceptor
+		 *
+		 *	@return The hydrogen bond array.
+		 */
+		const unsigned int * GetHydrogenBonds(void) const { return this->hydrogenBonds; }
+
+		/**
+		 *	Returns the number of available hydrogen bonds.
+		 *
+		 *	@param The number of hydrogen bonds.
+		 */
+		unsigned int HydrogenBondCount(void) const { return this->numHydrogenBonds; }
 
         /**
          * Get the residue count.
@@ -1513,6 +1604,8 @@ namespace protein_calls {
             this->calltime = s.calltime;
 			this->neighborhoods = s.neighborhoods;
 			this->neighborhoodSizes = s.neighborhoodSizes;
+			this->hydrogenBonds = s.hydrogenBonds;
+			this->numHydrogenBonds = s.numHydrogenBonds;
             return *this;
         }
 
@@ -1613,6 +1706,12 @@ namespace protein_calls {
 
 		/** The atom neighborhoods as 2D-array. first dim: neighborhood per atom, second dim: atom index of the j-th neighbor*/
 		const unsigned int** neighborhoods;
+
+		/** The hydrogen bond array. */
+		const unsigned int * hydrogenBonds;
+
+		/** The number of hydrogen bonds in the hydrogen bonds array */
+		unsigned int numHydrogenBonds;
     };
 
     /** Description class typedef */

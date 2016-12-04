@@ -523,9 +523,11 @@ MolecularDataCall::MolecularDataCall(void) : AbstractGetData3DCall(),
         molecules( 0), molCount( 0),
         chains( 0), chainCount( 0),
         atomTypeCount( 0), atomType( 0),
-		atomHydrogenBondsFake(false){
+		atomHydrogenBondsFake(false),
+		numHydrogenBonds(0) {
 	this->neighborhoods = nullptr;
 	this->neighborhoodSizes = nullptr;
+	this->hydrogenBonds = nullptr;
 }
 
 
