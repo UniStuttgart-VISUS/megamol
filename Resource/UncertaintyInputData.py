@@ -813,7 +813,7 @@ class UncertaintyInputData:
                         #    PDB-Index in STRIDE file    PDB-Index in ouputfile
                         strideIndex = FileLine[CW[3][0]:CW[3][1]]
                         # strideIndex is like in pdb if it has an letter at the end, else append space and cut one space at the beginning for same length like pdb index
-                        if(strideIndex[-1:].isdigit()):
+                        if(strideIndex[-1:].isdigit()): # check if last character is digit
                             strideIndex = (strideIndex[1:]+' ')
                         while (strideIndex != OutFileBuffer[LineOffset][41:46]):          
                             LineOffset += 1                                         
