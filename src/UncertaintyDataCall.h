@@ -75,6 +75,16 @@ namespace megamol {
             MISSING   = 1,
             HETEROGEN = 2
         };
+        
+        /**
+        * Enumeration of pdb secondary structure assignment methods.
+        */
+        enum pdbAssMethod {
+            PROMOTIF = 0,
+            AUTHOR   = 1,
+            DSSP     = 2,
+            UNKNOWN  = 3
+        };        
                 
         // ------------------ class functions ------------------- 
 
@@ -149,11 +159,11 @@ namespace megamol {
         *
         * @return The pdb amino-acid index.
         */
-        inline int GetPDBAminoAcidIndex(unsigned int i) const {
+        inline vislib::StringA GetPDBAminoAcidIndex(unsigned int i) const {
             if (!this->pdbIndex)
-                return static_cast<int>(0);
+                return static_cast<vislib::StringA>("");
             else if (this->pdbIndex->Count() <= i)
-                return static_cast<int>(0);
+                return static_cast<vislib::StringA>("");
             else
                 return (this->pdbIndex->operator[](i));
         }
@@ -262,7 +272,7 @@ namespace megamol {
         * @return The pdb id.
         */
         inline vislib::StringA GetPdbID(void) {
-            return *this->pdbID;
+            return this->pdbID;
         }  
 
         /**
@@ -291,6 +301,24 @@ namespace megamol {
         */
         vislib::math::Vector<float, 4> GetSecStructColor(UncertaintyDataCall::secStructure s);            
         
+        /**
+        * Get the pdb assignment method for helix.
+        *
+        * @return The pdb assignment method for helix.
+        */
+        inline UncertaintyDataCall::pdbAssMethod GetPdbAssMethodHelix(void) {
+            return this->pdbAssignmentHelix;
+        }
+        
+        /**
+        * Get the pdb assignment method for sheet.
+        *
+        * @return The pdb assignment method for sheet.
+        */
+        inline UncertaintyDataCall::pdbAssMethod GetPdbAssMethodSheet(void) {
+            return this->pdbAssignmentSheet;
+        }        
+                
         // ------------------ SET functions ------------------- 
 
         /**
@@ -307,7 +335,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetPdbIndex(vislib::Array<int> *rnPtr) {
+        inline void SetPdbIndex(vislib::Array<vislib::StringA> *rnPtr) {
             this->pdbIndex = rnPtr;
         }
 
@@ -359,10 +387,10 @@ namespace megamol {
         /**
         * Set the PDB ID.
         *
-        * @param rnPtr The pointer to the pdb id.
+        * @param rnPtr The pdb id.
         */
-        inline void SetPdbID(vislib::StringA *rnPtr) {
-            this->pdbID = rnPtr;
+        inline void SetPdbID(vislib::StringA rnData) {
+            this->pdbID = rnData;
         }
         
         /**
@@ -374,6 +402,24 @@ namespace megamol {
             this->recalcUncertainty = rnData;
         }
 
+        /**
+        * Set the pdb assignment method for helix.
+        *
+        * @param rnPtr The pdb assignment method for helix.
+        */
+        inline void SetPdbAssMethodHelix(UncertaintyDataCall::pdbAssMethod rnData) {
+            this->pdbAssignmentHelix = rnData;
+        }
+        
+       /**
+        * Set the pdb assignment method for sheet.
+        *
+        * @param rnPtr The pdb assignment method for sheet.
+        */
+        inline void SetPdbAssMethodSheet(UncertaintyDataCall::pdbAssMethod rnData) {
+            this->pdbAssignmentSheet = rnData;
+        }  
+        
 
 	private:
 
@@ -383,7 +429,7 @@ namespace megamol {
         vislib::Array<vislib::Array<secStructure> > *secStructAssignment;
         
         /** Pointer to the PDB index */
-        vislib::Array<int> *pdbIndex;
+        vislib::Array<vislib::StringA> *pdbIndex;
 
         /** Pointer to the chain ID */
         vislib::Array<char> *chainID;
@@ -404,8 +450,14 @@ namespace megamol {
         bool recalcUncertainty;
                 
         /** The PDB ID */
-        vislib::StringA *pdbID;
-
+        vislib::StringA pdbID;
+        
+        /** The pdb assignment method for helix */
+        UncertaintyDataCall::pdbAssMethod pdbAssignmentHelix;            
+        
+        /** The pdb assignment method for helix */
+        UncertaintyDataCall::pdbAssMethod pdbAssignmentSheet; 
+                    
     };
 
     /** Description class typedef */

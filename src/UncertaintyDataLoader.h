@@ -172,6 +172,12 @@ namespace megamol {
             
             /** The pdb id */
             vislib::StringA pdbID;
+            
+            /** The pdb assignment method for helix */
+            UncertaintyDataCall::pdbAssMethod pdbAssignmentHelix;            
+            
+            /** The pdb assignment method for helix */
+            UncertaintyDataCall::pdbAssMethod pdbAssignmentSheet;              
 
 		};
 	} /* end namespace protein_uncertainty */

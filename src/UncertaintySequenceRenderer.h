@@ -293,6 +293,8 @@ namespace megamol {
         megamol::core::param::ParamSlot toggleDiffParam;
         // parameter to show/hide secondary structure uncertainty visualization
         megamol::core::param::ParamSlot toggleUncertaintyParam;
+        // parameter to show/hide separator line for amino-acids in uncertainty visualization 
+        megamol::core::param::ParamSlot toggleUncSeparatorParam;        
                 
         // parameter to choose different visualizations        
         megamol::core::param::ParamSlot certainBlockChartColorParam;
@@ -309,6 +311,7 @@ namespace megamol {
         uncertainBlockChartOrientation currentUncertainBlockChartOrientation;
         uncertainStructColor           currentUncertainStructColor;
         uncertainStructGeometry        currentUncertainStructGeometry;
+        bool                           showSeparatorLine;
         
         // the number of secondary structure rows which can be shown/hidden
         unsigned int secStructRows;
@@ -328,7 +331,7 @@ namespace megamol {
         // the array of amino acid 1-letter codes
         vislib::Array<char> aminoAcidName;
         // the array of pdb amino-acid indices
-        vislib::Array<int> aminoAcidIndex;
+        vislib::Array<vislib::StringA> aminoAcidIndex;
         // the array of the chain IDs
         vislib::Array<char> chainID;
         // the array for the residue flag
@@ -388,6 +391,9 @@ namespace megamol {
         
         // PDB ID 
         vislib::StringA pdbID;
+        
+        // PDB legend string with methods used for secondary structure assignment
+        vislib::StringA pdbLegend;
 
         // timer for animation of morphing visualization
         clock_t animTimer;

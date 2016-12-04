@@ -498,7 +498,7 @@ class UncertaintyInputData:
            
             # Init list buffer with PDB header
             OutFileBuffer[2] += ('----------------------------------------------------------------------------------------------------------------------------------|')
-            OutFileBuffer[3] += (' PDB                                                                                                                              |')
+            OutFileBuffer[3] += (' PDB - Determination Method HELIX: PROMOTIF                         - Determination Method SHEET: PROMOTIF                        |')
             OutFileBuffer[4] += ('-Nr----|--AA--|-ChainID-|-X-|-Index----|-Structure-|-ID---|-SerNr-|-Count-|-H-Class-|-Sense-|-Start-AA-|-StartNr-|-End-AA-|-EndNr-|')                                                                                                       # line 5
             OutFileBuffer[7] += ('-------|------|---------|---|----------|-----------|------|-------|-------|---------|-------|----------|---------|--------|-------|')
             # Length of columns:    7       6       9       3     10         11         6        7      7        9        7        10         9         8        7
@@ -523,7 +523,7 @@ class UncertaintyInputData:
             GetMissing    = False                                                              # True if right PDB-code is read
             MissingAADict = {}                                                                 # Dictionary with chain ID as index and index of missing amino-acids as data
             HetAADict     = {}                                                                 # Dictionary with chain ID as index and index of HET residues as data
-            LastATOMIndex = -100000                                                            # a value never occuring ...
+            LastATOMIndex = ''                                                                 # as string
             EndOfFile     = False   
             while not EndOfFile:
                 FileLine = PDBFile.readline()
@@ -531,12 +531,20 @@ class UncertaintyInputData:
                     EndOfFile = True
                 else:
                 # Parsing file lines ...   
-                    if (FileLine[0:10] == 'REMARK 700'):                                      # for SHEET - for HELIX: elif (FileLine[0:30] == 'REMARK 700 DETERMINATION METHOD'): # SHEET 
-                        FileLineList = FileLine.split() 
-                        if (len(FileLineList) >= 4):                      
-                            if (FileLineList[4] == 'AUTHOR') :
-                                OutFileBuffer[3] = OutFileBuffer[3].replace('PDB        ', 'PDB: AUTHOR', 1)
+                    if (FileLine[0:10] == 'REMARK 650'):                                      # REMARK for HELIX
+                        if 'DETERMINATION METHOD' in FileLine:
+                            FileLine = FileLine[33:] 
+                            if (len(FileLine) > 32):  
+                                FileLine = FileLine[:32]   
+                            OutFileBuffer[3] = OutFileBuffer[3].replace('HELIX: PROMOTIF                        ', ('HELIX: '+FileLine).rjust(32), 1)
                 
+                    elif (FileLine[0:10] == 'REMARK 700'):                                      # REMARK for SHEET 
+                        if 'DETERMINATION METHOD' in FileLine:
+                            FileLine = FileLine[33:] 
+                            if (len(FileLine) > 31):  
+                                FileLine = FileLine[:31]   
+                            OutFileBuffer[3] = OutFileBuffer[3].replace('SHEET: PROMOTIF                       ', ('SHEET: '+FileLine).rjust(31), 1)
+                                                
                     elif (FileLine[0:6] == 'HET   '):                                          # PDB code for heterogen section
                             if FileLine[12:13] not in HetAADict:                               # Chain ID not in ...
                                 HetAADict[FileLine[12:13]] = [int(FileLine[13:17])]            # HetAADict[chain ID] = index of heterogen residues
@@ -565,9 +573,9 @@ class UncertaintyInputData:
                     elif (FileLine[0:4] == 'ATOM'):                                            # Get index and amino-acid of first ATOM in each chain
                         if FileLine[21:22] not in ATOMChainsAndIndices:                        # if chain ID of ATOM (= first amino-acid) not in ....                           
                             ATOMChainsAndIndices[FileLine[21:22]] = []                         # New entry in dict with starting index of first ATOM in chain        
-                        if(LastATOMIndex != int(FileLine[22:26])):
-                            ATOMChainsAndIndices[FileLine[21:22]].append(int(FileLine[22:26]))
-                            LastATOMIndex = int(FileLine[22:26])      
+                        if(LastATOMIndex != FileLine[22:27]):                                  # including "Residue sequence number"(Integer) and "Code for insertion of residues."(AChar)
+                            ATOMChainsAndIndices[FileLine[21:22]].append(FileLine[22:27])
+                            LastATOMIndex = FileLine[22:27]      
                                                
                     
             # Sorting indices of amino-acids
@@ -577,6 +585,9 @@ class UncertaintyInputData:
             MissingChainIndex = 0                                                              # Index for MissingAADict
             missingIndex = 0
             ChainID = ''
+            PDBIndex = 0
+            PDBIndexChar = ' ' 
+            
             for x in range(LineOffset, len(OutFileBuffer)):                                    # Buffer already contains an entry for every amino-acid
                 
                 # Reset offset for new chain
@@ -585,94 +596,110 @@ class UncertaintyInputData:
                     ChainIndex = 0
                     MissingChainIndex = 0
                     HetChainIndex = 0
-                                                                   
+                                     
                 if ChainID in MissingAADict:                                           
                     if (MissingChainIndex < len(MissingAADict[ChainID])): 
                         if (ChainIndex < len(ATOMChainsAndIndices[ChainID])) :
-                            if (MissingAADict[ChainID][MissingChainIndex] < ATOMChainsAndIndices[ChainID][ChainIndex]):   
+                            
+                            PDBIndex = int(ATOMChainsAndIndices[ChainID][ChainIndex][:-1]) 
+                            PDBIndexChar = ATOMChainsAndIndices[ChainID][ChainIndex][-1:] 
+                
+                            if (MissingAADict[ChainID][MissingChainIndex] < PDBIndex):   
                                 AAIndex = MissingAADict[ChainID][MissingChainIndex]
                                 MissingFlag = 'M'
+                                PDBIndexChar = ' '
                                 MissingChainIndex += 1
                                 if ChainID in HetAADict:                                                       # "Heterogen" has higher priority .. so overwrite missing
                                     if (AAIndex in HetAADict[ChainID]):
-                                        MissingFlag = 'H'                                
-                            else:  # if (ATOMChainsAndIndices[ChainID][ChainIndex] < MissingAADict[ChainID][MissingChainIndex]):
+                                        MissingFlag = 'H'                              
+                            else:  # if (PDBIndex < MissingAADict[ChainID][MissingChainIndex]):
                                 if ChainID in HetAADict: 
                                     if (HetChainIndex < len(HetAADict[ChainID])) :
-                                        if (HetAADict[ChainID][HetChainIndex] < ATOMChainsAndIndices[ChainID][ChainIndex]):
+                                        if (HetAADict[ChainID][HetChainIndex] < PDBIndex):
                                             AAIndex = HetAADict[ChainID][HetChainIndex]
                                             MissingFlag = 'H'
+                                            PDBIndexChar = ' '
                                             HetChainIndex += 1
                                         else :
-                                            AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                                            AAIndex = PDBIndex
                                             ChainIndex += 1
                                             MissingFlag = ' '
                                     else :
-                                        AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                                        AAIndex = PDBIndex
                                         ChainIndex += 1
                                         MissingFlag = ' '                                             
                                             
                                 else :
-                                    AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                                    AAIndex = PDBIndex
                                     ChainIndex += 1
                                     MissingFlag = ' '                                         
                         else :
                             AAIndex = MissingAADict[ChainID][MissingChainIndex]
                             MissingChainIndex += 1
                             MissingFlag = 'M'
+                            PDBIndexChar = ' '
                             if ChainID in HetAADict:                                                       # "Heterogen" has higher priority .. so overwrite missing
                                 if (AAIndex in HetAADict[ChainID]):
                                     MissingFlag = 'H'
                     elif (ChainIndex < len(ATOMChainsAndIndices[ChainID])) :
+                        
+                        PDBIndex = int(ATOMChainsAndIndices[ChainID][ChainIndex][:-1]) 
+                        PDBIndexChar = ATOMChainsAndIndices[ChainID][ChainIndex][-1:] 
+                            
                         if ChainID in HetAADict: 
                             if (HetChainIndex < len(HetAADict[ChainID])) :
-                                if (HetAADict[ChainID][HetChainIndex] < ATOMChainsAndIndices[ChainID][ChainIndex]):
+                                if (HetAADict[ChainID][HetChainIndex] < PDBIndex):
                                     AAIndex = HetAADict[ChainID][HetChainIndex]
                                     MissingFlag = 'H'
+                                    PDBIndexChar = ' '
                                     HetChainIndex += 1
                                 else :
-                                    AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                                    AAIndex = PDBIndex
                                     ChainIndex += 1
                                     MissingFlag = ' '
                             else :
-                                AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                                AAIndex = PDBIndex
                                 ChainIndex += 1
                                 MissingFlag = ' '                                                  
                         else :
-                            AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                            AAIndex = PDBIndex
                             ChainIndex += 1
                             MissingFlag = ' '   
                 else :
                     if(ChainIndex < len(ATOMChainsAndIndices[ChainID])) :
+                        
+                        PDBIndex = int(ATOMChainsAndIndices[ChainID][ChainIndex][:-1]) 
+                        PDBIndexChar = ATOMChainsAndIndices[ChainID][ChainIndex][-1:] 
+                            
                         if ChainID in HetAADict: 
                             if (HetChainIndex < len(HetAADict[ChainID])) :
-                                if (HetAADict[ChainID][HetChainIndex] < ATOMChainsAndIndices[ChainID][ChainIndex]):
+                                if (HetAADict[ChainID][HetChainIndex] < PDBIndex):
                                     AAIndex = HetAADict[ChainID][HetChainIndex]
                                     MissingFlag = 'H'
+                                    PDBIndexChar = ' '
                                     HetChainIndex += 1
                                 else :
-                                    AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                                    AAIndex = PDBIndex
                                     ChainIndex += 1
                                     MissingFlag = ' '
                             else :
-                                AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                                AAIndex = PDBIndex
                                 ChainIndex += 1
                                 MissingFlag = ' '                                               
                         else :
-                            AAIndex = ATOMChainsAndIndices[ChainID][ChainIndex]
+                            AAIndex = PDBIndex
                             ChainIndex += 1
                             MissingFlag = ' '  
                         
-                OutFileBuffer[x] += (' '+MissingFlag+' |   '+str(AAIndex).rjust(6)+' |')       # Writing flag and amino-acid index to corresponding buffer line 
-                
+                OutFileBuffer[x] += (' '+MissingFlag+' |    '+str(AAIndex).rjust(4)+PDBIndexChar+' |')       # Writing flag and amino-acid index to corresponding buffer line 
                
             # Lookup table for column width of PDB file entries
             #   - First Index of substring indices -1 because here index starts from 0 
             #   - Second Index +1 because range() is exclusive last index in range
             #   - Structure  ID    SerNr   Count    H-Class  Sense   Start-AA  Start-#   End-AA    End-#  
-            #   - #: 6       3       3       5         2       2        3        4        3        4   
-            CWh = [[0,6], [11,14], [7,10], [71,76], [38,40],          [15,18], [21,25], [27,30], [33,37]]  # For helix
-            CWs = [[0,6], [11,14], [7,10], [14,16],          [38,40], [17,20], [22,26], [28,31], [33,37]]  # For sheet   
+            #   - #: 6       3       3       5         2       2        3        5        3        5   
+            CWh = [[0,6], [11,14], [7,10], [71,76], [38,40],          [15,18], [21,26], [27,30], [33,38]]  # For helix
+            CWs = [[0,6], [11,14], [7,10], [14,16],          [38,40], [17,20], [22,27], [28,31], [33,38]]  # For sheet   
             
             # Second: Read file for assigning the secondary structure to the right amino-acid indices
             logging.debug('  Reading PDB file for assigning the secondary structure to the right amino-acid indices')
@@ -690,35 +717,36 @@ class UncertaintyInputData:
                         # Determining starting index of HELIX in chain
                         for x in range(LineOffset, len(OutFileBuffer)):
                             if (OutFileBuffer[x][30:31] == FileLine[19:20]):                   # Chain ID == chain ID HELIX
-                                if (int(OutFileBuffer[x][39:46])== int(FileLine[CWh[6][0]:CWh[6][1]])): # Amino-acid number of chain  == amino-acid start number of HELIX in chain               
-                                    LineOffset = x
-                                    break                                 
+                                if (OutFileBuffer[x][41:46] == FileLine[CWh[6][0]:CWh[6][1]]): # Amino-acid number of chain  == amino-acid start number of HELIX in chain          
+                                        LineOffset = x
+                                        break                                 
                                     
-                        AARange = int(FileLine[CWh[8][0]:CWh[8][1]]) - int(FileLine[CWh[6][0]:CWh[6][1]]) # Index range of HELIX = ending index of HELIX - starting index of HELIX  
-                        for x in range(LineOffset, LineOffset+AARange+1):                      # +1 because range() is excluding last index   
+                        AARange = int(FileLine[CWh[3][0]:CWh[3][1]])                           # Index range of HELIX = count 
+                        for x in range(LineOffset, LineOffset+AARange):                       
                             if (len(OutFileBuffer[2]) - len(OutFileBuffer[x]) > 0):            # skip overlapping structures (if line is already "full": len(OutFileBuffer[2])-len(OutFileBuffer[x]) == 0
                                 OutFileBuffer[x] += ('    '+FileLine[CWh[0][0]:CWh[0][1]]+' |  '+FileLine[CWh[1][0]:CWh[1][1]]+' |   '+FileLine[CWh[2][0]:CWh[2][1]]+' | '+
                                                      FileLine[CWh[3][0]:CWh[3][1]]+' |      '+FileLine[CWh[4][0]:CWh[4][1]]+' |       |      '+
-                                                     FileLine[CWh[5][0]:CWh[5][1]]+' |    '+FileLine[CWh[6][0]:CWh[6][1]]+' |    '+
-                                                     FileLine[CWh[7][0]:CWh[7][1]]+' |  '+FileLine[CWh[8][0]:CWh[8][1]]+' |')
+                                                     FileLine[CWh[5][0]:CWh[5][1]]+' |   '+FileLine[CWh[6][0]:CWh[6][1]]+' |    '+
+                                                     FileLine[CWh[7][0]:CWh[7][1]]+' | '+FileLine[CWh[8][0]:CWh[8][1]]+' |')
 
                     elif (PDBCode == 'SHEET'):
                         LineOffset = 8 
                         # Determining starting index of SHEET in chain
                         for x in range(LineOffset, len(OutFileBuffer)):
                             if (OutFileBuffer[x][30:31] == FileLine[21:22]):                   # Chain ID == chain ID SHEET
-                                if (int(OutFileBuffer[x][39:46]) == int(FileLine[CWs[6][0]:CWs[6][1]])): # Amino-acid number of chain  == amino-acid start number of SHEET in chain              
+                                if (OutFileBuffer[x][41:46] == FileLine[CWs[6][0]:CWs[6][1]]): # Amino-acid number of chain  == amino-acid start number of SHEET in chain              
                                     LineOffset = x
-                                    break
+                                    break  
 
-                        AARange = int(FileLine[CWs[8][0]:CWs[8][1]]) - int(FileLine[CWs[6][0]:CWs[6][1]])        
-                        for x in range(LineOffset, LineOffset+AARange+1):                      # +1 because range() is excluding last index                     
+                        while (OutFileBuffer[LineOffset-1][41:46] != FileLine[CWs[8][0]:CWs[8][1]]):  # index of ending amino-acid must be there ....                                    
                             # IGNORING if same strand belongs to different sheets -> only one SHEET ID is assigned ... 
-                            if (len(OutFileBuffer[x]) < len(OutFileBuffer[2])-1):              # ... determined by checking if buffer line is alredy 'filled'                
-                                OutFileBuffer[x] += ('    '+FileLine[CWs[0][0]:CWs[0][1]]+' |  '+FileLine[CWs[1][0]:CWs[1][1]]+' |   '+
+                            if (len(OutFileBuffer[LineOffset]) < len(OutFileBuffer[2])-1):              # ... determined by checking if buffer line is alredy 'filled'                
+                                OutFileBuffer[LineOffset] += ('    '+FileLine[CWs[0][0]:CWs[0][1]]+' |  '+FileLine[CWs[1][0]:CWs[1][1]]+' |   '+
                                                      FileLine[CWs[2][0]:CWs[2][1]]+' |    '+FileLine[CWs[3][0]:CWs[3][1]]+' |         |    '+FileLine[CWs[4][0]:CWs[4][1]]+' |      '+
-                                                     FileLine[CWs[5][0]:CWs[5][1]]+' |    '+FileLine[CWs[6][0]:CWs[6][1]]+' |    '+
-                                                     FileLine[CWs[7][0]:CWs[7][1]]+' |  '+FileLine[CWs[8][0]:CWs[8][1]]+' |')
+                                                     FileLine[CWs[5][0]:CWs[5][1]]+' |   '+FileLine[CWs[6][0]:CWs[6][1]]+' |    '+
+                                                     FileLine[CWs[7][0]:CWs[7][1]]+' | '+FileLine[CWs[8][0]:CWs[8][1]]+' |')
+                            LineOffset += 1
+                            
                     elif (PDBCode == 'ATOM '):                                                 # Stop reading file when PDB code ATOM is read ...ATOM comes after HELIX and SHEET
                         break 
                         
@@ -735,7 +763,7 @@ class UncertaintyInputData:
             logging.warn('  Didn\'t find file \"{0}\"'.format(Param_PDBFile))    
             return False                                                                       # This case should be handles earlier ... !
         
-  
+        
         # Parsing STRIDE file -------------------------------------------------
         logging.debug('  Opening STRIDE file')
         logging.info('  Parsing STRIDE file ...')
@@ -758,7 +786,7 @@ class UncertaintyInputData:
             #  - First Index of substrings -1 
             #  - Code     AA    ChainID   Nr      Structure  Phi      Psi      saa
             #  - #: 3      3       1      5         15       7        7        7
-            CW = [[0,3], [5,8], [9,10], [15,20], [24,39], [42,49], [52,59], [62,69]] 
+            CW = [[0,3], [5,8], [9,10], [10,15], [24,39], [42,49], [52,59], [62,69]] 
             
             LineOffset = 8                                                                     # ...
             ChainID = ''                                                                       # ...
@@ -770,14 +798,8 @@ class UncertaintyInputData:
                 else:
                 # Parsing file line ...                
                     if (FileLine[CW[0][0]:CW[0][1]] == 'ASG'):                                                      
-                                
-                        # Aligning PDB-Index of STRIDE file with (complete) PDB-Index in output file
-                        # Skipping missing amino-acids ('M'), heterogen residues ('H') and other irregularities in STRIDE calculation which lead to skipped amino-acids
-                        #    PDB-Index in STRIDE file    PDB-Index in ouputfile
-                        while (int(FileLine[11:15]) > int(OutFileBuffer[LineOffset][40:46])):          
-                            LineOffset += 1 
                             
-                        ChainID = FileLine[9:10]
+                        ChainID = FileLine[CW[2][0]:CW[2][1]]
                         # Search for matching chain ID                    
                         if (OutFileBuffer[LineOffset][30:31] != ChainID) :                     # PDB Chain ID != STRIDE chain ID  
                             LineOffset = 8                                                     # Reset LineOffset and search for next chain ID from the beginning
@@ -785,18 +807,25 @@ class UncertaintyInputData:
                                 if (OutFileBuffer[x][30:31] == ChainID) :                      # PDB Chain ID == STRIDE chain ID
                                     LineOffset = x
                                     break
-                            # ... and starting index of first amino-acid in ATOM 
-                            if (int(OutFileBuffer[LineOffset][39:46]) != ATOMChainsAndIndices[ChainID][0]):                            
-                                for y in range(x, len(OutFileBuffer)):
-                                    if (int(OutFileBuffer[y][39:46]) == ATOMChainsAndIndices[ChainID][0]):  # PDB amino-acid index == Index of first amino-acid in ATOM 
-                                        LineOffset = y
-                                        break
+                                        
+                        # Aligning PDB-Index of STRIDE file with (complete) PDB-Index in output file
+                        # Skipping missing amino-acids ('M'), heterogen residues ('H') and other irregularities in STRIDE calculation which lead to skipped amino-acids
+                        #    PDB-Index in STRIDE file    PDB-Index in ouputfile
+                        strideIndex = FileLine[CW[3][0]:CW[3][1]]
+                        # strideIndex is like in pdb if it has an letter at the end, else append space and cut one space at the beginning for same length like pdb index
+                        if(strideIndex[-1:].isdigit()):
+                            strideIndex = (strideIndex[1:]+' ')
+                        while (strideIndex != OutFileBuffer[LineOffset][41:46]):          
+                            LineOffset += 1                                         
                              
                         OutFileBuffer[LineOffset] += (' '+FileLine[CW[3][0]:CW[3][1]]+' |  '+FileLine[CW[1][0]:CW[1][1]]+' |       '+
                                                   FileLine[CW[2][0]:CW[2][1]]+' | '+FileLine[CW[4][0]:CW[4][1]]+' | '+
                                                   FileLine[CW[5][0]:CW[5][1]]+' | '+FileLine[CW[6][0]:CW[6][1]]+' | '+
                                                   FileLine[CW[7][0]:CW[7][1]]+' |')                                                 
-                        LineOffset += 1                     
+                        LineOffset += 1   
+                        
+                        if(LineOffset > len(OutFileBuffer)-1):
+                            LineOffset = 8                  
     
                             
             # Fill empty lines ...
@@ -811,7 +840,7 @@ class UncertaintyInputData:
         else:
             logging.warn('  Didn\'t find file \"{0}\"'.format(Param_STRIDEFile))    
             # return False - NOT: Because missing STRIDE file is not essential ...
-      
+        
         
         # Parsing DSSP file ---------------------------------------------------
         logging.debug('  Opening DSSP file')
@@ -835,7 +864,7 @@ class UncertaintyInputData:
             # - First Index of substring indices: -1 | Second Index of substring indices: +1
             # - Number  Amino.   ChainID  Struc.   BP1      BP2      AC C      TCO      KAPPA    ALPHA     PHI        PSI        X-CA       Y-CA       Z-CA
             # - #:  5        1        1        9        4       4          4       7        6        6        6           6         6          6          6
-            CW = [[0,5], [13,14], [11,12], [16,25], [25,29], [30,34], [34,38], [84,91], [91,97], [97,103], [103,109], [109,115], [116,122], [123,129], [130,136]] 
+            CW = [[6,11], [13,14], [11,12], [16,25], [25,29], [30,34], [34,38], [84,91], [91,97], [97,103], [103,109], [109,115], [116,122], [123,129], [130,136]] 
 
             # Not used any more ...
             # AmoniAciodOneLetter = {'A': 'ALA', 'R': 'ARG', 'N': 'ASN', 'D': 'ASP', 'B': 'ASX', 'C': 'CYS', 'E': 'GLU', 'Q': 'GLN', 'Z': 'GLX', 'G': 'GLY', 'H': 'HIS',
@@ -858,29 +887,23 @@ class UncertaintyInputData:
                     elif (('!' in FileLine) and ('*' not in FileLine)):                        # Skip lines indicating dicontinuity
                         pass
                     elif (('!' and  '*') not in FileLine):                                     
-                    
-                        # Aligning PDB-Index of DSSP file with (complete) PDB-Index in output file
-                        # Skipping missing amino-acids ('M') and other irregularities in DSSP ('!' or '*') calculation which lead to skipped amino-acids
-                        # Heterogen residues ('H') are handled by DSSP indicated by 'X' for the amino-acid name
-                        #    PDB-Index in DSSP file    PDB-Index in ouputfile
-                        while (int(FileLine[5:10]) > int(OutFileBuffer[LineOffset][40:46])):          
-                            LineOffset += 1                                   
-                                                           
-                        ChainID = FileLine[11:12]
+                                              
+                        ChainID = FileLine[CW[2][0]:CW[2][1]]
                         # Search for matching chain ID                    
                         if (OutFileBuffer[LineOffset][30:31] != ChainID) :                     # PDB Chain ID != DSSP chain ID  
                             LineOffset = 8                                                     # Reset LineOffset and search for next chain ID from the beginning
                             for x in range(LineOffset, len(OutFileBuffer)):                    # Start search from the beginning
                                 if (OutFileBuffer[x][30:31] == ChainID) :                      # PDB Chain ID == DSSP chain ID
                                     LineOffset = x
-                                    break
-                            # ... and starting index of first amino-acid in ATOM 
-                            if (int(OutFileBuffer[LineOffset][39:46]) != ATOMChainsAndIndices[ChainID][0]):                            
-                                for y in range(x, len(OutFileBuffer)):
-                                    if (int(OutFileBuffer[y][39:46]) == ATOMChainsAndIndices[ChainID][0]):  # PDB amino-acid index == Index of first amino-acid in ATOM 
-                                        LineOffset = y
-                                        break
-                                        
+                                    break    
+                                       
+                        # Aligning PDB-Index of DSSP file with (complete) PDB-Index in output file
+                        # Skipping missing amino-acids ('M') and other irregularities in DSSP ('!' or '*') calculation which lead to skipped amino-acids
+                        # Heterogen residues ('H') are handled by DSSP indicated by 'X' for the amino-acid name
+                        #    PDB-Index in DSSP file    PDB-Index in ouputfile                                       
+                        while (FileLine[CW[0][0]:CW[0][1]] != OutFileBuffer[LineOffset][41:46]):          
+                            LineOffset += 1  
+                                                                    
                         # mark empty (= ' ') secondary structure summary with 'C'
                         # so it is possible to distinguish if an entry is 'handled' by DSSP to distiguish with entries which are completly skipped by DSSP
                         if FileLine[CW[3][0]:(CW[3][0]+1)].isspace():
@@ -892,6 +915,10 @@ class UncertaintyInputData:
                                                   FileLine[CW[9][0]:CW[9][1]]+' | '+FileLine[CW[10][0]:CW[10][1]]+' | '+FileLine[CW[11][0]:CW[11][1]]+' | '+
                                                   FileLine[CW[12][0]:CW[12][1]]+' | '+FileLine[CW[13][0]:CW[13][1]]+' | '+FileLine[CW[14][0]:CW[14][1]]+' |')
                         LineOffset += 1
+                        
+                        if(LineOffset > len(OutFileBuffer)-1):
+                            LineOffset = 8
+                        
           
             # Fill empty lines ...
             LineOffset = 8 
