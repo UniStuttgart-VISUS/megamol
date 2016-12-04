@@ -1,12 +1,12 @@
 /*
- *	HydroBondGenerator.h
+ *	HydroBondFilter.h
  *	
  *	Copyright (C) 2016 by University of Stuttgart (VISUS).
  *	All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_HYDROBONDGENERATOR_H_INCLUDED
-#define MMPROTEINPLUGIN_HYDROBONDGENERATOR_H_INCLUDED
+#ifndef MMPROTEINPLUGIN_HYDROBONDFILTER_H_INCLUDED
+#define MMPROTEINPLUGIN_HYDROBONDFILTER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -20,14 +20,14 @@
 namespace megamol {
 namespace protein {
 
-	class HydroBondGenerator : public core::Module {
+	class HydroBondFilter : public core::Module {
 	public:
 
 		/** Ctor */
-		HydroBondGenerator(void);
+		HydroBondFilter(void);
 
 		/** Dtor */
-		virtual ~HydroBondGenerator(void);
+		virtual ~HydroBondFilter(void);
 
 		/**
          *	Answer the name of this module.
@@ -35,7 +35,7 @@ namespace protein {
          *	@return The name of this module.
          */
         static const char *ClassName(void)  {
-            return "HydroBondGenerator";
+            return "HydroBondFilter";
         }
 
         /**
@@ -44,7 +44,7 @@ namespace protein {
          *	@return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Computes hydrogen bonds of given molecules.";
+            return "Filters molecular hydrogen bonds due to certain criteria.";
         }
 
         /**
@@ -137,18 +137,11 @@ namespace protein {
 		};
 
 		/**
-		 *	Computes the H Bonds for the given MolecularDataCall
-		 *
-		 *	@param mdc The given call.
-		 */
-		void computeHBonds(protein_calls::MolecularDataCall& mdc);
-
-		/**
 		 *	Post process the computed hydrogen bonds by deleting unneccessary ones.
 		 *
 		 *	@param mdc The call storing all relevant molecular information.
 		 */
-		void postProcessHBonds(protein_calls::MolecularDataCall& mdc);
+		void filterHBonds(protein_calls::MolecularDataCall& mdc);
 
 		/**
 		 *	Fills the secondary structure vector with information about the secondary structure of every atom.
@@ -158,26 +151,13 @@ namespace protein {
 		void fillSecStructVector(protein_calls::MolecularDataCall& mdc);
 
 		/**
-		 *	Searches in the connections array for the connections starting at a certain atom.
-		 *	It is assumed that the connections array is sorted.
-		 *	
-		 *	@param atomIdx The atom index to search the connections for.
-		 *	@param firstIdx OUT: The index of the first connection.
-		 *	@param lastIdx OUT: The index of the last connection.
-		 *	@return True, when there are connections with atomIdx as start, false otherwise.
-		 */
-		bool findConnections(unsigned int atomIdx, unsigned int & firstIdx, unsigned int & lastIdx);
-
-		/**
 		 *	Computes whether a given hydrogen bond is valid.
 		 *
 		 *	@param donorIndex The index of the donor of the hydrogen bond.
 		 *	@param accptorIndex The index of the acceptor of the hydrogen bond.
-		 *	@param hydrogenIndex The index of the hydrogen atom of the bond.
 		 *	@param mdc The MolecularDataCall containing the data.
-		 *	@param angle OUT: The angle of the hydrogen bond.
 		 */
-		bool isValidHBond(unsigned int donorIndex, unsigned int acceptorIndex, unsigned int hydrogenIndex, protein_calls::MolecularDataCall& mdc, float & angle);
+		bool isValidHBond(unsigned int donorIndex, unsigned int acceptorIndex, protein_calls::MolecularDataCall& mdc);
 
 		/** caller slot */
 		core::CallerSlot inDataSlot;
@@ -185,14 +165,8 @@ namespace protein {
 		/** callee slot */
 		core::CalleeSlot outDataSlot;
 
-		/** Maximal distance for hydrogen bonds */
-		core::param::ParamSlot hBondDistance;
-
 		/** Maximal distance between donor and acceptor of a hydrogen bond */
 		core::param::ParamSlot hBondDonorAcceptorDistance;
-
-		/** Maximal angle between donor-acceptor and donor-hydrogen */
-		core::param::ParamSlot hBondDonorAcceptorAngle;
 
 		/** Should the H-Bonds of the alpha helices be computed? */
 		core::param::ParamSlot alphaHelixHBonds;
@@ -203,9 +177,6 @@ namespace protein {
 		/** Should the rest of the H-Bonds be computed */
 		core::param::ParamSlot otherHBonds;
 
-		/** Maximal number of hydrogen bonds per atom */
-		core::param::ParamSlot maxHBondsPerAtom;
-
 		/** Should the H-Bonds be faked as bonds between two c-alphas? */
 		core::param::ParamSlot cAlphaHBonds;
 
@@ -215,23 +186,11 @@ namespace protein {
 		/** The offset from the last known data hash */
 		SIZE_T dataHashOffset;
 
-		/** Vector containing all hydrogen bonds found */
-		std::vector<HBond> hydrogenBonds;
+		/** Vector containing all hydrogen bonds surviving the filtering process */
+		std::vector<unsigned int> hydrogenBondsFiltered;
 
 		/** Number of H-bonds per atom */
 		std::vector<unsigned int> hBondStatistics;
-
-		/** Indices of the connected H-bond H-atom if the atom is connected within a H-bond. -1 otherwise */
-		std::vector<int> hBondIndices;
-
-		/** Sorted atom connection array for fast search */
-		std::vector<std::pair<unsigned int, unsigned int>> connections;
-
-		/** The starting indices of the connections belonging to each atom */
-		std::vector<int> connectionStart;
-
-		/** The number of connections of each atom */
-		std::vector<unsigned int> numConnections;
 
 		/** The secondary structure ID per atom */
 		std::vector<protein_calls::MolecularDataCall::SecStructure::ElementType> secStructPerAtom;

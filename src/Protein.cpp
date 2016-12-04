@@ -89,7 +89,7 @@
 #include "PDBInterpolator.h"
 #include "ProteinExploder.h"
 #include "MolecularNeighborhood.h"
-#include "HydroBondGenerator.h"
+#include "HydroBondFilter.h"
 
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
@@ -183,7 +183,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();
-			this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondGenerator>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein::HydroBondFilter>();
 
             // register calls here:
 			this->call_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataCall>();

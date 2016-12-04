@@ -312,7 +312,7 @@
     <ClInclude Include="src\SolventHydroBondGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\HydroBondGenerator.h">
+    <ClInclude Include="src\HydroBondFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -572,7 +572,7 @@
     <ClCompile Include="src\SolventHydroBondGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\HydroBondGenerator.cpp">
+    <ClCompile Include="src\HydroBondFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

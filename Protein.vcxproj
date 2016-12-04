@@ -238,7 +238,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\HapticsMoleculeRenderer.h" />
     <ClInclude Include="src\Header.h" />
     <ClInclude Include="src\HostArr.h" />
-    <ClInclude Include="src\HydroBondGenerator.h" />
+    <ClInclude Include="src\HydroBondFilter.h" />
     <ClInclude Include="src\IntSelection.h" />
     <ClInclude Include="src\LayeredIsosurfaceRenderer.h" />
     <ClInclude Include="src\MDDriverConnector.h" />
@@ -340,7 +340,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     </ClCompile>
     <ClCompile Include="src\GROLoader.cpp" />
     <ClCompile Include="src\HapticsMoleculeRenderer.cpp" />
-    <ClCompile Include="src\HydroBondGenerator.cpp" />
+    <ClCompile Include="src\HydroBondFilter.cpp" />
     <ClCompile Include="src\IntSelection.cpp" />
     <ClCompile Include="src\LayeredIsosurfaceRenderer.cpp" />
     <ClCompile Include="src\MDDriverConnector.cpp" />
