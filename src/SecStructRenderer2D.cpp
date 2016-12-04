@@ -281,6 +281,8 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 		CAlpha lastCalpha;
 		unsigned int lastCalphaIndex;
 
+		std::vector<unsigned int> cAlphaMap(mdc->AtomCount(), 0);
+
 		// loop over all molecules of the protein
 		for (unsigned int molIdx = 0; molIdx < mdc->MoleculeCount(); molIdx++) {
 			MolecularDataCall::Molecule chain = mdc->Molecules()[molIdx];
@@ -331,6 +333,13 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 
 					this->molSizes[molIdx]++;
 
+					firstAtomIdx = acid->FirstAtomIndex();
+					lastAtomIdx = firstAtomIdx + acid->AtomCount();
+
+					for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++){
+						cAlphaMap[atomIdx] = static_cast<unsigned int>(this->cAlphas.size() - 1);
+					}
+
 					lastCalpha = calpha;
 					lastCalphaIndex = acid->CAlphaIndex();
 
@@ -352,6 +361,14 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 			this->cAlphaIndices.push_back(lastCalphaIndex);
 			this->cAlphaIndices.push_back(lastCalphaIndex);
 			this->molSizes[molIdx] += 2;
+		}
+
+		this->hydrogenBonds.resize(mdc->HydrogenBondCount() * 2);
+		memcpy(this->hydrogenBonds.data(), mdc->GetHydrogenBonds(), mdc->HydrogenBondCount() * 2 * sizeof(unsigned int));
+
+		// map the hydrogen bonds to the c alphas
+		for (unsigned int i = 0; i < this->hydrogenBonds.size(); i++) {
+			this->hydrogenBonds[i] = cAlphaMap[this->hydrogenBonds[i]];
 		}
 
 		this->lastDataHash = mdc->DataHash();
@@ -389,31 +406,6 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->ssbo);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, this->ssbo);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, this->cAlphas.size() * sizeof(CAlpha), this->cAlphas.data(), GL_DYNAMIC_COPY);
-
-		// fill the hydrogen bond vector
-		std::multimap<unsigned int, unsigned int> bondMap;
-		for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
-			bondMap.insert(std::pair<unsigned int, unsigned int>(mdc->AtomHydrogenBondIndices()[i], i));
-		}
-		/*unsigned int counter = 0;
-		for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
-			auto ret = bondMap.equal_range(i);
-
-			if (ret.first != ret.second)
-				printf("%u => ", i);
-			for (auto it = ret.first; it != ret.second; ++it) {
-				printf("%u ", it->second);
-			}
-
-			if (ret.first != ret.second) {
-				printf("\n");
-				counter++;
-			}
-		}
-		printf("Total: %u\n", counter);	*/
-		/*for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
-			printf("%u\n", mdc->AtomHydrogenBondStatistics()[i]);
-		}*/
 	}
 
 	float ar = static_cast<float>(this->bbRect.AspectRatio());
@@ -540,15 +532,16 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 		}
 	}
 
-	if (this->showHydrogenBondsParam.Param<param::BoolParam>()->Value() && mdc->AtomHydrogenBondsFake()) {
-		
-
+	if (this->showHydrogenBondsParam.Param<param::BoolParam>()->Value()) {
 		glBegin(GL_LINES);
 		glColor4f(0.87f, 0.92f, 0.97f, 1.0f);
 
+		for (unsigned int i = 0; i < this->hydrogenBonds.size(); i++) {
+			unsigned int idx = this->hydrogenBonds[i];
+			glVertex4f(cAlphas[idx].pos[0], cAlphas[idx].pos[1], 0.0f, 1.0f);
+		}
+
 		glEnd();
-	} else if (this->showHydrogenBondsParam.Param<param::BoolParam>()->Value() && !mdc->AtomHydrogenBondsFake()) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Trying to show fake hydrogen bonds where only real hydrogen bonds are available\n");
 	}
 
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->ssbo);
