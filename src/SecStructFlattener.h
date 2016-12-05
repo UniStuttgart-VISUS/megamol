@@ -23,8 +23,9 @@ extern "C" void getPositions(float * h_atomPositions, unsigned int numPositions)
 extern "C" void performTimestep(float timestepSize);
 extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas);
 extern "C" void transferPlane(vislib::math::Plane<float>& thePlane);
-extern "C" void transferSpringData(const float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas, 
-	unsigned int * h_oIndices, unsigned int numOs, float conFriction, float conConstant, float hFriction, float hConstant);
+extern "C" void transferSpringData(const float * h_atomPositions, unsigned int numPositions, const unsigned int * h_hBondIndices, unsigned int numBonds, 
+	unsigned int * h_cAlphaIndices, unsigned int numCAlphas, unsigned int * h_oIndices, unsigned int numOs, float conFriction, float conConstant, 
+	float hFriction, float hConstant, const unsigned int * moleculeStarts, unsigned int numMolecules, float cutoffDistance, float strengthFactor);
 
 namespace megamol {
 namespace protein_cuda {
@@ -218,6 +219,12 @@ namespace protein_cuda {
 
 		/** The friction parameter for the h bond springs */
 		megamol::core::param::ParamSlot hbondFrictionParam;
+
+		/** The cutoff distance for the repelling forces */
+		megamol::core::param::ParamSlot repellingForceCutoffDistanceParam;
+
+		/** Factor controlling the strength of the repelling forces */
+		megamol::core::param::ParamSlot repellingForceStrengthFactor;
 
 		/** The current atom positions */
 		float * atomPositions;

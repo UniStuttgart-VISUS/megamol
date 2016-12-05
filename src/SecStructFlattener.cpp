@@ -46,7 +46,9 @@ SecStructFlattener::SecStructFlattener(void) :
 	connectionSpringConstantParam("simulation::springs::conSpringConstant", "The spring constant for the atom connection springs."),
 	connectionFrictionParam("simulation::springs::conFriction", "The friction parameter for the atom connection springs."),
 	hbondSpringConstantParam("simulation::springs::hbondSpringConstant", "The spring constant for the h bond springs."),
-	hbondFrictionParam("simulation::springs::hbondFriction", "The friction parameter for the h bond springs.") {
+	hbondFrictionParam("simulation::springs::hbondFriction", "The friction parameter for the h bond springs."),
+	repellingForceCutoffDistanceParam("simulation::repelling::cutoffDistance", "Cutoff distance after which no repelling forces happen."),
+	repellingForceStrengthFactor("simulation::repelling::strengthFactor", "Factor controlling the strength of the repelling forces.") {
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -117,6 +119,12 @@ SecStructFlattener::SecStructFlattener(void) :
 
 	this->oxygenOffsetParam.SetParameter(new param::BoolParam(true));
 	this->MakeSlotAvailable(&this->oxygenOffsetParam);
+
+	this->repellingForceCutoffDistanceParam.SetParameter(new param::FloatParam(6.0f, 0.0f));
+	this->MakeSlotAvailable(&this->repellingForceCutoffDistanceParam);
+
+	this->repellingForceStrengthFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
+	this->MakeSlotAvailable(&this->repellingForceStrengthFactor);
 
 	this->atomPositions = NULL;
 	this->atomPositionsSize = 0;
@@ -390,16 +398,27 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 	std::vector<float> atomRadii(mdc->AtomCount(), 0.0f);
 
 	// transfer new spring data if necessary
-	if (this->hbondFrictionParam.IsDirty() || this->hbondSpringConstantParam.IsDirty() || this->connectionFrictionParam.IsDirty() 
-		|| this->connectionSpringConstantParam.IsDirty() || lastHash != mdc->DataHash() /*important if input data changes*/) {
+	if (this->hbondFrictionParam.IsDirty() || this->hbondSpringConstantParam.IsDirty() || this->connectionFrictionParam.IsDirty()
+		|| this->connectionSpringConstantParam.IsDirty() || this->repellingForceCutoffDistanceParam.IsDirty() || this->repellingForceStrengthFactor.IsDirty() 
+		|| lastHash != mdc->DataHash() /*important if input data changes*/) {
 
 		this->hbondFrictionParam.ResetDirty();
 		this->hbondSpringConstantParam.ResetDirty();
 		this->connectionFrictionParam.ResetDirty();
 		this->connectionSpringConstantParam.ResetDirty();
+		this->repellingForceCutoffDistanceParam.ResetDirty();
+		this->repellingForceStrengthFactor.ResetDirty();
 
 		cAlphaIndices.clear();
 		oIndices.clear();
+
+		// fill the vector for the molecule starts
+		std::vector<unsigned int> moleculeStarts(mdc->MoleculeCount());
+		for (unsigned int i = 0; i < mdc->MoleculeCount(); i++) {
+			unsigned int idx = mdc->Molecules()[i].FirstResidueIndex();
+			moleculeStarts[i] = mdc->Residues()[idx]->FirstAtomIndex();
+		}
+
 		for (unsigned int i = 0; i < mdc->AtomCount(); i++) {
 			// check the relevant atom types
 			vislib::StringA elName = mdc->AtomTypes()[mdc->AtomTypeIndices()[i]].Name();
@@ -409,12 +428,11 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 			if (elName.StartsWith("o") && elName.Length() == 1) oIndices.push_back(i); // cut out all o atoms besides the first per aminoacid
 		}
 
-		// TODO calculate hbonds and tranfer them
-
-		transferSpringData(mdc->AtomPositions(), mdc->AtomCount(), this->cAlphaIndices.data(), static_cast<unsigned int>(this->cAlphaIndices.size()), 
+		transferSpringData(mdc->AtomPositions(), mdc->AtomCount(), mdc->GetHydrogenBonds(), mdc->HydrogenBondCount(), this->cAlphaIndices.data(), static_cast<unsigned int>(this->cAlphaIndices.size()), 
 			this->oIndices.data(), static_cast<unsigned int>(this->oIndices.size()), this->connectionFrictionParam.Param<param::FloatParam>()->Value(),
 			this->connectionSpringConstantParam.Param<param::FloatParam>()->Value(), this->hbondFrictionParam.Param<param::FloatParam>()->Value(),
-			this->hbondSpringConstantParam.Param<param::FloatParam>()->Value());
+			this->hbondSpringConstantParam.Param<param::FloatParam>()->Value(), moleculeStarts.data(), moleculeStarts.size(),
+			this->repellingForceCutoffDistanceParam.Param<param::FloatParam>()->Value(), this->repellingForceStrengthFactor.Param<param::FloatParam>()->Value());
 	}
 
 	if (lastHash != mdc->DataHash() || this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty()) {
@@ -459,10 +477,6 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 			this->oxygenOffsets[i] = oPos - cPos;
 		}
 	}
-
-	// get the plane and transfer it to the cuda kernel
-
-
 
 	// perform the flattening
 	flatten();

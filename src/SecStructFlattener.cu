@@ -7,6 +7,7 @@
 #include <helper_math.h>
 #include <vector>
 #include <thrust/device_vector.h>
+#include <thrust/sort.h>
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Plane.h"
@@ -27,6 +28,19 @@ __host__ __device__ struct Spring {
 		this->springConstant = sc;
 		this->friction = f;
 	}
+
+	Spring& operator=(const Spring s) {
+		this->source = s.source;
+		this->target = s.target;
+		this->length = s.length;
+		this->springConstant = s.springConstant;
+		this->friction = s.friction;
+		return *this;
+	}
+
+	void print() { 
+		printf("S: src %u trgt %u l %f\n", source, target, length);
+	}
 };
 
 __host__ __device__ bool operator<(const Spring &lhs, const Spring &rhs) {
@@ -46,7 +60,13 @@ __device__ float3 d_CAlphaBoundingBoxMax;
 __device__ float3 d_planeNormal;
 __device__ float3 d_planeOrigin;
 
+__device__ float d_cutoffDistance;
+__device__ float d_repellingStrength;
+
 thrust::device_vector<Spring> d_springs;
+thrust::device_vector<uint> d_springStarts;
+
+GPUSortHandle sortHandle;
 
 typedef struct {
 	float4 m[4];
@@ -105,7 +125,7 @@ __global__ void applyMatrixToPositionsKernel(float * d_pos, uint sizePos, float4
  *	@param springSize The number of avaialable springs.
  *	@param timestepSize The duration of a single timestep
  */
-__global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, uint caSize, Spring * d_springs, uint springSize, float timestepSize) {
+__global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, uint caSize, Spring * d_springs, uint springSize, uint * d_starts, float timestepSize) {
 	
 	uint idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -115,11 +135,57 @@ __global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, ui
 
 	uint caIdx = d_ca[idx];
 	float3 bbCenter = (d_CAlphaBoundingBoxMin + d_CAlphaBoundingBoxMax) * 0.5f;
-	float3 atPos = make_float3(d_pos[caIdx * 3 + 0], d_pos[caIdx * 3 + 1], d_pos[caIdx * 3 + 2]);
-	float3 vector = normalize(atPos - bbCenter) * timestepSize;
-	d_pos[caIdx * 3 + 0] += timestepSize;
-	d_pos[caIdx * 3 + 1] += 0.0f;
-	d_pos[caIdx * 3 + 2] += 0.0f;
+	float2 atPos = make_float2(d_pos[caIdx * 3 + 0], d_pos[caIdx * 3 + 1]);
+
+	float2 force = make_float2(0.0f, 0.0f);	
+
+
+	/******************* Springs ********************/
+	uint springStart = d_starts[idx];
+	uint springEnd = caSize;
+	if (idx + 1 < caSize) {
+		springEnd = d_starts[idx + 1];
+	}
+
+	// loop over each spring
+	for (uint i = springStart; i < springEnd; i++) {
+		Spring s = d_springs[i];
+		float2 otherPos = make_float2(d_pos[s.target * 3 + 0], d_pos[s.target * 3 + 1]);
+		float dist = length(atPos - otherPos);
+		float2 forceHere = normalize(atPos - otherPos);
+
+		float deltaL = s.length - dist;
+		forceHere *= s.springConstant * deltaL; // linear spring
+		//forceHere *= s.springConstant * log(deltaL); // log spring
+
+		force += forceHere;
+	}
+
+	/******************* Repelling Forces ********************/
+
+	for (unsigned int i = 0; i < caSize; i++) {
+		if (i != idx) {
+			uint caOther = d_ca[i];
+			float2 otherPos = make_float2(d_pos[caOther * 3 + 0], d_pos[caOther * 3 + 1]);
+			float2 forceHere = normalize(atPos - otherPos);
+			float dist = length(atPos - otherPos);
+			if (dist < d_cutoffDistance) {
+				forceHere *= 1.0f / (dist);
+			} else{
+				forceHere = make_float2(0.0f, 0.0f);
+			}
+			forceHere *= d_repellingStrength;
+
+			force += forceHere;
+		}
+	}
+
+	/******************* Time Integration ********************/
+
+	atPos += timestepSize * force; // euler integration
+
+	d_pos[caIdx * 3 + 0] = atPos.x;
+	d_pos[caIdx * 3 + 1] = atPos.y;
 }
 
 /**
@@ -201,10 +267,11 @@ void performTimestep(float timestepSize) {
 	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
 	uint * d_ca = thrust::raw_pointer_cast(d_cAlphaIndices.data().get());
 	Spring * d_spring = thrust::raw_pointer_cast(d_springs.data().get());
+	uint * d_starts = thrust::raw_pointer_cast(d_springStarts.data().get());
 	uint N = static_cast<uint>(d_atomPositions.size());
 	uint NCa = static_cast<uint>(d_cAlphaIndices.size());
 	uint NSpring = static_cast <uint>(d_springs.size());
-	runSimulationKernel <<<(NCa + TpB - 1) / TpB, TpB >>>(d_pos, N, d_ca, NCa, d_spring, NSpring, timestepSize);
+	runSimulationKernel <<<(NCa + TpB - 1) / TpB, TpB >>>(d_pos, N, d_ca, NCa, d_spring, NSpring, d_starts, timestepSize);
 	checkCudaErrors(cudaDeviceSynchronize());
 }
 
@@ -334,33 +401,90 @@ void transferPlane(vislib::math::Plane<float>& thePlane) {
  *
  *	@param h_atomPositions Pointer to the atom positions (order: xyzxyzxyz...). This has to be a pointer to the unflattened positions.
  *	@param numPositions Number of different atom positions (number of values in h_atomPositions / 3).
+ *	@param h_hBondIndices Pointer to the hydrogen bond array.
+ *	@param numBonds Number of available hydrogen bonds.
  *	@param h_cAlphaIndices Pointer to the indices of the c alpha atoms in the position vector.
  *	@param numCAlphas The number of available c alpha atoms / indices.
  *	@param h_oIndices Pointer to the indices of the o atom of the carbonyl group.
  *	@param numOs number of available o atoms / indices.
+ *	@param conFriction Friction parameter for connections between c alpha atoms.
+ *	@param conConstant Feather constant for connections between c alpha atoms.
+ *	@param hFriction Friction parameter for hydrogen bonds.
+ *	@param hConstant Feather constant for hydrogen bonds.
+ *	@param moleculeStarts Pointer to the indices of the first atom of a molecule
+ *	@param numMolecules Number of molecule chains in the data
+ *	@param cutoffDistance Cutoff distance for the repelling forces.
+ *	@param strengthFactor Modification factor for th repelling forces.
  */
 extern "C"
-void transferSpringData(const float * h_atomPositions, uint numPositions, uint * h_cAlphaIndices, uint numCAlphas, uint * h_oIndices, uint numOs, float conFriction, float conConstant, float hFriction, float hConstant) {
+void transferSpringData(const float * h_atomPositions, uint numPositions, const uint * h_hBondIndices, uint numBonds, uint * h_cAlphaIndices, uint numCAlphas, 
+	uint * h_oIndices, uint numOs, float conFriction, float conConstant, float hFriction, float hConstant, const uint * moleculeStarts, uint numMolecules,
+	float cutoffDistance, float strengthFactor) {
+
 	d_springs.clear();
 
 	const float3 * h_atomPositions3D = reinterpret_cast<const float3 *>(h_atomPositions);
 
+	uint molIdx = 0;
+
+	// general strategy: push each spring twice and sort the array after start index
+	// then construct a map array that maps c alpha atoms to their first spring
+
 	for (uint i = 1; i < numCAlphas; i++) {
-		float3 lastPos = h_atomPositions3D[h_cAlphaIndices[i - 1]];
-		float3 thisPos = h_atomPositions3D[h_cAlphaIndices[i]];
+		
+		uint firstIdx = h_cAlphaIndices[i - 1];
+		uint secondIdx = h_cAlphaIndices[i];
+
+		// jump over connections between molecules
+		if (molIdx + 1 < numMolecules) {
+			uint startNew = moleculeStarts[molIdx + 1];
+			if (firstIdx < startNew && secondIdx >= startNew) {
+				molIdx++;
+				continue;
+			}
+		}
+
+		float3 lastPos = h_atomPositions3D[firstIdx];
+		float3 thisPos = h_atomPositions3D[secondIdx];
 		thisPos = thisPos - lastPos;
 		float dist = sqrt(thisPos.x * thisPos.x + thisPos.y * thisPos.y + thisPos.z * thisPos.z);
 
-		// TODO adjust spring constant and friction
 		Spring newSpring = Spring(h_cAlphaIndices[i - 1], h_cAlphaIndices[i], dist, conConstant, conFriction);
 		d_springs.push_back(newSpring);
+		Spring newSpring2 = Spring(h_cAlphaIndices[i], h_cAlphaIndices[i - 1], dist, conConstant, conFriction);
+		d_springs.push_back(newSpring2);
 	}
 
-	// TODO H-Bonds ?
-	// correct or fake?
-	// 
+	for (uint i = 0; i < numBonds; i++) {
+		uint donorIdx = h_hBondIndices[i * 2 + 0];
+		uint acceptorIdx = h_hBondIndices[i * 2 + 1];
 
+		float3 donorPos = h_atomPositions3D[donorIdx];
+		float3 acceptorPos = h_atomPositions3D[acceptorIdx];
+		acceptorPos = acceptorPos - donorPos;
+		float dist = sqrt(acceptorPos.x * acceptorPos.x + acceptorPos.y * acceptorPos.y + acceptorPos.z * acceptorPos.z);
 
+		Spring newSpring = Spring(donorIdx, acceptorIdx, dist, hConstant, hFriction);
+		d_springs.push_back(newSpring);
+		Spring newSpring2 = Spring(acceptorIdx, donorIdx, dist, hConstant, hFriction);
+		d_springs.push_back(newSpring2);
+	}
+
+	thrust::sort(d_springs.begin(), d_springs.end());
+
+	d_springStarts.clear();
+	int lastValue = -1;
+	// we assume that every c alpha atom has at least one spring connected
+	for (unsigned int i = 0; i < d_springs.size(); i++) {
+		int val = static_cast<int>(d_springs[i].operator Spring().source);
+		if (val != lastValue) {
+			d_springStarts.push_back(i);
+			lastValue = val;
+		}
+	}
+
+	checkCudaErrors(cudaMemcpyToSymbol(d_cutoffDistance, &cutoffDistance, sizeof(float), 0, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToSymbol(d_repellingStrength, &strengthFactor, sizeof(float), 0, cudaMemcpyHostToDevice));
 }
 
 #endif // #ifndef _SECSTRUCTFLATTENER_KERNEL_CU_
