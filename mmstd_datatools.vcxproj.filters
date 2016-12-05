@@ -202,6 +202,9 @@
     <ClCompile Include="src\io\MMGDDDataSource.cpp">
       <Filter>io\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\floattable\FloatTableColumnScaler.cpp">
+      <Filter>floattable\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -356,6 +359,9 @@
     </ClInclude>
     <ClInclude Include="src\io\MMGDDDataSource.h">
       <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\floattable\FloatTableColumnScaler.h">
+      <Filter>floattable\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

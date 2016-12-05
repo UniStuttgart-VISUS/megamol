@@ -60,6 +60,7 @@
 #include "ErosionField.h"
 #include "io/MMGDDWriter.h"
 #include "io/MMGDDDataSource.h"
+#include "floattable/FloatTableColumnScaler.h"
 
 
 /*
@@ -183,6 +184,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ErosionField>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDWriter>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::MMGDDDataSource>();
+            this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::FloatTableColumnScaler>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::floattable::CallFloatTableData>();

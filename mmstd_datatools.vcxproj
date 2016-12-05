@@ -280,6 +280,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\FloatTableToParticles.cpp" />
     <ClCompile Include="src\floattable\CallFloatTableData.cpp" />
     <ClCompile Include="src\floattable\CSVDataSource.cpp" />
+    <ClCompile Include="src\floattable\FloatTableColumnScaler.cpp" />
     <ClCompile Include="src\floattable\MMFTDataSource.cpp" />
     <ClCompile Include="src\floattable\MMFTDataWriter.cpp" />
     <ClCompile Include="src\GraphDataCall.cpp" />
@@ -337,6 +338,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\ErosionField.h" />
     <ClInclude Include="src\FloatTableToParticles.h" />
     <ClInclude Include="src\floattable\CSVDataSource.h" />
+    <ClInclude Include="src\floattable\FloatTableColumnScaler.h" />
     <ClInclude Include="src\floattable\MMFTDataSource.h" />
     <ClInclude Include="src\floattable\MMFTDataWriter.h" />
     <ClInclude Include="src\IColAdd.h" />
