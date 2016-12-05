@@ -180,6 +180,7 @@ bool HydroBondFilter::getData(Call& call) {
 	outCall->SetAtomHydrogenBondStatistics(this->hBondStatistics.data());
 	outCall->SetAtomHydrogenBondsFake(this->cAlphaHBonds.Param<param::BoolParam>()->Value());
 	outCall->SetHydrogenBonds(this->hydrogenBondsFiltered.data(), static_cast<unsigned int>(this->hydrogenBondsFiltered.size() / 2));
+	outCall->SetDataHash(this->lastDataHash + this->dataHashOffset);
 
 	return true;
 }
