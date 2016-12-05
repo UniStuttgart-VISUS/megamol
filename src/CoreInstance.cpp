@@ -313,7 +313,10 @@ void megamol::core::CoreInstance::Initialise(void) {
             auto& sub = overrides.Substring(pos, next - pos);
             int split = sub.Find('\a');
             if (split != vislib::StringW::INVALID_POS) {
-                this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, sub.Substring(0, split), sub.Substring(split + 1, sub.Length() - split));
+                auto name = sub.Substring(0, split);
+                auto val = sub.Substring(split + 1, sub.Length() - split);
+                vislib::sys::Log::DefaultLog.WriteWarn("Overriding from command line:");
+                this->config.SetValue<wchar_t>(MMC_CFGID_VARIABLE, name, val);
             }
         } while ((next = overrides.Find('\b', pos)) != vislib::StringW::INVALID_POS);
     }
