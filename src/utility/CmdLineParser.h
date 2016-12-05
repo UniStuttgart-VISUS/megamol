@@ -134,6 +134,13 @@ namespace utility {
         vislib::TMultiSz ConfigSets(void) const;
 
         /**
+        * Answers all names and values of config values that are to be overridden.
+        *
+        * @return All names and values of config values
+        */
+        vislib::TMultiSz ConfigValues(void) const;
+
+        /**
          * Answers whether the log file is specified or not.
          *
          * @return 'true' if the log file is specified, 'false' otherwise.
@@ -439,6 +446,9 @@ namespace utility {
 
         /** adds a configuration set */
         ParserOption configSet;
+
+        /** overrides a variable from the configuration */
+        ParserOption configValue;
 
         /** specifies a log file to use */
         ParserOption logFile;

@@ -332,6 +332,24 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
         }
     }
 
+    vislib::TMultiSz cfgVals;
+    cfgVals = parser->ConfigValues();
+    ASSERT((cfgVals.Count() % 2) == 0);
+    size_t cfgValsCount = cfgVals.Count() / 2;
+    vislib::TString val;
+    for (size_t i = 0; i < cfgValsCount; i++) {
+        //::mmcSetConfigurationValue(hCore, MMC_CFGID_VARIABLE, cfgVals[i * 2], cfgVals[i * 2 + 1]);
+        val.Append(cfgVals[i * 2]);
+        val.Append(_T("\a"));
+        val.Append(cfgVals[i * 2 + 1]);
+        if (i != cfgValsCount - 1) {
+            val.Append(_T("\b"));
+        }
+    }
+    if (cfgValsCount > 0) {
+        MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_CFGOVERRIDE, MMC_TYPE_TSTR, val));
+    }
+
     // Initialize core instance
     MMC_VERIFY_THROW(::mmcInitialiseCoreInstance(hCore));
 

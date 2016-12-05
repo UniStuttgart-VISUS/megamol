@@ -38,6 +38,9 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     configSet(_T('c'), _T("config"), _T("Specifies a configuration set to be activated. You can activate multiple configuration sets."), 
         ParserOption::FLAG_NULL, ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("name"), 
         _T("The name of the configuration set to be activated."))),
+    configValue(_T('o'), _T("configval"), _T("Overrides a value (potentially set) in the config file."), ParserOption::FLAG_NULL,
+        ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("cfgvar"), _T("the name of the config value"))
+        ->Add(ParserOption::STRING_VALUE, _T("cfgval"), _T("the value to set"))),
     logFile(0, _T("logfile"), _T("Specifies the log file."), ParserOption::FLAG_UNIQUE,
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("path"), _T("The path to the log file to use."))),
     logLevel(0, _T("loglevel"), _T("Specifies the log level."), ParserOption::FLAG_UNIQUE,
@@ -88,6 +91,7 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
 
     this->parser.AddOption(&this->configFile);
     this->parser.AddOption(&this->configSet);
+    this->parser.AddOption(&this->configValue);
 
     this->parser.AddOption(&this->logFile);
     this->parser.AddOption(&this->logLevel);
@@ -246,6 +250,29 @@ megamol::console::utility::CmdLineParser::ConfigSets(void) const {
             if ((arg->GetType() != ParserArgument::TYPE_OPTION_LONGNAME)
                 && (arg->GetType() != ParserArgument::TYPE_OPTION_SHORTNAMES)) continue;
             if (*arg->GetOption() == this->configSet) break;
+        }
+    }
+    return retval;
+}
+
+
+/*
+* megamol::console::utility::CmdLineParser::ConfigValues
+*/
+vislib::TMultiSz
+megamol::console::utility::CmdLineParser::ConfigValues(void) const {
+    vislib::TMultiSz retval;
+    for (unsigned int i = 0; i < this->parser.ArgumentCount(); i++) {
+        ParserArgument *arg = this->parser.GetArgument(i);
+        if ((arg->GetType() != ParserArgument::TYPE_OPTION_LONGNAME)
+            && (arg->GetType() != ParserArgument::TYPE_OPTION_SHORTNAMES)) {
+            continue;
+        }
+        if (arg->GetOption() == &this->configValue) {
+            arg = this->parser.NextArgument(arg);
+            retval.Append(arg->GetValueString());   // name
+            arg = this->parser.NextArgument(arg);
+            retval.Append(arg->GetValueString());   // value
         }
     }
     return retval;
