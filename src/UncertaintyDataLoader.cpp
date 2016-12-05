@@ -49,8 +49,8 @@ UncertaintyDataLoader::UncertaintyDataLoader( void ) : megamol::core::Module(),
 													   dataOutSlot( "dataout", "The slot providing the uncertainty data"),
 													   filenameSlot("uidFilename", "The filename of the uncertainty input data file."),
                                                        methodSlot("calculationMethod", "Select a uncertainty calculation method."),
-                                                       pdbAssignmentHelix(UncertaintyDataCall::pdbAssMethod::PROMOTIF), 
-                                                       pdbAssignmentSheet(UncertaintyDataCall::pdbAssMethod::PROMOTIF),
+													   pdbAssignmentHelix(UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF),
+													   pdbAssignmentSheet(UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF),
                                                        pdbID("") {
                                                            
 	this->dataOutSlot.SetCallback(UncertaintyDataCall::ClassName(), UncertaintyDataCall::FunctionName(UncertaintyDataCall::CallForGetData), &UncertaintyDataLoader::getData);
@@ -126,18 +126,17 @@ bool UncertaintyDataLoader::getData(Call& call) {
     if(recalculate) {
         switch(this->currentMethod) {
             case (AVERAGE): 
-
                 if (!this->calculateUncertaintyAverage()) {
                     return false;
                 }
                 break;
-                                    
+                                   
             default: return false;
         }
         udc->SetRecalcFlag(true);
         
         // DEBUG
-        /*
+		/*
         for (int i = 0; i < this->pdbIndex.Count(); i++) {
             std::cout << "U: ";
             for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
@@ -163,9 +162,9 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetResidueFlag(&this->residueFlag);
         udc->SetSecStructUncertainty(&this->secStructUncertainty);
         udc->SetSortedSecStructTypes(&this->sortedSecStructUncertainty);
-        udc->SetPdbID(this->pdbID);
-        udc->SetPdbAssMethodHelix(this->pdbAssignmentHelix);
-        udc->SetPdbAssMethodSheet(this->pdbAssignmentSheet);
+        udc->SetPdbID(&this->pdbID);
+        udc->SetPdbAssMethodHelix(&this->pdbAssignmentHelix);
+        udc->SetPdbAssMethodSheet(&this->pdbAssignmentSheet);
         return true;
     }
 }
@@ -225,11 +224,37 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
             
             // get pdb id
             if(line.StartsWith("PDB")) {
+
                 this->pdbID = line.Substring(9,4);
+
             }
-            
+			else if (line.StartsWith("METHOD")) {
+
+				// parse assignment method for pdb
+				// helix
+				tmpString = line.Substring(42, 32);
+				if (tmpString.Contains(" AUTHOR "))
+					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR;
+				else if (tmpString.Contains(" DSSP "))
+					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_DSSP;
+				else if (tmpString.Contains(" PROMOTIF "))
+					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF;
+				else
+					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_UNKNOWN;
+				// sheet
+				tmpString = line.Substring(105, 32);
+				if (tmpString.Contains(" AUTHOR "))
+					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR;
+				else if (tmpString.Contains(" DSSP "))
+					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_DSSP;
+				else if (tmpString.Contains(" PROMOTIF "))
+					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF;
+				else
+					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_UNKNOWN;
+
+			}
             // parsing lines beginning with DATA
-            if (line.StartsWith("DATA")) {
+            else if (line.StartsWith("DATA")) {
                 
                 // Truncate line beginning (first 8 charachters), so character 
                 // indices of line matches column indices given in input file
@@ -239,7 +264,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                 tmpString = line.Substring(32,6);
                 // remove spaces
                 tmpString.Remove(" ");
-                this->pdbIndex.Add(tmpString); // first parameter of substring is start (beginning with 0), second parameter is range
+                this->pdbIndex.Add(tmpString.PeekBuffer()); // first parameter of substring is start (beginning with 0), second parameter is range
                 
                 // PDB three letter code of amino-acids
                 this->aminoAcidName.Add(line.Substring(10,3)); 
@@ -252,29 +277,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                     this->residueFlag.Add(UncertaintyDataCall::addFlags::HETEROGEN);
                 else
                     this->residueFlag.Add(UncertaintyDataCall::addFlags::NOTHING);
-                    
-                // parse assignment method for pdb
-                // helix
-                tmpString = line.Substring(34,67);
-                if(tmpString.Contains(" AUTHOR ")) 
-                    this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::AUTHOR;
-                else if(tmpString.Contains(" DSSP ")) 
-                    this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::DSSP;
-                else if(tmpString.Contains(" PROMOTIF ")) 
-                    this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PROMOTIF;
-                else
-                    this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::UNKNOWN; 
-                // sheet
-                tmpString = line.Substring(97,128);
-                if(tmpString.Contains(" AUTHOR ")) 
-                    this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::AUTHOR;
-                else if(tmpString.Contains(" DSSP ")) 
-                    this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::DSSP;
-                else if(tmpString.Contains(" PROMOTIF ")) 
-                    this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PROMOTIF;
-                else
-                    this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::UNKNOWN; 
-                
+                                   
                 // Translate DSSP one letter secondary structure summary 
                 switch (line[228]) {
                     case 'H': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
@@ -346,8 +349,6 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
     using vislib::sys::Log;
 
-    float methodCount;
-    
     // Reset uncertainty data 
     this->secStructUncertainty.Clear();
     this->sortedSecStructUncertainty.Clear();
@@ -358,18 +359,18 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
     this->secStructUncertainty.AssertCapacity(this->pdbIndex.Count());
     this->sortedSecStructUncertainty.AssertCapacity(this->pdbIndex.Count());
 
-
-    // initialize structure factors for all three methods
-    float pdbStructFactor[UncertaintyDataCall::secStructure::NOE]    = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-    float strideStructFactor[UncertaintyDataCall::secStructure::NOE] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-    float dsspStructFactor[UncertaintyDataCall::secStructure::NOE]   = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-                                                                      //  H     G     I     E     T     B     S     C     ND  
+	// initialize structure factors for all three methods with 1.0f
+	vislib::Array<vislib::Array<float> > structFactor;
+	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
+		structFactor.Add(vislib::Array<float>());
+		for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); j++) {
+			structFactor[i].Add(1.0f);
+		}
+	}
 
     // Initialize and calculate uncertainty data
     for (int i = 0; i < this->pdbIndex.Count(); i++) {
 
-        methodCount = static_cast<float>(UncertaintyDataCall::assMethod::NOM);
-        
         // create new entry for amino-acid
         this->secStructUncertainty.Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
         this->sortedSecStructUncertainty.Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
@@ -383,21 +384,16 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
 
             // loop over all methods
             for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
-                
-                // ignore NOTDEFINED structure type assigment
-                if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == UncertaintyDataCall::secStructure::NOTDEFINED) {
-                    methodCount--;
-                }
-                else if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
-                    this->secStructUncertainty[i][j] += pdbStructFactor[j];
+				 if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
+					 this->secStructUncertainty[i][j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
                 }
                 else {
-                    this->secStructUncertainty[i][j] += ((1.0f - pdbStructFactor[j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
+					this->secStructUncertainty[i][j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
                 }
             }
 
             // normalise
-            this->secStructUncertainty[i][j] /= methodCount;
+			this->secStructUncertainty[i][j] /= static_cast<float>(UncertaintyDataCall::assMethod::NOM);
         }
 
         // using quicksort for sorting ...

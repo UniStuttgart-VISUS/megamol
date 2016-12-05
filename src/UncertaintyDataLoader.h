@@ -148,7 +148,7 @@ namespace megamol {
             
 
             /** The PDB index */
-            vislib::Array<int> pdbIndex;
+			vislib::Array<vislib::StringA> pdbIndex;
 
             /** The chain ID */
             vislib::Array<char> chainID;

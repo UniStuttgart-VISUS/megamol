@@ -30,12 +30,9 @@ const unsigned int UncertaintyDataCall::CallForGetData = 0;
 UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
                                                  secStructAssignment(NULL), sortedSecStructUncertainty(NULL), 
                                                  secStructUncertainty(NULL), pdbIndex(NULL), 
-                                                 chainID(NULL), residueFlag(NULL), aminoAcidName(NULL), pdbID(NULL) {
+                                                 chainID(NULL), residueFlag(NULL), aminoAcidName(NULL), pdbID(NULL),
+												 recalcUncertainty(NULL), pdbAssignmentHelix(NULL), pdbAssignmentSheet(NULL){
                                                      
-    this->recalcUncertainty  = false;
-    this->pdbID              = "";
-    this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PROMOTIF;
-    this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PROMOTIF;
 }
 
 
@@ -50,6 +47,11 @@ UncertaintyDataCall::~UncertaintyDataCall(void) {
     this->aminoAcidName = NULL;
     this->secStructUncertainty = NULL;
     this->sortedSecStructUncertainty = NULL;
+	this->recalcUncertainty = NULL;
+	this->pdbID = NULL;
+	this->pdbAssignmentHelix = NULL;
+	this->pdbAssignmentSheet = NULL;
+
 }
 
 
@@ -69,7 +71,7 @@ vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(Uncertaint
     case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.0f, 0.0f, 1.0f, 1.0f); break;
     case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(0.5f, 1.0f, 0.0f, 1.0f); break;
     case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.0f, 0.5f, 1.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.0f, 1.0f, 0.0f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.0f, 0.5f, 0.0f, 1.0f); break;
     case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.4f, 0.4f, 0.4f, 1.0f); break;
     case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.1f, 0.1f, 0.1f, 1.0f); break;
     default: break;
