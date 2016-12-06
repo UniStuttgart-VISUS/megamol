@@ -136,7 +136,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetRecalcFlag(true);
         
         // DEBUG
-		/*
+		
         for (int i = 0; i < this->pdbIndex.Count(); i++) {
             std::cout << "U: ";
             for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
@@ -148,7 +148,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
             }
             std::cout << std::endl;
         }
-        */
+        
     }
     
     // pass secondary strucutre data to call, if available
@@ -349,6 +349,8 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
     using vislib::sys::Log;
 
+    float methodCount;
+    
     // Reset uncertainty data 
     this->secStructUncertainty.Clear();
     this->sortedSecStructUncertainty.Clear();
@@ -375,6 +377,8 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
         this->secStructUncertainty.Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
         this->sortedSecStructUncertainty.Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
 
+        methodCount = static_cast<float>(UncertaintyDataCall::assMethod::NOM);
+
         // loop over all possible secondary strucutres
         for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
 
@@ -384,18 +388,26 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
 
             // loop over all methods
             for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
-				 if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
-					 this->secStructUncertainty[i][j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
+                
+                // ignore NOTDEFINED structure type for uncerainty calculation
+                if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == UncertaintyDataCall::assMethod::NOM) {
+                    methodCount--;
+                }
+                else if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
+                     this->secStructUncertainty[i][j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
                 }
                 else {
-					this->secStructUncertainty[i][j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
+                    this->secStructUncertainty[i][j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
                 }
             }
 
-            // normalise
-			this->secStructUncertainty[i][j] /= static_cast<float>(UncertaintyDataCall::assMethod::NOM);
         }
-
+        
+        // normalise
+        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
+            this->secStructUncertainty[i][j] /= methodCount;
+        }
+            
         // using quicksort for sorting ...
         this->quickSortUncertainties(&(this->secStructUncertainty[i]), &(this->sortedSecStructUncertainty[i]), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE)-1));
     }

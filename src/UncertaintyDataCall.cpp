@@ -58,7 +58,6 @@ UncertaintyDataCall::~UncertaintyDataCall(void) {
 /*
 * UncertaintyDataCall::secStructureColor
 */
-// https://wiki.selfhtml.org/wiki/Grafik/Farbpaletten
 vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(UncertaintyDataCall::secStructure s) {
 
     vislib::math::Vector<float, 4> color;
@@ -73,7 +72,7 @@ vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(Uncertaint
     case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.0f, 0.5f, 1.0f, 1.0f); break;
     case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.0f, 0.5f, 0.0f, 1.0f); break;
     case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.4f, 0.4f, 0.4f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.1f, 0.1f, 0.1f, 1.0f); break;
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.0f, 0.0f, 0.0f, 1.0f); break;
     default: break;
     }
     

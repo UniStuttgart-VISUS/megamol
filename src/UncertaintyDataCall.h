@@ -298,6 +298,8 @@ namespace megamol {
         * @param s The secondary structure type.
         * @return The description for the given secondary structure type.
         * 
+		* 
+		* Source: https://wiki.selfhtml.org/wiki/Grafik/Farbpaletten
         */
         vislib::math::Vector<float, 4> GetSecStructColor(UncertaintyDataCall::secStructure s);            
         

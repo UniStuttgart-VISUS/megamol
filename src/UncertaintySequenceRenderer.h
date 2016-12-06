@@ -162,11 +162,10 @@ namespace megamol {
          * @param f       The residue flag 
          * @param x       The x position
          * @param y       The y position
-         * @param ud      The pointer to the data call
          * @param bgColor The the default color
          */
         void drawSecStructTextureTiles(UncertaintyDataCall::secStructure pre, UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
-                                       UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4], UncertaintyDataCall *ud);
+                                       UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]);
 
         /**
          * Draws the geometry tiles for the secondary structure types.
@@ -176,11 +175,10 @@ namespace megamol {
          * @param f       The residue flag 
          * @param x       The x position
          * @param y       The y position
-         * @param ud      The pointer to the data call
          * @param bgColor The the default color
          */
         void drawSecStructGeometryTiles(UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
-                                       UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4], UncertaintyDataCall *ud);
+                                       UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]);
                                        
         /**
         * Renders a two lined tooltip text.
@@ -247,13 +245,44 @@ namespace megamol {
          * Renders the uncertainty visualization.
          *
          * @param yPos The y position the rendering should start.
-         * @param ud   The pointer to the data call
          * @param fgColor The foreground color.
          * @param bgColor The background color.
          */        
-        void renderUncertainty(float yPos, UncertaintyDataCall *ud, float fgColor[4], float bgColor[4]);
+        void renderUncertainty(float yPos, float fgColor[4], float bgColor[4]);
         
+		
+        /**
+         * Convert color from RGB(A) to HSL(A).
+         *
+         * @param rgba The color as RGB(A).
+         * @return The color in HSL(A).		 
+		 * 
+		 * Source: https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-HSL-and-HSL-to-rgb-in-range-0-255-for-both#6930407
+         */  
+		vislib::math::Vector<float, 4> rgb2hsl(vislib::math::Vector<float, 4> rgba);
+		
+        /**
+         * Convert color from HSL(A) to RGB(A).
+         *
+         * @param rgba The color as HSL(A).
+         * @return The color in RGB(A).		 
+		 * 
+		 * Source: https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-HSL-and-HSL-to-rgb-in-range-0-255-for-both#6930407
+         */  		
+		vislib::math::Vector<float, 4> hsl2rgb(vislib::math::Vector<float, 4> HSLa);
         
+        /**
+         * Hue preserving color blending for two colors in RGB(A).
+         *
+         * @param c1 The first color as RGB(A).
+         * @param c2 The second color as RGB(A).		 
+         * @return The color in RGB(A).		 
+		 * 
+		 * Source: http://www.vis.uni-stuttgart.de/~weiskopf/publications/vis09_blending.pdf
+         */  		
+		vislib::math::Vector<float, 4> huePreservingColorBlending(vislib::math::Vector<float, 4> c1, vislib::math::Vector<float, 4> c2);
+		
+		
         /**********************************************************************
          * variables
          **********************************************************************/
@@ -370,6 +399,13 @@ namespace megamol {
                 
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
+		
+		// secondary structure type colors as RGB(A)
+		vislib::Array<vislib::math::Vector<float, 4> > secStructColorRGB;
+		// secondary structure type colors as HSL(A)
+		vislib::Array<vislib::math::Vector<float, 4> > secStructColorHSL;		
+		// secondary structure type descriptions
+		vislib::Array<vislib::StringA> secStructDescription;
         
         // textures
         vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;

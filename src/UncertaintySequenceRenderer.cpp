@@ -65,7 +65,6 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
             uncertaintyDataSlot( "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage." ),
             bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage." ),
             resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage." ),
-
             toggleStrideParam(                  "01 Stride", "Show/hide STRIDE secondary structure row."),
             toggleDsspParam(                    "02 Dssp", "Show/hide DSSP secondary structure row."),
             togglePdbParam(                     "03 PDB", "Show/hide PDB secondary structure row."),
@@ -266,7 +265,14 @@ bool UncertaintySequenceRenderer::create() {
             heightStrand = 0.6f;
             pos.SetY(-heightStrand / 2.0f);
         }
-
+        
+        
+        /*
+        else if (s == UncertaintyDataCall::secStructure::NOTDEFINED) {
+            pos.SetY(0.0f);
+        }
+        */
+        
         this->secStructVertices.Last().Add(pos);
 
         for (unsigned int j = 0; j < (samples + 1); j++) { // loop over sample count
@@ -551,13 +557,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
                 tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE);
                this->drawSecStructGeometryTiles(this->secStructAssignment[tmpMethod][i], ((i < (this->aminoAcidCount-1))?(this->secStructAssignment[tmpMethod][i+1]):(this->secStructAssignment[tmpMethod][i])),
-                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor, ud);    
+                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);    
 			   // draw as texture
 			   // glEnable(GL_TEXTURE_2D); // call only once for all assignment method rows
 			   // glEnable(GL_BLEND);
 			   // this->drawSecStructTextureTiles(((i > 0) ? (this->secStructAssignment[tmpMethod][i - 1]) : (this->secStructAssignment[tmpMethod][i])), this->secStructAssignment[tmpMethod][i],
 			   //	                              ((i < (this->aminoAcidCount - 1)) ? (this->secStructAssignment[tmpMethod][i + 1]) : (this->secStructAssignment[tmpMethod][i])),
-			   //	                              this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor, ud);
+			   //	                              this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
 			   // glDisable(GL_BLEND);
 			   // glDisable(GL_TEXTURE_2D);
             } 
@@ -568,7 +574,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
                 tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP);
                 this->drawSecStructGeometryTiles(this->secStructAssignment[tmpMethod][i], ((i < (this->aminoAcidCount-1))?(this->secStructAssignment[tmpMethod][i+1]):(this->secStructAssignment[tmpMethod][i])),
-                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor, ud);                
+                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);                
             }
             yPos += 1.0f;
         }  
@@ -577,7 +583,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
                 tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PDB);
                 this->drawSecStructGeometryTiles(this->secStructAssignment[tmpMethod][i], ((i < (this->aminoAcidCount-1))?(this->secStructAssignment[tmpMethod][i+1]):(this->secStructAssignment[tmpMethod][i])),
-                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor, ud);               
+                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);               
             }
             yPos += 1.0f;
         }
@@ -612,7 +618,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         // draw uncertainty visualization
         if(this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
             
-			this->renderUncertainty(yPos, ud, fgColor, bgColor);
+			this->renderUncertainty(yPos, fgColor, bgColor);
 
 			// draw amino-acid separating lines
 			if (this->showSeparatorLine) {
@@ -711,14 +717,14 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 						glVertex2f((static_cast<float>(this->resCols) + 2.0f + xPos), -(static_cast<float>(i)+1.5f));
 					glEnd();
 
-					tmpStr = ud->GetSecStructDesc(static_cast<UncertaintyDataCall::secStructure>(i));
+					tmpStr = this->secStructDescription[i];
                     wordlength = theFont.LineWidth( fontSize, tmpStr);
                     theFont.DrawString(static_cast<float>(this->resCols) + 1.0f, -(static_cast<float>(i) + 2.5f), wordlength, 1.0f,
                                        fontSize * 0.75f, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
 
 					// draw type legend geometry
 					this->drawSecStructGeometryTiles(static_cast<UncertaintyDataCall::secStructure>(i), UncertaintyDataCall::secStructure::NOTDEFINED,
-						                             UncertaintyDataCall::addFlags::NOTHING, (static_cast<float>(this->resCols) + 1.0f + xPos), (static_cast<float>(i)+1.5f), bgColor, ud);
+						                             UncertaintyDataCall::addFlags::NOTHING, (static_cast<float>(this->resCols) + 1.0f + xPos), (static_cast<float>(i)+1.5f), bgColor);
                 }
 				// draw sparator lines
 				for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE)+1; i++) {  // end index: ...+1!
@@ -898,7 +904,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Stride:";
-                            tmpStr2 = ud->GetSecStructDesc(this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx]);
+                            tmpStr2 = this->secStructDescription[(int)this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx]]);
                             this->renderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
                         start += perCentRow;
@@ -907,7 +913,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Dssp:";
-                            tmpStr2 = ud->GetSecStructDesc(this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP][mousePosResIdx]);
+                            tmpStr2 = this->secStructDescription[(int)this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP][mousePosResIdx]]);
                             this->renderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
                         start += perCentRow;
@@ -916,7 +922,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Pdb:";
-                            tmpStr2 = ud->GetSecStructDesc(this->secStructAssignment[UncertaintyDataCall::assMethod::PDB][mousePosResIdx]);
+                            tmpStr2 = this->secStructDescription[(int)this->secStructAssignment[UncertaintyDataCall::assMethod::PDB][mousePosResIdx]]);
                             this->renderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
                         start += perCentRow;
@@ -947,7 +953,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                     if (i > 0) {
                                         tmpStr2.Append("|");
                                     }
-                                    tmpStr3.Format(" %s: %.0f %% ", ud->GetSecStructDesc(this->sortedUncertainty[mousePosResIdx][i]),
+                                    tmpStr3.Format(" %s: %.0f %% ", this->secStructDescription[(int)this->sortedUncertainty[mousePosResIdx][i]],
                                         this->secUncertainty[mousePosResIdx][(int)this->sortedUncertainty[mousePosResIdx][i]] * 100.0f);
                                     tmpStr2.Append(tmpStr3);
                                 }
@@ -986,11 +992,9 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 /*
  * UncertaintySequenceRenderer::renderUncertainty
  */
-void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataCall *ud, float fgColor[4], float bgColor[4]) {
+void UncertaintySequenceRenderer::renderUncertainty(float yPos, float fgColor[4], float bgColor[4]) {
 
-    if(ud == NULL) return;
-
-    vislib::math::Vector<float, 4> grayColor = ud->GetSecStructColor(UncertaintyDataCall::secStructure::NOTDEFINED);
+    vislib::math::Vector<float, 4> grayColor = this->secStructColorRGB[(int)UncertaintyDataCall::secStructure::NOTDEFINED];
 
     UncertaintyDataCall::secStructure sMax, sTemp;     // structure types 
     float uMax, uDelta, uTemp;                         // uncertainty
@@ -1015,7 +1019,9 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
 	glDisable(GL_DEPTH_TEST);
 
     for (unsigned int i = 0; i < this->aminoAcidCount; i++) { // loop over all amino-acids
-        if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) { // skip missing 
+        
+        // ignore as missing flagged amino-acids and ignore if all strucutre types are NOTDEFINED resulting in maximum uncerainty equals 0
+        if ((this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) || (this->secUncertainty[i][this->sortedUncertainty[i][0]] == 0.0f)) {
 
             // default
             posOffset.SetX(this->vertices[2 * i]);
@@ -1032,7 +1038,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                     
                     // block chart color
                     if (this->currentCertainBlockChartColor == CERTAIN_BC_COLORED) {
-                        glColor3fv(ud->GetSecStructColor(sMax).PeekComponents());
+                        glColor3fv(this->secStructColorRGB[(int)sMax].PeekComponents());
                     }
                     else { // this->currentCertainBlockChartColor == CERTAIN_BC_NONE
                         glColor3fv(bgColor);
@@ -1052,7 +1058,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                         // strucutre color
                         // ALWAYS assign color first (early as possible), because structure can change ... see below: end of strand
                         if (this->currentCertainStructColor == CERTAIN_STRUCT_COLORED) {
-                            glColor3fv(ud->GetSecStructColor(sMax).PeekComponents());
+                            glColor3fv(this->secStructColorRGB[(int)sMax].PeekComponents());
                         }
                         else if (this->currentCertainStructColor == CERTAIN_STRUCT_GRAY) {
                             glColor3fv(grayColor.PeekComponents());
@@ -1151,7 +1157,6 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
 							sortedStructLR[0] = sortedStructLR[j];
 							sortedStructLR[j] = sTemp;
 						}
-
                     }
                 }
                 
@@ -1160,11 +1165,13 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                 glBegin(GL_QUADS);                
 				if ((this->currentUncertainBlockChartOrientation == UNCERTAIN_BC_HORIZ) && (this->currentUncertainBlockChartColor != UNCERTAIN_BC_NONE)) {
 
+                    // OLD STUFF
+                    /*
                     uDelta = 0.0f;
                     for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); j++) {
                         
                         if (this->currentUncertainBlockChartColor == UNCERTAIN_BC_COLORED)
-                            glColor3fv(ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sortedStructLR[j])).PeekComponents());
+                            glColor3fv(this->secStructColorRGB[(int)sortedStructLR[j]].PeekComponents());
 
                         uTemp = this->secUncertainty[i][(int)sortedStructLR[j]];
                         
@@ -1175,6 +1182,83 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                         
                         uDelta += uTemp;            
                     }                
+                    */
+                    
+                    // NEW STUFF
+                    
+                    // get the number off structures with uncertainty greater 0 for color interpolation
+                    diffStruct = 0;
+                    for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) { 
+						if (this->secUncertainty[i][(int)this->sortedUncertainty[i][k]] > 0.0f)
+                            diffStruct++; 
+                    }
+					// diffStruct >= 2 (else it is just one structure type with uncertainty = 1.0f)
+
+                    start  = 0.0f;
+                    end    = 0.0f;
+                    middle = 0.0f;
+                    
+                    glBegin(GL_TRIANGLE_STRIP);
+                    for (unsigned int j = 0; j < this->secStructVertices[(int)sMax].Count(); j++) {
+
+                        if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
+                            
+                            fTemp = (static_cast<float>(j) / static_cast<float>(this->secStructVertices[(int)sMax].Count()));
+                            index = 0;
+                            
+                            for (unsigned int k = 0; k < (diffStruct-1); k++) {
+                                
+								while (this->secUncertainty[i][sortedStructLR[index]] == 0.0f) {
+                                    index++;
+                                    if(index >= static_cast<int>(UncertaintyDataCall::assMethod::NOM)) {
+                                        break; // shouldn't happen?
+                                    }
+                                }
+                                uTemp    = this->secUncertainty[i][sortedStructLR[index]];
+                                start    = ((k == 0)?(0.0f):(end));
+                                middle   = ((k == 0)?(uTemp):(start+(uTemp/2.0f)));
+                                colStart = this->secStructColorRGB[(int)sortedStructLR[index]];
+                                
+                                index++;
+                                while(this->secUncertainty[i][sortedStructLR[index]] == 0.0f) {
+                                    index++;
+                                    if(index >= static_cast<int>(UncertaintyDataCall::assMethod::NOM)) {
+                                        break; // shouldn't happen?
+                                    }
+                                }
+                                uTemp  = this->secUncertainty[i][sortedStructLR[index]];
+                                end    = ((k == (diffStruct-2))?(middle+uTemp):(middle+(uTemp/2.0f)));
+                                colEnd = this->secStructColorRGB[(int)sortedStructLR[index]];
+                                
+                                if ((start <= fTemp) && (fTemp <= middle)) {
+                                    colMiddle = (colStart + colEnd) / 2.0f;
+                                    colTemp = (1.0f - (fTemp-start)/(middle-start))*colStart + ((fTemp-start)/(middle-start))*colMiddle;
+                                }
+                                else if ((middle < fTemp) && (fTemp <= end)) {
+                                    colMiddle = (colStart + colEnd) / 2.0f;
+									colTemp = (1.0f - (fTemp - middle) / (end - middle))*colMiddle + ((fTemp - middle) / (end - middle))*colEnd;
+                                }
+                                glColor3fv(colTemp.PeekComponents()); 
+                            }
+                        }
+                        
+                        if (j == 0) { // additional initial vertex
+                            posTemp.SetX(fTemp);
+                            posTemp.SetY(0.0f);
+                            glVertex2f(posOffset.X() + posTemp.X(), -(posOffset.Y() + posTemp.Y()));
+                        }
+                        
+                        posTemp.SetX(fTemp);
+                        posTemp.SetY(((j % 2 == 0) ? (1.0f) : (0.0f));
+                        glVertex2f(posOffset.X() + posTemp.X(), -(posOffset.Y() + posTemp.Y()));
+                        
+                        if (j == (this->secStructVertices[(int)sMax].Count() - 1)) { // additional final vertex
+                            posTemp.SetX(1.0f);
+                            posTemp.SetY(-1.0f*posTemp.Y());
+                            glVertex2f(posOffset.X() + posTemp.X(), -(posOffset.Y() + posTemp.Y()));
+                        }
+                    }
+                    glEnd();                      
                 }
 				else if ((this->currentUncertainBlockChartOrientation == UNCERTAIN_BC_VERTI) && (this->currentUncertainBlockChartColor != UNCERTAIN_BC_NONE)) {
 
@@ -1182,7 +1266,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                     for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); j++) {
                         
                         if (this->currentUncertainBlockChartColor == UNCERTAIN_BC_COLORED)
-                            glColor3fv(ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sortedStructBT[j])).PeekComponents());
+                            glColor3fv(this->secStructColorRGB[(int)sortedStructBT[j]].PeekComponents());
 
                         uTemp = this->secUncertainty[i][(int)sortedStructBT[j]];
                         
@@ -1235,7 +1319,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                                 if ((tDelta <= timer) && (timer <= (tDelta + uTemp))) {
 
                                     if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
-                                        colTemp = (1.0f - (timer - tDelta) / uTemp)*(ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sTemp)));
+                                        colTemp = (1.0f - (timer - tDelta) / uTemp)*(this->secStructColorRGB[(int)sTemp]);
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                                     if ((sTemp == UncertaintyDataCall::secStructure::E_EXT_STRAND) && (this->sortedUncertainty[i + 1][0] != sTemp)) {
@@ -1251,7 +1335,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                                         sTemp = this->sortedUncertainty[i][k + 1];
                                     }
                                     if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
-                                        colTemp = colTemp + ((timer - tDelta) / uTemp)*(ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sTemp)));
+                                        colTemp = colTemp + ((timer - tDelta) / uTemp)*(this->secStructColorRGB[(int)sTemp]);
                                         glColor3fv(colTemp.PeekComponents());
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
@@ -1276,7 +1360,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                                     uTemp = this->secUncertainty[i][(int)sTemp];
 
                                     if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
-                                        colTemp = (1.0f - (timer - static_cast<float>(k)*tDelta) / tDelta)*(ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sTemp)));
+                                        colTemp = (1.0f - (timer - static_cast<float>(k)*tDelta) / tDelta)*(this->secStructColorRGB[(int)sTemp]);
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                                     if ((sTemp == UncertaintyDataCall::secStructure::E_EXT_STRAND) && (this->sortedUncertainty[i + 1][0] != sTemp)) {
@@ -1300,7 +1384,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                                     uTemp = this->secUncertainty[i][(int)sTemp];
 
                                     if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
-                                        colTemp = colTemp + ((timer - static_cast<float>(k)*tDelta) / tDelta)*(ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sTemp)));
+                                        colTemp = colTemp + ((timer - static_cast<float>(k)*tDelta) / tDelta)*(this->secStructColorRGB[(int)sTemp]);
                                         glColor3fv(colTemp.PeekComponents());
                                     }
                                     // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
@@ -1331,7 +1415,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                         uTemp = this->secUncertainty[i][(int)sTemp];
                         
                         if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED)
-                            glColor3fv(ud->GetSecStructColor(sTemp).PeekComponents());
+                            glColor3fv(this->secStructColorRGB[(int)sTemp].PeekComponents());
                         
                         // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                         if ((sTemp == UncertaintyDataCall::secStructure::E_EXT_STRAND) && (this->sortedUncertainty[i+1][0] != sTemp)) {
@@ -1357,7 +1441,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                         uTemp = this->secUncertainty[i][(int)sTemp];
                         
                         if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED)
-                            glColor3fv(ud->GetSecStructColor(sTemp).PeekComponents());
+                            glColor3fv(this->secStructColorRGB[(int)sTemp].PeekComponents());
                         
                         // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
                         if ((sTemp == UncertaintyDataCall::secStructure::E_EXT_STRAND) && (this->sortedUncertainty[i+1][0] != sTemp)) {
@@ -1381,7 +1465,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
 						if (this->secUncertainty[i][(int)this->sortedUncertainty[i][k]] > 0.0f)
                             diffStruct++;
                     }
-					// diffStruct >= 2
+					// diffStruct >= 2 (else it is just one structure type with uncertainty = 1.0f)
 
                     start = 0.0f;
                     end = 0.0f;
@@ -1390,9 +1474,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                     posOffset.SetY(posOffset.Y() - 0.5f);
                     glBegin(GL_TRIANGLE_STRIP);
                     for (unsigned int j = 0; j < this->secStructVertices[(int)sMax].Count(); j++) {
-
-                        // NEW STUFF
-                        
+                       
                         if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
                             
                             fTemp = (static_cast<float>(j) / static_cast<float>(this->secStructVertices[(int)sMax].Count()));
@@ -1409,7 +1491,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                                 uTemp    = this->secUncertainty[i][sortedStructLR[index]];
                                 start    = ((k == 0)?(0.0f):(end));
                                 middle   = ((k == 0)?(uTemp):(start+(uTemp/2.0f)));
-                                colStart = ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sortedStructLR[index]));
+                                colStart = this->secStructColorRGB[(int)sortedStructLR[index]];
                                 
                                 index++;
                                 while(this->secUncertainty[i][sortedStructLR[index]] == 0.0f) {
@@ -1420,7 +1502,7 @@ void UncertaintySequenceRenderer::renderUncertainty(float yPos, UncertaintyDataC
                                 }
                                 uTemp  = this->secUncertainty[i][sortedStructLR[index]];
                                 end    = ((k == (diffStruct-2))?(middle+uTemp):(middle+(uTemp/2.0f)));
-                                colEnd = ud->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(sortedStructLR[index]));
+                                colEnd = this->secStructColorRGB[(int)sortedStructLR[index]];
                                 
                                 if ((start <= fTemp) && (fTemp <= middle)) {
                                     colMiddle = (colStart + colEnd) / 2.0f;
@@ -1497,13 +1579,13 @@ void UncertaintySequenceRenderer::renderToolTip(float start, float end, vislib::
  * UncertaintySequenceRenderer::drawSecStructGeometryTiles
  */
 void UncertaintySequenceRenderer::drawSecStructGeometryTiles(UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
-                                                             UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4], UncertaintyDataCall *ud) {
-    if(ud == NULL) return;  
+                                                             UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]) {
 
     UncertaintyDataCall::secStructure curTemp = cur;                                                            
     
-    if(f != UncertaintyDataCall::addFlags::MISSING) {
-        glColor3fv(ud->GetSecStructColor(cur).PeekComponents()); 
+    // ignore as missing flagged amino-acids and NOTDEFINED secondary structure types
+    if((f != UncertaintyDataCall::addFlags::MISSING) || (cur != UncertaintyDataCall::secStructure::NOTDEFINED)) {
+        glColor3fv(this->secStructColorRGB[(int)cur].PeekComponents()); 
         // check if end of strand is an arrow (the arrow vertices ae stored in BRIDGE)
         if ((curTemp == UncertaintyDataCall::secStructure::E_EXT_STRAND) && (curTemp != fol)) {
             curTemp = UncertaintyDataCall::secStructure::B_BRIDGE;
@@ -1521,9 +1603,7 @@ void UncertaintySequenceRenderer::drawSecStructGeometryTiles(UncertaintyDataCall
  * UncertaintySequenceRenderer::drawSecStructTextureTiles
  */
 void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall::secStructure pre, UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
-                                                            UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4], UncertaintyDataCall *ud) {    
-    if(ud == NULL) return;
-
+                                                            UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]) {    
     const float eps = 0.0f;
         
     if(f == UncertaintyDataCall::addFlags::MISSING) {
@@ -1531,7 +1611,7 @@ void UncertaintySequenceRenderer::drawSecStructTextureTiles(UncertaintyDataCall:
         this->markerTextures[0]->Bind(); 
     }
     else {    
-        glColor3fv(ud->GetSecStructColor(cur).PeekComponents()); 
+        glColor3fv(this->secStructColorRGB[(int)cur].PeekComponents()); 
         switch (cur) {
             case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
                 if (pre != cur) {
@@ -1693,7 +1773,7 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
         this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
         this->secStructAssignment.Last().AssertCapacity(this->aminoAcidCount);
     }
-
+	
     this->residueFlag.Clear();
     this->residueFlag.AssertCapacity(this->aminoAcidCount);
     
@@ -1736,6 +1816,12 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 
     this->bindingSiteNames.Clear();
 
+	this->secStructColorRGB.Clear();
+	this->secStructColorRGB.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
+	
+	this->secStructDescription.Clear();
+	this->secStructDescription.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
+	
     // temporary variables
 	vislib::StringA tmpStr;
 	vislib::StringA letters;
@@ -1777,6 +1863,12 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 	}
 	this->pdbLegend.Append(")");
 
+	// get secondary structure type colors and descriptions
+	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
+		this->secStructColorRGB.Add(udc->GetsecStructColorRGB(static_cast<UncertaintyDataCall::secStructure>(i)));
+		this->secStructDescription.Add(udc->GetSecStructDesc(static_cast<UncertaintyDataCall::secStructure>(i)));
+	}
+	
     // collect data from call
     for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
 
@@ -2014,31 +2106,48 @@ char UncertaintySequenceRenderer::GetAminoAcidOneLetterCode(vislib::StringA resN
     
 }
 
+
 /*
- 
-HSLtrad = rgb2hsl(C1 + C2)
-HSL1 = rgb2hsl(C1)
-HSL2 = rgb2hsl(C2)
+* UncertaintySequenceRenderer::huePreservingColorBlending
+*/
+/*
+vislib::math::Vector<float, 4> UncertaintySequenceRenderer::huePreservingColorBlending(vislib::math::Vector<float, 4> c1, vislib::math::Vector<float, 4> c2) {
+	
+vislib::math::Vector<float, 4> cnew;
+	
+vislib::math::Vector<float, 4> HSLtrad = rgb2hsl(c1 + c2);
+vislib::math::Vector<float, 4> HSL1 = rgb2hsl(c1);
+vislib::math::Vector<float, 4> HSL2 = rgb2hsl(c2);
+
 if(sameHue(H1, H2)) then
-    Cnew = C1 + C2
+    cnew = c1 + c2
 else    
-    if(S1 > S2) then // C1 is dominant
+    if(S1 > S2) then // c1 is dominant
         H3 = H1 + 180
         S3 = S2
         L3 = L2
-        Cnew = C1 + hsl2rgb(H3, S3, L3)
-    else // C2 is dominant
+        cnew = c1 + hsl2rgb(H3, S3, L3)
+    else // c2 is dominant
         H3 = H2 + 180
         S3 = S1
         L3 = L1
-        Cnew = hsl2rgb(H3, S3, L3) + C2
+        cnew = hsl2rgb(H3, S3, L3) + c2
     endif
 
-endif
-
-https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both#6930407
-
-
+endif	
+	
+	
+	
+	
+}
+*/	
+		
+/*
+* UncertaintySequenceRenderer::rgb2hsv
+*/
+/*
+vislib::math::Vector<float, 4> UncertaintySequenceRenderer::rgb2hsv(vislib::math::Vector<float, 4> rgba) {
+	
 typedef struct {
     double r;       // percent
     double g;       // percent
@@ -2097,6 +2206,14 @@ hsv rgb2hsv(rgb in)
 
     return out;
 }
+*/
+
+/*
+* UncertaintySequenceRenderer::rgb2hsv
+*/
+/*
+vislib::math::Vector<float, 4> UncertaintySequenceRenderer::hsv2rgb(vislib::math::Vector<float, 4> hsva) {
+	
 
 
 rgb hsv2rgb(hsv in)
