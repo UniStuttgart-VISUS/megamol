@@ -48,7 +48,10 @@ SecStructFlattener::SecStructFlattener(void) :
 	hbondSpringConstantParam("simulation::springs::hbondSpringConstant", "The spring constant for the h bond springs."),
 	hbondFrictionParam("simulation::springs::hbondFriction", "The friction parameter for the h bond springs."),
 	repellingForceCutoffDistanceParam("simulation::repelling::cutoffDistance", "Cutoff distance after which no repelling forces happen."),
-	repellingForceStrengthFactor("simulation::repelling::strengthFactor", "Factor controlling the strength of the repelling forces.") {
+	repellingForceStrengthFactor("simulation::repelling::strengthFactor", "Factor controlling the strength of the repelling forces."),
+	forceToCenterParam("simulation::forceToCenter", "Activate a force towards the center of the bounding box."),
+	forceToCenterStrengthParam("simulation::forceToCenterStrength", "The strength of the force towards the center."),
+	resetButtonParam("simulation::resetButton", "Button to reset the simulation to the start state."){
 
 	// caller slot
 	this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -100,6 +103,10 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->singleStepButtonParam.SetUpdateCallback(this, &SecStructFlattener::onSingleStepButton);
 	this->MakeSlotAvailable(&this->singleStepButtonParam);
 
+	this->resetButtonParam << new param::ButtonParam('r');
+	this->resetButtonParam.SetUpdateCallback(this, &SecStructFlattener::onResetButton);
+	this->MakeSlotAvailable(&this->resetButtonParam);
+
 	param::EnumParam * fpParam = new param::EnumParam(int(FlatPlane::XY_PLANE));
 	FlatPlane fp;
 	for (int i = 0; i < getFlatPlaneModeNumber(); i++) {
@@ -126,6 +133,12 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->repellingForceStrengthFactor.SetParameter(new param::FloatParam(1.0f, 0.0f));
 	this->MakeSlotAvailable(&this->repellingForceStrengthFactor);
 
+	this->forceToCenterParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->forceToCenterParam);
+
+	this->forceToCenterStrengthParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+	this->MakeSlotAvailable(&this->forceToCenterStrengthParam);
+
 	this->atomPositions = NULL;
 	this->atomPositionsSize = 0;
 
@@ -134,6 +147,7 @@ SecStructFlattener::SecStructFlattener(void) :
 	this->myHash = 0;
 	this->planeHash = 0;
 	this->firstFrame = true;
+	this->forceReset = false;
 
 	this->lastPlaneMode = XY_PLANE;
 
@@ -228,7 +242,7 @@ void SecStructFlattener::flatten(bool transferPositions) {
 
 	bool somethingDirty = false;
 
-	if (this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty() || this->oxygenOffsetParam.IsDirty()) {
+	if (this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty() || this->oxygenOffsetParam.IsDirty() || transferPositions) {
 		this->flatPlaneMode.ResetDirty();
 		this->arbPlaneCenterParam.ResetDirty();
 		this->arbPlaneNormalParam.ResetDirty();
@@ -400,7 +414,8 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 	// transfer new spring data if necessary
 	if (this->hbondFrictionParam.IsDirty() || this->hbondSpringConstantParam.IsDirty() || this->connectionFrictionParam.IsDirty()
 		|| this->connectionSpringConstantParam.IsDirty() || this->repellingForceCutoffDistanceParam.IsDirty() || this->repellingForceStrengthFactor.IsDirty() 
-		|| lastHash != mdc->DataHash() /*important if input data changes*/) {
+		|| lastHash != mdc->DataHash() /*important if input data changes*/
+		|| forceReset) {
 
 		this->hbondFrictionParam.ResetDirty();
 		this->hbondSpringConstantParam.ResetDirty();
@@ -435,7 +450,7 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 			this->repellingForceCutoffDistanceParam.Param<param::FloatParam>()->Value(), this->repellingForceStrengthFactor.Param<param::FloatParam>()->Value());
 	}
 
-	if (lastHash != mdc->DataHash() || this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty()) {
+	if (lastHash != mdc->DataHash() || this->flatPlaneMode.IsDirty() || this->arbPlaneCenterParam.IsDirty() || this->arbPlaneNormalParam.IsDirty() || forceReset) {
 		lastHash = mdc->DataHash();
 		this->boundingBox = mdc->AccessBoundingBoxes().ObjectSpaceBBox();
 
@@ -479,7 +494,8 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 	}
 
 	// perform the flattening
-	flatten();
+	flatten(forceReset);
+	forceReset = false;
 
 	// run the simulation
 	if (this->playParam.Param<param::BoolParam>()->Value() || this->oneStep) {
@@ -578,6 +594,14 @@ bool SecStructFlattener::onPlayToggleButton(param::ParamSlot& p) {
 }
 
 /*
+ *	SecStructFlattener::onResetButton
+ */
+bool SecStructFlattener::onResetButton(param::ParamSlot& p) {
+	this->forceReset = true;
+	return true;
+}
+
+/*
  *	SecStructFlattener::onSingleStepButton
  */
 bool SecStructFlattener::onSingleStepButton(param::ParamSlot& p) {
@@ -607,7 +631,8 @@ void SecStructFlattener::runSimulation(void) {
 	}
 
 	for (unsigned int i = 0; i < numTimesteps; i++) {
-		performTimestep(delta);
+		performTimestep(delta, this->forceToCenterParam.Param<param::BoolParam>()->Value(), 
+			this->forceToCenterStrengthParam.Param<param::FloatParam>()->Value());
 	}
 
 	// get result from device

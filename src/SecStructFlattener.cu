@@ -124,8 +124,11 @@ __global__ void applyMatrixToPositionsKernel(float * d_pos, uint sizePos, float4
  *	@param d_springs Array of available spring connections between c alpha atoms
  *	@param springSize The number of avaialable springs.
  *	@param timestepSize The duration of a single timestep
+ *	@param forceToCenter Should a force towards the center of the bounding box be added?
+ *	@param forceStrength The strength of the force towards the center
  */
-__global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, uint caSize, Spring * d_springs, uint springSize, uint * d_starts, float timestepSize) {
+__global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, uint caSize, Spring * d_springs, uint springSize, uint * d_starts, float timestepSize,
+	bool forceToCenter, float forceStrength) {
 	
 	uint idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -134,7 +137,6 @@ __global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, ui
 	}
 
 	uint caIdx = d_ca[idx];
-	float3 bbCenter = (d_CAlphaBoundingBoxMin + d_CAlphaBoundingBoxMax) * 0.5f;
 	float2 atPos = make_float2(d_pos[caIdx * 3 + 0], d_pos[caIdx * 3 + 1]);
 
 	float2 force = make_float2(0.0f, 0.0f);	
@@ -178,6 +180,15 @@ __global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, ui
 
 			force += forceHere;
 		}
+	}
+
+	/******************* Force to Center ********************/
+
+	float2 bbCenter = (make_float2(d_CAlphaBoundingBoxMin) + make_float2(d_CAlphaBoundingBoxMax)) * 0.5f;
+	float2 forceDir = normalize(bbCenter - atPos);
+
+	if (forceToCenter) {
+		force += forceStrength * forceDir;
 	}
 
 	/******************* Time Integration ********************/
@@ -260,9 +271,11 @@ void recomputeGrid() {
  *	Performs a single particle system timestep on the particle data.
  *
  *	@param timestepSize The duration of the timestep.
+ *	@param forceToCenter Should a force towards the center of the bounding box be added?
+ *	@param forceStrength The strength of the force towards the center
  */
 extern "C"
-void performTimestep(float timestepSize) {
+void performTimestep(float timestepSize, bool forceToCenter, float forceStrength) {
 	recomputeGrid();
 	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
 	uint * d_ca = thrust::raw_pointer_cast(d_cAlphaIndices.data().get());
@@ -271,7 +284,7 @@ void performTimestep(float timestepSize) {
 	uint N = static_cast<uint>(d_atomPositions.size());
 	uint NCa = static_cast<uint>(d_cAlphaIndices.size());
 	uint NSpring = static_cast <uint>(d_springs.size());
-	runSimulationKernel <<<(NCa + TpB - 1) / TpB, TpB >>>(d_pos, N, d_ca, NCa, d_spring, NSpring, d_starts, timestepSize);
+	runSimulationKernel <<<(NCa + TpB - 1) / TpB, TpB >>>(d_pos, N, d_ca, NCa, d_spring, NSpring, d_starts, timestepSize, forceToCenter, forceStrength);
 	checkCudaErrors(cudaDeviceSynchronize());
 }
 

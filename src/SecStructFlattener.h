@@ -20,7 +20,7 @@
 #include <vector>
 
 extern "C" void getPositions(float * h_atomPositions, unsigned int numPositions);
-extern "C" void performTimestep(float timestepSize);
+extern "C" void performTimestep(float timestepSize, bool forceToCenter, float forceStrength);
 extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas);
 extern "C" void transferPlane(vislib::math::Plane<float>& thePlane);
 extern "C" void transferSpringData(const float * h_atomPositions, unsigned int numPositions, const unsigned int * h_hBondIndices, unsigned int numBonds, 
@@ -165,6 +165,14 @@ namespace protein_cuda {
 		bool onSingleStepButton(megamol::core::param::ParamSlot& p);
 
 		/**
+		 *	Callback function for the reset button.
+		 *
+		 *	@param p The button parameter
+		 *	@return true
+		 */
+		bool onResetButton(megamol::core::param::ParamSlot& p);
+
+		/**
 		 *	Computes the three main directions of the c alpha atoms
 		 */
 		void computeMainDirectionPCA(void);
@@ -226,6 +234,15 @@ namespace protein_cuda {
 		/** Factor controlling the strength of the repelling forces */
 		megamol::core::param::ParamSlot repellingForceStrengthFactor;
 
+		/** Flag activating a force to the center of the bounding box */
+		megamol::core::param::ParamSlot forceToCenterParam;
+
+		/** The strength of the force to the center of the bounding box */
+		megamol::core::param::ParamSlot forceToCenterStrengthParam;
+
+		/** The reset button */
+		megamol::core::param::ParamSlot resetButtonParam;
+
 		/** The current atom positions */
 		float * atomPositions;
 
@@ -273,6 +290,9 @@ namespace protein_cuda {
 
 		/** Should a single timestep be performed? */
 		bool oneStep;
+
+		/** Should a reset of the dataset be forced? */
+		bool forceReset;
 	};
 
 } /* end namespace protein_cuda */
