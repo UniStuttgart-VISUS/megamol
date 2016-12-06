@@ -148,6 +148,9 @@ namespace protein_cuda {
 		/** shall the hydrogen bonds be shown? */
 		core::param::ParamSlot showHydrogenBondsParam;
 
+		/** Shall the tubes be shown? */
+		core::param::ParamSlot showTubesParam;
+
 		/** the mouse position */
 		vislib::math::Vector<float, 2> mousePos;
 
@@ -174,6 +177,9 @@ namespace protein_cuda {
 
 		/** Shader for the tesselated GL_LINES */
 		vislib::graphics::gl::GLSLTesselationShader lineShader;
+
+		/** Shader for the tesselated tubes */
+		vislib::graphics::gl::GLSLTesselationShader tubeShader;
 
 		/** The bounding rectangle for the data */
 		vislib::math::Rectangle<float> bbRect;

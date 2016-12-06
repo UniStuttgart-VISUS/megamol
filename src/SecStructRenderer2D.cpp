@@ -115,7 +115,8 @@ SecStructRenderer2D::SecStructRenderer2D(void) : Renderer2DModule(),
 	showBackboneParam("Show::showBackbone", "Show the backbone of the main chain."),
 	showDirectConnectionsParam("Show::showDirectConnections", "Show the direct atom-atom connections between all atoms of the main chain."),
 	showAtomPositionsParam("Show::showAtomPositions", "Show the positions of the C-Alpha atoms."),
-	showHydrogenBondsParam("Show::showHydrogenBonds", "Show the hydrogen bonds.") {
+	showHydrogenBondsParam("Show::showHydrogenBonds", "Show the hydrogen bonds."),
+	showTubesParam("Show::showTubes", "Show the tubes around the backbone.") {
 
 	this->dataInSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable(&this->dataInSlot);
@@ -123,10 +124,10 @@ SecStructRenderer2D::SecStructRenderer2D(void) : Renderer2DModule(),
 	this->planeInSlot.SetCompatibleCall<PlaneDataCallDescription>();
 	this->MakeSlotAvailable(&this->planeInSlot);
 
-	this->coilWidthParam.SetParameter(new param::FloatParam(1.0f, 0.1f, 100.0f));
+	this->coilWidthParam.SetParameter(new param::FloatParam(0.002f, 0.0f, 0.1f));
 	this->MakeSlotAvailable(&this->coilWidthParam);
 
-	this->structureWidthParam.SetParameter(new param::FloatParam(3.0f, 0.1f, 100.0f));
+	this->structureWidthParam.SetParameter(new param::FloatParam(0.01f, 0.0f, 0.1f));
 	this->MakeSlotAvailable(&this->structureWidthParam);
 
 	this->showAtomPositionsParam.SetParameter(new param::BoolParam(true));
@@ -140,6 +141,9 @@ SecStructRenderer2D::SecStructRenderer2D(void) : Renderer2DModule(),
 
 	this->showHydrogenBondsParam.SetParameter(new param::BoolParam(true));
 	this->MakeSlotAvailable(&this->showHydrogenBondsParam);
+
+	this->showTubesParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->showTubesParam);
 
 	this->lastDataHash = 0;
 	this->lastPlaneHash = 0;
@@ -170,6 +174,7 @@ bool SecStructRenderer2D::create(void) {
 		return false;
 	}
 
+	/**************************** Line Shader ********************************/
 	vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
 	vert = new ShaderSource();
 	tessCont = new ShaderSource();
@@ -206,22 +211,75 @@ bool SecStructRenderer2D::create(void) {
 		}
 	} catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unable to compile tessellation shader (@%s): %s\n",
+			"Unable to compile line shader (@%s): %s\n",
 			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
 			ce.FailedAction()), ce.GetMsgA());
 		return false;
 	} catch (vislib::Exception e) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unable to compile tessellation shader: %s\n", e.GetMsgA());
+			"Unable to compile line shader: %s\n", e.GetMsgA());
 		return false;
 	} catch (...) {
 		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unable to compile tessellation shader: Unknown exception\n");
+			"Unable to compile line shader: Unknown exception\n");
 		return false;
 	}
-	return true;
 
-	glGenBuffers(1, &this->ssbo);
+	/**************************** Tube Shader ********************************/
+
+	vert = new ShaderSource();
+	tessCont = new ShaderSource();
+	tessEval = new ShaderSource();
+	geom = new ShaderSource();
+	frag = new ShaderSource();
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::vertex", *vert)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::tesscontrol", *tessCont)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::tesseval", *tessEval)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::geometry", *geom)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::fragment", *frag)) {
+		return false;
+	}
+	try {
+		// compile
+		if (!this->tubeShader.Compile(vert->Code(), vert->Count(),
+			tessCont->Code(), tessCont->Count(),
+			tessEval->Code(), tessEval->Count(),
+			geom->Code(), geom->Count(),
+			frag->Code(), frag->Count())) {
+			throw vislib::Exception("Could not compile tube shader. ", __FILE__, __LINE__);
+		}
+		// link
+		if (!this->tubeShader.Link()) {
+			throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
+		}
+	}
+	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile tube shader (@%s): %s\n",
+			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+			ce.FailedAction()), ce.GetMsgA());
+		return false;
+	}
+	catch (vislib::Exception e) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile tube shader: %s\n", e.GetMsgA());
+		return false;
+	}
+	catch (...) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile tube shader: Unknown exception\n");
+		return false;
+	}
+
+	return true;
 }
 
 /*
@@ -278,16 +336,12 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 		unsigned int firstAAIdx = 0;
 		unsigned int lastAAIdx = 0;
 
-		CAlpha lastCalpha;
-		unsigned int lastCalphaIndex;
-
 		this->cAlphaMap.resize(mdc->AtomCount(), 0);
 
 		// loop over all molecules of the protein
 		for (unsigned int molIdx = 0; molIdx < mdc->MoleculeCount(); molIdx++) {
 			MolecularDataCall::Molecule chain = mdc->Molecules()[molIdx];
 			this->molSizes.push_back(0);
-			bool firstset = false;
 
 			// is the first residue an aminoacid?
 			if (mdc->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID) {
@@ -340,27 +394,25 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 						this->cAlphaMap[atomIdx] = static_cast<unsigned int>(this->cAlphas.size() - 1);
 					}
 
-					lastCalpha = calpha;
-					lastCalphaIndex = acid->CAlphaIndex();
-
 					// add the first atom 3 times
-					if (!firstset) {
+					if (secIdx == firstSecIdx && aaIdx == firstAAIdx) {
 						this->cAlphas.push_back(calpha);
 						this->cAlphas.push_back(calpha);
 						this->cAlphaIndices.push_back(acid->CAlphaIndex());
 						this->cAlphaIndices.push_back(acid->CAlphaIndex());
 						this->molSizes[molIdx] += 2;
-						firstset = true;
+					}
+
+					// add the last atom 3 times
+					if (secIdx == lastSecIdx - 1 && aaIdx == lastAAIdx - 1) {
+						this->cAlphas.push_back(calpha);
+						this->cAlphas.push_back(calpha);
+						this->cAlphaIndices.push_back(acid->CAlphaIndex());
+						this->cAlphaIndices.push_back(acid->CAlphaIndex());
+						this->molSizes[molIdx] += 2;
 					}
 				}
 			}
-
-			// add the last atom 3 times
-			this->cAlphas.push_back(lastCalpha);
-			this->cAlphas.push_back(lastCalpha);
-			this->cAlphaIndices.push_back(lastCalphaIndex);
-			this->cAlphaIndices.push_back(lastCalphaIndex);
-			this->molSizes[molIdx] += 2;
 		}
 
 		this->lastDataHash = mdc->DataHash();
@@ -394,10 +446,22 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 			this->cAlphas[i].pos[1] = (2.0f * (this->cAlphas[i].pos[1] - this->bbRect.Bottom()) / this->bbRect.Height()) - 1.0f;
 		}
 
+		if (this->ssbo == 0) {
+			glGenBuffers(1, &this->ssbo);
+		}
+
 		// load the positions into the ssbo
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->ssbo);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, this->ssbo);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, this->cAlphas.size() * sizeof(CAlpha), this->cAlphas.data(), GL_DYNAMIC_COPY);
+
+		/*glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->ssbo);
+		CAlpha* ptr;
+		ptr = (CAlpha*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+		for (int i = 0; i < this->cAlphas.size(); i++) {
+			ptr[i].print();
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);*/
 	}
 
 	float ar = static_cast<float>(this->bbRect.AspectRatio());
@@ -453,10 +517,10 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->ssbo);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOBindingPoint, this->ssbo);
 
-	this->lineShader.Enable();
+	
 
 	if (this->showBackboneParam.Param<param::BoolParam>()->Value()) {
-
+		this->lineShader.Enable();
 		glUniformMatrix4fv(this->lineShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
 		glUniformMatrix4fv(this->lineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
 		glUniformMatrix4fv(this->lineShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
@@ -467,14 +531,40 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 
 		glPointSize(5.0f);
 		glLineWidth(1.0f);
+		unsigned int startingIndex = 0;
 		for (unsigned int i = 0; i < molSizes.size(); i++) {
-			glUniform1i(this->lineShader.ParameterLocation("instanceOffset"), 0);
+			glUniform1i(this->lineShader.ParameterLocation("instanceOffset"), startingIndex);
 			glPatchParameteri(GL_PATCH_VERTICES, 1);
-			glDrawArrays(GL_PATCHES, 0, molSizes[i]);
+			glDrawArrays(GL_PATCHES, 0, molSizes[i] - 3);
+			startingIndex += molSizes[i];
 		}
+		this->lineShader.Disable();
 	}
 
-	this->lineShader.Disable();
+	if (this->showTubesParam.Param<param::BoolParam>()->Value()) {
+		this->tubeShader.Enable();
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+
+		glUniform1f(this->tubeShader.ParameterLocation("tubewidth"), this->coilWidthParam.Param<param::FloatParam>()->Value());
+		glUniform1f(this->tubeShader.ParameterLocation("structurewidth"), this->structureWidthParam.Param<param::FloatParam>()->Value());
+
+		glPointSize(5.0f);
+		glLineWidth(1.0f);
+		unsigned int startingIndex = 0;
+		for (unsigned int i = 0; i < molSizes.size(); i++) {
+			glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), startingIndex);
+			glPatchParameteri(GL_PATCH_VERTICES, 1);
+			glDrawArrays(GL_PATCHES, 0, molSizes[i] - 3);
+			startingIndex += molSizes[i];
+		}
+		this->tubeShader.Disable();
+	}
 	
 	if (this->showAtomPositionsParam.Param<param::BoolParam>()->Value()) {
 		glPointSize(5.0f);
