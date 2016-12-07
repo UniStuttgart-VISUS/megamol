@@ -257,7 +257,7 @@ namespace megamol {
          * @param rgba The color as RGB(A).
          * @return The color in HSL(A).		 
 		 * 
-		 * Source: https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-HSL-and-HSL-to-rgb-in-range-0-255-for-both#6930407
+		 * Source: http://easyrgb.com/index.php?X=MATH
          */  
 		vislib::math::Vector<float, 4> rgb2hsl(vislib::math::Vector<float, 4> rgba);
 		
@@ -267,10 +267,22 @@ namespace megamol {
          * @param rgba The color as HSL(A).
          * @return The color in RGB(A).		 
 		 * 
-		 * Source: https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-HSL-and-HSL-to-rgb-in-range-0-255-for-both#6930407
+		 * Source: http://easyrgb.com/index.php?X=MATH
          */  		
-		vislib::math::Vector<float, 4> hsl2rgb(vislib::math::Vector<float, 4> HSLa);
+		vislib::math::Vector<float, 4> hsl2rgb(vislib::math::Vector<float, 4> hsla);
         
+		/**
+		* Convert color from HSL(A) to RGB(A).
+		*
+		* @param v1 The ... .
+		* @param v2 The ... .
+		* @param vH The ... .
+		* @return The ... .
+		*
+		* Source: http://easyrgb.com/index.php?X=MATH
+		*/
+		float hue2rgb(float v1, float v2, float vH);
+
         /**
          * Hue preserving color blending for two colors in RGB(A).
          *
