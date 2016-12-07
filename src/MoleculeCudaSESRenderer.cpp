@@ -7,8 +7,6 @@
 #include "stdafx.h"
 #include "MoleculeCudaSESRenderer.h"
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-
 #define _USE_MATH_DEFINES 1
 
 // define the maximum allowed number of atoms in the vicinity of an atom
@@ -17,6 +15,10 @@
 #define MAX_PROBE_VICINITY 32
 // define the maximum dimension for the visibility fbo
 #define VISIBILITY_FBO_DIM 512
+
+#include "cuda_runtime.h"
+#include "helper_cuda.h"
+#include "helper_functions.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "mmcore/CoreInstance.h"
@@ -31,10 +33,10 @@
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
 
-#include "cuda_helper.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 #include "cuda_error_check.h"
+
 
 extern "C" void cudaInit(int argc, char **argv);
 extern "C" void cudaGLInit(int argc, char **argv);
@@ -462,7 +464,7 @@ bool MoleculeCudaSESRenderer::initCuda( MolecularDataCall *protein, uint gridDim
         cudaWGLGetDevice( &devId, gpuId);
         cudaGLSetGLDevice( devId);
     } else {
-        cudaGLSetGLDevice( cutGetMaxGflopsDeviceId());
+		cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
     }
 #else
     cudaGLSetGLDevice( cutGetMaxGflopsDeviceId());
@@ -1573,8 +1575,8 @@ void MoleculeCudaSESRenderer::writeAtomPositions( MolecularDataCall *protein ) {
 	}
 	// setArray( POSITION, m_hPos, 0, this->numAtoms);
 	//copyArrayToDevice( this->m_dPos, this->m_hPos, 0, this->numAtoms*4*sizeof(float));
-	cutilSafeCall( cudaMemcpyAsync( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice, 0));
-	//cutilSafeCall( cudaMemcpy( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice));
+	checkCudaErrors( cudaMemcpyAsync( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice, 0));
+	//checkCudaErrors( cudaMemcpy( this->m_dPos, this->m_hPos, this->numAtoms*4*sizeof(float), cudaMemcpyHostToDevice));
 }
 
 
@@ -1991,15 +1993,15 @@ void MoleculeCudaSESRenderer::FindAdjacentTrianglesCUDA( MolecularDataCall *mol)
 
 	// register this texture with CUDA
 	if( !cudaTexResource ) {
-		cutilSafeCall(cudaGraphicsGLRegisterImage( &cudaTexResource,
+		checkCudaErrors(cudaGraphicsGLRegisterImage( &cudaTexResource,
 			this->visibleTriangleColor,	GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
 	}
 
     cudaArray *in_array;
 
 	// map Texture buffer objects to get CUDA device pointers
-	cutilSafeCall(cudaGraphicsMapResources(1, &cudaTexResource, 0));
-	cutilSafeCall(cudaGraphicsSubResourceGetMappedArray(&in_array, cudaTexResource, 0, 0));
+	checkCudaErrors(cudaGraphicsMapResources(1, &cudaTexResource, 0));
+	checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&in_array, cudaTexResource, 0, 0));
 
     // map PBO
     float *ptr;
@@ -2021,9 +2023,9 @@ void MoleculeCudaSESRenderer::FindAdjacentTrianglesCUDA( MolecularDataCall *mol)
         MAX_ATOM_VICINITY);
 
 	// unmap buffer object (PBO)
-    cutilSafeCall( cudaGLUnmapBufferObject( this->visibilityPbo));
+    checkCudaErrors( cudaGLUnmapBufferObject( this->visibilityPbo));
 	// unmap buffer object (tex)
-	cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaTexResource, 0));
+	checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaTexResource, 0));
 
     // copy PBO to texture
     glBindBuffer( GL_PIXEL_UNPACK_BUFFER, this->visibilityPbo);
@@ -2115,16 +2117,16 @@ void MoleculeCudaSESRenderer::CreateSingularityTextureCuda( MolecularDataCall *m
 
     // register the vertex buffer object with CUDA
     if( !this->cudaSTriaResource )
-        cutilSafeCall( cudaGraphicsGLRegisterBuffer( &this->cudaSTriaResource, this->sTriaVbo, cudaGraphicsMapFlagsReadOnly));
+        checkCudaErrors( cudaGraphicsGLRegisterBuffer( &this->cudaSTriaResource, this->sTriaVbo, cudaGraphicsMapFlagsReadOnly));
     float4 *outSTriaPtr;
     size_t num_bytes;
     // map OpenGL buffer object for reading from CUDA
-    cutilSafeCall( cudaGraphicsMapResources( 1, &this->cudaSTriaResource, 0));
-    cutilSafeCall( cudaGraphicsResourceGetMappedPointer((void **)&outSTriaPtr, &num_bytes, this->cudaSTriaResource));
+    checkCudaErrors( cudaGraphicsMapResources( 1, &this->cudaSTriaResource, 0));
+    checkCudaErrors( cudaGraphicsResourceGetMappedPointer((void **)&outSTriaPtr, &num_bytes, this->cudaSTriaResource));
     // execute kernel (copy probe positions from VBO to CUDA array
     writeProbePositionsCuda( this->m_dProbePos, outSTriaPtr, numProbes);
     // unmap buffer object
-    cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaSTriaResource, 0));
+    checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaSTriaResource, 0));
 
     // calculate grid hash
     calcHash(
@@ -2726,14 +2728,14 @@ void MoleculeCudaSESRenderer::RenderTrianglesCuda( MolecularDataCall *mol) {
         glBindBuffer( GL_ARRAY_BUFFER, 0);
 
 	    // register this buffer object with CUDA
-        cutilSafeCall( cudaGraphicsGLRegisterBuffer( &this->cudaVboResource, this->triangleVBO, cudaGraphicsMapFlagsWriteDiscard));
+        checkCudaErrors( cudaGraphicsGLRegisterBuffer( &this->cudaVboResource, this->triangleVBO, cudaGraphicsMapFlagsWriteDiscard));
     }
 
     // map OpenGL buffer object for writing from CUDA
     float3 *dptr;
-    cutilSafeCall( cudaGraphicsMapResources( 1, &this->cudaVboResource, 0));
+    checkCudaErrors( cudaGraphicsMapResources( 1, &this->cudaVboResource, 0));
     size_t num_bytes;
-    cutilSafeCall( cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, this->cudaVboResource));
+    checkCudaErrors( cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, this->cudaVboResource));
     // write VBO using CUDA
     computeTriangleVBOCuda( dptr, this->m_dPoint1, 
         //this->m_dPoint2, this->m_dPoint3,
@@ -2741,7 +2743,7 @@ void MoleculeCudaSESRenderer::RenderTrianglesCuda( MolecularDataCall *mol) {
         mol->AtomCount(), this->visibleAtomCount, MAX_ATOM_VICINITY, 0);
 
     // unmap buffer object
-    cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaVboResource, 0));
+    checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaVboResource, 0));
 
     // enable triangle drawing shader
     this->drawCUDATriangleShader.Enable();
@@ -2782,7 +2784,7 @@ void MoleculeCudaSESRenderer::RenderTrianglesCuda2( MolecularDataCall *mol) {
         glBindBuffer( GL_ARRAY_BUFFER, 0);
 
 	    // register this buffer object with CUDA
-        cutilSafeCall( cudaGraphicsGLRegisterBuffer( &this->cudaVboResource, this->triangleVBO, cudaGraphicsMapFlagsWriteDiscard));
+        checkCudaErrors( cudaGraphicsGLRegisterBuffer( &this->cudaVboResource, this->triangleVBO, cudaGraphicsMapFlagsWriteDiscard));
     }
 
     float3 *dptr;
@@ -2792,8 +2794,8 @@ void MoleculeCudaSESRenderer::RenderTrianglesCuda2( MolecularDataCall *mol) {
 
     for( unsigned int cnt = 0; cnt < numRuns; ++cnt ) {
 		// map OpenGL buffer object for writing from CUDA
-		cutilSafeCall( cudaGraphicsMapResources( 1, &this->cudaVboResource, 0));
-		cutilSafeCall( cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, this->cudaVboResource));
+		checkCudaErrors( cudaGraphicsMapResources( 1, &this->cudaVboResource, 0));
+		checkCudaErrors( cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, this->cudaVboResource));
 		
         // write VBO using CUDA
 		computeTriangleVBOCuda( dptr, this->m_dPoint1,
@@ -2802,7 +2804,7 @@ void MoleculeCudaSESRenderer::RenderTrianglesCuda2( MolecularDataCall *mol) {
             mol->AtomCount(), std::min( this->visibleAtomCount, 512U), MAX_ATOM_VICINITY, cnt * 512U);
 
 		// unmap buffer object (vbo)
-		cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaVboResource, 0));
+		checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaVboResource, 0));
 
         // enable triangle drawing shader
         this->drawCUDATriangleShader.Enable();
@@ -2845,12 +2847,12 @@ void MoleculeCudaSESRenderer::RenderVisibleTrianglesCuda( MolecularDataCall *mol
         glBindBuffer( GL_ARRAY_BUFFER, 0);
 
 	    // register this buffer object with CUDA
-        cutilSafeCall( cudaGraphicsGLRegisterBuffer( &this->cudaVboResource, this->triangleVBO, cudaGraphicsMapFlagsWriteDiscard));
+        checkCudaErrors( cudaGraphicsGLRegisterBuffer( &this->cudaVboResource, this->triangleVBO, cudaGraphicsMapFlagsWriteDiscard));
     }
 
 	// register this texture with CUDA
 	if( !cudaTexResource ) {
-		cutilSafeCall(cudaGraphicsGLRegisterImage( &cudaTexResource,
+		checkCudaErrors(cudaGraphicsGLRegisterImage( &cudaTexResource,
 			this->visibleTriangleColor,	GL_TEXTURE_2D, cudaGraphicsMapFlagsReadOnly));
 	}
 
@@ -2862,11 +2864,11 @@ void MoleculeCudaSESRenderer::RenderVisibleTrianglesCuda( MolecularDataCall *mol
 
     for( unsigned int cnt = 0; cnt < numRuns; ++cnt ) {
 		// map Texture buffer objects to get CUDA device pointers
-		cutilSafeCall(cudaGraphicsMapResources(1, &cudaTexResource, 0));
-		cutilSafeCall(cudaGraphicsSubResourceGetMappedArray(&in_array, cudaTexResource, 0, 0));
+		checkCudaErrors(cudaGraphicsMapResources(1, &cudaTexResource, 0));
+		checkCudaErrors(cudaGraphicsSubResourceGetMappedArray(&in_array, cudaTexResource, 0, 0));
 		// map OpenGL buffer object for writing from CUDA
-		cutilSafeCall( cudaGraphicsMapResources( 1, &this->cudaVboResource, 0));
-		cutilSafeCall( cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, this->cudaVboResource));
+		checkCudaErrors( cudaGraphicsMapResources( 1, &this->cudaVboResource, 0));
+		checkCudaErrors( cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, this->cudaVboResource));
 		
         // write VBO using CUDA
 		computeVisibleTriangleVBOCuda( dptr, this->m_dPoint1, in_array, 
@@ -2875,9 +2877,9 @@ void MoleculeCudaSESRenderer::RenderVisibleTrianglesCuda( MolecularDataCall *mol
             mol->AtomCount(), std::min( this->visibleAtomCount, 512U), MAX_ATOM_VICINITY, cnt * 512U);
 
 		// unmap buffer object (vbo)
-		cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaVboResource, 0));
+		checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaVboResource, 0));
 		// unmap buffer object (tex)
-		cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaTexResource, 0));
+		checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaTexResource, 0));
 
         // enable triangle drawing shader
         this->drawCUDATriangleShader.Enable();
@@ -2985,7 +2987,7 @@ unsigned int MoleculeCudaSESRenderer::CreateGeometricPrimitivesCuda( MolecularDa
 
     // register this buffer object with CUDA
     if( !this->cudaVisTriaVboResource )
-        cutilSafeCall( cudaGraphicsGLRegisterBuffer( &this->cudaVisTriaVboResource, this->sphericalTriaVBO, cudaGraphicsMapFlagsReadOnly));
+        checkCudaErrors( cudaGraphicsGLRegisterBuffer( &this->cudaVisTriaVboResource, this->sphericalTriaVBO, cudaGraphicsMapFlagsReadOnly));
 
     if( !glIsBuffer( this->torusVbo) ) {
         // the maximum number of atoms times the maximum number of neighborhood atoms times three (one for each edge)
@@ -2999,7 +3001,7 @@ unsigned int MoleculeCudaSESRenderer::CreateGeometricPrimitivesCuda( MolecularDa
         glBindBuffer( GL_ARRAY_BUFFER, 0);
         CHECK_FOR_OGL_ERROR();
         // register the vertex buffer object with CUDA
-        cutilSafeCall( cudaGraphicsGLRegisterBuffer( &this->cudaTorusVboResource, this->torusVbo, cudaGraphicsMapFlagsWriteDiscard));
+        checkCudaErrors( cudaGraphicsGLRegisterBuffer( &this->cudaTorusVboResource, this->torusVbo, cudaGraphicsMapFlagsWriteDiscard));
     }
     
     if( !glIsBuffer( this->sTriaVbo) ) {
@@ -3014,7 +3016,7 @@ unsigned int MoleculeCudaSESRenderer::CreateGeometricPrimitivesCuda( MolecularDa
         glBindBuffer( GL_ARRAY_BUFFER, 0);
         CHECK_FOR_OGL_ERROR();
         // register the vertex buffer object with CUDA
-        cutilSafeCall( cudaGraphicsGLRegisterBuffer( &this->cudaSTriaVboResource, this->sTriaVbo, cudaGraphicsMapFlagsWriteDiscard));
+        checkCudaErrors( cudaGraphicsGLRegisterBuffer( &this->cudaSTriaVboResource, this->sTriaVbo, cudaGraphicsMapFlagsWriteDiscard));
     }
     
     float4 *outTorusVboPtr;
@@ -3023,14 +3025,14 @@ unsigned int MoleculeCudaSESRenderer::CreateGeometricPrimitivesCuda( MolecularDa
     size_t num_bytes;
 
 	// map OpenGL buffer object for writing from CUDA
-	cutilSafeCall( cudaGraphicsMapResources( 1, &this->cudaTorusVboResource, 0));
-	cutilSafeCall( cudaGraphicsResourceGetMappedPointer((void **)&outTorusVboPtr, &num_bytes, this->cudaTorusVboResource));
+	checkCudaErrors( cudaGraphicsMapResources( 1, &this->cudaTorusVboResource, 0));
+	checkCudaErrors( cudaGraphicsResourceGetMappedPointer((void **)&outTorusVboPtr, &num_bytes, this->cudaTorusVboResource));
 	// map OpenGL buffer object for writing from CUDA
-	cutilSafeCall( cudaGraphicsMapResources( 1, &this->cudaSTriaVboResource, 0));
-	cutilSafeCall( cudaGraphicsResourceGetMappedPointer((void **)&outSTriaVboPtr, &num_bytes, this->cudaSTriaVboResource));
+	checkCudaErrors( cudaGraphicsMapResources( 1, &this->cudaSTriaVboResource, 0));
+	checkCudaErrors( cudaGraphicsResourceGetMappedPointer((void **)&outSTriaVboPtr, &num_bytes, this->cudaSTriaVboResource));
 	// map OpenGL buffer object for reading from CUDA
-	cutilSafeCall( cudaGraphicsMapResources( 1, &this->cudaVisTriaVboResource, 0));
-    cutilSafeCall( cudaGraphicsResourceGetMappedPointer((void **)&inVboPtr, &num_bytes, this->cudaVisTriaVboResource));
+	checkCudaErrors( cudaGraphicsMapResources( 1, &this->cudaVisTriaVboResource, 0));
+    checkCudaErrors( cudaGraphicsResourceGetMappedPointer((void **)&inVboPtr, &num_bytes, this->cudaVisTriaVboResource));
 
     // compute tori using CUDA
     computeSESPrimiticesVBOCuda( outTorusVboPtr, outSTriaVboPtr, inVboPtr, 
@@ -3038,16 +3040,12 @@ unsigned int MoleculeCudaSESRenderer::CreateGeometricPrimitivesCuda( MolecularDa
         mol->AtomCount(), this->visibleAtomCount, MAX_ATOM_VICINITY, primitiveCount);
 
 	// unmap buffer object (vbo)
-	cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaTorusVboResource, 0));
+	checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaTorusVboResource, 0));
 	// unmap buffer object (vbo)
-	cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaSTriaVboResource, 0));
+	checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaSTriaVboResource, 0));
 	// unmap buffer object (vbo)
-	cutilSafeCall( cudaGraphicsUnmapResources( 1, &this->cudaVisTriaVboResource, 0));
+	checkCudaErrors( cudaGraphicsUnmapResources( 1, &this->cudaVisTriaVboResource, 0));
 
     // return the number of visible triangles
     return (unsigned int)primitiveCount;
 }
-
-
-
-#endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */

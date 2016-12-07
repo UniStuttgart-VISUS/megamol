@@ -171,12 +171,12 @@ PotentialVolumeRaycaster::PotentialVolumeRaycaster(void):
 
     // Parameter for the maximum number of iterations when raycasting
     this->volMaxIt = 10000;
-    this->volMaxItSlot.SetParameter(new core::param::IntParam(this->volMaxIt, 0));
+    this->volMaxItSlot.SetParameter(new core::param::IntParam(static_cast<int>(this->volMaxIt), 0));
     this->MakeSlotAvailable(&this->volMaxItSlot);
 
     // Parameter for the gradient offset
-    this->gradOffs = 0.01;
-    this->gradOffsSlot.SetParameter(new core::param::FloatParam(this->gradOffs, 0.01));
+    this->gradOffs = 0.01f;
+    this->gradOffsSlot.SetParameter(new core::param::FloatParam(this->gradOffs, 0.01f));
     this->MakeSlotAvailable(&this->gradOffsSlot);
 
 
@@ -396,7 +396,7 @@ bool PotentialVolumeRaycaster::computeDensityMap(
 
     float *gridDataPos = new float[mol->AtomCount()*4]; // TODO Do not allocate every in frame
 
-	if (volSizeOld < (int)gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2]) { // TODO Do not allocate every time
+	if (volSizeOld < (int)(gridDensMap.size[0] * gridDensMap.size[1] * gridDensMap.size[2])) { // TODO Do not allocate every time
         if(this->volume != NULL) {
             delete[] this->volume;
         }
@@ -925,9 +925,9 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
     if((curVP[2] != this->fboDim.X()) || (curVP[3] != fboDim.Y())) {
-        this->fboDim.SetX(curVP[2]);
-        this->fboDim.SetY(curVP[3]);
-        if(!this->createFbos(curVP[2], curVP[3])) return false;
+        this->fboDim.SetX(static_cast<int>(curVP[2]));
+        this->fboDim.SetY(static_cast<int>(curVP[3]));
+		if (!this->createFbos(static_cast<GLsizei>(curVP[2]), static_cast<GLsizei>(curVP[3]))) return false;
     }
 
 
@@ -1028,14 +1028,14 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     glUniform1fARB(this->rcShader.ParameterLocation("delta"), this->volDelta*0.01f);
     glUniform1fARB(this->rcShader.ParameterLocation("isoVal"), this->volIsoVal);
     glUniform1fARB(this->rcShader.ParameterLocation("alphaScl"), this->volAlphaScl);
-    glUniform1iARB(this->rcShader.ParameterLocation("maxIt"), this->volMaxIt);
-    glUniform1fARB(this->rcShader.ParameterLocation("gradOffset"), this->gradOffs/10.0);
+	glUniform1iARB(this->rcShader.ParameterLocation("maxIt"), static_cast<int>(this->volMaxIt));
+    glUniform1fARB(this->rcShader.ParameterLocation("gradOffset"), this->gradOffs/10.0f);
     glUniform1fARB(this->rcShader.ParameterLocation("colorMinVal"), this->colorMinPotentialScl);
     glUniform1fARB(this->rcShader.ParameterLocation("colorMaxVal"), this->colorMaxPotentialScl);
     glUniform3fvARB(this->rcShader.ParameterLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
     glUniform3fvARB(this->rcShader.ParameterLocation("colorZero"), 1, this->colorZeroPotential.PeekComponents());
     glUniform3fvARB(this->rcShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
-    glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), fboDim.X(), fboDim.Y(),
+	glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()), static_cast<float>(fboDim.Y()),
             this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
     glUniform3fvARB(this->rcShader.ParameterLocation("potTexOrg"), 1, (float*)&gridPotentialMap.minC);
     glUniform3fARB(this->rcShader.ParameterLocation("potTexSize"),
@@ -1095,7 +1095,7 @@ bool PotentialVolumeRaycaster::Render(core::Call& call) {
     // Render single view aligned slice
     glColor3f(1.0f, 0.0, 0.0);
     glBegin(GL_TRIANGLE_FAN);
-    this->viewSlicing.drawSingleSlice(VS_EPS);
+	this->viewSlicing.drawSingleSlice(static_cast<float>(VS_EPS));
     //this->viewSlicing.drawSingleSlice(VS_EPS - this->volClipZ);
     glEnd();
     glEnable(GL_CULL_FACE);
@@ -1486,7 +1486,7 @@ bool PotentialVolumeRaycaster::updateParams() {
 
     // Parameter for the maximum number of raycasting steps
     if (this->volMaxItSlot.IsDirty()) {
-        this->volMaxIt = this->volMaxItSlot.Param<core::param::IntParam>()->Value();
+        this->volMaxIt = static_cast<float>(this->volMaxItSlot.Param<core::param::IntParam>()->Value());
         this->volMaxItSlot.ResetDirty();
     }
 

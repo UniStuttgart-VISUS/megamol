@@ -16,6 +16,8 @@
 #include "vislib/math/Vector.h"
 #include "vislib/Array.h"
 
+#include "helper_math.h"
+
 namespace megamol {
 namespace protein_cuda {
     

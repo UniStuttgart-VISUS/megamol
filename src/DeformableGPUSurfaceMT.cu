@@ -22,7 +22,6 @@
 #include "HostArr.h"
 #include "DiffusionSolver.h"
 #include "CUDAGrid.cuh"
-#include "cuda_helper.h"
 
 #include <algorithm>
 #include <cuda_runtime.h>

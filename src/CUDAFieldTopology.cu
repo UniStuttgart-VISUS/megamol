@@ -5,9 +5,9 @@
 // All rights reserved.
 //
 
-#include "cuda_helper.h"
 #include "helper_cuda.h"
 #include "helper_functions.h"
+#include "helper_math.h"
 
 
 // Shut up eclipse syntax error highlighting

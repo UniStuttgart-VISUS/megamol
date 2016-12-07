@@ -52,7 +52,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.5.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -110,11 +110,11 @@
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -135,7 +135,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -163,13 +163,13 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -189,7 +189,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -234,7 +234,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\CUDAQuickSurfArray.h" />
     <ClInclude Include="src\CUDAStreamlines.h" />
     <ClInclude Include="src\cuda_error_check.h" />
-    <ClInclude Include="src\cuda_helper.h" />
     <ClInclude Include="src\DataWriter.h" />
     <ClInclude Include="src\DeformableGPUSurfaceMT.h" />
     <ClInclude Include="src\DeformableGPUSurfaceMTCall.h" />
@@ -242,6 +241,14 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="src\Filter.h" />
     <ClInclude Include="src\GPUSurfaceMT.h" />
     <ClInclude Include="src\gridParams.h" />
+    <ClInclude Include="src\helper_includes\exception.h" />
+    <ClInclude Include="src\helper_includes\helper_cuda.h" />
+    <ClInclude Include="src\helper_includes\helper_cuda_gl.h" />
+    <ClInclude Include="src\helper_includes\helper_functions.h" />
+    <ClInclude Include="src\helper_includes\helper_image.h" />
+    <ClInclude Include="src\helper_includes\helper_math.h" />
+    <ClInclude Include="src\helper_includes\helper_string.h" />
+    <ClInclude Include="src\helper_includes\helper_timer.h" />
     <ClInclude Include="src\HostArr.h" />
     <ClInclude Include="src\LIC.h" />
     <ClInclude Include="src\MappableCategoryFloat.h" />
@@ -411,6 +418,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 6.5.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />
   </ImportGroup>
 </Project>

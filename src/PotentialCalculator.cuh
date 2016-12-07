@@ -17,6 +17,8 @@
 #include "HostArr.h"
 #include "CudaDevArr.h"
 
+#if _WIN64
+
 extern "C"
 cudaError_t SolvePoissonEq(float gridSpacing, uint3 gridSize, float *charges,
         float *potential_D, float *potential);
@@ -25,5 +27,6 @@ extern "C"
 cudaError_t DirectCoulombSummation(float *atomData, uint atomCount,
         float *potential, uint3 gridSize, float gridspacing);
 
+#endif // _WIN64
 
 #endif // MMPROTEINCUDAPLUGIN_POTENTIALCALCULATOR_CUH_INCLUDED

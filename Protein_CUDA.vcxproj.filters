@@ -19,6 +19,9 @@
     <Filter Include="CUDA Files">
       <UniqueIdentifier>{7e5aa192-4345-4fad-9a29-2b0c79d05017}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CUDA Helpers">
+      <UniqueIdentifier>{fcf9367e-9a5e-4c24-bfea-760ef1f3cb7e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ComparativeFieldTopologyRenderer.h">
@@ -34,9 +37,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\cuda_error_check.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\cuda_helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\CudaDevArr.h">
@@ -239,6 +239,30 @@
     </ClInclude>
     <ClInclude Include="src\CountingSortKernel.cuh">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\exception.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_cuda.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_cuda_gl.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_functions.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_image.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_math.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_string.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_timer.h">
+      <Filter>CUDA Helpers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

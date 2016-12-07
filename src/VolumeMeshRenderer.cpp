@@ -11,8 +11,6 @@
 #ifdef WITH_CUDA
 
 //#define TEST
-#undef min
-#undef max
 #include "VolumeMeshRenderer.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -35,7 +33,6 @@
 #include "vislib/math/Matrix.h"
 #include <GL/glu.h>
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 #include <thrust/version.h>
 #include <thrust/reduce.h>
@@ -752,7 +749,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
                 static_cast<Color::ColoringMode>(this->currentColoringMode0),
                 static_cast<Color::ColoringMode>(this->currentColoringMode1),
                 cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorTable, this->rainbowColors,
                 this->minGradColorParam.Param<param::StringParam>()->Value(),
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
@@ -952,7 +949,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
         glEnable(GL_POINT_SMOOTH);
         glLineWidth( 5.0f);
         for( unsigned int fCnt = 0; fCnt < this->clNodes.Count(); fCnt++ ) {
-            unsigned int clnCnt = this->clNodes[fCnt].size();
+            unsigned int clnCnt = static_cast<unsigned int>(this->clNodes[fCnt].size());
             unsigned int curClnCnt = 0;
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glBegin( GL_POINTS);
@@ -976,7 +973,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
             }
             glEnd();
             glBegin( GL_LINES);
-            clnCnt = this->clEdges[fCnt].size();
+            clnCnt = static_cast<unsigned int>(this->clEdges[fCnt].size());
             curClnCnt = 0;
             for( auto ed : this->clEdges[fCnt]) {
                 if( this->clg[fCnt]->fType == CenterLineGenerator::CHANNEL )
@@ -2656,7 +2653,7 @@ void VolumeMeshRenderer::ParameterRefresh( const MolecularDataCall *mol, const B
                 static_cast<Color::ColoringMode>(this->currentColoringMode0),
                 static_cast<Color::ColoringMode>(this->currentColoringMode1),
                 cmWeightParam.Param<param::FloatParam>()->Value(),       // weight for the first cm
-                1.0 - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
                 this->atomColorTable, this->colorTable, this->rainbowColors,
                 this->minGradColorParam.Param<param::StringParam>()->Value(),
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
@@ -3246,6 +3243,7 @@ bool VolumeMeshRenderer::GetCenterLineDiagramData(core::Call& call) {
     vislib::StringA featureName;
     DiagramCall::DiagramSeries *ds;
     MolecularSurfaceFeature *ms, *prevMS;
+	prevMS = nullptr;
     for( SIZE_T fIdx = this->featureCenterLines.Count(); fIdx < (this->clg.Count() + 1); fIdx++ ) {
         if( fIdx == 0 ) {
             // add first feature (outer surface)

@@ -14,7 +14,6 @@
 #include "ComparativeSurfacePotentialRenderer_inline_device_functions.cuh"
 #include "interpol.cuh"
 
-#include "cuda_helper.h"
 #include <device_functions.h>
 
 #include <cassert>

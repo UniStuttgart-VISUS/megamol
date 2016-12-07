@@ -17,7 +17,8 @@
 #include <thrust/fill.h>
 #include <thrust/scan.h>
 #include <thrust/sequence.h>
-#include "cuda_helper.h"
+
+#include "helper_math.h"
 
 /*
  * Note:

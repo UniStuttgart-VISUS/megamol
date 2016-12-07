@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#ifdef _WIN64
 #include <cufft.h>
 
 #define PI_FLOAT 3.14159265358979323846264338327f
@@ -64,3 +65,4 @@ void displayDeviceProperties(cudaDeviceProp* pDeviceProp)
     printf("\nDevice Overlap \t – %s", pDeviceProp-> deviceOverlap?"Allowed":"Not Allowed");
     printf("\nNumber of Multi processors \t – %d\n", pDeviceProp->multiProcessorCount);
 }
+#endif

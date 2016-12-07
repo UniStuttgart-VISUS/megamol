@@ -28,8 +28,8 @@
 #include <thrust/version.h>
 #include <iostream>
 #include <vector_types.h>
-#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
+#include "helper_cuda.h"
 
 #include <thrust/sort.h>
 
@@ -208,7 +208,7 @@ bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0,
 
         // Copy data from device to host
         CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
-        cutilSafeCall(cudaMemcpy(
+        checkCudaErrors(cudaMemcpy(
                 griddata,
                 cqs->getColorMap(),
                 this->numvoxels[0]*this->numvoxels[1]*this->numvoxels[2]*3*sizeof(float),
@@ -421,7 +421,7 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0,
         // Copy data from device to host
 
         CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
-        cutilSafeCall(cudaMemcpy(
+        checkCudaErrors(cudaMemcpy(
                 griddata,
                 cqs->getColorMap(),
                 this->numvoxels[0]*this->numvoxels[1]*this->numvoxels[2]*3*sizeof(float),
@@ -519,7 +519,7 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0,
         // Copy data from device to host
 
         CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
-        cutilSafeCall(cudaMemcpy(
+        checkCudaErrors(cudaMemcpy(
                 griddata,
                 cqs->getColorMap(),
                 this->numvoxels[0]*this->numvoxels[1]*this->numvoxels[2]*3*sizeof(float),
@@ -951,7 +951,7 @@ bool protein_cuda::DataWriter::writeFrame2VTKLegacy(unsigned int frameIdx,
 
     CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
     float *testArr = new float[this->numvoxels[0]*this->numvoxels[1]*this->numvoxels[2]*3];
-     cutilSafeCall(cudaMemcpy(
+     checkCudaErrors(cudaMemcpy(
             testArr,
             cqs->getColorMap(),
             this->numvoxels[0]*this->numvoxels[1]*this->numvoxels[2]*3*sizeof(float),

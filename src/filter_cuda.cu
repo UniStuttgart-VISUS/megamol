@@ -13,9 +13,9 @@
  * 
  */
 
-#include "cuda_helper.h"
-
 #include "filter_cuda.cuh"
+#include "helper_cuda.h"
+#include "helper_math.h"
 
 // Parameters in constant memory
 __constant__ FilterParams fparams;
@@ -324,7 +324,7 @@ extern "C" {
      */
     void setFilterParams(FilterParams *hostParams) {
         // Copy parameters to constant memory
-        cutilSafeCall(cudaMemcpyToSymbol(fparams, hostParams, sizeof(FilterParams)));
+        checkCudaErrors(cudaMemcpyToSymbol(fparams, hostParams, sizeof(FilterParams)));
     }
 
 
@@ -345,7 +345,7 @@ extern "C" {
                                                            gridIndex,
                                                            (float3*) atmPosProt);
         
-        cutilCheckMsg("calcFilterHashGridD");
+        getLastCudaError("calcFilterHashGridD");
     }
 
 
@@ -374,7 +374,7 @@ extern "C" {
                                                                    (float3*) atmPosProt,
                                                                    (float3*) atmPosProtSorted);
             
-        cutilCheckMsg("reorderFilterDataD");
+        getLastCudaError("reorderFilterDataD");
     }
                                        
     
@@ -405,7 +405,7 @@ extern "C" {
                                                           atomVisibility,
                                                           (int3*) neighbourCellPos);
         
-        cutilCheckMsg("calcSolventVisibilityAltD");
+        getLastCudaError("calcSolventVisibilityAltD");
         
     }
     
@@ -433,7 +433,7 @@ extern "C" {
                                                               isSolventAtom,
                                                               atomVisibility);
         
-        cutilCheckMsg("calcSolventVisibilityD");                                                              
+        getLastCudaError("calcSolventVisibilityD");                                                              
     }
 
                                  

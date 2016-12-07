@@ -19,7 +19,6 @@
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-#include "cuda_helper.h"
 #include <cstdlib>
 #include <cstdio>
 #include <string.h>
@@ -31,6 +30,8 @@
 #include "thrust/device_ptr.h"
 #include "thrust/sort.h"
 #include "thrust/scan.h"
+
+#include "helper_cuda.h"
 
 #include "particles_kernel.cu"
 
@@ -51,16 +52,16 @@ void scanParticles(uint *dInput, uint *dOutput, uint count) {
 
 void cudaInit(int argc, char **argv) {
     // use CUDA device with highest Gflops/s
-    cudaSetDevice( cutGetMaxGflopsDeviceId() );
+    cudaSetDevice( gpuGetMaxGflopsDeviceId() );
 }
 
 void cudaGLInit(int argc, char **argv) {
     // use CUDA device with highest Gflops/s
-    cudaGLSetGLDevice( cutGetMaxGflopsDeviceId() );
+	cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
 }
 
 void allocateArray(void **devPtr, size_t size) {
-    cutilSafeCall(cudaMalloc(devPtr, size));
+    checkCudaErrors(cudaMalloc(devPtr, size));
     //cudaMalloc(devPtr, size);
     //cudaError e;
     //e = cudaGetLastError();
@@ -68,53 +69,53 @@ void allocateArray(void **devPtr, size_t size) {
 }
 
 void freeArray(void *devPtr) {
-    cutilSafeCall(cudaFree(devPtr));
+	checkCudaErrors(cudaFree(devPtr));
 }
 
 void threadSync() {
-    cutilSafeCall(cudaThreadSynchronize());
+	checkCudaErrors(cudaThreadSynchronize());
 }
 
 void copyArrayFromDevice(void* host, const void* device, unsigned int vbo, int size) {   
     if (vbo)
-        cutilSafeCall(cudaGLMapBufferObject((void**)&device, vbo));
+		checkCudaErrors(cudaGLMapBufferObject((void**)&device, vbo));
 
-    cutilSafeCall(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
     
     if (vbo)
-        cutilSafeCall(cudaGLUnmapBufferObject(vbo));
+		checkCudaErrors(cudaGLUnmapBufferObject(vbo));
 }
 
 void copyArrayToDevice(void* device, const void* host, int offset, int size) {
-    cutilSafeCall(cudaMemcpy((char *) device + offset, host, size, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy((char *)device + offset, host, size, cudaMemcpyHostToDevice));
 }
 
 void registerGLBufferObject(uint vbo) {
-    cutilSafeCall(cudaGLRegisterBufferObject(vbo));
+	checkCudaErrors(cudaGLRegisterBufferObject(vbo));
 }
 
 void unregisterGLBufferObject(uint vbo) {
-    cutilSafeCall(cudaGLUnregisterBufferObject(vbo));
+	checkCudaErrors(cudaGLUnregisterBufferObject(vbo));
 }
 
 void *mapGLBufferObject(uint vbo) {
     void *ptr;
-    cutilSafeCall(cudaGLMapBufferObject(&ptr, vbo));
+	checkCudaErrors(cudaGLMapBufferObject(&ptr, vbo));
     return ptr;
 }
 
 void unmapGLBufferObject(uint vbo) {
-    cutilSafeCall(cudaGLUnmapBufferObject(vbo));
+	checkCudaErrors(cudaGLUnmapBufferObject(vbo));
 }
 
 void setParameters(SimParams *hostParams) {
     // copy parameters to constant memory
-    cutilSafeCall( cudaMemcpyToSymbol( params, hostParams, sizeof(SimParams)) );
+	checkCudaErrors(cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)));
 }
 
 void setRSParameters(RSParams *hostParams) {
     // copy parameters to constant memory
-    cutilSafeCall( cudaMemcpyToSymbol( rsParams, hostParams, sizeof(RSParams)) );
+	checkCudaErrors(cudaMemcpyToSymbol(rsParams, hostParams, sizeof(RSParams)));
 }
 
 //Round a / b to nearest higher integer value
@@ -142,7 +143,7 @@ void calcHash(uint*  gridParticleHash,
                                            numParticles);
     
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 }
 
 void reorderDataAndFindCellStart(uint*  cellStart,
@@ -157,9 +158,9 @@ void reorderDataAndFindCellStart(uint*  cellStart,
     computeGridSize(numParticles, 256, numBlocks, numThreads);
 
     // set all cells to empty
-    cutilSafeCall(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
+	checkCudaErrors(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
 
-    //cutilSafeCall(cudaBindTexture(0, oldPosTex, oldPos, numParticles*sizeof(float4)));
+    //checkCudaErrors(cudaBindTexture(0, oldPosTex, oldPos, numParticles*sizeof(float4)));
 
     uint smemSize = sizeof(uint)*(numThreads+1);
     reorderDataAndFindCellStartD<<< numBlocks, numThreads, smemSize>>>(
@@ -170,9 +171,9 @@ void reorderDataAndFindCellStart(uint*  cellStart,
         gridParticleIndex,
         (float4 *) oldPos,
         numParticles);
-    cutilCheckMsg("Kernel execution failed: reorderDataAndFindCellStartD");
+    getLastCudaError("Kernel execution failed: reorderDataAndFindCellStartD");
 
-    //cutilSafeCall(cudaUnbindTexture(oldPosTex));
+    //checkCudaErrors(cudaUnbindTexture(oldPosTex));
 }
 
 void countNeighbors( uint*  neighborCount,
@@ -185,12 +186,12 @@ void countNeighbors( uint*  neighborCount,
                      uint   numAtoms,
                      uint   numNeighbors,
                      uint   numCells) {
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -207,14 +208,14 @@ void countNeighbors( uint*  neighborCount,
                                                  numAtoms);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
-    cutilSafeCall( cudaUnbindTexture( cellStartTex));
-    cutilSafeCall( cudaUnbindTexture( cellEndTex));
+	checkCudaErrors(cudaUnbindTexture(atomPosTex));
+	checkCudaErrors(cudaUnbindTexture(neighborCountTex));
+	checkCudaErrors(cudaUnbindTexture(neighborsTex));
+	checkCudaErrors(cudaUnbindTexture(smallCirclesTex));
+	checkCudaErrors(cudaUnbindTexture(cellStartTex));
+	checkCudaErrors(cudaUnbindTexture(cellEndTex));
 }
 
 void countNeighbors2( uint*  neighborCount,
@@ -226,11 +227,11 @@ void countNeighbors2( uint*  neighborCount,
                      uint   numAtoms,
                      uint   numNeighbors,
                      uint   numCells) {
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-    //cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    //cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+    //checkCudaErrors( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    //checkCudaErrors( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -246,13 +247,13 @@ void countNeighbors2( uint*  neighborCount,
                                                  numAtoms);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    //cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    //cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( cellStartTex));
-    cutilSafeCall( cudaUnbindTexture( cellEndTex));
+	checkCudaErrors(cudaUnbindTexture(atomPosTex));
+    //checkCudaErrors( cudaUnbindTexture( neighborCountTex));
+    //checkCudaErrors( cudaUnbindTexture( neighborsTex));
+	checkCudaErrors(cudaUnbindTexture(cellStartTex));
+	checkCudaErrors(cudaUnbindTexture(cellEndTex));
 }
 
 void countProbeNeighbors( //uint*  probeNeighborCount,
@@ -268,8 +269,8 @@ void countProbeNeighbors( //uint*  probeNeighborCount,
                      uint   numCells) {
     // bind textures
     // TODO!!
-    cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -281,12 +282,12 @@ void countProbeNeighbors( //uint*  probeNeighborCount,
         cellStart, cellEnd, numProbes);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (countProbeNeighbors) failed");
+    getLastCudaError("Kernel execution (countProbeNeighbors) failed");
 
     // unbind textures
     // TODO!!
-    cutilSafeCall( cudaUnbindTexture( cellStartTex));
-    cutilSafeCall( cudaUnbindTexture( cellEndTex));
+	checkCudaErrors(cudaUnbindTexture(cellStartTex));
+	checkCudaErrors(cudaUnbindTexture(cellEndTex));
 }
 
 void computeArcsCUDA( float*  arcs,
@@ -297,11 +298,11 @@ void computeArcsCUDA( float*  arcs,
                       uint*   gridParticleIndex,
                       uint    numAtoms,
                       uint    numNeighbors) {
-    //cutilSafeCall( cudaBindTexture( 0, arcsTex, arcs, numAtoms*numNeighbors*4*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    //checkCudaErrors( cudaBindTexture( 0, arcsTex, arcs, numAtoms*numNeighbors*4*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // execute the kernel
     computeArcs<<< numAtoms, numNeighbors >>>( (float4*)arcs,
@@ -313,13 +314,13 @@ void computeArcsCUDA( float*  arcs,
                                       numAtoms);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    //cutilSafeCall( cudaUnbindTexture( arcsTex));
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    //checkCudaErrors( cudaUnbindTexture( arcsTex));
+	checkCudaErrors(cudaUnbindTexture(atomPosTex));
+	checkCudaErrors(cudaUnbindTexture(neighborCountTex));
+	checkCudaErrors(cudaUnbindTexture(neighborsTex));
+	checkCudaErrors(cudaUnbindTexture(smallCirclesTex));
 }
 
 void computeReducedSurfaceCuda( uint* point1, 
@@ -328,11 +329,11 @@ void computeReducedSurfaceCuda( uint* point1,
         uint* gridParticleIndex, float* visibleAtoms, uint* visibleAtomsId,
         uint numAtoms, uint numVisibleAtoms, uint numNeighbors) {
     // texture bindings
-    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+	checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
 
     dim3 numThreads;
     numThreads.x = 8;
@@ -352,13 +353,13 @@ void computeReducedSurfaceCuda( uint* point1,
         (float4*)visibleAtoms, visibleAtomsId);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (computeReducedSurface) failed");
+    getLastCudaError("Kernel execution (computeReducedSurface) failed");
 
-    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-    cutilSafeCall( cudaUnbindTexture( visibleAtomsIdTex));
+	checkCudaErrors(cudaUnbindTexture(neighborCountTex));
+	checkCudaErrors(cudaUnbindTexture(neighborsTex));
+	checkCudaErrors(cudaUnbindTexture(atomPosTex));
+	checkCudaErrors(cudaUnbindTexture(visibleAtomsTex));
+	checkCudaErrors(cudaUnbindTexture(visibleAtomsIdTex));
 }
 
 void computeTriangleVBOCuda( float3* vbo, uint4* point1, 
@@ -367,9 +368,9 @@ void computeTriangleVBOCuda( float3* vbo, uint4* point1,
         uint numAtoms, uint numVisibleAtoms, uint numNeighbors, uint offset) {
     // texture bindings
     // TODO!
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
-    //cutilSafeCall( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
+	checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+    //checkCudaErrors( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
 
     dim3 numThreads;
     numThreads.x = 8;
@@ -387,13 +388,13 @@ void computeTriangleVBOCuda( float3* vbo, uint4* point1,
         vbo, (uint4*)point1, (float4*)atomPos, (float4*)visibleAtoms, offset);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (computeTriangleVBO) failed");
+    getLastCudaError("Kernel execution (computeTriangleVBO) failed");
 
     // unbind textures
     // TODO!
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-    //cutilSafeCall( cudaUnbindTexture( point1Tex));
+	checkCudaErrors(cudaUnbindTexture(atomPosTex));
+	checkCudaErrors(cudaUnbindTexture(visibleAtomsTex));
+    //checkCudaErrors( cudaUnbindTexture( point1Tex));
 }
 
 void computeVisibleTriangleVBOCuda( float3* vbo, uint4* point1, cudaArray* visibility,
@@ -402,13 +403,13 @@ void computeVisibleTriangleVBOCuda( float3* vbo, uint4* point1, cudaArray* visib
         uint numAtoms, uint numVisibleAtoms, uint numNeighbors, uint offset) {
     // texture bindings
     // TODO!
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
-    //cutilSafeCall( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
-    cutilSafeCall( cudaBindTextureToArray( inVisibilityTex, visibility));
+	checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+	checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+    //checkCudaErrors( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
+	checkCudaErrors(cudaBindTextureToArray(inVisibilityTex, visibility));
 
     struct cudaChannelFormatDesc desc; 
-    cutilSafeCall(cudaGetChannelDesc(&desc, visibility));
+    checkCudaErrors(cudaGetChannelDesc(&desc, visibility));
     
     dim3 numThreads;
     numThreads.x = 8;
@@ -426,14 +427,14 @@ void computeVisibleTriangleVBOCuda( float3* vbo, uint4* point1, cudaArray* visib
         vbo, (uint4*)point1, (float4*)atomPos, (float4*)visibleAtoms, offset);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (computeVisibleTriangleVBO) failed");
+    getLastCudaError("Kernel execution (computeVisibleTriangleVBO) failed");
 
     // unbind textures
     // TODO!
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-    //cutilSafeCall( cudaUnbindTexture( point1Tex));
-    cutilSafeCall( cudaUnbindTexture( inVisibilityTex));
+    checkCudaErrors( cudaUnbindTexture( atomPosTex));
+    checkCudaErrors( cudaUnbindTexture( visibleAtomsTex));
+    //checkCudaErrors( cudaUnbindTexture( point1Tex));
+    checkCudaErrors( cudaUnbindTexture( inVisibilityTex));
 }
 
 void computeSESPrimiticesVBOCuda(
@@ -451,8 +452,8 @@ void computeSESPrimiticesVBOCuda(
     // check number of visible triangles
     if( numVisibleTria == 0 ) return;
     // texture bindings
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
 
     uint numThreads, numBlocks;
     numThreads = 8;
@@ -463,11 +464,11 @@ void computeSESPrimiticesVBOCuda(
         (float4*)atomPos, (float4*)visibleAtoms, (uint4*)point1, (float4*)probePos );
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (computeSESPrimiticesVBO) failed");
+    getLastCudaError("Kernel execution (computeSESPrimiticesVBO) failed");
     
     // unbind textures
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
+    checkCudaErrors( cudaUnbindTexture( atomPosTex));
+    checkCudaErrors( cudaUnbindTexture( visibleAtomsTex));
 }
 
 void writeProbePositionsCuda(
@@ -485,7 +486,7 @@ void writeProbePositionsCuda(
     writeProbePositions<<< numBlocks, numThreads >>>( (float4*)probePos, sTriaVbo, numProbes );
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (writeProbePositions) failed");
+    getLastCudaError("Kernel execution (writeProbePositions) failed");
 }
 
 void writeSingularitiesCuda(
@@ -512,7 +513,7 @@ void writeSingularitiesCuda(
         outArray, probeNeighbors, (float4*)probePos);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (writeSingularities) failed");
+    getLastCudaError("Kernel execution (writeSingularities) failed");
 }
 
 void findAdjacentTrianglesCuda(
@@ -531,15 +532,15 @@ void findAdjacentTrianglesCuda(
     // check the number of visible atoms
     if( numVisibleAtoms == 0 ) return;
     // texture bindings
-    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTextureToArray( inVisibilityTex, visibility));
+    checkCudaErrors( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
+    checkCudaErrors( cudaBindTextureToArray( inVisibilityTex, visibility));
 
     struct cudaChannelFormatDesc desc; 
-    cutilSafeCall(cudaGetChannelDesc(&desc, visibility));
+    checkCudaErrors(cudaGetChannelDesc(&desc, visibility));
 
     dim3 numThreads;
     numThreads.x = 8;
@@ -557,14 +558,14 @@ void findAdjacentTrianglesCuda(
         (float4*)atomPos, (float4*)visibleAtoms, visibleAtomsId);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution (findAdjacentTriangles) failed");
+    getLastCudaError("Kernel execution (findAdjacentTriangles) failed");
 
-    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( visibleAtomsTex));
-    cutilSafeCall( cudaUnbindTexture( visibleAtomsIdTex));
-    cutilSafeCall( cudaUnbindTexture( inVisibilityTex));
+    checkCudaErrors( cudaUnbindTexture( neighborCountTex));
+    checkCudaErrors( cudaUnbindTexture( neighborsTex));
+    checkCudaErrors( cudaUnbindTexture( atomPosTex));
+    checkCudaErrors( cudaUnbindTexture( visibleAtomsTex));
+    checkCudaErrors( cudaUnbindTexture( visibleAtomsIdTex));
+    checkCudaErrors( cudaUnbindTexture( inVisibilityTex));
 }
 
 void findNeighborsCB(
@@ -577,12 +578,12 @@ void findNeighborsCB(
         uint    numAtoms,
         uint    numNeighbors,
         uint    numCells) {
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -593,14 +594,14 @@ void findNeighborsCB(
         (float4*)smallCircles, (float4*)sortedPos, cellStart, cellEnd, numAtoms);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
-    cutilSafeCall( cudaUnbindTexture( cellStartTex));
-    cutilSafeCall( cudaUnbindTexture( cellEndTex));
+    checkCudaErrors( cudaUnbindTexture( atomPosTex));
+    checkCudaErrors( cudaUnbindTexture( neighborCountTex));
+    checkCudaErrors( cudaUnbindTexture( neighborsTex));
+    checkCudaErrors( cudaUnbindTexture( smallCirclesTex));
+    checkCudaErrors( cudaUnbindTexture( cellStartTex));
+    checkCudaErrors( cudaUnbindTexture( cellEndTex));
 }
 
 void removeCoveredSmallCirclesCB(
@@ -611,8 +612,8 @@ void removeCoveredSmallCirclesCB(
         float* sortedPos,
         uint   numAtoms,
         uint   numNeighbors) {
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -629,10 +630,10 @@ void removeCoveredSmallCirclesCB(
         (float4*)smallCircles, smallCircleVisible, neighborCount, neighbors, (float4*)sortedPos, numAtoms);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
+    checkCudaErrors( cudaUnbindTexture( atomPosTex));
+    checkCudaErrors( cudaUnbindTexture( neighborsTex));
 }
 
 void computeArcsCB(
@@ -645,10 +646,10 @@ void computeArcsCB(
         uint*  arcCount,
         uint   numAtoms,
         uint   numNeighbors) {
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -665,12 +666,12 @@ void computeArcsCB(
         smallCircleVisible, (float4*)arcs, arcCount, numAtoms);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    checkCudaErrors( cudaUnbindTexture( atomPosTex));
+    checkCudaErrors( cudaUnbindTexture( neighborCountTex));
+    checkCudaErrors( cudaUnbindTexture( neighborsTex));
+    checkCudaErrors( cudaUnbindTexture( smallCirclesTex));
 }
 
 void writeProbePositionsCB(
@@ -692,10 +693,10 @@ void writeProbePositionsCB(
         float*	smallCircles,
         uint    numAtoms,
         uint    numNeighbors) {
-    cutilSafeCall( cudaBindTexture( 0, atomPosTex, sortedAtomPos, numAtoms*sizeof(float4)));
-    cutilSafeCall( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, atomPosTex, sortedAtomPos, numAtoms*sizeof(float4)));
+    checkCudaErrors( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // one thread per particle neighbor
     dim3 numThreads;
@@ -714,12 +715,12 @@ void writeProbePositionsCB(
         (float4*)arcs, arcCount, arcCountScan, scCount, scCountScan, numAtoms);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    cutilSafeCall( cudaUnbindTexture( atomPosTex));
-    cutilSafeCall( cudaUnbindTexture( neighborCountTex));
-    cutilSafeCall( cudaUnbindTexture( neighborsTex));
-    cutilSafeCall( cudaUnbindTexture( smallCirclesTex));
+    checkCudaErrors( cudaUnbindTexture( atomPosTex));
+    checkCudaErrors( cudaUnbindTexture( neighborCountTex));
+    checkCudaErrors( cudaUnbindTexture( neighborsTex));
+    checkCudaErrors( cudaUnbindTexture( smallCirclesTex));
 }
 
 void writeSingularityTextureCB(
@@ -732,8 +733,8 @@ void writeSingularityTextureCB(
         uint    numProbes,
         uint    numNeighbors,
         uint    numCells) {
-    cutilSafeCall( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
-    cutilSafeCall( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, cellStartTex, cellStart, numCells*sizeof(uint)));
+    checkCudaErrors( cudaBindTexture( 0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -744,10 +745,10 @@ void writeSingularityTextureCB(
         (float4*)sortedProbePos, gridProbeIndex, cellStart, cellEnd, numProbes, numNeighbors);
 
     // check if kernel invocation generated an error
-    cutilCheckMsg("Kernel execution failed");
+    getLastCudaError("Kernel execution failed");
 
-    cutilSafeCall( cudaUnbindTexture( cellStartTex));
-    cutilSafeCall( cudaUnbindTexture( cellEndTex));
+    checkCudaErrors( cudaUnbindTexture( cellStartTex));
+    checkCudaErrors( cudaUnbindTexture( cellEndTex));
 }
 
 

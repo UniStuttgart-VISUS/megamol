@@ -616,7 +616,8 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
 
 	if (this->showHydrogenBondsParam.Param<param::BoolParam>()->Value()) {
 		glBegin(GL_LINES);
-		glColor4f(0.87f, 0.92f, 0.97f, 1.0f);
+		//glColor4f(0.87f, 0.92f, 0.97f, 1.0f);
+		glColor4f(0.75f, 0.5f, 0.0f, 1.0f);
 
 		if (mdc->AtomHydrogenBondsFake()) {
 			for (unsigned int i = 0; i < mdc->HydrogenBondCount() * 2; i++) {

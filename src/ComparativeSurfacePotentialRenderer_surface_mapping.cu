@@ -11,7 +11,6 @@
 #include "ComparativeSurfacePotentialRenderer.cuh"
 #include "ComparativeSurfacePotentialRenderer_inline_device_functions.cuh"
 #include "constantGridParams.cuh"
-#include "cuda_helper.h"
 #include <cstdio>
 
 

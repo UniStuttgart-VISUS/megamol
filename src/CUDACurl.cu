@@ -8,8 +8,8 @@
  */
 
 #include "CUDACurl.cuh"
-#include "cuda_helper.h"
 #include "helper_cuda.h"
+#include "helper_math.h"
 
 using namespace megamol;
 
@@ -395,23 +395,23 @@ cudaError_t protein_cuda::CudaGetCurlMagnitude(float *gridVecFieldD,
 
     protein_cuda::CudaNormalizeGrid_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD);
-    //cutilCheckMsg("protein_cuda::CudaNormalizeGrid_D"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaNormalizeGrid_D"); // DEBUG
 
     protein_cuda::CudaCurlX_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridCurlD, hInvHalf);
-    //cutilCheckMsg("protein_cuda::CudaCurlX_D"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaCurlX_D"); // DEBUG
 
     protein_cuda::CudaCurlY_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridCurlD, hInvHalf);
-    //cutilCheckMsg("protein_cuda::CudaCurlY_D"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaCurlY_D"); // DEBUG
 
     protein_cuda::CudaCurlZ_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridCurlD, hInvHalf);
-    //cutilCheckMsg("protein_cuda::CudaCurlZ_D"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaCurlZ_D"); // DEBUG
 
     protein_cuda::CudaCurlMag_D <<< nBlocks, nThreadsPerBlock >>>
              (gridCurlD, gridCurlMagD);
-    //cutilCheckMsg("protein_cuda::CudaCurlMagD"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaCurlMagD"); // DEBUG
 
     return cudaGetLastError();
 }
@@ -436,7 +436,7 @@ cudaError_t CudaGetGradX(float *gridVecFieldD,
 
     protein_cuda::CudaGradX_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridGrad_D, hInvHalf);
-    //cutilCheckMsg("protein_cuda::CudaGradX_D"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaGradX_D"); // DEBUG
 
     // Copy result to host
     checkCudaErrors(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
@@ -465,7 +465,7 @@ cudaError_t CudaGetGradY(float *gridVecFieldD,
 
     protein_cuda::CudaGradY_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridGrad_D, hInvHalf);
-    //cutilCheckMsg("protein_cuda::CudaGradY_D"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaGradY_D"); // DEBUG
 
     // Copy result to host
     checkCudaErrors(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,
@@ -494,7 +494,7 @@ cudaError_t CudaGetGradZ(float *gridVecFieldD,
 
     protein_cuda::CudaGradZ_D <<< nBlocks, nThreadsPerBlock >>>
              (gridVecFieldD, gridGrad_D, hInvHalf);
-    //cutilCheckMsg("protein_cuda::CudaGradZ_D"); // DEBUG
+    //getLastCudaError("protein_cuda::CudaGradZ_D"); // DEBUG
 
     // Copy result to host
     checkCudaErrors(cudaMemcpy(gridGrad, gridGrad_D, sizeof(float)*nVoxels*3,

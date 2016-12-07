@@ -522,9 +522,9 @@ int QuickSurfMTRenderer::calcMap(MolecularDataCall *mol, float *posInter,
 
     // crude estimate of the grid padding we require to prevent the
     // resulting isosurface from being clipped
-    float gridpadding = radscale * maxrad * 1.5;
+    float gridpadding = radscale * maxrad * 1.5f;
     float padrad = gridpadding;
-    padrad = 0.4 * sqrt(4.0/3.0*M_PI*padrad*padrad*padrad);
+    padrad = static_cast<float>(0.4 * sqrt(4.0/3.0*M_PI*padrad*padrad*padrad));
     gridpadding = std::max(gridpadding, padrad);
 
 #if VERBOSE

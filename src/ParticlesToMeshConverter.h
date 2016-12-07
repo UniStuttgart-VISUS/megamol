@@ -31,7 +31,6 @@
 #include <helper_cuda.h>
 #include <vector_functions.h>
 #include <vislib/graphics/gl/IncludeAllGL.h>
-#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
 extern "C" void setTextureFilterMode(bool bLinearFilter);

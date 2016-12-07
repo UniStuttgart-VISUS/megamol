@@ -6,6 +6,7 @@
  */
 
 #include "stdafx.h"
+#include "Filter.h"
 #include <omp.h>
 
 #include "mmcore/CoreInstance.h"
@@ -20,11 +21,8 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
-#include "Filter.h"
-
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
-#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 
 #include "filter_cuda.cuh"
@@ -153,22 +151,22 @@ void Filter::release(void) {
     if(this->isSolventAtom != NULL) delete[] this->isSolventAtom;
     
 #if (defined(WITH_CUDA) && (WITH_CUDA))
+	
+    if(this->atomPosD != NULL) checkCudaErrors(cudaFree(this->atomPosD));
+    if(this->atomPosProtD != NULL) checkCudaErrors(cudaFree(this->atomPosProtD));
+    if(this->atomPosProtSortedD != NULL) checkCudaErrors(cudaFree(this->atomPosProtSortedD));
+    
+    if(this->gridAtomHashD != NULL) checkCudaErrors(cudaFree(this->gridAtomHashD));
+    if(this->gridAtomIndexD != NULL) checkCudaErrors(cudaFree(this->gridAtomIndexD));
+    
+    if(this->isSolventAtomD != NULL) checkCudaErrors(cudaFree(this->isSolventAtomD));
 
-    if(this->atomPosD != NULL) cutilSafeCall(cudaFree(this->atomPosD));
-    if(this->atomPosProtD != NULL) cutilSafeCall(cudaFree(this->atomPosProtD));
-    if(this->atomPosProtSortedD != NULL) cutilSafeCall(cudaFree(this->atomPosProtSortedD));
+    if(this->cellStartD != NULL) checkCudaErrors(cudaFree(this->cellStartD));
+    if(this->cellEndD != NULL) checkCudaErrors(cudaFree(this->cellEndD));;    
     
-    if(this->gridAtomHashD != NULL) cutilSafeCall(cudaFree(this->gridAtomHashD));
-    if(this->gridAtomIndexD != NULL) cutilSafeCall(cudaFree(this->gridAtomIndexD));
+    if(this->atomVisibilityD != NULL) checkCudaErrors(cudaFree(this->atomVisibilityD));
     
-    if(this->isSolventAtomD != NULL) cutilSafeCall(cudaFree(this->isSolventAtomD));
-
-    if(this->cellStartD != NULL) cutilSafeCall(cudaFree(this->cellStartD));
-    if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD));;    
-    
-    if(this->atomVisibilityD != NULL) cutilSafeCall(cudaFree(this->atomVisibilityD));
-    
-    if(this->neighbourCellPosD != NULL) cutilSafeCall(cudaFree(this->neighbourCellPosD));
+    if(this->neighbourCellPosD != NULL) checkCudaErrors(cudaFree(this->neighbourCellPosD));
     
     //cudppDestroyPlan(this->sortHandle);
 
@@ -366,9 +364,9 @@ void Filter::updateParams(megamol::protein_calls::MolecularDataCall *mol) {
         this->params.atmCnt     = this->atmCnt;
         this->params.atmCntProt = this->atmCnt - this->solvAtmCnt;
         
-        this->params.discRange.x = ceil(this->params.solvRange / this->params.cellSize.x);
-        this->params.discRange.y = ceil(this->params.solvRange / this->params.cellSize.y);
-        this->params.discRange.z = ceil(this->params.solvRange / this->params.cellSize.z);
+        this->params.discRange.x = static_cast<int>(ceil(this->params.solvRange / this->params.cellSize.x));
+		this->params.discRange.y = static_cast<int>(ceil(this->params.solvRange / this->params.cellSize.y));
+		this->params.discRange.z = static_cast<int>(ceil(this->params.solvRange / this->params.cellSize.z));
         
         this->params.discRangeWide.x = (this->params.discRange.x*2 + 1);
         this->params.discRangeWide.y = (this->params.discRange.y*2 + 1);
@@ -400,37 +398,37 @@ void Filter::updateParams(megamol::protein_calls::MolecularDataCall *mol) {
         //}
 
         // Clean up 
-        if(this->atomPosD != NULL) cutilSafeCall(cudaFree(this->atomPosD));
-        if(this->atomPosProtD != NULL) cutilSafeCall(cudaFree(this->atomPosProtD));
-        if(this->atomPosProtSortedD != NULL) cutilSafeCall(cudaFree(this->atomPosProtSortedD));
+        if(this->atomPosD != NULL) checkCudaErrors(cudaFree(this->atomPosD));
+        if(this->atomPosProtD != NULL) checkCudaErrors(cudaFree(this->atomPosProtD));
+        if(this->atomPosProtSortedD != NULL) checkCudaErrors(cudaFree(this->atomPosProtSortedD));
         
-        if(this->gridAtomHashD != NULL) cutilSafeCall(cudaFree(this->gridAtomHashD));
-        if(this->gridAtomIndexD != NULL) cutilSafeCall(cudaFree(this->gridAtomIndexD));
+        if(this->gridAtomHashD != NULL) checkCudaErrors(cudaFree(this->gridAtomHashD));
+        if(this->gridAtomIndexD != NULL) checkCudaErrors(cudaFree(this->gridAtomIndexD));
         
-        if(this->isSolventAtomD != NULL) cutilSafeCall(cudaFree(this->isSolventAtomD));
+        if(this->isSolventAtomD != NULL) checkCudaErrors(cudaFree(this->isSolventAtomD));
     
-        if(this->cellStartD != NULL) cutilSafeCall(cudaFree(this->cellStartD));
-        if(this->cellEndD != NULL) cutilSafeCall(cudaFree(this->cellEndD)); 
+        if(this->cellStartD != NULL) checkCudaErrors(cudaFree(this->cellStartD));
+        if(this->cellEndD != NULL) checkCudaErrors(cudaFree(this->cellEndD)); 
         
-        if(this->atomVisibilityD != NULL) cutilSafeCall(cudaFree(this->atomVisibilityD));
-        if(this->neighbourCellPosD != NULL) cutilSafeCall(cudaFree(this->neighbourCellPosD));
+        if(this->atomVisibilityD != NULL) checkCudaErrors(cudaFree(this->atomVisibilityD));
+        if(this->neighbourCellPosD != NULL) checkCudaErrors(cudaFree(this->neighbourCellPosD));
 
         // Allocate device memory 
         
-        cutilSafeCall(cudaMalloc((void **)&this->atomPosD, sizeof(float)*this->atmCnt*3));
-        cutilSafeCall(cudaMalloc((void **)&this->atomPosProtD, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3));   
-        cutilSafeCall(cudaMalloc((void **)&this->atomPosProtSortedD, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3)); 
+        checkCudaErrors(cudaMalloc((void **)&this->atomPosD, sizeof(float)*this->atmCnt*3));
+        checkCudaErrors(cudaMalloc((void **)&this->atomPosProtD, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3));   
+        checkCudaErrors(cudaMalloc((void **)&this->atomPosProtSortedD, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3)); 
         
-        cutilSafeCall(cudaMalloc((void **)&this->gridAtomHashD, sizeof(unsigned int)*(this->atmCnt - this->solvAtmCnt)));
-        cutilSafeCall(cudaMalloc((void **)&this->gridAtomIndexD, sizeof(unsigned int)*(this->atmCnt - this->solvAtmCnt)));
+        checkCudaErrors(cudaMalloc((void **)&this->gridAtomHashD, sizeof(unsigned int)*(this->atmCnt - this->solvAtmCnt)));
+        checkCudaErrors(cudaMalloc((void **)&this->gridAtomIndexD, sizeof(unsigned int)*(this->atmCnt - this->solvAtmCnt)));
         
-        cutilSafeCall(cudaMalloc((void **)&this->isSolventAtomD, sizeof(bool)*this->atmCnt));
+        checkCudaErrors(cudaMalloc((void **)&this->isSolventAtomD, sizeof(bool)*this->atmCnt));
         
-        cutilSafeCall(cudaMalloc((void **)&this->cellStartD, sizeof(unsigned int)*this->params.numCells));
-        cutilSafeCall(cudaMalloc((void **)&this->cellEndD, sizeof(unsigned int)*this->params.numCells));
+        checkCudaErrors(cudaMalloc((void **)&this->cellStartD, sizeof(unsigned int)*this->params.numCells));
+        checkCudaErrors(cudaMalloc((void **)&this->cellEndD, sizeof(unsigned int)*this->params.numCells));
         
     
-        cutilSafeCall(cudaMalloc((void **)&this->atomVisibilityD, sizeof(int)*this->atmCnt));
+        checkCudaErrors(cudaMalloc((void **)&this->atomVisibilityD, sizeof(int)*this->atmCnt));
         
         
         // Calculate positions of neighbour cells in respect to the hash-value
@@ -441,16 +439,16 @@ void Filter::updateParams(megamol::protein_calls::MolecularDataCall *mol) {
             neighbourCellPos[i*3+2] = ((i / this->params.discRangeWide.x) / this->params.discRangeWide.y) - this->params.discRange.z;
         }
                
-        cutilSafeCall(cudaMalloc((void **)&this->neighbourCellPosD, sizeof(int)*3*this->params.numNeighbours));
+        checkCudaErrors(cudaMalloc((void **)&this->neighbourCellPosD, sizeof(int)*3*this->params.numNeighbours));
         
-        cutilSafeCall(cudaMemcpy(this->neighbourCellPosD, neighbourCellPos, 
+        checkCudaErrors(cudaMemcpy(this->neighbourCellPosD, neighbourCellPos, 
             sizeof(int)*3*this->params.numNeighbours, cudaMemcpyHostToDevice));
         
         delete[] neighbourCellPos; 
         
         // Copy data to device memory
         
-        cutilSafeCall(cudaMemcpy(this->isSolventAtomD, this->isSolventAtom, 
+        checkCudaErrors(cudaMemcpy(this->isSolventAtomD, this->isSolventAtom, 
             sizeof(bool)*this->atmCnt, cudaMemcpyHostToDevice));
     
 #endif // (defined(WITH_CUDA) && (WITH_CUDA))
@@ -653,10 +651,10 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
     this->getProtAtoms(atomPos);
 
     // Get current atom positions
-    cutilSafeCall(cudaMemcpy(this->atomPosD, atomPos, sizeof(float)*this->atmCnt*3, 
+    checkCudaErrors(cudaMemcpy(this->atomPosD, atomPos, sizeof(float)*this->atmCnt*3, 
         cudaMemcpyHostToDevice));  
         
-    cutilSafeCall(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
+    checkCudaErrors(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
         cudaMemcpyHostToDevice));
     
 //    printf("atom Count %u\n", atmCnt);
@@ -680,7 +678,7 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
     
         
     // Set all cells to empty
-    cutilSafeCall(cudaMemset(this->cellStartD, 0xffffffff, this->params.numCells*sizeof(unsigned int))); 
+    checkCudaErrors(cudaMemset(this->cellStartD, 0xffffffff, this->params.numCells*sizeof(unsigned int))); 
 
     // Reorder position array into sorted order and find start and end of each cell
     reorderFilterData(this->cellStartD, 
@@ -692,7 +690,7 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
                       (this->atmCnt - this->solvAtmCnt));    
     
     // Set all atoms invisible
-    cutilSafeCall(cudaMemset(this->atomVisibilityD, 0x00000000, this->atmCnt*sizeof(int)));
+    checkCudaErrors(cudaMemset(this->atomVisibilityD, 0x00000000, this->atmCnt*sizeof(int)));
     
     // Calculate visibility of solvent atoms     
     calcSolventVisibilityAlt(this->cellStartD,
@@ -707,7 +705,7 @@ void Filter::filterSolventAtomsAlt(float *atomPos) {
                                                
     
     // Copy visibility information from device to host
-    cutilSafeCall(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
+    checkCudaErrors(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
         sizeof(int)*this->atmCnt, cudaMemcpyDeviceToHost));
 
 #else // CPU
@@ -770,10 +768,10 @@ void Filter::filterSolventAtoms(float *atomPos) {
     this->getProtAtoms(atomPos);
 
     // Get current atom positions
-    cutilSafeCall(cudaMemcpy(this->atomPosD, atomPos, sizeof(float)*this->atmCnt*3, 
+    checkCudaErrors(cudaMemcpy(this->atomPosD, atomPos, sizeof(float)*this->atmCnt*3, 
         cudaMemcpyHostToDevice));  
         
-    cutilSafeCall(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
+    checkCudaErrors(cudaMemcpy(this->atomPosProtD, this->atmPosProt, sizeof(float)*(this->atmCnt - this->solvAtmCnt)*3, 
         cudaMemcpyHostToDevice));
     
 //    printf("atom Count %u\n", atmCnt);
@@ -797,7 +795,7 @@ void Filter::filterSolventAtoms(float *atomPos) {
     
         
     // Set all cells to empty
-    cutilSafeCall(cudaMemset(this->cellStartD, 0xffffffff, this->params.numCells*sizeof(unsigned int))); 
+    checkCudaErrors(cudaMemset(this->cellStartD, 0xffffffff, this->params.numCells*sizeof(unsigned int))); 
 
     // Reorder position array into sorted order and find start and end of each cell
     reorderFilterData(this->cellStartD, 
@@ -809,7 +807,7 @@ void Filter::filterSolventAtoms(float *atomPos) {
                       (this->atmCnt - this->solvAtmCnt));    
     
     // Set all atoms invisible
-    cutilSafeCall(cudaMemset(this->atomVisibilityD, 0x00000000, this->atmCnt*sizeof(int)));
+    checkCudaErrors(cudaMemset(this->atomVisibilityD, 0x00000000, this->atmCnt*sizeof(int)));
     
     // Calculate visibility of solvent atoms     
     calcSolventVisibility(this->cellStartD,
@@ -822,7 +820,7 @@ void Filter::filterSolventAtoms(float *atomPos) {
                                                
     
     // Copy visibility information from device to host
-    cutilSafeCall(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
+    checkCudaErrors(cudaMemcpy(this->atomVisibility, this->atomVisibilityD, 
         sizeof(int)*this->atmCnt, cudaMemcpyDeviceToHost));
 
 #else // CPU

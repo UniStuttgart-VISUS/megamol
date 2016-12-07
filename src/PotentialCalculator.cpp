@@ -21,11 +21,9 @@
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
 #include "CUDAQuickSurf.h"
 #include "cuda_error_check.h"
 #include "PotentialCalculator.cuh"
-#endif
 
 // TODO
 // + CUDAQuicksurf segfaults on release because vertex buffer object extension
@@ -48,9 +46,7 @@ PotentialCalculator::PotentialCalculator() : Module(),
         bboxTypeSlot("bboxType", "The periodic bounding box of the particle data"),
         chargesGridSpacingSlot("chargesGridSpacing", "Grid resolution for the charge distribution"),
         potentialGridSpacingSlot("potentialGridSpacing", "Grid resolution for the potential map"),
-#if (defined(WITH_CUDA) && (WITH_CUDA))
         cudaqsurf(NULL),
-#endif
         maxParticleRad(0.0f), minPotential(0.0f),
         maxPotential(0.0f), jobDone(false) {
 
@@ -113,13 +109,16 @@ PotentialCalculator::~PotentialCalculator() {
  * PotentialCalculator::create
  */
 bool PotentialCalculator::create(void) {
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+
+#ifdef _WIN64
     // Create quicksurf object
     if (!this->cudaqsurf) {
         this->cudaqsurf = new CUDAQuickSurf();
     }
-#endif
     return true;
+#else 
+	return false;
+#endif
 }
 
 
@@ -127,6 +126,8 @@ bool PotentialCalculator::create(void) {
  * PotentialCalculator::getData
  */
 bool PotentialCalculator::getData(core::Call& call) {
+
+#ifdef _WIN64
     using namespace vislib::math;
 
     // Get the incoming data call
@@ -173,6 +174,9 @@ bool PotentialCalculator::getData(core::Call& call) {
 //            VTKImageData::DataArray::VTI_FLOAT, "potential");
 
     return true;
+#else
+	return false;
+#endif // _WIN64
 }
 
 
@@ -180,6 +184,7 @@ bool PotentialCalculator::getData(core::Call& call) {
  * PotentialCalculator::getExtent
  */
 bool PotentialCalculator::getExtent(core::Call& call) {
+#ifdef _WIN64
     using namespace vislib::math;
 
     // Get the incoming data call
@@ -237,6 +242,9 @@ bool PotentialCalculator::getExtent(core::Call& call) {
 //    dcIn->SetNumberOfPieces(1);
 
     return true;
+#else
+	return false;
+#endif // _WIN64
 }
 
 
@@ -307,8 +315,6 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall *mol
     using namespace vislib::sys;
     using namespace vislib::math;
 
-#if (defined(WITH_CUDA) && (WITH_CUDA)) // GPU version
-
     unsigned int volSize;
 
     // (Re-)allocate memory for intermediate particle data
@@ -375,10 +381,6 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall *mol
 //    for (int i = 0; i < this->charges.GetCount(); ++i)
 //        printf("Charges %f\n", this->charges.Peek()[i]);
 
-#else // CPU version
-    // TODO
-#endif // (defined(WITH_CUDA) && (WITH_CUDA))
-
     return true;
 }
 
@@ -387,6 +389,7 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall *mol
  * PotentialCalculator::computePotentialMap
  */
 bool PotentialCalculator::computePotentialMap(const MolecularDataCall *mol) {
+#ifdef _WIN64
     using namespace vislib::sys;
 
     size_t volSize = this->potentialGrid.size[0]*
@@ -414,7 +417,7 @@ bool PotentialCalculator::computePotentialMap(const MolecularDataCall *mol) {
     case PARTICLE_MESH_EWALD: // TODO
     case CONTINUUM_SOLVATION_POISSON_BOLTZMAN: break; // TODO
     case GPU_POISSON_SOLVER:
-#ifdef WITH_CUDA
+
         if (!CudaSafeCall(this->potential_D.Validate(volSize))) {
             return false;
         }
@@ -425,7 +428,7 @@ bool PotentialCalculator::computePotentialMap(const MolecularDataCall *mol) {
                         this->charges.Peek(),
                         this->potential_D.Peek(),
                         this->potential.Peek()));
-#endif // WITH_CUDA
+
         break;
     case EWALD_SUMMATION:
         if (!this->computePotentialMapEwaldSum(mol, 0.25f)) {
@@ -453,7 +456,7 @@ bool PotentialCalculator::computePotentialMap(const MolecularDataCall *mol) {
             this->maxPotential = this->potential.Peek()[i];
         }
     }
-
+#endif _WIN64
     return true;
 }
 
@@ -466,8 +469,8 @@ bool PotentialCalculator::computePotentialMapDCS(const MolecularDataCall *mol,
 
     // Compute electrostatic potential for all grid points using Direct
     // Coulomb Summation
-#if (defined(WITH_CUDA) && (WITH_CUDA)) // GPU
 
+#ifdef _WIN64
     // Init atom data
     this->atomData.Validate(mol->AtomCount()*4);
 #pragma omp parallel for
@@ -488,62 +491,7 @@ bool PotentialCalculator::computePotentialMapDCS(const MolecularDataCall *mol,
                        this->potentialGridSpacing))) {
         return false;
     }
-
-#else // CPU
-
-    // Init lattice positions
-     vislib::Array<float> latticePos;
-     uint volSize = this->potentialGrid.size[0]*this->potentialGrid.size[1]*
-             this->potentialGrid.size[2];
-     latticePos.SetCount(volSize*3);
-
- #pragma omp parallel for
-     for (int pos = 0; pos < static_cast<int>(volSize); ++pos) {
-         Vec3i ipos(pos % this->potentialGrid.size[0],
-                 (pos / this->potentialGrid.size[0]) % this->potentialGrid.size[1],
-                 (pos / this->potentialGrid.size[0]) / this->potentialGrid.size[1]);
-         latticePos[3*pos+0] = this->potentialGrid.minC[0] + ipos[0]*this->potentialGrid.delta[0];
-         latticePos[3*pos+1] = this->potentialGrid.minC[1] + ipos[1]*this->potentialGrid.delta[1];
-         latticePos[3*pos+2] = this->potentialGrid.minC[2] + ipos[2]*this->potentialGrid.delta[2];
-     }
-
-     // Calc potential map
- #pragma omp parallel for
-
-     // Loop through all lattice positions
-     for (int pos = 0; pos < static_cast<int>(volSize); ++pos) {
-
-         this->potential.Peek()[pos] = 0.0f;
-         Vec3f lattPos(&latticePos[3*pos]);
-
-         // Loop through all particles
-         for (int at = 0; at < static_cast<int>(mol->AtomCount()); ++at) {
-             Vec3f atomPos(&mol->AtomPositions()[3*at]);
-             float minDist = (lattPos-atomPos).Length();
-
-             // If periodic boundary conditions are to be used find the minimum
-             // distance image of the respective particle
-             if (usePeriodicImages) {
-                 vislib::Array<Vec3f> imgArr;
-                 // Get list of periodic images
-                 this->getPeriodicImages(atomPos, imgArr);
-                 for (uint i = 0; i < imgArr.Count(); ++i) {
-                     if ((lattPos-imgArr[i]).Length() < minDist) {
-                         atomPos = imgArr[i];
-                         minDist = (lattPos-imgArr[i]).Length();
-                     }
-                 }
-             }
-
-             // Add potential contribution
-             this->potential.Peek()[pos] +=
-                     // Charge is saved in occupancy column
-                     (mol->AtomOccupancies()[at]) / minDist;
-         }
-     }
-
-#endif
-
+#endif // _WIN64
     return true;
 }
 
@@ -666,13 +614,12 @@ void PotentialCalculator::release(void) {
     this->particlePos.Release();
     this->particleCharges.Release();
     this->chargesBuff.Release();
-#if (defined(WITH_CUDA) && (WITH_CUDA))
     if (this->cudaqsurf != NULL) {
         CUDAQuickSurf *cqs = (CUDAQuickSurf *)this->cudaqsurf;
         delete cqs;
     }
     cudaDeviceReset();
-#endif
+
 }
 
 

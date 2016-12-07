@@ -14,7 +14,6 @@
 #include <thrust/reduce.h>
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/device_ptr.h>
-#include "cuda_helper.h"
 
 extern "C"
 cudaError_t ComputePrefixSumExclusiveScan(uint *flagArray_D, uint *offsArray_D,

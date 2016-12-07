@@ -239,7 +239,7 @@ bool ParticlesToMeshConverter::create(void) {
  */
 void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, float3 bbMin, float3 bbMax, float isoValue, float concMin, float concMax) {
 
-    uint3 extents = make_uint3(volSize.width, volSize.height, volSize.depth);
+	uint3 extents = make_uint3(static_cast<unsigned int>(volSize.width), static_cast<unsigned int>(volSize.height), static_cast<unsigned int>(volSize.depth));
     unsigned int chunkmaxverts = 3 * extents.x * extents.y * extents.z;
 
     float * data = volumeData;
@@ -254,7 +254,7 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
     float newMin = FLT_MAX;
     float newMax = FLT_MIN;
 
-    for (int index = 0; index < chunkmaxverts / 3; index++) {
+	for (int index = 0; index < static_cast<int>(chunkmaxverts / 3); index++) {
         int i = (index % (extents.x * extents.y)) % extents.x;
         int j = (index % (extents.x * extents.y)) / extents.x;
         int k = index / (extents.x * extents.y);
@@ -280,7 +280,7 @@ void ParticlesToMeshConverter::makeMesh(float * volumeData, cudaExtent volSize, 
 
 #define NORMALIZE
 #ifdef NORMALIZE
-    for (int i = 0; i < chunkmaxverts / 3; i++) {
+	for (int i = 0; i < static_cast<int>(chunkmaxverts / 3); i++) {
         data[i] = (data[i] - newMin) / (newMax - newMin);
     }
 #endif

@@ -9,14 +9,12 @@
 #define MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
 
 #ifdef WITH_CUDA
-#undef min
-#undef max
-#pragma pop_macro("min")
-#pragma pop_macro("max")
 #include "CUDAFieldTopology.cuh"
 #include <vector_types.h>
 
-#include "cuda_helper.h"
+#include "cuda_runtime.h"
+#include "helper_cuda.h"
+#include "helper_functions.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cuda_gl_interop.h>
 #endif

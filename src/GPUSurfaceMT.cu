@@ -17,7 +17,6 @@
 #include "HostArr.h"
 #include "sort_triangles.cuh"
 #include "CUDAGrid.cuh"
-#include "cuda_helper.h"
 
 #include <algorithm>
 #include <cuda_runtime.h>

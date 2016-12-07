@@ -11,13 +11,13 @@
 #include "ogl_error_check.h"
 #include "cuda_error_check.h"
 #include "CUDAGrid.cuh"
-#include "cuda_helper.h"
 #include "HostArr.h"
 #include "vislib/sys/Log.h"
 
 #include <cuda_runtime.h>
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
+#include "helper_math.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;

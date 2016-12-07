@@ -20,6 +20,10 @@
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
+#include "cuda_runtime.h"
+#include "helper_cuda.h"
+#include "helper_math.h"
+
 //#include <cudpp/cudpp.h>
 #include "filter_cuda.cuh"
 

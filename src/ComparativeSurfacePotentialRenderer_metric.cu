@@ -11,7 +11,6 @@
 //#include <stdafx.h>
 #include "ComparativeSurfacePotentialRenderer.cuh"
 #include "ComparativeSurfacePotentialRenderer_inline_device_functions.cuh"
-#include "cuda_helper.h"
 
 // Shut up eclipse syntax error highlighting
 #ifdef __CDT_PARSER__

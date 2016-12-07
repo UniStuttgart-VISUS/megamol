@@ -18,7 +18,7 @@
 
 #include "GPUSurfaceMT.h"
 #include "vislib/Array.h"
-#include "cuda_helper.h"
+#include "helper_math.h"
 
 namespace megamol {
 namespace protein_cuda {

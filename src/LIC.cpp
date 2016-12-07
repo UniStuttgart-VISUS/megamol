@@ -11,6 +11,8 @@
 #include "LIC.h"
 #include "UniGrid3D.h"
 
+#include "helper_math.h"
+
 #include "vislib/sys/Log.h"
 #include "vislib/Array.h"
 
@@ -40,10 +42,10 @@ bool protein_cuda::LIC::CalcLicX(UniGrid3D<float3> &grid,
     time_t t = clock();
 
     // Calc tex coords for planes // TODO handle case in which gridStep is not 1.0f
-    int gridCoordX = licBuffX.GetGridOrg().X() -
-            grid.GetGridOrg().X()/(grid.GetGridDim().X()*grid.GetGridStepSize())*grid.GetGridDim().X();
+	int gridCoordX = static_cast<int>(licBuffX.GetGridOrg().X() -
+            grid.GetGridOrg().X()/(grid.GetGridDim().X()*grid.GetGridStepSize())*grid.GetGridDim().X());
     //printf("Grid x coord in unigrid space %i\n", gridCoordX); // DEBUG
-    gridCoordX *= ((float)(licDim.X())/(float)(grid.GetGridDim().X()));
+	gridCoordX *= static_cast<int>((float)(licDim.X()) / (float)(grid.GetGridDim().X()));
     //printf("Grid x coord in lic tex space %i\n", gridCoordX); // DEBUG
 
     //float minStreamLines = 3.0f;
@@ -79,7 +81,7 @@ bool protein_cuda::LIC::CalcLicX(UniGrid3D<float3> &grid,
                     fRandTexBackward.SetCount(length);
 
                     // Compute convolution for this voxel
-                    vPos.Set(gridCoordX, y, z);
+					vPos.Set(static_cast<float>(gridCoordX), static_cast<float>(y), static_cast<float>(z));
                     licCol = LIC::sampleRandBuffWrap(randBuff, vPos);
                     vDir = LIC::sampleUniGrid(vPos, grid, licDim);
                     if(projectVec2D) vDir.SetX(0.0f);
@@ -96,7 +98,7 @@ bool protein_cuda::LIC::CalcLicX(UniGrid3D<float3> &grid,
                         fRandTexForward[p-1] = randVal;
                     }
 
-                    vPos.Set(gridCoordX, y, z);
+					vPos.Set(static_cast<float>(gridCoordX), static_cast<float>(y), static_cast<float>(z));
                     vDir = LIC::sampleUniGrid(vPos, grid, licDim);
                     if(projectVec2D) vDir.SetX(0.0f);
 
@@ -251,9 +253,9 @@ bool protein_cuda::LIC::CalcLicY(UniGrid3D<float3> &grid,
     time_t t = clock();
 
     // Calc tex coords for planes // TODO handle case in which gridStep is not 1.0f
-    int gridCoordY = licBuffY.GetGridOrg().Y() -
-            grid.GetGridOrg().Y()/(grid.GetGridDim().Y()*grid.GetGridStepSize())*grid.GetGridDim().Y();
-    gridCoordY *= ((float)(licDim.Y())/(float)(grid.GetGridDim().Y()));
+    int gridCoordY = static_cast<int>(licBuffY.GetGridOrg().Y() -
+            grid.GetGridOrg().Y()/(grid.GetGridDim().Y()*grid.GetGridStepSize())*grid.GetGridDim().Y());
+    gridCoordY *= static_cast<int>(((float)(licDim.Y())/(float)(grid.GetGridDim().Y())));
 
     //float minStreamLines = 3.0f;
     int length = static_cast<int> (streamLen);
@@ -288,7 +290,7 @@ bool protein_cuda::LIC::CalcLicY(UniGrid3D<float3> &grid,
                     fRandTexBackward.SetCount(length);
 
                     // Compute convolution for this voxel
-                    vPos.Set(x, gridCoordY, z);
+					vPos.Set(static_cast<float>(x), static_cast<float>(gridCoordY), static_cast<float>(z));
                     licCol = LIC::sampleRandBuffWrap(randBuff, vPos);
                     vDir = LIC::sampleUniGrid(vPos, grid, licDim);
                     if(projectVec2D) vDir.SetY(0.0f);
@@ -305,7 +307,7 @@ bool protein_cuda::LIC::CalcLicY(UniGrid3D<float3> &grid,
                         fRandTexForward[p-1] = randVal;
                     }
 
-                    vPos.Set(x, gridCoordY, z);
+					vPos.Set(static_cast<float>(x), static_cast<float>(gridCoordY), static_cast<float>(z));
                     vDir = LIC::sampleUniGrid(vPos, grid, licDim);
                     if(projectVec2D) vDir.SetY(0.0f);
 
@@ -463,9 +465,9 @@ bool protein_cuda::LIC::CalcLicZ(UniGrid3D<float3> &grid,
     time_t t = clock();
 
     // Calc tex coords for planes // TODO handle case in which gridStep is not 1.0f
-    int gridCoordZ = licBuffZ.GetGridOrg().Z() -
-            grid.GetGridOrg().Z()/(grid.GetGridDim().Z()*grid.GetGridStepSize())*grid.GetGridDim().Z();
-    gridCoordZ *= ((float)(licDim.Z())/(float)(grid.GetGridDim().Z()));
+    int gridCoordZ = static_cast<int>(licBuffZ.GetGridOrg().Z() -
+            grid.GetGridOrg().Z()/(grid.GetGridDim().Z()*grid.GetGridStepSize())*grid.GetGridDim().Z());
+    gridCoordZ *= static_cast<int>((float)(licDim.Z())/(float)(grid.GetGridDim().Z()));
 
     //float minStreamLines = 3.0f;
     int length = static_cast<int> (streamLen);
@@ -500,7 +502,7 @@ bool protein_cuda::LIC::CalcLicZ(UniGrid3D<float3> &grid,
                     fRandTexBackward.SetCount(length);
 
                     // Compute convolution for this voxel
-                    vPos.Set(x, y, gridCoordZ);
+					vPos.Set(static_cast<float>(x), static_cast<float>(y), static_cast<float>(gridCoordZ));
                     licCol = LIC::sampleRandBuffWrap(randBuff, vPos);
                     vDir = LIC::sampleUniGrid(vPos, grid, licDim);
                     if(projectVec2D) vDir.SetZ(0.0f);
@@ -517,7 +519,7 @@ bool protein_cuda::LIC::CalcLicZ(UniGrid3D<float3> &grid,
                         fRandTexForward[p-1] = randVal;
                     }
 
-                    vPos.Set(x, y, gridCoordZ);
+					vPos.Set(static_cast<float>(x), static_cast<float>(y), static_cast<float>(gridCoordZ));
                     vDir = LIC::sampleUniGrid(vPos, grid, licDim);
                     if(projectVec2D) vDir.SetZ(0.0f);
 

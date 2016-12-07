@@ -446,7 +446,7 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 		transferSpringData(mdc->AtomPositions(), mdc->AtomCount(), mdc->GetHydrogenBonds(), mdc->HydrogenBondCount(), this->cAlphaIndices.data(), static_cast<unsigned int>(this->cAlphaIndices.size()), 
 			this->oIndices.data(), static_cast<unsigned int>(this->oIndices.size()), this->connectionFrictionParam.Param<param::FloatParam>()->Value(),
 			this->connectionSpringConstantParam.Param<param::FloatParam>()->Value(), this->hbondFrictionParam.Param<param::FloatParam>()->Value(),
-			this->hbondSpringConstantParam.Param<param::FloatParam>()->Value(), moleculeStarts.data(), moleculeStarts.size(),
+			this->hbondSpringConstantParam.Param<param::FloatParam>()->Value(), moleculeStarts.data(), static_cast<unsigned int>(moleculeStarts.size()),
 			this->repellingForceCutoffDistanceParam.Param<param::FloatParam>()->Value(), this->repellingForceStrengthFactor.Param<param::FloatParam>()->Value());
 	}
 
@@ -627,7 +627,7 @@ void SecStructFlattener::runSimulation(void) {
 	int maxTime = this->maxTimestepParam.Param<param::IntParam>()->Value();
 
 	if (maxTime - currentTimestep + 1 < numTimesteps && maxTime >= 0) {
-		numTimesteps = maxTime - currentTimestep + 1;
+		numTimesteps = static_cast<unsigned int>(maxTime - currentTimestep + 1);
 	}
 
 	for (unsigned int i = 0; i < numTimesteps; i++) {

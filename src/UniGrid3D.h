@@ -12,10 +12,8 @@
 
 #include "vislib/math/Vector.h"
 #include "vislib/OutOfRangeException.h"
-
-#ifdef WITH_CUDA
-#include "cuda_helper.h"
-#endif  // WITH_CUDA
+#include "cuda_runtime.h"
+#include "helper_cuda.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -44,15 +42,12 @@ public:
     /** Dtor. */
     ~UniGrid3D();
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
-    cudaError_t MemCpyFromDevice(const T *dvPt) {
+    cudaError MemCpyFromDevice(const T *dvPt) {
         cudaMemcpy(this->data, dvPt,
                 this->gridDim.X()*this->gridDim.Y()*this->gridDim.Z()*sizeof(T),
                 cudaMemcpyDeviceToHost);
         return cudaGetLastError();
     }
-
-#endif /* (defined(WITH_CUDA) && (WITH_CUDA)) */
 
     /**
      * TODO

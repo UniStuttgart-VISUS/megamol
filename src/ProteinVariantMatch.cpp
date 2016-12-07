@@ -13,6 +13,9 @@
 
 #ifdef WITH_CUDA
 
+#pragma warning(push)
+#pragma warning(disable : 4258)
+
 // Toggle performance measurement and the respective messages
 #define USE_TIMER
 
@@ -392,31 +395,31 @@ bool ProteinVariantMatch::getDiagData(core::Call& call) {
 
         // Define feature list for rmsd
         this->featureList[0] = new DiagramCall::DiagramSeries("RMSD",
-                new MolecularSurfaceFeature(this->nVariants,
+				new MolecularSurfaceFeature(static_cast<float>(this->nVariants),
                         Vec3f(0.0f, 0.0f, 0.0f)));
         this->featureList[0]->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
 
         // Define feature list for absolute hausdorff distance
         this->featureList[1] = new DiagramCall::DiagramSeries("Hausdorff distance",
-                new MolecularSurfaceFeature(this->nVariants,
+				new MolecularSurfaceFeature(static_cast<float>(this->nVariants),
                         Vec3f(0.0f, 0.0f, 0.0f)));
         this->featureList[1]->SetColor(1.0f, 0.0f, 1.0f, 1.0f);
 
         // Define feature list for absolute hausdorff distance
         this->featureList[2] = new DiagramCall::DiagramSeries("Mean hausdorff distance",
-                new MolecularSurfaceFeature(this->nVariants,
+				new MolecularSurfaceFeature(static_cast<float>(this->nVariants),
                         Vec3f(0.0f, 0.0f, 0.0f)));
         this->featureList[2]->SetColor(0.0f, 1.0f, 0.0f, 1.0f);
 
         // Define feature list for mean potential difference
         this->featureList[3] = new DiagramCall::DiagramSeries("Mean potential difference",
-                new MolecularSurfaceFeature(this->nVariants,
+				new MolecularSurfaceFeature(static_cast<float>(this->nVariants),
                         Vec3f(0.0f, 0.0f, 0.0f)));
         this->featureList[3]->SetColor(0.0f, 1.0f, 1.0f, 1.0f);
 
         // Define feature list for mean sign switch
         this->featureList[4] = new DiagramCall::DiagramSeries("Potential sign switch",
-                new MolecularSurfaceFeature(this->nVariants,
+				new MolecularSurfaceFeature(static_cast<float>(this->nVariants),
                         Vec3f(0.0f, 0.0f, 0.0f)));
         this->featureList[4]->SetColor(0.0f, 0.0f, 1.0f, 1.0f);
 
@@ -438,14 +441,14 @@ bool ProteinVariantMatch::getDiagData(core::Call& call) {
     // RMSD
     ms = static_cast<MolecularSurfaceFeature*>(this->featureList[0]->GetMappable());
     for (unsigned int i = 0; i < this->nVariants; ++i) {
-        ms->AppendValue(i, this->matchRMSD[this->singleFrameIdx*this->nVariants+i]/this->maxMatchRMSDVal);
+		ms->AppendValue(static_cast<float>(i), this->matchRMSD[this->singleFrameIdx*this->nVariants + i] / this->maxMatchRMSDVal);
     }
 
     // Surface potential
     ms = static_cast<MolecularSurfaceFeature*>(this->featureList[3]->GetMappable());
 //    printf("Surface potential: ");
     for (unsigned int i = 0; i < this->nVariants; ++i) {
-        ms->AppendValue(i,
+		ms->AppendValue(static_cast<float>(i),
                 this->matchSurfacePotential[this->singleFrameIdx*this->nVariants+i]/
                 this->maxMatchSurfacePotentialVal);
 //        printf("%f ", this->matchSurfacePotential[this->singleFrameIdx*this->nVariants+i]/
@@ -457,7 +460,7 @@ bool ProteinVariantMatch::getDiagData(core::Call& call) {
 //    printf("Mean hausdorff: ");
     ms = static_cast<MolecularSurfaceFeature*>(this->featureList[4]->GetMappable());
     for (unsigned int i = 0; i < this->nVariants; ++i) {
-        ms->AppendValue(i,
+		ms->AppendValue(static_cast<float>(i),
                 this->matchSurfacePotentialSign[this->singleFrameIdx*this->nVariants+i]/
                 this->maxMatchSurfacePotentialSignVal);
         printf("%f ", this->matchSurfacePotentialSign[this->singleFrameIdx*this->nVariants+i]/
@@ -469,7 +472,7 @@ bool ProteinVariantMatch::getDiagData(core::Call& call) {
 //    printf("Mean hausdorff: ");
     ms = static_cast<MolecularSurfaceFeature*>(this->featureList[2]->GetMappable());
     for (unsigned int i = 0; i < this->nVariants; ++i) {
-        ms->AppendValue(i,
+		ms->AppendValue(static_cast<float>(i),
                 this->matchMeanVertexPath[this->singleFrameIdx*this->nVariants+i]/
                 this->maxMatchMeanVertexPathVal);
 //        printf("%f ", this->matchMeanHausdorffDistance[this->singleFrameIdx*this->nVariants+i]/
@@ -480,7 +483,7 @@ bool ProteinVariantMatch::getDiagData(core::Call& call) {
     // Hausdorff distance
     ms = static_cast<MolecularSurfaceFeature*>(this->featureList[1]->GetMappable());
     for (unsigned int i = 0; i < this->nVariants; ++i) {
-        ms->AppendValue(i,
+		ms->AppendValue(static_cast<float>(i),
                 this->matchHausdorffDistance[this->singleFrameIdx*this->nVariants+i]/
                 this->maxMatchHausdorffDistanceVal);
     }
@@ -733,7 +736,7 @@ bool ProteinVariantMatch::computeDensityMap(
 
     // Compute uniform grid
     int rc = cqs->calc_map(
-            atomCnt,
+            static_cast<long>(atomCnt),
             this->atomPosTmp.Peek(),
             NULL,   // Pointer to 'color' array
             false,  // Do not use 'color' array
@@ -861,7 +864,7 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
 
 #if defined(OUTPUT_PROGRESS)
     //float steps = (this->nVariants*(this->nVariants+1))*0.5f;
-    float steps = this->nVariants*this->nVariants;
+    float steps = static_cast<float>(this->nVariants*this->nVariants);
     float currStep = 0.0f;
 #endif // defined(OUTPUT_PROGRESS)
 
@@ -1257,10 +1260,10 @@ bool ProteinVariantMatch::computeMatchSurfMapping() {
         nVoxMin = std::min((uint)(this->volDim.x*this->volDim.y*this->volDim.z), nVoxMin);
         nVoxMax = std::max((uint)(this->volDim.x*this->volDim.y*this->volDim.z), nVoxMax);
     }
-    nVertices += surfStart.GetVertexCnt();                 // Number of vertices
+    nVertices += static_cast<uint>(surfStart.GetVertexCnt());                 // Number of vertices
     if (nComp == 1) { // First comparison
-        nVerticesMin = surfStart.GetVertexCnt();
-        nVerticesMax = surfStart.GetVertexCnt();
+        nVerticesMin = static_cast<uint>(surfStart.GetVertexCnt());
+        nVerticesMax = static_cast<uint>(surfStart.GetVertexCnt());
     } else {
         nVerticesMin = std::min((uint)(surfStart.GetVertexCnt()), nVerticesMin);
         nVerticesMax = std::max((uint)(surfStart.GetVertexCnt()), nVerticesMax);
@@ -2185,5 +2188,6 @@ void ProteinVariantMatch::updatParams() {
         this->qsIsoValSlot.ResetDirty();
     }
 }
+#pragma warning(pop)
 
 #endif // WITH_CUDA

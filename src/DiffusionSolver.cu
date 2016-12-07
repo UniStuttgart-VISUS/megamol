@@ -14,13 +14,17 @@
 #ifdef WITH_CUDA
 
 #include "cuda_error_check.h"
-#include "cuda_helper.h"
 #include "CUDAGrid.cuh"
+
+#include "helper_cuda.h"
+#include "helper_math.h"
 
 #include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
+
+typedef unsigned int uint;
 
 //#define USE_CUDA_TIMER
 

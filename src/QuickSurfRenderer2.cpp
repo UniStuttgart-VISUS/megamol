@@ -308,8 +308,6 @@ bool QuickSurfRenderer2::Render(Call& call) {
     MultiParticleDataCall *c2 = this->molDataCallerSlot.CallAs<MultiParticleDataCall>();
     if( c2 == NULL) return false;
 
-    int cnt;
-
     // set frame ID and call data
     c2->SetFrameID(static_cast<int>( callTime));
     if (!(*c2)(0)) return false;
@@ -531,7 +529,8 @@ bool QuickSurfRenderer2::recomputeAreaDiagramCallback(core::param::ParamSlot& sl
     return true;
 }
 
-
+#pragma warning(push)
+#pragma warning(disable : 4258)
 bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
 
     DiagramCall *dc = dynamic_cast<DiagramCall*>(&call);
@@ -642,7 +641,7 @@ bool QuickSurfRenderer2::GetAreaDiagramData(core::Call& call) {
 
     return true;
 }
-
+#pragma warning(pop)
 
 int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
                          int quality, float radscale, float gridspacing,
@@ -661,15 +660,17 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     // parameter to pass in the solid color to be applied to all vertices
     //vec_copy(solidcolor, cmap);
 
+#define PADDING
+#define USE_BOUNDING_BOX
+
     // compute min/max atom radius, build list of selected atom radii,
     // and compute bounding box for the selected atoms
+#ifndef USE_BOUNDING_BOX
     float minx, miny, minz, maxx, maxy, maxz;
+#endif
     float minrad, maxrad;
     int i;
     float mincoord[3], maxcoord[3];
-
-#define PADDING
-#define USE_BOUNDING_BOX
 
     minrad = FLT_MAX;
     maxrad = FLT_MIN;
@@ -690,9 +691,9 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     // crude estimate of the grid padding we require to prevent the
     // resulting isosurface from being clipped
 #ifdef PADDING
-    float gridpadding = radscale * maxrad * 3.0;
+    float gridpadding = radscale * maxrad * 3.0f;
     float padrad = gridpadding;
-    padrad = 0.4 * sqrt(4.0/3.0*M_PI*padrad*padrad*padrad);
+    padrad = static_cast<float>(0.4f * sqrt(4.0f/3.0f*M_PI*padrad*padrad*padrad));
     gridpadding = std::max(gridpadding, padrad);
     gridpadding *= 2.0f;
 #else
@@ -860,7 +861,7 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
     cqs->useGaussKernel = true;
 
     // compute both density map and floating point color texture map
-    int rc = cqs->calc_surf( numParticles, posInter,
+    int rc = cqs->calc_surf( static_cast<long>(numParticles), posInter,
         (useCol) ? &colors[0] : &this->atomColorTable[0],
         useCol, origin, numvoxels, maxrad,
         radscale, gridSpacing3D, isovalue, gausslim,

@@ -11,6 +11,8 @@
 #define MMPROTEINCUDAPLUGIN_LIC_H
 
 #include "vislib/math/Vector.h"
+#include "helper_cuda.h"
+#include "helper_math.h"
 
 #include "UniGrid3D.h"
 

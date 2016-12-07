@@ -12,8 +12,6 @@
 #include <omp.h>
 #include <algorithm>
 
-#undef max
-
 using namespace megamol::protein_cuda;
 
 /*
@@ -122,7 +120,7 @@ float* MolecularAOShader::createVolume(class megamol::protein_calls::MolecularDa
     // Aggregate AO Factors.
 #pragma omp parallel for
     for (j = 0; j < sx * sy * sz; j++ ) {
-        for ( unsigned int i = 1; i < omp_get_max_threads(); i++ ) {
+        for ( unsigned int i = 1; i < static_cast<unsigned int>(omp_get_max_threads()); i++ ) {
             vol[0][j] += vol[i][j];
         }
     }
@@ -131,7 +129,7 @@ float* MolecularAOShader::createVolume(class megamol::protein_calls::MolecularDa
 
     // Cleanup (exept for result)
 #pragma omp parallel for
-    for( init = 1; init < omp_get_max_threads(); init++ ) {
+	for (init = 1; init < omp_get_max_threads(); init++) {
         delete[] vol[init];
     }
     delete[] vol;
@@ -150,7 +148,7 @@ float* MolecularAOShader::createVolumeDebug(class megamol::protein_calls::Molecu
 
     // Allocate empty volume.
     float *vol;
-    int init, i, j;
+    int i;
     vol = new float[sx * sy * sz];
     ::memset(vol, 0, sizeof(float) * sx * sy * sz);
 

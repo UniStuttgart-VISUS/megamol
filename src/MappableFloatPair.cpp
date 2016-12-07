@@ -75,7 +75,7 @@ int MappableWibble::GetDataCount() const {
 
 
 bool MappableWibble::GetAbscissaValue(const SIZE_T index, float *value) const {
-    *value = index;
+	*value = static_cast<float>(index);
     if (index == holePos) {
         return false;
     } else {

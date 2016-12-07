@@ -188,9 +188,9 @@ private:
     core::param::ParamSlot potentialGridSpacingSlot;
     float potentialGridSpacing;
 
-#if (defined(WITH_CUDA) && (WITH_CUDA))
+
     void *cudaqsurf;             ///> Pointer to CUDAQuickSurf objects
-#endif
+
     gridParams chargesGrid;         ///> Grid params for the charge distribution
     HostArr<float> charges;         ///> The charge distribution
     HostArr<float> particlePos;     ///> Array containing the grid positions
@@ -204,9 +204,9 @@ private:
 
     gridParams potentialGrid;       ///> Grid params for the potential map
     HostArr<float> potential;       ///> The potential map (host memory)
-#ifdef WITH_CUDA
+
     CudaDevArr<float> potential_D;  ///> The potential map (device memory)
-#endif // WITH_CUDA
+
     float minPotential;             ///> Minimum potential value
     float maxPotential;             ///> Maximum potential value
 

@@ -18,7 +18,6 @@
 #include "constantGridParams.cuh"
 
 #include "interpol.cuh"
-#include "cuda_helper.h"
 #include <cstdio>
 #include <cassert>
 

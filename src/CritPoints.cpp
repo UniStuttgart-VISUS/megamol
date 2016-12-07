@@ -9,15 +9,19 @@
 
 #include "stdafx.h"
 
-#define _USE_MATH_DEFINES
-
 #include <cmath>
 #include <math.h>
+
+#ifndef M_PI 
+#define M_PI    3.14159265358979323846f 
+#endif
 
 #include "CritPoints.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"
+
+#include "helper_math.h"
 
 using namespace megamol;
 using namespace vislib;
@@ -535,7 +539,7 @@ float protein_cuda::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &u
 
     //printf("Div %e\n",div );
 
-    float at = atan2(determ, double(div));
+    float at = static_cast<float>(atan2(determ, double(div)));
     if(at < 0) {
         at += M_PI; // If det > 0 and div < 0 arctan2 returns < 0, so add pi.
     }

@@ -19,10 +19,8 @@
 // includes, graphics
 #if defined (__APPLE__) || defined(MACOSX)
 #include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
 #else
 #include <GL/gl.h>
-#include <GL/glu.h>
 #endif
 
 #ifndef EXIT_WAIVED
@@ -122,6 +120,26 @@ inline int findCudaGLDevice(int argc, const char **argv)
     return devID;
 }
 
+static inline const char* glErrorToString(GLenum err)
+{
+#define CASE_RETURN_MACRO(arg) case arg: return #arg
+    switch(err)
+    {
+        CASE_RETURN_MACRO(GL_NO_ERROR);
+        CASE_RETURN_MACRO(GL_INVALID_ENUM);
+        CASE_RETURN_MACRO(GL_INVALID_VALUE);
+        CASE_RETURN_MACRO(GL_INVALID_OPERATION);
+        CASE_RETURN_MACRO(GL_OUT_OF_MEMORY);
+        CASE_RETURN_MACRO(GL_STACK_UNDERFLOW);
+        CASE_RETURN_MACRO(GL_STACK_OVERFLOW);
+#ifdef GL_INVALID_FRAMEBUFFER_OPERATION
+        CASE_RETURN_MACRO(GL_INVALID_FRAMEBUFFER_OPERATION);
+#endif
+        default: break;
+    }
+#undef CASE_RETURN_MACRO
+    return "*UNKNOWN*";
+}
 ////////////////////////////////////////////////////////////////////////////
 //! Check for OpenGL error
 //! @return bool if no GL error has been encountered, otherwise 0
@@ -144,11 +162,11 @@ sdkCheckErrorGL(const char *file, const int line)
         char tmpStr[512];
         // NOTE: "%s(%i) : " allows Visual Studio to directly jump to the file at the right line
         // when the user double clicks on the error line in the Output pane. Like any compile error.
-        sprintf_s(tmpStr, 255, "\n%s(%i) : GL Error : %s\n\n", file, line, gluErrorString(gl_error));
+        sprintf_s(tmpStr, 255, "\n%s(%i) : GL Error : %s\n\n", file, line, glErrorToString(gl_error));
         fprintf(stderr, "%s", tmpStr);
 #endif
         fprintf(stderr, "GL Error in file '%s' in line %d :\n", file, line);
-        fprintf(stderr, "%s\n", gluErrorString(gl_error));
+        fprintf(stderr, "%s\n", glErrorToString(gl_error));
         ret_val = false;
     }
 

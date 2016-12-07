@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "interpol.cuh"
-#include "cuda_helper.h"
+#include "helper_math.h"
 
 __constant__ __device__ int3 gridSize_D;     // The size of the volume texture
 __constant__ __device__ float3 gridOrg_D;    // The origin of the volume texture

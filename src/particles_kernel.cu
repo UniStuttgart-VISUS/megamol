@@ -22,9 +22,9 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "cuda_helper.h"
 #include "math_constants.h"
 #include "particles_kernel.cuh"
+#include "helper_math.h"
 
 // texture for particle position
 texture<float4, 1, cudaReadModeElementType> oldPosTex;

@@ -8,6 +8,9 @@
 #include "stdafx.h"
 #include "Streamline.h"
 
+#include "cuda_runtime.h"
+#include "helper_cuda.h"
+
 
 using namespace megamol;
 using namespace megamol::protein_cuda;

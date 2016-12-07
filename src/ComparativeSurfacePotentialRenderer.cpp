@@ -42,7 +42,6 @@
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
-#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 
 using namespace megamol;

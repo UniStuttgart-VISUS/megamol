@@ -13,7 +13,7 @@
 #include <thrust/reduce.h>
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/device_ptr.h>
-#include "cuda_helper.h"
+#include "helper_math.h"
 
 #ifdef CUDA_NO_SM_11_ATOMIC_INTRINSICS
 #error "Atomic intrinsics are missing (nvcc -arch=sm_11)"

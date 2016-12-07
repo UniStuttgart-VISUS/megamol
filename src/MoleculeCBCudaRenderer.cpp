@@ -36,10 +36,9 @@
 #include <fstream>
 #include <math.h>
 
+#include "helper_cuda.h"
 #include "particleSystem.cuh"
 #include "particles_kernel.cuh"
-
-#include "cuda_helper.h"
 #include <cuda_gl_interop.h>
 
 extern "C" void cudaInit(int argc, char **argv);
@@ -432,8 +431,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	// get total number of small circles
 	uint numSC = 0;
 	uint lastSC = 0;
-    cutilSafeCall( cudaMemcpy( (void *)&numSC, (void *)(m_dSmallCircleVisibleScan + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
-    cutilSafeCall( cudaMemcpy( (void *)&lastSC, (void *)(m_dSmallCircleVisible + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+    checkCudaErrors( cudaMemcpy( (void *)&numSC, (void *)(m_dSmallCircleVisibleScan + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+    checkCudaErrors( cudaMemcpy( (void *)&lastSC, (void *)(m_dSmallCircleVisible + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
 	numSC += lastSC;
 
     // count total number of arcs
@@ -442,8 +441,8 @@ void MoleculeCBCudaRenderer::ContourBuildupCuda( MolecularDataCall *mol) {
 	// get total number of probes
 	uint numProbes = 0;
 	uint lastProbeCnt = 0;
-    cutilSafeCall( cudaMemcpy( (void *)&numProbes, (void *)(m_dArcCountScan + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
-    cutilSafeCall( cudaMemcpy( (void *)&lastProbeCnt, (void *)(m_dArcCount + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+    checkCudaErrors( cudaMemcpy( (void *)&numProbes, (void *)(m_dArcCountScan + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
+    checkCudaErrors( cudaMemcpy( (void *)&lastProbeCnt, (void *)(m_dArcCount + ( this->numAtoms * this->atomNeighborCount) -1), sizeof(uint), cudaMemcpyDeviceToHost));
 	numProbes += lastProbeCnt;
 
 	// resize torus buffer objects

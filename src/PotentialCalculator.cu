@@ -11,6 +11,8 @@
 #include "gpu_poisson_solver.cu" // Note: by Georg Rempfer (georg@icp.uni-stuttgart.de)
 #include "cuenergy.cu"
 #include "cuda_error_check.h"
+#ifdef _WIN64
+#include "cufft.h"
 
 #define CUERR { cudaError_t err; \
   if ((err = cudaGetLastError()) != cudaSuccess) { \
@@ -120,20 +122,20 @@ cudaError_t SolvePoissonEq(float gridSpacing, uint3 gridSize, float *charges,
         return cudaGetLastError();
     }
 
-    if(cufftSetCompatibilityMode(plan_fft, CUFFT_COMPATIBILITY_NATIVE) != CUFFT_SUCCESS) {
+    /*if(cufftSetCompatibilityMode(plan_fft, CUFFT_COMPATIBILITY_NATIVE) != CUFFT_SUCCESS) {
         fprintf(stderr, "ERROR: Unable to set fft compatibility mode to native\n");
         return cudaGetLastError();
-    }
+    }*/
 
     if(cufftPlan3d(&plan_ifft, Nz, Ny, Nx, CUFFT_C2R) != CUFFT_SUCCESS) {
         fprintf(stderr, "ERROR: Unable to create ifft plan\n");
         return cudaGetLastError();
     }
 
-    if(cufftSetCompatibilityMode(plan_ifft, CUFFT_COMPATIBILITY_NATIVE) != CUFFT_SUCCESS) {
+    /*if(cufftSetCompatibilityMode(plan_ifft, CUFFT_COMPATIBILITY_NATIVE) != CUFFT_SUCCESS) {
         fprintf(stderr, "ERROR: Unable to set ifft compatibility mode to native\n");
         return cudaGetLastError();
-    }
+    }*/
 
     /* FFT in place */
     printf("Executing FFT in place\n");
@@ -378,4 +380,4 @@ cudaError_t DirectCoulombSummation(float *atomData, uint atomCount,
 
 
 
-
+#endif // _WIN64

@@ -32,7 +32,6 @@
 #include "mmcore/param/EnumParam.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 #include <cstdlib>
 
@@ -442,7 +441,7 @@ void StreamlineRenderer::genSeedPoints(
     float yMin = vti->GetOrigin().GetY();
 
     // Initialize random seed
-    srand (time(NULL));
+    srand (static_cast<unsigned int>(time(NULL)));
     this->seedPoints.SetCount(0);
     //for (size_t cnt = 0; cnt < this->nStreamlines; ++cnt) {
     while (this->seedPoints.Count()/3 < this->nStreamlines) {
@@ -529,7 +528,7 @@ bool StreamlineRenderer::requestPlane(Call& call) {
     this->clipPlane.Set(vislib::math::Point<float, 3>(0.0, 0.0, this->seedClipZ * this->bbox.ObjectSpaceBBox().Depth()), Vec3f(0.0, 0.0, 1.0));
     this->clipPlane.Distance(vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f));
 
-    ccp->SetColour(0.0, 0.0, 0.0, 0.0);
+    ccp->SetColour(0, 0, 0, 0);
     ccp->SetPlane(this->clipPlane);
 
     return true;

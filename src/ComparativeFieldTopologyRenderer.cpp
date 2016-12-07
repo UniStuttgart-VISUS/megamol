@@ -27,12 +27,15 @@
 #include "vislib/sys/Log.h"
 #include "vislib/math/mathfunctions.h"
 
-
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/Interpol.h"
 #include "VecField3f.h"
 #include "CUDAFieldTopology.cuh"
 #include <GL/glu.h>
+
+#include "cuda_runtime.h"
+#include "helper_cuda.h"
+#include "helper_math.h"
 
 bool myisnan(double x) { return x != x; } // uses Nan != Nan
 bool myisinf(double x) { return !myisnan(x) && myisnan(x - x); } // uses inf-inf=NaN
@@ -415,9 +418,9 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     }
     try {
         if(!this->streamlineShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw Exception("Generic creation failure", __FILE__, __LINE__);
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
-    catch(Exception &e){
+	catch (vislib::Exception &e){
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
@@ -436,9 +439,9 @@ bool ComparativeFieldTopologyRenderer::create(void) {
     }
     try {
         if(!this->sliceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw Exception("Generic creation failure", __FILE__, __LINE__);
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
-    catch(Exception &e){
+	catch (vislib::Exception &e){
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                 "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;

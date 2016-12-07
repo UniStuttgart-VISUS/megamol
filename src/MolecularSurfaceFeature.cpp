@@ -18,7 +18,7 @@ int MolecularSurfaceFeature::GetAbscissaeCount() const {
 }
 
 int MolecularSurfaceFeature::GetDataCount() const {
-    return data.Count();
+    return static_cast<int>(data.Count());
 }
 
 bool MolecularSurfaceFeature::IsCategoricalAbscissa(const SIZE_T abscissa) const {

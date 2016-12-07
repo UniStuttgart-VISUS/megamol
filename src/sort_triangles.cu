@@ -16,7 +16,7 @@
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/device_ptr.h>
 
-#include "cuda_helper.h"
+#include "helper_math.h"
 
 //#define SORT_TRIANGLES_CUDA_USE_TIMER
 

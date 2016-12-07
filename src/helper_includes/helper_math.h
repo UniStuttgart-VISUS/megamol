@@ -1422,6 +1422,33 @@ inline __host__ __device__ float3 cross(float3 a, float3 b)
     return make_float3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
 }
 
+/**
+ * Returns a 1D grid definition based on the given threadsPerBlock value.
+ *
+ * @param size             The minimum number of threads
+ * @param threadsPerBlock  The number of threads per block
+ * @return The grid dimensions
+ */
+inline dim3 Grid(const unsigned int size, const int threadsPerBlock) {
+    //TODO: remove hardcoded hardware capabilities :(
+    // see: http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/arch.inl
+    //   and http://code.google.com/p/thrust/source/browse/thrust/detail/backend/cuda/detail/safe_scan.inl
+    //   for refactoring.
+    // Get maximum grid size of CUDA device.
+    //CUdevice device;
+    //cuDeviceGet(&device, 0);
+    //CUdevprop deviceProps;
+    //cuDeviceGetProperties(&deviceProps, device);
+    //this->gridSize = dim3(deviceProps.maxGridSize[0],
+    //  deviceProps.maxGridSize[1],
+    //  deviceProps.maxGridSize[2]);
+    const dim3 maxGridSize(65535, 65535, 0);
+    const int blocksPerGrid = (size + threadsPerBlock - 1) / threadsPerBlock;
+    dim3 grid(blocksPerGrid, 1, 1);
+
+    return grid;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // smoothstep
 // - returns 0 if x < a

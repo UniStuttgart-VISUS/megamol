@@ -21,7 +21,6 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "RMS.h"
 #include "ogl_error_check.h"
-#include "cuda_error_check.h"
 #include "DiffusionSolver.h"
 
 #include "mmcore/CoreInstance.h"
@@ -46,15 +45,15 @@ using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
 
 // 99 75 0
-Vec3f dark_brown = Vec3f(0.388235294, 0.294117647, 0.0);
-Vec3f light_brown = Vec3f(0.654901961, 0.494117647, 0.0);
-Vec3f light_blue = Vec3f(0.0, 0.458823529, 0.650980392);
-Vec3f dark_blue = Vec3f(0.0, 0.309803922, 0.439215686);
+Vec3f dark_brown = Vec3f(0.388235294f, 0.294117647f, 0.0f);
+Vec3f light_brown = Vec3f(0.654901961f, 0.494117647f, 0.0f);
+Vec3f light_blue = Vec3f(0.0f, 0.458823529f, 0.650980392f);
+Vec3f dark_blue = Vec3f(0.0f, 0.309803922f, 0.439215686f);
 
 // Lighter brown for shading
 // #DAB23A
 // 218 178 58
-Vec3f light_surf_brown = Vec3f(0.854901961, 0.698039216, 0.22745098);
+Vec3f light_surf_brown = Vec3f(0.854901961f, 0.698039216f, 0.22745098f);
 
 Vec3f white = Vec3f(1, 1, 1);
 
@@ -362,7 +361,7 @@ ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void) :
     this->MakeSlotAvailable(&this->surfaceMappingMaxItSlot);
 
     // Spring stiffness
-    this->surfMappedSpringStiffness = 0.1;
+    this->surfMappedSpringStiffness = 0.1f;
     this->surfMappedSpringStiffnessSlot.SetParameter(
             new core::param::FloatParam(this->surfMappedSpringStiffness,
                     0.01f));
@@ -1712,15 +1711,15 @@ bool ComparativeMolSurfaceRenderer::getVBOData1(core::Call& call) {
 
     // Set vertex data
     c->SetVbo(this->deformSurf1.GetVtxDataVBO());
-    c->SetDataStride(DeformableGPUSurfaceMT::vertexDataStride);
-    c->SetDataOffs(DeformableGPUSurfaceMT::vertexDataOffsPos,
-            DeformableGPUSurfaceMT::vertexDataOffsNormal,
-            DeformableGPUSurfaceMT::vertexDataOffsTexCoord);
-    c->SetVertexCnt(this->deformSurf1.GetVertexCnt());
+    c->SetDataStride(static_cast<int>(DeformableGPUSurfaceMT::vertexDataStride));
+	c->SetDataOffs(static_cast<int>(DeformableGPUSurfaceMT::vertexDataOffsPos),
+			static_cast<int>(DeformableGPUSurfaceMT::vertexDataOffsNormal),
+			static_cast<int>(DeformableGPUSurfaceMT::vertexDataOffsTexCoord));
+	c->SetVertexCnt(static_cast<unsigned int>(this->deformSurf1.GetVertexCnt()));
 
     // Set triangles
     c->SetVboTriangleIdx(this->deformSurf1.GetTriangleIdxVBO());
-    c->SetTriangleCnt(this->deformSurf1.GetTriangleCnt());
+	c->SetTriangleCnt(static_cast<unsigned int>(this->deformSurf1.GetTriangleCnt()));
 
     // Set potential texture
     c->SetTex(this->surfAttribTex1);
@@ -1742,15 +1741,15 @@ bool ComparativeMolSurfaceRenderer::getVBOData2(core::Call& call) {
 
     // Set vertex data
     c->SetVbo(this->deformSurf2.GetVtxDataVBO());
-    c->SetDataStride(DeformableGPUSurfaceMT::vertexDataStride);
-    c->SetDataOffs(DeformableGPUSurfaceMT::vertexDataOffsPos,
-            DeformableGPUSurfaceMT::vertexDataOffsNormal,
-            DeformableGPUSurfaceMT::vertexDataOffsTexCoord);
-    c->SetVertexCnt(this->deformSurf2.GetVertexCnt());
+	c->SetDataStride(static_cast<int>(DeformableGPUSurfaceMT::vertexDataStride));
+	c->SetDataOffs(static_cast<int>(DeformableGPUSurfaceMT::vertexDataOffsPos),
+			static_cast<int>(DeformableGPUSurfaceMT::vertexDataOffsNormal),
+			static_cast<int>(DeformableGPUSurfaceMT::vertexDataOffsTexCoord));
+	c->SetVertexCnt(static_cast<unsigned int>(this->deformSurf2.GetVertexCnt()));
 
     // Set triangles
     c->SetVboTriangleIdx(this->deformSurf2.GetTriangleIdxVBO());
-    c->SetTriangleCnt(this->deformSurf2.GetTriangleCnt());
+	c->SetTriangleCnt(static_cast<unsigned int>(this->deformSurf2.GetTriangleCnt()));
 
     // Set potential texture
     c->SetTex(this->surfAttribTex2);
@@ -2945,9 +2944,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Render surface #1
         if (!this->renderSurface(this->deformSurf1.GetVtxDataVBO(),
-                this->deformSurf1.GetVertexCnt(),
+                static_cast<uint>(this->deformSurf1.GetVertexCnt()),
                 this->deformSurf1.GetTriangleIdxVBO(),
-                this->deformSurf1.GetTriangleCnt() * 3, this->surface1RM,
+				static_cast<uint>(this->deformSurf1.GetTriangleCnt() * 3), this->surface1RM,
                 this->surface1ColorMode, this->surfAttribTex1,
                 this->uniformColorSurf1, this->surf1AlphaScl)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -2966,9 +2965,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Render surface #2
         if (!this->renderSurface(this->deformSurf2.GetVtxDataVBO(),
-                this->deformSurf2.GetVertexCnt(),
+                static_cast<uint>(this->deformSurf2.GetVertexCnt()),
                 this->deformSurf2.GetTriangleIdxVBO(),
-                this->deformSurf2.GetTriangleCnt() * 3, this->surface2RM,
+				static_cast<uint>(this->deformSurf2.GetTriangleCnt() * 3), this->surface2RM,
                 this->surface2ColorMode, this->surfAttribTex2,
                 this->uniformColorSurf2, this->surf2AlphaScl)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -3009,9 +3008,9 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
         // Render mapped surface
         if (!this->renderMappedSurface(this->deformSurf2.GetVtxDataVBO(),
                 this->deformSurfMapped.GetVtxDataVBO(),
-                this->deformSurfMapped.GetVertexCnt(),
+                static_cast<uint>(this->deformSurfMapped.GetVertexCnt()),
                 this->deformSurfMapped.GetTriangleIdxVBO(),
-                this->deformSurfMapped.GetTriangleCnt() * 3,
+				static_cast<uint>(this->deformSurfMapped.GetTriangleCnt() * 3),
                 this->surfaceMappedRM, this->surfaceMappedColorMode)) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                     "%s: could not render mapped surface", this->ClassName());
@@ -3132,7 +3131,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
  */
 bool ComparativeMolSurfaceRenderer::renderEdges() {
 
-    unsigned int edgeCnt = this->deformSurfMapped.GetTriangleCnt() * 3 / 2;
+    unsigned int edgeCnt = static_cast<unsigned int>(this->deformSurfMapped.GetTriangleCnt() * 3 / 2);
 
     glDisable (GL_LIGHTING);
     glColor3f(0.0, 1.0, 0.0);
@@ -3145,7 +3144,7 @@ bool ComparativeMolSurfaceRenderer::renderEdges() {
     //Draw Triangle from VBO - do each time window, view point or data changes
     //Establish its 3 coordinates per vertex with zero stride in this array; necessary here
     glVertexPointer(3, GL_FLOAT,
-            this->deformSurfMapped.vertexDataStride * sizeof(float),
+            static_cast<GLsizei>(this->deformSurfMapped.vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(0));
 
     glDrawElements(GL_LINES, edgeCnt * 2, GL_UNSIGNED_INT,
@@ -3240,7 +3239,7 @@ bool ComparativeMolSurfaceRenderer::renderExternalForces() {
     glColorPointer(3, GL_FLOAT, 0, this->lineColors.PeekElements());
 
     glLineWidth(2.0);
-    glDrawArrays(GL_LINES, 0, gridSize * 2);
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(gridSize * 2));
     // deactivate vertex arrays after drawing
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -3387,7 +3386,7 @@ bool ComparativeMolSurfaceRenderer::renderGrid(
 
     glLineWidth(1.0);
     glColor3f(0.0, 0.0, 1.0);
-    glDrawArrays(GL_LINES, 0, this->lines.Count() / 3);
+	glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(this->lines.Count() / 3));
     // deactivate vertex arrays after drawing
     glDisableClientState(GL_VERTEX_ARRAY);
 //    glDisableClientState(GL_COLOR_ARRAY);
@@ -3429,15 +3428,15 @@ bool ComparativeMolSurfaceRenderer::renderSurface(GLuint vbo, uint vertexCnt,
     CheckForGLError(); // OpenGL error check
 
     glVertexAttribPointerARB(attribLocPos, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+			static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos
                     * sizeof(float)));
     glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+			static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsNormal
                     * sizeof(float)));
     glVertexAttribPointerARB(attribLocTexCoord, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+			static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsTexCoord
                     * sizeof(float)));
     CheckForGLError(); // OpenGL error check
@@ -3525,7 +3524,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag(
 
     // Note: This method does not check whether the vertexFlag array is filled
 
-    GLint attribLocPos, attribLocNormal, attribLocFlag;
+    GLint attribLocPos, /*attribLocNormal,*/ attribLocFlag;
 
     /* Get vertex attributes from vbo */
 
@@ -3548,7 +3547,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag(
     CheckForGLError(); // OpenGL error check
 
     glVertexAttribPointerARB(attribLocPos, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+			static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos
                     * sizeof(float)));
 //    glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE,
@@ -3581,7 +3580,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag(
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, surf.GetTriangleIdxVBO());
     CheckForGLError(); // OpenGL error check
 
-    glDrawElements(GL_TRIANGLES, surf.GetTriangleCnt() * 3, GL_UNSIGNED_INT,
+	glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(surf.GetTriangleCnt() * 3), GL_UNSIGNED_INT,
             reinterpret_cast<void*>(0));
 
     glDisable(GL_CULL_FACE);
@@ -3612,7 +3611,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(
 
     // Note: This method does not check whether the vertexFlag array is filled
 
-    GLint attribLocPos, attribLocNormal, attribLocUncertainty;
+    GLint attribLocPos, /*attribLocNormal,*/ attribLocUncertainty;
 
     /* Get vertex attributes from vbo */
 
@@ -3622,7 +3621,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(
     this->pplSurfaceShaderUncertainty.Enable();
     glUniform1fARB(
             this->pplSurfaceShaderUncertainty.ParameterLocation(
-                    "maxUncertainty"), 1.0 / this->surfMaxPosDiff);
+                    "maxUncertainty"), 1.0f / this->surfMaxPosDiff);
     CheckForGLError(); // OpenGL error check
 
     // Note: glGetAttribLocation returnes -1 if the attribute if not used in
@@ -3638,7 +3637,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(
     CheckForGLError(); // OpenGL error check
 
     glVertexAttribPointerARB(attribLocPos, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+			static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos
                     * sizeof(float)));
 //    glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE,
@@ -3668,7 +3667,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, surf.GetTriangleIdxVBO());
     CheckForGLError(); // OpenGL error check
 
-    glDrawElements(GL_TRIANGLES, surf.GetTriangleCnt() * 3, GL_UNSIGNED_INT,
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(surf.GetTriangleCnt() * 3), GL_UNSIGNED_INT,
             reinterpret_cast<void*>(0));
 
     glDisable(GL_CULL_FACE);
@@ -3696,9 +3695,9 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(GLuint vboOld,
         uint triangleVertexCnt, SurfaceRenderMode renderMode,
         SurfaceColorMode colorMode) {
 
-    GLint attribLocPosNew, attribLocPosOld;
+    GLint attribLocPosNew/*, attribLocPosOld*/;
     GLint attribLocNormal, attribLocCorruptTriangleFlag;
-    GLint attribLocTexCoordNew, attribLocTexCoordOld, attribLocPathLen,
+    GLint attribLocTexCoordNew, /*attribLocTexCoordOld,*/ attribLocPathLen,
             attribLocSurfAttrib;
 
     this->pplMappedSurfaceShader.Enable();
@@ -3741,17 +3740,17 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(GLuint vboOld,
     CheckForGLError(); // OpenGL error check
 
     glVertexAttribPointerARB(attribLocPosNew, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+			static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsPos
                     * sizeof(float)));
 
     glVertexAttribPointerARB(attribLocTexCoordNew, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+			static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsTexCoord
                     * sizeof(float)));
 
     glVertexAttribPointerARB(attribLocNormal, 3, GL_FLOAT, GL_FALSE,
-            DeformableGPUSurfaceMT::vertexDataStride * sizeof(float),
+            static_cast<GLsizei>(DeformableGPUSurfaceMT::vertexDataStride * sizeof(float)),
             reinterpret_cast<void*>(DeformableGPUSurfaceMT::vertexDataOffsNormal
                     * sizeof(float)));
 
@@ -4081,7 +4080,7 @@ void ComparativeMolSurfaceRenderer::updateParams() {
     // Param for minimum vertex displacement
     if (this->surfregMinDisplSclSlot.IsDirty()) {
         this->surfregMinDisplScl =
-                1.0
+                1.0f
                         / this->surfregMinDisplSclSlot.Param<
                                 core::param::FloatParam>()->Value();
         this->surfregMinDisplSclSlot.ResetDirty();

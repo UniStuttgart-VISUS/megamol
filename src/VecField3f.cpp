@@ -10,13 +10,13 @@
 
 #include "stdafx.h"
 #if (defined(WITH_CUDA) && (WITH_CUDA))
-//#include "cuda_helper.h"
 #define _USE_MATH_DEFINES 1
 
 #endif
 
 #include "VecField3f.h"
 #include "protein_calls/Interpol.h"
+#include "helper_math.h"
 
 
 

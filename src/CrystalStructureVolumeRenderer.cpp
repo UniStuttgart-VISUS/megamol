@@ -45,7 +45,6 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include <thrust/version.h>
-#include "cuda_helper.h"
 #include "cuda_gl_interop.h"
 
 #include <GL/glu.h>
@@ -745,7 +744,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
 
         int rc = cqs->calc_map(
-                gridPos.Count()/4,
+                static_cast<long>(gridPos.Count()/4),
                 gridPos.PeekElements(),
                 gridCol.PeekElements(),
                 true,                // Use 'color' array
@@ -894,10 +893,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     // Allocate device memory if necessary
 
     if(this->gridCurlD == NULL) {
-        cutilSafeCall(cudaMalloc((void **)&this->gridCurlD, sizeof(float)*nVoxels*3));
+        checkCudaErrors(cudaMalloc((void **)&this->gridCurlD, sizeof(float)*nVoxels*3));
     }
     if(this->gridCurlMagD == NULL) {
-        cutilSafeCall(cudaMalloc((void **)&this->gridCurlMagD, sizeof(float)*nVoxels));
+        checkCudaErrors(cudaMalloc((void **)&this->gridCurlMagD, sizeof(float)*nVoxels));
     }
 
     // Copy grid parameters to constant device memory
@@ -1552,7 +1551,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, si
     sap.format = GL_STENCIL_INDEX;
     sap.state = FramebufferObject::ATTACHMENT_DISABLED;
 
-    return this->srcFbo.Create(width, height, 1, cap, dap, sap);
+	return this->srcFbo.Create(static_cast<UINT>(width), static_cast<UINT>(height), 1, cap, dap, sap);
 }
 
 
@@ -1564,10 +1563,10 @@ void protein_cuda::CrystalStructureVolumeRenderer::FreeBuffs() {
     if(this->frame0 != NULL) { delete[] this->frame0; this->frame0 = NULL; }
     if(this->frame1 != NULL){ delete[] this->frame1; this->frame1 = NULL; }
 
-    if(this->gridCurlD != NULL) { cutilSafeCall(cudaFree(this->gridCurlD)); this->gridCurlD = NULL; }
-    if(this->gridCurlMagD != NULL) { cutilSafeCall(cudaFree(this->gridCurlMagD)); this->gridCurlMagD = NULL; }
-    if(this->mcVertOut_D != NULL) { cutilSafeCall(cudaFree(this->mcVertOut_D)); this->mcVertOut_D = NULL; }
-    if(this->mcNormOut_D != NULL) { cutilSafeCall(cudaFree(this->mcNormOut_D)); this->mcNormOut_D = NULL; }
+    if(this->gridCurlD != NULL) { checkCudaErrors(cudaFree(this->gridCurlD)); this->gridCurlD = NULL; }
+    if(this->gridCurlMagD != NULL) { checkCudaErrors(cudaFree(this->gridCurlMagD)); this->gridCurlMagD = NULL; }
+    if(this->mcVertOut_D != NULL) { checkCudaErrors(cudaFree(this->mcVertOut_D)); this->mcVertOut_D = NULL; }
+    if(this->mcNormOut_D != NULL) { checkCudaErrors(cudaFree(this->mcNormOut_D)); this->mcNormOut_D = NULL; }
 
     if(glIsTexture(this->uniGridTex)) glDeleteTextures(1, &this->uniGridTex);
     if(glIsTexture(this->curlMagTex)) glDeleteTextures(1, &this->curlMagTex);
@@ -2073,9 +2072,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
     if((curVP[2] != this->srcFboDim.X()) || (curVP[3] != srcFboDim.Y())) {
-        this->srcFboDim.SetX(curVP[2]);
-        this->srcFboDim.SetY(curVP[3]);
-        if(!this->CreateSrcFbo(curVP[2], curVP[3])) return false;
+        this->srcFboDim.SetX(static_cast<int>(curVP[2]));
+        this->srcFboDim.SetY(static_cast<int>(curVP[3]));
+		if (!this->CreateSrcFbo(static_cast<size_t>(curVP[2]), static_cast<size_t>(curVP[3]))) return false;
     }
 
     this->srcFbo.Enable(0);
@@ -2444,9 +2443,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
         else if(this->arrColorMode == ARRCOL_ORIENT){
             float len = vec.Length();
             // Set color based on orientation
-            this->arrowCol[cnt*3+0] = (vec.X()/len+1.0)*0.5f;
-            this->arrowCol[cnt*3+1] = (vec.Y()/len+1.0)*0.5f;
-            this->arrowCol[cnt*3+2] = (vec.Z()/len+1.0)*0.5f;
+            this->arrowCol[cnt*3+0] = (vec.X()/len+1.0f)*0.5f;
+            this->arrowCol[cnt*3+1] = (vec.Y()/len+1.0f)*0.5f;
+            this->arrowCol[cnt*3+2] = (vec.Z()/len+1.0f)*0.5f;
         }
         else if(this->arrColorMode == ARRCOL_MAGNITUDE) {
             // Use gradient color based on magnitude
@@ -2737,7 +2736,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
     // Set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, sphPos.PeekElements());
     glColorPointer(3, GL_FLOAT, 0, sphColor.PeekElements());
-    glDrawArrays(GL_POINTS, 0, this->critPoints.Count()/3);
+	glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->critPoints.Count() / 3));
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -2764,7 +2763,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
 
     glVertexPointer(3, GL_FLOAT, 16, atomPos);
     glColorPointer(3, GL_FLOAT, 0, atomCol);
-    glDrawElements(GL_LINES, this->edgeIdxBa.Count(), GL_UNSIGNED_INT,
+	glDrawElements(GL_LINES, static_cast<GLsizei>(this->edgeIdxBa.Count()), GL_UNSIGNED_INT,
             this->edgeIdxBa.PeekElements());
 
     glDisableClientState(GL_COLOR_ARRAY);
@@ -2887,7 +2886,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
     glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
     glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
 
-    glDrawArrays(GL_POINTS, 0, (this->edgeIdxBa.Count()/2));
+	glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->edgeIdxBa.Count() / 2));
 
     glDisableVertexAttribArrayARB(this->attribLocInParams);
     glDisableVertexAttribArrayARB(this->attribLocQuatC);
@@ -2917,7 +2916,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
 
     glVertexPointer(3, GL_FLOAT, 16, atomPos);
     glColorPointer(3, GL_FLOAT, 0, atomCol);
-    glDrawElements(GL_LINES, this->edgeIdxTi.Count(), GL_UNSIGNED_INT,
+	glDrawElements(GL_LINES, static_cast<GLsizei>(this->edgeIdxTi.Count()), GL_UNSIGNED_INT,
             this->edgeIdxTi.PeekElements());
 
     glDisableClientState(GL_COLOR_ARRAY);
@@ -3031,7 +3030,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
     glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
     glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
 
-    glDrawArrays(GL_POINTS, 0, (this->edgeIdxTi.Count()/2));
+	glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>((this->edgeIdxTi.Count() / 2)));
 
     glDisableVertexAttribArrayARB(this->attribLocInParams);
     glDisableVertexAttribArrayARB(this->attribLocQuatC);
@@ -3095,14 +3094,14 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
             gridMaxCoord[2] - gridMinCoord[2]);
 
     uint3 subVolStart;
-    subVolStart.x = ((this->posXMin - gridOrg[0])/gridXAxis[0])*gridDim.X();
-    subVolStart.y = ((this->posYMin - gridOrg[1])/gridYAxis[1])*gridDim.Y();
-    subVolStart.z = ((this->posZMin - gridOrg[2])/gridZAxis[2])*gridDim.Z();
+    subVolStart.x = static_cast<unsigned int>(((this->posXMin - gridOrg[0])/gridXAxis[0])*gridDim.X());
+    subVolStart.y = static_cast<unsigned int>(((this->posYMin - gridOrg[1])/gridYAxis[1])*gridDim.Y());
+    subVolStart.z = static_cast<unsigned int>(((this->posZMin - gridOrg[2])/gridZAxis[2])*gridDim.Z());
 
     uint3 subVolEnd;
-    subVolEnd.x = ((this->posXMax - gridOrg[0])/gridXAxis[0])*gridDim.X();
-    subVolEnd.y = ((this->posYMax - gridOrg[1])/gridYAxis[1])*gridDim.Y();
-    subVolEnd.z = ((this->posZMax - gridOrg[2])/gridZAxis[2])*gridDim.Z();
+    subVolEnd.x = static_cast<unsigned int>(((this->posXMax - gridOrg[0])/gridXAxis[0])*gridDim.X());
+    subVolEnd.y = static_cast<unsigned int>(((this->posYMax - gridOrg[1])/gridYAxis[1])*gridDim.Y());
+    subVolEnd.z = static_cast<unsigned int>(((this->posZMax - gridOrg[2])/gridZAxis[2])*gridDim.Z());
 
     if(this->posXMax > gridMaxCoord[0]) this->posXMax = gridMaxCoord[0];
     if(this->posYMax > gridMaxCoord[1]) this->posYMax = gridMaxCoord[1];
@@ -3122,13 +3121,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
     if(nVerticesMC != this->nVerticesMCOld) {
         // Free if necessary
-        if(this->mcVertOut_D != NULL) cutilSafeCall(cudaFree(this->mcVertOut_D));
-        if(this->mcNormOut_D != NULL) cutilSafeCall(cudaFree(this->mcNormOut_D));
+        if(this->mcVertOut_D != NULL) checkCudaErrors(cudaFree(this->mcVertOut_D));
+        if(this->mcNormOut_D != NULL) checkCudaErrors(cudaFree(this->mcNormOut_D));
         if(this->mcVertOut != NULL) delete[] this->mcVertOut;
         if(this->mcNormOut != NULL) delete[] this->mcNormOut;
         // Allocate memory
-        cutilSafeCall(cudaMalloc((void **)&this->mcVertOut_D, nVerticesMC*sizeof(float3)));
-        cutilSafeCall(cudaMalloc((void **)&this->mcNormOut_D, nVerticesMC*sizeof(float3)));
+        checkCudaErrors(cudaMalloc((void **)&this->mcVertOut_D, nVerticesMC*sizeof(float3)));
+        checkCudaErrors(cudaMalloc((void **)&this->mcNormOut_D, nVerticesMC*sizeof(float3)));
         this->mcVertOut = new float[nVerticesMC*3];
         this->mcNormOut = new float[nVerticesMC*3];
         printf("(Re)allocating of memory done.");
@@ -3174,13 +3173,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
     // Copy data to host
 
-    cutilSafeCall(cudaMemcpy(
+    checkCudaErrors(cudaMemcpy(
             this->mcVertOut,
             this->mcVertOut_D,
             this->cudaMC->GetVertexCount()*3*sizeof(float),
             cudaMemcpyDeviceToHost));
 
-    cutilSafeCall(cudaMemcpy(
+    checkCudaErrors(cudaMemcpy(
             this->mcNormOut,
             this->mcNormOut_D,
             this->cudaMC->GetVertexCount()*3*sizeof(float),
@@ -3403,9 +3402,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
     if((curVP[2] != this->fboDim.X()) || (curVP[3] != this->fboDim.Y())) {
-        this->fboDim.SetX(curVP[2]);
-        this->fboDim.SetY(curVP[3]);
-        if(!this->CreateFbo(curVP[2], curVP[3]))
+        this->fboDim.SetX(static_cast<int>(curVP[2]));
+        this->fboDim.SetY(static_cast<int>(curVP[3]));
+        if(!this->CreateFbo(static_cast<UINT>(curVP[2]), static_cast<UINT>(curVP[3])))
             return false;
     }
 
@@ -3458,7 +3457,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     glUniform1fARB(this->rcShader.ParameterLocation("licContrast"), this->volLicContrastStretching);
     glUniform1fARB(this->rcShader.ParameterLocation("licBright"), this->volLicBright);
     glUniform1fARB(this->rcShader.ParameterLocation("licTCScl"), this->volLicTCScl);
-    glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), fboDim.X(), fboDim.Y(),
+	glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()), static_cast<float>(fboDim.Y()),
             this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
     glUniform1iARB(this->rcShader.ParameterLocation("vColorMode"), this->vColorMode);
     glUniform1iARB(this->rcShader.ParameterLocation("rayMarchTex"), this->rmTex);
@@ -4288,15 +4287,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
         for (int p=0; p<numPolygons; p++) {
 
             float normVerts[9];
-            normVerts[0] = transX + scale * meshVertices[meshFaces[p*3+0]*3+0];
-            normVerts[1] = transY + scale * meshVertices[meshFaces[p*3+0]*3+1];
-            normVerts[2] = transZ + scale * meshVertices[meshFaces[p*3+0]*3+2];
-            normVerts[3] = transX + scale * meshVertices[meshFaces[p*3+1]*3+0];
-            normVerts[4] = transY + scale * meshVertices[meshFaces[p*3+1]*3+1];
-            normVerts[5] = transZ + scale * meshVertices[meshFaces[p*3+1]*3+2];
-            normVerts[6] = transX + scale * meshVertices[meshFaces[p*3+2]*3+0];
-            normVerts[7] = transY + scale * meshVertices[meshFaces[p*3+2]*3+1];
-            normVerts[8] = transZ + scale * meshVertices[meshFaces[p*3+2]*3+2];
+            normVerts[0] = static_cast<float>(transX + scale * meshVertices[meshFaces[p*3+0]*3+0]);
+            normVerts[1] = static_cast<float>(transY + scale * meshVertices[meshFaces[p*3+0]*3+1]);
+            normVerts[2] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p*3+0]*3+2]);
+            normVerts[3] = static_cast<float>(transX + scale * meshVertices[meshFaces[p*3+1]*3+0]);
+            normVerts[4] = static_cast<float>(transY + scale * meshVertices[meshFaces[p*3+1]*3+1]);
+            normVerts[5] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p*3+1]*3+2]);
+            normVerts[6] = static_cast<float>(transX + scale * meshVertices[meshFaces[p*3+2]*3+0]);
+            normVerts[7] = static_cast<float>(transY + scale * meshVertices[meshFaces[p*3+2]*3+1]);
+            normVerts[8] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p*3+2]*3+2]);
 
             float norm[3];
             {
@@ -4319,9 +4318,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
                     len *= -1.0;
                 }
 
-                norm[0] /= len;
-                norm[1] /= len;
-                norm[2] /= len;
+                norm[0] /= static_cast<float>(len);
+                norm[1] /= static_cast<float>(len);
+                norm[2] /= static_cast<float>(len);
             }
 
             // ###### HACK neglecting normals of non-triangles
