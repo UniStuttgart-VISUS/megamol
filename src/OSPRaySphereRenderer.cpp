@@ -20,6 +20,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallClipPlane.h"
 
 #include "ospray/ospray.h"
 
@@ -116,7 +117,7 @@ mat_type("Material::Type", "Switches material types")
     mt->SetTypePair(VELVET, "Velvet (only PathTracer)");
 
     // Ambient parameters
-    this->AOweight << new core::param::FloatParam(0.25f);
+    this->AOweight << new core::param::FloatParam(1.0f);
     this->AOsamples << new core::param::IntParam(1);
     this->AOdistance << new core::param::FloatParam(1e20f);
     this->extraSamles << new core::param::BoolParam(true);
@@ -272,7 +273,7 @@ void ospray::OSPRaySphereRenderer::release() {
     ospRelease(spheres);
     ospRelease(light);
     ospRelease(lightArray);
-    //GLenum shaderError = this->osprayShader.Release();
+    ospRelease(pln);
     core::moldyn::AbstractSimpleSphereRenderer::release();
 }
 
@@ -288,13 +289,6 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     core::moldyn::MultiParticleDataCall *c2 = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
     if (c2 == NULL)
         return false;
-
-    //TODO
-    float clipDat[4];
-    float clipCol[4];
-    this->getClipData(clipDat, clipCol);
-    
-    
 
     if (camParams == NULL)
         camParams = new vislib::graphics::CameraParamsStore();
@@ -352,6 +346,17 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
     ospCommit(camera);
 
+    // clipPlane setup
+    //core::view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<core::view::CallClipPlane>();
+    float clipDat[4];
+    float clipCol[4];
+    this->getClipData(clipDat, clipCol);
+
+    pln = ospNewPlane("clipPlane");
+    ospSet1f(pln, "dist", clipDat[3]);
+    ospSet3fv(pln, "normal", clipDat);
+    ospSet4fv(pln, "color", clipCol);
+    ospCommit(pln);
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
@@ -446,26 +451,18 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             ospSetData(spheres, "spheres", vertexData);
             ospSetData(spheres, "color", colorData);
             ospSet1f(spheres, "radius", parts.GetGlobalRadius());
+            ospSetObject(spheres, "clipPlane", pln);
 
             // custom material settings
             OSPMaterial material;
             switch (this->mat_type.Param<core::param::EnumParam>()->Value()) {
             case OBJMATERIAL:
                 material = ospNewMaterial(renderer, "OBJMaterial");
-                ospSetVec3f(material, "Kd", {
-                    this->mat_Kd.Param<core::param::Vector3fParam>()->Value().GetX(),
-                    this->mat_Kd.Param<core::param::Vector3fParam>()->Value().GetY(),
-                    this->mat_Kd.Param<core::param::Vector3fParam>()->Value().GetZ() });
-                ospSetVec3f(material, "Ks", {
-                    this->mat_Ks.Param<core::param::Vector3fParam>()->Value().GetX(),
-                    this->mat_Ks.Param<core::param::Vector3fParam>()->Value().GetY(),
-                    this->mat_Ks.Param<core::param::Vector3fParam>()->Value().GetZ() });
+                ospSet3fv(material, "Kd", this->mat_Kd.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+                ospSet3fv(material, "Ks", this->mat_Ks.Param<core::param::Vector3fParam>()->Value().PeekComponents());
                 ospSet1f(material, "Ns", this->mat_Ns.Param<core::param::FloatParam>()->Value());
                 ospSet1f(material, "d", this->mat_d.Param<core::param::FloatParam>()->Value());
-                ospSetVec3f(material, "Tf", {
-                    this->mat_Tf.Param<core::param::Vector3fParam>()->Value().GetX(),
-                    this->mat_Tf.Param<core::param::Vector3fParam>()->Value().GetY(),
-                    this->mat_Tf.Param<core::param::Vector3fParam>()->Value().GetZ() });
+                ospSet3fv(material, "Tf", this->mat_Tf.Param<core::param::Vector3fParam>()->Value().PeekComponents());
                 break;
             case GLASS:
                 material = ospNewMaterial(renderer, "Glass");
@@ -536,64 +533,35 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
                     //GLfloat lightdir[4];
                     //glGetLightfv(GL_LIGHT0, GL_POSITION, lightdir);
                     //ospSetVec3f(light, "direction", { lightdir[0], lightdir[1], lightdir[2] });
-                    ospSetVec3f(light, "direction", { cr->GetCameraParameters()->EyeDirection().GetX(),
-                                                      cr->GetCameraParameters()->EyeDirection().GetY(),
-                                                      cr->GetCameraParameters()->EyeDirection().GetZ() });
+                    ospSet3fv(light, "direction", cr->GetCameraParameters()->EyeDirection().PeekComponents());
                 } else {
-                    ospSetVec3f(light, "direction", {
-                    this->dl_direction.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->dl_direction.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->dl_direction.Param<core::param::Vector3fParam>()->Value().Z() });
+                    ospSet3fv(light, "direction", this->dl_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents());
                 }
                 ospSet1f(light, "angularDiameter", this->dl_angularDiameter.Param<core::param::FloatParam>()->Value());
                 break;
             case POINTLIGHT:
                 light = ospNewLight(renderer, "point");
-                ospSetVec3f(light, "position", {
-                    this->pl_position.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->pl_position.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->pl_position.Param<core::param::Vector3fParam>()->Value().Z() });
+                ospSet3fv(light, "position", this->pl_position.Param<core::param::Vector3fParam>()->Value().PeekComponents());
                 ospSet1f(light, "radius", this->pl_radius.Param<core::param::FloatParam>()->Value());
                 break;
             case SPOTLIGHT:
                 light = ospNewLight(renderer, "spot");
-                ospSetVec3f(light, "position", {
-                    this->sl_position.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->sl_position.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->sl_position.Param<core::param::Vector3fParam>()->Value().Z() });
-                ospSetVec3f(light, "direction", {
-                    this->sl_direction.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->sl_direction.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->sl_direction.Param<core::param::Vector3fParam>()->Value().Z() });
+                ospSet3fv(light, "position", this->sl_position.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+                ospSet3fv(light, "direction", this->sl_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents());
                 ospSet1f(light, "openingAngle", this->sl_openingAngle.Param<core::param::FloatParam>()->Value());
                 ospSet1f(light, "penumbraAngle", this->sl_penumbraAngle.Param<core::param::FloatParam>()->Value());
                 ospSet1f(light, "radius", this->sl_radius.Param<core::param::FloatParam>()->Value());
                 break;
             case QUADLIGHT:
                 light = ospNewLight(renderer, "quad");
-                ospSetVec3f(light, "position", {
-                    this->ql_position.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->ql_position.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->ql_position.Param<core::param::Vector3fParam>()->Value().Z() });
-                ospSetVec3f(light, "edge1", {
-                    this->ql_edgeOne.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->ql_edgeOne.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->ql_edgeOne.Param<core::param::Vector3fParam>()->Value().Z() });
-                ospSetVec3f(light, "edge2", {
-                    this->ql_edgeTwo.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->ql_edgeTwo.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->ql_edgeTwo.Param<core::param::Vector3fParam>()->Value().Z() });
+                ospSet3fv(light, "position", this->ql_position.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+                ospSet3fv(light, "edge1", this->ql_edgeOne.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+                ospSet3fv(light, "edge2", this->ql_edgeTwo.Param<core::param::Vector3fParam>()->Value().PeekComponents());
                 break;
             case HDRILIGHT:
                 light = ospNewLight(renderer, "hdri");
-                ospSetVec3f(light, "up", {
-                    this->hdri_up.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->hdri_up.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->hdri_up.Param<core::param::Vector3fParam>()->Value().Z() });
-                ospSetVec3f(light, "dir", {
-                    this->hdri_direction.Param<core::param::Vector3fParam>()->Value().X(),
-                    this->hdri_direction.Param<core::param::Vector3fParam>()->Value().Y(),
-                    this->hdri_direction.Param<core::param::Vector3fParam>()->Value().Z() });
+                ospSet3fv(light, "up", this->hdri_up.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+                ospSet3fv(light, "dir", this->hdri_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents());
                 if (this->hdri_evnfile.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
                     OSPTexture2D hdri_tex = this->TextureFromFile(this->hdri_evnfile.Param<core::param::FilePathParam>()->Value());
                     ospSetObject(renderer, "backplate", hdri_tex);

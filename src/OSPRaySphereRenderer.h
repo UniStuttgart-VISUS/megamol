@@ -149,6 +149,7 @@ namespace ospray {
         OSPCamera camera;
         OSPModel world;
         OSPGeometry spheres;
+        OSPPlane pln;
 
         osp::vec2i imgSize;
 

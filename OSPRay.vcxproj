@@ -112,7 +112,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(OSPRayPath)apps\common;$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -137,6 +137,7 @@
       <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb_debug.dll" xcopy "$(OSPRayPath)bin\tbb_debug.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -146,7 +147,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(OSPRayPath)apps\common;$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -171,6 +172,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
       <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb_debug.dll" xcopy "$(OSPRayPath)bin\tbb_debug.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -178,7 +180,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(OSPRayPath)apps\common;$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -204,6 +206,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
       <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb_debug.dll" xcopy "$(OSPRayPath)bin\tbb_debug.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -214,7 +217,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(OSPRayPath)apps\common;$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -240,6 +243,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
       <Command>if exist "$(OSPRayPath)bin\ospray.dll" xcopy "$(OSPRayPath)bin\ospray.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\ospray_common.dll" xcopy "$(OSPRayPath)bin\ospray_common.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\tbb.dll" xcopy "$(OSPRayPath)bin\tbb.dll" "$(OutDir)" /Y /F /V /G /K
+if exist "$(OSPRayPath)bin\tbb_debug.dll" xcopy "$(OSPRayPath)bin\tbb_debug.dll" "$(OutDir)" /Y /F /V /G /K
 if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(OutDir)" /Y /F /V /G /K</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
