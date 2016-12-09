@@ -161,6 +161,9 @@ namespace megamol {
             
             /** The secondary structure assignment methods and their secondary structure type assignments */
             vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
+
+			/** The secondary structure assignment methods and th secondary structure assignment length */
+			vislib::Array<vislib::Array<unsigned int> > secStructLength;
             
             /** The values of the secondary structure uncertainty for each amino-acid (index = secStructure) */
             vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secStructUncertainty;
@@ -170,6 +173,9 @@ namespace megamol {
             *   To get the uncertainty value: use secStructure given here as index in secStructUncertainty */
             vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedSecStructUncertainty;
             
+			/** The change measure of secondary structure assignment for each amino-acid */
+			vislib::Array<float> changeMeasure;
+
             /** The pdb id */
             vislib::StringA pdbID;
             

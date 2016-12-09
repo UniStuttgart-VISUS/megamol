@@ -165,6 +165,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetPdbID(&this->pdbID);
         udc->SetPdbAssMethodHelix(&this->pdbAssignmentHelix);
         udc->SetPdbAssMethodSheet(&this->pdbAssignmentSheet);
+		udc->SetChangeMeasure(&this->changeMeasure);
         return true;
     }
 }
@@ -183,6 +184,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
     vislib::sys::ASCIIFileBuffer file;          // ascii buffer of file
     vislib::StringA              filenameA = T2A(filename);
     vislib::StringA              tmpString;
+	vislib::math::Vector<unsigned int, static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)> tmpStructLength;
 
     // reset data (or just if new file can be loaded?)
     this->pdbIndex.Clear();
@@ -193,6 +195,10 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
         this->secStructAssignment[i].Clear();
     }
     this->secStructAssignment.Clear();
+	for (unsigned int i = 0; i < secStructLength.Count(); i++) {
+		this->secStructLength[i].Clear();
+	}
+	this->secStructLength.Clear();
 
     // check if file ending matches ".uid"
     if(!filenameA.Contains(".uid")) {
@@ -207,9 +213,15 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 
         // Reset array size
         // (maximum number of entries in data arrays is ~9 less than line count of file)
+		this->secStructLength.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
+		this->secStructAssignment.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
         for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
+
             this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
             this->secStructAssignment.Last().AssertCapacity(file.Count());
+
+			this->secStructLength.Add(vislib::Array<unsigned int>());
+			this->secStructLength.Last().AssertCapacity(file.Count());
         }
         this->chainID.AssertCapacity(file.Count());
         this->aminoAcidName.AssertCapacity(file.Count());
@@ -226,7 +238,6 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
             if(line.StartsWith("PDB")) {
 
                 this->pdbID = line.Substring(9,4);
-
             }
 			else if (line.StartsWith("METHOD")) {
 
@@ -251,7 +262,6 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF;
 				else
 					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_UNKNOWN;
-
 			}
             // parsing lines beginning with DATA
             else if (line.StartsWith("DATA")) {
@@ -280,60 +290,105 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
                                    
                 // Translate DSSP one letter secondary structure summary 
                 switch (line[228]) {
-                    case 'H': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
-                    case 'G': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
-                    case 'I': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
-                    case 'E': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
-                    case 'B': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
-                    case 'T': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
-                    case 'S': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::S_BEND); break;
-                    case 'C': this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::C_COIL); break;
-                    default:  this->secStructAssignment[UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+                    case 'H': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
+					case 'G': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
+					case 'I': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
+					case 'E': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
+					case 'B': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+					case 'T': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
+					case 'S': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::S_BEND); break;
+					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::C_COIL); break;
+					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
 
                 // Translate STRIDE one letter secondary structure
                 switch (line[157]) {
-                    case 'H': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
-                    case 'G': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
-                    case 'I': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
-                    case 'E': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
-                    case 'B': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
-                    case 'b': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
-                    case 'T': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
-                    case 'C': this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::C_COIL); break;
-                    default:  this->secStructAssignment[UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+					case 'H': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
+					case 'G': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
+					case 'I': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
+					case 'E': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
+					case 'B': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+					case 'b': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+					case 'T': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
+					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::C_COIL); break;
+					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
 
                 // Translate first letter of PDB secondary structure definition
                 tmpSecStruct = line[44];
                 if (tmpSecStruct == 'H') {
                     switch (line[82]) {
-                        case '1': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;  // right-handed-alpha
-                        case '2': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // right-handed omega
-                        case '3': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;     // right-handed pi
-                        case '4': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // right-handed gamma
-                        case '5': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;    // right-handed 310
-                        case '6': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;  // left-handed alpha
-                        case '7': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // left-handed omega
-                        case '8': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // left-handed gamma
-                        case '9': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // 27 ribbon/helix
-                        case '0': this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // Polyproline 
-                        default:  this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+						case '1': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;  // right-handed-alpha
+						case '2': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // right-handed omega
+						case '3': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;     // right-handed pi
+						case '4': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // right-handed gamma
+						case '5': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;    // right-handed 310
+						case '6': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;  // left-handed alpha
+						case '7': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // left-handed omega
+						case '8': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // left-handed gamma
+						case '9': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // 27 ribbon/helix
+						case '0': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;     // Polyproline 
+						default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                     }
                 }
                 else if (tmpSecStruct == 'S'){
-                    this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND);
+					this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND);
                 }
                 else {
-                    this->secStructAssignment[UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::C_COIL);
+					this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::C_COIL);
                 }
             }
 			// Next line
 			lineCnt++;
 		}
+		
+		// calculate length of continuos secondary structure assignments
+		for (int i = 0; i < this->pdbIndex.Count(); i++) {
+			for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); j++) {
+				// init struct length
+				if (i == 0) {
+					tmpStructLength[j] = 1;
+				}
+				else if (i == this->pdbIndex.Count()-1) {
+					if (this->secStructAssignment[j][i] != this->secStructAssignment[j][i - 1]) { // if last entry is different to previous
+						for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
+							this->secStructLength[j].Add(tmpStructLength[j]);
+						}
+						tmpStructLength[j] = 1;
+						this->secStructLength[j].Add(tmpStructLength[j]); // adding last entry (=1)
+					}
+					else { // las tentry is same as previous
+						tmpStructLength[j]++;
+						for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
+							this->secStructLength[j].Add(tmpStructLength[j]);
+						}
+					}
+				}
+				else {
+					if (this->secStructAssignment[j][i] != this->secStructAssignment[j][i - 1]) {
+						for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
+							this->secStructLength[j].Add(tmpStructLength[j]);
+						}
+						tmpStructLength[j] = 1;
+					}
+					else {
+						tmpStructLength[j]++;
+					}
+				}
+			}
+		}
+
+		// DEBUG
+		/*
+		for (int i = 0; i < this->pdbIndex.Count(); i++) {
+			std::cout << this->secStructLength[0][i] << std::endl;
+		}
+		*/
+
         //Clear ascii file buffer
 		file.Clear();
 		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Read secondary structure for %i amino-acids.", this->pdbIndex.Count()); // INFO
+
         return true;
 	}
 	else {
@@ -350,16 +405,19 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
     using vislib::sys::Log;
 
     float methodCount;
+	float tmpChange;
     
     // Reset uncertainty data 
     this->secStructUncertainty.Clear();
     this->sortedSecStructUncertainty.Clear();
+	this->changeMeasure.Clear();
 
     if (this->pdbIndex.IsEmpty()) { // return if no data is present ...
         return false;
     }
     this->secStructUncertainty.AssertCapacity(this->pdbIndex.Count());
     this->sortedSecStructUncertainty.AssertCapacity(this->pdbIndex.Count());
+	this->changeMeasure.AssertCapacity(this->pdbIndex.Count());
 
 	// initialize structure factors for all three methods with 1.0f
 	vislib::Array<vislib::Array<float> > structFactor;
@@ -383,8 +441,8 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
         for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
 
             // initialising
-            this->secStructUncertainty[i][j] = 0.0f;
-            this->sortedSecStructUncertainty[i][j] = static_cast<UncertaintyDataCall::secStructure>(j);
+            this->secStructUncertainty.Last()[j] = 0.0f;
+			this->sortedSecStructUncertainty.Last()[j] = static_cast<UncertaintyDataCall::secStructure>(j);
 
             // loop over all methods
             for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
@@ -395,22 +453,32 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
 						methodCount -= 1.0f;
 					}
 					else {
-						this->secStructUncertainty[i][j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
+						this->secStructUncertainty.Last()[j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
 					}
                 }
                 else {
-                    this->secStructUncertainty[i][j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
+					this->secStructUncertainty.Last()[j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
                 }
             }
         }
         
         // normalise
         for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
-            this->secStructUncertainty[i][j] /= abs(methodCount);
+			this->secStructUncertainty.Last()[j] /= abs(methodCount);
         }
             
         // using quicksort for sorting ...
-        this->quickSortUncertainties(&(this->secStructUncertainty[i]), &(this->sortedSecStructUncertainty[i]), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE)-1));
+		this->quickSortUncertainties(&(this->secStructUncertainty.Last()), &(this->sortedSecStructUncertainty.Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+
+		// calculate change measure 
+		tmpChange = 0.0f;
+		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
+			tmpChange += (this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k]] - this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k+1]]);
+		}
+		this->changeMeasure.Add(1.0f - tmpChange);
+
+		// DEBUG
+		// std::cout << this->changeMeasure.Last() << std::endl;
     }
 
     return true;

@@ -251,7 +251,7 @@ namespace megamol {
         * Get the sorted secondary structure types.
         *
         * @param i The index of the amino-acid.
-        * @return The sorted secondary strucutre types.
+        * @return The sorted secondary structure types.
         */
         inline vislib::math::Vector<secStructure, static_cast<int>(secStructure::NOE)> GetSortedSecStructureIndices(unsigned int i) const {
             vislib::math::Vector<secStructure, static_cast<unsigned int>(secStructure::NOE)> default;
@@ -320,6 +320,22 @@ namespace megamol {
         inline UncertaintyDataCall::pdbAssMethod GetPdbAssMethodSheet(void) {
             return *this->pdbAssignmentSheet;
         }        
+
+		/**
+		* Get the change measure of the secondary structure assignment.
+		*
+		* @param i The index of the amino-acid.
+		* @return The change measure of secondary structure type assignment.
+		*/
+		inline float GetChangeMeasure(unsigned int i) const {
+			if (!this->changeMeasure)
+				return 0.0f;
+			else if (this->changeMeasure->Count() <= i)
+				return 0.0f;
+			else
+				return (this->changeMeasure->operator[](i));
+		}
+
                 
         // ------------------ SET functions ------------------- 
 
@@ -422,6 +438,14 @@ namespace megamol {
 			this->pdbAssignmentSheet = rnPtr;
         }  
         
+		/**
+		* Set the pointer to the change measure.
+		*
+		* @param rnPtr The pointer.
+		*/
+		inline void SetChangeMeasure(vislib::Array<float> *rnPtr) {
+			this->changeMeasure = rnPtr;
+		}
 
 	private:
 
@@ -448,6 +472,9 @@ namespace megamol {
         /** Pointer to the sorted structure types of the uncertainty values */
         vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NOE)> > *sortedSecStructUncertainty;
         
+		/** Pointer to the change measure of secondary structure types */
+		vislib::Array<float> *changeMeasure;
+
         /** Flag indicating that uncertainty was recalculated */
         bool recalcUncertainty;
                 

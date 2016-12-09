@@ -291,6 +291,7 @@ namespace megamol {
          * @return The color in RGB(A).		 
 		 * 
 		 * Source: http://www.vis.uni-stuttgart.de/~weiskopf/publications/vis09_blending.pdf
+		 *         https://www.w3.org/TR/compositing-1/#blendingluminosity
          */  		
 		vislib::math::Vector<float, 4> huePreservingColorBlending(vislib::math::Vector<float, 4> c1, vislib::math::Vector<float, 4> c2);
 		
@@ -331,7 +332,7 @@ namespace megamol {
         ///////////////////////////////////////////////        
         
         // parameter to show/hide disagreements in secondary structure assignment
-        megamol::core::param::ParamSlot toggleDiffParam;
+        megamol::core::param::ParamSlot toggleChangeParam;
         // parameter to show/hide secondary structure uncertainty visualization
         megamol::core::param::ParamSlot toggleUncertaintyParam;
         // parameter to show/hide separator line for amino-acids in uncertainty visualization 
@@ -385,6 +386,8 @@ namespace megamol {
         
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;
+		// the array of the secondary structure type change measure for each amino-acid tile
+		vislib::Array<float> changeMeasure;
         // the vertex buffer array secondary structure
         vislib::Array<vislib::Array<vislib::math::Vector<float, 2> > >secStructVertices;
 		// the vertex buffer array for the amino-acid separator lines
