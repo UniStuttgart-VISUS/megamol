@@ -116,7 +116,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
 	// check if new filename is set 
 	if (this->filenameSlot.IsDirty()) {
 		this->filenameSlot.ResetDirty();
-		if(!this->readInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value())) {
+		if(!this->ReadInputFile(this->filenameSlot.Param<core::param::FilePathParam>()->Value())) {
             return false;
         }
         recalculate = true;
@@ -126,7 +126,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
     if(recalculate) {
         switch(this->currentMethod) {
             case (AVERAGE): 
-                if (!this->calculateUncertaintyAverage()) {
+                if (!this->CalculateUncertaintyAverage()) {
                     return false;
                 }
                 break;
@@ -172,9 +172,9 @@ bool UncertaintyDataLoader::getData(Call& call) {
 
 
 /*
-* UncertaintyDataLoader::readInputFile
+* UncertaintyDataLoader::ReadInputFile
 */
-bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
+bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 	using vislib::sys::Log;
 
 	// temp variables
@@ -213,15 +213,10 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 
         // Reset array size
         // (maximum number of entries in data arrays is ~9 less than line count of file)
-		this->secStructLength.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
 		this->secStructAssignment.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
         for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
-
             this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
             this->secStructAssignment.Last().AssertCapacity(file.Count());
-
-			this->secStructLength.Add(vislib::Array<unsigned int>());
-			this->secStructLength.Last().AssertCapacity(file.Count());
         }
         this->chainID.AssertCapacity(file.Count());
         this->aminoAcidName.AssertCapacity(file.Count());
@@ -343,6 +338,11 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 		}
 		
 		// calculate length of continuos secondary structure assignments
+        this->secStructLength.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
+        for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
+			this->secStructLength.Add(vislib::Array<unsigned int>());
+			this->secStructLength.Last().AssertCapacity(file.Count());
+        }
 		for (int i = 0; i < this->pdbIndex.Count(); i++) {
 			for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); j++) {
 				// init struct length
@@ -357,7 +357,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 						tmpStructLength[j] = 1;
 						this->secStructLength[j].Add(tmpStructLength[j]); // adding last entry (=1)
 					}
-					else { // las tentry is same as previous
+					else { // last entry is same as previous
 						tmpStructLength[j]++;
 						for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
 							this->secStructLength[j].Add(tmpStructLength[j]);
@@ -401,7 +401,7 @@ bool UncertaintyDataLoader::readInputFile(const vislib::TString& filename) {
 /*
 * UncertaintyDataLoader::calculateUncertainty
 */
-bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
+bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
     using vislib::sys::Log;
 
     float methodCount;
@@ -468,7 +468,7 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
         }
             
         // using quicksort for sorting ...
-		this->quickSortUncertainties(&(this->secStructUncertainty.Last()), &(this->sortedSecStructUncertainty.Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+		this->QuickSortUncertainties(&(this->secStructUncertainty.Last()), &(this->sortedSecStructUncertainty.Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
 
 		// calculate change measure 
 		tmpChange = 0.0f;
@@ -486,9 +486,9 @@ bool UncertaintyDataLoader::calculateUncertaintyAverage(void) {
 
 
 /*
-* UncertaintyDataLoader::quickSortUncertainties
+* UncertaintyDataLoader::QuickSortUncertainties
 */
-void UncertaintyDataLoader::quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *valueArr,
+void UncertaintyDataLoader::QuickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *valueArr,
                                                    vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *structArr,
                                                    int left, int right) {
     int i = left;
@@ -517,8 +517,8 @@ void UncertaintyDataLoader::quickSortUncertainties(vislib::math::Vector<float, s
 
     // recursion
     if (left < j) 
-        this->quickSortUncertainties(valueArr, structArr, left, j);
+        this->QuickSortUncertainties(valueArr, structArr, left, j);
         
     if (i < right)
-        this->quickSortUncertainties(valueArr, structArr, i, right);
+        this->QuickSortUncertainties(valueArr, structArr, i, right);
 }

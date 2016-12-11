@@ -5,7 +5,7 @@
  * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  *
- * This module is based on the source code of "CartoonTessellationRenderer" in megamol protein plugin (svn revision 1500).
+ * This module is based on the source code of "CartoonTessellationRenderer" in megamol protein plugin (svn revision 1511).
  *
  */
 
@@ -34,6 +34,7 @@
 #include "UncertaintyDataCall.h"
 
 
+// DEBUG output secondary strucutre type of first frame
 //#define FIRSTFRAME_CHECK
 
 
@@ -50,13 +51,14 @@ namespace megamol {
     class UncertaintyCartoonRenderer : public megamol::core::view::Renderer3DModule {
     public:
 
+
         /**
          * Answer the name of this module.
          *
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "UncertaintyCartoonRenderer";
+            return "CartoonTessellationRenderer";
         }
 
         /**
@@ -65,7 +67,7 @@ namespace megamol {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Offers cartoon renderings for protein secondary structure uncertainty (uses Tessellation Shaders).";
+            return "Offers cartoon renderings for biomolecules (uses Tessellation Shaders).";
         }
 
         /**
@@ -89,10 +91,10 @@ namespace megamol {
         }
 
         /** Ctor. */
-        UncertaintyCartoonRenderer(void);
+        CartoonTessellationRenderer(void);
 
         /** Dtor. */
-        virtual ~UncertaintyCartoonRenderer(void);
+        virtual ~CartoonTessellationRenderer(void);
 
     protected:
 
@@ -145,6 +147,54 @@ namespace megamol {
 
     private:
 
+        /**
+         * The ... .
+         *
+         * @param mol     The ...
+         * @param vertBuf The ...
+         * @param vertPtr The ...
+         * @param colBuf  The ...
+         * @param colPtr  The ...         
+         */
+        void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
+        
+        /**
+         * The ... .
+         *
+         * @param mol        The ...
+         * @param colBytes   The ...
+         * @param vertBytes  The ...
+         * @param colStride  The ...
+         * @param vertStride The ...         
+         */        
+		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
+        
+        /**
+         * The ... .
+         *
+         * @param mol        The ...
+         * @param colBytes   The ...
+         * @param vertBytes  The ...
+         * @param colStride  The ...
+         * @param vertStride The ...         
+         */  
+		void getBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
+
+        /**
+         * The ... .
+         *
+         * @param syncObj The ...        
+         */  
+        void queueSignal(GLsync& syncObj);
+        
+        /**
+         * The ... .
+         *
+         * @param syncObj The ...        
+         */          
+		void waitSignal(GLsync& syncObj);
+        
+        /** Strucutre to hold C-alpha data */
 		struct CAlpha
 		{
 			float pos[4];
@@ -152,38 +202,19 @@ namespace megamol {
 			int type;
 		};
 
-        /** The call for data */
-        CallerSlot getDataSlot;
-
-		/** The call for uncertainty data */
-		core::CallerSlot uncertaintyDataSlot;
-
-        void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
-		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
-			unsigned int &colStride, unsigned int &vertStride);
-		void getBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
-			unsigned int &colStride, unsigned int &vertStride);
-
-        void queueSignal(GLsync& syncObj);
-		void waitSignal(GLsync& syncObj);
-
+        /**********************************************************************
+         * variables
+         **********************************************************************/
+         
 #ifdef FIRSTFRAME_CHECK
 		bool firstFrame;
 #endif
-
-        GLuint vertArray;
-        std::vector<GLsync> fences;
-		GLuint theSingleBuffer;
-        unsigned int currBuf;
-        GLuint colIdxAttribLoc;
-        GLsizeiptr bufSize;
-		int numBuffers;
-		void *theSingleMappedMem;
-		GLuint singleBufferCreationBits;
-        GLuint singleBufferMappingBits;
-        typedef std::map <std::pair<int, int>, std::shared_ptr<GLSLShader>> shaderMap;
-		vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
-		vislib::SmartPtr<ShaderSource> tubeVert, tubeTessCont, tubeTessEval, tubeGeom, tubeFrag;
+        /** The call for PDB data */
+        core::CallerSlot getPdbDataSlot;
+	    /** The call for uncertainty data */
+        core::CallerSlot uncertaintyDataSlot;	
+                
+        // paramter
         core::param::ParamSlot scalingParam;
 		core::param::ParamSlot sphereParam;
 		core::param::ParamSlot lineParam;
@@ -193,18 +224,44 @@ namespace megamol {
 		core::param::ParamSlot lineDebugParam;
 		core::param::ParamSlot buttonParam;
 		core::param::ParamSlot colorInterpolationParam;
+                
+        GLuint              vertArray;
+        std::vector<GLsync> fences;           // (?)
+		GLuint              theSingleBuffer;
+        unsigned int        currBuf;
+        GLuint              colIdxAttribLoc;
+        GLsizeiptr          bufSize;
+		int                 numBuffers;
+		void               *theSingleMappedMem;
+		GLuint              singleBufferCreationBits;
+        GLuint              singleBufferMappingBits;
+        
+        //typedef std::map<std::pair<int, int>, std::shared_ptr<GLSLShader> > shaderMap; // unused
+        
+		vislib::SmartPtr<ShaderSource> vert;
+        vislib::SmartPtr<ShaderSource> tessCont;
+        vislib::SmartPtr<ShaderSource> tessEval;
+        vislib::SmartPtr<ShaderSource> geom;
+        vislib::SmartPtr<ShaderSource> frag;
+		vislib::SmartPtr<ShaderSource> tubeVert
+        vislib::SmartPtr<ShaderSource> tubeTessCont;
+        vislib::SmartPtr<ShaderSource> tubeTessEval;
+        vislib::SmartPtr<ShaderSource> tubeGeom;
+        vislib::SmartPtr<ShaderSource> tubeFrag;
 
+        // positions of C-alpha-atoms and O-atoms
         vislib::Array<vislib::Array<float> > positionsCa;
         vislib::Array<vislib::Array<float> > positionsO;
 
+        // C-alpha main chain
+		std::vector<CAlpha> mainChain;
+        
         /** shader for the spheres (raycasting view) */
-        vislib::graphics::gl::GLSLShader sphereShader;
+        vislib::graphics::gl::GLSLShader            sphereShader;
         /** shader for spline rendering */
         vislib::graphics::gl::GLSLTesselationShader splineShader;
 		/** shader for the tubes */
 		vislib::graphics::gl::GLSLTesselationShader tubeShader;
-
-		std::vector<CAlpha> mainchain;
     };
 
 	} /* end namespace protein_uncertainty */

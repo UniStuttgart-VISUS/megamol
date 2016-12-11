@@ -102,7 +102,7 @@ namespace megamol {
             *
             *@return True on success
 			*/
-			bool readInputFile(const vislib::TString& filename);
+			bool ReadInputFile(const vislib::TString& filename);
 
 
 
@@ -114,7 +114,7 @@ namespace megamol {
             * @param left      The left index of the array
             * @param right     The right index of the array
             */
-            void quickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *valueArr,  
+            void QuickSortUncertainties(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *valueArr,  
                                         vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> *structArr,  
                                         int left, int right);
 
@@ -130,7 +130,7 @@ namespace megamol {
             *
             *@return True on success
             */
-            bool calculateUncertaintyAverage(void);             
+            bool CalculateUncertaintyAverage(void);             
 
 			// ------------------ variables ------------------- 
 

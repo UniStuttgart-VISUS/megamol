@@ -164,7 +164,7 @@ namespace megamol {
          * @param y       The y position
          * @param bgColor The the default color
          */
-        void drawSecStructTextureTiles(UncertaintyDataCall::secStructure pre, UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
+        void DrawSecStructTextureTiles(UncertaintyDataCall::secStructure pre, UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
                                        UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]);
 
         /**
@@ -177,7 +177,7 @@ namespace megamol {
          * @param y       The y position
          * @param bgColor The the default color
          */
-        void drawSecStructGeometryTiles(UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
+        void DrawSecStructGeometryTiles(UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
                                        UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]);
                                        
         /**
@@ -190,7 +190,7 @@ namespace megamol {
         * @param fgColor The foreground color.
         * @param bgColor The background color.
         */
-        void renderToolTip(float start, float end, vislib::StringA str1, vislib::StringA str2, float fgColor[4], float bgColor[4]);
+        void RenderToolTip(float start, float end, vislib::StringA str1, vislib::StringA str2, float fgColor[4], float bgColor[4]);
 
         /**
          * block chart color for certain structure assignment
@@ -240,7 +240,16 @@ namespace megamol {
             UNCERTAIN_STRUCT_DYN_SPACE  = 4,  
             UNCERTAIN_STRUCT_DYN_EQUAL  = 5,                       
         };          
-                
+        /**
+         * Color interpolation methods available for: UNCERTAIN_STRUCT_STAT_MORPH
+         *                                            UNCERTAIN_BC_HORIZ
+         */        
+        enum uncertainColorInterpol {
+            UNCERTAIN_COLOR_RGB     = 0,              
+            UNCERTAIN_COLOR_HSL     = 1,  
+            UNCERTAIN_COLOR_HSL_HP = 2             
+        };   
+                        
         /**
          * Renders the uncertainty visualization.
          *
@@ -248,7 +257,7 @@ namespace megamol {
          * @param fgColor The foreground color.
          * @param bgColor The background color.
          */        
-        void renderUncertainty(float yPos, float fgColor[4], float bgColor[4]);
+        void RenderUncertainty(float yPos, float fgColor[4], float bgColor[4]);
         
 		
         /**
@@ -272,12 +281,12 @@ namespace megamol {
 		vislib::math::Vector<float, 4> hsl2rgb(vislib::math::Vector<float, 4> hsla);
         
 		/**
-		* Convert color from HSL(A) to RGB(A).
+		* Convert hue to RGB(A). Helper function for hsl2rgb.
 		*
-		* @param v1 The ... .
-		* @param v2 The ... .
-		* @param vH The ... .
-		* @return The ... .
+		* @param v1 The first interim value for hue of the hsl2rgb function
+		* @param v2 The second interim value for hue of the hsl2rgb function.
+		* @param vH The current hue.
+		* @return The corresponding component for RGB color.
 		*
 		* Source: http://easyrgb.com/index.php?X=MATH
 		*/
@@ -293,7 +302,7 @@ namespace megamol {
 		 * Source: http://www.vis.uni-stuttgart.de/~weiskopf/publications/vis09_blending.pdf
 		 *         https://www.w3.org/TR/compositing-1/#blendingluminosity
          */  		
-		vislib::math::Vector<float, 4> huePreservingColorBlending(vislib::math::Vector<float, 4> c1, vislib::math::Vector<float, 4> c2);
+		vislib::math::Vector<float, 4> HuePreservingColorBlending(vislib::math::Vector<float, 4> c1, vislib::math::Vector<float, 4> c2);
 		
 		
         /**********************************************************************
@@ -327,9 +336,9 @@ namespace megamol {
         // parameter to show/hide pdb secondary structure 
         megamol::core::param::ParamSlot togglePdbParam;
                 
-        ///////////////////////////////////////////////
-        // INSERT CODE FROM OBOVE FOR NEW METHOD HER //
-        ///////////////////////////////////////////////        
+        ////////////////////////////////////////////////
+        // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
+        ////////////////////////////////////////////////        
         
         // parameter to show/hide disagreements in secondary structure assignment
         megamol::core::param::ParamSlot toggleChangeParam;
@@ -345,6 +354,8 @@ namespace megamol {
         megamol::core::param::ParamSlot uncertainBlockChartOrientationParam;        
         megamol::core::param::ParamSlot uncertainStructColorParam;
         megamol::core::param::ParamSlot uncertainStructGeometryParam;
+        megamol::core::param::ParamSlot uncertainColorInterpolParam;
+        megamol::core::param::ParamSlot uncertainGardientIntervalParam;
 
         // the current uncertainty visualization selection
         certainBlockChartColor         currentCertainBlockChartColor;
@@ -353,23 +364,24 @@ namespace megamol {
         uncertainBlockChartOrientation currentUncertainBlockChartOrientation;
         uncertainStructColor           currentUncertainStructColor;
         uncertainStructGeometry        currentUncertainStructGeometry;
+        uncertainColorInterpol         currentUncertainColorInterpol;
+        float                          currentUncertainGardientInterval;
         bool                           showSeparatorLine;
         
         // the number of secondary structure rows which can be shown/hidden
-        unsigned int secStructRows;
+        unsigned int        secStructRows;
         // the number of residue columns
-        unsigned int resCols;
+        unsigned int        resCols;
         // the number of residue rows
-        unsigned int resRows;
+        unsigned int        resRows;
         // the height of a row
-        float rowHeight;
-                
+        float               rowHeight;
         // data preparation flag
-        bool dataPrepared;
+        bool                dataPrepared;
         // the total number of amino-acids 
-        unsigned int aminoAcidCount;
+        unsigned int        aminoAcidCount;
         // the total number of binding sites
-        unsigned int bindingSiteCount;
+        unsigned int        bindingSiteCount;
         // the array of amino acid 1-letter codes
         vislib::Array<char> aminoAcidName;
         // the array of pdb amino-acid indices
@@ -420,7 +432,7 @@ namespace megamol {
 		// secondary structure type colors as HSL(A)
 		vislib::Array<vislib::math::Vector<float, 4> > secStructColorHSL;		
 		// secondary structure type descriptions
-		vislib::Array<vislib::StringA> secStructDescription;
+		vislib::Array<vislib::StringA>                 secStructDescription;
         
         // textures
         vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
@@ -428,9 +440,9 @@ namespace megamol {
         // mouse hover
         vislib::math::Vector<float, 2> mousePos;
         vislib::math::Vector<float, 2> mousePosDetail;
-        int mousePosResIdx;
-        bool rightMouseDown;
-        bool initialClickSelection;
+        int                            mousePosResIdx;
+        bool                           rightMouseDown;
+        bool                           initialClickSelection;
 
         // font rendering
 #ifdef USE_SIMPLE_FONT
@@ -444,11 +456,10 @@ namespace megamol {
         
         // PDB ID 
         vislib::StringA pdbID;
-        
         // PDB legend string with methods used for secondary structure assignment
         vislib::StringA pdbLegend;
 
-        // timer for animation of morphing visualization
+        // timer for animation of geometry
         clock_t animTimer;
     };
 

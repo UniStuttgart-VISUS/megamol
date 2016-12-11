@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<btf type="MegaMolGLSLShader" version="1.0" namespace="cartoontessellationnew">
+<btf type="MegaMolGLSLShader" version="1.0" namespace="uncertaintycartoontessellation">
     <include file="common"/>
 
     <shader name="vertex">
@@ -79,6 +79,7 @@ void main(void) {
 -->
         </snippet>
     </shader>
+
 
     <shader name="tesscontrol">
       <snippet type="version">400</snippet>
@@ -486,7 +487,7 @@ void main(void) {
     outCol = vec4(c, 1);
 }
 -->
-</snippet>
+        <snippet>
     </shader>
 
 </btf>
