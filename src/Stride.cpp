@@ -318,9 +318,10 @@ bool Stride::WriteToInterface( MolecularDataCall *mol) {
         for( i = 0; i < (int)sec.size(); ++i ) {
             mol->SetSecondaryStructure( i, sec[i]);
         }
-		/*for (int i = 0; i < HydroBondCnt; i++) {
-			printf("%i %i %i %i\n", HydroBond[i]->Dnr->D_Res, HydroBond[i]->Dnr->D_At, HydroBond[i]->Dnr->DD_At, HydroBond[i]->Dnr->DDI_At);
-		}*/
+
+		// set the found hydrogen bonds
+		mol->SetHydrogenBonds(this->ownHydroBonds.data(), static_cast<unsigned int>(HydroBondCnt));
+
     } else {
         return false;
     }
