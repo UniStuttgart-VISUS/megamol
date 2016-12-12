@@ -12,7 +12,7 @@
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Plane.h"
 
-__host__ __device__ struct Spring {
+typedef struct Spring{
 	uint source;
 	uint target;
 	float length;
@@ -29,6 +29,8 @@ __host__ __device__ struct Spring {
 		this->friction = f;
 	}
 
+	__host__ __device__ ~Spring() {}
+
 	Spring& operator=(const Spring s) {
 		this->source = s.source;
 		this->target = s.target;
@@ -41,7 +43,7 @@ __host__ __device__ struct Spring {
 	void print() { 
 		printf("S: src %u trgt %u l %f\n", source, target, length);
 	}
-};
+} Spring;
 
 __host__ __device__ bool operator<(const Spring &lhs, const Spring &rhs) {
 	return lhs.source < rhs.source;
@@ -63,7 +65,9 @@ __device__ float3 d_planeOrigin;
 __device__ float d_cutoffDistance;
 __device__ float d_repellingStrength;
 
-thrust::device_vector<Spring> d_springs;
+__device__ Spring * d_springs;
+__device__ uint d_springSize;
+//thrust::device_vector<Spring> d_springs;
 thrust::device_vector<uint> d_springStarts;
 
 GPUSortHandle sortHandle;
@@ -121,13 +125,11 @@ __global__ void applyMatrixToPositionsKernel(float * d_pos, uint sizePos, float4
  *	@param sizePos The number of available positions
  *	@param d_ca Array of c alpha atom indices.
  *	@param caSize Number of available c alpha indices.
- *	@param d_springs Array of available spring connections between c alpha atoms
- *	@param springSize The number of avaialable springs.
  *	@param timestepSize The duration of a single timestep
  *	@param forceToCenter Should a force towards the center of the bounding box be added?
  *	@param forceStrength The strength of the force towards the center
  */
-__global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, uint caSize, Spring * d_springs, uint springSize, uint * d_starts, float timestepSize,
+__global__ void runSimulationKernel(float * d_pos, uint sizePos, uint * d_ca, uint caSize, Spring * d_springs, uint * d_starts, float timestepSize,
 	bool forceToCenter, float forceStrength) {
 	
 	uint idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -279,12 +281,10 @@ void performTimestep(float timestepSize, bool forceToCenter, float forceStrength
 	recomputeGrid();
 	float * d_pos = thrust::raw_pointer_cast(d_atomPositions.data().get());
 	uint * d_ca = thrust::raw_pointer_cast(d_cAlphaIndices.data().get());
-	Spring * d_spring = thrust::raw_pointer_cast(d_springs.data().get());
 	uint * d_starts = thrust::raw_pointer_cast(d_springStarts.data().get());
 	uint N = static_cast<uint>(d_atomPositions.size());
 	uint NCa = static_cast<uint>(d_cAlphaIndices.size());
-	uint NSpring = static_cast <uint>(d_springs.size());
-	runSimulationKernel <<<(NCa + TpB - 1) / TpB, TpB >>>(d_pos, N, d_ca, NCa, d_spring, NSpring, d_starts, timestepSize, forceToCenter, forceStrength);
+	runSimulationKernel <<<(NCa + TpB - 1) / TpB, TpB >>>(d_pos, N, d_ca, NCa, d_springs, d_starts, timestepSize, forceToCenter, forceStrength);
 	checkCudaErrors(cudaDeviceSynchronize());
 }
 
@@ -434,7 +434,7 @@ void transferSpringData(const float * h_atomPositions, uint numPositions, const 
 	uint * h_oIndices, uint numOs, float conFriction, float conConstant, float hFriction, float hConstant, const uint * moleculeStarts, uint numMolecules,
 	float cutoffDistance, float strengthFactor) {
 
-	d_springs.clear();
+	std::vector<Spring> help;
 
 	const float3 * h_atomPositions3D = reinterpret_cast<const float3 *>(h_atomPositions);
 
@@ -463,9 +463,9 @@ void transferSpringData(const float * h_atomPositions, uint numPositions, const 
 		float dist = sqrt(thisPos.x * thisPos.x + thisPos.y * thisPos.y + thisPos.z * thisPos.z);
 
 		Spring newSpring = Spring(h_cAlphaIndices[i - 1], h_cAlphaIndices[i], dist, conConstant, conFriction);
-		d_springs.push_back(newSpring);
+		help.push_back(newSpring);
 		Spring newSpring2 = Spring(h_cAlphaIndices[i], h_cAlphaIndices[i - 1], dist, conConstant, conFriction);
-		d_springs.push_back(newSpring2);
+		help.push_back(newSpring2);
 	}
 
 	for (uint i = 0; i < numBonds; i++) {
@@ -478,26 +478,36 @@ void transferSpringData(const float * h_atomPositions, uint numPositions, const 
 		float dist = sqrt(acceptorPos.x * acceptorPos.x + acceptorPos.y * acceptorPos.y + acceptorPos.z * acceptorPos.z);
 
 		Spring newSpring = Spring(donorIdx, acceptorIdx, dist, hConstant, hFriction);
-		d_springs.push_back(newSpring);
+		help.push_back(newSpring);
 		Spring newSpring2 = Spring(acceptorIdx, donorIdx, dist, hConstant, hFriction);
-		d_springs.push_back(newSpring2);
+		help.push_back(newSpring2);
 	}
 
-	thrust::sort(d_springs.begin(), d_springs.end());
+	thrust::sort(help.begin(), help.end());
 
 	d_springStarts.clear();
 	int lastValue = -1;
 	// we assume that every c alpha atom has at least one spring connected
-	for (unsigned int i = 0; i < d_springs.size(); i++) {
-		int val = static_cast<int>(d_springs[i].operator Spring().source);
+	for (unsigned int i = 0; i < help.size(); i++) {
+		int val = static_cast<int>(help[i].source);
 		if (val != lastValue) {
 			d_springStarts.push_back(i);
 			lastValue = val;
 		}
 	}
 
+	uint springSize = static_cast<uint>(help.size());
+	if (d_springs != 0) {
+		checkCudaErrors(cudaFree(d_springs));
+	}
+	checkCudaErrors(cudaMalloc(&d_springs, static_cast<size_t>(springSize * sizeof(Spring))));
+	checkCudaErrors(cudaDeviceSynchronize());
+
 	checkCudaErrors(cudaMemcpyToSymbol(d_cutoffDistance, &cutoffDistance, sizeof(float), 0, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpyToSymbol(d_repellingStrength, &strengthFactor, sizeof(float), 0, cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpyToSymbol(d_springSize, &springSize, sizeof(uint), 0, cudaMemcpyHostToDevice));
+
+	checkCudaErrors(cudaMemcpy(d_springs, help.data(), springSize * sizeof(Spring), cudaMemcpyHostToDevice));
 }
 
 /**
@@ -505,12 +515,9 @@ void transferSpringData(const float * h_atomPositions, uint numPositions, const 
  */
 extern "C"
 void clearAll(void) {
-	d_atomPositions.clear();
-	d_atomPositionsSave.clear();
-	d_cAlphaIndices.clear();
-	d_oIndices.clear();
-	d_springs.clear();
-	d_springStarts.clear();
+	if (d_springs != 0) {
+		checkCudaErrors(cudaFree(d_springs));
+	}
 }
 
 #endif // #ifndef _SECSTRUCTFLATTENER_KERNEL_CU_

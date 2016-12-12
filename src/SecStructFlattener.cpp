@@ -176,7 +176,6 @@ bool SecStructFlattener::create(void) {
  */
 void SecStructFlattener::release(void) {
 	clearAll();
-
 	if (this->atomPositions != NULL) {
 		delete[] this->atomPositions;
 		this->atomPositions = NULL;
