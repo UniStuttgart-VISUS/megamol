@@ -19,6 +19,7 @@
 
 #include <vector>
 
+extern "C" void clearAll(void);
 extern "C" void getPositions(float * h_atomPositions, unsigned int numPositions);
 extern "C" void performTimestep(float timestepSize, bool forceToCenter, float forceStrength);
 extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas);

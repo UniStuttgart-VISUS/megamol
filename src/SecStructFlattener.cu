@@ -500,4 +500,17 @@ void transferSpringData(const float * h_atomPositions, uint numPositions, const 
 	checkCudaErrors(cudaMemcpyToSymbol(d_repellingStrength, &strengthFactor, sizeof(float), 0, cudaMemcpyHostToDevice));
 }
 
+/**
+ *	Deletes all data stored on the gpu
+ */
+extern "C"
+void clearAll(void) {
+	d_atomPositions.clear();
+	d_atomPositionsSave.clear();
+	d_cAlphaIndices.clear();
+	d_oIndices.clear();
+	d_springs.clear();
+	d_springStarts.clear();
+}
+
 #endif // #ifndef _SECSTRUCTFLATTENER_KERNEL_CU_
