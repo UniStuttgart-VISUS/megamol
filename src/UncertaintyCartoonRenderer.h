@@ -30,6 +30,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
+#include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "UncertaintyDataCall.h"
 
@@ -58,7 +59,7 @@ namespace megamol {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "CartoonTessellationRenderer";
+            return "UncertaintyCartoonRenderer";
         }
 
         /**
@@ -91,10 +92,10 @@ namespace megamol {
         }
 
         /** Ctor. */
-        CartoonTessellationRenderer(void);
+		UncertaintyCartoonRenderer(void);
 
         /** Dtor. */
-        virtual ~CartoonTessellationRenderer(void);
+		virtual ~UncertaintyCartoonRenderer(void);
 
     protected:
 
@@ -132,9 +133,14 @@ namespace megamol {
         virtual bool GetExtents(Call& call);
 
         /**
-        * TODO: Document
+		* The ...
+		*
+		* @param t          The ...
+		* @param outScaling The ...
+		*
+		* @return The pointer to the molecular data call.
         */
-        MolecularDataCall *getData(unsigned int t, float& outScaling);
+        MolecularDataCall *GetData(unsigned int t, float& outScaling);
 
         /**
          * The render callback.
@@ -147,7 +153,18 @@ namespace megamol {
 
     private:
 
+		/**
+		* The ... .
+		*
+		* @param udc The uncertainty data call.
+		*
+		* @return The return value of the function.
+		*/
+		bool GetUncertaintyData(UncertaintyDataCall *udc);
+
         /**
+		 * UNUSED ...
+		 *
          * The ... .
          *
          * @param mol     The ...
@@ -156,7 +173,7 @@ namespace megamol {
          * @param colBuf  The ...
          * @param colPtr  The ...         
          */
-        void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
+        // void SetPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
         
         /**
          * The ... .
@@ -167,7 +184,7 @@ namespace megamol {
          * @param colStride  The ...
          * @param vertStride The ...         
          */        
-		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
+		void GetBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
         
         /**
          * The ... .
@@ -178,21 +195,21 @@ namespace megamol {
          * @param colStride  The ...
          * @param vertStride The ...         
          */  
-		void getBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
+		void GetBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
 
         /**
          * The ... .
          *
          * @param syncObj The ...        
          */  
-        void queueSignal(GLsync& syncObj);
+        void QueueSignal(GLsync& syncObj);
         
         /**
          * The ... .
          *
          * @param syncObj The ...        
          */          
-		void waitSignal(GLsync& syncObj);
+		void WaitSignal(GLsync& syncObj);
         
         /** Strucutre to hold C-alpha data */
 		struct CAlpha
@@ -213,6 +230,8 @@ namespace megamol {
         core::CallerSlot getPdbDataSlot;
 	    /** The call for uncertainty data */
         core::CallerSlot uncertaintyDataSlot;	
+		/** residue selection caller slot */
+		core::CallerSlot resSelectionCallerSlot;
                 
         // paramter
         core::param::ParamSlot scalingParam;
@@ -243,7 +262,7 @@ namespace megamol {
         vislib::SmartPtr<ShaderSource> tessEval;
         vislib::SmartPtr<ShaderSource> geom;
         vislib::SmartPtr<ShaderSource> frag;
-		vislib::SmartPtr<ShaderSource> tubeVert
+		vislib::SmartPtr<ShaderSource> tubeVert;
         vislib::SmartPtr<ShaderSource> tubeTessCont;
         vislib::SmartPtr<ShaderSource> tubeTessEval;
         vislib::SmartPtr<ShaderSource> tubeGeom;
@@ -262,6 +281,28 @@ namespace megamol {
         vislib::graphics::gl::GLSLTesselationShader splineShader;
 		/** shader for the tubes */
 		vislib::graphics::gl::GLSLTesselationShader tubeShader;
+
+
+		// the total number of amino-acids 
+		unsigned int aminoAcidCount;
+		// the array for the residue flag
+		vislib::Array<UncertaintyDataCall::addFlags> residueFlag;
+		// The secondary structure assignment methods and their secondary structure type assignments
+		vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
+		// The values of the secondary structure uncertainty for each amino-acid 
+		vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
+		// The sorted structure types of the uncertainty values
+		vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
+
+		// secondary structure type colors as RGB(A)
+		vislib::Array<vislib::math::Vector<float, 4> > secStructColorRGB;
+		// secondary structure type colors as HSL(A)
+		vislib::Array<vislib::math::Vector<float, 4> > secStructColorHSL;  // unused so far ...
+
+
+		// selection 
+		vislib::Array<bool> selection;
+		protein_calls::ResidueSelectionCall *resSelectionCall;
     };
 
 	} /* end namespace protein_uncertainty */

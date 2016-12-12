@@ -49,9 +49,85 @@ using namespace megamol::protein_uncertainty;
 //#define NGS_THE_INSTANCE "gl_InstanceID"
 #define NGS_THE_INSTANCE "gl_VertexID"
 
-#define DEBUG_GL
+// #define DEBUG_GL
 
 const GLuint SSBObindingPoint = 2;
+
+
+/*
+* MyFunkyDebugCallback
+*/
+//typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
+void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam) {
+	const char *sourceText, *typeText, *severityText;
+	switch (source) {
+	case GL_DEBUG_SOURCE_API:
+		sourceText = "API";
+		break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+		sourceText = "Window System";
+		break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:
+		sourceText = "Shader Compiler";
+		break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:
+		sourceText = "Third Party";
+		break;
+	case GL_DEBUG_SOURCE_APPLICATION:
+		sourceText = "Application";
+		break;
+	case GL_DEBUG_SOURCE_OTHER:
+		sourceText = "Other";
+		break;
+	default:
+		sourceText = "Unknown";
+		break;
+	}
+	switch (type) {
+	case GL_DEBUG_TYPE_ERROR:
+		typeText = "Error";
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		typeText = "Deprecated Behavior";
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		typeText = "Undefined Behavior";
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY:
+		typeText = "Portability";
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		typeText = "Performance";
+		break;
+	case GL_DEBUG_TYPE_OTHER:
+		typeText = "Other";
+		break;
+	case GL_DEBUG_TYPE_MARKER:
+		typeText = "Marker";
+		break;
+	default:
+		typeText = "Unknown";
+		break;
+	}
+	switch (severity) {
+	case GL_DEBUG_SEVERITY_HIGH:
+		severityText = "High";
+		break;
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		severityText = "Medium";
+		break;
+	case GL_DEBUG_SEVERITY_LOW:
+		severityText = "Low";
+		break;
+	case GL_DEBUG_SEVERITY_NOTIFICATION:
+		severityText = "Notification";
+		break;
+	default:
+		severityText = "Unknown";
+		break;
+	}
+	vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+}
 
 
 /*
@@ -60,6 +136,7 @@ const GLuint SSBObindingPoint = 2;
 UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(),
         getPdbDataSlot(         "getPdbData", "Connects to the pdb data source."),
         uncertaintyDataSlot(    "uncertaintyDataSlot", "Connects the cartoon tesselation rendering with uncertainty data storage."),
+		resSelectionCallerSlot( "getResSelection", "Connects the cartoon rendering with residue selection storage."),
         scalingParam(           "01 Scaling", "Scaling factor for particle radii."),
         sphereParam(            "02 Spheres", "Render atoms as spheres."),
         lineParam(              "03 Lines", "Render backbone as GL_LINE."),
@@ -69,7 +146,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
         lineDebugParam(         "07 Wireframe", "Render in wireframe mode."),
         buttonParam(            "08 Reload shaders", "Reload the shaders."),
         colorInterpolationParam("09 Color interpolation", "Should the colors be interpolated?"),
-        fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
+		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
         singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) 
@@ -80,14 +157,18 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
     this->MakeSlotAvailable(&this->uncertaintyDataSlot);
 
     // pdb data caller slot
-    this->getDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
-    this->MakeSlotAvailable(&this->getDataSlot);
+    this->getPdbDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
+    this->MakeSlotAvailable(&this->getPdbDataSlot);
+
+	// residue selection caller slot
+	this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
+	this->MakeSlotAvailable(&this->resSelectionCallerSlot);
 
 
 	this->sphereParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->sphereParam);
 
-	this->lineParam << new core::param::BoolParam(true);
+	this->lineParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->lineParam);
 
 	this->backboneParam << new core::param::BoolParam(true);
@@ -96,7 +177,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
     this->scalingParam << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->scalingParam);
     
-	this->backboneWidthParam << new core::param::FloatParam(0.25f);
+	this->backboneWidthParam << new core::param::FloatParam(0.2f);
 	this->MakeSlotAvailable(&this->backboneWidthParam);
 
 	this->lineDebugParam << new core::param::BoolParam(false);
@@ -147,7 +228,9 @@ bool UncertaintyCartoonRenderer::create(void) {
     if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
         return false;
 
-    //vislib::graphics::gl::ShaderSource vert, frag;
+	ShaderSource vertSrc; // sphere shader
+	ShaderSource fragSrc; // sphere shader
+
     this->vert     = new ShaderSource();
     this->tessCont = new ShaderSource();
     this->tessEval = new ShaderSource();
@@ -257,8 +340,6 @@ bool UncertaintyCartoonRenderer::create(void) {
 	}
 
     // load sphere shader
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
@@ -302,7 +383,7 @@ void UncertaintyCartoonRenderer::release(void) {
         }
     }
     
-    // TODO release all shaders (?)
+    // TODO release all shaders (done?)
     this->sphereShader.Release();
     this->splineShader.Release();
     this->tubeShader.Release();
@@ -341,7 +422,7 @@ bool UncertaintyCartoonRenderer::GetExtents(Call& call) {
     if (!(*udc)(UncertaintyDataCall::CallForGetData)) return false;
 
     // get pointer to MolecularDataCall
-    MolecularDataCall *mol = this->getDataSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall *mol = this->getPdbDataSlot.CallAs<MolecularDataCall>();
     if ((mol != NULL) && ((*mol)(MolecularDataCall::CallForGetExtent))) {
         cr->SetTimeFramesCount(mol->FrameCount());
         cr->AccessBoundingBoxes() = mol->AccessBoundingBoxes();
@@ -366,14 +447,15 @@ bool UncertaintyCartoonRenderer::GetExtents(Call& call) {
 
 
 /*
- *  UncertaintyCartoonRenderer::getData
+ *  UncertaintyCartoonRenderer::GetData
  */
-MolecularDataCall* UncertaintyCartoonRenderer::getData(unsigned int t, float& outScaling) {
+MolecularDataCall* UncertaintyCartoonRenderer::GetData(unsigned int t, float& outScaling) {
     
-    MolecularDataCall *mol = this->getDataSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall *mol = this->getPdbDataSlot.CallAs<MolecularDataCall>();
     outScaling = 1.0f;
     
     if (mol != NULL) {
+
         mol->SetFrameID(t);
         if (!(*mol)(MolecularDataCall::CallForGetExtent)) return NULL;
 
@@ -398,6 +480,70 @@ MolecularDataCall* UncertaintyCartoonRenderer::getData(unsigned int t, float& ou
 
 
 /*
+* UncertaintyCartoonRenderer::GetUncertaintyData
+*/
+bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc) {
+
+	if (!udc) return false;
+
+	// initialization
+	this->aminoAcidCount = udc->GetAminoAcidCount();
+
+	// reset arrays
+	this->secStructColorRGB.Clear();
+	this->secStructColorRGB.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
+
+	this->secStructColorHSL.Clear();
+	this->secStructColorHSL.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
+
+	// get secondary structure type colors 
+	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
+		this->secStructColorRGB.Add(udc->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(i)));
+		// convert RGB secondary structure type colors from RGB to HSL
+		// this->secStructColorHSL.Add(this->rgb2hsl(this->secStructColorRGB.Last()));
+	}
+
+	// reset arrays
+	this->secUncertainty.Clear();
+	this->secUncertainty.AssertCapacity(this->aminoAcidCount);
+
+	this->sortedUncertainty.Clear();
+	this->sortedUncertainty.AssertCapacity(this->aminoAcidCount);
+
+	for (unsigned int i = 0; i < this->secStructAssignment.Count(); i++) {
+		this->secStructAssignment.Clear();
+	}
+	this->secStructAssignment.Clear();
+
+	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
+		this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
+		this->secStructAssignment.Last().AssertCapacity(this->aminoAcidCount);
+	}
+
+	this->residueFlag.Clear();
+	this->residueFlag.AssertCapacity(this->aminoAcidCount);
+
+	// collect data from call
+	for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
+
+		// store the secondary structure element type of the current amino-acid for each assignment method
+		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
+			this->secStructAssignment[k].Add(udc->GetSecStructure(static_cast<UncertaintyDataCall::assMethod>(k), aa));
+		}
+
+		// store residue flag
+		this->residueFlag.Add(udc->GetResidueFlag(aa));
+		// store uncerteiny values
+		this->secUncertainty.Add(udc->GetSecStructUncertainty(aa));
+		// store sorted uncertainty structure types
+		this->sortedUncertainty.Add(udc->GetSortedSecStructureIndices(aa));
+	}
+
+	return true;
+}
+
+
+/*
  * UncertaintyCartoonRenderer::Render
  */
 bool UncertaintyCartoonRenderer::Render(Call& call) {
@@ -407,18 +553,27 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
+	float scaling = 1.0f;
+
+	// the pointer to the render call
+	view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
+	if (cr == NULL) return false;
+
+	// get new data from the MolecularDataCall
+	MolecularDataCall *mol = this->GetData(static_cast<unsigned int>(cr->Time()), scaling);
+	if (mol == NULL) return false;
+
 	// get pointer to UncertaintyDataCall
 	UncertaintyDataCall *ud = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
     if(ud == NULL) return false;
     // execute the call
     if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
     
-    view::CallRender3D *cr = dynamic_cast<view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+	// if amino-acid count changed get new data
+	if (ud->GetAminoAcidCount() != this->aminoAcidCount) {
+		this->GetUncertaintyData(ud); // use return value ...?
+	}
 
-    float scaling = 1.0f;
-    MolecularDataCall *mol = this->getData(static_cast<unsigned int>(cr->Time()), scaling);
-    if (mol == NULL) return false;
 
     // reload shaders
 	if (this->buttonParam.IsDirty()) {
@@ -481,7 +636,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		}
 	}
 
-//	timer.BeginFrame();
+	// timer.BeginFrame();
 
     float clipDat[4];
     float clipCol[4];
@@ -539,185 +694,275 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	std::cout << lightDiffuse[0] << " " << lightDiffuse[1] << " " << lightDiffuse[2] << " " << lightDiffuse[3] << std::endl;
 	std::cout << lightSpecular[0] << " " << lightSpecular[1] << " " << lightSpecular[2] << " " << lightSpecular[3] << std::endl;*/
 
-    // copy data to: mainChain
-    unsigned int firstResIdx = 0;
-    unsigned int lastResIdx = 0;
-    unsigned int firstAtomIdx = 0;
-    unsigned int lastAtomIdx = 0;
-    unsigned int atomTypeIdx = 0;
+
+	unsigned int firstResIdx = 0;
+	unsigned int lastResIdx = 0;
+	unsigned int firstAtomIdx = 0;
+	unsigned int lastAtomIdx = 0;
+	unsigned int atomTypeIdx = 0;
 	unsigned int firstSecIdx = 0;
 	unsigned int lastSecIdx = 0;
 	unsigned int firstAAIdx = 0;
 	unsigned int lastAAIdx = 0;
 
-	unsigned int cIndex = 0;
-	unsigned int oIndex = 0;
+	// Render in wireframe mode
+	if (this->lineDebugParam.Param<param::BoolParam>()->Value())
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	this->mainChain.clear();
+	// Render backbone as tubes
+	if (this->backboneParam.Param<param::BoolParam>()->Value()) {
 
-	CAlpha lastCalpha;
+		// copy data to: mainChain
+		firstResIdx = 0;
+		lastResIdx = 0;
+		firstAtomIdx = 0;
+		lastAtomIdx = 0;
+		atomTypeIdx = 0;
+		firstSecIdx = 0;
+		lastSecIdx = 0;
+		firstAAIdx = 0;
+		lastAAIdx = 0;
 
-	int molCount = mol->MoleculeCount();
-	std::vector<int> molSizes;
+		unsigned int cIndex = 0;
+		unsigned int oIndex = 0;
 
-	// loop over all molecules of the protein
-	for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++) {
+		this->mainChain.clear();
 
-		MolecularDataCall::Molecule chain = mol->Molecules()[molIdx];
-		molSizes.push_back(0);
+		CAlpha lastCalpha;
 
-		bool firstset = false;
+		int molCount = mol->MoleculeCount();
+		std::vector<int> molSizes;
 
-		// is the first residue an aminoacid?
-		if (mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID) {
-			continue;
-		}
+		// loop over all molecules of the protein
+		for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++) {
 
-		firstSecIdx = chain.FirstSecStructIndex();
-		lastSecIdx = firstSecIdx + chain.SecStructCount();
+			MolecularDataCall::Molecule chain = mol->Molecules()[molIdx];
+			molSizes.push_back(0);
 
-		// loop over all secondary structures of the molecule
-		for (unsigned int secIdx = firstSecIdx; secIdx < lastSecIdx; secIdx++) {
-			firstAAIdx = mol->SecondaryStructures()[secIdx].FirstAminoAcidIndex();
-			lastAAIdx = firstAAIdx + mol->SecondaryStructures()[secIdx].AminoAcidCount();
+			bool firstset = false;
 
-			// loop over all aminoacids inside the secondary structure
-			for (unsigned int aaIdx = firstAAIdx; aaIdx < lastAAIdx; aaIdx++) {
+			// is the first residue an aminoacid?
+			if (mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID) {
+				continue;
+			}
 
-				MolecularDataCall::AminoAcid * acid;
+			firstSecIdx = chain.FirstSecStructIndex();
+			lastSecIdx = firstSecIdx + chain.SecStructCount();
 
-				// is the current residue really an aminoacid?
-				if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID)
-					acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
-				else
-					continue;
+			// loop over all secondary structures of the molecule
+			for (unsigned int secIdx = firstSecIdx; secIdx < lastSecIdx; secIdx++) {
+				firstAAIdx = mol->SecondaryStructures()[secIdx].FirstAminoAcidIndex();
+				lastAAIdx = firstAAIdx + mol->SecondaryStructures()[secIdx].AminoAcidCount();
 
-				// extract relevant positions and other values
-				CAlpha calpha;
-				calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
-				calpha.pos[1] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 1];
-				calpha.pos[2] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 2];
-				calpha.pos[3] = 1.0f;
+				// loop over all aminoacids inside the secondary structure
+				for (unsigned int aaIdx = firstAAIdx; aaIdx < lastAAIdx; aaIdx++) {
 
-				calpha.dir[0] = mol->AtomPositions()[3 * acid->OIndex()] - calpha.pos[0];
-				calpha.dir[1] = mol->AtomPositions()[3 * acid->OIndex() + 1] - calpha.pos[1];
-				calpha.dir[2] = mol->AtomPositions()[3 * acid->OIndex() + 2] - calpha.pos[2];
+					MolecularDataCall::AminoAcid * acid;
 
-				auto type = mol->SecondaryStructures()[secIdx].Type(); // TYPE_COIL  = 0, TYPE_SHEET = 1, TYPE_HELIX = 2, TYPE_TURN  = 3
-				calpha.type = (int)type;
-				molSizes[molIdx]++;
+					// is the current residue really an aminoacid?
+					if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID)
+						acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
+					else
+						continue;
 
-				// TODO: do this on GPU?
-				// orientation check for the direction
-				if (mainChain.size() != 0)
-				{
-					CAlpha before = mainChain[mainChain.size() - 1];
-					float dotProd = calpha.dir[0] * before.dir[0] + calpha.dir[1] * before.dir[1] + calpha.dir[2] * before.dir[2];
+					// extract relevant positions and other values
+					CAlpha calpha;
+					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
+					calpha.pos[1] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 1];
+					calpha.pos[2] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 2];
+					calpha.pos[3] = 1.0f;
 
-					if (dotProd < 0) // flip direction if the orientation is wrong
+					calpha.dir[0] = mol->AtomPositions()[3 * acid->OIndex()] - calpha.pos[0];
+					calpha.dir[1] = mol->AtomPositions()[3 * acid->OIndex() + 1] - calpha.pos[1];
+					calpha.dir[2] = mol->AtomPositions()[3 * acid->OIndex() + 2] - calpha.pos[2];
+
+					auto type = mol->SecondaryStructures()[secIdx].Type(); // TYPE_COIL  = 0, TYPE_SHEET = 1, TYPE_HELIX = 2, TYPE_TURN  = 3
+					calpha.type = (int)type;
+					molSizes[molIdx]++;
+
+					// TODO: do this on GPU?
+					// orientation check for the direction
+					if (mainChain.size() != 0)
 					{
-						calpha.dir[0] = -calpha.dir[0];
-						calpha.dir[1] = -calpha.dir[1];
-						calpha.dir[2] = -calpha.dir[2];
+						CAlpha before = mainChain[mainChain.size() - 1];
+						float dotProd = calpha.dir[0] * before.dir[0] + calpha.dir[1] * before.dir[1] + calpha.dir[2] * before.dir[2];
+
+						if (dotProd < 0) // flip direction if the orientation is wrong
+						{
+							calpha.dir[0] = -calpha.dir[0];
+							calpha.dir[1] = -calpha.dir[1];
+							calpha.dir[2] = -calpha.dir[2];
+						}
+					}
+
+					mainChain.push_back(calpha);
+
+					lastCalpha = calpha;
+
+					// add the first atom 3 times
+					if (!firstset) {
+						mainChain.push_back(calpha);
+						mainChain.push_back(calpha);
+						molSizes[molIdx] += 2;
+						firstset = true;
 					}
 				}
-
-				mainChain.push_back(calpha);
-
-				lastCalpha = calpha;
-
-				// add the first atom 3 times
-				if (!firstset) {
-					mainChain.push_back(calpha);
-					mainChain.push_back(calpha);
-					molSizes[molIdx] += 2;
-					firstset = true;
-				}
 			}
-		}
 
-		// add the last atom 3 times
-		mainChain.push_back(lastCalpha);
-		mainChain.push_back(lastCalpha);
-		molSizes[molIdx] += 2;
-	}
+			// add the last atom 3 times
+			mainChain.push_back(lastCalpha);
+			mainChain.push_back(lastCalpha);
+			molSizes[molIdx] += 2;
+		}
 	
 // DEBUG
 #ifdef FIRSTFRAME_CHECK
-	if (this->firstFrame) {
-		for (int i = 0; i < mainChain.size(); i++) {
-			std::cout << mainChain[i].type << std::endl;
+		if (this->firstFrame) {
+			for (int i = 0; i < mainChain.size(); i++) {
+				std::cout << mainChain[i].type << std::endl;
+			}
+			this->firstFrame = false;
 		}
-		this->firstFrame = false;
-	}
 #endif
 
-    // copy data to: positionCA and positionO
-	firstResIdx  = 0;
-	lastResIdx   = 0;
-	firstAtomIdx = 0;
-	lastAtomIdx  = 0;
-	atomTypeIdx  = 0;
+		// draw backbone as tubes
+		unsigned int colBytes, vertBytes, colStride, vertStride;
+		this->GetBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
+		//currBuf = 0;
 
-    if (this->positionsCa.Count() != mol->MoleculeCount()) {
-        this->positionsCa.SetCount(mol->MoleculeCount());
-        this->positionsO.SetCount(mol->MoleculeCount());
-    }
-    
-    for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++){
-        this->positionsCa[molIdx].Clear();
-        this->positionsCa[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
-        this->positionsO[molIdx].Clear();
-        this->positionsO[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
+		this->tubeShader.Enable();
+		glColor4f(1.0f / mainChain.size(), 0.75f, 0.25f, 1.0f);
+		colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
+		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+		glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
+		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
+		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), this->colorInterpolationParam.Param<param::BoolParam>()->Value());
+		float minC = 0.0f, maxC = 0.0f;
+		unsigned int colTabSize = 0;
+		glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+		//auto v = this->materialParam.Param<param::Vector4fParam>()->Value();
+		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
+		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
+		glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
 
-        //bool first;
-        firstResIdx = mol->Molecules()[molIdx].FirstResidueIndex();
-        lastResIdx = firstResIdx + mol->Molecules()[molIdx].ResidueCount();
-        for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++){
-            firstAtomIdx = mol->Residues()[resIdx]->FirstAtomIndex();
-            lastAtomIdx = firstAtomIdx + mol->Residues()[resIdx]->AtomCount();
-            for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++){
-                unsigned int atomTypeIdx = mol->AtomTypeIndices()[atomIdx];
-                if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")){
-                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                    this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                    this->positionsCa[molIdx].Add(1.0f);
-                    // write first and last Ca position three times
-                    if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))){
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsCa[molIdx].Add(1.0f);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsCa[molIdx].Add(1.0f);
-                    }
-                }
-                if (mol->AtomTypes()[atomTypeIdx].Name().Equals("O")){
-                    this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                    this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                    this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                    this->positionsO[molIdx].Add(1.0f);
-                    // write first and last Ca position three times
-                    if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))){
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsO[molIdx].Add(1.0f);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
-                        this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
-                        this->positionsO[molIdx].Add(1.0f);
-                    }
-                }
-            }
-        }
-    } 
-    // DEBUG
-	//std::cout << "cIndex " << cIndex << " oIndex " << oIndex << " molCount " << mol->MoleculeCount() << std::endl;
+		UINT64 numVerts;
+		numVerts = this->bufSize / vertStride;
+		UINT64 stride = 0;
 
+		for (int i = 0; i < (int)molSizes.size(); i++) {
+			UINT64 vertCounter = 0;
+			while (vertCounter < molSizes[i]) {
+				const char *currVert = (const char *)(&mainChain[(unsigned int)vertCounter + (unsigned int)stride]);
+				void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
+				const char *whence = currVert;
+				UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);
+				this->WaitSignal(this->fences[currBuf]);
+				memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
+				glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
+				glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), 0);
+
+				glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
+				glPatchParameteri(GL_PATCH_VERTICES, 1);
+				glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));
+				this->QueueSignal(this->fences[currBuf]);
+
+				currBuf = (currBuf + 1) % this->numBuffers;
+				vertCounter += vertsThisTime;
+				currVert += vertsThisTime * vertStride;
+			}
+			stride += molSizes[i];
+		}
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		glDisableClientState(GL_COLOR_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisable(GL_TEXTURE_1D);
+		this->tubeShader.Disable();
+	}
+
+
+	// copy data to: positionCA and positionO for backbone line rendering or sphere rendering
+	if (this->lineParam.Param<param::BoolParam>()->Value() || this->sphereParam.Param<param::BoolParam>()->Value()) {
+
+		firstResIdx = 0;
+		lastResIdx = 0;
+		firstAtomIdx = 0;
+		lastAtomIdx = 0;
+		atomTypeIdx = 0;
+
+		if (this->positionsCa.Count() != mol->MoleculeCount()) {
+			this->positionsCa.SetCount(mol->MoleculeCount());
+			this->positionsO.SetCount(mol->MoleculeCount());
+		}
+
+		for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++){
+			this->positionsCa[molIdx].Clear();
+			this->positionsCa[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
+			this->positionsO[molIdx].Clear();
+			this->positionsO[molIdx].AssertCapacity(mol->Molecules()[molIdx].ResidueCount() * 4 + 16);
+
+			//bool first;
+			firstResIdx = mol->Molecules()[molIdx].FirstResidueIndex();
+			lastResIdx = firstResIdx + mol->Molecules()[molIdx].ResidueCount();
+			for (unsigned int resIdx = firstResIdx; resIdx < lastResIdx; resIdx++){
+				firstAtomIdx = mol->Residues()[resIdx]->FirstAtomIndex();
+				lastAtomIdx = firstAtomIdx + mol->Residues()[resIdx]->AtomCount();
+				for (unsigned int atomIdx = firstAtomIdx; atomIdx < lastAtomIdx; atomIdx++){
+					unsigned int atomTypeIdx = mol->AtomTypeIndices()[atomIdx];
+					if (mol->AtomTypes()[atomTypeIdx].Name().Equals("CA")){
+						this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+						this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+						this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+						this->positionsCa[molIdx].Add(1.0f);
+						// write first and last Ca position three times
+						if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))){
+							this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+							this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+							this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+							this->positionsCa[molIdx].Add(1.0f);
+							this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+							this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+							this->positionsCa[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+							this->positionsCa[molIdx].Add(1.0f);
+						}
+					}
+					if (mol->AtomTypes()[atomTypeIdx].Name().Equals("O")){
+						this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+						this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+						this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+						this->positionsO[molIdx].Add(1.0f);
+						// write first and last Ca position three times
+						if ((resIdx == firstResIdx) || (resIdx == (lastResIdx - 1))){
+							this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+							this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+							this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+							this->positionsO[molIdx].Add(1.0f);
+							this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx]);
+							this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 1]);
+							this->positionsO[molIdx].Add(mol->AtomPositions()[3 * atomIdx + 2]);
+							this->positionsO[molIdx].Add(1.0f);
+						}
+					}
+				}
+			}
+		}
+		// DEBUG
+		//std::cout << "cIndex " << cIndex << " oIndex " << oIndex << " molCount " << mol->MoleculeCount() << std::endl;
+	}
 
     // Render backbone as GL_LINE
 	if (lineParam.Param<param::BoolParam>()->Value())
@@ -725,7 +970,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		//currBuf = 0;
 		for (unsigned int i = 0; i < this->positionsCa.Count(); i++) {
 			unsigned int colBytes, vertBytes, colStride, vertStride;
-			this->getBytesAndStrideLines(*mol, colBytes, vertBytes, colStride, vertStride);
+			this->GetBytesAndStrideLines(*mol, colBytes, vertBytes, colStride, vertStride);
 
 			this->splineShader.Enable();
 			glColor4f(1.0f / this->positionsCa.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
@@ -756,7 +1001,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 				void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
 				const char *whence = currVert;
 				UINT64 vertsThisTime = vislib::math::Min(this->positionsCa[i].Count() / 4 - vertCounter, numVerts);
-				this->waitSignal(this->fences[currBuf]);
+				this->WaitSignal(this->fences[currBuf]);
 				memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
 				glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
 				glUniform1i(this->splineShader.ParameterLocation("instanceOffset"), 0);
@@ -764,7 +1009,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 				glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
 				glPatchParameteri(GL_PATCH_VERTICES, 1);
 				glDrawArrays(GL_PATCHES, 0, (GLsizei)vertsThisTime - 3);
-				this->queueSignal(this->fences[currBuf]);
+				this->QueueSignal(this->fences[currBuf]);
 
 				currBuf = (currBuf + 1) % this->numBuffers;
 				vertCounter += vertsThisTime;
@@ -778,81 +1023,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			glDisable(GL_TEXTURE_1D);
 			this->splineShader.Disable();
 		}
-	}
-
-    // Render in wireframe mode
-	if (this->lineDebugParam.Param<param::BoolParam>()->Value())
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    // Render backbone as tubes
-	if (backboneParam.Param<param::BoolParam>()->Value()) {
-        
-		//currBuf = 0;
-		unsigned int colBytes, vertBytes, colStride, vertStride;
-		this->getBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
-
-		this->tubeShader.Enable();
-		glColor4f(1.0f / mainChain.size(), 0.75f, 0.25f, 1.0f);
-		colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
-		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"),         1, viewportStuff);
-		glUniform3fv(this->tubeShader.ParameterLocation("camIn"),            1, cr->GetCameraParameters()->Front().PeekComponents());
-		glUniform3fv(this->tubeShader.ParameterLocation("camRight"),         1, cr->GetCameraParameters()->Right().PeekComponents());
-		glUniform3fv(this->tubeShader.ParameterLocation("camUp"),            1, cr->GetCameraParameters()->Up().PeekComponents());
-		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"),          1, clipDat);
-		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"),          1, clipCol);
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"),         1, GL_FALSE, modelViewMatrix.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinv"),      1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"),        1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"),     1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"),  1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"),    1, GL_FALSE, projectionMatrixInv.PeekComponents());
-		glUniform1f(this->tubeShader.ParameterLocation("scaling"),           this->scalingParam.Param<param::FloatParam>()->Value());
-		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"),         this->backboneWidthParam.Param<param::FloatParam>()->Value());
-		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), this->colorInterpolationParam.Param<param::BoolParam>()->Value());
-		float minC = 0.0f, maxC = 0.0f;
-		unsigned int colTabSize = 0;
-		glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-		//auto v = this->materialParam.Param<param::Vector4fParam>()->Value();
-		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
-		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
-		glUniform4f(this->tubeShader.ParameterLocation("lightPos"),     lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
-
-		UINT64 numVerts;
-		numVerts = this->bufSize / vertStride;
-		UINT64 stride = 0;
-
-		for (int i = 0; i < (int)molSizes.size(); i++) {
-			UINT64 vertCounter = 0;
-			while (vertCounter < molSizes[i]) {
-				const char *currVert = (const char *)(&mainChain[(unsigned int)vertCounter + (unsigned int)stride]);
-				void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
-				const char *whence = currVert;
-				UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);
-				this->waitSignal(this->fences[currBuf]);
-				memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
-				glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, (GLsizeiptr)vertsThisTime * vertStride);
-				glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), 0);
-
-				glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
-				glPatchParameteri(GL_PATCH_VERTICES, 1);
-				glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));
-				this->queueSignal(this->fences[currBuf]);
-
-				currBuf = (currBuf + 1) % this->numBuffers;
-				vertCounter += vertsThisTime;
-				currVert += vertsThisTime * vertStride;
-			}
-			stride += molSizes[i];
-		}
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		glDisableClientState(GL_COLOR_ARRAY);
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisable(GL_TEXTURE_1D);
-		this->tubeShader.Disable();
 	}
 
     // DEBUG
@@ -918,9 +1088,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 
 /*
- * UncertaintyCartoonRenderer::getBytesAndStride
+ * UncertaintyCartoonRenderer::GetBytesAndStride
  */
-void UncertaintyCartoonRenderer::getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, 
+void UncertaintyCartoonRenderer::GetBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, 
                                                    unsigned int &colStride, unsigned int &vertStride) {
     
     vertBytes = 0; 
@@ -936,9 +1106,9 @@ void UncertaintyCartoonRenderer::getBytesAndStride(MolecularDataCall &mol, unsig
 
 
 /*
- * UncertaintyCartoonRenderer::getBytesAndStrideLines 
+ * UncertaintyCartoonRenderer::GetBytesAndStrideLines 
  */
-void UncertaintyCartoonRenderer::getBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
+void UncertaintyCartoonRenderer::GetBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
                                                         unsigned int &colStride, unsigned int &vertStride) {
 	vertBytes = 0; 
     colBytes = 0;
@@ -953,9 +1123,9 @@ void UncertaintyCartoonRenderer::getBytesAndStrideLines(MolecularDataCall &mol, 
 
 
 /*
-* UncertaintyCartoonRenderer::queueSignal
+* UncertaintyCartoonRenderer::QueueSignal
 */
-void UncertaintyCartoonRenderer::queueSignal(GLsync& syncObj) {
+void UncertaintyCartoonRenderer::QueueSignal(GLsync& syncObj) {
     
     if (syncObj) {
         glDeleteSync(syncObj);
@@ -965,9 +1135,9 @@ void UncertaintyCartoonRenderer::queueSignal(GLsync& syncObj) {
 
 
 /*
-* UncertaintyCartoonRenderer::waitSignal
+* UncertaintyCartoonRenderer::WaitSignal
 */
-void UncertaintyCartoonRenderer::waitSignal(GLsync& syncObj) {
+void UncertaintyCartoonRenderer::WaitSignal(GLsync& syncObj) {
     
     if (syncObj) {
         while (1) {
@@ -978,80 +1148,3 @@ void UncertaintyCartoonRenderer::waitSignal(GLsync& syncObj) {
         }
     }
 }
-
-
-/*
- * MyFunkyDebugCallback
- */
-//typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
-void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const GLvoid* userParam) {
-        const char *sourceText, *typeText, *severityText;
-        switch(source) {
-            case GL_DEBUG_SOURCE_API:
-                sourceText = "API";
-                break;
-            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-                sourceText = "Window System";
-                break;
-            case GL_DEBUG_SOURCE_SHADER_COMPILER:
-                sourceText = "Shader Compiler";
-                break;
-            case GL_DEBUG_SOURCE_THIRD_PARTY:
-                sourceText = "Third Party";
-                break;
-            case GL_DEBUG_SOURCE_APPLICATION:
-                sourceText = "Application";
-                break;
-            case GL_DEBUG_SOURCE_OTHER:
-                sourceText = "Other";
-                break;
-            default:
-                sourceText = "Unknown";
-                break;
-        }
-        switch(type) {
-            case GL_DEBUG_TYPE_ERROR:
-                typeText = "Error";
-                break;
-            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-                typeText = "Deprecated Behavior";
-                break;
-            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-                typeText = "Undefined Behavior";
-                break;
-            case GL_DEBUG_TYPE_PORTABILITY:
-                typeText = "Portability";
-                break;
-            case GL_DEBUG_TYPE_PERFORMANCE:
-                typeText = "Performance";
-                break;
-            case GL_DEBUG_TYPE_OTHER:
-                typeText = "Other";
-                break;
-            case GL_DEBUG_TYPE_MARKER:
-                typeText = "Marker";
-                break;
-            default:
-                typeText = "Unknown";
-                break;
-        }
-        switch(severity) {
-            case GL_DEBUG_SEVERITY_HIGH:
-                severityText = "High";
-                break;
-            case GL_DEBUG_SEVERITY_MEDIUM:
-                severityText = "Medium";
-                break;
-            case GL_DEBUG_SEVERITY_LOW:
-                severityText = "Low";
-                break;
-            case GL_DEBUG_SEVERITY_NOTIFICATION:
-                severityText = "Notification";
-                break;
-            default:
-                severityText = "Unknown";
-                break;
-        }
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
-}
-

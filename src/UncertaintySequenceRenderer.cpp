@@ -1192,7 +1192,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     }
 					// diffStruct >= 2 (else it is just one structure type with uncertainty = 1.0f which is handled above)
                     
-					samples = 30;    // ...
+					samples = 50;    // ...
                     
                     start   = 0.0f;
                     end     = 0.0f;
@@ -1215,9 +1215,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                 start    = ((k == 0)?(0.0f):(end));
                                 middle   = ((k == 0)?(uTemp):(start+(uTemp/2.0f)));
                                 if(this->currentUncertainColorInterpol == UNCERTAIN_COLOR_HSL)
-                                    colEnd = this->secStructColorHSL[(int)sortedStructLR[index]];
+                                    colStart = this->secStructColorHSL[(int)sortedStructLR[index]];
                                 else // RGB
-                                    colEnd = this->secStructColorRGB[(int)sortedStructLR[index]];
+									colStart = this->secStructColorRGB[(int)sortedStructLR[index]];
                                     
                                 // get data for second structure type
                                 index++;
@@ -1236,13 +1236,12 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                                 if ((start <= fTemp) && (fTemp <= end)) {
                                     xTemp  = (fTemp - start) / (end - start);  // 0-1
-                                    mTemp  = (middle - start) / (end - start); // shift of x=0 to middle
+                                    mTemp  = (middle - start) / (end - start); // shift of x=0 to "middle"
                                     aStart = -(1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp + this->currentUncertainGardientInterval/2.0f)));
                                     aStart = (aStart > 1.0f) ? (1.0f) : ((aStart < 0.0f) ? (0.0f) : (aStart));
-                                    aEnd   = -aStart + 1.0f // is already in 0-1
-                                    //aEnd   =  (1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp - this->currentUncertainGardientInterval/2.0f)));
-                                    //aStart = (aStart > 1.0f) ? (1.0f) : ((aStart < 0.0f) ? (0.0f) : (aStart));
-                                    //aEnd   = (aEnd > 1.0f)   ? (1.0f) : ((aEnd < 0.0f)   ? (0.0f) : (aEnd));
+									aEnd = -aStart + 1.0f; // is already in 0-1
+                                    // aEnd   =  (1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp - this->currentUncertainGardientInterval/2.0f)));
+                                    // aEnd   = (aEnd > 1.0f)   ? (1.0f) : ((aEnd < 0.0f)   ? (0.0f) : (aEnd));
 
                                     if (this->currentUncertainColorInterpol == UNCERTAIN_COLOR_RGB) {
                                         colTemp = aStart*colStart +  aEnd*colEnd;
@@ -1524,7 +1523,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     glBegin(GL_TRIANGLE_STRIP);
                     for (unsigned int j = 0; j < this->secStructVertices[(int)sMax].Count(); j++) {
                                                   
-						if (this->currentUncertainBlockChartColor == UNCERTAIN_BC_COLORED) {
+						if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
                             
                             fTemp = (static_cast<float>(j) / static_cast<float>(this->secStructVertices[(int)sMax].Count()));
                             index = 0;
@@ -1540,9 +1539,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                 start    = ((k == 0)?(0.0f):(end));
                                 middle   = ((k == 0)?(uTemp):(start+(uTemp/2.0f)));
                                 if(this->currentUncertainColorInterpol == UNCERTAIN_COLOR_HSL)
-                                    colEnd = this->secStructColorHSL[(int)sortedStructLR[index]];
+                                    colStart = this->secStructColorHSL[(int)sortedStructLR[index]];
                                 else // RGB
-                                    colEnd = this->secStructColorRGB[(int)sortedStructLR[index]];
+									colStart = this->secStructColorRGB[(int)sortedStructLR[index]];
                                     
                                 // get data for second structure type
                                 index++;
@@ -1564,7 +1563,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     mTemp  = (middle - start) / (end - start); // shift of x=0 to middle
                                     aStart = -(1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp + this->currentUncertainGardientInterval/2.0f)));
                                     aStart = (aStart > 1.0f) ? (1.0f) : ((aStart < 0.0f) ? (0.0f) : (aStart));
-                                    aEnd   = -aStart + 1.0f // is already in 0-1
+									aEnd = -aStart + 1.0f; // is already in 0-1
 
                                     if (this->currentUncertainColorInterpol == UNCERTAIN_COLOR_RGB) {
                                         colTemp = aStart*colStart +  aEnd*colEnd;
