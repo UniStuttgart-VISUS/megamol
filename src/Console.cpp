@@ -13,6 +13,7 @@
 #include <iostream>
 #include <iomanip>
 #include <map>
+#include <thread>
 
 #include "mmcore/api/MegaMolCore.h"
 
@@ -31,7 +32,6 @@
 #include "vislib/functioncast.h"
 #include "vislib/String.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
 #include "vislib/Trace.h"
 
 /** The core instance handle. */
@@ -96,14 +96,6 @@ int main(int argc, char* argv[]) {
 
     // VISlib TRACE
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
-
-    // VISlib StackTrace
-    vislib::sys::ThreadSafeStackTrace::Initialise();
-    {
-        vislib::SmartPtr<vislib::StackTrace> manager = vislib::sys::ThreadSafeStackTrace::Manager();
-        ::mmcSetInitialisationValue(NULL, MMC_INITVAL_VISLIB_STACKTRACEMANAGER, MMC_TYPE_VOIDP, static_cast<void*>(&manager));
-    }
-    VLSTACKTRACE("main", __FILE__, __LINE__);
 
     // VISlib Log
     vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
@@ -213,10 +205,6 @@ int main(int argc, char* argv[]) {
     } catch(vislib::Exception e) {
         vislib::StringA msg;
         msg.Format("Exception in (%s, %d): %s\n", e.GetFile(), e.GetLine(), e.GetMsgA());
-        if (e.HasStack()) {
-            msg.Append("\tStack Trace:\n");
-            msg.Append(e.GetStack());
-        }
         vislib::sys::Log::DefaultLog.WriteError(msg);
         retVal = -1;
     } catch(...) {
@@ -492,7 +480,7 @@ int runNormal(megamol::console::utility::CmdLineParser *& parser) {
             megamol::console::utility::ParamFileManager::Instance().Save();
             if (parser->InitOnlyParameterFile()) return 0;
         } else {
-            vislib::sys::Thread::Sleep(100);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             megamol::console::utility::ParamFileManager::Instance().Load();
         }
     }
