@@ -39,7 +39,7 @@
  *            function porting
  *            (from old classes to newly added external libraries)
  */
-#define VISLIB_VERSION_MINOR 1
+#define VISLIB_VERSION_MINOR 2
 
 
 /**
