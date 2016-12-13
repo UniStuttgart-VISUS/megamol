@@ -9,6 +9,7 @@
 #include "WavefrontObjWriter.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
+#include <thread>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -176,7 +177,7 @@ bool trisoup::WavefrontObjWriter::writeLines(trisoup::LinesDataCall* ldc) {
                         "Frame %u returned on request for frame %u\n", ldc->FrameID(), myFrame);
                 }
                 ++missCnt;
-                vislib::sys::Thread::Sleep(static_cast<DWORD>(1 + std::max<int>(missCnt, 0) * 100));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1 + std::max<int>(missCnt, 0) * 100));
             }
         } while (ldc->FrameID() != myFrame);
 
