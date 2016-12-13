@@ -53,7 +53,6 @@
 
 #include "vislib/sys/Log.h"
 #include "vislib/Trace.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {

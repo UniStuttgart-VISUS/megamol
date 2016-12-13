@@ -834,7 +834,7 @@ bool VolumeMeshRenderer::Render(Call& call) {
         }
         lastTime = time;
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "UpdateMesh failed: %s, %i \n %s\n", e.GetMsgA(), e.GetLine(), e.GetStack());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "UpdateMesh failed: %s, %i \n", e.GetMsgA(), e.GetLine());
         return false;
     }
     // -------- END create mesh -----
