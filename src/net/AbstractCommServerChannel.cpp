@@ -8,7 +8,6 @@
 
 #include "vislib/net/AbstractCommServerChannel.h"
 
-#include "vislib/StackTrace.h"
 
 
 /*
@@ -16,8 +15,6 @@
  */
 vislib::net::AbstractCommServerChannel::AbstractCommServerChannel(void) 
         : Super() {
-    VLSTACKTRACE("AbstractCommServerChannel::AbstractCommServerChannel", 
-        __FILE__, __LINE__);
 }
 
 
@@ -25,8 +22,6 @@ vislib::net::AbstractCommServerChannel::AbstractCommServerChannel(void)
  * vislib::net::AbstractCommServerChannel::~AbstractCommServerChannel
  */
 vislib::net::AbstractCommServerChannel::~AbstractCommServerChannel(void) {
-    VLSTACKTRACE("AbstractCommServerChannel::~AbstractCommServerChannel", 
-        __FILE__, __LINE__);
     // Note: Calling Close() here to ensure correct cleanup of all child classes
     // will not work. The child class that has the actual implementation of
     // Close() must do that.

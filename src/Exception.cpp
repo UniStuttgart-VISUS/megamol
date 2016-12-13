@@ -12,7 +12,6 @@
 #include <cstdarg>
 
 #include "vislib/memutils.h"
-#include "vislib/StackTrace.h"
 #include "vislib/StringConverter.h"
 
 
@@ -24,7 +23,6 @@ vislib::Exception::Exception(const char *msg, const char *file,
         : file(NULL), line(line), msg(NULL), stack(NULL) {
     this->setFile(file);
     this->setMsg(msg);
-    this->fetchStack();
 }
 
 
@@ -36,7 +34,6 @@ vislib::Exception::Exception(const wchar_t *msg, const char *file,
         : file(NULL), line(line), msg(NULL), stack(NULL) {
     this->setFile(file);
     this->setMsg(msg);
-    this->fetchStack();
 }
 
 
@@ -46,7 +43,6 @@ vislib::Exception::Exception(const wchar_t *msg, const char *file,
 vislib::Exception::Exception(const char *file, const int line) 
         : file(NULL), line(line), msg(NULL), stack(NULL) {
     this->setFile(file);
-    this->fetchStack();
 }
 
 
@@ -138,23 +134,6 @@ vislib::Exception& vislib::Exception::operator =(const Exception& rhs) {
     }
 
     return *this;
-}
-
-
-/*
- * vislib::Exception::fetchStack
- */
-void vislib::Exception::fetchStack(void) {
-    unsigned int size;
-    vislib::StackTrace::GetStackString((char*)NULL, size);
-    if (size <= 1) {
-        //ARY_SAFE_DELETE(this->stack);
-        this->stack = NULL;
-        return;
-    }
-
-    this->stack = new char[size];
-    vislib::StackTrace::GetStackString(this->stack, size);
 }
 
 

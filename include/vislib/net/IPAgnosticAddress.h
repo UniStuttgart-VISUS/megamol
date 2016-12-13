@@ -18,7 +18,6 @@
 #include "vislib/net/IPAddress.h"
 #include "vislib/net/IPAddress6.h"
 #include "vislib/net/SocketAddress.h"
-#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -268,7 +267,6 @@ namespace net {
          * @return true if the address represents "any" address, false otherwise.
          */
         inline bool IsAny(void) const {
-            VLSTACKTRACE("IPAgnosticAddress::IsAny", __FILE__, __LINE__);
             return ((*this == ANY4) || (*this == ANY6));
         }
 
@@ -278,7 +276,6 @@ namespace net {
          * @return true if the address is v4, false otherwise.
          */
         inline bool IsV4(void) const {
-            VLSTACKTRACE("IPAgnosticAddress::IsV4", __FILE__, __LINE__);
             return (this->v4 != NULL);
         }
 
@@ -288,7 +285,6 @@ namespace net {
          * @return true if the address is v6, false otherwise.
          */
         inline bool IsV6(void) const {
-            VLSTACKTRACE("IPAgnosticAddress::IsV6", __FILE__, __LINE__);
             return (this->v6 != NULL);
         }
 
@@ -417,7 +413,6 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAgnosticAddress& rhs) const {
-            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -429,7 +424,6 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAddress& rhs) const {
-            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -441,7 +435,6 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const IPAddress6& rhs) const {
-            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -453,7 +446,6 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const struct in_addr& rhs) const {
-            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 
@@ -465,7 +457,6 @@ namespace net {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const struct in6_addr& rhs) const {
-            VLSTACKTRACE("IPAgnosticAddress::operator !=", __FILE__, __LINE__);
             return !(*this == rhs);
         }
 

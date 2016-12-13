@@ -159,9 +159,6 @@
     <ClInclude Include="include\vislib\Stack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\vislib\StackTrace.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\vislib\String.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -529,9 +526,6 @@
       <Filter>Header Files\sys</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\sys\ThreadPoolListener.h">
-      <Filter>Header Files\sys</Filter>
-    </ClInclude>
-    <ClInclude Include="include\vislib\sys\ThreadSafeStackTrace.h">
       <Filter>Header Files\sys</Filter>
     </ClInclude>
     <ClInclude Include="include\vislib\sys\TrayIcon.h">
@@ -1067,9 +1061,6 @@
     <ClCompile Include="src\Stack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\StackTrace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\String.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1425,9 +1416,6 @@
       <Filter>Source Files\sys</Filter>
     </ClCompile>
     <ClCompile Include="src\sys\ThreadPoolListener.cpp">
-      <Filter>Source Files\sys</Filter>
-    </ClCompile>
-    <ClCompile Include="src\sys\ThreadSafeStackTrace.cpp">
       <Filter>Source Files\sys</Filter>
     </ClCompile>
     <ClCompile Include="src\sys\TrayIcon.cpp">

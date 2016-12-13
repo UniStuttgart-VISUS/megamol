@@ -383,8 +383,6 @@ namespace math {
     template<class T, class S> 
     AbstractRectangularPyramidalFrustum<T, S>
             ::~AbstractRectangularPyramidalFrustum(void) {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::"
-            "AbstractRectangularPyramidalFrustum", __FILE__, __LINE__);
         // Must not do anything about 'values' due to the Crowbar pattern(TM).
         //ARY_SAFE_DELETE(this->cachePoints);
         ARY_SAFE_DELETE(this->cachePlanes);
@@ -398,8 +396,6 @@ namespace math {
     template<class Tp, class Sp>
     bool AbstractRectangularPyramidalFrustum<T, S>::Contains(
             const AbstractPoint<Tp, 3, Sp>& point, const bool onIsIn) const {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Contains",
-            __FILE__, __LINE__);
         Plane<T> *planes = this->fillPlaneCache();
         ASSERT(planes != NULL);
 
@@ -423,8 +419,6 @@ namespace math {
     template<class T, class S> 
     void AbstractRectangularPyramidalFrustum<T, S>::GetBottomBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetBottomBasePoints",
-            __FILE__, __LINE__);
         Point<T, 3> apex = this->GetApex();             // Cache apex.
         Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
@@ -462,8 +456,6 @@ namespace math {
     template<class T, class S> 
     void AbstractRectangularPyramidalFrustum<T, S>::GetTopBasePoints(
             vislib::Array<Point<T, 3> >& outPoints) const {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::GetTopBasePoints",
-            __FILE__, __LINE__);
         Point<T, 3> apex = this->GetApex();             // Cache apex.
         Vector<T, 3> normal = this->GetBaseNormal();    // Cache normal.
         Vector<T, 3> up = this->GetBaseUp();            // Cache up.
@@ -528,8 +520,6 @@ namespace math {
     template<class T, class S>
     void AbstractRectangularPyramidalFrustum<T, S>::SetBaseNormal(
             const T x, const T y, const T z) {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseNormal",
-            __FILE__, __LINE__);
         this->values[IDX_NORMAL_X] = x;
         this->values[IDX_NORMAL_Y] = y;
         this->values[IDX_NORMAL_Z] = z;
@@ -546,8 +536,6 @@ namespace math {
     template<class T, class S> 
     void AbstractRectangularPyramidalFrustum<T, S>::SetBaseUp(
             const T x, const T y, const T z) {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::SetBaseUp",
-            __FILE__, __LINE__);
         this->values[IDX_UP_X] = x;
         this->values[IDX_UP_Y] = y;
         this->values[IDX_UP_Z] = z;
@@ -689,8 +677,6 @@ namespace math {
             const T ax, const T ay, const T az,
             const T nx, const T ny, const T nz,
             const T ux, const T uy, const T uz) {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Set", 
-            __FILE__, __LINE__);
 
         this->values[IDX_BOTTOM] = bottom;
         this->values[IDX_TOP] = top;
@@ -717,8 +703,6 @@ namespace math {
             const AbstractVector<T, 3, Sp2>& baseNormal,
             const AbstractVector<T, 3, Sp3>& baseUp,
             const AbstractViewFrustum<T, Sp4>& frustum) {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::Set", 
-            __FILE__, __LINE__);
         this->Set(frustum.GetLeftDistance(), frustum.GetRightDistance(),
             frustum.GetBottomDistance(), frustum.GetTopDistance(),
             frustum.GetNearDistance(), frustum.GetFarDistance(),
@@ -734,9 +718,7 @@ namespace math {
     //template<class T, class S>
     //void AbstractRectangularPyramidalFrustum<T, S>::fillPointCache(
     //        const bool forcheUpdate) const {
-    //    VLSTACKTRACE("AbstractRectangularPyramidalFrustum::fillPointCache",
-    //        __FILE__, __LINE__);
-
+    //
     //    if (this->cachePoints == NULL) {
     //        this->cachePoints = new Point<T, 3>[8];
 
@@ -752,8 +734,6 @@ namespace math {
     template<class T, class S>
     Plane<T> *AbstractRectangularPyramidalFrustum<T, S>::fillPlaneCache(
             const bool forceUpdate) const {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::fillPlaneCache",
-            __FILE__, __LINE__);
 
         if (this->cachePlanes == NULL) {
             this->cachePlanes = new Plane<T>[6];
@@ -817,8 +797,6 @@ namespace math {
     template<class T, class S>
     ShallowVector<T, 3>& AbstractRectangularPyramidalFrustum<T, S>
             ::safeUpVector(ShallowVector<T, 3>& inOutUp) {
-        VLSTACKTRACE("AbstractRectangularPyramidalFrustum::safeUpVector",
-            __FILE__, __LINE__);
 
         const ShallowVector<T, 3> normal(this->values + IDX_NORMAL_X);
         ASSERT(normal.IsNormalised());

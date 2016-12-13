@@ -257,7 +257,6 @@
     <ClCompile Include="testrefcount.cpp" />
     <ClCompile Include="testserialiser.cpp" />
     <ClCompile Include="testsockets.cpp" />
-    <ClCompile Include="teststacktrace.cpp" />
     <ClCompile Include="teststring.cpp" />
     <ClCompile Include="testsysinfo.cpp" />
     <ClCompile Include="testtcpserver.cpp" />
@@ -311,7 +310,6 @@
     <ClInclude Include="testrefcount.h" />
     <ClInclude Include="testserialiser.h" />
     <ClInclude Include="testsockets.h" />
-    <ClInclude Include="teststacktrace.h" />
     <ClInclude Include="teststring.h" />
     <ClInclude Include="testsysinfo.h" />
     <ClInclude Include="testtcpserver.h" />

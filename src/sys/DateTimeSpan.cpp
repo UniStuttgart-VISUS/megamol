@@ -19,7 +19,6 @@
  * vislib::sys::DateTimeSpan::DaysToTicks
  */
 INT64 vislib::sys::DateTimeSpan::DaysToTicks(const INT64 days) {
-    VLSTACKTRACE("DateTimeSpan::DaysToTicks", __FILE__, __LINE__);
     // TODO range check!
     return days * TICKS_PER_DAY;
 }
@@ -31,7 +30,6 @@ INT64 vislib::sys::DateTimeSpan::DaysToTicks(const INT64 days) {
 INT64 vislib::sys::DateTimeSpan::TimeToTicks(const INT hours, 
         const INT minutes, const INT seconds, const INT milliseconds, 
         const INT ticks) {
-    VLSTACKTRACE("DateTimeSpan::TimeToTicks", __FILE__, __LINE__);
     // TODO range check
     return hours * TICKS_PER_HOUR
         + minutes * TICKS_PER_MINUTE
@@ -143,7 +141,6 @@ const INT64 vislib::sys::DateTimeSpan::TICKS_PER_SECOND
 vislib::sys::DateTimeSpan::DateTimeSpan(const INT days, const INT hours, 
         const INT minutes, const INT seconds, const INT milliseconds,
         const INT ticks) : ticks(0) {
-    VLSTACKTRACE("DateTimeSpan::~DateTimeSpan", __FILE__, __LINE__);
     try {
         this->Set(days, hours, minutes, seconds, milliseconds, ticks);
     } catch (...) {
@@ -157,7 +154,6 @@ vislib::sys::DateTimeSpan::DateTimeSpan(const INT days, const INT hours,
  * vislib::sys::DateTimeSpan::~DateTimeSpan
  */
 vislib::sys::DateTimeSpan::~DateTimeSpan(void) {
-    VLSTACKTRACE("DateTimeSpan::~DateTimeSpan", __FILE__, __LINE__);
 
 }
 
@@ -168,7 +164,6 @@ vislib::sys::DateTimeSpan::~DateTimeSpan(void) {
 void vislib::sys::DateTimeSpan::Set(const INT days, const INT hours, 
         const INT minutes, const INT seconds, const INT milliseconds,
         const INT ticks) {
-    VLSTACKTRACE("DateTimeSpan::Set", __FILE__, __LINE__);
     this->ticks = 0;
     this->add(DateTimeSpan::DaysToTicks(days));
     this->add(DateTimeSpan::TimeToTicks(hours, minutes, seconds, 
@@ -180,7 +175,6 @@ void vislib::sys::DateTimeSpan::Set(const INT days, const INT hours,
  * vislib::sys::DateTimeSpan::ToStringA
  */
 vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
-    VLSTACKTRACE("DateTimeSpan::ToStringA", __FILE__, __LINE__);
     StringA retval;
     retval.Format("%d:%02d:%02d:%02d.%04d", this->GetDays(), 
         math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
@@ -193,7 +187,6 @@ vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
  * vislib::sys::DateTimeSpan::ToStringW
  */
 vislib::StringW vislib::sys::DateTimeSpan::ToStringW(void) const {
-    VLSTACKTRACE("DateTimeSpan::ToStringW", __FILE__, __LINE__);
     StringW retval;
     retval.Format(L"%d:%02d:%02d:%02d.%04d", this->GetDays(), 
         math::Abs(this->GetHours()), math::Abs(this->GetMinutes()), 
@@ -207,7 +200,6 @@ vislib::StringW vislib::sys::DateTimeSpan::ToStringW(void) const {
  */
 vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator -=(
         const DateTimeSpan& rhs) {
-    VLSTACKTRACE("DateTimeSpan::operator -=", __FILE__, __LINE__);
     try {
         this->add((-rhs).ticks);
         return *this;
@@ -224,7 +216,6 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator -=(
  * vislib::sys::DateTimeSpan::operator -
  */
 vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::operator -(void) const {
-    VLSTACKTRACE("DateTimeSpan::operator -", __FILE__, __LINE__);
     if (this->ticks == DateTimeSpan::MINIMUM) {
         // Minimum would overflow, because 0 belongs to positive range.
         throw IllegalStateException("DateTimeSpan::MINIMUM", __FILE__, 
@@ -241,7 +232,6 @@ vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::operator -(void) const {
  */
 vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator =(
         const DateTimeSpan& rhs) throw() {
-    VLSTACKTRACE("DateTimeSpan::operator =", __FILE__, __LINE__);
     if (this != &rhs) {
         this->ticks = rhs.ticks;
     }
@@ -253,7 +243,6 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator =(
  * vislib::sys::DateTimeSpan::add
  */
 void vislib::sys::DateTimeSpan::add(const INT64 millis) {
-    VLSTACKTRACE("DateTimeSpan::add", __FILE__, __LINE__);
     INT64 max = static_cast<INT64>(DateTimeSpan::MAXIMUM);
     INT64 min = static_cast<INT64>(DateTimeSpan::MINIMUM);
     

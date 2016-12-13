@@ -14,7 +14,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-
+#include "vislib/assert.h"
 #include "vislib/net/AbstractSimpleMessageHeader.h"
 
 
@@ -70,8 +70,6 @@ namespace net {
          *             not be NULL.
          */
         inline void SetData(SimpleMessageHeaderData *data) {
-            VLSTACKTRACE("ShallowSimpleMessageHeader::SetData", 
-                __FILE__, __LINE__);
             ASSERT(data != NULL);
             this->data = data;
         }
@@ -85,8 +83,6 @@ namespace net {
          */
         inline ShallowSimpleMessageHeader& operator =(
                 const ShallowSimpleMessageHeader& rhs) {
-            VLSTACKTRACE("ShallowSimpleMessageHeader::operator =", 
-                __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -100,7 +96,6 @@ namespace net {
          */
         inline ShallowSimpleMessageHeader& operator =(
                 const AbstractSimpleMessageHeader& rhs) {
-            VLSTACKTRACE("SimpleMessageHeader::operator =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -114,8 +109,6 @@ namespace net {
          */
         inline ShallowSimpleMessageHeader& operator =(
                 const SimpleMessageHeaderData& rhs) {
-            VLSTACKTRACE("ShallowSimpleMessageHeader::operator =",
-                __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -129,8 +122,6 @@ namespace net {
          */
         inline ShallowSimpleMessageHeader& operator =(
                 const SimpleMessageHeaderData *rhs) {
-            VLSTACKTRACE("ShallowSimpleMessageHeader::operator =", 
-                __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }

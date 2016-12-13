@@ -123,9 +123,6 @@
     <ClCompile Include="testsockets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="teststacktrace.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="teststring.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -279,9 +276,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testsockets.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="teststacktrace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="teststring.h">

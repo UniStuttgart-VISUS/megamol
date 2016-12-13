@@ -6,6 +6,7 @@
  */
 
 #include "vislib/net/AbstractSimpleMessage.h"
+#include "vislib/assert.h"
 
 #include <climits>
 
@@ -14,8 +15,6 @@
  * vislib::net::AbstractSimpleMessage::~AbstractSimpleMessage
  */
 vislib::net::AbstractSimpleMessage::~AbstractSimpleMessage(void) {
-    VLSTACKTRACE("AbstractSimpleMessage::~AbstractSimpleMessage", 
-        __FILE__, __LINE__);
 }
 
 
@@ -23,8 +22,6 @@ vislib::net::AbstractSimpleMessage::~AbstractSimpleMessage(void) {
  * vislib::net::AbstractSimpleMessage::AbstractSimpleMessage
  */
 vislib::net::AbstractSimpleMessage::AbstractSimpleMessage(void) {
-    VLSTACKTRACE("AbstractSimpleMessage::AbstractSimpleMessage", 
-        __FILE__, __LINE__);
 }
 
 
@@ -32,7 +29,6 @@ vislib::net::AbstractSimpleMessage::AbstractSimpleMessage(void) {
  * vislib::net::AbstractSimpleMessage::GetBody
  */
 const void *vislib::net::AbstractSimpleMessage::GetBody(void) const {
-    VLSTACKTRACE("AbstractSimpleMessage::GetBody", __FILE__, __LINE__);
     // If that asserts, the child class probably does not initialise correctly.
     ASSERT(this->header.PeekData() != NULL);
     return (this->header.PeekData() + 1);
@@ -43,7 +39,6 @@ const void *vislib::net::AbstractSimpleMessage::GetBody(void) const {
  * vislib::net::AbstractSimpleMessage::GetBody
  */
 void *vislib::net::AbstractSimpleMessage::GetBody(void) {
-    VLSTACKTRACE("AbstractSimpleMessage::GetBody", __FILE__, __LINE__);
     // If that asserts, the child class probably does not initialise correctly.
     ASSERT(this->header.PeekData() != NULL);
     return const_cast<SimpleMessageHeaderData *>(this->header.PeekData() + 1);
@@ -56,7 +51,6 @@ void *vislib::net::AbstractSimpleMessage::GetBody(void) {
  */
 void vislib::net::AbstractSimpleMessage::SetBody(const void *body, 
         const SIZE_T bodySize) {
-    VLSTACKTRACE("AbstractSimpleMessage::SetBody", __FILE__, __LINE__);
     // If that asserts, the child class probably does not initialise correctly.
     ASSERT(this->header.PeekData() != NULL);
 
@@ -89,7 +83,6 @@ void vislib::net::AbstractSimpleMessage::SetBody(const void *body,
  */
 void vislib::net::AbstractSimpleMessage::SetHeader(
         const AbstractSimpleMessageHeader& header, const bool reallocateBody) {
-    VLSTACKTRACE("AbstractSimpleMessage::SetHeader", __FILE__, __LINE__);
     // If that asserts, the child class probably does not initialise correctly.
     ASSERT(this->header.PeekData() != NULL);
     this->header = header;
@@ -105,7 +98,6 @@ void vislib::net::AbstractSimpleMessage::SetHeader(
 vislib::net::AbstractSimpleMessage& 
 vislib::net::AbstractSimpleMessage::operator =(
         const AbstractSimpleMessage& rhs) {
-    VLSTACKTRACE("AbstractSimpleMessage::operator =", __FILE__, __LINE__);
 
     if ((this != &rhs) && (static_cast<const void *>(*this) 
             != static_cast<const void *>(rhs))) {
@@ -122,7 +114,6 @@ vislib::net::AbstractSimpleMessage::operator =(
  */
 bool vislib::net::AbstractSimpleMessage::operator ==(
         const AbstractSimpleMessage& rhs) const {
-    VLSTACKTRACE("AbstractSimpleMessage::operator ==", __FILE__, __LINE__);
 
     // Note: Order of tests ensures correct test range and performance
     if (this->GetHeader() == rhs.GetHeader()) {
@@ -138,8 +129,6 @@ bool vislib::net::AbstractSimpleMessage::operator ==(
  * vislib::net::AbstractSimpleMessage::operator const void *
  */
 vislib::net::AbstractSimpleMessage::operator const void *(void) const {
-    VLSTACKTRACE("AbstractSimpleMessage::operator const void *",
-        __FILE__, __LINE__);
     return static_cast<const void *>(this->header.PeekData());
 }
 
@@ -148,8 +137,6 @@ vislib::net::AbstractSimpleMessage::operator const void *(void) const {
  * vislib::net::AbstractSimpleMessage::operator void *
  */
 vislib::net::AbstractSimpleMessage::operator void *(void) {
-    VLSTACKTRACE("AbstractSimpleMessage::operator void *",
-        __FILE__, __LINE__);
     return const_cast<void *>(static_cast<const void *>(
         this->header.PeekData()));
 }
@@ -160,7 +147,6 @@ vislib::net::AbstractSimpleMessage::operator void *(void) {
  */
 void *vislib::net::AbstractSimpleMessage::assertStorage(
         const SIZE_T bodySize) {
-    VLSTACKTRACE("AbstractSimpleMessage::assertStorage", __FILE__, __LINE__);
     ASSERT(bodySize <= UINT_MAX);
     
     SimpleMessageHeader oldHeader;

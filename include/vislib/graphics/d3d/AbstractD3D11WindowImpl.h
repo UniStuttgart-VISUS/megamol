@@ -19,7 +19,6 @@
 #include <DXGI.h>
 
 #include "vislib/Array.H"
-#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -124,7 +123,6 @@ namespace d3d {
             DXGI_SWAP_CHAIN_DESC& inOutSwapChainDesc) throw();
 
         inline ID3D11DepthStencilView *peekDepthStencilView(void) {
-            VLAUTOSTACKTRACE;
             return this->depthStencilView;
         }
 
@@ -134,7 +132,6 @@ namespace d3d {
          * @return The D3D device.
          */
         inline ID3D11Device *peekDevice(void) {
-            VLAUTOSTACKTRACE;
             return this->device;
         }
 
@@ -145,17 +142,14 @@ namespace d3d {
          * @reutnr THe D3D immediate context.
          */
         inline ID3D11DeviceContext *peekDeviceContext(void) {
-            VLAUTOSTACKTRACE;
             return this->deviceContext;
         }
 
         inline ID3D11RenderTargetView *peekRenderTargetView(void) {
-            VLAUTOSTACKTRACE;
             return this->renderTargetView;
         }
 
         inline IDXGISwapChain *peekSwapChain(void) {
-            VLAUTOSTACKTRACE;
             return this->swapChain;
         }
 

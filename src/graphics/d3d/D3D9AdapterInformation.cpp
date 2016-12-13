@@ -18,7 +18,6 @@
 void vislib::graphics::d3d::D3D9AdapterInformation::GetAdapterInformation(
             vislib::PtrArray<D3D9AdapterInformation>& outAdapterInformation,
             IDirect3D9 *d3d) {
-    VLAUTOSTACKTRACE;
     USES_D3D_VERIFY;
     D3DCAPS9 d3dCaps;           // Capabilities of the hardware.
 
@@ -45,7 +44,6 @@ void vislib::graphics::d3d::D3D9AdapterInformation::GetAdapterInformation(
  */
 vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
         IDirect3D9 *d3d, const UINT adapterOrdinal) {
-    VLAUTOSTACKTRACE;
 
     HRESULT hr = D3D_OK;            // Direct3D API results.
     Output output;                  // Receives current output infos.
@@ -105,7 +103,6 @@ vislib::graphics::d3d::D3D9AdapterInformation::D3D9AdapterInformation(
  * vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation
  */
 vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation(void) {
-    VLAUTOSTACKTRACE;
     this->infos.Clear(true);
 }
 
@@ -116,7 +113,6 @@ vislib::graphics::d3d::D3D9AdapterInformation::~D3D9AdapterInformation(void) {
 const D3DCAPS9& 
 vislib::graphics::d3d::D3D9AdapterInformation::GetDirect3DCapabilites(
         const SIZE_T outputIdx) {
-    VLAUTOSTACKTRACE;
 
     /* Range check. */
     if (outputIdx > this->infos.Count()) {
@@ -133,7 +129,6 @@ vislib::graphics::d3d::D3D9AdapterInformation::GetDirect3DCapabilites(
  */
 SIZE_T vislib::graphics::d3d::D3D9AdapterInformation::GetOutputCount(
         void) const {
-    VLAUTOSTACKTRACE;
     return this->infos.Count();
 }
 
@@ -144,7 +139,6 @@ SIZE_T vislib::graphics::d3d::D3D9AdapterInformation::GetOutputCount(
 vislib::graphics::d3d::D3D9AdapterInformation& 
 vislib::graphics::d3d::D3D9AdapterInformation::operator =(
         const D3D9AdapterInformation& rhs) {
-    VLAUTOSTACKTRACE;
 
     if (this != &rhs) {
         this->infos = rhs.infos;
@@ -160,7 +154,6 @@ vislib::graphics::d3d::D3D9AdapterInformation::operator =(
 const MONITORINFOEXW&
 vislib::graphics::d3d::D3D9AdapterInformation::getMonitorInfo(
         const SIZE_T outputIdx) const {
-    VLAUTOSTACKTRACE;
 
     for (SIZE_T i = 0; i < this->infos.Count(); i++) {
         if (this->infos[i].d3dCaps.AdapterOrdinalInGroup == outputIdx) {

@@ -8,7 +8,6 @@
 #include "vislib/net/Socket.h"
 #include "vislib/net/AbstractCommClientChannel.h"
 
-#include "vislib/StackTrace.h"
 
 
 /*
@@ -23,8 +22,6 @@ const UINT vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE
  */
 vislib::net::AbstractCommClientChannel::AbstractCommClientChannel(void) 
         : Super() {
-    VLSTACKTRACE("AbstractCommClientChannel::AbstractCommClientChannel", 
-        __FILE__, __LINE__);
 }
 
 
@@ -32,8 +29,6 @@ vislib::net::AbstractCommClientChannel::AbstractCommClientChannel(void)
  * vislib::net::AbstractCommClientChannel::~AbstractCommClientChannel
  */
 vislib::net::AbstractCommClientChannel::~AbstractCommClientChannel(void) {
-    VLSTACKTRACE("AbstractCommClientChannel::~AbstractCommClientChannel", 
-        __FILE__, __LINE__);
     // Note: Calling Close() here to ensure correct cleanup of all child classes
     // will not work. The child class that has the actual implementation of
     // Close() must do that.

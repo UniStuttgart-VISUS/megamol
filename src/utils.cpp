@@ -7,14 +7,12 @@
 #include "vislib/utils.h"
 
 #include "vislib/assert.h"
-#include "vislib/StackTrace.h"
 
 
 /*
  * vislib::BytesToHexStringA
  */
 vislib::StringA vislib::BytesToHexStringA(const BYTE *bytes, SIZE_T cntBytes) {
-    VLSTACKTRACE("vislib::BytesToHexStringA", __FILE__, __LINE__);
     StringA::Char *out = NULL;
     StringA retval;
     StringA tmp(' ', 2);
@@ -36,7 +34,6 @@ vislib::StringA vislib::BytesToHexStringA(const BYTE *bytes, SIZE_T cntBytes) {
  * vislib::BytesToHexStringW
  */
 vislib::StringW vislib::BytesToHexStringW(const BYTE *bytes, SIZE_T cntBytes) {
-    VLSTACKTRACE("vislib::BytesToHexStringW", __FILE__, __LINE__);
     StringW::Char *out = NULL;
     StringW retval;
     StringW tmp(' ', 2);

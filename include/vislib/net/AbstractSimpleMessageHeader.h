@@ -16,7 +16,6 @@
 
 
 #include "vislib/net/SimpleMessageHeaderData.h"
-#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -44,8 +43,6 @@ namespace net {
 		 * @return The body size.
 		 */
 		inline SimpleMessageSize GetBodySize(void) const {
-			VLSTACKTRACE("SimpleMessageHeader::GetBodySize", __FILE__, 
-				__LINE__);
 			return this->PeekData()->BodySize;
 		}
 
@@ -56,8 +53,6 @@ namespace net {
 		 * @return The size of the header data in bytes.
 		 */
 		inline SimpleMessageSize GetHeaderSize(void) const {
-			VLSTACKTRACE("SimpleMessageHeader::GetHeaderSize", __FILE__, 
-				__LINE__);
 			return sizeof(SimpleMessageHeaderData);
 		}
 
@@ -67,8 +62,6 @@ namespace net {
 		 * @return The message ID.
 		 */
 		inline SimpleMessageID GetMessageID(void) const {
-			VLSTACKTRACE("SimpleMessageHeader::GetMessageID", __FILE__, 
-				__LINE__);
 			return this->PeekData()->MessageID;
 		}
 
@@ -78,7 +71,6 @@ namespace net {
 		 * @return true if the body size is larger than zero, false otherwise.
 		 */
 		inline bool HasBody(void) const {
-			VLSTACKTRACE("SimpleMessageHeader::HasBody", __FILE__, __LINE__);
 			return (this->PeekData()->BodySize > 0);
 		}
 
@@ -102,8 +94,6 @@ namespace net {
 		 * @param bodySize The body size.
 		 */
 		inline void SetBodySize(const SimpleMessageSize bodySize) {
-			VLSTACKTRACE("SimpleMessageHeader::SetBodySize", __FILE__, 
-				__LINE__);
 			this->PeekData()->BodySize = bodySize;
 		}
 
@@ -167,8 +157,6 @@ namespace net {
 		 *         false otherwise.
 		 */
 		inline bool operator !=(const AbstractSimpleMessageHeader& rhs) const {
-			VLSTACKTRACE("AbstractSimpleMessageHeader::operator !=", __FILE__,
-				__LINE__);
 			return !(*this == rhs);
 		}
 

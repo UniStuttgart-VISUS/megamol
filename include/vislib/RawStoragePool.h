@@ -17,7 +17,6 @@
 
 #include "vislib/RawStorage.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/StackTrace.h"
 
 
 namespace vislib {

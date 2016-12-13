@@ -18,7 +18,6 @@
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/Pair.h"
-#include "vislib/StackTrace.h"
 #include "vislib/types.h"
 
 #include "vislib/math/mathfunctions.h"

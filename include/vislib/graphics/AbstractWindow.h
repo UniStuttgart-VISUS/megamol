@@ -23,7 +23,6 @@
 #include "vislib/math/Dimension.h"
 #include "vislib/math/Point.h"
 #include "vislib/MissingImplementationException.h"
-#include "vislib/StackTrace.h"
 #include "vislib/String.h"
 
 
@@ -116,7 +115,6 @@ namespace graphics {
          * Makes the window invisible.
          */
         inline void Hide(void) {
-            VLSTACKTRACE("AbstractWindow::Hide", __FILE__, __LINE__);
 #ifdef _WIN32
             ::ShowWindow(this->hWnd, SW_HIDE);
 #else /* _WIN32 */
@@ -149,7 +147,6 @@ namespace graphics {
          * Makes the window visible.
          */
         inline void Show(void) {
-            VLSTACKTRACE("AbstractWindow::Show", __FILE__, __LINE__);
 #ifdef _WIN32
             ::ShowWindow(this->hWnd, SW_SHOW);
 #else /* _WIN32 */
@@ -301,9 +298,7 @@ namespace graphics {
         // *                         be registered.
         // */
         //inline vislib::StringA registerWindowClassA(HINSTANCE hInstance) {
-        //    VLSTACKTRACE("AbstractWindow::registerWindowClassA", __FILE__, 
-        //        __LINE__);
-        //    return vislib::StringA(this->registerWindowClassW(hInstance));
+        //        //    return vislib::StringA(this->registerWindowClassW(hInstance));
         //}
 
         /**

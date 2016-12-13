@@ -10,7 +10,6 @@
 
 #include "vislib/graphics/d3d/D3DException.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/StackTrace.h"
 
 
 #ifdef HAVE_LEGACY_DIRECTX_SDK
@@ -57,7 +56,6 @@ static bool IsDisplayModeLargerThan(const D3DDISPLAYMODE& displayMode,
  */
 void vislib::graphics::d3d::GetBackbufferSize(UINT& outWidth, UINT& outHeight,
         IDirect3DDevice9 *device) {
-    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -97,7 +95,6 @@ void vislib::graphics::d3d::GetMaximumFullscreenResolution(
         const UINT adapterID, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;
@@ -140,7 +137,6 @@ bool vislib::graphics::d3d::GetMaximumSharedFullscreenResolution(
         IDirect3D9 *d3d, 
         const D3DFORMAT& format,
         const FullscreenSizeCriterion criterion) {
-    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;                // API return values.
@@ -222,7 +218,6 @@ bool vislib::graphics::d3d::IsFullscreenResolutionSupported(
         const UINT width,
         const UINT height,
         UINT *outRefreshRate) {
-    VLAUTOSTACKTRACE;
     using vislib::graphics::d3d::D3DException;
 
     HRESULT hr = D3D_OK;

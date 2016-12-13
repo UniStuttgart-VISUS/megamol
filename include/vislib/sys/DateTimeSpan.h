@@ -15,7 +15,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "vislib/StackTrace.h"
 #include "vislib/String.h"
 #include "vislib/types.h"
 
@@ -196,7 +195,6 @@ namespace sys {
          */
         inline DateTimeSpan(const DateTimeSpan& rhs) throw() 
                 : ticks(rhs.ticks) {
-            VLSTACKTRACE("DateTimeSpan::DateTimeSpan", __FILE__, __LINE__);
         }
 
         /** Dtor. */
@@ -208,7 +206,6 @@ namespace sys {
          * @return The days part of the time span.
          */
         inline INT GetDays(void) const {
-            VLSTACKTRACE("DateTimeSpan::GetDays", __FILE__, __LINE__);
             return static_cast<INT>(this->ticks / TICKS_PER_DAY);
         }
 
@@ -219,7 +216,6 @@ namespace sys {
          * @return The hours part of the time span.
          */
         inline INT GetHours(void) const {
-            VLSTACKTRACE("DateTimeSpan::GetHours", __FILE__, __LINE__);
             return static_cast<INT>((this->ticks / TICKS_PER_HOUR) % 24);
         }
 
@@ -230,7 +226,6 @@ namespace sys {
          * @return The milliseconds part of the time span.
          */
         inline INT GetMilliseconds(void) const {
-            VLSTACKTRACE("DateTimeSpan::GetMilliseconds", __FILE__, __LINE__);
             return static_cast<INT>((this->ticks / TICKS_PER_MILLISECOND) 
                 % 1000);
         }
@@ -242,7 +237,6 @@ namespace sys {
          * @return The minutes part of the time span.
          */
         inline INT GetMinutes(void) const {
-            VLSTACKTRACE("DateTimeSpan::GetMinutes", __FILE__, __LINE__);
             return static_cast<INT>((this->ticks / TICKS_PER_MINUTE) % 60);
         }
 
@@ -253,7 +247,6 @@ namespace sys {
          * @return The seconds part of the time span.
          */
         inline INT GetSeconds(void) const {
-            VLSTACKTRACE("DateTimeSpan::GetSeconds", __FILE__, __LINE__);
             return static_cast<INT>((this->ticks / TICKS_PER_SECOND) % 60);
         }
 
@@ -264,7 +257,6 @@ namespace sys {
          * @return The ticks part of the time span.
          */
         inline INT GetTicks(void) const {
-            VLSTACKTRACE("DateTimeSpan::GetTicks", __FILE__, __LINE__);
             return static_cast<INT>(this->ticks % TICKS_PER_MILLISECOND);
         }
 
@@ -274,7 +266,6 @@ namespace sys {
          * @return The total number of ticks.
          */
         inline INT64 GetTotalTicks(void) const {
-            VLSTACKTRACE("DateTimeSpan::GetTotalTicks", __FILE__, __LINE__);
             return this->ticks;
         }
 
@@ -318,7 +309,6 @@ namespace sys {
          * @return true if this object and 'rhs' are equal, false otherwise.
          */
         inline bool operator ==(const DateTimeSpan& rhs) const throw() {
-            VLSTACKTRACE("DateTimeSpan::operator ==", __FILE__, __LINE__);
             return (this->ticks == rhs.ticks);
         }
 	
@@ -330,7 +320,6 @@ namespace sys {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const DateTimeSpan& rhs) const throw() {
-            VLSTACKTRACE("DateTimeSpan::operator !=", __FILE__, __LINE__);
             return (this->ticks != rhs.ticks);
         }
 
@@ -343,7 +332,6 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator <(const DateTimeSpan& rhs) const throw() {
-            VLSTACKTRACE("DateTimeSpan::operator <", __FILE__, __LINE__);
             return (this->ticks < rhs.ticks);
         }
 
@@ -356,7 +344,6 @@ namespace sys {
          *         false otherwise.
          */
 	    inline bool operator >(const DateTimeSpan& rhs) const throw() {
-            VLSTACKTRACE("DateTimeSpan::operator <", __FILE__, __LINE__);
             return (this->ticks > rhs.ticks);
         }
 	    
@@ -369,7 +356,6 @@ namespace sys {
          *         false otherwise.
          */
         inline bool operator <=(const DateTimeSpan& rhs) const throw() {
-            VLSTACKTRACE("DateTimeSpan::operator <=", __FILE__, __LINE__);
             return (this->ticks <= rhs.ticks);
         }
 
@@ -382,7 +368,6 @@ namespace sys {
          *         false otherwise.
          */
 	    inline bool operator >=(const DateTimeSpan& rhs) const throw() {
-            VLSTACKTRACE("DateTimeSpan::operator >=", __FILE__, __LINE__);
             return (this->ticks >= rhs.ticks);
         }
 
@@ -397,7 +382,6 @@ namespace sys {
          *                               an overflow of the result.
          */
 	    inline DateTimeSpan operator +(const DateTimeSpan& rhs) const {
-            VLSTACKTRACE("DateTimeSpan::operator +", __FILE__, __LINE__);
             DateTimeSpan retval(*this);
             retval += rhs;
             return retval;
@@ -414,7 +398,6 @@ namespace sys {
          *                               an overflow of the result.
          */
         inline DateTimeSpan operator -(const DateTimeSpan& rhs) const {
-            VLSTACKTRACE("DateTimeSpan::operator -", __FILE__, __LINE__);
             DateTimeSpan retval(*this);
             retval -= rhs;
             return retval;
@@ -432,7 +415,6 @@ namespace sys {
          *                               an overflow of the result.
          */
         inline DateTimeSpan& operator +=(const DateTimeSpan& rhs) {
-            VLSTACKTRACE("DateTimeSpan::operator +=", __FILE__, __LINE__);
             this->add(rhs.ticks);
             return *this;
         }
@@ -476,7 +458,6 @@ namespace sys {
          * @return The total number of ticks.
          */
         inline operator INT64(void) const throw() {
-            VLSTACKTRACE("DateTimeSpan::operator INT64", __FILE__, __LINE__);
             return this->ticks;
         }
 

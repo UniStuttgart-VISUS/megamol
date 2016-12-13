@@ -20,7 +20,6 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Runnable.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/StackTrace.h"
 #include "vislib/StringConverter.h"
 #include "vislib/net/TcpCommChannel.h"
 

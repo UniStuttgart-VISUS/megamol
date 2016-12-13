@@ -17,7 +17,6 @@
 
 #include "vislib/net/Socket.h"
 #include "vislib/net/AbstractCommChannel.h"
-#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -38,7 +37,6 @@ namespace net {
          * @param flags The flags for the channel.
          */
         static inline SmartRef<UdpCommChannel> Create(const UINT64 flags = 0) {
-            VLSTACKTRACE("UdpCommChannel::Create", __FILE__, __LINE__);
             return SmartRef<UdpCommChannel>(new UdpCommChannel(flags), false);
         }
 
@@ -103,7 +101,6 @@ namespace net {
          * @return The underlying socket.
          */
         inline Socket& GetSocket(void) {
-            VLSTACKTRACE("UdpCommChannel::GetSocket", __FILE__, __LINE__);
             return this->socket;
         }
 
@@ -141,7 +138,6 @@ namespace net {
          * @return true if broadcast is enabled, false otherwise.
          */
         inline bool IsSetBroadcast(void) const {
-            VLSTACKTRACE("UdpCommChannel::IsSetBroadcast", __FILE__, __LINE__);
             return ((this->flags & FLAG_BROADCAST) != 0);
         }
 
@@ -151,8 +147,6 @@ namespace net {
          * @return true if address reuse is enabled, false otherwise.
          */
         inline bool IsSetReuseAddress(void) const {
-            VLSTACKTRACE("UdpCommChannel::IsSetReuseAddress", __FILE__, 
-                __LINE__);
             return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
         }
 

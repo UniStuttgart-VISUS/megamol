@@ -21,7 +21,6 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include "vislib/graphics/gl/ExtensionsDependent.h"
-#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -85,7 +84,6 @@ namespace gl {
          * @return The ID of the texture.
          */
         inline GLuint GetId(void) const {
-            VLSTACKTRACE("AbstractOpenGLTexture::GetId", __FILE__, __LINE__);
             return this->id;
         }
 

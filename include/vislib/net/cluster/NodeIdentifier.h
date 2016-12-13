@@ -13,7 +13,6 @@
 
 
 #include "vislib/net/IPEndPoint.h"
-#include "vislib/StackTrace.h"
 
 
 namespace vislib {
@@ -40,7 +39,6 @@ namespace cluster {
          * @param rhs The object to be cloned.
          */
         inline NodeIdentifier(const NodeIdentifier& rhs) {
-            VLSTACKTRACE("NodeIdentifier::NodeIdentifier", __FILE__, __LINE__);
             *this = rhs;
         }
 
@@ -56,7 +54,6 @@ namespace cluster {
          * @return true if the identifier is undeterminate, false otherwise.
          */
         inline bool IsNull(void) const {
-            VLSTACKTRACE("NodeIdentifier::IsNull", __FILE__, __LINE__);
             return (this->id.GetIPAddress().IsAny() 
                 && (this->id.GetPort() == 0));
         }
@@ -67,7 +64,6 @@ namespace cluster {
          * @return A string representation of the ID.
          */
         StringA ToStringA(void) const {
-            VLSTACKTRACE("NodeIdentifier::ToStringA", __FILE__, __LINE__);
             return this->id.ToStringA();
         }
 
@@ -77,7 +73,6 @@ namespace cluster {
          * @return A string representation of the ID.
          */
         StringW ToStringW(void) const {
-            VLSTACKTRACE("NodeIdentifier::ToStringW", __FILE__, __LINE__);
             return this->id.ToStringW();
         }
 
@@ -89,7 +84,6 @@ namespace cluster {
          * @return true if this object and 'rhs' are equal, false otherwise.
          */
         inline bool operator ==(const NodeIdentifier& rhs) const {
-            VLSTACKTRACE("NodeIdentifier::operator ==", __FILE__, __LINE__);
             return (this->id == rhs.id);
         }
 
@@ -101,7 +95,6 @@ namespace cluster {
          * @return true if this object and 'rhs' are not equal, false otherwise.
          */
         inline bool operator !=(const NodeIdentifier& rhs) const {
-            VLSTACKTRACE("NodeIdentifier::operator !=", __FILE__, __LINE__);
             return (this->id != rhs.id);
         }
 

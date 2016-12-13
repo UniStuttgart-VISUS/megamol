@@ -87,7 +87,6 @@ namespace net {
          * @return *this.
          */
         inline SimpleMessage& operator =(const AbstractSimpleMessage& rhs) {
-            VLSTACKTRACE("SimpleMessage::operator =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }
@@ -100,7 +99,6 @@ namespace net {
          * @return *this.
          */
         inline SimpleMessage& operator =(const SimpleMessage& rhs) {
-            VLSTACKTRACE("SimpleMessage::operator =", __FILE__, __LINE__);
             Super::operator =(rhs);
             return *this;
         }

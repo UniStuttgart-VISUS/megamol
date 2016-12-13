@@ -14,8 +14,6 @@
  * vislib::net::AbstractSyncMsgUser::~AbstractSyncMsgUser
  */
 vislib::net::AbstractSyncMsgUser::~AbstractSyncMsgUser(void) {
-    VLSTACKTRACE("AbstractSyncMsgUser::~AbstractSyncMsgUser", __FILE__, 
-        __LINE__);
     // Nothing to do.
 }
 
@@ -24,8 +22,6 @@ vislib::net::AbstractSyncMsgUser::~AbstractSyncMsgUser(void) {
  * vislib::net::AbstractSyncMsgUser::AbstractSyncMsgUser
  */
 vislib::net::AbstractSyncMsgUser::AbstractSyncMsgUser(void) {
-    VLSTACKTRACE("AbstractSyncMsgUser::AbstractSyncMsgUser", __FILE__, 
-        __LINE__);
     // Nothing to do.
 }
 
@@ -37,8 +33,6 @@ const vislib::net::SimpleMessage&
 vislib::net::AbstractSyncMsgUser::receiveViaMsgBuffer(
         SmartRef<AbstractCommClientChannel> channel,
         const UINT timeout) {
-    VLSTACKTRACE("AbstractSyncMsgUser::receiveViaMsgBuffer", __FILE__, 
-        __LINE__);
     
     SimpleMessageSize headerSize = this->msgBuffer.GetHeader().GetHeaderSize();
     channel->Receive(static_cast<void *>(this->msgBuffer), headerSize, timeout,
@@ -62,7 +56,6 @@ void vislib::net::AbstractSyncMsgUser::sendViaMsgBuffer(
         const void *body, 
         const unsigned int bodySize,
         const UINT timeout) {
-    VLSTACKTRACE("AbstractSyncMsgUser::sendViaMsgBuffer", __FILE__, __LINE__);
 
     this->msgBuffer.GetHeader().SetMessageID(msgID);
     this->msgBuffer.SetBody(body, bodySize);

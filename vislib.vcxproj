@@ -405,7 +405,6 @@
     <ClInclude Include="include\vislib\SmartPtr.h" />
     <ClInclude Include="include\vislib\SmartRef.h" />
     <ClInclude Include="include\vislib\Stack.h" />
-    <ClInclude Include="include\vislib\StackTrace.h" />
     <ClInclude Include="include\vislib\String.h" />
     <ClInclude Include="include\vislib\StringConverter.h" />
     <ClInclude Include="include\vislib\StringSerialiser.h" />
@@ -470,7 +469,6 @@
     <ClInclude Include="include\vislib\sys\Thread.h" />
     <ClInclude Include="include\vislib\sys\ThreadPool.h" />
     <ClInclude Include="include\vislib\sys\ThreadPoolListener.h" />
-    <ClInclude Include="include\vislib\sys\ThreadSafeStackTrace.h" />
     <ClInclude Include="include\vislib\sys\TrayIcon.h" />
     <ClInclude Include="include\vislib\sys\VolatileIPCStringTable.h" />
     <ClInclude Include="include\vislib\sys\WindowsService.h" />
@@ -1130,7 +1128,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\StackTrace.cpp" />
     <ClCompile Include="src\String.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -1280,7 +1277,6 @@
     <ClCompile Include="src\sys\Thread.cpp" />
     <ClCompile Include="src\sys\ThreadPool.cpp" />
     <ClCompile Include="src\sys\ThreadPoolListener.cpp" />
-    <ClCompile Include="src\sys\ThreadSafeStackTrace.cpp" />
     <ClCompile Include="src\sys\TrayIcon.cpp" />
     <ClCompile Include="src\sys\VolatileIPCStringTable.cpp" />
     <ClCompile Include="src\sys\WindowsService.cpp" />

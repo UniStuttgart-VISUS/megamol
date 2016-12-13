@@ -10,14 +10,12 @@
 
 #include "vislib/net/CommServer.h"
 #include "vislib/Exception.h"
-#include "vislib/StackTrace.h"
 
 
 /*
  * vislib::net::CommServerListener::~CommServerListener
  */
 vislib::net::CommServerListener::~CommServerListener(void) {
-    VLSTACKTRACE("CommServerListener::~CommServerListener", __FILE__, __LINE__);
 }
 
 
@@ -26,7 +24,6 @@ vislib::net::CommServerListener::~CommServerListener(void) {
  */
 bool vislib::net::CommServerListener::OnServerError(
         const CommServer& src, const vislib::Exception& exception) throw() {
-    VLSTACKTRACE("CommServerListener::OnServerError", __FILE__, __LINE__);
     return true;
 }
 
@@ -36,7 +33,6 @@ bool vislib::net::CommServerListener::OnServerError(
  */
 void vislib::net::CommServerListener::OnServerExited(
         const CommServer& src) throw() {
-    VLSTACKTRACE("CommServerListener::OnServerExited", __FILE__, __LINE__);
 
 }
 
@@ -46,7 +42,6 @@ void vislib::net::CommServerListener::OnServerExited(
  */
 void vislib::net::CommServerListener::OnServerStarted(
         const CommServer& src) throw() {
-    VLSTACKTRACE("CommServerListener::OnServerStarted", __FILE__, __LINE__);
 }
 
 
@@ -54,5 +49,4 @@ void vislib::net::CommServerListener::OnServerStarted(
  * vislib::net::CommServerListener::CommServerListener
  */
 vislib::net::CommServerListener::CommServerListener(void) {
-    VLSTACKTRACE("CommServerListener::CommServerListener", __FILE__, __LINE__);
 }

@@ -14,7 +14,6 @@
  * vislib::net::cluster::NodeIdentifier::NodeIdentifier
  */
 vislib::net::cluster::NodeIdentifier::NodeIdentifier(void) {
-    VLSTACKTRACE("NodeIdentifier::NodeIdentifier", __FILE__, __LINE__);
     ASSERT(this->IsNull());
 }
 
@@ -23,7 +22,6 @@ vislib::net::cluster::NodeIdentifier::NodeIdentifier(void) {
  * vislib::net::cluster::NodeIdentifier::~NodeIdentifier
  */
 vislib::net::cluster::NodeIdentifier::~NodeIdentifier(void) {
-    VLSTACKTRACE("NodeIdentifier::~NodeIdentifier", __FILE__, __LINE__);
 }
 
 
@@ -32,7 +30,6 @@ vislib::net::cluster::NodeIdentifier::~NodeIdentifier(void) {
  */
 vislib::net::cluster::NodeIdentifier& 
 vislib::net::cluster::NodeIdentifier::operator =(const NodeIdentifier& rhs) {
-    VLSTACKTRACE("NodeIdentifier::operator =", __FILE__, __LINE__);
     if (this != &rhs) {
         this->id = rhs.id;
     }
