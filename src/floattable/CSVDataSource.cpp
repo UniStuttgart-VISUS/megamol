@@ -348,8 +348,8 @@ void datatools::floattable::CSVDataSource::assertData(void) {
         }
 
         // collect minMax
-        std::vector<float> minVals(colCnt, std::numeric_limits<float>::max());
-        std::vector<float> maxVals(colCnt, -std::numeric_limits<float>::max());
+        std::vector<float> minVals(colCnt, (std::numeric_limits<float>::max)());
+        std::vector<float> maxVals(colCnt, -(std::numeric_limits<float>::max)());
         for (size_t r = 0; r < rowCnt; ++r) {
             for (size_t c = 0; c < colCnt; ++c) {
                 float f = values[r * colCnt + c];
