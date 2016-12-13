@@ -437,7 +437,7 @@ void mdao::SphereRenderer::renderDeferredPass(megamol::core::view::AbstractCallR
 	glActiveTexture(GL_TEXTURE0); 
 	glBindTexture(GL_TEXTURE_2D, gBuffer.color);
 
-	glPointSize(static_cast<GLfloat>(std::max(vpWidth, vpHeight)));
+	glPointSize(static_cast<GLfloat>((std::max)(vpWidth, vpHeight)));
 	
 	lightingShader.Enable();
 	lightingShader.SetParameter("inWidth", static_cast<float>(vpWidth));
@@ -677,7 +677,7 @@ void mdao::SphereRenderer::rebuildWorkingData(megamol::core::view::AbstractCallR
 		
 		dims.SetHeight(ceil(dims.GetHeight()));
 		dims.SetDepth(ceil(dims.GetDepth()));
-		ambConeConstants[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
+		ambConeConstants[0] = (std::min)(dims.Width(), (std::min)(dims.Height(), dims.Depth()));
 		ambConeConstants[1] = ceil(std::log2(static_cast<float>(volSize)))-1.0f;
 		
 		// Set resolution accordingly
@@ -724,29 +724,29 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE:
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
-			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), 3u), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*(std::max)(particles.GetColourDataStride(), 3u), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, particles.GetColourDataStride(), 0);
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), 4u), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*(std::max)(particles.GetColourDataStride(), 4u), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, particles.GetColourDataStride(), 0);
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(3*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*(std::max)(particles.GetColourDataStride(), static_cast<unsigned int>(3*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
 			break;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(4*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*(std::max)(particles.GetColourDataStride(), static_cast<unsigned int>(4*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
 			break;
 		// Not supported - fall through to the gay version
 		// FIXME: this will probably not work!
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I: 
-			glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetColourDataStride(), static_cast<unsigned int>(1*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, partCount*(std::max)(particles.GetColourDataStride(), static_cast<unsigned int>(1*sizeof(float))), particles.GetColourData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);
 			glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, particles.GetColourDataStride(), 0);
 			//std::cout<<"Transfer function"<<std::endl;
@@ -763,13 +763,13 @@ void mdao::SphereRenderer::uploadDataToGPU(const mdao::SphereRenderer::gpuPartic
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
 			return;
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-            glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetVertexDataStride(), static_cast<unsigned int>(3 * sizeof(float))), particles.GetVertexData(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, partCount*(std::max)(particles.GetVertexDataStride(), static_cast<unsigned int>(3 * sizeof(float))), particles.GetVertexData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, particles.GetVertexDataStride(), 0);
 			break;
 
 		case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-            glBufferData(GL_ARRAY_BUFFER, partCount*std::max(particles.GetVertexDataStride(), static_cast<unsigned int>(4*sizeof(float))), particles.GetVertexData(), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, partCount*(std::max)(particles.GetVertexDataStride(), static_cast<unsigned int>(4*sizeof(float))), particles.GetVertexData(), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, particles.GetVertexDataStride(), 0);
 			break;
