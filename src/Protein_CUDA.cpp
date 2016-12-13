@@ -9,6 +9,7 @@
 
 #include "../include/protein_cuda/Protein_CUDA.h"
 #include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/versioninfo.h"
 
 // jobs
 #include "DataWriter.h"
@@ -54,156 +55,144 @@
 #include "vislib/Trace.h"
 #include "vislib/sys/ThreadSafeStackTrace.h"
 
+/* anonymous namespace hides this type from any other object files */
+namespace {
+	/** Implementing the instance class of this plugin */
+	class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
+	public:
+		/** ctor */
+		plugin_instance(void)
+			: ::megamol::core::utility::plugins::Plugin200Instance(
 
+			/* machine-readable plugin assembly name */
+			"Protein_CUDA",
+
+			/* human-readable plugin description */
+			"Plugin for protein rendering using CUDA for accelleration (SFB716 D4)") {
+
+				// here we could perform addition initialization
+			};
+		/** Dtor */
+		virtual ~plugin_instance(void) {
+			// here we could perform addition de-initialization
+		}
+		/** Registers modules and calls */
+		virtual void registerClasses(void) {
+
+			// register modules here:
+#ifdef WITH_OPENHAPTICS
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::HapticsMoleculeRenderer>();
+#endif // WITH_OPENHAPTICS
+#ifdef WITH_OPENBABEL
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::OpenBabelLoader>();
+#endif // WITH_OPENBABEL
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::PotentialVolumeRaycaster>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::StreamlineRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCudaSESRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCBCudaRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer2>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfMTRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeVolumeCudaRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::VolumeMeshRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::DataWriter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::CrystalStructureVolumeRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ComparativeMolSurfaceRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ComparativeFieldTopologyRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ProteinVariantMatch>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRaycaster>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SecStructFlattener>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::ParticlesToMeshConverter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SecStructRenderer2D>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::PotentialCalculator>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::Filter>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::SurfacePotentialRendererSlave>();
+
+			// register calls here:
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_cuda::VBODataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_cuda::PlaneDataCall>();
+		}
+		MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
+	};
+}
 
 /*
  * mmplgPluginAPIVersion
  */
 PROTEIN_CUDA_API int mmplgPluginAPIVersion(void) {
-    return 100;
+    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
 
 /*
- * mmplgPluginName
+ * mmplgGetPluginCompatibilityInfo
  */
-PROTEIN_CUDA_API const char * mmplgPluginName(void) {
-    return "Protein_CUDA";
-}
+PROTEIN_CUDA_API
+::megamol::core::utility::plugins::PluginCompatibilityInfo *
+mmplgGetPluginCompatibilityInfo(
+        ::megamol::core::utility::plugins::ErrorCallback onError) {
+    // compatibility information with core and vislib
+    using ::megamol::core::utility::plugins::PluginCompatibilityInfo;
+    using ::megamol::core::utility::plugins::LibraryVersionInfo;
 
+    PluginCompatibilityInfo *ci = new PluginCompatibilityInfo;
+    ci->libs_cnt = 2;
+    ci->libs = new LibraryVersionInfo[2];
 
-/*
- * mmplgPluginDescription
- */
-PROTEIN_CUDA_API const char * mmplgPluginDescription(void) {
-    return "Plugin for protein rendering using CUDA for accelleration (SFB716 D4)";
-}
-
-
-/*
- * mmplgCoreCompatibilityValue
- */
-PROTEIN_CUDA_API const void * mmplgCoreCompatibilityValue(void) {
-    static const mmplgCompatibilityValues compRev = {
-        sizeof(mmplgCompatibilityValues),
-        MEGAMOL_CORE_COMP_REV,
-        VISLIB_VERSION_REVISION
-    };
-    return &compRev;
-}
-
-
-/*
- * mmplgModuleCount
- */
-PROTEIN_CUDA_API int mmplgModuleCount(void) {
-	int moduleCount = 4;
-#ifdef WITH_CUDA
-    moduleCount+=18;
-#endif // WITH_CUDA
-#ifdef WITH_OPENHAPTICS
-    moduleCount+=1;
-#endif // WITH_OPENHAPTICS
-#ifdef WITH_OPENBABEL
-    moduleCount += 1;
-#endif // WITH_OPENBABEL
-    return moduleCount;
-}
-
-
-/*
- * mmplgModuleDescription
- */
-PROTEIN_CUDA_API void* mmplgModuleDescription(int idx) {
-    using namespace megamol;
-    using namespace megamol::core;
-    switch (idx) {
-#ifdef WITH_OPENHAPTICS
-        case 0 : return new megamol::core::ModuleAutoDescription<megamol::protein_cuda::HapticsMoleculeRenderer>();
-        #define HAPTICS_OFFSET 1
-#else
-        #define HAPTICS_OFFSET 0
-#endif // WITH_OPENHAPTICS
-#ifdef WITH_CUDA
-        case HAPTICS_OFFSET +  0 : return new factories::ModuleAutoDescription<protein_cuda::PotentialVolumeRaycaster>();
-        case HAPTICS_OFFSET +  1 : return new factories::ModuleAutoDescription<protein_cuda::StreamlineRenderer>();
-        case HAPTICS_OFFSET +  2 : return new factories::ModuleAutoDescription<protein_cuda::MoleculeCudaSESRenderer>();
-        case HAPTICS_OFFSET +  3 : return new factories::ModuleAutoDescription<protein_cuda::MoleculeCBCudaRenderer>();
-        case HAPTICS_OFFSET +  4 : return new factories::ModuleAutoDescription<protein_cuda::QuickSurfRenderer>();
-        case HAPTICS_OFFSET +  5 : return new factories::ModuleAutoDescription<protein_cuda::QuickSurfRenderer2>();
-        case HAPTICS_OFFSET +  6 : return new factories::ModuleAutoDescription<protein_cuda::QuickSurfMTRenderer>();
-        case HAPTICS_OFFSET +  7 : return new factories::ModuleAutoDescription<protein_cuda::MoleculeVolumeCudaRenderer>();
-        case HAPTICS_OFFSET +  8 : return new factories::ModuleAutoDescription<protein_cuda::VolumeMeshRenderer>();
-        case HAPTICS_OFFSET +  9 : return new factories::ModuleAutoDescription<protein_cuda::DataWriter>();
-        case HAPTICS_OFFSET + 10 : return new factories::ModuleAutoDescription<protein_cuda::CrystalStructureVolumeRenderer>();
-        case HAPTICS_OFFSET + 11 : return new factories::ModuleAutoDescription<protein_cuda::ComparativeMolSurfaceRenderer>();
-        case HAPTICS_OFFSET + 12 : return new factories::ModuleAutoDescription<protein_cuda::ComparativeFieldTopologyRenderer>();
-        case HAPTICS_OFFSET + 13 : return new factories::ModuleAutoDescription<protein_cuda::ProteinVariantMatch>();
-		case HAPTICS_OFFSET + 14 : return new factories::ModuleAutoDescription<protein_cuda::QuickSurfRaycaster>();
-		case HAPTICS_OFFSET + 15 : return new factories::ModuleAutoDescription<protein_cuda::SecStructFlattener>();
-        case HAPTICS_OFFSET + 16 : return new factories::ModuleAutoDescription<protein_cuda::ParticlesToMeshConverter>();
-		case HAPTICS_OFFSET + 17 : return new factories::ModuleAutoDescription<protein_cuda::SecStructRenderer2D>();
-        #define CUDA_OFFSET 18
-#else
-        #define CUDA_OFFSET 0
-#endif // WITH_CUDA
-#ifdef WITH_OPENBABEL
-		case CUDA_OFFSET + HAPTICS_OFFSET + 0: return new factories::ModuleAutoDescription<protein_cuda::OpenBabelLoader>();
-        #define OPENBABAEL_OFFSET 1
-#else
-        #define OPENBABAEL_OFFSET 0
-#endif //WITH_OPENBABEL
-		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 0: return new factories::ModuleAutoDescription<protein_cuda::PotentialCalculator>();
-		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 1: return new factories::ModuleAutoDescription<protein_cuda::Filter>();
-		case OPENBABAEL_OFFSET + CUDA_OFFSET + HAPTICS_OFFSET + 2: return new factories::ModuleAutoDescription<protein_cuda::SurfacePotentialRendererSlave>();
-        default: return NULL;
-    }
-    return NULL;
-}
-
-
-/*
- * mmplgCallCount
- */
-PROTEIN_CUDA_API int mmplgCallCount(void) {
-	return 2;
-}
-
-
-/*
- * mmplgCallDescription
- */
-PROTEIN_CUDA_API void* mmplgCallDescription(int idx) {
-    switch (idx) {
-		case 0: return new megamol::core::factories::CallAutoDescription<megamol::protein_cuda::VBODataCall>();
-		case 1: return new megamol::core::factories::CallAutoDescription<megamol::protein_cuda::PlaneDataCall>();
-        default: return NULL;
-    }
-    return NULL;
-}
-
-
-/*
- * mmplgConnectStatics
- */
-PROTEIN_CUDA_API bool mmplgConnectStatics(int which, void* value) {
+    SetLibraryVersionInfo(ci->libs[0], "MegaMolCore",
+        MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV, 0
 #if defined(DEBUG) || defined(_DEBUG)
-    // only trace non-vislib messages
-    vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
-#endif /* DEBUG || _DEBUG */
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
+#endif
+#if defined(MEGAMOL_CORE_DIRTY) && (MEGAMOL_CORE_DIRTY != 0)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
+#endif
+        );
 
-    switch (which) {
-        case 1: // vislib::log
-            vislib::sys::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-            vislib::sys::Log::DefaultLog.SetLevel(vislib::sys::Log::LEVEL_NONE);
-            vislib::sys::Log::DefaultLog.SetEchoTarget(new
-                vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value)));
-            vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL);
-            vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
-            return true;
-        case 2: // vislib::stacktrace
-            return vislib::sys::ThreadSafeStackTrace::Initialise(
-                *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true);
-    }
-    return false;
+    SetLibraryVersionInfo(ci->libs[1], "vislib",
+        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD, 0
+#if defined(DEBUG) || defined(_DEBUG)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
+#endif
+#if defined(VISLIB_DIRTY_BUILD) && (VISLIB_DIRTY_BUILD != 0)
+        | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
+#endif
+        );
+    //
+    // If you want to test additional compatibilties, add the corresponding versions here
+    //
+
+    return ci;
+}
+
+
+/*
+* mmplgReleasePluginCompatibilityInfo
+*/
+PROTEIN_CUDA_API
+void mmplgReleasePluginCompatibilityInfo(
+::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
+	// release compatiblity data on the correct heap
+	MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)
+}
+
+
+/*
+* mmplgGetPluginInstance
+*/
+PROTEIN_CUDA_API
+::megamol::core::utility::plugins::AbstractPluginInstance*
+mmplgGetPluginInstance(
+::megamol::core::utility::plugins::ErrorCallback onError) {
+	MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgGetPluginInstance(plugin_instance, onError)
+}
+
+
+/*
+* mmplgReleasePluginInstance
+*/
+PROTEIN_CUDA_API
+void mmplgReleasePluginInstance(
+::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
+	MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
 }
