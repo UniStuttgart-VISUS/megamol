@@ -41,7 +41,6 @@
 #include "vislib/GUID.h"
 #include "vislib/sys/RegistryKey.h"
 #include "vislib/net/Socket.h"
-#include "vislib/StackTrace.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sys/SystemInformation.h"
@@ -74,7 +73,6 @@
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
 #include "vislib/Trace.h"
 
 
@@ -753,7 +751,6 @@ vislib::StringA megamol::core::CoreInstance::GetPendingViewName(void) const {
 megamol::core::ViewInstance::ptr_type
 megamol::core::CoreInstance::InstantiatePendingView(void) {
     using vislib::sys::Log;
-    VLSTACKTRACE("InstantiatePendingView", __FILE__, __LINE__);
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
@@ -898,7 +895,6 @@ megamol::core::CoreInstance::InstantiatePendingView(void) {
 megamol::core::view::AbstractView *
 megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *vd) {
     using vislib::sys::Log;
-    VLSTACKTRACE("instantiateSubView", __FILE__, __LINE__);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
@@ -989,7 +985,6 @@ megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription *
 megamol::core::JobInstance::ptr_type
 megamol::core::CoreInstance::InstantiatePendingJob(void) {
     using vislib::sys::Log;
-    VLSTACKTRACE("InstantiatePendingJob", __FILE__, __LINE__);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
@@ -1148,7 +1143,6 @@ megamol::core::CoreInstance::FindParameterIndirect(const vislib::StringA& name, 
 vislib::SmartPtr<megamol::core::param::AbstractParam>
 megamol::core::CoreInstance::FindParameter(const vislib::StringA& name, bool quiet, bool create) {
     using vislib::sys::Log;
-    VLSTACKTRACE("FindParameter", __FILE__, __LINE__);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
 
@@ -1333,7 +1327,6 @@ void megamol::core::CoreInstance::OffsetInstanceTime(double offset) {
  * megamol::core::CoreInstance::CleanupModuleGraph
  */
 void megamol::core::CoreInstance::CleanupModuleGraph(void) {
-    VLSTACKTRACE("CleanupModuleGraph", __FILE__, __LINE__);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
     vislib::sys::AutoLock lock(locker);
 
@@ -2130,7 +2123,6 @@ void debugDumpSlots(megamol::core::AbstractNamedObjectContainer *c) {
 megamol::core::Module::ptr_type megamol::core::CoreInstance::instantiateModule(
         const vislib::StringA path, factories::ModuleDescription::ptr desc) {
     using vislib::sys::Log;
-    VLSTACKTRACE("instantiateModule", __FILE__, __LINE__);
 
     ASSERT(path.StartsWith("::"));
     ASSERT(desc != NULL);
@@ -2208,7 +2200,6 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
         const vislib::StringA fromPath, const vislib::StringA toPath,
         megamol::core::factories::CallDescription::ptr desc) {
     using vislib::sys::Log;
-    VLSTACKTRACE("InstantiateCall", __FILE__, __LINE__);
 
     ASSERT(fromPath.StartsWith("::"));
     ASSERT(toPath.StartsWith("::"));
@@ -2350,7 +2341,6 @@ megamol::core::Call* megamol::core::CoreInstance::InstantiateCall(
 void megamol::core::CoreInstance::enumParameters(
         megamol::core::ModuleNamespace::const_ptr_type path,
         mmcEnumStringAFunction func, void *data) const {
-    VLSTACKTRACE("enumParameters", __FILE__, __LINE__);
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
@@ -2389,7 +2379,6 @@ vislib::StringA megamol::core::CoreInstance::findParameterName(
         megamol::core::ModuleNamespace::const_ptr_type path,
         const vislib::SmartPtr<megamol::core::param::AbstractParam>& param)
         const {
-    VLSTACKTRACE("findParameterName", __FILE__, __LINE__);
 
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
     vislib::sys::AutoLock lock(locker);
@@ -2429,7 +2418,6 @@ vislib::StringA megamol::core::CoreInstance::findParameterName(
  * megamol::core::CoreInstance::closeViewJob
  */
 void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::ptr_type obj) {
-    VLSTACKTRACE("closeViewJob", __FILE__, __LINE__);
 
     ASSERT(obj != NULL);
     AbstractNamedObject::GraphLocker locker(this->namespaceRoot, true);
@@ -2479,7 +2467,6 @@ void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::p
 void megamol::core::CoreInstance::applyConfigParams(
         const vislib::StringA& root, const InstanceDescription *id,
         const ParamValueSetRequest *params) {
-    VLSTACKTRACE("applyConfigParams", __FILE__, __LINE__);
 
     for (unsigned int i = 0; i < id->ParamValueCount(); i++) {
         const InstanceDescription::ParamValueRequest& pvr = id->ParamValue(i);

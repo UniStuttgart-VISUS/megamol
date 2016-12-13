@@ -96,7 +96,6 @@ namespace plugins {
     delete ci;
 
 #include "vislib/sys/Log.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
 
 /*
  * Usage
@@ -115,10 +114,6 @@ namespace plugins {
                 vislib::sys::Log::DefaultLog.SetEchoTarget(new vislib::sys::Log::RedirectTarget(static_cast<vislib::sys::Log*>(value))); \
                 vislib::sys::Log::DefaultLog.SetEchoLevel(vislib::sys::Log::LEVEL_ALL); \
                 vislib::sys::Log::DefaultLog.EchoOfflineMessages(true); \
-                break; \
-            case StaticConnectorType::StackTrace: \
-                vislib::sys::ThreadSafeStackTrace::Initialise( \
-                    *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true); \
                 break; \
         } \
     }

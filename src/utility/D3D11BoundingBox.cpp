@@ -13,7 +13,6 @@
 #include "vislib/graphics/d3d/d3dutils.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/sys/Log.h"
-#include "vislib/StackTrace.h"
 
 
 /* 
@@ -22,7 +21,6 @@
 megamol::core::utility::D3D11BoundingBox::D3D11BoundingBox(void) : Base(),
         cbConstants(NULL), rasteriserStateBack(NULL), 
         rasteriserStateFront(NULL) {
-    VLAUTOSTACKTRACE;
 }
 
 
@@ -31,7 +29,6 @@ megamol::core::utility::D3D11BoundingBox::D3D11BoundingBox(void) : Base(),
  */
 megamol::core::utility::D3D11BoundingBox::~D3D11BoundingBox(
         void) {
-    VLAUTOSTACKTRACE;
     this->Finalise();
 }
 
@@ -40,7 +37,6 @@ megamol::core::utility::D3D11BoundingBox::~D3D11BoundingBox(
  * megamol::core::utility::D3D11BoundingBox::Draw
  */
 HRESULT megamol::core::utility::D3D11BoundingBox::Draw(const bool frontSides) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->immediateContext != NULL);
 
     HRESULT hr = S_OK;
@@ -81,7 +77,6 @@ HRESULT megamol::core::utility::D3D11BoundingBox::Draw(const bool frontSides) {
  * megamol::core::utility::D3D11BoundingBox::Finalise
  */
 HRESULT megamol::core::utility::D3D11BoundingBox::Finalise(void) {
-    VLAUTOSTACKTRACE;
     HRESULT hr = Base::Finalise();
 
     SAFE_RELEASE(this->cbConstants);
@@ -97,7 +92,6 @@ HRESULT megamol::core::utility::D3D11BoundingBox::Finalise(void) {
  */
 HRESULT megamol::core::utility::D3D11BoundingBox::Initialise(
         ID3D11Device *device, utility::ShaderSourceFactory& factory) {
-    VLAUTOSTACKTRACE;
     HRESULT hr = Base::Initialise(device);
 
     D3D11_INPUT_ELEMENT_DESC ilDesc[] = {
@@ -200,7 +194,6 @@ HRESULT megamol::core::utility::D3D11BoundingBox::Update(
         const DirectX::XMMATRIX& projMatrix,
         const vislib::graphics::SceneSpaceCuboid& bbox,
         const vislib::graphics::ColourRGBAu8& colour) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->immediateContext != NULL);
 
     // http://msdn.microsoft.com/en-us/library/windows/desktop/ee418725(v=vs.85).aspx

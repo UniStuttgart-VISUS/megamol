@@ -17,7 +17,6 @@
 #include "mmcore/api/MegaMolCore.std.h"
 
 #include "vislib/graphics/CameraParameters.h"
-#include "vislib/StackTrace.h"
 
 
 namespace megamol {
@@ -78,18 +77,15 @@ namespace view {
         virtual ~CallCamParamSync(void);
 
         inline CamParams PeekCamParams(void) {
-            VLAUTOSTACKTRACE;
             return this->camParams;
         }
 
         inline const vislib::graphics::CameraParameters& GetCamParams(
                 void) const {
-            VLAUTOSTACKTRACE;
             return *this->camParams;
         }
 
         inline void SetCamParams(const CamParams camParams) {
-            VLAUTOSTACKTRACE;
             this->camParams = camParams;
         }
 

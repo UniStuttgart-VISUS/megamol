@@ -69,8 +69,7 @@ view::AbstractTileView::~AbstractTileView(void) {
 // */
 //void view::AbstractTileView::AdjustTileFromContext(
 //        const mmcRenderViewContext *context) {
-//    VLAUTOSTACKTRACE;
-//    if ((context != NULL) && (context->Window != NULL)) {
+////    if ((context != NULL) && (context->Window != NULL)) {
 //#ifdef _WIN32
 //        RECT wndRect;
 //        if (::GetWindowRect(context->Window, &wndRect)) {

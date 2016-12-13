@@ -1079,7 +1079,6 @@ void view::View3D::renderSoftCursor(void) {
  * view::View3D::OnGetCamParams
  */
 bool view::View3D::OnGetCamParams(CallCamParamSync& c) {
-    VLAUTOSTACKTRACE;
     c.SetCamParams(this->cam.Parameters());
     return true;
 }

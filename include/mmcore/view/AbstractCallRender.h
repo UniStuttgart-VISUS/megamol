@@ -17,7 +17,6 @@
 #include "vislib/Array.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib/StackTrace.h"
 #include "vislib/types.h"
 
 
@@ -55,7 +54,6 @@ namespace view {
          * @return The GPU affinity handle.
          */
         template<class T> T GpuAffinity(void) const {
-            VLAUTOSTACKTRACE;
             static_assert(sizeof(T) == sizeof(this->gpuAffinity), "The size of "
                 "the GPU handle is unexpected. You are probably doing "
                 "something very nasty.");
@@ -77,7 +75,6 @@ namespace view {
          * @return true in case GPU affinity was requested, false otherwise.
          */
         inline bool IsGpuAffinity(void) const {
-            VLAUTOSTACKTRACE;
             return (this->gpuAffinity != NO_GPU_AFFINITY);
         }
 
@@ -103,7 +100,6 @@ namespace view {
          *                    NO_GPU_AFFINITY in case affinity does not matter.
          */
         inline void SetGpuAffinity(const GpuHandleType gpuAffinity) {
-            VLAUTOSTACKTRACE;
             this->gpuAffinity = gpuAffinity;
         }
 

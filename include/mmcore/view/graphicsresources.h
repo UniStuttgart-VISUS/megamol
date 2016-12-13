@@ -24,7 +24,7 @@ namespace view {
     /**
      * Possible font purposes
      */
-    MEGAMOLCORE_API enum FontPurpose {
+    /*MEGAMOLCORE_API*/ enum FontPurpose {
         FONTPURPOSE_OPENGL_DEFAULT,
         FONTPURPISE_OPENGL_INFO_HQ
     };

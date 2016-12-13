@@ -30,7 +30,6 @@ const char *megamol::core::view::CallUpdateDirect3D::FunctionName(
  */
 megamol::core::view::CallUpdateDirect3D::CallUpdateDirect3D(void) : Base(), 
         device(NULL) {
-    VLAUTOSTACKTRACE;
 }
 
 
@@ -38,7 +37,6 @@ megamol::core::view::CallUpdateDirect3D::CallUpdateDirect3D(void) : Base(),
  * megamol::core::view::CallUpdateDirect3D::~CallUpdateDirect3D
  */
 megamol::core::view::CallUpdateDirect3D::~CallUpdateDirect3D(void) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     SAFE_RELEASE(this->device);
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
@@ -49,7 +47,6 @@ megamol::core::view::CallUpdateDirect3D::~CallUpdateDirect3D(void) {
  * megamol::core::view::CallUpdateDirect3D::SetDevice
  */
 void megamol::core::view::CallUpdateDirect3D::SetDevice(ID3D11Device *device) {
-    VLAUTOSTACKTRACE;
     ASSERT(device != NULL);
 
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
@@ -67,7 +64,6 @@ void megamol::core::view::CallUpdateDirect3D::SetDevice(ID3D11Device *device) {
 megamol::core::view::CallUpdateDirect3D&
 megamol::core::view::CallUpdateDirect3D::operator =(
         const CallUpdateDirect3D& rhs) {
-    VLAUTOSTACKTRACE;
     Base::operator =(rhs);
     if (this != &rhs) {
         this->SetDevice(rhs.device);

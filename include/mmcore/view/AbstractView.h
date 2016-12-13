@@ -21,7 +21,6 @@
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
-#include "vislib/StackTrace.h"
 
 
 namespace megamol {

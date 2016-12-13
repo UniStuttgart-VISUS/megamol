@@ -14,7 +14,6 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "vislib/assert.h"
-#include "vislib/StackTrace.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 
@@ -241,7 +240,6 @@ namespace misc {
                     const void *data, size_t data_cnt, bool data_memory_ownership,
                     const unsigned int *index, size_t index_cnt, bool index_memory_ownership,
                     float rad, unsigned char colR, unsigned char colG, unsigned char colB) {
-                VLSTACKTRACE("BezierCurvesListDataCall::Curves::Set", __FILE__, __LINE__);
                 this->Clear();
                 this->layout = layout;
                 this->data = static_cast<const unsigned char*>(data);
@@ -284,7 +282,6 @@ namespace misc {
             inline void Set(DataLayout layout,
                     const void *data, size_t data_cnt,
                     const unsigned int *index, size_t index_cnt) {
-                VLSTACKTRACE("BezierCurvesListDataCall::Curves::Set", __FILE__, __LINE__);
                 this->Clear();
                 this->layout = layout;
                 this->data = static_cast<const unsigned char*>(data);

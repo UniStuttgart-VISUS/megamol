@@ -6,7 +6,6 @@
  * megamol::pcl::CallPcd::FunctionCount
  */
 unsigned int megamol::core::view::CallCamParamSync::FunctionCount(void) {
-    VLAUTOSTACKTRACE;
     return (sizeof(CallCamParamSync::INTENTS)
         / sizeof(*CallCamParamSync::INTENTS));
 }
@@ -17,7 +16,6 @@ unsigned int megamol::core::view::CallCamParamSync::FunctionCount(void) {
  */
 const char *megamol::core::view::CallCamParamSync::FunctionName(
         unsigned int idx) {
-    VLAUTOSTACKTRACE;
     if (idx < CallCamParamSync::FunctionCount()) {
         return CallCamParamSync::INTENTS[idx];
     } else {
@@ -36,7 +34,6 @@ const unsigned int megamol::core::view::CallCamParamSync::IDX_GET_CAM_PARAMS = 0
  * megamol::core::view::CallCamParamSync::CallCamParamSync
  */
 megamol::core::view::CallCamParamSync::CallCamParamSync(void) {
-    VLAUTOSTACKTRACE;
 }
 
 
@@ -44,7 +41,6 @@ megamol::core::view::CallCamParamSync::CallCamParamSync(void) {
  * megamol::core::view::CallCamParamSync::~CallCamParamSync
  */
 megamol::core::view::CallCamParamSync::~CallCamParamSync(void) {
-    VLAUTOSTACKTRACE;
 }
 
 

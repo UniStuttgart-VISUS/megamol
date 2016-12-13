@@ -392,7 +392,6 @@ void cluster::simple::Client::OnDispatcherExited(vislib::net::SimpleMessageDispa
  * cluster::simple::Client::OnDispatcherStarted
  */
 void cluster::simple::Client::OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw() {
-    VLAUTOSTACKTRACE;
 }
 
 

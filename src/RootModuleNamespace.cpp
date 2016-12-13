@@ -25,7 +25,6 @@
 #endif
 #include "vislib/sys/Log.h"
 #include "vislib/Stack.h"
-#include "vislib/StackTrace.h"
 #include "vislib/String.h"
 #include "vislib/sys/Thread.h"
 #include "vislib/Trace.h"

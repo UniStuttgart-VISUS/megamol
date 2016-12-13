@@ -87,7 +87,6 @@
  * megamol::core::cluster::mpi::View::IsAvailable
  */
 bool megamol::core::cluster::mpi::View::IsAvailable(void) {
-    VLAUTOSTACKTRACE;
 #ifdef WITH_MPI
     return true;
 #else /* WITH_MPI */
@@ -108,7 +107,6 @@ megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
         mustNegotiateMaster(true),
         paramUseGsync("useGsync", "Try to synchronise buffer swaps if possible."),
         relayOffset(0) {
-    VLAUTOSTACKTRACE;
 #ifdef WITH_MPI
     this->comm = MPI_COMM_NULL;
 #endif /* WITH_MPI */
@@ -127,7 +125,6 @@ megamol::core::cluster::mpi::View::View(void) : Base1(), Base2(),
  * megamol::core::cluster::mpi::View::~View
  */
 megamol::core::cluster::mpi::View::~View(void) {
-    VLAUTOSTACKTRACE;
     this->Release();
 }
 
@@ -137,7 +134,6 @@ megamol::core::cluster::mpi::View::~View(void) {
  */
 void megamol::core::cluster::mpi::View::OnDispatcherExited(
         vislib::net::SimpleMessageDispatcher& src) throw() {
-    VLAUTOSTACKTRACE;
     _TRACE_INFO("Rank %d is no potential master any more.\n", this->mpiRank);
     this->hasMasterConnection = false;
 }
@@ -148,7 +144,6 @@ void megamol::core::cluster::mpi::View::OnDispatcherExited(
  */
 void megamol::core::cluster::mpi::View::OnDispatcherStarted(
         vislib::net::SimpleMessageDispatcher& src) throw() {
-    VLAUTOSTACKTRACE;
     _TRACE_INFO("Rank %d is now a potential master.\n", this->mpiRank);
     this->hasMasterConnection = true;
 }
@@ -160,7 +155,6 @@ void megamol::core::cluster::mpi::View::OnDispatcherStarted(
 bool megamol::core::cluster::mpi::View::OnMessageReceived(
         vislib::net::SimpleMessageDispatcher& src,
         const vislib::net::AbstractSimpleMessage& msg) throw() {
-    VLAUTOSTACKTRACE;
 
     switch (msg.GetHeader().GetMessageID()) {
         case MSG_TIMESYNC:
@@ -187,7 +181,6 @@ bool megamol::core::cluster::mpi::View::OnMessageReceived(
  * megamol::core::cluster::mpi::View::Render
  */
 void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& context) {
-    VLAUTOSTACKTRACE;
     bool canRender = false;
     view::CallRenderView *crv = nullptr;
     FrameState state;
@@ -444,7 +437,6 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
  */
 megamol::core::cluster::mpi::View::SwapGroupApi&
 megamol::core::cluster::mpi::View::SwapGroupApi::GetInstance(void) {
-    VLAUTOSTACKTRACE;
     static SwapGroupApi instance;
     return instance;
 }
@@ -455,7 +447,6 @@ megamol::core::cluster::mpi::View::SwapGroupApi::GetInstance(void) {
  */
 bool megamol::core::cluster::mpi::View::SwapGroupApi::BindSwapBarrier(
         const GLuint group, const GLuint barrier) {
-    VLAUTOSTACKTRACE;
     bool retval = false;
 #if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
     if (this->IsAvailable()) {
@@ -471,7 +462,6 @@ bool megamol::core::cluster::mpi::View::SwapGroupApi::BindSwapBarrier(
  */
 bool megamol::core::cluster::mpi::View::SwapGroupApi::JoinSwapGroup(
         const GLuint group) {
-    VLAUTOSTACKTRACE;
     bool retval = false;
 #if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
     if (this->IsAvailable()) {
@@ -490,7 +480,6 @@ bool megamol::core::cluster::mpi::View::SwapGroupApi::JoinSwapGroup(
  */
 bool megamol::core::cluster::mpi::View::SwapGroupApi::QueryFrameCount(
         unsigned int &count) {
-    VLAUTOSTACKTRACE;
     bool retval = false;
 #if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
     if (this->IsAvailable()) {
@@ -509,7 +498,6 @@ bool megamol::core::cluster::mpi::View::SwapGroupApi::QueryFrameCount(
  */
 bool megamol::core::cluster::mpi::View::SwapGroupApi::QueryMaxSwapGroups(
         GLuint& outMaxGroups, GLuint& outMaxBarriers) {
-    VLAUTOSTACKTRACE;
     bool retval = false;
 #if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
     if (this->IsAvailable()) {
@@ -529,7 +517,6 @@ bool megamol::core::cluster::mpi::View::SwapGroupApi::QueryMaxSwapGroups(
  */
 bool megamol::core::cluster::mpi::View::SwapGroupApi::QuerySwapGroup(
         GLuint& outGroup, GLuint& outBarrier) {
-    VLAUTOSTACKTRACE;
     bool retval = false;
 #if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
     if (this->IsAvailable()) {
@@ -548,7 +535,6 @@ bool megamol::core::cluster::mpi::View::SwapGroupApi::QuerySwapGroup(
  * megamol::core::cluster::mpi::View::SwapGroupApi::ResetFrameCount
  */
 bool megamol::core::cluster::mpi::View::SwapGroupApi::ResetFrameCount(void) {
-    VLAUTOSTACKTRACE;
     bool retval = false;
 #if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
     if (this->IsAvailable()) {
@@ -567,7 +553,6 @@ bool megamol::core::cluster::mpi::View::SwapGroupApi::ResetFrameCount(void) {
  */
 megamol::core::cluster::mpi::View::SwapGroupApi::SwapGroupApi(void)
         : isAvailable(false) {
-    VLAUTOSTACKTRACE;
 #if (defined(_WIN32) && defined(MPI_VIEW_WITH_SWAPGROUP))
     this->wglJoinSwapGroupNV = reinterpret_cast<PFNWGLJOINSWAPGROUPNVPROC>(
         ::wglGetProcAddress("wglJoinSwapGroupNV"));
@@ -600,7 +585,6 @@ megamol::core::cluster::mpi::View::SwapGroupApi::SwapGroupApi(void)
  * megamol::core::cluster::mpi::View::create
  */
 bool megamol::core::cluster::mpi::View::create(void) {
-    VLAUTOSTACKTRACE;
     bool retval = Base1::create();
     this->viewState = ViewState::CREATED;
     this->mustNegotiateMaster = true;
@@ -616,7 +600,6 @@ bool megamol::core::cluster::mpi::View::create(void) {
  * megamol::core::cluster::mpi::View::filterRelayBuffer
  */
 size_t megamol::core::cluster::mpi::View::filterRelayBuffer(void) {
-    VLAUTOSTACKTRACE;
     typedef std::pair<size_t, size_t> RangeType;
 
     size_t retval = 0;
@@ -703,7 +686,6 @@ size_t megamol::core::cluster::mpi::View::filterRelayBuffer(void) {
  * megamol::core::cluster::mpi::View::finaliseMpi
  */
 void megamol::core::cluster::mpi::View::finaliseMpi(void) {
-    VLAUTOSTACKTRACE;
     if (this->isMpiInitialised) {
         // Finalise MPI, but only if the view has initialised MPI by itself.
         // This is the legacy case that we keep for backward compatibility with
@@ -719,7 +701,6 @@ void megamol::core::cluster::mpi::View::finaliseMpi(void) {
  * megamol::core::cluster::mpi::View::hasGsync
  */
 bool megamol::core::cluster::mpi::View::hasGsync(void) const {
-    VLAUTOSTACKTRACE;
     GLuint maxGroups, maxBarriers;
     if (SwapGroupApi::GetInstance().QueryMaxSwapGroups(maxGroups,
             maxBarriers)) {
@@ -737,7 +718,6 @@ bool megamol::core::cluster::mpi::View::hasGsync(void) const {
  * megamol::core::cluster::mpi::View::initialiseMpi
  */
 bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
-    VLAUTOSTACKTRACE;
     bool retval = false;
 
 #ifdef WITH_MPI
@@ -803,7 +783,6 @@ bool megamol::core::cluster::mpi::View::initialiseMpi(void) {
  * megamol::core::cluster::mpi::View::isGsyncEnabled
  */
 bool megamol::core::cluster::mpi::View::isGsyncEnabled(void) const {
-    VLAUTOSTACKTRACE;
     GLuint group, barrier;
     if (SwapGroupApi::GetInstance().QuerySwapGroup(group, barrier)) {
         _TRACE_GSYNC("Swap group is %u, swap barrier is %u.\n", group, barrier);
@@ -819,7 +798,6 @@ bool megamol::core::cluster::mpi::View::isGsyncEnabled(void) const {
  * megamol::core::cluster::mpi::View::negotiateBcastMaster
  */
 bool megamol::core::cluster::mpi::View::negotiateBcastMaster(void) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->mpiRank >= 0);
     ASSERT(this->mpiSize > 0);
 
@@ -856,7 +834,6 @@ bool megamol::core::cluster::mpi::View::negotiateBcastMaster(void) {
  * megamol::core::cluster::mpi::View::release
  */
 void megamol::core::cluster::mpi::View::release(void) {
-    VLAUTOSTACKTRACE;
     if (this->isGsyncEnabled()) {
         // Swap group ID 1 is because-i-know (we always use 1).
         SwapGroupApi::GetInstance().BindSwapBarrier(1, 0);
@@ -872,7 +849,6 @@ void megamol::core::cluster::mpi::View::release(void) {
  */
 void megamol::core::cluster::mpi::View::storeMessageForRelay(
         const vislib::net::AbstractSimpleMessage& msg) {
-    VLAUTOSTACKTRACE;
     if (this->isBcastMaster()) {
 // if (this->relayOffset == 8) ::DebugBreak();
 //if (msg.GetHeader().GetBodySize() == 0) ::DebugBreak();

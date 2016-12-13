@@ -20,7 +20,6 @@
  * megamol::pcl::CallPcd::FunctionCount
  */
 unsigned int megamol::core::misc::VolumetricDataCall::FunctionCount(void) {
-    VLAUTOSTACKTRACE;
     return STATIC_ARRAY_COUNT(VolumetricDataCall::FUNCTIONS);
 }
 
@@ -30,7 +29,6 @@ unsigned int megamol::core::misc::VolumetricDataCall::FunctionCount(void) {
  */
 const char *megamol::core::misc::VolumetricDataCall::FunctionName(
         unsigned int idx) {
-    VLAUTOSTACKTRACE;
     if (idx < VolumetricDataCall::FunctionCount()) {
         return VolumetricDataCall::FUNCTIONS[idx];
     } else {
@@ -81,7 +79,6 @@ const unsigned int megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA
  */
 megamol::core::misc::VolumetricDataCall::VolumetricDataCall(void)
         : cntFrames(0), data(nullptr), metadata(nullptr) {
-    VLAUTOSTACKTRACE;
 }
 
 
@@ -90,7 +87,6 @@ megamol::core::misc::VolumetricDataCall::VolumetricDataCall(void)
  */
 megamol::core::misc::VolumetricDataCall::VolumetricDataCall(
         const VolumetricDataCall& rhs) : data(nullptr), metadata(nullptr) {
-    VLAUTOSTACKTRACE;
     *this = rhs;
 }
 
@@ -99,7 +95,6 @@ megamol::core::misc::VolumetricDataCall::VolumetricDataCall(
  * megamol::core::misc::VolumetricDataCall::~VolumetricDataCall
  */
 megamol::core::misc::VolumetricDataCall::~VolumetricDataCall(void) {
-    VLAUTOSTACKTRACE;
 }
 
 
@@ -107,7 +102,6 @@ megamol::core::misc::VolumetricDataCall::~VolumetricDataCall(void) {
  * megamol::core::misc::VolumetricDataCall::GetComponents
  */
 size_t megamol::core::misc::VolumetricDataCall::GetComponents(void) const {
-    VLAUTOSTACKTRACE;
     return (this->metadata != nullptr) ? this->metadata->Components : 0;
 }
 
@@ -116,7 +110,6 @@ size_t megamol::core::misc::VolumetricDataCall::GetComponents(void) const {
  * megamol::core::misc::VolumetricDataCall::GetFrames
  */
 size_t megamol::core::misc::VolumetricDataCall::GetFrames(void) const {
-    VLAUTOSTACKTRACE;
     return (this->metadata != nullptr) ? this->metadata->NumberOfFrames : 0;
 }
 
@@ -126,7 +119,6 @@ size_t megamol::core::misc::VolumetricDataCall::GetFrames(void) const {
  */
 megamol::core::misc::VolumetricDataCall::GridType
 megamol::core::misc::VolumetricDataCall::GetGridType(void) const {
-    VLAUTOSTACKTRACE;
     return (this->metadata != nullptr)
         ? this->metadata->GridType
         : GridType::NONE;
@@ -138,7 +130,6 @@ megamol::core::misc::VolumetricDataCall::GetGridType(void) const {
  */
 const size_t megamol::core::misc::VolumetricDataCall::GetResolution(
         const int axis) const {
-    VLAUTOSTACKTRACE;
     if ((axis < 0) || (axis > 2)) {
         throw vislib::OutOfRangeException(axis, 0, 2, __FILE__, __LINE__);
     }
@@ -150,7 +141,6 @@ const size_t megamol::core::misc::VolumetricDataCall::GetResolution(
  * megamol::core::misc::VolumetricDataCall::GetScalarLength
  */
 size_t megamol::core::misc::VolumetricDataCall::GetScalarLength(void) const {
-    VLAUTOSTACKTRACE;
     return (this->metadata != nullptr) ? this->metadata->ScalarLength : 0;
 }
 
@@ -160,7 +150,6 @@ size_t megamol::core::misc::VolumetricDataCall::GetScalarLength(void) const {
  */
 megamol::core::misc::VolumetricDataCall::ScalarType
 megamol::core::misc::VolumetricDataCall::GetScalarType(void) const {
-    VLAUTOSTACKTRACE;
     return (this->metadata != nullptr)
         ? this->metadata->ScalarType
         : ScalarType::UNKNOWN;
@@ -172,7 +161,6 @@ megamol::core::misc::VolumetricDataCall::GetScalarType(void) const {
  */
 const float *megamol::core::misc::VolumetricDataCall::GetSliceDistances(
         const int axis) const {
-    VLAUTOSTACKTRACE;
     if ((axis < 0) || (axis > 2)) {
         throw vislib::OutOfRangeException(axis, 0, 2, __FILE__, __LINE__);
     }
@@ -186,7 +174,6 @@ const float *megamol::core::misc::VolumetricDataCall::GetSliceDistances(
  * megamol::core::misc::VolumetricDataCall::GetVoxelsPerFrame
  */
 size_t megamol::core::misc::VolumetricDataCall::GetVoxelsPerFrame(void) const {
-    VLAUTOSTACKTRACE;
     if (this->metadata == nullptr) {
         return 0;
     } else {
@@ -204,7 +191,6 @@ size_t megamol::core::misc::VolumetricDataCall::GetVoxelsPerFrame(void) const {
  * megamol::core::misc::VolumetricDataCall::IsUniform
  */
 bool megamol::core::misc::VolumetricDataCall::IsUniform(const int axis) const {
-    VLAUTOSTACKTRACE;
     if ((axis < 0) || (axis > 2)) {
         throw vislib::OutOfRangeException(axis, 0, 2, __FILE__, __LINE__);
     }
@@ -217,7 +203,6 @@ bool megamol::core::misc::VolumetricDataCall::IsUniform(const int axis) const {
  */
 void megamol::core::misc::VolumetricDataCall::SetMetadata(
         const Metadata *metadata) {
-    VLAUTOSTACKTRACE;
     this->metadata = metadata;
 }
 
@@ -227,7 +212,6 @@ void megamol::core::misc::VolumetricDataCall::SetMetadata(
  */
 megamol::core::misc::VolumetricDataCall&
 megamol::core::misc::VolumetricDataCall::operator =(const VolumetricDataCall& rhs) {
-    VLAUTOSTACKTRACE;
     if (this != &rhs) {
         Base::operator =(rhs);
         this->cntFrames = rhs.cntFrames;

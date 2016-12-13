@@ -17,7 +17,6 @@
 #include "mmcore/misc/VolumetricDataCallTypes.h"
 
 #include "vislib/Array.h"
-#include "vislib/StackTrace.h"
 
 
 namespace megamol {
@@ -115,7 +114,6 @@ namespace misc {
          * @return The number of frames loaded.
          */
         inline size_t GetAvailableFrames(void) const {
-            VLAUTOSTACKTRACE;
             return this->cntFrames;
         }
 
@@ -132,7 +130,6 @@ namespace misc {
          * @return The raw data.
          */
         inline const void *GetData(void) const {
-            VLAUTOSTACKTRACE;
             return this->data;
         }
 
@@ -142,7 +139,6 @@ namespace misc {
          * @return The raw data.
          */
         inline void *GetData(void) {
-            VLAUTOSTACKTRACE;
             return this->data;
         }
 
@@ -159,7 +155,6 @@ namespace misc {
          * @return The size of a single frame.
          */
         inline size_t GetFrameSize(void) const {
-            VLAUTOSTACKTRACE;
             return this->GetVoxelSize() * this->GetVoxelsPerFrame();
         }
 
@@ -176,7 +171,6 @@ namespace misc {
          * @return The metadata record if available.
          */
         inline const Metadata *GetMetadata(void) const {
-            VLAUTOSTACKTRACE;
             return this->metadata;
         }
 
@@ -223,7 +217,6 @@ namespace misc {
          * @return The size of a single data point.
          */
         inline size_t GetVoxelSize(void) const {
-            VLAUTOSTACKTRACE;
             return this->GetScalarLength() * this->GetComponents();
         }
 
@@ -254,7 +247,6 @@ namespace misc {
          * @param cntFrames
          */
         void SetData(void *data, const size_t cntFrames = 1) {
-            VLAUTOSTACKTRACE;
             this->data = data;
             this->cntFrames = cntFrames;
         }

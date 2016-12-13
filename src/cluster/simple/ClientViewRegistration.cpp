@@ -10,7 +10,6 @@
 
 #include "mmcore/cluster/simple/View.h"
 
-#include "vislib/StackTrace.h"
 
 using namespace megamol::core;
 
@@ -39,7 +38,6 @@ cluster::simple::ClientViewRegistration::~ClientViewRegistration(void) {
  */
 vislib::net::SimpleMessageDispatchListener *
 cluster::simple::ClientViewRegistration::GetRawMessageDispatchListener(void) {
-    VLAUTOSTACKTRACE;
     if (this->isRawMessageDispatching) {
         return dynamic_cast<vislib::net::SimpleMessageDispatchListener *>(
             this->view);

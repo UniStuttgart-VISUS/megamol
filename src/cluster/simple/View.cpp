@@ -300,7 +300,6 @@ bool cluster::simple::View::create(void) {
  * cluster::simple::View::processInitialisationMessage
  */
 void cluster::simple::View::processInitialisationMessage(void) {
-    VLAUTOSTACKTRACE;
     if (this->initMsg != NULL) {
         if (this->initMsg->GetHeader().GetMessageID() == MSG_MODULGRAPH) {
             this->GetCoreInstance()->SetupGraphFromNetwork(this->initMsg);
@@ -320,7 +319,6 @@ void cluster::simple::View::processInitialisationMessage(void) {
  * cluster::simple::View::registerClient
  */
 bool cluster::simple::View::registerClient(const bool isRawMessageDispatching) {
-    VLAUTOSTACKTRACE;
     if (this->client == NULL) {
         ClientViewRegistration *sccvr = this->registerSlot.CallAs<ClientViewRegistration>();
         if (sccvr != NULL) {

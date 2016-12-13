@@ -8,14 +8,12 @@
 #include "stdafx.h"
 #include "mmcore/view/AbstractCamParamSync.h"
 
-#include "vislib/StackTrace.h"
 
 
 /*
  * megamol::core::view::AbstractCamParamSync::~AbstractCamParamSync
  */
 megamol::core::view::AbstractCamParamSync::~AbstractCamParamSync(void) {
-    VLAUTOSTACKTRACE;
 }
 
 
@@ -25,7 +23,6 @@ megamol::core::view::AbstractCamParamSync::~AbstractCamParamSync(void) {
 megamol::core::view::AbstractCamParamSync::AbstractCamParamSync(void)
     : slotGetCamParams("CamParamSink", ""),
     slotSetCamParams("CamParamSource", "") {
-    VLAUTOSTACKTRACE;
 
     this->slotGetCamParams.SetCompatibleCall<CallCamParamSyncDescription>();
 
@@ -40,7 +37,6 @@ megamol::core::view::AbstractCamParamSync::AbstractCamParamSync(void)
  */
 void megamol::core::view::AbstractCamParamSync::SyncCamParams(
         CallCamParamSync::CamParams dst) {
-    VLAUTOSTACKTRACE;
     auto ccp = this->slotGetCamParams.CallAs<CallCamParamSync>();
     if (ccp != nullptr) {
         (*ccp)(CallCamParamSync::IDX_GET_CAM_PARAMS);
@@ -53,7 +49,6 @@ void megamol::core::view::AbstractCamParamSync::SyncCamParams(
  * megamol::core::view::AbstractCamParamSync::onGetCamParams
  */
 bool megamol::core::view::AbstractCamParamSync::onGetCamParams(Call & c) {
-    VLAUTOSTACKTRACE;
     try {
         return this->OnGetCamParams(dynamic_cast<CallCamParamSync&>(c));
     } catch (...) {

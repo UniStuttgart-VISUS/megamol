@@ -38,7 +38,6 @@
 #include "vislib/Serialiser.h"
 #include "vislib/net/SimpleMessageDispatchListener.h"
 #include "vislib/SmartPtr.h"
-#include "vislib/StackTrace.h"
 #include "vislib/String.h"
 
 #define MPI_VIEW_WITH_SWAPGROUP
@@ -64,7 +63,6 @@ namespace mpi {
          * @return The name of this module.
          */
         static inline const char *ClassName(void) {
-            VLAUTOSTACKTRACE;
             return "MpiClusterView";
         }
 
@@ -74,7 +72,6 @@ namespace mpi {
          * @return A human readable description of this module.
          */
         static inline const char *Description(void) {
-            VLAUTOSTACKTRACE;
             return "MPI-based powerwall view module.";
         }
 
@@ -91,7 +88,6 @@ namespace mpi {
          * @return false
          */
         static bool SupportQuickstart(void) {
-            VLAUTOSTACKTRACE;
             return false;
         }
 
@@ -148,7 +144,6 @@ namespace mpi {
              * @return true if the swap group APIs can be used, false otherwise.
              */
             inline bool IsAvailable(void) const {
-                VLAUTOSTACKTRACE;
                 return this->isAvailable;
             }
 
@@ -227,7 +222,6 @@ namespace mpi {
          *         known.
          */
         inline int getBcastMaster(void) const {
-            VLAUTOSTACKTRACE;
             return this->bcastMaster;
         }
 
@@ -261,7 +255,6 @@ namespace mpi {
          * @return true if this rank is the master, false otherwise.
          */
         inline bool isBcastMaster(void) const {
-            VLAUTOSTACKTRACE;
             return (this->bcastMaster == this->mpiRank);
         }
 
@@ -279,7 +272,6 @@ namespace mpi {
          * @return true if the master is known, false otherwise.
          */
         inline bool knowsBcastMaster(void) const {
-            VLAUTOSTACKTRACE;
             return (this->bcastMaster >= 0);
         }
 

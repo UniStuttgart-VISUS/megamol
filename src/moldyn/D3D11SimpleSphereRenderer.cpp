@@ -29,7 +29,6 @@
  * megamol::core::moldyn::D3D11SimpleSphereRenderer::IsAvailable
  */
 bool megamol::core::moldyn::D3D11SimpleSphereRenderer::IsAvailable(void) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     return true;
 #else /* MEGAMOLCORE_WITH_DIRECT3D11 */
@@ -49,7 +48,6 @@ megamol::core::moldyn::D3D11SimpleSphereRenderer::D3D11SimpleSphereRenderer(
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     updateD3D("updated3d", "Allows the renderer using D3D11 resources of a view.")
     {
-    VLAUTOSTACKTRACE;
 
     this->updateD3D.SetCallback(view::CallUpdateDirect3D::ClassName(),
         view::CallUpdateDirect3D::FunctionName(0),
@@ -63,7 +61,6 @@ megamol::core::moldyn::D3D11SimpleSphereRenderer::D3D11SimpleSphereRenderer(
  */
 megamol::core::moldyn::D3D11SimpleSphereRenderer::~D3D11SimpleSphereRenderer(
         void) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     this->finaliseD3D();
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
@@ -74,7 +71,6 @@ megamol::core::moldyn::D3D11SimpleSphereRenderer::~D3D11SimpleSphereRenderer(
  * megamol::core::moldyn::D3D11SimpleSphereRenderer::create
  */
 bool megamol::core::moldyn::D3D11SimpleSphereRenderer::create(void) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     bool retval = AbstractSimpleSphereRenderer::create();
     ::NvAPI_Initialize();
@@ -91,7 +87,6 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::create(void) {
  * megamol::core::moldyn::D3D11SimpleSphereRenderer::Render
  */
 bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     ASSERT(this->device != NULL);
     ASSERT(this->immediateContext != NULL);
@@ -350,7 +345,6 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Render(Call& call) {
  * megamol::core::moldyn::D3D11SimpleSphereRenderer::Update
  */
 bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Update(Call& call) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     using view::CallUpdateDirect3D;
     try {
@@ -374,8 +368,7 @@ bool megamol::core::moldyn::D3D11SimpleSphereRenderer::Update(Call& call) {
 //void megamol::core::moldyn::D3D11SimpleSphereRenderer::layoutVertices(
 //        BYTE *data, const SIZE_T size, 
 //        MultiParticleDataCall::Particles& particles) {
-//    VLAUTOSTACKTRACE;
-//
+////
 //    ASSERT(data != NULL);
 //    ASSERT(size >= particles.GetCount() * VERTEX_SIZE);
 //
@@ -428,7 +421,6 @@ const size_t megamol::core::moldyn::D3D11SimpleSphereRenderer::VERTEX_SIZE
 size_t megamol::core::moldyn::D3D11SimpleSphereRenderer::coalesceParticles(
         BYTE *buffer, const size_t cntBuffer,
         MultiParticleDataCall::Particles& particles) {
-    VLAUTOSTACKTRACE;
     ASSERT(buffer != NULL);
     ASSERT(particles.GetCount() < SIZE_MAX);
 
@@ -562,7 +554,6 @@ size_t megamol::core::moldyn::D3D11SimpleSphereRenderer::coalesceParticles(
  * megamol::core::moldyn::D3D11SimpleSphereRenderer::finaliseD3D
  */
 void megamol::core::moldyn::D3D11SimpleSphereRenderer::finaliseD3D(void) {
-    VLAUTOSTACKTRACE;
     VLTRACE(VISLIB_TRCELVL_INFO, "Releasing D3D resources in "
         "D3D11SimpleSphereRenderer...\n");
     this->bboxResources.Finalise();
@@ -582,7 +573,6 @@ void megamol::core::moldyn::D3D11SimpleSphereRenderer::finaliseD3D(void) {
  */
 HRESULT megamol::core::moldyn::D3D11SimpleSphereRenderer::initialiseD3D(
         ID3D11Device *device) {
-    VLAUTOSTACKTRACE;
     using nv::stereo::ParamTextureManagerD3D11;
     using utility::ShaderSourceFactory;
     using vislib::sys::Log;

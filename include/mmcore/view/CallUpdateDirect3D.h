@@ -15,7 +15,6 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/mmd3d.h"
 
-#include "vislib/StackTrace.h"
 
 
 namespace megamol {
@@ -33,7 +32,6 @@ namespace view {
          * @return The name of the objects of this description.
          */
         inline static const char *ClassName(void) {
-            VLAUTOSTACKTRACE;
             return "CallUpdateDirect3D";
         }
 
@@ -43,7 +41,6 @@ namespace view {
          * @return A human readable description of the module.
          */
         inline static const char *Description(void) {
-            VLAUTOSTACKTRACE;
             return "Call for updating Direct3D resources";
         }
 
@@ -53,7 +50,6 @@ namespace view {
          * @return The number of functions used for this call.
          */
         inline static unsigned int FunctionCount(void) {
-            VLAUTOSTACKTRACE;
             return (sizeof(FUNCTIONS) / sizeof(*FUNCTIONS));
         }
 
@@ -70,14 +66,12 @@ namespace view {
 
         inline CallUpdateDirect3D(const CallUpdateDirect3D& rhs) 
                 : device(NULL) {
-            VLAUTOSTACKTRACE;
             *this = rhs;
         }
 
         virtual ~CallUpdateDirect3D(void);
 
         inline ID3D11Device *PeekDevice(void) {
-            VLAUTOSTACKTRACE;
             return this->device;
         }
 

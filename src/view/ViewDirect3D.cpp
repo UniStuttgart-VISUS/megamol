@@ -24,7 +24,6 @@
  * megamol::core::view::ViewDirect3D::IsAvailable
  */
 bool megamol::core::view::ViewDirect3D::IsAvailable(void) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     return true;
 #else /* MEGAMOLCORE_WITH_DIRECT3D11 */
@@ -44,7 +43,6 @@ megamol::core::view::ViewDirect3D::ViewDirect3D(void) : Base(),
         rtv(NULL),
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
         updateD3D("updated3d", "Propagates Direct3D resources from a view to a renderer.") {
-    VLAUTOSTACKTRACE;
 
     this->updateD3D.SetCompatibleCall<CallUpdateDirect3DDescription>();
     this->MakeSlotAvailable(&this->updateD3D);
@@ -55,7 +53,6 @@ megamol::core::view::ViewDirect3D::ViewDirect3D(void) : Base(),
  * megamol::core::view::ViewDirect3D::~ViewDirect3D
  */
 megamol::core::view::ViewDirect3D::~ViewDirect3D(void) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     this->finaliseD3D();
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
@@ -66,7 +63,6 @@ megamol::core::view::ViewDirect3D::~ViewDirect3D(void) {
  * megamol::core::view::ViewDirect3D::Render
  */
 void megamol::core::view::ViewDirect3D::Render(float time, double instTime) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     /* Prepare D3D-specific stuff. */
     if (this->rtv != NULL) {
@@ -90,7 +86,6 @@ void megamol::core::view::ViewDirect3D::Render(float tileX, float tileY,
         float tileW, float tileH, float virtW, float virtH, 
         bool stereo, bool leftEye, double instTime,
         class ::megamol::core::CoreInstance *core) {
-    VLAUTOSTACKTRACE;
     ASSERT(false);
 }
 
@@ -100,7 +95,6 @@ void megamol::core::view::ViewDirect3D::Render(float tileX, float tileY,
  */
 void megamol::core::view::ViewDirect3D::Resize(unsigned int width, 
         unsigned int height) {
-    VLAUTOSTACKTRACE;
     Base::Resize(width, height);
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     this->onResizingD3D(width, height);
@@ -113,7 +107,6 @@ void megamol::core::view::ViewDirect3D::Resize(unsigned int width,
  */
 void megamol::core::view::ViewDirect3D::UpdateFromContext(
         mmcRenderViewContext *context) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     if (context != NULL) {
         if (context->Direct3DDevice != this->device) {
@@ -135,7 +128,6 @@ void megamol::core::view::ViewDirect3D::UpdateFromContext(
  * megamol::core::view::ViewDirect3D::create
  */
 bool megamol::core::view::ViewDirect3D::create(void) {
-    VLAUTOSTACKTRACE;
     bool retval = Base::create();
 
     if (retval) {
@@ -149,7 +141,6 @@ bool megamol::core::view::ViewDirect3D::create(void) {
  * megamol::core::view::ViewDirect3D::release
  */
 void megamol::core::view::ViewDirect3D::release(void) {
-    VLAUTOSTACKTRACE;
     Base::release();
 }
 
@@ -159,7 +150,6 @@ void megamol::core::view::ViewDirect3D::release(void) {
  * megamol::core::view::ViewDirect3D::finaliseD3D
  */
 void megamol::core::view::ViewDirect3D::finaliseD3D(void) {
-    VLAUTOSTACKTRACE;
     VLTRACE(VISLIB_TRCELVL_INFO, "Releasing D3D resources in "
         "ViewDirect3D...\n");
     SAFE_RELEASE(this->device);
@@ -173,7 +163,6 @@ void megamol::core::view::ViewDirect3D::finaliseD3D(void) {
  * megamol::core::view::ViewDirect3D::initialiseD3D
  */
 void megamol::core::view::ViewDirect3D::initialiseD3D(ID3D11Device *device) {
-    VLAUTOSTACKTRACE;
     ASSERT(device != NULL);
     
     ASSERT(this->device == NULL);
@@ -196,7 +185,6 @@ void megamol::core::view::ViewDirect3D::initialiseD3D(ID3D11Device *device) {
  */
 void megamol::core::view::ViewDirect3D::onResizedD3D(
         ID3D11RenderTargetView *rtv) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->device != NULL);
     ASSERT(rtv != NULL);
     ASSERT(this->dsv == NULL);
@@ -253,7 +241,6 @@ void megamol::core::view::ViewDirect3D::onResizedD3D(
  */
 void megamol::core::view::ViewDirect3D::onResizingD3D(const unsigned int width,
         const unsigned int height) {
-    VLAUTOSTACKTRACE;
     ASSERT((this->immediateContext != NULL) || (this->rtv == NULL));
 
     VLTRACE(VISLIB_TRCELVL_INFO, "Releasing render target view in "

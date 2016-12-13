@@ -77,8 +77,7 @@ namespace plugins {
 
         /** Possible target values for static connectors */
         enum class StaticConnectorType {
-            Log,
-            StackTrace
+            Log
         };
 
         /** Type declaration to register something at the core instance*/

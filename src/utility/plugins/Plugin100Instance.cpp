@@ -53,9 +53,6 @@ PluginManager::collection_type Plugin100Instance::ContinueLoad(
         bool rv;
         rv = mmplgConnectStatics(1, static_cast<void*>(&vislib::sys::Log::DefaultLog));
         VLTRACE(VISLIB_TRCELVL_INFO, "Plug-in connect log: %s\n", rv ? "true" : "false");
-        vislib::SmartPtr<vislib::StackTrace> stackManager(vislib::StackTrace::Manager());
-        rv = mmplgConnectStatics(2, static_cast<void*>(&stackManager));
-        VLTRACE(VISLIB_TRCELVL_INFO, "Plug-in connect stacktrace: %s\n", rv ? "true" : "false");
     }
 
     // load plugin description

@@ -240,8 +240,6 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
     plugin200->SetAssemblyFileName(path);
 
     // connect static objects
-    vislib::SmartPtr<vislib::StackTrace> stackManager(vislib::StackTrace::Manager());
-    plugin200->connectStatics(Plugin200Instance::StaticConnectorType::StackTrace, static_cast<void*>(&stackManager));
     plugin200->connectStatics(Plugin200Instance::StaticConnectorType::Log, static_cast<void*>(&vislib::sys::Log::DefaultLog));
 
     // initialize factories

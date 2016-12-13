@@ -44,7 +44,6 @@
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/sys/SystemInformation.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
 #include "vislib/Trace.h"
 #include "vislib/net/Socket.h"
 
@@ -182,7 +181,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreeVersionInfo(mmcBinaryVersionInfo* i
  * mmcGetHandleSize
  */
 MEGAMOLCORE_API unsigned int MEGAMOLCORE_CALL mmcGetHandleSize(void) {
-    VLSTACKTRACE("mmcGetHandleSize", __FILE__, __LINE__);
     return megamol::core::ApiHandle::GetHandleSize();
 }
 
@@ -191,7 +189,6 @@ MEGAMOLCORE_API unsigned int MEGAMOLCORE_CALL mmcGetHandleSize(void) {
  * mmcDisposeHandle
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void *hndl) {
-    VLSTACKTRACE("mmcDisposeHandle", __FILE__, __LINE__);
     megamol::core::ApiHandle::DestroyHandle(hndl);
 }
 
@@ -200,7 +197,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcDisposeHandle(void *hndl) {
  * mmcIsHandleValid
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsHandleValid(void *hndl) {
-    VLSTACKTRACE("mmcIsHandleValid", __FILE__, __LINE__);
     return (megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ApiHandle>(hndl) != NULL);
 }
@@ -210,7 +206,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsHandleValid(void *hndl) {
  * mmcGetHandleType
  */
 MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void *hndl) {
-    VLSTACKTRACE("mmcGetHandleType", __FILE__, __LINE__);
 
     if (megamol::core::ApiHandle::InterpretHandle<
             megamol::core::ApiHandle>(hndl) == NULL) {
@@ -242,7 +237,6 @@ MEGAMOLCORE_API mmcHandleType MEGAMOLCORE_CALL mmcGetHandleType(void *hndl) {
  * mmcCreateCoreInstance
  */
 MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
-    VLSTACKTRACE("mmcCreateCore", __FILE__, __LINE__);
     if (mmcIsHandleValid(hCore) != 0) {
         return MMC_ERR_HANDLE; // handle was already valid.
     }
@@ -369,17 +363,10 @@ MEGAMOLCORE_API mmcErrorCode MEGAMOLCORE_CALL mmcCreateCore(void *hCore) {
 MEGAMOLCORE_API mmcErrorCode
 MEGAMOLCORE_CALL mmcSetInitialisationValue(void *hCore, mmcInitValue key, 
         mmcValueType type, const void* value) {
-    VLSTACKTRACE("mmcSetInitialisationValue", __FILE__, __LINE__);
 
     megamol::core::CoreInstance *inst
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
-
-    if (key == MMC_INITVAL_VISLIB_STACKTRACEMANAGER) {
-        return vislib::sys::ThreadSafeStackTrace::Initialise(
-            *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true)
-            ? MMC_ERR_NO_ERROR : MMC_ERR_UNKNOWN;
-    }
 
     if (inst == NULL) { return MMC_ERR_INVALID_HANDLE; }
     try {
@@ -401,7 +388,6 @@ MEGAMOLCORE_CALL mmcSetInitialisationValue(void *hCore, mmcInitValue key,
  */
 MEGAMOLCORE_API mmcErrorCode
 MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void *hCore) {
-    VLSTACKTRACE("mmcInitialiseCoreInstance", __FILE__, __LINE__);
     megamol::core::CoreInstance *inst
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -427,7 +413,6 @@ MEGAMOLCORE_CALL mmcInitialiseCoreInstance(void *hCore) {
 MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueA(
         void *hCore, mmcConfigID id, const char *name, 
         mmcValueType *outType) {
-    VLSTACKTRACE("mmcGetConfigurationValueA", __FILE__, __LINE__);
     megamol::core::CoreInstance *inst
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -442,7 +427,6 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueA(
 MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
         void *hCore, mmcConfigID id, const wchar_t *name, 
         mmcValueType *outType) {
-    VLSTACKTRACE("mmcGetConfigurationValueW", __FILE__, __LINE__);
     megamol::core::CoreInstance *inst
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -456,7 +440,6 @@ MEGAMOLCORE_API const void * MEGAMOLCORE_CALL mmcGetConfigurationValueW(
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueA(
 		void *hCore, mmcConfigID id, const char *name, const char* val) {
-	VLSTACKTRACE("mmcSetConfigurationValueA", __FILE__, __LINE__);
 	megamol::core::CoreInstance *inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
 	if (inst == NULL) { return false; }
 	return const_cast<megamol::core::utility::Configuration&>(inst->Configuration()).SetValue(id, name, val);
@@ -468,7 +451,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueA(
 */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
 		void *hCore, mmcConfigID id, const wchar_t *name, const wchar_t* val) {
-	VLSTACKTRACE("mmcSetConfigurationValueW", __FILE__, __LINE__);
 	megamol::core::CoreInstance *inst = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
 	if (inst == NULL) { return false; }
 	return const_cast<megamol::core::utility::Configuration&>(inst->Configuration()).SetValue(id, name, val);
@@ -480,7 +462,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcSetConfigurationValueW(
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore) {
     printf("Request all instances\n");
-    VLSTACKTRACE("mmcRequestAllInstances", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -494,7 +475,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestAllInstances(void *hCore) {
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
         void *hCore, const char *name, const char *id) {
-    VLSTACKTRACE("mmcRequestInstanceA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -522,7 +502,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceA(
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
         void *hCore, const wchar_t *name, const wchar_t *id) {
-    VLSTACKTRACE("mmcRequestInstanceW", __FILE__, __LINE__);
     mmcRequestInstanceA(hCore, vislib::StringA(name).PeekBuffer(),
         vislib::StringA(id).PeekBuffer());
 }
@@ -533,7 +512,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRequestInstanceW(
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
         void *hCore) {
-    VLSTACKTRACE("mmcHasPendingViewInstantiationRequests", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -546,7 +524,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingViewInstantiationRequests(
  * mmcGetPendingViewInstanceName
  */
 MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void *hCore) {
-    VLSTACKTRACE("mmcHasPendingViewInstantiationRequests", __FILE__, __LINE__);
     static vislib::StringA name;
     megamol::core::CoreInstance *core = megamol::core::ApiHandle::InterpretHandle<megamol::core::CoreInstance>(hCore);
     if (core == nullptr) return nullptr;
@@ -560,7 +537,6 @@ MEGAMOLCORE_API const char* MEGAMOLCORE_CALL mmcGetPendingViewInstanceName(void 
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,
         void *hView) {
-    VLSTACKTRACE("mmcInstantiatePendingView", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -586,7 +562,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingView(void *hCore,
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingJobInstantiationRequests(
         void *hCore) {
-    VLSTACKTRACE("mmcHasPendingJobInstantiationRequests", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -600,7 +575,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcHasPendingJobInstantiationRequests(
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
         void *hJob) {
-    VLSTACKTRACE("mmcInstantiatePendingJob", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -626,7 +600,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
         mmcRenderViewContext *context) {
-    VLSTACKTRACE("mmcRenderView", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -691,7 +664,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRegisterViewCloseRequestFunction(
         void *hView, mmcViewCloseRequestFunction func, void *data) {
-    VLSTACKTRACE("mmcRegisterViewCloseRequestFunction", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -706,7 +678,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRegisterViewCloseRequestFunction(
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
         unsigned int width, unsigned int height) {
-    VLSTACKTRACE("mmcResizeView", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -721,7 +692,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcResizeView(void *hView,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetInputModifier(void *hView,
         mmcInputModifier mod, bool down) {
-    VLSTACKTRACE("mmcSetInputModifier", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -736,7 +706,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetInputModifier(void *hView,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMouseButton(void *hView,
         unsigned int btn, bool down) {
-    VLSTACKTRACE("mmcSet2DMouseButton", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -751,7 +720,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMouseButton(void *hView,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMousePosition(void *hView,
         float x, float y) {
-    VLSTACKTRACE("mmcSet2DMousePosition", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -766,7 +734,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSet2DMousePosition(void *hView,
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcDesiredViewWindowConfig(void *hView,
         int *x, int *y, int *w, int *h, bool *nd) {
-    VLSTACKTRACE("mmcDesiredViewWindowConfig", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -781,7 +748,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcDesiredViewWindowConfig(void *hView,
  * mmcIsJobRunning
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob) {
-    VLSTACKTRACE("mmcIsJobRunning", __FILE__, __LINE__);
     megamol::core::JobInstance *job
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::JobInstance>(hJob);
@@ -796,7 +762,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsJobRunning(void *hJob) {
  * mmcIsViewRunning
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView) {
-    VLSTACKTRACE("mmcIsViewRunning", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -808,7 +773,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsViewRunning(void *hView) {
  * mmcStartJob
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void *hJob) {
-    VLSTACKTRACE("mmcStartJob", __FILE__, __LINE__);
     megamol::core::JobInstance *job
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::JobInstance>(hJob);
@@ -823,7 +787,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcStartJob(void *hJob) {
  * mmcTerminateJob
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void *hJob) {
-    VLSTACKTRACE("mmcTerminateJob", __FILE__, __LINE__);
     megamol::core::JobInstance *job
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::JobInstance>(hJob);
@@ -838,7 +801,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcTerminateJob(void *hJob) {
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
         const char *value) {
-    VLSTACKTRACE("mmcSetParameterValueA", __FILE__, __LINE__);
     megamol::core::param::ParamHandle *param
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
@@ -866,7 +828,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueA(void *hParam,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
         const wchar_t *value) {
-    VLSTACKTRACE("mmcSetParameterValueW", __FILE__, __LINE__);
     megamol::core::param::ParamHandle *param
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
@@ -894,7 +855,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcSetParameterValueW(void *hParam,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectA(void *hCore,
         const char *filename) {
-    VLSTACKTRACE("mmcLoadProjectA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -908,7 +868,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectA(void *hCore,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
         const wchar_t *filename) {
-    VLSTACKTRACE("mmcLoadProjectW", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -922,7 +881,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcLoadProjectW(void *hCore,
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
         const char *name, void *hParam, bool bCreate) {
-    VLSTACKTRACE("mmcGetParameterA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -949,7 +907,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterA(void *hCore,
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
         const wchar_t *name, void *hParam, bool bCreate) {
-    VLSTACKTRACE("mmcGetParameterW", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -977,7 +934,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcGetParameterW(void *hCore,
 MEGAMOLCORE_API const char * MEGAMOLCORE_CALL mmcGetParameterValueA(
         void *hParam) {
     static vislib::StringA retval;
-    VLSTACKTRACE("mmcGetParameterValueA", __FILE__, __LINE__);
     megamol::core::param::ParamHandle *param
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
@@ -994,7 +950,6 @@ MEGAMOLCORE_API const char * MEGAMOLCORE_CALL mmcGetParameterValueA(
 MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
         void *hParam) {
     static vislib::StringW retval;
-    VLSTACKTRACE("mmcGetParameterValueW", __FILE__, __LINE__);
     megamol::core::param::ParamHandle *param
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
@@ -1009,7 +964,6 @@ MEGAMOLCORE_API const wchar_t * MEGAMOLCORE_CALL mmcGetParameterValueW(
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersA(void *hCore,
         mmcEnumStringAFunction func, void *data) {
-    VLSTACKTRACE("mmcEnumParametersA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -1053,7 +1007,6 @@ EnumParamsW(const char *name, void *data) {
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void *hCore,
         mmcEnumStringWFunction func, void *data) {
-    VLSTACKTRACE("mmcEnumParametersW", __FILE__, __LINE__);
     EnumParamDataHelperW context;
     context.func = func;
     context.data = data;
@@ -1066,7 +1019,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcEnumParametersW(void *hCore,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDA(void *hInst,
         char *buf, unsigned int *len) {
-    VLSTACKTRACE("mmcGetInstanceIDA", __FILE__, __LINE__);
     if (len == NULL) return;
 
     vislib::StringA id;
@@ -1103,7 +1055,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDA(void *hInst,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void *hInst,
         wchar_t *buf, unsigned int *len) {
-    VLSTACKTRACE("mmcGetInstanceIDW", __FILE__, __LINE__);
     if (len == NULL) return;
 
     char *bufA = new char[*len];
@@ -1125,7 +1076,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetInstanceIDW(void *hInst,
  */
 MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void *hInst,
         void *hParam) {
-    VLSTACKTRACE("mmcIsParameterRelevant", __FILE__, __LINE__);
     megamol::core::param::ParamHandle *param
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
@@ -1154,7 +1104,6 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcIsParameterRelevant(void *hInst,
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
         void *hParam, unsigned char *buf, unsigned int *len) {
-    VLSTACKTRACE("mmcGetParameterTypeDescription", __FILE__, __LINE__);
     megamol::core::param::ParamHandle *param
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::param::ParamHandle>(hParam);
@@ -1182,7 +1131,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreezeOrUpdateView(
         void *hView, bool freeze) {
-    VLSTACKTRACE("mmcFreezeOrUpdateView", __FILE__, __LINE__);
     megamol::core::ViewInstance *view
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::ViewInstance>(hView);
@@ -1196,7 +1144,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreezeOrUpdateView(
  * mmcQuickstartA
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartA(void *hCore, const char *filename) {
-    VLSTACKTRACE("mmcQuickstartA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -1209,7 +1156,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartA(void *hCore, const char *fi
  * mmcQuickstartW
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartW(void *hCore, const wchar_t *filename) {
-    VLSTACKTRACE("mmcQuickstartW", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -1224,7 +1170,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartW(void *hCore, const wchar_t 
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryA(void *hCore,
         const char *frontend, const char *feparams,
         const char *filetype, bool unreg, bool overwrite) {
-    VLSTACKTRACE("mmcQuickstartRegistryA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -1239,7 +1184,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryA(void *hCore,
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
         const wchar_t *frontend, const wchar_t *feparams,
         const wchar_t *filetype, bool unreg, bool overwrite) {
-    VLSTACKTRACE("mmcQuickstartRegistryW", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);
@@ -1252,7 +1196,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcQuickstartRegistryW(void *hCore,
  * mmcWriteStateToXML
  */
 MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcWriteStateToXMLA(void *hCore, const char *outFilename) {
-    VLSTACKTRACE("mmcWriteStateToXMLA", __FILE__, __LINE__);
     megamol::core::CoreInstance *core
         = megamol::core::ApiHandle::InterpretHandle<
         megamol::core::CoreInstance>(hCore);

@@ -10,7 +10,6 @@
 #include "mmcore/ModuleNamespace.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Log.h"
-#include "vislib/StackTrace.h"
 
 using namespace megamol::core;
 
@@ -39,7 +38,6 @@ ViewInstance::~ViewInstance(void) {
  * ViewInstance::Initialize
  */
 bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *view) {
-    VLSTACKTRACE("Initialize", __FILE__, __LINE__);
     if ((this->view != NULL) || (ns == NULL) || (view == NULL)) {
         return false;
     }

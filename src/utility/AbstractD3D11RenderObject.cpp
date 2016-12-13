@@ -14,7 +14,6 @@
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
 #include "vislib/IllegalParamException.h"
 #include "vislib/sys/Log.h"
-#include "vislib/StackTrace.h"
 
 
 /*
@@ -22,7 +21,6 @@
  */
 megamol::core::utility::AbstractD3D11RenderObject::~AbstractD3D11RenderObject(
         void) {
-    VLAUTOSTACKTRACE;
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
     this->Finalise();
 #endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
@@ -34,7 +32,6 @@ megamol::core::utility::AbstractD3D11RenderObject::~AbstractD3D11RenderObject(
  * megamol::core::utility::AbstractD3D11RenderObject::Finalise
  */
 HRESULT megamol::core::utility::AbstractD3D11RenderObject::Finalise(void) {
-    VLAUTOSTACKTRACE;
     SAFE_RELEASE(this->blendState);
     SAFE_RELEASE(this->depthStencilState);
     SAFE_RELEASE(this->device);
@@ -54,7 +51,6 @@ HRESULT megamol::core::utility::AbstractD3D11RenderObject::Finalise(void) {
  */
 HRESULT megamol::core::utility::AbstractD3D11RenderObject::Initialise(
         ID3D11Device *device) {
-    VLAUTOSTACKTRACE;
 
     if (device == NULL) {
         throw vislib::IllegalParamException("device", __FILE__, __LINE__);
@@ -81,7 +77,6 @@ megamol::core::utility::AbstractD3D11RenderObject::AbstractD3D11RenderObject(
         geometryShader(NULL), immediateContext(NULL), indexBuffer(NULL),
         inputLayout(NULL), pixelShader(NULL), vertexBuffer(NULL),
         vertexShader(NULL) {
-    VLAUTOSTACKTRACE;
 }
 
 
@@ -91,7 +86,6 @@ megamol::core::utility::AbstractD3D11RenderObject::AbstractD3D11RenderObject(
 HRESULT megamol::core::utility::AbstractD3D11RenderObject::compileFromBtf(
         ID3DBlob *& outBinary, ShaderSourceFactory& factory, 
         const char *name, const char *entryPoint, const char *target) {
-    VLAUTOSTACKTRACE;
 
     UINT flags = 0;                     // Shader compiler flags.
     HRESULT hr = S_OK;                  // API call result.
@@ -150,7 +144,6 @@ HRESULT megamol::core::utility::AbstractD3D11RenderObject::compileFromBtf(
 HRESULT megamol::core::utility::AbstractD3D11RenderObject::createBuffer(
         ID3D11Buffer *& outBuffer, const UINT type, const UINT size,
         const bool isDynamic, const void *data) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->device != NULL);
 
     D3D11_BUFFER_DESC desc;
@@ -199,7 +192,6 @@ HRESULT
 megamol::core::utility::AbstractD3D11RenderObject::createGeometryShaderFromBtf(
         ShaderSourceFactory& factory, const char *name, 
         const char *entryPoint, const char *target) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->device != NULL);
 
     ID3DBlob *binary = NULL;
@@ -229,7 +221,6 @@ megamol::core::utility::AbstractD3D11RenderObject::createGeometryShaderFromBtf(
  */
 HRESULT megamol::core::utility::AbstractD3D11RenderObject::createIndexBuffer(
         const UINT size, const bool isDynamic, const void *data) {
-    VLAUTOSTACKTRACE;
 
     HRESULT hr = S_OK;
 
@@ -260,7 +251,6 @@ HRESULT
 megamol::core::utility::AbstractD3D11RenderObject::createPixelShaderFromBtf(
         ShaderSourceFactory& factory, const char *name, 
         const char *entryPoint, const char *target) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->device != NULL);
 
     ID3DBlob *binary = NULL;
@@ -290,7 +280,6 @@ megamol::core::utility::AbstractD3D11RenderObject::createPixelShaderFromBtf(
  */
 HRESULT megamol::core::utility::AbstractD3D11RenderObject::createSamplerState(
         ID3D11SamplerState *& outSamplerState, const D3D11_FILTER filter) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->device != NULL);
 
     D3D11_SAMPLER_DESC desc;
@@ -326,7 +315,6 @@ HRESULT megamol::core::utility::AbstractD3D11RenderObject::createSamplerState(
  */
 HRESULT megamol::core::utility::AbstractD3D11RenderObject::createVertexBuffer(
         const UINT size, const bool isDynamic, const void *data) {
-    VLAUTOSTACKTRACE;
 
     HRESULT hr = S_OK;
 
@@ -358,7 +346,6 @@ HRESULT megamol::core::utility::AbstractD3D11RenderObject
         ShaderSourceFactory& factory, const char *name,
         const char *entryPoint, const char *target,
         D3D11_INPUT_ELEMENT_DESC *desc, const UINT cntDesc) {
-    VLAUTOSTACKTRACE;
     ASSERT(this->device != NULL);
 
     ID3DBlob *binary = NULL;

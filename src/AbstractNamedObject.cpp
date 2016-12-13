@@ -9,7 +9,6 @@
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Log.h"
-#include "vislib/StackTrace.h"
 #include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;
@@ -41,7 +40,6 @@ AbstractNamedObject::GraphLocker::~GraphLocker(void) {
  * AbstractNamedObject::GraphLocker::Lock
  */
 void AbstractNamedObject::GraphLocker::Lock(void) {
-    VLSTACKTRACE("GraphLocker::Lock", __FILE__, __LINE__);
     //if (this->writelock) {
 //        this->root->ModuleGraphLock().LockExclusive();
     //} else {
@@ -54,7 +52,6 @@ void AbstractNamedObject::GraphLocker::Lock(void) {
  * AbstractNamedObject::GraphLocker::Unlock
  */
 void AbstractNamedObject::GraphLocker::Unlock(void) {
-    VLSTACKTRACE("GraphLocker::Unlock", __FILE__, __LINE__);
     //if (this->writelock) {
 //        this->root->ModuleGraphLock().UnlockExclusive();
     //} else {

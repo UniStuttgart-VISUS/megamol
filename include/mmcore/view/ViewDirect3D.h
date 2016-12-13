@@ -18,7 +18,6 @@
 
 #include "vislib/assert.h"
 #include "vislib/sys/CriticalSection.h"
-#include "vislib/StackTrace.h"
 
 
 namespace megamol {
