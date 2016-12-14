@@ -11,7 +11,6 @@
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "vislib/vislibversion.h"
 #include "vislib/sys/Log.h"
-#include "vislib/sys/ThreadSafeStackTrace.h"
 #include "DatRawDataSource.h"
 #include "DirectVolumeRenderer.h"
 #include "BuckyBall.h"
@@ -114,8 +113,7 @@ MMSTD_VOLUME_API bool mmplgConnectStatics(int which, void* value) {
             return true;
 
         case 2: // vislib::stacktrace
-            return vislib::sys::ThreadSafeStackTrace::Initialise(
-                *static_cast<const vislib::SmartPtr<vislib::StackTrace>*>(value), true);
+            return true;
 
     }
     return false;
