@@ -1,6 +1,6 @@
 /*
  * OSPRaySphereRenderer.h
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2009-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef OSPRAY_SPHERERENDERER_H_INCLUDED
@@ -140,9 +140,6 @@ namespace ospray {
         float time;
 
 
-        // vertex array, vertex buffer object, texture
-        GLuint vaScreen, vbo, tex;
-
         // OSP objects
         OSPRenderer renderer;
         OSPFrameBuffer framebuffer;
@@ -197,7 +194,6 @@ namespace ospray {
         OSPDataType colorType;
 
         // color transfer data
-        float * tf_tex;
         unsigned int tex_size;
 
 	};

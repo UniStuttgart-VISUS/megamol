@@ -278,7 +278,7 @@ void ospray::OSPRaySphereRenderer::release() {
 }
 
 /*
-ospray::OSPRaySphereRenderer::release
+ospray::OSPRaySphereRenderer::Render
 */
 bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
@@ -346,17 +346,6 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
     ospCommit(camera);
 
-    // clipPlane setup
-    //core::view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<core::view::CallClipPlane>();
-    float clipDat[4];
-    float clipCol[4];
-    this->getClipData(clipDat, clipCol);
-
-    pln = ospNewPlane("clipPlane");
-    ospSet1f(pln, "dist", clipDat[3]);
-    ospSet3fv(pln, "normal", clipDat);
-    ospSet4fv(pln, "color", clipCol);
-    ospCommit(pln);
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
@@ -403,16 +392,12 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
                 core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
                 if (cgtf != NULL && ((*cgtf)())) {
-                    tf_tex = cgtf->GetTextureData();
-                    if (tf_tex == NULL) {
-                        return false;
-                    }
+                    float const* tf_tex = cgtf->GetTextureData();
                     tex_size = cgtf->TextureSize();
+                    this->colorTransferGray(cd, tf_tex, tex_size, cd_rgba);
                 } else {
-                    tf_tex = NULL;
-                    tex_size = 0;
+                    this->colorTransferGray(cd, NULL, 0, cd_rgba);
                 }
-                this->colorTransferGray(cd, tf_tex, tex_size, cd_rgba);
                 colorLength = 4;
             }
 
@@ -451,7 +436,20 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             ospSetData(spheres, "spheres", vertexData);
             ospSetData(spheres, "color", colorData);
             ospSet1f(spheres, "radius", parts.GetGlobalRadius());
-            ospSetObject(spheres, "clipPlane", pln);
+
+            // clipPlane setup
+            std::vector<float> clipDat(4);
+            std::vector<float> clipCol(4);
+            this->getClipData(clipDat.data(), clipCol.data());
+
+            if (!std::all_of(clipDat.begin(), clipDat.end() - 1, [](float i) { return i == 0; })) {
+                pln = ospNewPlane("clipPlane");
+                ospSet1f(pln, "dist", clipDat[3]);
+                ospSet3fv(pln, "normal", clipDat.data());
+                ospSet4fv(pln, "color", clipCol.data());
+                ospCommit(pln);
+                ospSetObject(spheres, "clipPlane", pln);
+            }
 
             // custom material settings
             OSPMaterial material;
@@ -619,7 +617,9 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     return true;
 }
 
-
+/*
+ospray::OSPRaySphereRenderer::InterfaceIsDirty()
+*/
 bool ospray::OSPRaySphereRenderer::InterfaceIsDirty() {
     if (this->AOsamples.IsDirty() ||
         this->AOweight.IsDirty() ||

@@ -81,7 +81,20 @@ void OSPRayRenderer::setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPMo
 
 }
 
-void OSPRayRenderer::colorTransferGray(std::vector<float> &grayArray, float* transferTable, unsigned int &tableSize, std::vector<float> &rgbaArray) {
+void OSPRayRenderer::setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, OSPVolume &volume, const char * volume_name, const char * renderer_name) {
+
+    // create and setup renderer
+    renderer = ospNewRenderer(renderer_name);
+    camera = ospNewCamera("perspective");
+    world = ospNewModel();
+    ospSetObject(renderer, "model", world);
+    ospSetObject(renderer, "camera", camera);
+    volume = ospNewVolume(volume_name);
+    ospAddVolume(world, volume);
+
+}
+
+void OSPRayRenderer::colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray) {
   
     float gray_max = *std::max_element(grayArray.begin(), grayArray.end());
     float gray_min = *std::min_element(grayArray.begin(), grayArray.end());
