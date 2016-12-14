@@ -61,7 +61,6 @@ namespace datatools {
         };
 
         enum class DensityAlgorithmType : int {
-            ANN = 0,
             grid = 1,
             listSepGrid = 2
         };
@@ -82,7 +81,6 @@ namespace datatools {
         void makeData(core::moldyn::MultiParticleDataCall *dat);
 
         size_t count_all_particles(core::moldyn::MultiParticleDataCall *dat);
-        void compute_density_ANN(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off);
         void compute_density_grid(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off);
         void compute_density_grid_grouped(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off);
 

@@ -9,7 +9,6 @@
 #define MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED
 #pragma once
 
-#ifdef WITH_ANN
 #include "mmstd_datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
@@ -82,5 +81,4 @@ namespace datatools {
 } /* end namespace stdplugin */
 } /* end namespace megamol */
 
-#endif
 #endif /* MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED */

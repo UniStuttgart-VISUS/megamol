@@ -9,9 +9,6 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cstdint>
 #include "vislib/math/ShallowPoint.h"
-#ifdef WITH_ANN
-#include "ANN/ANN.h"
-#endif
 #include "mmcore/param/EnumParam.h"
 
 
@@ -83,9 +80,6 @@ megamol::stdplugin::datatools::ParticleDensityOpacityModule::ParticleDensityOpac
     this->MakeSlotAvailable(&this->mapModeSlot);
 
     core::param::EnumParam *dAlg = new core::param::EnumParam(static_cast<int>(DensityAlgorithmType::grid));
-#ifdef WITH_ANN
-    dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::ANN), "ANN");
-#endif
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::grid), "grid");
     dAlg->SetTypePair(static_cast<int>(DensityAlgorithmType::listSepGrid), "listSepGrid");
     this->densitAlgorithmSlot.SetParameter(dAlg);
@@ -325,17 +319,7 @@ void megamol::stdplugin::datatools::ParticleDensityOpacityModule::makeData(core:
     DensityAlgorithmType dAlg = static_cast<DensityAlgorithmType>(
         this->densitAlgorithmSlot.Param<core::param::EnumParam>()->Value());
     float rad = this->densityRadiusSlot.Param<core::param::FloatParam>()->Value();
-    if (dAlg == DensityAlgorithmType::ANN) {
-#ifdef WITH_ANN
-        this->compute_density_ANN(dat,
-            this->cyclBoundXSlot.Param<core::param::BoolParam>()->Value(),
-            this->cyclBoundYSlot.Param<core::param::BoolParam>()->Value(),
-            this->cyclBoundZSlot.Param<core::param::BoolParam>()->Value(),
-            rad, f, col_step, col_off);
-#else
-        throw std::runtime_error("ANN not enabled");
-#endif
-    } else if (dAlg == DensityAlgorithmType::grid) {
+    if (dAlg == DensityAlgorithmType::grid) {
         this->compute_density_grid(dat,
             this->cyclBoundXSlot.Param<core::param::BoolParam>()->Value(),
             this->cyclBoundYSlot.Param<core::param::BoolParam>()->Value(),
@@ -429,65 +413,6 @@ size_t megamol::stdplugin::datatools::ParticleDensityOpacityModule::count_all_pa
         all_cnt += static_cast<size_t>(dat->AccessParticles(pli).GetCount());
     }
     return all_cnt;
-}
-
-
-/*
- * megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_ANN
- */
-void megamol::stdplugin::datatools::ParticleDensityOpacityModule::compute_density_ANN(core::moldyn::MultiParticleDataCall *dat, bool cycX, bool cycY, bool cycZ, float rad, float *f, int col_step, int col_off) {
-#ifdef WITH_ANN
-    // implementation using ANN
-    unsigned int plc = dat->GetParticleListCount();
-    size_t all_cnt = this->count_all_particles(dat);
-    size_t ci = 0;
-
-    ANNpointArray dataPts = new ANNpoint[all_cnt];
-    ANNpoint dataPtsData = new ANNcoord[3 * all_cnt];
-
-    // interate over all particles and store positions as ANN points
-    for (unsigned int pli = 0; pli < plc; pli++) {
-        core::moldyn::MultiParticleDataCall::Particles &pl = dat->AccessParticles(pli);
-        if ((pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_NONE)
-            || (pl.GetVertexDataType() == core::moldyn::SimpleSphericalParticles::VERTDATA_SHORT_XYZ)) continue;
-        size_t vert_stride = pl.GetVertexDataStride();
-        const uint8_t *vert = static_cast<const uint8_t*>(pl.GetVertexData());
-        switch (pl.GetVertexDataType()) {
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ:
-            if (vert_stride < 12) vert_stride = 12;
-            break;
-        case core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR:
-            if (vert_stride < 16) vert_stride = 16;
-            break;
-        default: throw std::exception();
-        }
-
-        for (uint64_t pi = 0; pi < pl.GetCount(); pi++, vert += vert_stride) {
-            size_t idx = static_cast<size_t>(pi + ci);
-            dataPts[idx] = dataPtsData + idx * 3;
-            dataPtsData[idx * 3 + 0] = static_cast<ANNcoord>(reinterpret_cast<const float*>(vert)[0]);
-            dataPtsData[idx * 3 + 1] = static_cast<ANNcoord>(reinterpret_cast<const float*>(vert)[1]);
-            dataPtsData[idx * 3 + 2] = static_cast<ANNcoord>(reinterpret_cast<const float*>(vert)[2]);
-        }
-    }
-
-    ANNkd_tree* kdTree = new ANNkd_tree(dataPts, static_cast<int>(all_cnt), 3);
-    ANNdist rad_sq = static_cast<ANNdist>(rad);
-    rad_sq *= rad_sq;
-
-    f = this->colData.As<float>();
-    for (size_t i = 0; i < all_cnt; i++) {
-        int n = kdTree->annkFRSearch(dataPts[i], rad_sq, 0);
-        f[i * col_step + col_off] = static_cast<float>(n);
-    }
-
-    delete kdTree;
-
-    delete[] dataPts;
-    delete[] dataPtsData;
-#else
-    assert(false);
-#endif
 }
 
 

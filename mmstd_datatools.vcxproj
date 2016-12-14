@@ -369,7 +369,6 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="cmake\ConfigInstall.cmake.in" />
     <None Include="cmake\ConfigLocal.cmake.in" />
     <None Include="cmake\ConfigVersion.cmake.in" />
-    <None Include="cmake\FindANN.cmake" />
     <None Include="cmake_build.sh" />
     <None Include="config.bat" />
     <None Include="configure.win.pl" />

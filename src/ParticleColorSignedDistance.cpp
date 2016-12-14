@@ -5,10 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#ifdef WITH_ANN
 #include "ParticleColorSignedDistance.h"
 #include "mmcore/param/BoolParam.h"
-#include "ANN/ANN.h"
+#include "nanoflann.hpp"
 #include <cstdint>
 #include <algorithm>
 #include <cfloat>
@@ -90,6 +89,98 @@ bool datatools::ParticleColorSignedDistance::manipulateData(
     return true;
 }
 
+namespace {
+
+    class pointcloud {
+    private:
+
+        megamol::core::moldyn::MultiParticleDataCall& dat;
+        std::vector<size_t> &indices;
+
+    public:
+
+        typedef float coord_t;
+
+        pointcloud(megamol::core::moldyn::MultiParticleDataCall& dat, std::vector<size_t> &indices) : dat(dat), indices(indices) {
+            // intentionally empty
+        }
+        ~pointcloud() {
+            // intentionally empty
+        }
+
+        // Must return the number of data points
+        inline size_t kdtree_get_point_count() const { return indices.size(); }
+
+        // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
+        inline coord_t kdtree_distance(const coord_t *p1, const size_t idx_p2, size_t /*size*/) const {
+            float const *p2 = get_position(idx_p2);
+            const coord_t d0 = p1[0] - p2[0];
+            const coord_t d1 = p1[1] - p2[1];
+            const coord_t d2 = p1[2] - p2[2];
+            return d0 * d0 + d1 * d1 + d2 * d2;
+        }
+
+        // Returns the dim'th component of the idx'th point in the class:
+        // Since this is inlined and the "dim" argument is typically an immediate value, the
+        //  "if/else's" are actually solved at compile time.
+        inline coord_t kdtree_get_pt(const size_t idx, int dim) const {
+            assert((dim >= 0) && (dim < 3));
+            return get_position(idx)[dim];
+        }
+
+        // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+        //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it again.
+        //   Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+        template <class BBOX>
+        bool kdtree_get_bbox(BBOX& bb) const {
+            //return false;
+
+            assert(bb.size() == 3);
+            const auto& cbox = dat.AccessBoundingBoxes().ObjectSpaceClipBox();
+            bb[0].low = cbox.Left();
+            bb[0].high = cbox.Right();
+            bb[1].low = cbox.Bottom();
+            bb[1].high = cbox.Top();
+            bb[2].low = cbox.Back();
+            bb[2].high = cbox.Front();
+            return true;
+        }
+
+    private:
+
+        inline const coord_t* get_position(size_t index) const {
+            using megamol::core::moldyn::SimpleSphericalParticles;
+
+            unsigned int plc = dat.GetParticleListCount();
+            for (unsigned int pli = 0; pli < plc; pli++) {
+                auto& pl = dat.AccessParticles(pli);
+                if (pl.GetColourDataType() != SimpleSphericalParticles::COLDATA_FLOAT_I) continue;
+                if ((pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZ)
+                    && (pl.GetVertexDataType() != SimpleSphericalParticles::VERTDATA_FLOAT_XYZR)) {
+                    continue;
+                }
+
+                if (index < pl.GetCount()) {
+                    unsigned int vert_stride = 0;
+                    if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZ) vert_stride = 12;
+                    else if (pl.GetVertexDataType() == SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) vert_stride = 16;
+                    else continue;
+                    vert_stride = std::max<unsigned int>(vert_stride, pl.GetVertexDataStride());
+                    const unsigned char *vert = static_cast<const unsigned char*>(pl.GetVertexData());
+
+                    return reinterpret_cast<const float *>(vert + (index * vert_stride));
+                }
+
+                index -= static_cast<size_t>(pl.GetCount());
+            }
+
+            return nullptr;
+        }
+
+    };
+
+}
+
 
 void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldyn::MultiParticleDataCall& dat) {
     using megamol::core::moldyn::SimpleSphericalParticles;
@@ -112,7 +203,6 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
     }
 
     this->newColors.resize(allpartcnt);
-    ANNpoint dataPtsData = new ANNcoord[3 * allpartcnt];
     std::vector<size_t> posparts;
     std::vector<size_t> negparts;
     posparts.reserve(allpartcnt);
@@ -141,9 +231,6 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
         for (int part_i = 0; part_i < part_cnt; ++part_i) {
             float c = *reinterpret_cast<const float *>(col + (part_i * stride));
             const float *v = reinterpret_cast<const float *>(vert + (part_i * vert_stride));
-            dataPtsData[(allpartcnt + part_i) * 3 + 0] = static_cast<ANNcoord>(v[0]);
-            dataPtsData[(allpartcnt + part_i) * 3 + 1] = static_cast<ANNcoord>(v[1]);
-            dataPtsData[(allpartcnt + part_i) * 3 + 2] = static_cast<ANNcoord>(v[2]);
 
             if (c < -border_epsilon) {
                 negpartcnt++;
@@ -160,21 +247,22 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
         allpartcnt += static_cast<size_t>(pl.GetCount());
     }
 
-    // allocate ANN data structures for border
+    // allocate nanoflann data structures for border
     assert(pospartcnt + nulpartcnt == posparts.size());
-    ANNpointArray posnulPts = new ANNpoint[posparts.size()];
-    for (size_t i = 0; i < pospartcnt + nulpartcnt; ++i) {
-        posnulPts[i] = dataPtsData + (posparts[i] * 3);
-    }
-    posparts.clear();
+    pointcloud posnulPts(dat, posparts);
     assert(negpartcnt + nulpartcnt == negparts.size());
-    ANNpointArray negnulPts = new ANNpoint[negparts.size()];
-    for (size_t i = 0; i < negpartcnt + nulpartcnt; ++i) {
-        negnulPts[i] = dataPtsData + (negparts[i] * 3);
-    }
-    negparts.clear();
-    ANNkd_tree* posTree = new ANNkd_tree(posnulPts, static_cast<int>(pospartcnt + nulpartcnt), 3);
-    ANNkd_tree* negTree = new ANNkd_tree(negnulPts, static_cast<int>(negpartcnt + nulpartcnt), 3);
+    pointcloud negnulPts(dat, negparts);
+
+    typedef nanoflann::KDTreeSingleIndexAdaptor<
+        nanoflann::L2_Simple_Adaptor<float, pointcloud >,
+        pointcloud,
+        3 /* dim */
+        > my_kd_tree_t;
+
+    my_kd_tree_t posTree(3 /* dim */, posnulPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+    posTree.buildIndex();
+    my_kd_tree_t negTree(3 /* dim */, negnulPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+    negTree.buildIndex();
 
     // final computation
     bool cycl_x = this->cyclXSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -211,30 +299,31 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
             if ((-border_epsilon < c) && (c < border_epsilon)) {
                 c = 0.0f;
             } else {
-                ANNcoord q[3];
-                ANNidx ni;
-                ANNdist nd, dist = static_cast<ANNdist>(DBL_MAX);
-                ANNkd_tree *tree = (c < 0.0f) ? posTree : negTree;
+                float q[3];
+                float dist, distsq = static_cast<float>(DBL_MAX);
+                my_kd_tree_t& tree = (c < 0.0f) ? posTree : negTree;
 
                 for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
                     for (int y_s = 0; y_s < (cycl_y ? 2 : 1); ++y_s) {
                         for (int z_s = 0; z_s < (cycl_z ? 2 : 1); ++z_s) {
 
-                            q[0] = static_cast<ANNcoord>(v[0]);
-                            q[1] = static_cast<ANNcoord>(v[1]);
-                            q[2] = static_cast<ANNcoord>(v[2]);
-                            if (x_s > 0) q[0] = static_cast<ANNcoord>(v[0] + ((v[0] > bbox_cntr.X()) ? -bbox.Width()  : bbox.Width() ));
-                            if (y_s > 0) q[1] = static_cast<ANNcoord>(v[1] + ((v[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height()));
-                            if (z_s > 0) q[2] = static_cast<ANNcoord>(v[2] + ((v[2] > bbox_cntr.Z()) ? -bbox.Depth()  : bbox.Depth() ));
+                            q[0] = v[0];
+                            q[1] = v[1];
+                            q[2] = v[2];
+                            if (x_s > 0) q[0] = v[0] + ((v[0] > bbox_cntr.X()) ? -bbox.Width()  : bbox.Width() );
+                            if (y_s > 0) q[1] = v[1] + ((v[1] > bbox_cntr.Y()) ? -bbox.Height() : bbox.Height());
+                            if (z_s > 0) q[2] = v[2] + ((v[2] > bbox_cntr.Z()) ? -bbox.Depth()  : bbox.Depth() );
 
-                            tree->annkSearch(q, 1, &ni, &nd);
-                            if (nd < dist) dist = nd;
+                            size_t n_idx;
+                            float n_distsq;
+                            tree.knnSearch(q, 1, &n_idx, &n_distsq);
+                            if (n_distsq < distsq) distsq = n_distsq;
 
                         }
                     }
                 }
 
-                dist = sqrt(dist);
+                dist = sqrt(distsq);
                 if (c < 0.0f) dist = -dist;
                 c = static_cast<float>(dist);
             }
@@ -248,11 +337,6 @@ void datatools::ParticleColorSignedDistance::compute_colors(megamol::core::moldy
         allpartcnt += static_cast<size_t>(part_cnt);
     }
 
-    delete posTree;
-    delete negTree;
-    delete[] posnulPts;
-    delete[] negnulPts;
-    delete[] dataPtsData;
 }
 
 
@@ -270,4 +354,3 @@ void datatools::ParticleColorSignedDistance::set_colors(megamol::core::moldyn::M
         allpartcnt += static_cast<size_t>(pl.GetCount());
     }
 }
-#endif

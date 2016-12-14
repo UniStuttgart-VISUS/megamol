@@ -27,9 +27,7 @@
 #include "DataFileSequence.h"
 #include "OverrideParticleBBox.h"
 #include "ParticleColorSignThreshold.h"
-#ifdef WITH_ANN
 #include "ParticleColorSignedDistance.h"
-#endif
 #include "EnforceSymmetricParticleColorRanges.h"
 #include "ParticleSortFixHack.h"
 #include "ParticleDataSequenceConcatenate.h"
@@ -155,9 +153,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::DataFileSequence>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::OverrideParticleBBox>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignThreshold>();
-#ifdef WITH_ANN
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColorSignedDistance>();
-#endif
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::EnforceSymmetricParticleColorRanges>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleSortFixHack>();
             this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleDataSequenceConcatenate>();

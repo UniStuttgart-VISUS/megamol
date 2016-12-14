@@ -29,18 +29,12 @@ if (USE_MEGAMOLCORE_INSTALL_PREFIX)
 	message(STATUS "Using MegaMolCore install prefix")
 endif()
 find_package(vislib REQUIRED HINTS ${MegaMolCore_vislib_DIR})
-find_package(ANN)
 find_package(OpenMP)
 
 set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES})
 include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS})
 if (OPENMP_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
-if (ANN_FOUND)
-	set(LIBS ${LIBS} ${ANN_LIBRARIES})
-	include_directories(${ANN_INCLUDE_DIRS})
-	add_definitions(-DWITH_ANN)
 endif()
 
 

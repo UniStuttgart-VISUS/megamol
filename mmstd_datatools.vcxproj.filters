@@ -386,9 +386,6 @@
     <None Include="cmake\ConfigVersion.cmake.in">
       <Filter>Config and Make Files\cmake</Filter>
     </None>
-    <None Include="cmake\FindANN.cmake">
-      <Filter>Config and Make Files\cmake</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt">
