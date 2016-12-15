@@ -1237,9 +1237,15 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                 if ((start <= fTemp) && (fTemp <= end)) {
                                     xTemp  = (fTemp - start) / (end - start);  // 0-1
                                     mTemp  = (middle - start) / (end - start); // shift of x=0 to "middle"
-                                    aStart = -(1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp + this->currentUncertainGardientInterval/2.0f)));
-                                    aStart = (aStart > 1.0f) ? (1.0f) : ((aStart < 0.0f) ? (0.0f) : (aStart));
-									aEnd = -aStart + 1.0f; // is already in 0-1
+                                    if (this->currentUncertainGardientInterval > 0.0f) {
+                                        aStart = -(1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp + this->currentUncertainGardientInterval/2.0f)));
+                                        aStart = (aStart > 1.0f) ? (1.0f) : ((aStart < 0.0f) ? (0.0f) : (aStart));
+                                        aEnd = -aStart + 1.0f; // is already in 0-1
+                                    }
+                                    else {
+                                        aStart = (xTemp <= mTemp) ? (1.0f) : (0.0f);
+                                        aEnd   = (xTemp > mTemp)  ? (1.0f) : (0.0f);
+                                    }
                                     // aEnd   =  (1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp - this->currentUncertainGardientInterval/2.0f)));
                                     // aEnd   = (aEnd > 1.0f)   ? (1.0f) : ((aEnd < 0.0f)   ? (0.0f) : (aEnd));
 
@@ -1561,10 +1567,16 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                 if ((start <= fTemp) && (fTemp <= end)) {
                                     xTemp  = (fTemp - start) / (end - start);  // 0-1
                                     mTemp  = (middle - start) / (end - start); // shift of x=0 to middle
-                                    aStart = -(1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp + this->currentUncertainGardientInterval/2.0f)));
-                                    aStart = (aStart > 1.0f) ? (1.0f) : ((aStart < 0.0f) ? (0.0f) : (aStart));
-									aEnd = -aStart + 1.0f; // is already in 0-1
-
+                                    if (this->currentUncertainGardientInterval > 0.0f) {
+                                        aStart = -(1.0f / (this->currentUncertainGardientInterval)*(xTemp - (mTemp + this->currentUncertainGardientInterval/2.0f)));
+                                        aStart = (aStart > 1.0f) ? (1.0f) : ((aStart < 0.0f) ? (0.0f) : (aStart));
+                                        aEnd = -aStart + 1.0f; // is already in 0-1
+                                    }
+                                    else {
+                                        aStart = (xTemp <= mTemp) ? (1.0f) : (0.0f);
+                                        aEnd   = (xTemp > mTemp)  ? (1.0f) : (0.0f);
+                                    }
+                                    
                                     if (this->currentUncertainColorInterpol == UNCERTAIN_COLOR_RGB) {
                                         colTemp = aStart*colStart +  aEnd*colEnd;
                                     }   
