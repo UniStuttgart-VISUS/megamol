@@ -57,22 +57,24 @@ UncertaintyDataCall::~UncertaintyDataCall(void) {
 
 /*
 * UncertaintyDataCall::secStructureColor
+*
+* Source: https://wiki.selfhtml.org/wiki/Grafik/Farbpaletten
 */
 vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(UncertaintyDataCall::secStructure s) {
 
     vislib::math::Vector<float, 4> color;
     color.Set(1.0f, 1.0f, 1.0f, 1.0f);
 
-    switch (s) {
-    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(1.0f, 0.0f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(1.0f, 0.5f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(1.0f, 1.0f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.0f, 0.0f, 1.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(0.5f, 1.0f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.0f, 0.5f, 1.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.0f, 0.5f, 0.0f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.4f, 0.2f, 0.4f, 1.0f); break;
-    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.0f, 0.0f, 0.0f, 1.0f); break;
+    switch (s) {                                                     //  R     G     B     A
+    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(1.0f, 0.0f, 0.0f, 1.0f); break; // HSL: H=  , S=  , L=  
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(1.0f, 0.5f, 0.0f, 1.0f); break; // HSL: H=  , S=  , L=  
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(1.0f, 1.0f, 0.0f, 1.0f); break; // HSL: H=  , S=  , L=  
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.0f, 0.0f, 1.0f, 1.0f); break; // HSL: H=  , S=  , L=  
+    case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(0.5f, 1.0f, 0.0f, 1.0f); break; // HSL: H=  , S=  , L=  
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.0f, 0.5f, 1.0f, 1.0f); break; // HSL: H=  , S=  , L=   
+    case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.0f, 0.5f, 0.0f, 1.0f); break; // HSL: H=  , S=  , L=  
+    case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.4f, 0.2f, 0.4f, 1.0f); break; // HSL: H=  , S=  , L=  
+    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.0f, 0.0f, 0.0f, 1.0f); break; // HSL: H=  , S=  , L=  
     default: break;
     }
     

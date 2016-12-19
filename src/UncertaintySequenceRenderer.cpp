@@ -637,10 +637,16 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 
 			// draw amino-acid separating lines
 			if (this->showSeparatorLine) {
-				glColor3fv(fgColor);
+				/*glColor3fv(fgColor);
 				glEnable(GL_VERTEX_ARRAY);
 				glVertexPointer(2, GL_FLOAT, 0, this->aminoacidSeparatorVertices.PeekElements());
 				glDrawArrays(GL_LINES, 0, (GLsizei)this->aminoacidSeparatorVertices.Count() / 2);
+				glDisable(GL_VERTEX_ARRAY);*/
+                
+				glColor3fv(fgColor);
+				glEnable(GL_VERTEX_ARRAY);
+				glVertexPointer(2, GL_FLOAT, 0, this->aminoacidSeparatorVertices.PeekElements());
+				glDrawArrays(GL_QUADS, 0, (GLsizei)this->aminoacidSeparatorVertices.Count() / 2);
 				glDisable(GL_VERTEX_ARRAY);
 			}
             yPos += 1.0f;            
@@ -1900,7 +1906,7 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
     this->chainSeparatorVertices.AssertCapacity(this->aminoAcidCount * 4);
 
 	this->aminoacidSeparatorVertices.Clear();
-	this->aminoacidSeparatorVertices.AssertCapacity(this->aminoAcidCount * 4);
+	this->aminoacidSeparatorVertices.AssertCapacity(this->aminoAcidCount * 8);
 
     this->chainColors.Clear();
     this->chainColors.AssertCapacity(this->aminoAcidCount * 3);
@@ -2120,16 +2126,29 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 			// left side of amino-acid tile
 			if (aaCur < 1.0f) {
 				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
-				this->aminoacidSeparatorVertices.Add(-(this->chainVertices[aa * 2 + 1] - 2.5f));
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1]));
+                
 				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
-				this->aminoacidSeparatorVertices.Add(-(this->chainVertices[aa * 2 + 1] - 1.5f));
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] - this->secStructRows));
 
+				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]+1.0f);
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] - this->secStructRows));
+                
+				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]+1.0f);
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1]);                
 				// if next one is certain draw separator on right side too
 				if (aaFol == 1.0f) {
-					this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
-					this->aminoacidSeparatorVertices.Add(-(this->chainVertices[aa * 2 + 1] - 2.5f));
-					this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
-					this->aminoacidSeparatorVertices.Add(-(this->chainVertices[aa * 2 + 1] - 1.5f));
+				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1]));
+                
+				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] - this->secStructRows));
+
+				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]+1.0f);
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] - this->secStructRows));
+                
+				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]+1.0f);
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1]);   
 				}
 			}
 		}
