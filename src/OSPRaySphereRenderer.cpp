@@ -257,7 +257,7 @@ bool ospray::OSPRaySphereRenderer::create() {
     }
 
     this->initOSPRay();
-    this->setupTextureScreen(vaScreen, vbo, tex);
+    this->setupTextureScreen();
     this->setupOSPRay(renderer, camera, world, spheres, "spheres", "scivis");
 
     return true;
@@ -274,6 +274,7 @@ void ospray::OSPRaySphereRenderer::release() {
     ospRelease(light);
     ospRelease(lightArray);
     ospRelease(pln);
+    releaseTextureScreen();
     core::moldyn::AbstractSimpleSphereRenderer::release();
 }
 
@@ -518,7 +519,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
                 break;
             }
 
-            ospCommit(renderer);
+            //ospCommit(renderer);
 
             // create custom ospray light
             switch (this->lightType.Param<core::param::EnumParam>()->Value()) {
@@ -592,7 +593,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
             //writePPM("ospframe.ppm", imgSize, fb);
 
-            this->renderTexture2D(osprayShader, tex, fb, vaScreen, imgSize.x, imgSize.y);
+            this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
 
             // clear stuff
             ospUnmapFrameBuffer(fb, framebuffer);
@@ -607,7 +608,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     } else {
             ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
             fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-            this->renderTexture2D(osprayShader, tex, fb, vaScreen, imgSize.x, imgSize.y);
+            this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
             ospUnmapFrameBuffer(fb, framebuffer);
     }
 

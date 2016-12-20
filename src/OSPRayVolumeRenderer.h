@@ -15,6 +15,7 @@
 #include "OSPRayRenderer.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
@@ -102,14 +103,42 @@ namespace ospray {
         */
         virtual bool GetExtents(megamol::core::Call& call);
 
+        bool InterfaceIsDirty();
+
 
         vislib::graphics::gl::GLSLShader osprayShader;
 
+        // API VARS
+        core::param::ParamSlot rd_type;
+        core::param::ParamSlot extraSamles;
+
+        // renderer type
+        enum rdenum {
+            SCIVIS,
+            PATHTRACER
+        };
+
+
+        // rendering conditions
+        bool data_has_changed;
+        bool cam_has_changed;
+        SIZE_T m_datahash;
+        vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
+        int extra_samples;
+        float time;
+        bool renderer_changed;
+
         // OSPRay objects
         OSPRenderer renderer;
+        OSPFrameBuffer framebuffer;
         OSPCamera camera;
         OSPModel world;
         OSPVolume volume;
+        osp::vec2i imgSize;
+        OSPData voxels;
+
+        // OSPRay texture
+        const uint32_t * fb;
 
         /** caller slot */
         megamol::core::CallerSlot volDataCallerSlot;

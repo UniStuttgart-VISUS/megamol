@@ -35,7 +35,7 @@ namespace ospray {
         * @param image/window width
         * @param image/window heigth
         */
-        void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, GLuint &texture, const uint32_t * fb, GLuint &vertexarray, int &width, int &height);
+        void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, int &width, int &height);
 
         /**
         * helper function for setting up the OSPRay screen
@@ -43,7 +43,12 @@ namespace ospray {
         * @param GL vertex buffer object
         * @param GL texture object
         */
-        void setupTextureScreen(GLuint &vertexarray, GLuint &vbo, GLuint &texture);
+        void setupTextureScreen();
+
+        /**
+        * Releases the OGL content created by setupTextureScreen
+        */
+        void releaseTextureScreen();
 
         /**
         * helper function for initializing OSPRay

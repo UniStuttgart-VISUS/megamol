@@ -12,6 +12,7 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 #include "OSPRaySphereRenderer.h"
+#include "OSPRayVolumeRenderer.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -41,7 +42,7 @@ namespace {
             // register modules here:
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereRenderer>();
-            
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVolumeRenderer>();
 
             // register calls here:
 

@@ -14,30 +14,30 @@
 
 using namespace megamol::ospray;
 
-void OSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &shader, GLuint &texture, const uint32_t * fb, GLuint &vertexarray, int &width, int &height) {
+void OSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, int &width, int &height) {
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, this->tex);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
 
     glUniform1i(shader.ParameterLocation("tex"), 0);
 
-    glBindVertexArray(vertexarray);
+    glBindVertexArray(this->vaScreen);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void OSPRayRenderer::setupTextureScreen(GLuint &vertexarray, GLuint &vbo, GLuint &texture) {
+void OSPRayRenderer::setupTextureScreen() {
 
     // setup vertexarray
     float screenVertices[] = { 0.0f,0.0f, 1.0f,0.0f, 0.0f,1.0f, 1.0f,1.0f };
 
-    glGenVertexArrays(1, &vertexarray);
-    glGenBuffers(1, &vbo);
+    glGenVertexArrays(1, &this->vaScreen);
+    glGenBuffers(1, &this->vbo);
 
-    glBindVertexArray(vertexarray);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindVertexArray(this->vaScreen);
+    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
     glEnableVertexAttribArray(0);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 2, screenVertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -46,8 +46,8 @@ void OSPRayRenderer::setupTextureScreen(GLuint &vertexarray, GLuint &vbo, GLuint
 
     // setup texture
     glEnable(GL_TEXTURE_2D);
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glGenTextures(1, &this->tex);
+    glBindTexture(GL_TEXTURE_2D, this->tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -55,6 +55,12 @@ void OSPRayRenderer::setupTextureScreen(GLuint &vertexarray, GLuint &vbo, GLuint
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
+}
+
+void OSPRayRenderer::releaseTextureScreen() {
+    glDeleteTextures(1, &this->tex);
+    glDeleteBuffers(1, &this->vbo);
+    glDeleteVertexArrays(1, &vaScreen);
 }
 
 void OSPRayRenderer::initOSPRay() {

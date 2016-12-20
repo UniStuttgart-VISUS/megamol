@@ -83,6 +83,8 @@ namespace ospray {
     private:
         /** The texture shader */
         vislib::graphics::gl::GLSLShader osprayShader;
+
+        // API VARS
         core::param::ParamSlot AOweight;
         core::param::ParamSlot AOsamples;
         core::param::ParamSlot AOdistance;
