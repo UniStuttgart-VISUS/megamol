@@ -21,7 +21,7 @@
 namespace megamol {
 namespace ospray {
 
-    class OSPRayVolumeRenderer : public core::view::Renderer3DModule, OSPRayRenderer {
+    class OSPRayVolumeRenderer : public OSPRayRenderer {
     public:
 
         /**
@@ -108,15 +108,19 @@ namespace ospray {
 
         vislib::graphics::gl::GLSLShader osprayShader;
 
-        // API VARS
-        core::param::ParamSlot rd_type;
-        core::param::ParamSlot extraSamles;
+        // API VARIABLES
+        core::param::ParamSlot showVolume;
+        core::param::ParamSlot showIsosurface;
+        core::param::ParamSlot showSlice;
 
-        // renderer type
-        enum rdenum {
-            SCIVIS,
-            PATHTRACER
-        };
+        core::param::ParamSlot sliceNormal;
+        core::param::ParamSlot sliceDist;
+
+        core::param::ParamSlot clippingBoxActive;
+        core::param::ParamSlot clippingBoxLower;
+        core::param::ParamSlot clippingBoxUpper;
+
+        
 
 
         // rendering conditions
@@ -136,24 +140,22 @@ namespace ospray {
         OSPVolume volume;
         osp::vec2i imgSize;
         OSPData voxels;
+        OSPGeometry slice;
+        OSPGeometry isosurface;
 
         // OSPRay texture
         const uint32_t * fb;
 
         /** caller slot */
-        megamol::core::CallerSlot volDataCallerSlot;
+        core::CallerSlot volDataCallerSlot;
         /** caller slot for additional renderer */
-        megamol::core::CallerSlot secRenCallerSlot;
+        core::CallerSlot secRenCallerSlot;
+        /** The call for Transfer function */
+        core::CallerSlot TFSlot;
 
-        // camera information
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+
         // scaling factor for the scene
-        float scale;
-        // translation of the scene
-        vislib::math::Vector<float, 3> translation;
-        vislib::math::Vector<float, 3> bboxCenter;
-        vislib::math::Cuboid<float> unionBBox;
-
+        float scaling;
         };
     
 } // end namespace ospray

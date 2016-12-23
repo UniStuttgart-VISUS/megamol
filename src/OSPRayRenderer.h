@@ -13,14 +13,18 @@
 #include <vector>
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "ospray/ospray.h"
+#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
 namespace ospray {
 
-    class OSPRayRenderer {
+    class OSPRayRenderer : public core::view::Renderer3DModule {
     protected:
-    
+        // Ctor
+        OSPRayRenderer(void);
+
         /**
         * initializes OSPRay
         */
@@ -88,8 +92,72 @@ namespace ospray {
         */
         OSPTexture2D TextureFromFile(vislib::TString fileName);
 
+        // TODO: Documentation
+        void ospray::OSPRayRenderer::OSPRayLights(OSPRenderer &renderer, core::Call& call);
+        bool AbstractIsDirty();
+        void AbstractResetDirty();
+        void RendererSettings(OSPRenderer &renderer);
+
         // vertex array, vertex buffer object, texture
         GLuint vaScreen, vbo, tex;
+
+        // API Variables
+        core::param::ParamSlot AOweight;
+        core::param::ParamSlot AOsamples;
+        core::param::ParamSlot AOdistance;
+        core::param::ParamSlot extraSamles;
+
+        core::param::ParamSlot lightIntensity;
+        core::param::ParamSlot lightType;
+        core::param::ParamSlot lightColor;
+        core::param::ParamSlot shadows;
+
+        core::param::ParamSlot dl_angularDiameter;
+        core::param::ParamSlot dl_direction;
+        core::param::ParamSlot dl_eye_direction;
+
+        core::param::ParamSlot pl_position;
+        core::param::ParamSlot pl_radius;
+
+        core::param::ParamSlot sl_position;
+        core::param::ParamSlot sl_direction;
+        core::param::ParamSlot sl_openingAngle;
+        core::param::ParamSlot sl_penumbraAngle;
+        core::param::ParamSlot sl_radius;
+
+        core::param::ParamSlot ql_position;
+        core::param::ParamSlot ql_edgeOne;
+        core::param::ParamSlot ql_edgeTwo;
+
+        core::param::ParamSlot hdri_up;
+        core::param::ParamSlot hdri_direction;
+        core::param::ParamSlot hdri_evnfile;
+
+        core::param::ParamSlot rd_epsilon;
+        core::param::ParamSlot rd_spp;
+        core::param::ParamSlot rd_maxRecursion;
+        core::param::ParamSlot rd_type;
+        core::param::ParamSlot rd_ptBackground;
+
+        enum lightenum {
+            NONE,
+            DISTANTLIGHT,
+            POINTLIGHT,
+            SPOTLIGHT,
+            QUADLIGHT,
+            AMBIENTLIGHT,
+            HDRILIGHT
+        };
+
+        // renderer type
+        enum rdenum {
+            SCIVIS,
+            PATHTRACER
+        };
+
+        // light
+        OSPLight light;
+        OSPData lightArray;
     };
 
 } // end namespace ospray

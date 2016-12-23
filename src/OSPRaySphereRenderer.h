@@ -13,12 +13,15 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "OSPRayRenderer.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 
 
 namespace megamol {
 namespace ospray {
 
-    class OSPRaySphereRenderer : public core::moldyn::AbstractSimpleSphereRenderer, OSPRayRenderer {
+    class OSPRaySphereRenderer : public OSPRayRenderer {
     public:
 
         /**
@@ -81,47 +84,55 @@ namespace ospray {
 
 
     private:
+        /**
+        * The get capabilities callback. The module should set the members
+        * of 'call' to tell the caller its capabilities.
+        *
+        * @param call The calling call.
+        *
+        * @return The return value of the function.
+        */
+        virtual bool GetCapabilities(megamol::core::Call& call);
+
+        /**
+        * The get extents callback. The module should set the members of
+        * 'call' to tell the caller the extents of its data (bounding boxes
+        * and times).
+        *
+        * @param call The calling call.
+        *
+        * @return The return value of the function.
+        */
+        virtual bool GetExtents(megamol::core::Call& call);
+
+        /** The call for data */
+        core::CallerSlot getDataSlot;
+
+        /** The call for clipping plane */
+        core::CallerSlot getClipPlaneSlot;
+
+        /** The call for Transfer function */
+        core::CallerSlot getTFSlot;
+
+        /**
+        * TODO: Document
+        */
+        core::moldyn::MultiParticleDataCall *getData(unsigned int t, float& outScaling);
+
+        /**
+        * TODO: Document
+        *
+        * @param clipDat points to four floats
+        * @param clipCol points to four floats
+        */
+        void getClipData(float *clipDat, float *clipCol);
+
+
+
         /** The texture shader */
         vislib::graphics::gl::GLSLShader osprayShader;
 
         // API VARS
-        core::param::ParamSlot AOweight;
-        core::param::ParamSlot AOsamples;
-        core::param::ParamSlot AOdistance;
-        core::param::ParamSlot extraSamles;
-
-        core::param::ParamSlot lightIntensity;
-        core::param::ParamSlot lightType;
-        core::param::ParamSlot lightColor;
-        core::param::ParamSlot shadows;
-
-        core::param::ParamSlot dl_angularDiameter;
-        core::param::ParamSlot dl_direction;
-        core::param::ParamSlot dl_eye_direction;
-
-        core::param::ParamSlot pl_position;
-        core::param::ParamSlot pl_radius;
-
-        core::param::ParamSlot sl_position;
-        core::param::ParamSlot sl_direction;
-        core::param::ParamSlot sl_openingAngle;
-        core::param::ParamSlot sl_penumbraAngle;
-        core::param::ParamSlot sl_radius;
-
-        core::param::ParamSlot ql_position;
-        core::param::ParamSlot ql_edgeOne;
-        core::param::ParamSlot ql_edgeTwo;
-
-        core::param::ParamSlot hdri_up;
-        core::param::ParamSlot hdri_direction;
-        core::param::ParamSlot hdri_evnfile;
-
-        core::param::ParamSlot rd_epsilon;
-        core::param::ParamSlot rd_spp;
-        core::param::ParamSlot rd_maxRecursion;
-        core::param::ParamSlot rd_type;
-        core::param::ParamSlot rd_ptBackground;
-
         core::param::ParamSlot mat_Kd;
         core::param::ParamSlot mat_Ks;
         core::param::ParamSlot mat_Ns;
@@ -158,22 +169,10 @@ namespace ospray {
         // OSPRay texture
         const uint32_t * fb;
 
-        // light
-        OSPLight light;
-        OSPData lightArray;
-        enum lightenum { NONE,
-            DISTANTLIGHT,
-            POINTLIGHT,
-            SPOTLIGHT,
-            QUADLIGHT,
-            AMBIENTLIGHT,
-            HDRILIGHT };
 
-        // renderer type
-        enum rdenum {
-            SCIVIS,
-            PATHTRACER
-        };
+
+
+
         bool renderer_changed;
 
         // material
