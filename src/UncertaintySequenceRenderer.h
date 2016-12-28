@@ -238,7 +238,9 @@ namespace megamol {
             UNCERTAIN_STRUCT_STAT_MORPH = 2,             
             UNCERTAIN_STRUCT_DYN_TIME   = 3,  
             UNCERTAIN_STRUCT_DYN_SPACE  = 4,  
-            UNCERTAIN_STRUCT_DYN_EQUAL  = 5,                       
+            UNCERTAIN_STRUCT_DYN_EQUAL  = 5,   
+			UNCERTAIN_GLYPH             = 6,
+			UNCERTAIN_GLYPH_WITH_AXES   = 7,
         };          
         /**
          * Color interpolation methods available for: UNCERTAIN_STRUCT_STAT_MORPH
@@ -416,6 +418,9 @@ namespace megamol {
         vislib::Array<unsigned int> bsIndices;
         // the color array for the binding site tiles
         vislib::Array<vislib::math::Vector<float, 3> > bsColors;
+
+		// axes for uncertainty glyph
+		vislib::Array<vislib::math::Vector<float, 2> > glyphAxis;
 
         // The secondary structure assignment methods and their secondary structure type assignments
         vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
