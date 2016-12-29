@@ -25,6 +25,7 @@
 
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 
 #ifdef USE_SIMPLE_FONT
 #include "vislib/graphics/gl/SimpleFont.h"
@@ -69,7 +70,7 @@ namespace megamol {
          * @return 'true' if the module is available, 'false' otherwise.
          */
         static bool IsAvailable(void) {
-            return true;
+			return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() && ogl_IsVersionGEQ(1, 2);;
         }
 
         /** ctor */
@@ -306,6 +307,12 @@ namespace megamol {
          */  		
 		vislib::math::Vector<float, 4> HuePreservingColorBlending(vislib::math::Vector<float, 4> c1, vislib::math::Vector<float, 4> c2);
 		
+		/**
+		* ... .
+		*
+		* @return The ... .
+		*/
+		bool LoadShader(void);
 		
         /**********************************************************************
          * variables
@@ -343,7 +350,7 @@ namespace megamol {
         ////////////////////////////////////////////////        
         
         // parameter to show/hide disagreements in secondary structure assignment
-        megamol::core::param::ParamSlot toggleChangeParam;
+		megamol::core::param::ParamSlot toggleDifferenceParam;
         // parameter to show/hide secondary structure uncertainty visualization
         megamol::core::param::ParamSlot toggleUncertaintyParam;
         // parameter to show/hide separator line for amino-acids in uncertainty visualization 
@@ -370,6 +377,9 @@ namespace megamol {
         float                          currentUncertainGardientInterval;
         bool                           showSeparatorLine;
         
+		// parameter to reload shader
+		megamol::core::param::ParamSlot reloadShaderParam;
+
         // the number of secondary structure rows which can be shown/hidden
         unsigned int        secStructRows;
         // the number of residue columns
@@ -400,8 +410,8 @@ namespace megamol {
         
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;
-		// the array of the secondary structure type change measure for each amino-acid tile
-		vislib::Array<float> changeMeasure;
+		// the array of the secondary structure type difference for each amino-acid tile
+		vislib::Array<float> difference;
         // the vertex buffer array secondary structure
         vislib::Array<vislib::Array<vislib::math::Vector<float, 2> > >secStructVertices;
 		// the vertex buffer array for the amino-acid separator lines
@@ -466,6 +476,12 @@ namespace megamol {
 
         // timer for animation of geometry
         clock_t animTimer;
+
+		// shader for per fragment color interpolation
+		vislib::graphics::gl::GLSLShader                       shader;
+		vislib::SmartPtr<vislib::graphics::gl::ShaderSource>   vertex;
+		vislib::SmartPtr<vislib::graphics::gl::ShaderSource>   fragment;
+
     };
 
 	} /* end namespace protein_uncertainty */

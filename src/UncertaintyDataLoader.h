@@ -173,8 +173,8 @@ namespace megamol {
             *   To get the uncertainty value: use secStructure given here as index in secStructUncertainty */
             vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedSecStructUncertainty;
             
-			/** The change measure of secondary structure assignment for each amino-acid */
-			vislib::Array<float> changeMeasure;
+			/** The difference of secondary structure assignment for each amino-acid */
+			vislib::Array<float> difference;
 
             /** The pdb id */
             vislib::StringA pdbID;

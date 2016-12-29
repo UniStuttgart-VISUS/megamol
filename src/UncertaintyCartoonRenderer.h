@@ -248,7 +248,7 @@ namespace megamol {
         std::vector<GLsync> fences;           // (?)
 		GLuint              theSingleBuffer;
         unsigned int        currBuf;
-        GLuint              colIdxAttribLoc;
+        GLuint              colIdxAttribLoc;  // unused (?)
         GLsizeiptr          bufSize;
 		int                 numBuffers;
 		void               *theSingleMappedMem;

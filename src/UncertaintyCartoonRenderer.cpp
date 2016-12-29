@@ -744,6 +744,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			bool firstset = false;
 
 			// is the first residue an aminoacid?
+			// if first residue is no aminoacid the whole secondary structure is skipped!
 			if (mol->Residues()[chain.FirstResidueIndex()]->Identifier() != MolecularDataCall::Residue::AMINOACID) {
 				continue;
 			}
@@ -774,6 +775,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					calpha.pos[2] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 2];
 					calpha.pos[3] = 1.0f;
 
+					// direction is vector from C_alpha atom to O(xygen) atom
 					calpha.dir[0] = mol->AtomPositions()[3 * acid->OIndex()] - calpha.pos[0];
 					calpha.dir[1] = mol->AtomPositions()[3 * acid->OIndex() + 1] - calpha.pos[1];
 					calpha.dir[2] = mol->AtomPositions()[3 * acid->OIndex() + 2] - calpha.pos[2];
@@ -784,9 +786,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 					// TODO: do this on GPU?
 					// orientation check for the direction
-					if (mainChain.size() != 0)
+					if (this->mainChain.size() != 0)
 					{
-						CAlpha before = mainChain[mainChain.size() - 1];
+						CAlpha before = this->mainChain[this->mainChain.size() - 1];
 						float dotProd = calpha.dir[0] * before.dir[0] + calpha.dir[1] * before.dir[1] + calpha.dir[2] * before.dir[2];
 
 						if (dotProd < 0) // flip direction if the orientation is wrong
@@ -797,14 +799,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 						}
 					}
 
-					mainChain.push_back(calpha);
+					this->mainChain.push_back(calpha);
 
 					lastCalpha = calpha;
 
 					// add the first atom 3 times
 					if (!firstset) {
-						mainChain.push_back(calpha);
-						mainChain.push_back(calpha);
+						this->mainChain.push_back(calpha);
+						this->mainChain.push_back(calpha);
 						molSizes[molIdx] += 2;
 						firstset = true;
 					}
@@ -812,16 +814,16 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			}
 
 			// add the last atom 3 times
-			mainChain.push_back(lastCalpha);
-			mainChain.push_back(lastCalpha);
+			this->mainChain.push_back(lastCalpha);
+			this->mainChain.push_back(lastCalpha);
 			molSizes[molIdx] += 2;
 		}
 	
 // DEBUG
 #ifdef FIRSTFRAME_CHECK
 		if (this->firstFrame) {
-			for (int i = 0; i < mainChain.size(); i++) {
-				std::cout << mainChain[i].type << std::endl;
+			for (int i = 0; i < this->mainChain.size(); i++) {
+				std::cout << this->mainChain[i].type << std::endl;
 			}
 			this->firstFrame = false;
 		}
@@ -833,31 +835,44 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		//currBuf = 0;
 
 		this->tubeShader.Enable();
-		glColor4f(1.0f / mainChain.size(), 0.75f, 0.25f, 1.0f);
-		colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
+		glColor4f(1.0f / this->mainChain.size(), 0.75f, 0.25f, 1.0f);
+		colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx"); // NOT USED in shader (?)
+
+		// vertex
 		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+
+		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+
 		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-		glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
 		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+		glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+		
 		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
 		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
+
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
-		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
-		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
-		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
-		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), this->colorInterpolationParam.Param<param::BoolParam>()->Value());
+
+		// only vertex shader
 		float minC = 0.0f, maxC = 0.0f;
 		unsigned int colTabSize = 0;
 		glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-		//auto v = this->materialParam.Param<param::Vector4fParam>()->Value();
+		
+		// only tesselation evaluation shader
+		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
+		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), this->colorInterpolationParam.Param<param::BoolParam>()->Value());
+
+		// only fragment shader
+		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+		glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
-		glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
+		glUniform4f(this->tubeShader.ParameterLocation("specularColor"), lightSpecular[0], lightSpecular[1], lightSpecular[2], lightSpecular[3]);
 
 		UINT64 numVerts;
 		numVerts = this->bufSize / vertStride;
@@ -866,7 +881,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		for (int i = 0; i < (int)molSizes.size(); i++) {
 			UINT64 vertCounter = 0;
 			while (vertCounter < molSizes[i]) {
-				const char *currVert = (const char *)(&mainChain[(unsigned int)vertCounter + (unsigned int)stride]);
+				const char *currVert = (const char *)(&this->mainChain[(unsigned int)vertCounter + (unsigned int)stride]);
 				void *mem = static_cast<char*>(this->theSingleMappedMem) + bufSize * currBuf;
 				const char *whence = currVert;
 				UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);
