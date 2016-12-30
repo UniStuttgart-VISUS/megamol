@@ -49,7 +49,7 @@
 #include <iostream> // DEBUG
 
 
-#define M_PI 3.1415926535897932384626433832795
+#define U_PI 3.1415926535897932384626433832795
 
 
 using namespace megamol;
@@ -313,7 +313,7 @@ bool UncertaintySequenceRenderer::create() {
             case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
             case (UncertaintyDataCall::secStructure::G_310_HELIX) :
             case (UncertaintyDataCall::secStructure::I_PI_HELIX) :
-                 offset = flip*(height / 2.0f) + sin(dS*2.0f*(float)M_PI)*0.25f;
+                 offset = flip*(height / 2.0f) + sin(dS*2.0f*(float)U_PI)*0.25f;
                 break;
             case (UncertaintyDataCall::secStructure::B_BRIDGE) :
                 offset = ((dS > 1.0f/7.0f) ? (flip*(0.5f-(height/2.0f))*(7.0f-dS*7.0f)/6.0f + flip*(height/2.0f)) : (flip*(heightStrand/2.0f))); 
@@ -342,7 +342,7 @@ bool UncertaintySequenceRenderer::create() {
 
 	for (unsigned int i = 0; i < structCount; i++) {
 
-		angle = 2.0f*(float)M_PI / static_cast<float>(structCount)* static_cast<float>(i);
+		angle = 2.0f*(float)U_PI / static_cast<float>(structCount)* static_cast<float>(i);
 
 		if (i == 0) {
 			tmpVec = initVec;
@@ -1307,9 +1307,12 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
 					glUniformMatrix4fv(this->shader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
 					glUniform2fv(this->shader.ParameterLocation("worldPos"), 1, (GLfloat *)posOffset.PeekComponents());
-					glUniform4fv(this->shader.ParameterLocation("structCol"), structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
+					glUniform4fv(this->shader.ParameterLocation("structColRGB"), structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
+					glUniform4fv(this->shader.ParameterLocation("structColHSL"), structCount, (GLfloat *)this->secStructColorHSL.PeekElements());
 					glUniform1iv(this->shader.ParameterLocation("sortedStruct"), structCount, (GLint *)sortedStructLR.PeekComponents());
 					glUniform1fv(this->shader.ParameterLocation("structUnc"), structCount, (GLfloat *)this->secUncertainty[i].PeekComponents());
+					glUniform1f(this->shader.ParameterLocation("gradientInt"), this->currentUncertainGardientInterval);
+					glUniform1i(this->shader.ParameterLocation("colorInterpol"), (int)this->currentUncertainColorInterpol);
 					
 					glBegin(GL_QUADS);
 
@@ -1322,7 +1325,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
 					this->shader.Disable();
 
-
+					// OLD STUFF
 					/*
                     // get the number off structures with uncertainty greater 0 for color interpolation
                     diffStruct = 0;
@@ -1719,7 +1722,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                 }
                 else if((this->currentUncertainStructGeometry == UNCERTAIN_STRUCT_STAT_MORPH) && 
 					    (!((this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) && ((this->currentUncertainBlockChartOrientation == UNCERTAIN_BC_HORIZ) && 
-						                                                                       (this->currentUncertainBlockChartColor == UNCERTAIN_BC_COLORED))))) {
+						                                                                      (this->currentUncertainBlockChartColor == UNCERTAIN_BC_COLORED))))) {
+					// OLD STUFF
+					
                     // get the number off structures with uncertainty greater 0 for color interpolation
                     diffStruct = 0;
 					for (unsigned int k = 0; k < structCount; k++) {
@@ -1733,11 +1738,43 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     start  = 0.0f;
                     end    = 0.0f;
                     middle = 0.0f;
-                    
+					
+					// END OLD STUFF
+
+					// NEW STUFF
+					/*
+					if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
+
+						// matricess
+						GLfloat modelViewMatrix_column[16];
+						glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+						vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+						GLfloat projMatrix_column[16];
+						glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+						vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+						// Compute modelviewprojection matrix
+						vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
+
+						this->shader.Enable();
+
+						glUniformMatrix4fv(this->shader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+						glUniform2fv(this->shader.ParameterLocation("worldPos"), 1, (GLfloat *)posOffset.PeekComponents());
+						glUniform4fv(this->shader.ParameterLocation("structColRGB"), structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
+						glUniform4fv(this->shader.ParameterLocation("structColHSL"), structCount, (GLfloat *)this->secStructColorHSL.PeekElements());
+						glUniform1iv(this->shader.ParameterLocation("sortedStruct"), structCount, (GLint *)sortedStructLR.PeekComponents());
+						glUniform1fv(this->shader.ParameterLocation("structUnc"), structCount, (GLfloat *)this->secUncertainty[i].PeekComponents());
+						glUniform1f(this->shader.ParameterLocation("gradientInt"), this->currentUncertainGardientInterval);
+						glUniform1i(this->shader.ParameterLocation("colorInterpol"), (int)this->currentUncertainColorInterpol);
+					}
+					*/
+					// END NEW STUFF
+
                     posOffset.SetY(posOffset.Y() - 0.5f);
                     glBegin(GL_TRIANGLE_STRIP);
                     for (unsigned int j = 0; j < this->secStructVertices[sMax].Count(); j++) {
-                                                  
+                                
+						// OLD STUFF
+						
 						if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
                             
                             fTemp = (static_cast<float>(j) / static_cast<float>(this->secStructVertices[sMax].Count()));
@@ -1831,6 +1868,9 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                             glColor3fv(colTemp.PeekComponents());                    
                         }
 
+						// END OLD STUFF
+						
+
                         posTemp.SetX(this->secStructVertices[sMax][j].X());
                         posTemp.SetY(0.0f);
 
@@ -1849,7 +1889,15 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
 
                         glVertex2f(posOffset.X() + posTemp.X(), -(posOffset.Y() + posTemp.Y()));
                     }
-                    glEnd();                     
+                    glEnd(); 
+
+					// NEW STUFF
+					/*
+					if (this->currentUncertainStructColor == UNCERTAIN_STRUCT_COLORED) {
+						this->shader.Disable();
+					}
+					*/
+					// END NEW STUFF
                 }
             }
         }

@@ -250,7 +250,7 @@ namespace megamol {
         enum uncertainColorInterpol {
             UNCERTAIN_COLOR_RGB     = 0,              
             UNCERTAIN_COLOR_HSL     = 1,  
-            UNCERTAIN_COLOR_HSL_HP = 2             
+            UNCERTAIN_COLOR_HSL_HP  = 2             
         };   
                         
         /**

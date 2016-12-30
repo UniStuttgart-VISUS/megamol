@@ -160,7 +160,7 @@
     uniform int minOuter = 6;                              // unused - just as INFO ?
     uniform int maxOuter = 30;                             // unused - just as INFO ?
 
-    uniform int instanceOffset = 0;
+    uniform int instanceOffset = 0;                        // unused
 
     struct CAlpha
     {
@@ -178,15 +178,17 @@
     //////////
     void main() {
         
-        int atomPos                         = gl_PrimitiveID + (gl_InvocationID % 2);
-        gl_out[gl_InvocationID].gl_Position = atoms[atomPos].pos;
+        int atomPos  = gl_PrimitiveID + (gl_InvocationID % 2);     // 4 invocations because of "layout(vertices = 4) out".
+                                                                   // output vertices with index 0 and 2 belong to atomPos+0 and 
+                                                                   // vertices with index 1 and 3 belong to atomPos+1 (?)
+        gl_out[gl_InvocationID].gl_Position = atoms[atomPos].pos; 
         id[gl_InvocationID]                 = atomPos;
     
-        vec4 cp = camPos[0];
+        vec4 cp = camPos[0];                                       // unused ? 
     
         if(gl_InvocationID == 0)
         {
-            // TODO changes tesslevels
+            // TODO change tesslevels
             gl_TessLevelOuter[0] = float(uOuter0);
             gl_TessLevelOuter[1] = float(uOuter1);
             gl_TessLevelOuter[2] = float(uOuter0);
@@ -212,7 +214,8 @@
     /////////////
     // DEFINES //
     /////////////
-    #define M_PI 3.1415926535897932384626433832795
+    #define M_PI         3.1415926535897932384626433832795
+    #define STRUCT_COUNT 9                                     // must be equal to 'UncertaintyDataCall::secStructure::NOE'
 
     ////////////////
     // EXTENSIONS //
@@ -246,6 +249,8 @@
     uniform bool interpolateColors = false;
 
     uniform float pipeWidth = 1.0;
+    
+    uniform vec4[STRUCT_COUNT]  structColRGB;                  // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
 
     struct CAlpha
     {
@@ -268,7 +273,7 @@
     //////////
     void main() {
     
-        CAlpha alph0 = atoms[id[0] - 1];
+        CAlpha alph0 = atoms[id[0] - 1];                   // (id[0] - 1) doesn't exist for first vertex call ?
         CAlpha alph1 = atoms[id[0]];
         CAlpha alph2 = atoms[id[1]];
         CAlpha alph3 = atoms[id[1] + 1];
@@ -280,6 +285,8 @@
     
         vec4 colors[4];
     
+        // OLD STUFF
+        
         for(int i = 0; i < 4; i++)
         {
             int mytype = atoms[id[0] + i - 1].type;
@@ -301,6 +308,18 @@
                 colors[i] = vec4(0.7, 0.7, 0.7, 1);
             }
         }
+        
+        // END OLD STUFF
+    
+        // NEW STUFF
+        /*
+
+
+
+        
+        */
+        // END NEW STUFF
+    
     
         float u = gl_TessCoord.x;
         float v = gl_TessCoord.y;
@@ -388,6 +407,7 @@
                 color = vec4(1.0, 1.0, 1.0, 1.0);
         }*/
 
+        // DEBUG - draw only backbone 
         if(true) // (mytype != 1 && mytype != 2)                     // backbone
         {
             // rotate negative dir vector around tangent vector
@@ -531,7 +551,7 @@
     //////////
     void main() {
     
-      for(int i = 0; i < gl_in.length(); i++) {
+      for(int i = 0; i < gl_in.length(); i++) {            // length = 4 ?
       
         gl_Position  = MVP * gl_in[i].gl_Position;
         mycol        = color[i];

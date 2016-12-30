@@ -292,7 +292,7 @@ namespace megamol {
 		// The values of the secondary structure uncertainty for each amino-acid 
 		vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
 		// The sorted structure types of the uncertainty values
-		vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
+		vislib::Array<vislib::math::Vector<unsigned int, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
 
 		// secondary structure type colors as RGB(A)
 		vislib::Array<vislib::math::Vector<float, 4> > secStructColorRGB;
