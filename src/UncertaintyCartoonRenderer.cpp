@@ -13,7 +13,7 @@
 //
 // TODO:
 //
-//    - ...
+//    - 
 // 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,6 +32,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
@@ -139,14 +140,16 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		resSelectionCallerSlot( "getResSelection", "Connects the cartoon rendering with residue selection storage."),
         scalingParam(           "01 Scaling", "Scaling factor for particle radii."),
         sphereParam(            "02 Spheres", "Render atoms as spheres."),
-        lineParam(              "03 Lines", "Render backbone as GL_LINE."),
-        backboneParam(          "04 Backbone", "Render backbone as tubes."),
-        backboneWidthParam(     "05 Backbone width", "The width of the backbone."),
-        materialParam(          "06 Material", "Ambient, diffuse, specular components + exponent."),
-        lineDebugParam(         "07 Wireframe", "Render in wireframe mode."),
-        buttonParam(            "08 Reload shaders", "Reload the shaders."),
-        colorInterpolationParam("09 Color interpolation", "Should the colors be interpolated?"),
-		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL),
+		backboneParam(          "03 Backbone", "Render backbone as tubes."), 
+        backboneWidthParam(     "04 Backbone width", "The width of the backbone."),
+		tessLevelParam(         "05 Tess. Level", "The tesselation level."),
+		lineDebugParam(         "06 Wireframe", "Render in wireframe mode."),
+		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
+        materialParam(          "08 Material", "Ambient, diffuse, specular components + exponent."),
+		coloredChainParam(      "09 Colored chains", "Colored chains."),
+        colorInterpolationParam("10 Color interpolation", "Should the colors be interpolated?"),
+		buttonParam(            "11 Reload shaders", "Reload the shaders."),
+		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), currentTessLevel(16), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
         singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) 
@@ -165,11 +168,14 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->MakeSlotAvailable(&this->resSelectionCallerSlot);
 
 
+	this->onlyTubesParam << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->onlyTubesParam);
+
+	this->coloredChainParam << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->coloredChainParam);
+
 	this->sphereParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->sphereParam);
-
-	this->lineParam << new core::param::BoolParam(false);
-	this->MakeSlotAvailable(&this->lineParam);
 
 	this->backboneParam << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->backboneParam);
@@ -185,16 +191,17 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 
 	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
 	this->MakeSlotAvailable(&this->buttonParam);
+	                                          // init min max
+	this->tessLevelParam << new core::param::IntParam(16, 6, 30);
+	this->MakeSlotAvailable(&this->tessLevelParam);
 
 	this->colorInterpolationParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->colorInterpolationParam);
 
-	/*float components[4] = { 0.2f, 0.8f, 0.4f, 10.0f };
-	vislib::math::Vector<float, 4U> myvec(components);
-	this->materialParam << new core::param::Vector4fParam(myvec);
-	this->MakeSlotAvailable(&this->materialParam);*/
+	vislib::math::Vector<float, 4> tmpVec(0.2f, 0.8f, 0.4f, 10.0f);
+	this->materialParam << new core::param::Vector4fParam(tmpVec);
+	this->MakeSlotAvailable(&this->materialParam);
 
-	
 	this->fences.resize(this->numBuffers);
 
 #ifdef FIRSTFRAME_CHECK
@@ -209,6 +216,76 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
  */
 UncertaintyCartoonRenderer::~UncertaintyCartoonRenderer(void) {
     this->Release(); // DON'T change !
+}
+
+
+/*
+* UncertaintyCartoonRenderer::loadTubeShader
+*/
+bool UncertaintyCartoonRenderer::loadTubeShader(void) {
+
+	if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
+		return false;
+	if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
+		return false;
+
+	instance()->ShaderSourceFactory().LoadBTF("uncertaintycartoontessellation", true);
+
+	// load tube shader
+	this->tubeVert = new ShaderSource();
+	this->tubeTessCont = new ShaderSource();
+	this->tubeTessEval = new ShaderSource();
+	this->tubeGeom = new ShaderSource();
+	this->tubeFrag = new ShaderSource();
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::vertex", *this->tubeVert)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesscontrol", *this->tubeTessCont)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesseval", *this->tubeTessEval)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::geometry", *this->tubeGeom)) {
+		return false;
+	}
+	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::fragment", *this->tubeFrag)) {
+		return false;
+	}
+
+	try {
+		// compile the shader
+		if (!this->tubeShader.Compile(this->tubeVert->Code(), this->tubeVert->Count(),
+			this->tubeTessCont->Code(), this->tubeTessCont->Count(),
+			this->tubeTessEval->Code(), this->tubeTessEval->Count(),
+			this->tubeGeom->Code(), this->tubeGeom->Count(),
+			this->tubeFrag->Code(), this->tubeFrag->Count())) {
+			throw vislib::Exception("Could not compile tube shader. ", __FILE__, __LINE__);
+		}
+		// link the shader
+		if (!this->tubeShader.Link()) {
+			throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
+		}
+	}
+	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile tessellation shader (@%s): %s\n",
+			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+			ce.FailedAction()), ce.GetMsgA());
+		return false;
+	}
+	catch (vislib::Exception e) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile tessellation shader: %s\n", e.GetMsgA());
+		return false;
+	}
+	catch (...) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			"Unable to compile tessellation shader: Unknown exception\n");
+		return false;
+	}
+
+	return true;
 }
 
 
@@ -228,118 +305,15 @@ bool UncertaintyCartoonRenderer::create(void) {
     if (!vislib::graphics::gl::GLSLTesselationShader::InitialiseExtensions())
         return false;
 
-	ShaderSource vertSrc; // sphere shader
-	ShaderSource fragSrc; // sphere shader
-
-    this->vert     = new ShaderSource();
-    this->tessCont = new ShaderSource();
-    this->tessEval = new ShaderSource();
-    this->geom     = new ShaderSource();
-    this->frag     = new ShaderSource();
-    
-    // load spline shader
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::vertex", *this->vert)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesscontrol", *this->tessCont)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesseval", *this->tessEval)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::geometry", *this->geom)) {
-        return false;
-    }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::fragment", *this->frag)) {
-        return false;
-    }
-    try {
-        // compile the shader
-        if (!this->splineShader.Compile(this->vert->Code(),     this->vert->Count(),
-                                        this->tessCont->Code(), this->tessCont->Count(),
-                                        this->tessEval->Code(), this->tessEval->Count(),
-                                        this->geom->Code(),     this->geom->Count(),
-                                        this->frag->Code(),     this->frag->Count())) {
-            throw vislib::Exception("Could not compile spline shader. ", __FILE__, __LINE__);
-        }
-        // link the shader
-        if (!this->splineShader.Link()){
-            throw vislib::Exception("Could not link spline shader", __FILE__, __LINE__);
-        }
-    }
-    catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile tessellation shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-            ce.FailedAction()), ce.GetMsgA());
-        return false;
-    }
-    catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile tessellation shader: %s\n", e.GetMsgA());
-        return false;
-    }
-    catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile tessellation shader: Unknown exception\n");
-        return false;
-    }
-
 	// load tube shader
-	this->tubeVert     = new ShaderSource();
-	this->tubeTessCont = new ShaderSource();
-	this->tubeTessEval = new ShaderSource();
-	this->tubeGeom     = new ShaderSource();
-	this->tubeFrag     = new ShaderSource();
-	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::vertex", *this->tubeVert)) {
-		return false;
-	}
-	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesscontrol", *this->tubeTessCont)) {
-		return false;
-	}
-	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesseval", *this->tubeTessEval)) {
-		return false;
-	}
-	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::geometry", *this->tubeGeom)) {
-		return false;
-	}
-	if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::fragment", *this->tubeFrag)) {
-		return false;
-	}
-
-	try {
-		// compile the shader
-		if (!this->tubeShader.Compile(this->tubeVert->Code(),     this->tubeVert->Count(),
-                                      this->tubeTessCont->Code(), this->tubeTessCont->Count(),
-                                      this->tubeTessEval->Code(), this->tubeTessEval->Count(),
-                                      this->tubeGeom->Code(),     this->tubeGeom->Count(),
-                                      this->tubeFrag->Code(),     this-> tubeFrag->Count())) {
-			throw vislib::Exception("Could not compile tube shader. ", __FILE__, __LINE__);
-		}
-		// link the shader
-		if (!this->tubeShader.Link()) {
-			throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
-		}
-	}
-	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unable to compile tessellation shader (@%s): %s\n",
-			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-				ce.FailedAction()), ce.GetMsgA());
-		return false;
-	}
-	catch (vislib::Exception e) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unable to compile tessellation shader: %s\n", e.GetMsgA());
-		return false;
-	}
-	catch (...) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-			"Unable to compile tessellation shader: Unknown exception\n");
+	if (!this->loadTubeShader()) {
 		return false;
 	}
 
     // load sphere shader
+	ShaderSource vertSrc; 
+	ShaderSource fragSrc; 
+
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for sphere shader");
         return false;
@@ -385,7 +359,6 @@ void UncertaintyCartoonRenderer::release(void) {
     
     // TODO release all shaders (done?)
     this->sphereShader.Release();
-    this->splineShader.Release();
     this->tubeShader.Release();
 
     glDeleteVertexArrays(1, &this->vertArray);
@@ -482,12 +455,17 @@ MolecularDataCall* UncertaintyCartoonRenderer::GetData(unsigned int t, float& ou
 /*
 * UncertaintyCartoonRenderer::GetUncertaintyData
 */
-bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc) {
+bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, MolecularDataCall *mol) {
 
 	if (!udc) return false;
+	if (!mol) return false;
+
+	// check molecular data
+	if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 
 	// initialization
 	this->aminoAcidCount = udc->GetAminoAcidCount();
+	this->molAtomCount = mol->AtomCount();
 
 	// reset arrays
 	this->secStructColorRGB.Clear();
@@ -523,6 +501,15 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc) {
 	this->residueFlag.Clear();
 	this->residueFlag.AssertCapacity(this->aminoAcidCount);
 
+	this->diffUncertainty.Clear();
+	this->diffUncertainty.AssertCapacity(this->aminoAcidCount);
+
+	this->pdbIndex.Clear();
+	this->pdbIndex.AssertCapacity(this->aminoAcidCount);
+
+	this->chainID.Clear();
+	this->chainID.AssertCapacity(this->aminoAcidCount);
+
 	// collect data from call
 	for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
 
@@ -532,11 +519,80 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc) {
 		}
 
 		// store residue flag
-		this->residueFlag.Add(udc->GetResidueFlag(aa));
+		this->residueFlag.Add(static_cast<unsigned int>(udc->GetResidueFlag(aa)));
 		// store uncerteiny values
 		this->secUncertainty.Add(udc->GetSecStructUncertainty(aa));
 		// store sorted uncertainty structure types
 		this->sortedUncertainty.Add(udc->GetSortedSecStructureIndices(aa));
+		// store the uncertainty difference
+		this->diffUncertainty.Add(udc->GetDifference(aa));
+		// store the original pdb index
+		this->pdbIndex.Add(udc->GetPDBAminoAcidIndex(aa));
+		// store chain id 
+		this->chainID.Add(udc->GetChainID(aa));
+	}
+
+
+	// Synchronize data array index from MoleculeDataCall with data array index from UncertaintyDataCall via the original pdb index
+	unsigned int firstMol;
+	unsigned int firstStruct;
+	unsigned int uncIndex;
+	unsigned int molIndex;
+	unsigned int origMolIndex;
+
+	this->synchronizedIndex.Clear();
+	this->synchronizedIndex.AssertCapacity(this->molAtomCount);
+
+	// loop over all chains of the molecular data
+	for (unsigned int cCnt = 0; cCnt < mol->ChainCount(); cCnt++) { // all chains
+
+		firstMol = mol->Chains()[cCnt].FirstMoleculeIndex();
+		for (unsigned int mCnt = firstMol; mCnt < firstMol + mol->Chains()[cCnt].MoleculeCount(); mCnt++) { // molecules in chain (?)
+
+			firstStruct = mol->Molecules()[mCnt].FirstSecStructIndex();
+			for (unsigned int sCnt = 0; sCnt < mol->Molecules()[mCnt].SecStructCount(); sCnt++) { // secondary structures in chain
+
+				for (unsigned int rCnt = 0; rCnt < mol->SecondaryStructures()[firstStruct + sCnt].AminoAcidCount(); rCnt++) { // aminoacids in secondary structures
+
+					uncIndex = 0;
+					origMolIndex = mol->Residues()[(mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt)]->OriginalResIndex();
+
+					// go to right chain in uncertainty data
+					while ((uncIndex < this->aminoAcidCount) && (mol->Chains()[cCnt].Name() != udc->GetChainID(uncIndex))) {
+						uncIndex++;
+					}
+					// search for matching original pdb indices in both data loader
+					while (uncIndex < this->aminoAcidCount) {
+						if (static_cast<std::string>(udc->GetPDBAminoAcidIndex(uncIndex).PeekBuffer()).find_first_not_of("0123456789") == std::string::npos) { // C++11 function ...
+							if (std::atoi(udc->GetPDBAminoAcidIndex(uncIndex)) == origMolIndex) {
+								break;
+							}
+						}
+						uncIndex++;
+					}
+
+					// when indices in molecular data are missing, fill 'synchronizedIndex' with 'dummy' indices
+					// in the end molecular index must always match array length !
+					molIndex = mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt;
+					while (this->synchronizedIndex.Count() < molIndex) {
+						this->synchronizedIndex.Add(0);
+					}
+
+					this->synchronizedIndex.Add(uncIndex); 
+
+					// DEBUG
+					/*
+					unsigned int molIndex = (mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt);
+					std::cout << " mol index: " << mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt
+					          << " | Chain Name: " << mol->Chains()[cCnt].Name()
+							  << " | mol orig index: " << origMolIndex
+							  << " | unc orig index: " << this->synchronizedIndex.Last()
+							  << " | count: " << this->synchronizedIndex.Count()
+							  << std::endl;
+					*/
+				}
+			}
+		}
 	}
 
 	return true;
@@ -552,6 +608,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
+
+	// number of different secondary structure types
+	const unsigned int structCount = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
 
 	float scaling = 1.0f;
 
@@ -570,68 +629,22 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
     if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
     
 	// if amino-acid count changed get new data
-	if (ud->GetAminoAcidCount() != this->aminoAcidCount) {
-		this->GetUncertaintyData(ud); // use return value ...?
+	if ((ud->GetAminoAcidCount() != this->aminoAcidCount) && (mol->AtomCount() != this->molAtomCount)) {
+		this->GetUncertaintyData(ud, mol); // use return value ...?
 	}
 
+	// reload shaders
+	if (this->tessLevelParam.IsDirty()) {
+		this->tessLevelParam.ResetDirty();
+
+		this->currentTessLevel = this->tessLevelParam.Param<param::IntParam>()->Value();
+	}
 
     // reload shaders
 	if (this->buttonParam.IsDirty()) {
 		this->buttonParam.ResetDirty();
 
-		instance()->ShaderSourceFactory().LoadBTF("uncertaintycartoontessellation", true);
-
-		// load tube shader
-		this->tubeVert     = new ShaderSource();
-		this->tubeTessCont = new ShaderSource();
-		this->tubeTessEval = new ShaderSource();
-		this->tubeGeom     = new ShaderSource();
-		this->tubeFrag     = new ShaderSource();
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::vertex", *this->tubeVert)) {
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesscontrol", *this->tubeTessCont)) {
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::tesseval", *this->tubeTessEval)) {
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::geometry", *this->tubeGeom)) {
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("uncertaintycartoontessellation::fragment", *this->tubeFrag)) {
-			return false;
-		}
-
-		try {
-			// compile the shader
-			if (!this->tubeShader.Compile(this->tubeVert->Code(),     this->tubeVert->Count(),
-                                          this->tubeTessCont->Code(), this->tubeTessCont->Count(),
-                                          this->tubeTessEval->Code(), this->tubeTessEval->Count(),
-                                          this->tubeGeom->Code(),     this->tubeGeom->Count(),
-                                          this->tubeFrag->Code(),     this->tubeFrag->Count())) {
-				throw vislib::Exception("Could not compile tube shader. ", __FILE__, __LINE__);
-			}
-			// link the shader
-			if (!this->tubeShader.Link()) {
-				throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
-			}
-		}
-		catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-				"Unable to compile tessellation shader (@%s): %s\n",
-				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-					ce.FailedAction()), ce.GetMsgA());
-			return false;
-		}
-		catch (vislib::Exception e) {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-				"Unable to compile tessellation shader: %s\n", e.GetMsgA());
-			return false;
-		}
-		catch (...) {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-				"Unable to compile tessellation shader: Unknown exception\n");
+		if (!this->loadTubeShader()) {
 			return false;
 		}
 	}
@@ -695,6 +708,13 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	std::cout << lightSpecular[0] << " " << lightSpecular[1] << " " << lightSpecular[2] << " " << lightSpecular[3] << std::endl;*/
 
 
+	// Render in wireframe mode
+	if (this->lineDebugParam.Param<param::BoolParam>()->Value())
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
 	unsigned int firstResIdx = 0;
 	unsigned int lastResIdx = 0;
 	unsigned int firstAtomIdx = 0;
@@ -705,28 +725,16 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	unsigned int firstAAIdx = 0;
 	unsigned int lastAAIdx = 0;
 
-	// Render in wireframe mode
-	if (this->lineDebugParam.Param<param::BoolParam>()->Value())
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	unsigned int uncIndex = 0;
 
 	// Render backbone as tubes
 	if (this->backboneParam.Param<param::BoolParam>()->Value()) {
 
 		// copy data to: mainChain
-		firstResIdx = 0;
-		lastResIdx = 0;
-		firstAtomIdx = 0;
-		lastAtomIdx = 0;
-		atomTypeIdx = 0;
 		firstSecIdx = 0;
 		lastSecIdx = 0;
 		firstAAIdx = 0;
 		lastAAIdx = 0;
-
-		unsigned int cIndex = 0;
-		unsigned int oIndex = 0;
 
 		this->mainChain.clear();
 
@@ -739,6 +747,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		for (unsigned int molIdx = 0; molIdx < mol->MoleculeCount(); molIdx++) {
 
 			MolecularDataCall::Molecule chain = mol->Molecules()[molIdx];
+
 			molSizes.push_back(0);
 
 			bool firstset = false;
@@ -761,7 +770,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 				for (unsigned int aaIdx = firstAAIdx; aaIdx < lastAAIdx; aaIdx++) {
 
 					MolecularDataCall::AminoAcid * acid;
-
+					 
 					// is the current residue really an aminoacid?
 					if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID)
 						acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
@@ -770,6 +779,28 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 					// extract relevant positions and other values
 					CAlpha calpha;
+
+
+					// DEBUG
+					/*
+					std::cout << " mol index: " << aaIdx
+						      << " | unc index: " << this->synchronizedIndex[aaIdx]
+							  << std::endl;
+					*/
+					uncIndex = this->synchronizedIndex[aaIdx];
+					for (unsigned int k = 0; k < structCount; k++) {
+						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP][uncIndex]);
+						calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB][uncIndex]);
+						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE][uncIndex]);
+						// calpha.sortedStruct[k] = static_cast<int>(this->sortedUncertainty[uncIndex][k]);
+
+						calpha.unc[k] = this->secUncertainty[uncIndex][k];
+					}
+					calpha.chain = static_cast<int>(this->chainID[uncIndex]);
+					calpha.flag = this->residueFlag[uncIndex];
+					calpha.diff = this->diffUncertainty[uncIndex];
+					
+
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
 					calpha.pos[1] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 1];
 					calpha.pos[2] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 2];
@@ -780,9 +811,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					calpha.dir[1] = mol->AtomPositions()[3 * acid->OIndex() + 1] - calpha.pos[1];
 					calpha.dir[2] = mol->AtomPositions()[3 * acid->OIndex() + 2] - calpha.pos[2];
 
-					auto type = mol->SecondaryStructures()[secIdx].Type(); // TYPE_COIL  = 0, TYPE_SHEET = 1, TYPE_HELIX = 2, TYPE_TURN  = 3
-					calpha.type = (int)type;
-					
 					// TODO: do this on GPU?
 					// orientation check for the direction
 					if (this->mainChain.size() != 0)
@@ -823,7 +851,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 #ifdef FIRSTFRAME_CHECK
 		if (this->firstFrame) {
 			for (int i = 0; i < this->mainChain.size(); i++) {
-				std::cout << this->mainChain[i].type << std::endl;
+				std::cout << this->mainChain[i].sortedStruct[0] << std::endl;
 			}
 			this->firstFrame = false;
 		}
@@ -834,12 +862,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		this->GetBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
 		//this->currBuf = 0;
 
-		// number of different secondary structure types
-		const unsigned int structCount = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
-
 		this->tubeShader.Enable();
 		glColor4f(1.0f / this->mainChain.size(), 0.75f, 0.25f, 1.0f);
-		colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx"); // NOT USED in shader (?)
+		colIdxAttribLoc = glGetAttribLocationARB(this->tubeShader, "colIdx"); // NECESSARY ! - WHY ... NOT USED in shader (?)
 
 		// vertex
 		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
@@ -866,11 +891,16 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		unsigned int colTabSize = 0;
 		glUniform4f(this->tubeShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
 		
-		// only tesselation evaluation shader
-		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
-		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), this->colorInterpolationParam.Param<param::BoolParam>()->Value());
+		// only tesselation control 
+		glUniform1i(this->tubeShader.ParameterLocation("tessLevel"), this->currentTessLevel);
 
+		// only tesselation evaluation 
+		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
+		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), (GLint)this->colorInterpolationParam.Param<param::BoolParam>()->Value());
 		glUniform4fv(this->tubeShader.ParameterLocation("structColRGB"), structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
+		glUniform1i(this->tubeShader.ParameterLocation("coloredChain"), (GLint)this->coloredChainParam.Param<param::BoolParam>()->Value());
+		glUniform1i(this->tubeShader.ParameterLocation("onlyTubes"), (GLint)this->onlyTubesParam.Param<param::BoolParam>()->Value());
+
 
 		// only fragment shader
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
@@ -878,6 +908,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("specularColor"), lightSpecular[0], lightSpecular[1], lightSpecular[2], lightSpecular[3]);
+		glUniform4fv(this->tubeShader.ParameterLocation("material"), 1, (GLfloat *)this->materialParam.Param<param::Vector4fParam>()->Value().PeekComponents());
 
 
 		UINT64 numVerts;
@@ -925,7 +956,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 
 	// copy data to: positionCA and positionO for backbone line rendering or sphere rendering
-	if (this->lineParam.Param<param::BoolParam>()->Value() || this->sphereParam.Param<param::BoolParam>()->Value()) {
+	if (this->sphereParam.Param<param::BoolParam>()->Value()) {
 
 		firstResIdx = 0;
 		lastResIdx = 0;
@@ -991,73 +1022,8 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		}
 		// DEBUG
 		//std::cout << "cIndex " << cIndex << " oIndex " << oIndex << " molCount " << mol->MoleculeCount() << std::endl;
-	}
 
-    // Render backbone as GL_LINE
-	if (lineParam.Param<param::BoolParam>()->Value())
-	{
-		//this->currBuf = 0;
-		for (unsigned int i = 0; i < this->positionsCa.Count(); i++) {
-			unsigned int colBytes, vertBytes, colStride, vertStride;
-			this->GetBytesAndStrideLines(*mol, colBytes, vertBytes, colStride, vertStride);
-
-			this->splineShader.Enable();
-			glColor4f(1.0f / this->positionsCa.Count() * (i + 1), 0.75f, 0.25f, 1.0f);
-			colIdxAttribLoc = glGetAttribLocationARB(this->splineShader, "colIdx");
-			glUniform4fv(this->splineShader.ParameterLocation("viewAttr"),        1, viewportStuff);
-			glUniform3fv(this->splineShader.ParameterLocation("camIn"),           1, cr->GetCameraParameters()->Front().PeekComponents());
-			glUniform3fv(this->splineShader.ParameterLocation("camRight"),        1, cr->GetCameraParameters()->Right().PeekComponents());
-			glUniform3fv(this->splineShader.ParameterLocation("camUp"),           1, cr->GetCameraParameters()->Up().PeekComponents());
-			glUniform4fv(this->splineShader.ParameterLocation("clipDat"),         1, clipDat);
-			glUniform4fv(this->splineShader.ParameterLocation("clipCol"),         1, clipCol);
-			glUniformMatrix4fv(this->splineShader.ParameterLocation("MVinv"),     1, GL_FALSE, modelViewMatrixInv.PeekComponents());
-			glUniformMatrix4fv(this->splineShader.ParameterLocation("MVP"),       1, GL_FALSE, modelViewProjMatrix.PeekComponents());
-			glUniformMatrix4fv(this->splineShader.ParameterLocation("MVPinv"),    1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
-			glUniformMatrix4fv(this->splineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-			glUniform1f(this->splineShader.ParameterLocation("scaling"),          this->scalingParam.Param<param::FloatParam>()->Value());
-			float minC = 0.0f;
-            float maxC = 0.0f;
-			unsigned int colTabSize = 0;
-			glUniform4f(this->splineShader.ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
-
-			UINT64 numVerts;
-            UINT64 vertCounter;
-			numVerts = this->bufSize / vertStride;
-			const char *currVert = (const char *)(this->positionsCa[i].PeekElements());
-			const char *currCol = 0;
-			vertCounter = 0;
-			while (vertCounter < this->positionsCa[i].Count() / 4) {
-				void *mem = static_cast<char*>(this->theSingleMappedMem) + this->bufSize * this->currBuf;
-				const char *whence = currVert;
-				UINT64 vertsThisTime = vislib::math::Min(this->positionsCa[i].Count() / 4 - vertCounter, numVerts);
-				this->WaitSignal(this->fences[this->currBuf]);
-				memcpy(mem, whence, (size_t)vertsThisTime * vertStride);
-				glFlushMappedNamedBufferRangeEXT(theSingleBuffer, this->bufSize * this->currBuf, (GLsizeiptr)vertsThisTime * vertStride);
-				glUniform1i(this->splineShader.ParameterLocation("instanceOffset"), 0);
-
-				glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, this->bufSize * this->currBuf, this->bufSize);
-				glPatchParameteri(GL_PATCH_VERTICES, 1);
-				glDrawArrays(GL_PATCHES, 0, (GLsizei)vertsThisTime - 3);
-				this->QueueSignal(this->fences[this->currBuf]);
-
-				this->currBuf = (this->currBuf + 1) % this->numBuffers;
-				vertCounter += vertsThisTime;
-				currVert += vertsThisTime * vertStride;
-				currCol += vertsThisTime * colStride;
-			}
-
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-			glDisableClientState(GL_COLOR_ARRAY);
-			glDisableClientState(GL_VERTEX_ARRAY);
-			glDisable(GL_TEXTURE_1D);
-			this->splineShader.Disable();
-		}
-	}
-
-    // DEBUG
-    // Render atoms as spheres
-	if (this->sphereParam.Param<param::BoolParam>()->Value())
-	{
+		// draw spheres
 		glEnable(GL_BLEND);
 		glColor4f(0.5f, 0.5f, 0.5f, 0.5f);
 		// enable sphere shader
@@ -1137,6 +1103,7 @@ void UncertaintyCartoonRenderer::GetBytesAndStride(MolecularDataCall &mol, unsig
 /*
  * UncertaintyCartoonRenderer::GetBytesAndStrideLines 
  */
+/*
 void UncertaintyCartoonRenderer::GetBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
                                                         unsigned int &colStride, unsigned int &vertStride) {
 	vertBytes = 0; 
@@ -1149,7 +1116,7 @@ void UncertaintyCartoonRenderer::GetBytesAndStrideLines(MolecularDataCall &mol, 
 	vertStride = 0;
 	vertStride = (vertStride < vertBytes) ? (vertBytes) : (vertStride);
 }
-
+*/
 
 /*
 * UncertaintyCartoonRenderer::QueueSignal

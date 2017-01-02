@@ -410,8 +410,6 @@ namespace megamol {
         
         // the vertex buffer array for the tiles
         vislib::Array<float> vertices;
-		// the array of the secondary structure type difference for each amino-acid tile
-		vislib::Array<float> difference;
         // the vertex buffer array secondary structure
         vislib::Array<vislib::Array<vislib::math::Vector<float, 2> > >secStructVertices;
 		// the vertex buffer array for the amino-acid separator lines
@@ -438,7 +436,9 @@ namespace megamol {
         vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
         // The sorted structure types of the uncertainty values
         vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
-                
+		// the array of the secondary structure type difference for each amino-acid tile
+		vislib::Array<float> diffUncertainty;
+
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
 		

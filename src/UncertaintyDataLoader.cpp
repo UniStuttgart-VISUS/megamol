@@ -165,7 +165,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetPdbID(&this->pdbID);
         udc->SetPdbAssMethodHelix(&this->pdbAssignmentHelix);
         udc->SetPdbAssMethodSheet(&this->pdbAssignmentSheet);
-		udc->SetDifference(&this->difference);
+		udc->SetDifference(&this->diffUncertainty);
         return true;
     }
 }
@@ -410,14 +410,14 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
     // Reset uncertainty data 
     this->secStructUncertainty.Clear();
     this->sortedSecStructUncertainty.Clear();
-	this->difference.Clear();
+	this->diffUncertainty.Clear();
 
     if (this->pdbIndex.IsEmpty()) { // return if no data is present ...
         return false;
     }
     this->secStructUncertainty.AssertCapacity(this->pdbIndex.Count());
     this->sortedSecStructUncertainty.AssertCapacity(this->pdbIndex.Count());
-	this->difference.AssertCapacity(this->pdbIndex.Count());
+	this->diffUncertainty.AssertCapacity(this->pdbIndex.Count());
 
 	// initialize structure factors for all three methods with 1.0f
 	vislib::Array<vislib::Array<float> > structFactor;
@@ -475,10 +475,10 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
 		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
 			tmpChange += (this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k]] - this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k+1]]);
 		}
-		this->difference.Add(1.0f - tmpChange);
+		this->diffUncertainty.Add(1.0f - tmpChange);
 
 		// DEBUG
-		// std::cout << this->difference.Last() << std::endl;
+		// std::cout << this->diffUncertainty.Last() << std::endl;
     }
 
     return true;

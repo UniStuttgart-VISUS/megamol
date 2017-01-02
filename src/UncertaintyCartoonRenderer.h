@@ -157,24 +157,12 @@ namespace megamol {
 		* The ... .
 		*
 		* @param udc The uncertainty data call.
+		* @param mol The molecular data call.
 		*
 		* @return The return value of the function.
 		*/
-		bool GetUncertaintyData(UncertaintyDataCall *udc);
+		bool GetUncertaintyData(UncertaintyDataCall *udc, MolecularDataCall *mol);
 
-        /**
-		 * UNUSED ...
-		 *
-         * The ... .
-         *
-         * @param mol     The ...
-         * @param vertBuf The ...
-         * @param vertPtr The ...
-         * @param colBuf  The ...
-         * @param colPtr  The ...         
-         */
-        // void SetPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
-        
         /**
          * The ... .
          *
@@ -186,17 +174,6 @@ namespace megamol {
          */        
 		void GetBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
         
-        /**
-         * The ... .
-         *
-         * @param mol        The ...
-         * @param colBytes   The ...
-         * @param vertBytes  The ...
-         * @param colStride  The ...
-         * @param vertStride The ...         
-         */  
-		void GetBytesAndStrideLines(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes, unsigned int &colStride, unsigned int &vertStride);
-
         /**
          * The ... .
          *
@@ -215,9 +192,20 @@ namespace megamol {
 		struct CAlpha
 		{
 			float pos[4];
-			float dir[3];
-			int type;
+			float dir[3]; 
+			int   chain;
+			float diff;
+			int   flag;
+			float unc[UncertaintyDataCall::secStructure::NOE];
+			int   sortedStruct[UncertaintyDataCall::secStructure::NOE];
 		};
+
+		/**
+		* ... .
+		*
+		* @return The ... .
+		*/
+		bool loadTubeShader(void);
 
         /**********************************************************************
          * variables
@@ -236,27 +224,35 @@ namespace megamol {
         // paramter
         core::param::ParamSlot scalingParam;
 		core::param::ParamSlot sphereParam;
-		core::param::ParamSlot lineParam;
 		core::param::ParamSlot backboneParam;
 		core::param::ParamSlot backboneWidthParam;
 		core::param::ParamSlot materialParam;
 		core::param::ParamSlot lineDebugParam;
 		core::param::ParamSlot buttonParam;
 		core::param::ParamSlot colorInterpolationParam;
+		core::param::ParamSlot tessLevelParam;
+		core::param::ParamSlot coloredChainParam;
+		core::param::ParamSlot onlyTubesParam;
                 
         GLuint              vertArray;
         std::vector<GLsync> fences;           // (?)
 		GLuint              theSingleBuffer;
         unsigned int        currBuf;
-        GLuint              colIdxAttribLoc;  // unused (?)
+        GLuint              colIdxAttribLoc;  // (?)
         GLsizeiptr          bufSize;
 		int                 numBuffers;
 		void               *theSingleMappedMem;
 		GLuint              singleBufferCreationBits;
         GLuint              singleBufferMappingBits;
+		// the current tesselation level
+		int                 currentTessLevel;
         
-        //typedef std::map<std::pair<int, int>, std::shared_ptr<GLSLShader> > shaderMap; // unused
-        
+
+		/** shader for the tubes */
+		vislib::graphics::gl::GLSLTesselationShader tubeShader;
+		/** shader for the spheres (raycasting view) */
+		vislib::graphics::gl::GLSLShader            sphereShader;
+
 		vislib::SmartPtr<ShaderSource> vert;
         vislib::SmartPtr<ShaderSource> tessCont;
         vislib::SmartPtr<ShaderSource> tessEval;
@@ -268,6 +264,7 @@ namespace megamol {
         vislib::SmartPtr<ShaderSource> tubeGeom;
         vislib::SmartPtr<ShaderSource> tubeFrag;
 
+
         // positions of C-alpha-atoms and O-atoms
         vislib::Array<vislib::Array<float> > positionsCa;
         vislib::Array<vislib::Array<float> > positionsO;
@@ -275,18 +272,21 @@ namespace megamol {
         // C-alpha main chain
 		std::vector<CAlpha> mainChain;
         
-        /** shader for the spheres (raycasting view) */
-        vislib::graphics::gl::GLSLShader            sphereShader;
-        /** shader for spline rendering */
-        vislib::graphics::gl::GLSLTesselationShader splineShader;
-		/** shader for the tubes */
-		vislib::graphics::gl::GLSLTesselationShader tubeShader;
+		// the total number of amino-acids defined in molecular data
+		unsigned int molAtomCount;
 
-
-		// the total number of amino-acids 
+		// the total number of amino-acids defined in uncertainty data
 		unsigned int aminoAcidCount;
+		// The original PDB index
+		vislib::Array<vislib::StringA> pdbIndex;
+		// chain id
+		vislib::Array<char> chainID;
+		// The synchronized index between molecular data and uncertainty data
+		vislib::Array<unsigned int> synchronizedIndex;
 		// the array for the residue flag
-		vislib::Array<UncertaintyDataCall::addFlags> residueFlag;
+		vislib::Array<unsigned int> residueFlag;
+		/** The uncertainty difference of secondary structure types */
+		vislib::Array<float> diffUncertainty;
 		// The secondary structure assignment methods and their secondary structure type assignments
 		vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
 		// The values of the secondary structure uncertainty for each amino-acid 
@@ -294,15 +294,16 @@ namespace megamol {
 		// The sorted structure types of the uncertainty values
 		vislib::Array<vislib::math::Vector<unsigned int, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
 
+
 		// secondary structure type colors as RGB(A)
 		vislib::Array<vislib::math::Vector<float, 4> > secStructColorRGB;
+
+
 		// secondary structure type colors as HSL(A)
 		vislib::Array<vislib::math::Vector<float, 4> > secStructColorHSL;  // unused so far ...
-
-
 		// selection 
-		vislib::Array<bool> selection;
-		protein_calls::ResidueSelectionCall *resSelectionCall;
+		vislib::Array<bool> selection;                                     // unused so far ...
+		protein_calls::ResidueSelectionCall *resSelectionCall;             // unused so far ...
     };
 
 	} /* end namespace protein_uncertainty */

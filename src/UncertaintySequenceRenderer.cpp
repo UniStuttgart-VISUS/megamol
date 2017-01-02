@@ -720,10 +720,10 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
                     // assuming values are in range 0.0-1.0
-					glVertex2f(this->vertices[2 * i],        -(this->vertices[2 * i + 1] + yPos + 1.0f - this->difference[i]));
+					glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->diffUncertainty[i]));
                     glVertex2f(this->vertices[2 * i],        -(this->vertices[2 * i + 1] + yPos + 1.0f));
                     glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f));
-					glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f - this->difference[i]));
+					glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f - this->diffUncertainty[i]));
                 }
             }
             glEnd();
@@ -1056,7 +1056,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleDifferenceParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Difference:";
-							tmpStr2.Format("%.0f %%", this->difference[mousePosResIdx]*100.0f);
+							tmpStr2.Format("%.0f %%", this->diffUncertainty[mousePosResIdx] * 100.0f);
                             this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
                         start += perCentRow;
@@ -2124,8 +2124,8 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
     // initialization
     this->aminoAcidCount = udc->GetAminoAcidCount();
 
-	this->difference.Clear();
-	this->difference.AssertCapacity(this->aminoAcidCount);
+	this->diffUncertainty.Clear();
+	this->diffUncertainty.AssertCapacity(this->aminoAcidCount);
 
     this->secUncertainty.Clear();
     this->secUncertainty.AssertCapacity(this->aminoAcidCount);
@@ -2285,8 +2285,8 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
         this->secUncertainty.Add(udc->GetSecStructUncertainty(aa));
         // store sorted uncertainty structure types
         this->sortedUncertainty.Add(udc->GetSortedSecStructureIndices(aa));
-		// store difference of secondary structure assignment
-		this->difference.Add(udc->GetDifference(aa));
+		// store uncertainty difference of secondary structure assignment
+		this->diffUncertainty.Add(udc->GetDifference(aa));
                       
         // count different chains and set seperator vertices
         if (udc->GetChainID(aa) != currentChainID) {
@@ -2339,19 +2339,23 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
             // try to match binding sites
             vislib::Pair<char, unsigned int> bsRes;
             unsigned int numBS = 0;
+			bool skipIndexWithLetter;
+
             // loop over all binding sites
             for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
                 for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
                     bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
+					skipIndexWithLetter = false;
 
 					// remove possible letters in pdb index before converting to integer
                     tmpStr = udc->GetPDBAminoAcidIndex(aa);
 					letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 					for (int k = 0; k < letters.Length(); k++) {
-						tmpStr.Remove(letters[k]);
+						if (tmpStr.Contains(letters[k]))
+							skipIndexWithLetter = true;
 					}
 
-                    if (udc->GetChainID(aa) == bsRes.First() && std::atoi(tmpStr) == bsRes.Second()) {   
+					if ((!skipIndexWithLetter) && (udc->GetChainID(aa) == bsRes.First()) && (std::atoi(tmpStr) == bsRes.Second())) {
                         this->bsVertices.Add(this->vertices[this->vertices.Count() - 2]);
                         this->bsVertices.Add(this->vertices[this->vertices.Count() - 1] + (2.0f + static_cast<float>(this->secStructRows)) + numBS*0.5f);
                         this->bsIndices.Add(bsCnt);

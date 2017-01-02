@@ -328,12 +328,12 @@ namespace megamol {
 		* @return The difference of secondary structure type assignment.
 		*/
 		inline float GetDifference(unsigned int i) const {
-			if (!this->difference)
+			if (!this->diffUncertainty)
 				return 0.0f;
-			else if (this->difference->Count() <= i)
+			else if (this->diffUncertainty->Count() <= i)
 				return 0.0f;
 			else
-				return (this->difference->operator[](i));
+				return (this->diffUncertainty->operator[](i));
 		}
 
                 
@@ -444,7 +444,7 @@ namespace megamol {
 		* @param rnPtr The pointer.
 		*/
 		inline void SetDifference(vislib::Array<float> *rnPtr) {
-			this->difference = rnPtr;
+			this->diffUncertainty = rnPtr;
 		}
 
 	private:
@@ -472,8 +472,8 @@ namespace megamol {
         /** Pointer to the sorted structure types of the uncertainty values */
         vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NOE)> > *sortedSecStructUncertainty;
         
-		/** Pointer to the difference of secondary structure types */
-		vislib::Array<float> *difference;
+		/** Pointer to the diffUncertainty of secondary structure types */
+		vislib::Array<float> *diffUncertainty;
 
         /** Flag indicating that uncertainty was recalculated */
         bool recalcUncertainty;
