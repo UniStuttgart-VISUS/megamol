@@ -145,14 +145,6 @@ namespace megamol {
         /**********************************************************************
          * other functions
          **********************************************************************/
-         
-        /**
-         * Returns the single letter code for an amino acid given the three letter code.
-         *
-         * @param resName The name of the residue as three letter code.
-         * @return The single letter code for the amino acid.
-         */
-        char GetAminoAcidOneLetterCode(vislib::StringA resName);
         
         /**
          * Draws the texture tiles for the secondary structure types.

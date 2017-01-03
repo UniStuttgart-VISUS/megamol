@@ -122,7 +122,8 @@ namespace megamol {
              * enumeration of available uncertainty calculation methods. 
              */
              enum calculationMethod {
-                 AVERAGE    = 0
+                 AVERAGE    = 0,
+				 EXTENDED   = 1
              };
              
             /**

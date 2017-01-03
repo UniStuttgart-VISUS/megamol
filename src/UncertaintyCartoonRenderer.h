@@ -193,7 +193,7 @@ namespace megamol {
 		{
 			float pos[4];
 			float dir[3]; 
-			int   chain;
+			int   colIdx;
 			float diff;
 			int   flag;
 			float unc[UncertaintyDataCall::secStructure::NOE];
@@ -206,6 +206,17 @@ namespace megamol {
 		* @return The ... .
 		*/
 		bool loadTubeShader(void);
+
+		/**
+		* structure color for uncertain structure assignment
+		*/
+		enum coloringModes {
+			COLOR_MODE_STRUCT        = 0,
+			COLOR_MODE_UNCERTAIN     = 1,
+			COLOR_MODE_CHAIN         = 2,
+			COLOR_MODE_AMINOACID     = 3,
+			COLOR_MODE_RESIDUE_DEBUG = 4
+		};
 
         /**********************************************************************
          * variables
@@ -231,7 +242,7 @@ namespace megamol {
 		core::param::ParamSlot buttonParam;
 		core::param::ParamSlot colorInterpolationParam;
 		core::param::ParamSlot tessLevelParam;
-		core::param::ParamSlot coloredChainParam;
+		core::param::ParamSlot colorModeParam;
 		core::param::ParamSlot onlyTubesParam;
                 
         GLuint              vertArray;
@@ -246,6 +257,7 @@ namespace megamol {
         GLuint              singleBufferMappingBits;
 		// the current tesselation level
 		int                 currentTessLevel;
+		int                 currentColoringMode;
         
 
 		/** shader for the tubes */
@@ -279,8 +291,10 @@ namespace megamol {
 		unsigned int aminoAcidCount;
 		// The original PDB index
 		vislib::Array<vislib::StringA> pdbIndex;
-		// chain id
+		// The chain id
 		vislib::Array<char> chainID;
+		// The array of amino acid 1-letter codes
+		vislib::Array<char> aminoAcidName;
 		// The synchronized index between molecular data and uncertainty data
 		vislib::Array<unsigned int> synchronizedIndex;
 		// the array for the residue flag

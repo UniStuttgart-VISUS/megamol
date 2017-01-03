@@ -13,7 +13,7 @@
 //
 // TODO:
 //
-//    - ...
+//    - color interpolation for glyphs (~ line 1495)
 // 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2274,7 +2274,7 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 		}
 
         // store the amino-acid three letter code and convert it to the one letter code
-        this->aminoAcidName.Add(this->GetAminoAcidOneLetterCode(udc->GetAminoAcid(aa)));
+		this->aminoAcidName.Add(udc->GetAminoAcidOneLetterCode(aa));
         // store the chainID
         this->chainID.Add(udc->GetChainID(aa));
         // init selection
@@ -2288,15 +2288,26 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 		// store uncertainty difference of secondary structure assignment
 		this->diffUncertainty.Add(udc->GetDifference(aa));
                       
-        // count different chains and set seperator vertices
+        // count different chains and set seperator vertices and chain color
         if (udc->GetChainID(aa) != currentChainID) {
             currentChainID = udc->GetChainID(aa);
             this->chainSeparatorVertices.Add(this->vertices[this->vertices.Count() - 2] + 1.0f);
-            this->chainSeparatorVertices.Add(-(this->chainVertices[this->chainVertices.Count() - 1] - 1.5f));
+			this->chainSeparatorVertices.Add(-(this->vertices[this->vertices.Count() - 1]));
             this->chainSeparatorVertices.Add(this->vertices[this->vertices.Count() - 2] + 1.0f);
             this->chainSeparatorVertices.Add(-(this->chainVertices[this->chainVertices.Count() - 1] + 0.5f));
             cCnt++;
         }
+
+		// function for chain color assignment shaould be the same as in 'uncertaintycartoontessellation.btf' (~ line 353)
+		// -> vec4(1.0 - float(chainIndex % 5) / 4.0, float(chainIndex % 3) / 2.0, float(chainIndex % 5) / 4.0, 1.0);
+		this->chainColors.Add(1.0f - float((int)currentChainID % 5) / 4.0f);
+		this->chainColors.Add(float((int)currentChainID % 3) / 2.0f);
+		this->chainColors.Add(float((int)currentChainID % 5) / 4.0f);
+		/*
+		this->chainColors.Add(this->colorTable[cCnt].X());
+		this->chainColors.Add(this->colorTable[cCnt].Y());
+		this->chainColors.Add(this->colorTable[cCnt].Z());
+		*/
 
         // compute the position of the amino-acid icon
         if (aa == 0) {
@@ -2306,9 +2317,6 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
             // chain tile vertices and colors
             this->chainVertices.Add(0.0f);
             this->chainVertices.Add(static_cast<float>(this->secStructRows) + 1.5f);
-            this->chainColors.Add(this->colorTable[cCnt].X());
-            this->chainColors.Add(this->colorTable[cCnt].Y());
-            this->chainColors.Add(this->colorTable[cCnt].Z());
         }
 		else {
 			if (aa % static_cast<unsigned int>(this->resCountPerRowParam.Param<param::IntParam>()->Value()) != 0) {
@@ -2318,9 +2326,6 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 				// chain tile vertices and colors
 				this->chainVertices.Add(this->chainVertices[aa * 2 - 2] + 1.0f);
 				this->chainVertices.Add(this->chainVertices[aa * 2 - 1]);
-				this->chainColors.Add(this->colorTable[cCnt].X());
-				this->chainColors.Add(this->colorTable[cCnt].Y());
-				this->chainColors.Add(this->colorTable[cCnt].Z());
 			}
 			else {
 				// structure vertices
@@ -2329,9 +2334,6 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 				// chain tile vertices and colors
 				this->chainVertices.Add(0.0f);
 				this->chainVertices.Add(this->chainVertices[aa * 2 - 1] + this->rowHeight);
-				this->chainColors.Add(this->colorTable[cCnt].X());
-				this->chainColors.Add(this->colorTable[cCnt].Y());
-				this->chainColors.Add(this->colorTable[cCnt].Z());
 			}
 		}
 
@@ -2455,46 +2457,6 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
         Log::DefaultLog.WriteError("Could not find \"%s\" texture.", filename.PeekBuffer());
     }
     return false;
-}
-
-
-/*
-* Check if the residue is an amino acid.
-*/
-char UncertaintySequenceRenderer::GetAminoAcidOneLetterCode(vislib::StringA resName) {
-    
-    if      (resName.Equals("ALA")) return 'A';
-    else if (resName.Equals("ARG")) return 'R';
-    else if (resName.Equals("ASN")) return 'N';
-    else if (resName.Equals("ASP")) return 'D';
-    else if (resName.Equals("CYS")) return 'C';
-    else if (resName.Equals("GLN")) return 'Q';
-    else if (resName.Equals("GLU")) return 'E';
-    else if (resName.Equals("GLY")) return 'G';
-    else if (resName.Equals("HIS")) return 'H';
-    else if (resName.Equals("ILE")) return 'I';
-    else if (resName.Equals("LEU")) return 'L';
-    else if (resName.Equals("LYS")) return 'K';
-    else if (resName.Equals("MET")) return 'M';
-    else if (resName.Equals("PHE")) return 'F';
-    else if (resName.Equals("PRO")) return 'P';
-    else if (resName.Equals("SER")) return 'S';
-    else if (resName.Equals("THR")) return 'T';
-    else if (resName.Equals("TRP")) return 'W';
-    else if (resName.Equals("TYR")) return 'Y';
-    else if (resName.Equals("VAL")) return 'V';
-    else if (resName.Equals("ASH")) return 'D';
-    else if (resName.Equals("CYX")) return 'C';
-    else if (resName.Equals("CYM")) return 'C';
-    else if (resName.Equals("GLH")) return 'E';
-    else if (resName.Equals("HID")) return 'H';
-    else if (resName.Equals("HIE")) return 'H';
-    else if (resName.Equals("HIP")) return 'H';
-    else if (resName.Equals("MSE")) return 'M';
-    else if (resName.Equals("LYN")) return 'K';
-    else if (resName.Equals("TYM")) return 'Y';
-    else return '?';
-    
 }
 
 

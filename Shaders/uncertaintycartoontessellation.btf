@@ -173,7 +173,7 @@
     {
         vec4  pos;
         vec3  dir;      
-        int   chain;
+        int   colIdx;
 	    float diff;
 		int   flag; 
 		float unc[STRUCT_COUNT];
@@ -229,7 +229,7 @@
     /////////////
     #define M_PI         3.1415926535897932384626433832795
 
-    // must be equal to 'UncertaintyDataCall::secStructure':
+    // should be equal to 'UncertaintyDataCall::secStructure':
     #define H_ALPHA_HELIX 0   
     #define G_310_HELIX   1
     #define I_PI_HELIX    2
@@ -241,6 +241,13 @@
     #define NOTDEFINED    8
     #define STRUCT_COUNT  9                                   
     
+    // should be equal to 'UncertaintyCartoonRenderer::coloringModes':    
+	#define COLOR_MODE_STRUCT        0
+    #define COLOR_MODE_UNCERTAIN     1
+	#define COLOR_MODE_CHAIN         2
+	#define COLOR_MODE_AMINOACID     3
+    #define COLOR_MODE_RESIDUE_DEBUG 4
+            
     ////////////////
     // EXTENSIONS //
     ////////////////  
@@ -270,10 +277,10 @@
     uniform float minDistance = 1.0;
     uniform float maxDistance = 1.0;
 
-    uniform bool interpolateColors = false;
-    uniform float pipeWidth = 1.0;
-    uniform bool coloredChain = false;
-    uniform bool onlyTubes = false;
+    uniform bool                interpolateColors = false;
+    uniform float               pipeWidth         = 1.0;
+    uniform int                 colorMode         = 0;
+    uniform bool                onlyTubes         = false;
     uniform vec4[STRUCT_COUNT]  structColRGB;              // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
 
     
@@ -281,7 +288,7 @@
     {
         vec4  pos;
         vec3  dir;      
-        int   chain;
+        int   colIdx;
 	    float diff;
 		int   flag; 
 		float unc[STRUCT_COUNT];
@@ -336,16 +343,26 @@
     
     
         // assign colors
-
         vec4 colors[4];
+        int colorIndex;
         for(int i = 0; i < 4; i++)
         {        
-            if (coloredChain) {
-                int chainColor = atoms[id[0] + i - 1].chain; // in range 0...255
-                colors[i] = vec4(1.0 - float(chainColor%2), float(chainColor%10)/10.0, float(chainColor%4)/4.0 , 1.0);
-            }
-            else {
+            if ((colorMode == COLOR_MODE_STRUCT) || (colorMode == COLOR_MODE_UNCERTAIN)) {
                 colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[0]];
+            }        
+            else {
+                if (colorMode == COLOR_MODE_CHAIN) {
+                    colorIndex = atoms[id[0] + i - 1].colIdx; 
+                    colors[i] = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
+                }
+                else if (colorMode == COLOR_MODE_AMINOACID) {
+                    colorIndex = atoms[id[0] + i - 1].colIdx; 
+                    colors[i] = vec4(1.0 - float(colorIndex % 26) / 25.0, 0.5 + (0.5 - float(colorIndex % 26) / 25.0), float(colorIndex % 26) / 25.0, 1.0);
+                }                
+                else if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
+                    colorIndex = id[0] + i - 1;
+                    colors[i] = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
+                }
             }
         }
     
@@ -366,7 +383,6 @@
             color = colors[2];
         }
     
-  
         // interpolate directions
         vec3 dir10 = mix(alph0.dir, alph1.dir, q);
         vec3 dir11 = mix(alph1.dir, alph2.dir, q1);
@@ -378,7 +394,7 @@
         vec3 dir = normalize(mix(dir20, dir21, q5));
     
         vec3 tangent = normalize(d21.xyz - d20.xyz);
-        vec3 normal = normalize(cross(tangent, dir));
+        // vec3 normal = normalize(cross(tangent, dir)); - unused
     
     
         // compute corrected direction that is truly orthogonal to the tangent vector
@@ -390,7 +406,6 @@
         bool changeStart = false;   
         int edgeType     = alph1.sortedStruct[0];
         int curType      = alph2.sortedStruct[0];
-        
         if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
             ((curType != C_COIL) && (curType != S_BEND) && (curType != T_H_TURN) && (curType != NOTDEFINED))) {
             changeStart = true;
@@ -400,7 +415,6 @@
         bool changeEnd = false;
         curType        = alph2.sortedStruct[0];
         edgeType       = alph3.sortedStruct[0];        
-        
         if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
             ((curType != C_COIL) && (curType != S_BEND) && (curType != T_H_TURN) && (curType != NOTDEFINED))) {
             changeEnd = true;
@@ -416,7 +430,6 @@
                 color = vec4(1.0, 1.0, 1.0, 1.0);
         }*/
         
-        
         // backbone
         if ((onlyTubes) || ((mytype == C_COIL) || (mytype == S_BEND) || (mytype == T_H_TURN) || (mytype == NOTDEFINED))) 
         {
@@ -425,8 +438,36 @@
             vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
             vrot = normalize(vrot);
         
-            mypos.xyz += pipeWidth * vrot;
-            n = vrot;
+          
+            // displacment of geometry
+
+            float uncFac    = atoms[id[1]].diff;
+            float distorLev = 10.0;   
+            
+            float uDisp     = distorLev * M_PI * gl_TessCoord.x;
+            float vDisp     = distorLev * M_PI * gl_TessCoord.y;
+            float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
+            float fV        = 1.0f;                                  // in range [-1,1]
+                              // uncFac*sin(vDisp);
+            float disp      = (pipeWidth/2.0)*(fU + fV)/2.0;         // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
+            
+            mypos.xyz      += (disp + pipeWidth) * vrot;
+           // OLD: mypos.xyz += pipeWidth * vrot;
+           
+           
+            // adjusting normal
+            
+            float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
+            vec2 vNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
+            vec2 vGrad      = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
+            vec2 vOffset    = (-dot(vGrad, vNormal))*vGrad;          // offset for normal in UV-space
+            
+            float nDisp     = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
+            n = normalize(vrot + nDisp*tangent);
+            
+            // OLD: 
+            // n = vrot;
+
         } 
         else  // alpha helix and beta sheets             
         {
@@ -518,7 +559,8 @@
             }
             
         }
-    
+        
+
         gl_Position = mypos;
     }
 -->
@@ -614,12 +656,6 @@
     /////////
     out layout(location = 0) vec4 outCol;
     
-    ///////////////
-    // variables //
-    ///////////////
-    uniform vec4 specularColor = vec4(1);
-    uniform vec4 phong         = vec4(0.4, 0.8, 0.4, 10.0);
-    
     /////////////////////
     // INPUT variables //
     /////////////////////
@@ -632,11 +668,10 @@
     
     uniform mat4 ProjInv;
     uniform vec4 lightPos;
-    uniform vec4 diffuseColor  = vec4(1);
-    uniform vec4 ambientColor  = vec4(1); 
-    
-    uniform vec4 material  = vec4(1); 
-    
+    uniform vec4 diffuseColor  = vec4(1.0);
+    uniform vec4 ambientColor  = vec4(1.0); 
+    uniform vec4 specularColor = vec4(1.0);    
+    uniform vec4 phong         = vec4(0.6, 0.6, 0.8, 10.0);
   
     //////////
     // MAIN //
@@ -646,7 +681,9 @@
         outCol        = mycol;
         vec4 pos      = ProjInv * gl_FragCoord.xyzw;
         vec4 light    = MV * lightPos;
-        vec3 lightDir = normalize(light.xyz - pos.xyz);
+       
+        //vec3 lightDir = normalize(light.xyz - pos.xyz);
+        vec3 lightDir = normalize(vec3(0.0, 0.5, 1.0));
     
         vec3 n  = normal;
         vec3 e  = pos.xyz;
@@ -661,10 +698,10 @@
             c += vec3(0.0);
         }
         else {
-            c += phong.z * vec3(pow(max(dot(r, normalize(eyenew.xyz - e)), 0.0), phong.w));
+            c += phong.z * vec3(pow(max(dot(r, lightDir), 0.0), phong.w));
         }
         
-        outCol = vec4(c, 1);
+        outCol = vec4(c, 1.0);
     }
 -->
         </snippet>

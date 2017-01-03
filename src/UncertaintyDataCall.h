@@ -187,7 +187,7 @@ namespace megamol {
         *
         * @return The amino-acid three letter code.
         */
-        inline vislib::StringA GetAminoAcid(unsigned int i) const {
+		inline vislib::StringA GetAminoAcidThreeLetterCode(unsigned int i) const {
             if (!this->aminoAcidName)
                 return static_cast<vislib::StringA>("");
             else if (this->aminoAcidName->Count() <= i)
@@ -195,6 +195,20 @@ namespace megamol {
             else
                 return (this->aminoAcidName->operator[](i));
         }
+
+		/**
+		* Get the amino-acid in one letter code.
+		*
+		* @return The amino-acid one letter code.
+		*/
+		inline char GetAminoAcidOneLetterCode(unsigned int i) {
+			if (!this->aminoAcidName)
+				return static_cast<char>(' ');
+			else if (this->aminoAcidName->Count() <= i)
+				return static_cast<char>(' ');
+			else
+				return (this->AminoacidThreeToOneLetterCode(this->aminoAcidName->operator[](i)));
+		}
 
         /**
         * Get the missing amino-acid flag.
@@ -448,6 +462,14 @@ namespace megamol {
 		}
 
 	private:
+
+		/**
+		* Returns the single letter code for an amino acid given the three letter code.
+		*
+		* @param resName The name of the residue as three letter code.
+		* @return The single letter code for the amino acid.
+		*/
+		char AminoacidThreeToOneLetterCode(vislib::StringA resName);
 
         // ------------------ variables ------------------- 
 

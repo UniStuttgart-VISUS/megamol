@@ -33,6 +33,7 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/EnumParam.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
@@ -142,14 +143,15 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
         sphereParam(            "02 Spheres", "Render atoms as spheres."),
 		backboneParam(          "03 Backbone", "Render backbone as tubes."), 
         backboneWidthParam(     "04 Backbone width", "The width of the backbone."),
-		tessLevelParam(         "05 Tess. Level", "The tesselation level."),
+		tessLevelParam(         "05 Tesselation level", "The tesselation level."),
 		lineDebugParam(         "06 Wireframe", "Render in wireframe mode."),
 		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
         materialParam(          "08 Material", "Ambient, diffuse, specular components + exponent."),
-		coloredChainParam(      "09 Colored chains", "Colored chains."),
+		colorModeParam(         "09 Color mode", "Coloring mode for secondary structure."),
         colorInterpolationParam("10 Color interpolation", "Should the colors be interpolated?"),
 		buttonParam(            "11 Reload shaders", "Reload the shaders."),
-		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), currentTessLevel(16), molAtomCount(0),
+		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), 
+		currentTessLevel(16), molAtomCount(0), currentColoringMode(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
         singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) 
@@ -170,9 +172,6 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 
 	this->onlyTubesParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->onlyTubesParam);
-
-	this->coloredChainParam << new core::param::BoolParam(false);
-	this->MakeSlotAvailable(&this->coloredChainParam);
 
 	this->sphereParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->sphereParam);
@@ -201,6 +200,15 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	vislib::math::Vector<float, 4> tmpVec(0.2f, 0.8f, 0.4f, 10.0f);
 	this->materialParam << new core::param::Vector4fParam(tmpVec);
 	this->MakeSlotAvailable(&this->materialParam);
+
+	param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(COLOR_MODE_STRUCT));
+	tmpEnum->SetTypePair(COLOR_MODE_STRUCT,        "Secondary Structure");
+	tmpEnum->SetTypePair(COLOR_MODE_UNCERTAIN,     "Uncertainty");
+	tmpEnum->SetTypePair(COLOR_MODE_CHAIN,         "Chains");
+	tmpEnum->SetTypePair(COLOR_MODE_AMINOACID,     "Aminoacids");
+	tmpEnum->SetTypePair(COLOR_MODE_RESIDUE_DEBUG, "DEBUG residues");
+	this->colorModeParam << tmpEnum;
+	this->MakeSlotAvailable(&this->colorModeParam);
 
 	this->fences.resize(this->numBuffers);
 
@@ -510,6 +518,9 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 	this->chainID.Clear();
 	this->chainID.AssertCapacity(this->aminoAcidCount);
 
+	this->aminoAcidName.Clear();
+	this->aminoAcidName.AssertCapacity(this->aminoAcidCount);
+
 	// collect data from call
 	for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
 
@@ -530,6 +541,8 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 		this->pdbIndex.Add(udc->GetPDBAminoAcidIndex(aa));
 		// store chain id 
 		this->chainID.Add(udc->GetChainID(aa));
+		// store the aminoacid one letter code
+		this->aminoAcidName.Add(udc->GetAminoAcidOneLetterCode(aa));
 	}
 
 
@@ -633,7 +646,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		this->GetUncertaintyData(ud, mol); // use return value ...?
 	}
 
-	// reload shaders
+	// get coloring mode
+	if (this->colorModeParam.IsDirty()) {
+		this->colorModeParam.ResetDirty();
+		
+		this->currentColoringMode = static_cast<int>(this->colorModeParam.Param<param::EnumParam>()->Value());
+	}
+
+	// get new tesselation level
 	if (this->tessLevelParam.IsDirty()) {
 		this->tessLevelParam.ResetDirty();
 
@@ -780,7 +800,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					// extract relevant positions and other values
 					CAlpha calpha;
 
-
 					// DEBUG
 					/*
 					std::cout << " mol index: " << aaIdx
@@ -796,7 +815,16 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 						calpha.unc[k] = this->secUncertainty[uncIndex][k];
 					}
-					calpha.chain = static_cast<int>(this->chainID[uncIndex]);
+					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
+						calpha.colIdx = static_cast<int>(this->chainID[uncIndex]);
+					}
+					else if (this->currentColoringMode == (int)COLOR_MODE_AMINOACID) {
+						calpha.colIdx = static_cast<int>(this->aminoAcidName[uncIndex]);
+					}
+					else
+					{
+						calpha.colIdx = 0;
+					}
 					calpha.flag = this->residueFlag[uncIndex];
 					calpha.diff = this->diffUncertainty[uncIndex];
 					
@@ -898,7 +926,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
 		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), (GLint)this->colorInterpolationParam.Param<param::BoolParam>()->Value());
 		glUniform4fv(this->tubeShader.ParameterLocation("structColRGB"), structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
-		glUniform1i(this->tubeShader.ParameterLocation("coloredChain"), (GLint)this->coloredChainParam.Param<param::BoolParam>()->Value());
+		glUniform1i(this->tubeShader.ParameterLocation("colorMode"), (GLint)this->currentColoringMode);
 		glUniform1i(this->tubeShader.ParameterLocation("onlyTubes"), (GLint)this->onlyTubesParam.Param<param::BoolParam>()->Value());
 
 
@@ -908,7 +936,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("specularColor"), lightSpecular[0], lightSpecular[1], lightSpecular[2], lightSpecular[3]);
-		glUniform4fv(this->tubeShader.ParameterLocation("material"), 1, (GLfloat *)this->materialParam.Param<param::Vector4fParam>()->Value().PeekComponents());
+		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->materialParam.Param<param::Vector4fParam>()->Value().PeekComponents());
 
 
 		UINT64 numVerts;
