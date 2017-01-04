@@ -133,10 +133,10 @@ namespace megamol {
 			return "";
 		}
 
- 
+		/** CTOR */
         UncertaintyDataCall(void);
 
-
+		/** DTOR */
         ~UncertaintyDataCall(void);
 
 

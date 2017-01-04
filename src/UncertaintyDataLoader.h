@@ -131,7 +131,14 @@ namespace megamol {
             *
             *@return True on success
             */
-            bool CalculateUncertaintyAverage(void);             
+            bool CalculateUncertaintyAverage(void);    
+
+			/**
+			* Compute uncertainty on current secondary structure data with method EXTENDED.
+			*
+			*@return True on success
+			*/
+			bool CalculateUncertaintyExtended(void);
 
 			// ------------------ variables ------------------- 
 

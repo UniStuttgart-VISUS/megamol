@@ -193,7 +193,8 @@ namespace megamol {
 		{
 			float pos[4];
 			float dir[3]; 
-			int   colIdx;
+			int   colIdx; // unused - don't delete ... shader is corrupt otherwise - WHY?
+			float col[4];
 			float diff;
 			int   flag;
 			float unc[UncertaintyDataCall::secStructure::NOE];
@@ -216,6 +217,17 @@ namespace megamol {
 			COLOR_MODE_CHAIN         = 2,
 			COLOR_MODE_AMINOACID     = 3,
 			COLOR_MODE_RESIDUE_DEBUG = 4
+		};
+
+		/**
+		* structure for uncertain visualisations
+		*/
+		enum uncVisualisations {
+			UNC_VIS_NONE   = 0,
+			UNC_VIS_SIN_U  = 1,
+			UNC_VIS_SIN_V  = 2,
+			UNC_VIS_SIN_UV = 3,
+
 		};
 
         /**********************************************************************
@@ -244,6 +256,10 @@ namespace megamol {
 		core::param::ParamSlot tessLevelParam;
 		core::param::ParamSlot colorModeParam;
 		core::param::ParamSlot onlyTubesParam;
+		core::param::ParamSlot colorTableFileParam;
+		core::param::ParamSlot lightPosParam;
+		core::param::ParamSlot uncVisParam;
+		core::param::ParamSlot uncDistorParam;
                 
         GLuint              vertArray;
         std::vector<GLsync> fences;           // (?)
@@ -255,10 +271,15 @@ namespace megamol {
 		void               *theSingleMappedMem;
 		GLuint              singleBufferCreationBits;
         GLuint              singleBufferMappingBits;
-		// the current tesselation level
-		int                 currentTessLevel;
-		int                 currentColoringMode;
-        
+
+		int                            currentTessLevel;
+		uncVisualisations              currentUncVis;
+	    coloringModes                  currentColoringMode;
+		vislib::math::Vector<float, 4> currentLightPos;
+		float                          currentScaling;
+		float                          currentBackboneWidth;
+		vislib::math::Vector<float, 4> currentMaterial;
+		vislib::math::Vector<float, 4> currentUncDist;
 
 		/** shader for the tubes */
 		vislib::graphics::gl::GLSLTesselationShader tubeShader;
@@ -276,11 +297,6 @@ namespace megamol {
         vislib::SmartPtr<ShaderSource> tubeGeom;
         vislib::SmartPtr<ShaderSource> tubeFrag;
 
-
-        // positions of C-alpha-atoms and O-atoms
-        vislib::Array<vislib::Array<float> > positionsCa;
-        vislib::Array<vislib::Array<float> > positionsO;
-
         // C-alpha main chain
 		std::vector<CAlpha> mainChain;
         
@@ -291,10 +307,6 @@ namespace megamol {
 		unsigned int aminoAcidCount;
 		// The original PDB index
 		vislib::Array<vislib::StringA> pdbIndex;
-		// The chain id
-		vislib::Array<char> chainID;
-		// The array of amino acid 1-letter codes
-		vislib::Array<char> aminoAcidName;
 		// The synchronized index between molecular data and uncertainty data
 		vislib::Array<unsigned int> synchronizedIndex;
 		// the array for the residue flag
@@ -308,13 +320,19 @@ namespace megamol {
 		// The sorted structure types of the uncertainty values
 		vislib::Array<vislib::math::Vector<unsigned int, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
 
-
+		// color table for chain id per amino acid
+		vislib::Array<vislib::math::Vector<float, 3> > chainColors;
+		// color table for amino acid per amino acid
+		vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColors;
 		// secondary structure type colors as RGB(A)
 		vislib::Array<vislib::math::Vector<float, 4> > secStructColorRGB;
+		// color table
+		vislib::Array<vislib::math::Vector<float, 3> > colorTable;
 
+		// positions of C-alpha-atoms and O-atoms
+		vislib::Array<vislib::Array<float> > positionsCa;
+		vislib::Array<vislib::Array<float> > positionsO;
 
-		// secondary structure type colors as HSL(A)
-		vislib::Array<vislib::math::Vector<float, 4> > secStructColorHSL;  // unused so far ...
 		// selection 
 		vislib::Array<bool> selection;                                     // unused so far ...
 		protein_calls::ResidueSelectionCall *resSelectionCall;             // unused so far ...

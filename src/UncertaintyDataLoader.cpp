@@ -128,7 +128,11 @@ bool UncertaintyDataLoader::getData(Call& call) {
                     return false;
                 }
                 break;
-                                   
+			case (EXTENDED) :
+				if (!this->CalculateUncertaintyExtended()) {
+					return false;
+				}
+				break;
             default: return false;
         }
         udc->SetRecalcFlag(true);
@@ -397,7 +401,102 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 
 
 /*
-* UncertaintyDataLoader::calculateUncertainty
+* UncertaintyDataLoader::CalculateUncertaintyExtended
+*/
+bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
+	using vislib::sys::Log;
+
+	float methodCount;
+	float tmpChange;
+
+	// Reset uncertainty data 
+	this->secStructUncertainty.Clear();
+	this->sortedSecStructUncertainty.Clear();
+	this->diffUncertainty.Clear();
+
+	if (this->pdbIndex.IsEmpty()) { // return if no data is present ...
+		return false;
+	}
+	this->secStructUncertainty.AssertCapacity(this->pdbIndex.Count());
+	this->sortedSecStructUncertainty.AssertCapacity(this->pdbIndex.Count());
+	this->diffUncertainty.AssertCapacity(this->pdbIndex.Count());
+
+
+
+
+
+	// initialize structure factors for all three methods with 1.0f
+	vislib::Array<vislib::Array<float> > structFactor;
+	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
+		structFactor.Add(vislib::Array<float>());
+		for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); j++) {
+			structFactor[i].Add(1.0f);
+		}
+	}
+
+	// Initialize and calculate uncertainty data
+	for (int i = 0; i < this->pdbIndex.Count(); i++) {
+
+		// create new entry for amino-acid
+		this->secStructUncertainty.Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
+		this->sortedSecStructUncertainty.Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
+
+		methodCount = static_cast<float>(UncertaintyDataCall::assMethod::NOM);
+
+		// loop over all possible secondary strucutres
+		for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
+
+			// initialising
+			this->secStructUncertainty.Last()[j] = 0.0f;
+			this->sortedSecStructUncertainty.Last()[j] = static_cast<UncertaintyDataCall::secStructure>(j);
+
+			// loop over all methods
+			for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
+
+				if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
+					// ignore NOTDEFINED structure type for uncerainty calculation
+					if (static_cast<UncertaintyDataCall::secStructure>(j) == UncertaintyDataCall::secStructure::NOTDEFINED) {
+						methodCount -= 1.0f;
+					}
+					else {
+						this->secStructUncertainty.Last()[j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
+					}
+				}
+				else {
+					this->secStructUncertainty.Last()[j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
+				}
+			}
+		}
+
+		// normalise
+		for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
+			this->secStructUncertainty.Last()[j] /= abs(methodCount);
+		}
+
+		// using quicksort for sorting ...
+		this->QuickSortUncertainties(&(this->secStructUncertainty.Last()), &(this->sortedSecStructUncertainty.Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+
+		// calculate change measure 
+		tmpChange = 0.0f;
+		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM) - 1; k++) {
+			tmpChange += (this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k]] - this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k + 1]]);
+		}
+		this->diffUncertainty.Add(1.0f - tmpChange);
+
+		// DEBUG
+		// std::cout << this->diffUncertainty.Last() << std::endl;
+	}
+
+
+
+
+
+	return true;
+}
+
+
+/*
+* UncertaintyDataLoader::CalculateUncertaintyAverage
 */
 bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
     using vislib::sys::Log;

@@ -2298,16 +2298,18 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
             cCnt++;
         }
 
+		/*
 		// function for chain color assignment shaould be the same as in 'uncertaintycartoontessellation.btf' (~ line 353)
 		// -> vec4(1.0 - float(chainIndex % 5) / 4.0, float(chainIndex % 3) / 2.0, float(chainIndex % 5) / 4.0, 1.0);
 		this->chainColors.Add(1.0f - float((int)currentChainID % 5) / 4.0f);
 		this->chainColors.Add(float((int)currentChainID % 3) / 2.0f);
 		this->chainColors.Add(float((int)currentChainID % 5) / 4.0f);
-		/*
+		*/
+		
 		this->chainColors.Add(this->colorTable[cCnt].X());
 		this->chainColors.Add(this->colorTable[cCnt].Y());
 		this->chainColors.Add(this->colorTable[cCnt].Z());
-		*/
+		
 
         // compute the position of the amino-acid icon
         if (aa == 0) {

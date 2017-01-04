@@ -34,12 +34,14 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
 
+#include "UncertaintyColor.h" 
 
 using namespace megamol::core;
 using namespace megamol::protein_calls;
@@ -136,34 +138,38 @@ void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum
  * UncertaintyCartoonRenderer::UncertaintyCartoonRenderer (CTOR)
  */ 
 UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(),
-        getPdbDataSlot(         "getPdbData", "Connects to the pdb data source."),
-        uncertaintyDataSlot(    "uncertaintyDataSlot", "Connects the cartoon tesselation rendering with uncertainty data storage."),
+		getPdbDataSlot(         "getPdbData", "Connects to the pdb data source."),
+		uncertaintyDataSlot(    "uncertaintyDataSlot", "Connects the cartoon tesselation rendering with uncertainty data storage."),
 		resSelectionCallerSlot( "getResSelection", "Connects the cartoon rendering with residue selection storage."),
-        scalingParam(           "01 Scaling", "Scaling factor for particle radii."),
-        sphereParam(            "02 Spheres", "Render atoms as spheres."),
-		backboneParam(          "03 Backbone", "Render backbone as tubes."), 
-        backboneWidthParam(     "04 Backbone width", "The width of the backbone."),
+
+		scalingParam(           "01 Scaling", "Scaling factor for particle radii."),
+		sphereParam(            "02 Spheres", "Render atoms as spheres."),
+		backboneParam(          "03 Backbone", "Render backbone as tubes."),
+		backboneWidthParam(     "04 Backbone width", "The width of the backbone."),
 		tessLevelParam(         "05 Tesselation level", "The tesselation level."),
 		lineDebugParam(         "06 Wireframe", "Render in wireframe mode."),
 		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
-        materialParam(          "08 Material", "Ambient, diffuse, specular components + exponent."),
-		colorModeParam(         "09 Color mode", "Coloring mode for secondary structure."),
-        colorInterpolationParam("10 Color interpolation", "Should the colors be interpolated?"),
-		buttonParam(            "11 Reload shaders", "Reload the shaders."),
-		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), 
-		currentTessLevel(16), molAtomCount(0), currentColoringMode(0),
+		uncVisParam(            "08 Uncertainty visualisation", "The uncertainty visualisation."),
+		uncDistorParam(         "09 Uncertainty distortion", "Amplification, 2*PI-factor, uncertainty overall(true if value = 0.0), unused."),
+		lightPosParam(          "10 Light position", "The light position."),
+		materialParam(          "11 Material", "Ambient, diffuse, specular components + exponent."),
+		colorModeParam(         "12 Color mode", "Coloring mode for secondary structure."),
+		colorInterpolationParam("13 Color interpolation", "Should the colors be interpolated?"),
+		buttonParam(            "14 Reload shaders", "Reload the shaders."),
+		colorTableFileParam(    "15 Color Table Filename", "The filename of the color table."),
+		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
         singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) 
         {
 
-    // uncertainty data caller slot
-    this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
-    this->MakeSlotAvailable(&this->uncertaintyDataSlot);
+	// uncertainty data caller slot
+	this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
+	this->MakeSlotAvailable(&this->uncertaintyDataSlot);
 
-    // pdb data caller slot
-    this->getPdbDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
-    this->MakeSlotAvailable(&this->getPdbDataSlot);
+	// pdb data caller slot
+	this->getPdbDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
+	this->MakeSlotAvailable(&this->getPdbDataSlot);
 
 	// residue selection caller slot
 	this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
@@ -179,36 +185,70 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->backboneParam << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->backboneParam);
 
-    this->scalingParam << new core::param::FloatParam(1.0f);
-    this->MakeSlotAvailable(&this->scalingParam);
-    
-	this->backboneWidthParam << new core::param::FloatParam(0.2f);
-	this->MakeSlotAvailable(&this->backboneWidthParam);
-
 	this->lineDebugParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->lineDebugParam);
-
-	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
-	this->MakeSlotAvailable(&this->buttonParam);
-	                                          // init min max
-	this->tessLevelParam << new core::param::IntParam(16, 6, 30);
-	this->MakeSlotAvailable(&this->tessLevelParam);
 
 	this->colorInterpolationParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->colorInterpolationParam);
 
-	vislib::math::Vector<float, 4> tmpVec(0.2f, 0.8f, 0.4f, 10.0f);
-	this->materialParam << new core::param::Vector4fParam(tmpVec);
+	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
+	this->MakeSlotAvailable(&this->buttonParam);
+
+	// init min max
+	this->tessLevelParam << new core::param::IntParam(16, 6, 30);
+	this->MakeSlotAvailable(&this->tessLevelParam);
+
+	this->scalingParam << new core::param::FloatParam(1.0f);
+	this->MakeSlotAvailable(&this->scalingParam);
+
+	this->backboneWidthParam << new core::param::FloatParam(0.2f);
+	this->MakeSlotAvailable(&this->backboneWidthParam);
+
+	vislib::math::Vector<float, 4> tmpVec4(0.2f, 0.8f, 0.4f, 10.0f);
+	this->materialParam << new core::param::Vector4fParam(tmpVec4);
 	this->MakeSlotAvailable(&this->materialParam);
 
+	tmpVec4 = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
+	this->lightPosParam << new core::param::Vector4fParam(tmpVec4);
+	this->MakeSlotAvailable(&this->lightPosParam);
+
+	tmpVec4 = vislib::math::Vector<float, 4>(1.0f, 5.0f, 0.0f, 0.0f);
+	this->uncDistorParam << new core::param::Vector4fParam(tmpVec4);
+	this->MakeSlotAvailable(&this->uncDistorParam);
+
 	param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(COLOR_MODE_STRUCT));
-	tmpEnum->SetTypePair(COLOR_MODE_STRUCT,        "Secondary Structure");
-	tmpEnum->SetTypePair(COLOR_MODE_UNCERTAIN,     "Uncertainty");
+	tmpEnum->SetTypePair(COLOR_MODE_STRUCT, "Secondary Structure");
+	tmpEnum->SetTypePair(COLOR_MODE_UNCERTAIN, "Uncertainty");
 	tmpEnum->SetTypePair(COLOR_MODE_CHAIN,         "Chains");
 	tmpEnum->SetTypePair(COLOR_MODE_AMINOACID,     "Aminoacids");
 	tmpEnum->SetTypePair(COLOR_MODE_RESIDUE_DEBUG, "DEBUG residues");
 	this->colorModeParam << tmpEnum;
 	this->MakeSlotAvailable(&this->colorModeParam);
+
+	tmpEnum = new param::EnumParam(static_cast<int>(UNC_VIS_SIN_UV));
+	tmpEnum->SetTypePair(UNC_VIS_NONE,   "None");
+	tmpEnum->SetTypePair(UNC_VIS_SIN_U,  "Sinus U");
+	tmpEnum->SetTypePair(UNC_VIS_SIN_V,  "Sinus V");
+	tmpEnum->SetTypePair(UNC_VIS_SIN_UV, "Sinus UV");
+	this->uncVisParam << tmpEnum;
+	this->MakeSlotAvailable(&this->uncVisParam);
+
+	// fill color table with default values and set the filename param
+	vislib::StringA filename("colors.txt");
+	this->colorTableFileParam.SetParameter(new param::FilePathParam(A2T(filename)));
+	this->MakeSlotAvailable(&this->colorTableFileParam);
+	UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
+
+	this->currentTessLevel     = 16;
+	this->currentUncVis        = uncVisualisations::UNC_VIS_SIN_U;
+	this->currentColoringMode  = coloringModes::COLOR_MODE_STRUCT;
+	this->currentScaling       = 1.0f;
+	this->currentBackboneWidth = 0.2f;
+	this->currentMaterial      = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);;
+	this->currentColoringMode  = coloringModes::COLOR_MODE_STRUCT;
+	this->currentUncVis        = uncVisualisations::UNC_VIS_SIN_UV;
+	this->currentLightPos      = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
+	this->currentUncDist       = vislib::math::Vector<float, 4>(1.0f, 5.0f, 0.0f, 0.0f);
 
 	this->fences.resize(this->numBuffers);
 
@@ -479,16 +519,6 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 	this->secStructColorRGB.Clear();
 	this->secStructColorRGB.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
 
-	this->secStructColorHSL.Clear();
-	this->secStructColorHSL.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
-
-	// get secondary structure type colors 
-	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
-		this->secStructColorRGB.Add(udc->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(i)));
-		// convert RGB secondary structure type colors from RGB to HSL
-		// this->secStructColorHSL.Add(this->rgb2hsl(this->secStructColorRGB.Last()));
-	}
-
 	// reset arrays
 	this->secUncertainty.Clear();
 	this->secUncertainty.AssertCapacity(this->aminoAcidCount);
@@ -515,11 +545,19 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 	this->pdbIndex.Clear();
 	this->pdbIndex.AssertCapacity(this->aminoAcidCount);
 
-	this->chainID.Clear();
-	this->chainID.AssertCapacity(this->aminoAcidCount);
+	this->chainColors.Clear();
+	this->chainColors.AssertCapacity(this->aminoAcidCount);
 
-	this->aminoAcidName.Clear();
-	this->aminoAcidName.AssertCapacity(this->aminoAcidCount);
+	this->aminoAcidColors.Clear();
+	this->aminoAcidColors.AssertCapacity(this->aminoAcidCount);
+
+	// get secondary structure type colors 
+	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
+		this->secStructColorRGB.Add(udc->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(i)));
+	}
+
+	unsigned int cCnt = 0;
+	char currentChainID = udc->GetChainID(0);
 
 	// collect data from call
 	for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
@@ -539,10 +577,24 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 		this->diffUncertainty.Add(udc->GetDifference(aa));
 		// store the original pdb index
 		this->pdbIndex.Add(udc->GetPDBAminoAcidIndex(aa));
-		// store chain id 
-		this->chainID.Add(udc->GetChainID(aa));
-		// store the aminoacid one letter code
-		this->aminoAcidName.Add(udc->GetAminoAcidOneLetterCode(aa));
+
+
+		// count different chains and set chain color
+		if (udc->GetChainID(aa) != currentChainID) {
+			currentChainID = udc->GetChainID(aa);
+			cCnt++;
+		}
+		this->chainColors.Add(this->colorTable[cCnt]);
+		
+		// set colors for amino acids
+		
+		char tmpAA = udc->GetAminoAcidOneLetterCode(aa);
+		if (tmpAA == '?') {
+			this->aminoAcidColors.Add(this->colorTable[this->colorTable.Count()-1]);
+		}
+		else {
+			this->aminoAcidColors.Add(this->colorTable[((unsigned int)tmpAA - 65)]);
+		}
 	}
 
 
@@ -646,24 +698,55 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		this->GetUncertaintyData(ud, mol); // use return value ...?
 	}
 
+
+	// get scaling factor
+	if (this->scalingParam.IsDirty()) {
+		this->scalingParam.ResetDirty();
+		this->currentScaling = static_cast<float>(this->scalingParam.Param<param::FloatParam>()->Value());
+	}
+	// get backbone width
+	if (this->backboneWidthParam.IsDirty()) {
+		this->backboneWidthParam.ResetDirty();
+		this->currentBackboneWidth = static_cast<float>(this->backboneWidthParam.Param<param::FloatParam>()->Value());
+	}
+	// get material lighting properties
+	if (this->materialParam.IsDirty()) {
+		this->materialParam.ResetDirty();
+		this->currentMaterial = static_cast<vislib::math::Vector<float, 4>>(this->materialParam.Param<param::Vector4fParam>()->Value());
+	}
+	// get uncertainty distortion
+	if (this->uncDistorParam.IsDirty()) {
+		this->uncDistorParam.ResetDirty();
+		this->currentUncDist = static_cast<vislib::math::Vector<float, 4>>(this->uncDistorParam.Param<param::Vector4fParam>()->Value());
+	}
+	// get uncertainty visualisation mode
+	if (this->uncVisParam.IsDirty()) {
+		this->uncVisParam.ResetDirty();
+		this->currentUncVis = static_cast<uncVisualisations>(this->uncVisParam.Param<param::EnumParam>()->Value());
+	}
+	// read and update the color table, if necessary
+	if (this->colorTableFileParam.IsDirty()) {
+		UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
+		this->colorTableFileParam.ResetDirty();
+	}
+	// get lighting position
+	if (this->lightPosParam.IsDirty()) {
+		this->lightPosParam.ResetDirty();
+		this->currentLightPos = static_cast<vislib::math::Vector<float, 4>>(this->lightPosParam.Param<param::Vector4fParam>()->Value());
+	}
 	// get coloring mode
 	if (this->colorModeParam.IsDirty()) {
 		this->colorModeParam.ResetDirty();
-		
-		this->currentColoringMode = static_cast<int>(this->colorModeParam.Param<param::EnumParam>()->Value());
+		this->currentColoringMode = static_cast<coloringModes>(this->colorModeParam.Param<param::EnumParam>()->Value());
 	}
-
 	// get new tesselation level
 	if (this->tessLevelParam.IsDirty()) {
 		this->tessLevelParam.ResetDirty();
-
 		this->currentTessLevel = this->tessLevelParam.Param<param::IntParam>()->Value();
 	}
-
     // reload shaders
 	if (this->buttonParam.IsDirty()) {
 		this->buttonParam.ResetDirty();
-
 		if (!this->loadTubeShader()) {
 			return false;
 		}
@@ -815,16 +898,25 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 						calpha.unc[k] = this->secUncertainty[uncIndex][k];
 					}
+					
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
-						calpha.colIdx = static_cast<int>(this->chainID[uncIndex]);
+						for (unsigned int k = 0; k < 3; k++) {
+							calpha.col[k] = this->chainColors[uncIndex][k];
+						}
 					}
 					else if (this->currentColoringMode == (int)COLOR_MODE_AMINOACID) {
-						calpha.colIdx = static_cast<int>(this->aminoAcidName[uncIndex]);
+						for (unsigned int k = 0; k < 3; k++) {
+							calpha.col[k] = this->aminoAcidColors[uncIndex][k];
+						}
 					}
 					else
 					{
-						calpha.colIdx = 0;
+						for (unsigned int k = 0; k < 3; k++) {
+							calpha.col[k] = 0.0f;
+						}
 					}
+					
+
 					calpha.flag = this->residueFlag[uncIndex];
 					calpha.diff = this->diffUncertainty[uncIndex];
 					
@@ -897,7 +989,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		// vertex
 		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
 
-		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->scalingParam.Param<param::FloatParam>()->Value());
+		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->currentScaling);
 
 		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
 		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
@@ -923,20 +1015,22 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform1i(this->tubeShader.ParameterLocation("tessLevel"), this->currentTessLevel);
 
 		// only tesselation evaluation 
-		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->backboneWidthParam.Param<param::FloatParam>()->Value());
+		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->currentBackboneWidth);
 		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), (GLint)this->colorInterpolationParam.Param<param::BoolParam>()->Value());
 		glUniform4fv(this->tubeShader.ParameterLocation("structColRGB"), structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
 		glUniform1i(this->tubeShader.ParameterLocation("colorMode"), (GLint)this->currentColoringMode);
 		glUniform1i(this->tubeShader.ParameterLocation("onlyTubes"), (GLint)this->onlyTubesParam.Param<param::BoolParam>()->Value());
-
+		glUniform1i(this->tubeShader.ParameterLocation("uncVis"), (GLint)this->currentUncVis);
+		glUniform4fv(this->tubeShader.ParameterLocation("uncDistor"), 1, (GLfloat *)this->currentUncDist.PeekComponents());
 
 		// only fragment shader
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
-		glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
+		glUniform4fv(this->tubeShader.ParameterLocation("lightPos"), 1, (GLfloat *)this->currentLightPos.PeekComponents());
+			// glUniform4f(this->tubeShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2], lightPos[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("ambientColor"), lightAmbient[0], lightAmbient[1], lightAmbient[2], lightAmbient[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("specularColor"), lightSpecular[0], lightSpecular[1], lightSpecular[2], lightSpecular[3]);
-		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->materialParam.Param<param::Vector4fParam>()->Value().PeekComponents());
+		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->currentMaterial.PeekComponents());
 
 
 		UINT64 numVerts;

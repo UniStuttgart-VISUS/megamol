@@ -172,8 +172,9 @@
     struct CAlpha
     {
         vec4  pos;
-        vec3  dir;      
-        int   colIdx;
+        vec3  dir;
+        int   colIdx;        
+        vec4  col;
 	    float diff;
 		int   flag; 
 		float unc[STRUCT_COUNT];
@@ -248,6 +249,12 @@
 	#define COLOR_MODE_AMINOACID     3
     #define COLOR_MODE_RESIDUE_DEBUG 4
             
+    // should be equal to 'UncertaintyCartoonRenderer::uncVisualisations':   
+    #define UNC_VIS_NONE   0
+	#define UNC_VIS_SIN_U  1
+	#define UNC_VIS_SIN_V  2    
+	#define UNC_VIS_SIN_UV 3
+    
     ////////////////
     // EXTENSIONS //
     ////////////////  
@@ -274,21 +281,23 @@
     ///////////////
     // variables //
     ///////////////    
-    uniform float minDistance = 1.0;
-    uniform float maxDistance = 1.0;
+    uniform float minDistance = 1.0;                       // unused
+    uniform float maxDistance = 1.0;                       // unused
 
     uniform bool                interpolateColors = false;
+    uniform bool                onlyTubes         = false;    
     uniform float               pipeWidth         = 1.0;
     uniform int                 colorMode         = 0;
-    uniform bool                onlyTubes         = false;
+    uniform int                 uncVis            = 0;
     uniform vec4[STRUCT_COUNT]  structColRGB;              // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
-
+    uniform vec4                uncDistor;                 // uncertainty distortion parameters
     
     struct CAlpha
     {
         vec4  pos;
-        vec3  dir;      
-        int   colIdx;
+        vec3  dir;
+        int   colIdx;                                      // unused - don't delete ... otherwise shader has 'strange' behaviour - WHY?
+        vec4  col;
 	    float diff;
 		int   flag; 
 		float unc[STRUCT_COUNT];
@@ -344,25 +353,20 @@
     
         // assign colors
         vec4 colors[4];
-        int colorIndex;
         for(int i = 0; i < 4; i++)
         {        
-            if ((colorMode == COLOR_MODE_STRUCT) || (colorMode == COLOR_MODE_UNCERTAIN)) {
+            if (colorMode == COLOR_MODE_STRUCT) {
                 colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[0]];
-            }        
-            else {
-                if (colorMode == COLOR_MODE_CHAIN) {
-                    colorIndex = atoms[id[0] + i - 1].colIdx; 
-                    colors[i] = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
-                }
-                else if (colorMode == COLOR_MODE_AMINOACID) {
-                    colorIndex = atoms[id[0] + i - 1].colIdx; 
-                    colors[i] = vec4(1.0 - float(colorIndex % 26) / 25.0, 0.5 + (0.5 - float(colorIndex % 26) / 25.0), float(colorIndex % 26) / 25.0, 1.0);
-                }                
-                else if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
-                    colorIndex = id[0] + i - 1;
-                    colors[i] = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
-                }
+            }     
+            else if (colorMode == COLOR_MODE_UNCERTAIN) {
+                colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[0]];
+            }                    
+            else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
+                colors[i] = atoms[id[0] + i - 1].col; 
+            }
+            else { // if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
+                int colorIndex = id[0] + i - 1;
+                colors[i] = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
             }
         }
     
@@ -438,36 +442,9 @@
             vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
             vrot = normalize(vrot);
         
-          
-            // displacment of geometry
-
-            float uncFac    = atoms[id[1]].diff;
-            float distorLev = 10.0;   
-            
-            float uDisp     = distorLev * M_PI * gl_TessCoord.x;
-            float vDisp     = distorLev * M_PI * gl_TessCoord.y;
-            float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
-            float fV        = 1.0f;                                  // in range [-1,1]
-                              // uncFac*sin(vDisp);
-            float disp      = (pipeWidth/2.0)*(fU + fV)/2.0;         // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
-            
-            mypos.xyz      += (disp + pipeWidth) * vrot;
-           // OLD: mypos.xyz += pipeWidth * vrot;
-           
-           
-            // adjusting normal
-            
-            float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
-            vec2 vNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
-            vec2 vGrad      = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
-            vec2 vOffset    = (-dot(vGrad, vNormal))*vGrad;          // offset for normal in UV-space
-            
-            float nDisp     = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
-            n = normalize(vrot + nDisp*tangent);
-            
-            // OLD: 
-            // n = vrot;
-
+            mypos.xyz += pipeWidth * vrot;
+            n = vrot;
+                            
         } 
         else  // alpha helix and beta sheets             
         {
@@ -560,7 +537,82 @@
             
         }
         
+        
+        float uncFac    = 1.0;
+        if (uncDistor[2] > 0.0) {
+            uncFac      = atoms[id[1]].diff;                     // in range [0,1] - 1.0; // 
+        }    
+        float distorLev = uncDistor[1];  
+        float ampLevel  = uncDistor[0];
+            
+        if (uncVis == UNC_VIS_SIN_U) { // U
+        
+            // displacment of geometry
+            float uDisp     = distorLev * M_PI * gl_TessCoord.x;
+            float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
+            float disp      = (pipeWidth/2.0)*(fU);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
+            if(fU > 0.0) {
+                disp *= ampLevel;
+            }
+            mypos.xyz      += (disp + pipeWidth) * n;
 
+            // adjusting normal
+            float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
+            vec2 uNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
+            vec2 uGrad      = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
+            vec2 uOffset    = (-dot(uGrad, uNormal))*uGrad;          // offset vector for normal in UV-space
+            float uNdisp    = dot(vec2(1.0, 0.0), uOffset);          // offset projected on tangent in UV-space
+            n = normalize(n + uNdisp*tangent);
+        }
+        else if (uncVis == UNC_VIS_SIN_V) { // V
+        
+            // displacment of geometry
+            float vDisp     = distorLev * M_PI * gl_TessCoord.y;
+            float fV        = uncFac*sin(vDisp);                     // in range [-1,1]
+            float disp      = (pipeWidth/2.0)*(fV);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
+            if(fV > 0.0) {
+                disp *= ampLevel;
+            }
+            mypos.xyz      += (disp + pipeWidth) * n;
+
+            // adjusting normal
+            float vM        = uncFac*cos(vDisp);                     // derivation = gradient of fU
+            vec2 vNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
+            vec2 vGrad      = normalize(vec2(1.0, vM));              // tangent of fU in UV-space
+            vec2 vOffset    = (-dot(vGrad, vNormal))*vGrad;          // offset vector for normal in UV-space
+            float vNdisp    = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
+            n = normalize(n + vNdisp*cross(n, tangent)); 
+        }
+        else if (uncVis == UNC_VIS_SIN_UV) { // U,V
+        
+            // displacment of geometry
+            float uDisp     = distorLev * M_PI * gl_TessCoord.x;
+            float vDisp     = distorLev * M_PI * gl_TessCoord.y;
+            float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
+            float fV        = uncFac*sin(vDisp);                     // in range [-1,1]
+            float disp      = (pipeWidth/2.0)*(fU);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
+            if ((fU > 0.0) && (fV > 0.0)) {
+                disp = (pipeWidth/2.0)*(fU * fV);
+                disp *= ampLevel;
+            }
+            mypos.xyz      += (disp + pipeWidth) * n;
+
+            // adjusting normal
+            float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
+            vec2 uNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
+            vec2 uGrad      = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
+            vec2 uOffset    = (-dot(uGrad, uNormal))*uGrad;          // offset vector for normal in UV-space
+            float uNdisp     = dot(vec2(1.0, 0.0), uOffset);         // offset projected on tangent in UV-space
+            
+            float vM        = uncFac*cos(vDisp);                     // derivation = gradient of fU
+            vec2 vNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
+            vec2 vGrad      = normalize(vec2(1.0, vM));              // tangent of fU in UV-space
+            vec2 vOffset    = (-dot(vGrad, vNormal))*vGrad;          // offset vector for normal in UV-space
+            float vNdisp    = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
+            
+            n = normalize(n + uNdisp*tangent + vNdisp*cross(n, tangent));        
+        }        
+            
         gl_Position = mypos;
     }
 -->
@@ -683,7 +735,8 @@
         vec4 light    = MV * lightPos;
        
         //vec3 lightDir = normalize(light.xyz - pos.xyz);
-        vec3 lightDir = normalize(vec3(0.0, 0.5, 1.0));
+        
+        vec3 lightDir = normalize(lightPos.xyz);
     
         vec3 n  = normal;
         vec3 e  = pos.xyz;
