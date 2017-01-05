@@ -150,7 +150,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		lineDebugParam(         "06 Wireframe", "Render in wireframe mode."),
 		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
 		uncVisParam(            "08 Uncertainty visualisation", "The uncertainty visualisation."),
-		uncDistorParam(         "09 Uncertainty distortion", "Amplification, 2*PI-factor, uncertainty overall(true if value = 0.0), unused."),
+		uncDistorParam(         "09 Uncertainty distortion", "(0) amplification, (1) repeat of sin(2*PI), (2) apply uncertainty all over (true if value = 0.0), (3) unused."),
 		lightPosParam(          "10 Light position", "The light position."),
 		materialParam(          "11 Material", "Ambient, diffuse, specular components + exponent."),
 		colorModeParam(         "12 Color mode", "Coloring mode for secondary structure."),
@@ -195,7 +195,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->MakeSlotAvailable(&this->buttonParam);
 
 	// init min max
-	this->tessLevelParam << new core::param::IntParam(16, 6, 30);
+	this->tessLevelParam << new core::param::IntParam(16, 1, 64);
 	this->MakeSlotAvailable(&this->tessLevelParam);
 
 	this->scalingParam << new core::param::FloatParam(1.0f);
@@ -217,8 +217,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->MakeSlotAvailable(&this->uncDistorParam);
 
 	param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(COLOR_MODE_STRUCT));
-	tmpEnum->SetTypePair(COLOR_MODE_STRUCT, "Secondary Structure");
-	tmpEnum->SetTypePair(COLOR_MODE_UNCERTAIN, "Uncertainty");
+	tmpEnum->SetTypePair(COLOR_MODE_STRUCT,        "Secondary Structure");
+	tmpEnum->SetTypePair(COLOR_MODE_UNCERTAIN,     "Uncertainty");
 	tmpEnum->SetTypePair(COLOR_MODE_CHAIN,         "Chains");
 	tmpEnum->SetTypePair(COLOR_MODE_AMINOACID,     "Aminoacids");
 	tmpEnum->SetTypePair(COLOR_MODE_RESIDUE_DEBUG, "DEBUG residues");

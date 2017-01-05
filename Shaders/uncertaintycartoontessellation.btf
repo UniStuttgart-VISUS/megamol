@@ -40,7 +40,7 @@
     /////////////////////   
     uniform vec4      viewAttr;                             
 
-    uniform float     scaling;                             // only used by slpine shader    
+    uniform float     scaling;                             // UNUSED - only used by slpine shader    
     
     uniform vec3      camIn;
     uniform vec3      camUp;
@@ -57,9 +57,9 @@
     uniform mat4      MVPtransp;
 
     uniform vec4      inConsts1;
-    uniform int       instanceOffset;                      // used for what ? - always 0 assigned
-
-    // uniform sampler1D colTab;                          // 1D texture (unused)
+    
+    uniform int       instanceOffset;                         // UNUSED - for what ? - always 0 assigned
+    // uniform sampler1D colTab;                              // UNUSED - 1D texture
 
 -->
         </snippet>
@@ -75,9 +75,9 @@
     //////////
     void main(void) {
     
-        float theColIdx;                                   // = ... ?       | unused - NOT initialised ?
-        vec4  theColor;                                    // = gl_Color    | unused - NOT initialised ?
-        vec4  inPos;                                       // = gl_Position | unused - NOT initialised ?
+        float theColIdx;                                      // UNUSED - NOT initialised ? (= ... ?)
+        vec4  theColor;                                       // UNUSED - NOT initialised ? (= gl_Color)
+        vec4  inPos;                                          // UNUSED - NOT initialised ? (= gl_Position)
 -->
         </snippet>
         <!-- here comes the injected snippet -->
@@ -102,11 +102,11 @@
 //////////////////////////////////////////
 
     // object pivot point in object space    
-    objPos       = inPos;                                  // no w-div needed, because w is 1.0 (Because I know)
+    objPos       = inPos;                                     // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos       = MVinv[3];                               // (C) by Christoph
-    camPos.xyz  -= objPos.xyz;                             // cam pos to glyph space
+    camPos       = MVinv[3];                                  // (C) by Christoph
+    camPos.xyz  -= objPos.xyz;                                // cam pos to glyph space
 
     // calculate light position in glyph space
     lightPos     = MVinv * gl_LightSource[0].position;
@@ -131,7 +131,7 @@
     /////////////
     // DEFINES //
     /////////////
-    #define STRUCT_COUNT 9                                     // must be equal to 'UncertaintyDataCall::secStructure::NOE'
+    #define STRUCT_COUNT 9                                    // must be equal to 'UncertaintyDataCall::secStructure::NOE'
     
     ////////////////
     // EXTENSIONS //
@@ -160,14 +160,14 @@
     uniform int uOuter0 = 16;
     uniform int uOuter1 = 16;
 
-    uniform int minInner = 6;                              // unused - just as INFO ?
-    uniform int maxInner = 30;                             // unused - just as INFO ?
-    uniform int minOuter = 6;                              // unused - just as INFO ?
-    uniform int maxOuter = 30;                             // unused - just as INFO ?
-
+    // uniform int minInner = 6;                              // UNUSED - just as INFO ?
+    // uniform int maxInner = 30;                             // UNUSED - just as INFO ?
+    // uniform int minOuter = 6;                              // UNUSED - just as INFO ?
+    // uniform int maxOuter = 30;                             // UNUSED - just as INFO ?
+    uniform int instanceOffset = 0;                           // UNUSED ?
+    
     uniform int tessLevel;
 
-    uniform int instanceOffset = 0;                        // unused
 
     struct CAlpha
     {
@@ -191,12 +191,12 @@
     void main() {
         
         int atomPos  = gl_PrimitiveID + (gl_InvocationID % 2);     // 4 invocations because of "layout(vertices = 4) out".
-                                                                   // output vertices with index 0 and 2 belong to atomPos+0 and 
-                                                                   // vertices with index 1 and 3 belong to atomPos+1 (?)
+                                                                   // output vertices with index 0 and 2 belong to atomPos with inv%2=0 and 
+                                                                   // vertices with index 1 and 3 belong to atomPos with inv%2=1 (?)
         gl_out[gl_InvocationID].gl_Position = atoms[atomPos].pos; 
         id[gl_InvocationID]                 = atomPos;
     
-        vec4 cp = camPos[0];                                       // unused ? 
+        vec4 cp = camPos[0];                                       // UNUSED ? 
     
         if(gl_InvocationID == 0)
         {
@@ -228,7 +228,7 @@
     /////////////
     // DEFINES //
     /////////////
-    #define M_PI         3.1415926535897932384626433832795
+    #define M_PI          3.1415926535897932384626433832795
 
     // should be equal to 'UncertaintyDataCall::secStructure':
     #define H_ALPHA_HELIX 0   
@@ -281,8 +281,8 @@
     ///////////////
     // variables //
     ///////////////    
-    uniform float minDistance = 1.0;                       // unused
-    uniform float maxDistance = 1.0;                       // unused
+    uniform float minDistance = 1.0;                       // UNUSED ?
+    uniform float maxDistance = 1.0;                       // UNUSED ?
 
     uniform bool                interpolateColors = false;
     uniform bool                onlyTubes         = false;    
@@ -290,13 +290,15 @@
     uniform int                 colorMode         = 0;
     uniform int                 uncVis            = 0;
     uniform vec4[STRUCT_COUNT]  structColRGB;              // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
-    uniform vec4                uncDistor;                 // uncertainty distortion parameters
-    
-    struct CAlpha
+    uniform vec4                uncDistor;                 // uncertainty distortion parameters: (0) amplification for sin>0, 
+                                                           //                                    (1) repeat of sin(2*PI), 
+                                                           //                                    (2) uncertainty overall (true if value = 0.0),
+                                                           //                                    (3) UNUSED
+    struct CAlpha                                       
     {
         vec4  pos;
         vec3  dir;
-        int   colIdx;                                      // unused - don't delete ... otherwise shader has 'strange' behaviour - WHY?
+        int   colIdx;                                      // UNUSED - don't delete ! ... otherwise shader has 'strange' behaviour - WHY?
         vec4  col;
 	    float diff;
 		int   flag; 
@@ -398,7 +400,7 @@
         vec3 dir = normalize(mix(dir20, dir21, q5));
     
         vec3 tangent = normalize(d21.xyz - d20.xyz);
-        // vec3 normal = normalize(cross(tangent, dir)); - unused
+        // vec3 normal = normalize(cross(tangent, dir)); - UNUSED
     
     
         // compute corrected direction that is truly orthogonal to the tangent vector
@@ -438,7 +440,7 @@
         if ((onlyTubes) || ((mytype == C_COIL) || (mytype == S_BEND) || (mytype == T_H_TURN) || (mytype == NOTDEFINED))) 
         {
             // rotate negative dir vector around tangent vector
-            float a = 2.0 * M_PI - v * 2.0 * M_PI;         // has to be this angle because of backface culling
+            float a = 2.0 * M_PI - v * 2.0 * M_PI;            // has to be this angle because of backface culling
             vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
             vrot = normalize(vrot);
         
@@ -448,7 +450,7 @@
         } 
         else  // alpha helix and beta sheets             
         {
-            vec3 curPos = mypos.xyz + nDir * pipeWidth;    // point <width> under the backbone
+            vec3 curPos = mypos.xyz + nDir * pipeWidth;       // point <width> under the backbone
             vec3 normalDown = nDir;
             vec3 normalLeft = normalize(cross(tangent, -nDir));
 
@@ -463,7 +465,7 @@
             {
                 if((mytype == E_EXT_STRAND) || (mytype == B_BRIDGE))  // arrow heads
                 {
-                    lutVal = u * 9.0f;  // the size of the LUT is hardcoded to be 10
+                    lutVal = u * 9.0f;                        // the size of the LUT is hardcoded to be 10
                     float mymin = arrowLUT[int(floor(lutVal))];
                     float mymax = arrowLUT[int(ceil(lutVal))];
                     float theU  = (lutVal - floor(lutVal)) / (ceil(lutVal) - floor(lutVal));
@@ -538,6 +540,9 @@
         }
         
         
+        // uncertainty visualisation
+        
+        // apply surface displacement parameter
         float uncFac    = 1.0;
         if (uncDistor[2] > 0.0) {
             uncFac      = atoms[id[1]].diff;                     // in range [0,1] - 1.0; // 
@@ -545,74 +550,50 @@
         float distorLev = uncDistor[1];  
         float ampLevel  = uncDistor[0];
             
-        if (uncVis == UNC_VIS_SIN_U) { // U
+        // displacment of geometry
+        float uDisp     = distorLev * M_PI * gl_TessCoord.x;
+        float vDisp     = distorLev * M_PI * gl_TessCoord.y;
+        float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
+        float fV        = uncFac*sin(vDisp);                     // in range [-1,1]
+        float disp      = (pipeWidth/2.0)*(fU);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
         
-            // displacment of geometry
-            float uDisp     = distorLev * M_PI * gl_TessCoord.x;
-            float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
-            float disp      = (pipeWidth/2.0)*(fU);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
+        // adjusting normal
+        float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
+        vec2  uNormal   = normalize(vec2(0.0, 1.0));             // normal in UV-space
+        vec2  uGrad     = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
+        vec2  uOffset   = (-dot(uGrad, uNormal))*uGrad;          // offset vector for normal in UV-space
+        float uNdisp     = dot(vec2(1.0, 0.0), uOffset);         // offset projected on tangent in UV-space
+        
+        float vM        = uncFac*cos(vDisp);                     // derivation = gradient of fU
+        vec2  vNormal   = normalize(vec2(0.0, 1.0));             // normal in UV-space
+        vec2  vGrad     = normalize(vec2(1.0, vM));              // tangent of fU in UV-space
+        vec2  vOffset   = (-dot(vGrad, vNormal))*vGrad;          // offset vector for normal in UV-space
+        float vNdisp    = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
+        
+        if (uncVis == UNC_VIS_SIN_U) { // U
             if(fU > 0.0) {
-                disp *= ampLevel;
-            }
-            mypos.xyz      += (disp + pipeWidth) * n;
-
-            // adjusting normal
-            float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
-            vec2 uNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
-            vec2 uGrad      = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
-            vec2 uOffset    = (-dot(uGrad, uNormal))*uGrad;          // offset vector for normal in UV-space
-            float uNdisp    = dot(vec2(1.0, 0.0), uOffset);          // offset projected on tangent in UV-space
-            n = normalize(n + uNdisp*tangent);
+                disp   *= ampLevel;
+            }            
+            mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
+            n           = normalize(n + uNdisp * tangent);
         }
         else if (uncVis == UNC_VIS_SIN_V) { // V
-        
-            // displacment of geometry
-            float vDisp     = distorLev * M_PI * gl_TessCoord.y;
-            float fV        = uncFac*sin(vDisp);                     // in range [-1,1]
-            float disp      = (pipeWidth/2.0)*(fV);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
             if(fV > 0.0) {
-                disp *= ampLevel;
-            }
-            mypos.xyz      += (disp + pipeWidth) * n;
-
-            // adjusting normal
-            float vM        = uncFac*cos(vDisp);                     // derivation = gradient of fU
-            vec2 vNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
-            vec2 vGrad      = normalize(vec2(1.0, vM));              // tangent of fU in UV-space
-            vec2 vOffset    = (-dot(vGrad, vNormal))*vGrad;          // offset vector for normal in UV-space
-            float vNdisp    = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
-            n = normalize(n + vNdisp*cross(n, tangent)); 
-        }
-        else if (uncVis == UNC_VIS_SIN_UV) { // U,V
-        
-            // displacment of geometry
-            float uDisp     = distorLev * M_PI * gl_TessCoord.x;
-            float vDisp     = distorLev * M_PI * gl_TessCoord.y;
-            float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
-            float fV        = uncFac*sin(vDisp);                     // in range [-1,1]
-            float disp      = (pipeWidth/2.0)*(fU);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
+                disp   *= ampLevel;
+            }            
+            mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
+            n           = normalize(n + vNdisp * normalize(cross(n, tangent)));
+        }    
+        else if (uncVis == UNC_VIS_SIN_UV) {  // U,V
             if ((fU > 0.0) && (fV > 0.0)) {
-                disp = (pipeWidth/2.0)*(fU * fV);
-                disp *= ampLevel;
+                disp    = (pipeWidth/2.0)*(fU * fV);                    
+                disp   *= ampLevel;
             }
-            mypos.xyz      += (disp + pipeWidth) * n;
-
-            // adjusting normal
-            float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
-            vec2 uNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
-            vec2 uGrad      = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
-            vec2 uOffset    = (-dot(uGrad, uNormal))*uGrad;          // offset vector for normal in UV-space
-            float uNdisp     = dot(vec2(1.0, 0.0), uOffset);         // offset projected on tangent in UV-space
-            
-            float vM        = uncFac*cos(vDisp);                     // derivation = gradient of fU
-            vec2 vNormal    = normalize(vec2(0.0, 1.0));             // normal in UV-space
-            vec2 vGrad      = normalize(vec2(1.0, vM));              // tangent of fU in UV-space
-            vec2 vOffset    = (-dot(vGrad, vNormal))*vGrad;          // offset vector for normal in UV-space
-            float vNdisp    = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
-            
-            n = normalize(n + uNdisp*tangent + vNdisp*cross(n, tangent));        
-        }        
-            
+            mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
+            n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
+        }
+        
+        
         gl_Position = mypos;
     }
 -->
