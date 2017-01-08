@@ -151,18 +151,22 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
 		uncVisParam(            "08 Uncertainty visualisation", "The uncertainty visualisation."),
 		uncDistorParam(         "09 Uncertainty distortion", "(0) amplification, (1) repeat of sin(2*PI), (2) apply uncertainty all over (true if value = 0.0), (3) unused."),
-		lightPosParam(          "10 Light position", "The light position."),
-		materialParam(          "11 Material", "Ambient, diffuse, specular components + exponent."),
-		colorModeParam(         "12 Color mode", "Coloring mode for secondary structure."),
-		colorInterpolationParam("13 Color interpolation", "Should the colors be interpolated?"),
-		buttonParam(            "14 Reload shaders", "Reload the shaders."),
-		colorTableFileParam(    "15 Color Table Filename", "The filename of the color table."),
+        ditherParam(            "10 Dithering", "Add additional dithering passes."),
+		lightPosParam(          "11 Light position", "The light position."),
+		materialParam(          "12 Material", "Ambient, diffuse, specular components + exponent."),
+		colorModeParam(         "13 Color mode", "Coloring mode for secondary structure."),
+		colorInterpolationParam("14 Color interpolation", "Should the colors be interpolated?"),
+		buttonParam(            "15 Reload shaders", "Reload the shaders."),
+		colorTableFileParam(    "16 Color Table Filename", "The filename of the color table."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
         singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) 
         {
 
+	// number of different secondary structure types
+	this->structCount = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
+    
 	// uncertainty data caller slot
 	this->uncertaintyDataSlot.SetCompatibleCall<UncertaintyDataCallDescription>();
 	this->MakeSlotAvailable(&this->uncertaintyDataSlot);
@@ -193,8 +197,10 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 
 	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
 	this->MakeSlotAvailable(&this->buttonParam);
-
-	// init min max
+                                              // init min max
+	this->ditherParam << new core::param::IntParam(0, 0, this->structCount-1);
+	this->MakeSlotAvailable(&this->ditherParam);
+	                                              // init min max
 	this->tessLevelParam << new core::param::IntParam(16, 1, 64);
 	this->MakeSlotAvailable(&this->tessLevelParam);
 
@@ -249,7 +255,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->currentUncVis        = uncVisualisations::UNC_VIS_SIN_UV;
 	this->currentLightPos      = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
 	this->currentUncDist       = vislib::math::Vector<float, 4>(1.0f, 5.0f, 0.0f, 0.0f);
-
+    this->currentDitherMode    = 0;
+    
 	this->fences.resize(this->numBuffers);
 
 #ifdef FIRSTFRAME_CHECK
@@ -508,6 +515,9 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 	if (!udc) return false;
 	if (!mol) return false;
 
+    // execute the call
+    if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
+    
 	// check molecular data
 	if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 
@@ -626,7 +636,7 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 					while ((uncIndex < this->aminoAcidCount) && (mol->Chains()[cCnt].Name() != udc->GetChainID(uncIndex))) {
 						uncIndex++;
 					}
-					// search for matching original pdb indices in both data loader
+					// search for matching original pdb indices in both data loaders
 					while (uncIndex < this->aminoAcidCount) {
 						if (static_cast<std::string>(udc->GetPDBAminoAcidIndex(uncIndex).PeekBuffer()).find_first_not_of("0123456789") == std::string::npos) { // C++11 function ...
 							if (std::atoi(udc->GetPDBAminoAcidIndex(uncIndex)) == origMolIndex) {
@@ -636,7 +646,7 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 						uncIndex++;
 					}
 
-					// when indices in molecular data are missing, fill 'synchronizedIndex' with 'dummy' indices
+					// when indices in molecular data are missing, fill 'synchronizedIndex' with 'dummy' indices.
 					// in the end molecular index must always match array length !
 					molIndex = mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt;
 					while (this->synchronizedIndex.Count() < molIndex) {
@@ -674,9 +684,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
-	// number of different secondary structure types
-	const unsigned int structCount = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
-
 	float scaling = 1.0f;
 
 	// the pointer to the render call
@@ -690,8 +697,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	// get pointer to UncertaintyDataCall
 	UncertaintyDataCall *ud = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
     if(ud == NULL) return false;
-    // execute the call
-    if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
     
 	// if amino-acid count changed get new data
 	if ((ud->GetAminoAcidCount() != this->aminoAcidCount) && (mol->AtomCount() != this->molAtomCount)) {
@@ -699,6 +704,11 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	}
 
 
+	// get dither mode
+	if (this->ditherParam.IsDirty()) {
+		this->ditherParam.ResetDirty();
+		this->currentDitherMode = this->ditherParam.Param<param::IntParam>()->Value();
+    }
 	// get scaling factor
 	if (this->scalingParam.IsDirty()) {
 		this->scalingParam.ResetDirty();
@@ -890,15 +900,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 							  << std::endl;
 					*/
 					uncIndex = this->synchronizedIndex[aaIdx];
-					for (unsigned int k = 0; k < structCount; k++) {
+					for (unsigned int k = 0; k < this->structCount; k++) {
 						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP][uncIndex]);
-						calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB][uncIndex]);
+						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB][uncIndex]);
 						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE][uncIndex]);
-						// calpha.sortedStruct[k] = static_cast<int>(this->sortedUncertainty[uncIndex][k]);
+						calpha.sortedStruct[k] = static_cast<int>(this->sortedUncertainty[uncIndex][k]);
 
 						calpha.unc[k] = this->secUncertainty[uncIndex][k];
 					}
-					
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
 						for (unsigned int k = 0; k < 3; k++) {
 							calpha.col[k] = this->chainColors[uncIndex][k];
@@ -915,12 +924,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 							calpha.col[k] = 0.0f;
 						}
 					}
-					
-
 					calpha.flag = this->residueFlag[uncIndex];
 					calpha.diff = this->diffUncertainty[uncIndex];
 					
-
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
 					calpha.pos[1] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 1];
 					calpha.pos[2] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 2];
@@ -976,7 +982,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			this->firstFrame = false;
 		}
 #endif
-
+        
 		// draw backbone as tubes
 		unsigned int colBytes, vertBytes, colStride, vertStride;
 		this->GetBytesAndStride(*mol, colBytes, vertBytes, colStride, vertStride);
@@ -984,9 +990,8 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 		this->tubeShader.Enable();
 		glColor4f(1.0f / this->mainChain.size(), 0.75f, 0.25f, 1.0f);
-		colIdxAttribLoc = glGetAttribLocationARB(this->tubeShader, "colIdx"); // NECESSARY ! - WHY ... NOT USED in shader (?)
+		colIdxAttribLoc = glGetAttribLocationARB(this->tubeShader, "colIdx"); // UNUSED (?) ... 
 
-		// vertex
 		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
 
 		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->currentScaling);
@@ -1017,12 +1022,12 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		// only tesselation evaluation 
 		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->currentBackboneWidth);
 		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), (GLint)this->colorInterpolationParam.Param<param::BoolParam>()->Value());
-		glUniform4fv(this->tubeShader.ParameterLocation("structColRGB"), structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
+		glUniform4fv(this->tubeShader.ParameterLocation("structColRGB"), this->structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
 		glUniform1i(this->tubeShader.ParameterLocation("colorMode"), (GLint)this->currentColoringMode);
 		glUniform1i(this->tubeShader.ParameterLocation("onlyTubes"), (GLint)this->onlyTubesParam.Param<param::BoolParam>()->Value());
-		glUniform1i(this->tubeShader.ParameterLocation("uncVis"), (GLint)this->currentUncVis);
+		glUniform1i(this->tubeShader.ParameterLocation("uncVisMode"), (GLint)this->currentUncVis);
 		glUniform4fv(this->tubeShader.ParameterLocation("uncDistor"), 1, (GLfloat *)this->currentUncDist.PeekComponents());
-
+        
 		// only fragment shader
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
 		glUniform4fv(this->tubeShader.ParameterLocation("lightPos"), 1, (GLfloat *)this->currentLightPos.PeekComponents());
@@ -1031,43 +1036,57 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("specularColor"), lightSpecular[0], lightSpecular[1], lightSpecular[2], lightSpecular[3]);
 		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->currentMaterial.PeekComponents());
+        
+        // dither matrix
+        GLfloat dithM[4][20] = {{14,  6,  9,  3,  7,  2, 10,  6, 12, 11, 13,  5, 10,  0,  4,  1,  9,  5, 15,  8}, 
+                                { 4,  1,  5, 15,  0,  8, 14,  9,  3, 15,  7,  2,  6, 12,  3, 11, 13, 10,  0, 12}, 
+                                {11,  7, 13, 10, 12,  4, 11,  1,  5,  0,  8,  4, 14,  9, 15,  7,  8,  2,  6,  3},
+                                {15,  8,  2, 14,  6,  3,  7, 13,  2, 10, 12, 11,  1, 13,  5,  0,  4, 14,  1,  9}}; 
+                                    
+        glUniform1fv(this->tubeShader.ParameterLocation("dithM"), 40, dithM);
+                                
+        // DITHERING 
+        for (unsigned int d = 0; d <= this->currentDitherMode; d++) {
+        
+            // fragment and tesselation eval
+            glUniform1i(this->tubeShader.ParameterLocation("ditherCount"), (GLint)d);                                                                  // dithering pass
+            
+            UINT64 numVerts;
+            numVerts = this->bufSize / vertStride;                                                                                                       // bufSize = 32*1024*1024 - WHY? | vertStride = (unsigned int)sizeof(CAlpha)
+                                                                                                                                                         // numVert = number of vertices fitting into bufSize
+            UINT64 stride = 0;                                                                                                                           // aminoacid index in mainChain 
 
+            for (int i = 0; i < (int)molSizes.size(); i++) {                                                                                             // loop over all secondary structures
+                UINT64 vertCounter = 0;
+                while (vertCounter < molSizes[i]) {                                                                                                      // loop over all aminoacids inside of one secondary structure - WHY ?
 
-		UINT64 numVerts;
-		numVerts = this->bufSize / vertStride;                                                                                                       // bufSize = 32*1024*1024 - WHY? | vertStride = (unsigned int)sizeof(CAlpha)
-		                                                                                                                                             // numVert = number of vertices fitting into bufSize
-		UINT64 stride = 0;                                                                                                                           // aminoacid index in mainChain 
+                    const char *currVert = (const char *)(&this->mainChain[(unsigned int)vertCounter + (unsigned int)stride]);                           // pointer to current vertex data in mainChain
 
-		for (int i = 0; i < (int)molSizes.size(); i++) {                                                                                             // loop over all secondary structures
-			UINT64 vertCounter = 0;
-			while (vertCounter < molSizes[i]) {                                                                                                      // loop over all aminoacids inside of one secondary structure - WHY ?
+                    void *mem            = static_cast<char*>(this->theSingleMappedMem) + this->bufSize * this->currBuf;                                 // pointer to the mapped memory - ?
+                    const char *whence   = currVert;                                                                                                     // copy of pointer currVert
+                    UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);                                                       // try to take all vertices of current secondary structure at once ... 
+                                                                                                                                                         // ... or at least as many as fit into buffer of size bufSize
+                    this->WaitSignal(this->fences[this->currBuf]);                                                                                       // wait for buffer 'currBuf' to be "ready" - ?
 
-				const char *currVert = (const char *)(&this->mainChain[(unsigned int)vertCounter + (unsigned int)stride]);                           // pointer to current vertex data in mainChain
+                    memcpy(mem, whence, (size_t)vertsThisTime * vertStride);                                                                             // copy data of current vertex data in mainChain to mapped memory - ?
+                                                 
+                    glFlushMappedNamedBufferRangeEXT(theSingleBuffer, this->bufSize * this->currBuf, (GLsizeiptr)vertsThisTime * vertStride);            // parameter: buffer, offset, length 
 
-				void *mem            = static_cast<char*>(this->theSingleMappedMem) + this->bufSize * this->currBuf;                                 // pointer to the mapped memory - ?
-				const char *whence   = currVert;                                                                                                     // copy of pointer currVert
-				UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);                                                       // try to take all vertices of current secondary structure at once ... 
-				                                                                                                                                     // ... or at least as many as fit into buffer of size bufSize
-				this->WaitSignal(this->fences[this->currBuf]);                                                                                       // wait for buffer 'currBuf' to be "ready" - ?
+                    glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), 0);                                                                // unused?
 
-				memcpy(mem, whence, (size_t)vertsThisTime * vertStride);                                                                             // copy data of current vertex data in mainChain to mapped memory - ?
-				                             
-				glFlushMappedNamedBufferRangeEXT(theSingleBuffer, this->bufSize * this->currBuf, (GLsizeiptr)vertsThisTime * vertStride);            // parameter: buffer, offset, length 
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, this->bufSize * this->currBuf, this->bufSize);  // bind Shader Storage Buffer Object
+                    glPatchParameteri(GL_PATCH_VERTICES, 1);                                                                                             // set parameter GL_PATCH_VERTICES to 1 (the number of vertices that will be used to make up a single patch primitive)
+                    glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));                                                                           // draw as many as (vertsThisTime-3) patches 
+                                                                                                                                                         // -3 ? - because the first atom is added 3 times for each different secondary structure
+                    this->QueueSignal(this->fences[this->currBuf]);                                                                                      // queue signal - tell that mapped memory 'operations' are done - ?
 
-				glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), 0);                                                                // unused?
-
-				glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, this->bufSize * this->currBuf, this->bufSize);  // bind Shader Storage Buffer Object
-				glPatchParameteri(GL_PATCH_VERTICES, 1);                                                                                             // set parameter GL_PATCH_VERTICES to 1 (the number of vertices that will be used to make up a single patch primitive)
-				glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));                                                                           // draw as many as (vertsThisTime-3) patches 
-				                                                                                                                                     // -3 ? - because the first atom is added 3 times for each different secondary structure
-				this->QueueSignal(this->fences[this->currBuf]);                                                                                      // queue signal - tell that mapped memory 'operations' are done - ?
-
-				this->currBuf = (this->currBuf + 1) % this->numBuffers;                                                                              // switch to next buffer in range 0...3
-				vertCounter += vertsThisTime;                                                                                                        // increase counter of processed vertices
-				currVert += vertsThisTime * vertStride;                                                                                              // unused - will be overwritten in next loop cycle
-			}
-			stride += molSizes[i];
-		}
+                    this->currBuf = (this->currBuf + 1) % this->numBuffers;                                                                              // switch to next buffer in range 0...3
+                    vertCounter += vertsThisTime;                                                                                                        // increase counter of processed vertices
+                    currVert += vertsThisTime * vertStride;                                                                                              // unused - will be overwritten in next loop cycle
+                }
+                stride += molSizes[i];
+            }
+        }
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glDisableClientState(GL_COLOR_ARRAY);

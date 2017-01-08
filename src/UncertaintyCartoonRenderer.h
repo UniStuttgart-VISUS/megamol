@@ -191,14 +191,14 @@ namespace megamol {
         /** Strucutre to hold C-alpha data */
 		struct CAlpha
 		{
-			float pos[4];
-			float dir[3]; 
-			int   colIdx; // unused - don't delete ... shader is corrupt otherwise - WHY?
-			float col[4];
-			float diff;
-			int   flag;
-			float unc[UncertaintyDataCall::secStructure::NOE];
-			int   sortedStruct[UncertaintyDataCall::secStructure::NOE];
+			float pos[4];                                               // position of the C-alpha atom
+			float dir[3];                                               // direction of the amino-acid
+			int   colIdx;                                               // UNUSED - don't delete ... shader is corrupt otherwise - WHY?
+			float col[4];                                               // the color of the amino-acid or chain (depending on coloring mode)
+			float diff;                                                 // the uncertainty difference
+			int   flag;                                                 // UNUSED - the amino-acid flag (none, missing, heterogen)
+			float unc[UncertaintyDataCall::secStructure::NOE];          // the uncertainties of the sctructure assignments                    - used for dithering
+			int   sortedStruct[UncertaintyDataCall::secStructure::NOE]; // the sorted structure assignments: max=[0] to min=[NOE]             - used for dithering
 		};
 
 		/**
@@ -260,6 +260,7 @@ namespace megamol {
 		core::param::ParamSlot lightPosParam;
 		core::param::ParamSlot uncVisParam;
 		core::param::ParamSlot uncDistorParam;
+        core::param::ParamSlot ditherParam;
                 
         GLuint              vertArray;
         std::vector<GLsync> fences;           // (?)
@@ -280,6 +281,7 @@ namespace megamol {
 		float                          currentBackboneWidth;
 		vislib::math::Vector<float, 4> currentMaterial;
 		vislib::math::Vector<float, 4> currentUncDist;
+        int                            currentDitherMode;
 
 		/** shader for the tubes */
 		vislib::graphics::gl::GLSLTesselationShader tubeShader;
@@ -297,6 +299,9 @@ namespace megamol {
         vislib::SmartPtr<ShaderSource> tubeGeom;
         vislib::SmartPtr<ShaderSource> tubeFrag;
 
+        // the number of different structure types
+        unsigned int structCount;
+        
         // C-alpha main chain
 		std::vector<CAlpha> mainChain;
         

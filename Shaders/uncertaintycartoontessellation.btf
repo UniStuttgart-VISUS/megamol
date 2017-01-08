@@ -31,8 +31,8 @@
     out vec4  objPos;
     out vec4  camPos;
     out vec4  lightPos;
-    out float squarRad;                                    // radius squared
-    out float rad;                                         // radius
+    out float squarRad;                                                 // radius squared
+    out float rad;                                                      // radius
     out vec4  vertColor;
     
     /////////////////////
@@ -40,7 +40,7 @@
     /////////////////////   
     uniform vec4      viewAttr;                             
 
-    uniform float     scaling;                             // UNUSED - only used by slpine shader    
+    uniform float     scaling;                                          // UNUSED - only used by slpine shader    
     
     uniform vec3      camIn;
     uniform vec3      camUp;
@@ -58,8 +58,8 @@
 
     uniform vec4      inConsts1;
     
-    uniform int       instanceOffset;                         // UNUSED - for what ? - always 0 assigned
-    // uniform sampler1D colTab;                              // UNUSED - 1D texture
+    uniform int       instanceOffset;                                   // UNUSED - for what ? - always 0 assigned
+    // uniform sampler1D colTab;                                        // UNUSED - 1D texture
 
 -->
         </snippet>
@@ -75,9 +75,9 @@
     //////////
     void main(void) {
     
-        float theColIdx;                                      // UNUSED - NOT initialised ? (= ... ?)
-        vec4  theColor;                                       // UNUSED - NOT initialised ? (= gl_Color)
-        vec4  inPos;                                          // UNUSED - NOT initialised ? (= gl_Position)
+        float theColIdx;                                                // UNUSED - NOT initialised ? (= ... ?)
+        vec4  theColor;                                                 // UNUSED - NOT initialised ? (= gl_Color)
+        vec4  inPos;                                                    // UNUSED - NOT initialised ? (= gl_Position)
 -->
         </snippet>
         <!-- here comes the injected snippet -->
@@ -102,11 +102,11 @@
 //////////////////////////////////////////
 
     // object pivot point in object space    
-    objPos       = inPos;                                     // no w-div needed, because w is 1.0 (Because I know)
+    objPos       = inPos;                                               // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos       = MVinv[3];                                  // (C) by Christoph
-    camPos.xyz  -= objPos.xyz;                                // cam pos to glyph space
+    camPos       = MVinv[3];                                            // (C) by Christoph
+    camPos.xyz  -= objPos.xyz;                                          // cam pos to glyph space
 
     // calculate light position in glyph space
     lightPos     = MVinv * gl_LightSource[0].position;
@@ -131,7 +131,7 @@
     /////////////
     // DEFINES //
     /////////////
-    #define STRUCT_COUNT 9                                    // must be equal to 'UncertaintyDataCall::secStructure::NOE'
+    #define STRUCT_COUNT 9                                              // must be equal to 'UncertaintyDataCall::secStructure::NOE'
     
     ////////////////
     // EXTENSIONS //
@@ -160,11 +160,11 @@
     uniform int uOuter0 = 16;
     uniform int uOuter1 = 16;
 
-    // uniform int minInner = 6;                              // UNUSED - just as INFO ?
-    // uniform int maxInner = 30;                             // UNUSED - just as INFO ?
-    // uniform int minOuter = 6;                              // UNUSED - just as INFO ?
-    // uniform int maxOuter = 30;                             // UNUSED - just as INFO ?
-    uniform int instanceOffset = 0;                           // UNUSED ?
+    // uniform int minInner = 6;                                        // UNUSED - just as INFO ?
+    // uniform int maxInner = 30;                                       // UNUSED - just as INFO ?
+    // uniform int minOuter = 6;                                        // UNUSED - just as INFO ?
+    // uniform int maxOuter = 30;                                       // UNUSED - just as INFO ?
+    uniform int instanceOffset = 0;                                     // UNUSED ?
     
     uniform int tessLevel;
 
@@ -190,13 +190,13 @@
     //////////
     void main() {
         
-        int atomPos  = gl_PrimitiveID + (gl_InvocationID % 2);     // 4 invocations because of "layout(vertices = 4) out".
-                                                                   // output vertices with index 0 and 2 belong to atomPos with inv%2=0 and 
-                                                                   // vertices with index 1 and 3 belong to atomPos with inv%2=1 (?)
+        int atomPos  = gl_PrimitiveID + (gl_InvocationID % 2);          // 4 invocations because of "layout(vertices = 4) out".
+                                                                        // output vertices with index 0 and 2 belong to atomPos with inv%2=0 and 
+                                                                        // vertices with index 1 and 3 belong to atomPos with inv%2=1 (???)
         gl_out[gl_InvocationID].gl_Position = atoms[atomPos].pos; 
         id[gl_InvocationID]                 = atomPos;
     
-        vec4 cp = camPos[0];                                       // UNUSED ? 
+        vec4 cp = camPos[0];                                            // UNUSED ? 
     
         if(gl_InvocationID == 0)
         {
@@ -249,7 +249,7 @@
 	#define COLOR_MODE_AMINOACID     3
     #define COLOR_MODE_RESIDUE_DEBUG 4
             
-    // should be equal to 'UncertaintyCartoonRenderer::uncVisualisations':   
+    // should be equal to 'UncertaintyCartoonRenderer::uncVisModeualisations':   
     #define UNC_VIS_NONE   0
 	#define UNC_VIS_SIN_U  1
 	#define UNC_VIS_SIN_V  2    
@@ -278,30 +278,35 @@
     out vec4 color;
     out vec3 n;
     
+    out float dith;                                                     // DITHERING - pass current accumulated uncertainties as dithering threshold to fragment shader
+
+
     ///////////////
     // variables //
     ///////////////    
-    uniform float minDistance = 1.0;                       // UNUSED ?
-    uniform float maxDistance = 1.0;                       // UNUSED ?
-
+    uniform float minDistance = 1.0;                                    // UNUSED ?
+    uniform float maxDistance = 1.0;                                    // UNUSED ?
+    
+    uniform int                 ditherCount       = 0;                  // DITHERING - current dithering pass - in range [0,number of sec truct types - 1]
+    
     uniform bool                interpolateColors = false;
-    uniform bool                onlyTubes         = false;    
+    uniform bool                onlyTubes         = false;  
     uniform float               pipeWidth         = 1.0;
     uniform int                 colorMode         = 0;
-    uniform int                 uncVis            = 0;
-    uniform vec4[STRUCT_COUNT]  structColRGB;              // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
-    uniform vec4                uncDistor;                 // uncertainty distortion parameters: (0) amplification for sin>0, 
-                                                           //                                    (1) repeat of sin(2*PI), 
-                                                           //                                    (2) uncertainty overall (true if value = 0.0),
-                                                           //                                    (3) UNUSED
+    uniform int                 uncVisMode        = 0;
+    uniform vec4[STRUCT_COUNT]  structColRGB;                           // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
+    uniform vec4                uncDistor;                              // uncertainty distortion parameters: (0) amplification for sin>0, 
+                                                                        //                                    (1) repeat of sin(2*PI), 
+                                                                        //                                    (2) uncertainty overall (true if value = 0.0),
+                                                                        //                                    (3) UNUSED
     struct CAlpha                                       
     {
         vec4  pos;
         vec3  dir;
-        int   colIdx;                                      // UNUSED - don't delete ! ... otherwise shader has 'strange' behaviour - WHY?
+        int   colIdx;                                                   // UNUSED - don't delete ! ... otherwise shader has 'strange' behaviour - WHY?
         vec4  col;
 	    float diff;
-		int   flag; 
+		int   flag;                                        
 		float unc[STRUCT_COUNT];
 	    int   sortedStruct[STRUCT_COUNT];
     };
@@ -310,7 +315,7 @@
         CAlpha atoms[];
     };
 
-    const float arrowLUT[10] =                             // LUT = look-up-table
+    const float arrowLUT[10] =                                          // LUT = look-up-table
     {
         5.0, 5.0, 5.0, 8.0, 7.0, 6.0, 4.5, 3.0, 2.0, 1.0
     };
@@ -320,281 +325,309 @@
     //////////
     void main() {
     
-        CAlpha alph0 = atoms[id[0] - 1];                   // (id[0] - 1) doesn't exist for first vertex call ?
-        CAlpha alph1 = atoms[id[0]];
-        CAlpha alph2 = atoms[id[1]];
-        CAlpha alph3 = atoms[id[1] + 1];
-    
-        vec4 p0 = alph0.pos;
-        vec4 p1 = alph1.pos;
-        vec4 p2 = alph2.pos;
-        vec4 p3 = alph3.pos;
-   
-        float u = gl_TessCoord.x;
-        float v = gl_TessCoord.y;
-    
-        // Cubic B-Spline
-        u += 3;
-        float q = ( u - 1.0) / 3.0;
-        vec4 d10 = p0 * ( 1.0 - q) + p1 * q;
-        float q1 = ( u - 2.0) / 3.0;
-        vec4 d11 =  p1 * ( 1.0 - q1) + p2 * q1;
-        float q2 = ( u - 3.0) / 3.0; 
-        vec4 d12 =  p2 * ( 1.0 - q2) + p3 * q2;
-    
-        float q3 = ( u - 2.0) / 2.0; 
-        vec4 d20 = d10 * ( 1.0 - q3) + d11 * q3;
-        float q4 = ( u - 3.0) / 2.0; 
-        vec4 d21 = d11 * ( 1.0 - q4) + d12 * q4;
-    
-        float q5 = ( u - 3.0); 
-        vec4 mypos = d20 * (1.0 - q5) + d21 * q5;
-        vec4 savepos = mypos;
-        gl_Position =  d20 * ( 1.0 - q5) + d21 * q5;
-    
-    
-        // assign colors
-        vec4 colors[4];
-        for(int i = 0; i < 4; i++)
-        {        
-            if (colorMode == COLOR_MODE_STRUCT) {
-                colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[0]];
-            }     
-            else if (colorMode == COLOR_MODE_UNCERTAIN) {
-                colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[0]];
-            }                    
-            else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
-                colors[i] = atoms[id[0] + i - 1].col; 
+        // for ditherCount=0: first or only dithering pass -> draw everything
+        dith = 1.0;
+        // for following dithering passes: calculate dithering threshold
+        if (ditherCount > 0) { 
+            CAlpha alpha = atoms[id[1]];
+            // assign dithering threshold
+            dith = 0.0;
+            // accumulate all uncertainties up to current structure type (sum uncertainty from minimum to current)
+            for (int i = 0; i < (STRUCT_COUNT-ditherCount); i++) {
+                dith += alpha.unc[alpha.sortedStruct[(STRUCT_COUNT-1) -i]];
             }
-            else { // if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
-                int colorIndex = id[0] + i - 1;
-                colors[i] = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
-            }
-        }
-    
-        // interpolate colors, too
-        if(interpolateColors)
-        {
-            vec4 c10 = colors[0] * (1.0 - q) + colors[1] * q;
-            vec4 c11 = colors[1] * (1.0 - q1) + colors[2] * q1;
-            vec4 c12 = colors[2] * (1.0 - q2) + colors[3] * q2;
-        
-            vec4 c20 = c10 * (1.0 - q3) + c11 * q3;
-            vec4 c21 = c11 * (1.0 - q4) + c12 * q4;
-        
-            color = c20 * (1.0 - q5) + c21 * q5;
-        }
-        else
-        {
-            color = colors[2];
-        }
-    
-        // interpolate directions
-        vec3 dir10 = mix(alph0.dir, alph1.dir, q);
-        vec3 dir11 = mix(alph1.dir, alph2.dir, q1);
-        vec3 dir12 = mix(alph2.dir, alph3.dir, q2);
-    
-        vec3 dir20 = mix(dir10, dir11, q3);
-        vec3 dir21 = mix(dir11, dir12, q4);
-    
-        vec3 dir = normalize(mix(dir20, dir21, q5));
-    
-        vec3 tangent = normalize(d21.xyz - d20.xyz);
-        // vec3 normal = normalize(cross(tangent, dir)); - UNUSED
-    
-    
-        // compute corrected direction that is truly orthogonal to the tangent vector
-        vec3 nDir    = dir;
-        nDir         = dir -  dot(dir, tangent) * tangent;
-        nDir         = -normalize(nDir);
-        
-        // check if geometry type changes at the beginning from tube to helix or strand
-        bool changeStart = false;   
-        int edgeType     = alph1.sortedStruct[0];
-        int curType      = alph2.sortedStruct[0];
-        if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
-            ((curType != C_COIL) && (curType != S_BEND) && (curType != T_H_TURN) && (curType != NOTDEFINED))) {
-            changeStart = true;
+            // default assignment 
+            gl_Position = vec3(0.0);
+            n           = vec3(0.0);
+            color       = vec4(0.0);
         }
         
-        // check if geometry type changes at the end      
-        bool changeEnd = false;
-        curType        = alph2.sortedStruct[0];
-        edgeType       = alph3.sortedStruct[0];        
-        if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
-            ((curType != C_COIL) && (curType != S_BEND) && (curType != T_H_TURN) && (curType != NOTDEFINED))) {
-            changeEnd = true;
-        }
-   
-   
-        int mytype   = atoms[id[1]].sortedStruct[0];
+        if (dith > 0.0) {
+            
+            CAlpha alph0 = atoms[id[0] - 1];                            // (id[0] - 1) doesn't exist for first vertex call ?
+            CAlpha alph1 = atoms[id[0]];
+            CAlpha alph2 = atoms[id[1]];
+            CAlpha alph3 = atoms[id[1] + 1];
         
-        // DEBUG - mark the position of the arrow heads white
-        /*if((mytype == E_EXT_STRAND) || (mytype == B_BRIDGE))
-        {
-            if(changeEnd) 
-                color = vec4(1.0, 1.0, 1.0, 1.0);
-        }*/
+            vec4 p0 = alph0.pos;
+            vec4 p1 = alph1.pos;
+            vec4 p2 = alph2.pos;
+            vec4 p3 = alph3.pos;
+       
+            float u = gl_TessCoord.x;
+            float v = gl_TessCoord.y;
         
-        // backbone
-        if ((onlyTubes) || ((mytype == C_COIL) || (mytype == S_BEND) || (mytype == T_H_TURN) || (mytype == NOTDEFINED))) 
-        {
-            // rotate negative dir vector around tangent vector
-            float a = 2.0 * M_PI - v * 2.0 * M_PI;            // has to be this angle because of backface culling
-            vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
-            vrot = normalize(vrot);
+            // Cubic B-Spline
+            u += 3;
+            float q = ( u - 1.0) / 3.0;
+            vec4 d10 = p0 * ( 1.0 - q) + p1 * q;
+            float q1 = ( u - 2.0) / 3.0;
+            vec4 d11 =  p1 * ( 1.0 - q1) + p2 * q1;
+            float q2 = ( u - 3.0) / 3.0; 
+            vec4 d12 =  p2 * ( 1.0 - q2) + p3 * q2;
         
-            mypos.xyz += pipeWidth * vrot;
-            n = vrot;
-                            
-        } 
-        else  // alpha helix and beta sheets             
-        {
-            vec3 curPos = mypos.xyz + nDir * pipeWidth;       // point <width> under the backbone
-            vec3 normalDown = nDir;
-            vec3 normalLeft = normalize(cross(tangent, -nDir));
-
-            u = gl_TessCoord.x;
-            float factor = 0.01;
-            float thresh = 0.01;
+            float q3 = ( u - 2.0) / 2.0; 
+            vec4 d20 = d10 * ( 1.0 - q3) + d11 * q3;
+            float q4 = ( u - 3.0) / 2.0; 
+            vec4 d21 = d11 * ( 1.0 - q4) + d12 * q4;
         
-            float val = 1.0 / float(gl_TessLevelOuter[1]);
-
-            float lutVal = 5.0f;
-            if(changeEnd) 
-            {
-                if((mytype == E_EXT_STRAND) || (mytype == B_BRIDGE))  // arrow heads
-                {
-                    lutVal = u * 9.0f;                        // the size of the LUT is hardcoded to be 10
-                    float mymin = arrowLUT[int(floor(lutVal))];
-                    float mymax = arrowLUT[int(ceil(lutVal))];
-                    float theU  = (lutVal - floor(lutVal)) / (ceil(lutVal) - floor(lutVal));
-
-                    if(ceil(lutVal) - floor(lutVal) < 0.5) 
-                    {
-                        theU = 0.0f;
-
-                        if(ceil(lutVal) > 8.9f)
-                            theU = 1.0f;
+            float q5 = ( u - 3.0); 
+            vec4 mypos = d20 * (1.0 - q5) + d21 * q5;
+            vec4 savepos = mypos;
+            gl_Position =  d20 * ( 1.0 - q5) + d21 * q5;
+        
+            // interpolate directions
+            vec3 dir10 = mix(alph0.dir, alph1.dir, q);
+            vec3 dir11 = mix(alph1.dir, alph2.dir, q1);
+            vec3 dir12 = mix(alph2.dir, alph3.dir, q2);
+        
+            vec3 dir20 = mix(dir10, dir11, q3);
+            vec3 dir21 = mix(dir11, dir12, q4);
+        
+            vec3 dir = normalize(mix(dir20, dir21, q5));
+        
+            vec3 tangent = normalize(d21.xyz - d20.xyz);
+                // vec3 normal = normalize(cross(tangent, dir)); - UNUSED
+        
+            // compute corrected direction that is truly orthogonal to the tangent vector
+            vec3 nDir    = dir;
+            nDir         = dir -  dot(dir, tangent) * tangent;
+            nDir         = -normalize(nDir);
+            
+            
+            // assign current structure type
+            int mytype   = alph2.sortedStruct[ditherCount];
+                    
+            // assign colors
+            if(interpolateColors) // interpolate colors
+            {      
+                vec4 colors[4];
+                
+                for(int i = 0; i < 4; i++)
+                {        
+                    if (colorMode == COLOR_MODE_STRUCT) {
+                        colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[ditherCount]];
+                    }     
+                    else if (colorMode == COLOR_MODE_UNCERTAIN) {
+                        colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[ditherCount]];
+                    }                    
+                    else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
+                        colors[i] = atoms[id[0] + i - 1].col; 
                     }
+                    else { // if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
+                        int colorIndex = id[0] + i - 1;
+                        colors[i] = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
+                    }
+                }     
+                                     
+                vec4 c10 = colors[0] * (1.0 - q) + colors[1] * q;
+                vec4 c11 = colors[1] * (1.0 - q1) + colors[2] * q1;
+                vec4 c12 = colors[2] * (1.0 - q2) + colors[3] * q2;
+            
+                vec4 c20 = c10 * (1.0 - q3) + c11 * q3;
+                vec4 c21 = c11 * (1.0 - q4) + c12 * q4;
+            
+                color = c20 * (1.0 - q5) + c21 * q5;
+            }
+            else // current C-alpha is alph2
+            {
+                if (colorMode == COLOR_MODE_STRUCT) {
+                    color = structColRGB[mytype];
+                }     
+                else if (colorMode == COLOR_MODE_UNCERTAIN) {
+                    color= structColRGB[mytype];
+                }                    
+                else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
+                    color = alph2.col; 
+                }
+                else { // if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
+                    int colorIndex = id[1];
+                    color = vec4(1.0 - float(colorIndex % 5) / 4.0, float(colorIndex % 3) / 2.0, float(colorIndex % 5) / 4.0, 1.0);
+                }
+            }
 
-                    lutVal = mix(mymin, mymax, theU);
-                }
+            // check if geometry type changes at the beginning from tube to helix or strand
+            bool changeStart = false;   
+            int edgeType     = alph1.sortedStruct[ditherCount];
+            int curType      = alph2.sortedStruct[ditherCount];
+            if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
+                ((curType != C_COIL) && (curType != S_BEND) && (curType != T_H_TURN) && (curType != NOTDEFINED))) {
+                changeStart = true;
             }
-        
-            if(v < val)
+            // check if geometry type changes at the end      
+            bool changeEnd = false;
+            edgeType       = alph3.sortedStruct[ditherCount];        
+            if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
+                ((curType != C_COIL) && (curType != S_BEND) && (curType != T_H_TURN) && (curType != NOTDEFINED))) {
+                changeEnd = true;
+            }
+            
+            // DEBUG - mark the position of the arrow heads white
+            /*if((mytype == E_EXT_STRAND) || (mytype == B_BRIDGE))
             {
-                mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * mix(0, pipeWidth, v / val);
-                n = normalDown;
-            }
-            else if( v >= val && v < 0.5 - val)
+                if(changeEnd) 
+                    color = vec4(1.0, 1.0, 1.0, 1.0);
+            }*/
+            
+            // calculate geometry and normal
+            if ((onlyTubes) || ((mytype == C_COIL) || (mytype == S_BEND) || (mytype == T_H_TURN) || (mytype == NOTDEFINED)))  // backbone
             {
-                mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * pipeWidth - nDir * mix(0, pipeWidth * lutVal * 2.0, (v - val)/(0.5 - 2 * val) );
-                n = normalLeft;
-            }
-            else if(v >= 0.5 - val && v < 0.5 + val)
+                // rotate negative dir vector around tangent vector
+                float a = 2.0 * M_PI - v * 2.0 * M_PI;            // has to be this angle because of backface culling
+                vec3 vrot = nDir * cos(a) + cross(tangent, nDir) * sin(a) + tangent * dot(tangent, nDir) * (1.0 - cos(a)); 
+                vrot = normalize(vrot);
+            
+                mypos.xyz += pipeWidth * vrot;
+                n = vrot;
+                                
+            } 
+            else  // alpha helix and beta sheets             
             {
-                mypos.xyz += -nDir * pipeWidth * lutVal + pipeWidth * normalLeft - normalLeft * mix(0, 2 * pipeWidth, (v - (0.5 - val))/(2 * val));
-                n = -normalDown;
-            }
-            else if(v >= 0.5 + val && v < 1.0 - val)
-            {
-                mypos.xyz += -nDir * pipeWidth * lutVal - pipeWidth * normalLeft + nDir * mix(0, pipeWidth * lutVal * 2.0, (v- (0.5 + val))/(0.5 - 2 * val));
-                n = -normalLeft;
-            }
-            else
-            {
-                mypos.xyz += nDir * pipeWidth * lutVal - normalLeft * mix(pipeWidth, 0, ((v - (1.0 - val))/ val));
-                n = normalDown;
-            }
-        
+                vec3 curPos = mypos.xyz + nDir * pipeWidth;             // point <width> under the backbone
+                vec3 normalDown = nDir;
+                vec3 normalLeft = normalize(cross(tangent, -nDir));
 
-            // if change in secondary structure is at the beginning: make transition from spline to tube surface
-            if(changeStart)
-            {
-                vec3 surfdir = mypos.xyz - savepos.xyz; // direction from spline to tube surface.
-                vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
+                u = gl_TessCoord.x;
+                float factor = 0.01;
+                float thresh = 0.01;
             
-                if(u < factor)
+                float val = 1.0 / float(gl_TessLevelOuter[1]);
+
+                float lutVal = 5.0f;
+                if(changeEnd) 
                 {
-                    mypos.xyz = mix(newpos, mypos.xyz, u / factor);
-                    mypos.xyz += thresh * (-tangent);
-                    n = -tangent;
+                    if((mytype == E_EXT_STRAND) || (mytype == B_BRIDGE))  // arrow heads
+                    {
+                        lutVal = u * 9.0f;                              // the size of the LUT is hardcoded to be 10
+                        float mymin = arrowLUT[int(floor(lutVal))];
+                        float mymax = arrowLUT[int(ceil(lutVal))];
+                        float theU  = (lutVal - floor(lutVal)) / (ceil(lutVal) - floor(lutVal));
+
+                        if(ceil(lutVal) - floor(lutVal) < 0.5) 
+                        {
+                            theU = 0.0f;
+
+                            if(ceil(lutVal) > 8.9f)
+                                theU = 1.0f;
+                        }
+
+                        lutVal = mix(mymin, mymax, theU);
+                    }
                 }
-            }
             
-            // if change in secondary structure is at the end: make transition from spline to tube surface
-            if(changeEnd)
-            {
-                vec3 surfdir = mypos.xyz - savepos.xyz; // direction from spline to tube surface.
-                vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
-            
-                if(u > (1.0 - factor))
+                if(v < val)
                 {
-                    mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);
-                    mypos.xyz += thresh * tangent;
-                    n = tangent;
+                    mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * mix(0, pipeWidth, v / val);
+                    n = normalDown;
                 }
+                else if( v >= val && v < 0.5 - val)
+                {
+                    mypos.xyz += nDir * pipeWidth * lutVal + normalLeft * pipeWidth - nDir * mix(0, pipeWidth * lutVal * 2.0, (v - val)/(0.5 - 2 * val) );
+                    n = normalLeft;
+                }
+                else if(v >= 0.5 - val && v < 0.5 + val)
+                {
+                    mypos.xyz += -nDir * pipeWidth * lutVal + pipeWidth * normalLeft - normalLeft * mix(0, 2 * pipeWidth, (v - (0.5 - val))/(2 * val));
+                    n = -normalDown;
+                }
+                else if(v >= 0.5 + val && v < 1.0 - val)
+                {
+                    mypos.xyz += -nDir * pipeWidth * lutVal - pipeWidth * normalLeft + nDir * mix(0, pipeWidth * lutVal * 2.0, (v- (0.5 + val))/(0.5 - 2 * val));
+                    n = -normalLeft;
+                }
+                else
+                {
+                    mypos.xyz += nDir * pipeWidth * lutVal - normalLeft * mix(pipeWidth, 0, ((v - (1.0 - val))/ val));
+                    n = normalDown;
+                }
+            
+
+                // if change in secondary structure is at the beginning: make transition from spline to tube surface
+                if(changeStart)
+                {
+                    vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
+                    vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
+                
+                    if(u < factor)
+                    {
+                        mypos.xyz = mix(newpos, mypos.xyz, u / factor);
+                        mypos.xyz += thresh * (-tangent);
+                        n = -tangent;
+                    }
+                }
+                
+                // if change in secondary structure is at the end: make transition from spline to tube surface
+                if(changeEnd)
+                {
+                    vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
+                    vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
+                
+                    if(u > (1.0 - factor))
+                    {
+                        mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);
+                        mypos.xyz += thresh * tangent;
+                        n = tangent;
+                    }
+                }
+                
             }
             
-        }
-        
-        
-        // uncertainty visualisation
-        
-        // apply surface displacement parameter
-        float uncFac    = 1.0;
-        if (uncDistor[2] > 0.0) {
-            uncFac      = atoms[id[1]].diff;                     // in range [0,1] - 1.0; // 
-        }    
-        float distorLev = uncDistor[1];  
-        float ampLevel  = uncDistor[0];
             
-        // displacment of geometry
-        float uDisp     = distorLev * M_PI * gl_TessCoord.x;
-        float vDisp     = distorLev * M_PI * gl_TessCoord.y;
-        float fU        = uncFac*sin(uDisp);                     // in range [-1,1]
-        float fV        = uncFac*sin(vDisp);                     // in range [-1,1]
-        float disp      = (pipeWidth/2.0)*(fU);                  // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
-        
-        // adjusting normal
-        float uM        = uncFac*cos(uDisp);                     // derivation = gradient of fU
-        vec2  uNormal   = normalize(vec2(0.0, 1.0));             // normal in UV-space
-        vec2  uGrad     = normalize(vec2(1.0, uM));              // tangent of fU in UV-space
-        vec2  uOffset   = (-dot(uGrad, uNormal))*uGrad;          // offset vector for normal in UV-space
-        float uNdisp     = dot(vec2(1.0, 0.0), uOffset);         // offset projected on tangent in UV-space
-        
-        float vM        = uncFac*cos(vDisp);                     // derivation = gradient of fU
-        vec2  vNormal   = normalize(vec2(0.0, 1.0));             // normal in UV-space
-        vec2  vGrad     = normalize(vec2(1.0, vM));              // tangent of fU in UV-space
-        vec2  vOffset   = (-dot(vGrad, vNormal))*vGrad;          // offset vector for normal in UV-space
-        float vNdisp    = dot(vec2(1.0, 0.0), vOffset);          // offset projected on tangent in UV-space
-        
-        if (uncVis == UNC_VIS_SIN_U) { // U
-            if(fU > 0.0) {
-                disp   *= ampLevel;
-            }            
-            mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
-            n           = normalize(n + uNdisp * tangent);
-        }
-        else if (uncVis == UNC_VIS_SIN_V) { // V
-            if(fV > 0.0) {
-                disp   *= ampLevel;
-            }            
-            mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
-            n           = normalize(n + vNdisp * normalize(cross(n, tangent)));
-        }    
-        else if (uncVis == UNC_VIS_SIN_UV) {  // U,V
-            if ((fU > 0.0) && (fV > 0.0)) {
-                disp    = (pipeWidth/2.0)*(fU * fV);                    
-                disp   *= ampLevel;
+            // uncertainty visualisation
+            
+            // apply surface displacement parameter
+            float uncFac    = 1.0;
+            if (uncDistor[2] > 0.0) {
+                uncFac      = alph2.diff;                               // in range [0,1] - 1.0; // 
+            }    
+            float distorLev = uncDistor[1];  
+            float ampLevel  = uncDistor[0];
+                
+            // displacment of geometry
+            float uDisp     = distorLev * M_PI * gl_TessCoord.x;
+            float vDisp     = distorLev * M_PI * gl_TessCoord.y;
+            float fU        = uncFac*sin(uDisp);                        // in range [-1,1]
+            float fV        = uncFac*sin(vDisp);                        // in range [-1,1]
+            float disp      = (pipeWidth/2.0)*(fU);                     // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
+            
+            // adjusting normal
+            float uM        = uncFac*cos(uDisp);                        // derivation = gradient of fU
+            vec2  uNormal   = normalize(vec2(0.0, 1.0));                // normal in UV-space
+            vec2  uGrad     = normalize(vec2(1.0, uM));                 // tangent of fU in UV-space
+            vec2  uOffset   = (-dot(uGrad, uNormal))*uGrad;             // offset vector for normal in UV-space
+            float uNdisp     = dot(vec2(1.0, 0.0), uOffset);            // offset projected on tangent in UV-space
+            
+            float vM        = uncFac*cos(vDisp);                        // derivation = gradient of fU
+            vec2  vNormal   = normalize(vec2(0.0, 1.0));                // normal in UV-space
+            vec2  vGrad     = normalize(vec2(1.0, vM));                 // tangent of fU in UV-space
+            vec2  vOffset   = (-dot(vGrad, vNormal))*vGrad;             // offset vector for normal in UV-space
+            float vNdisp    = dot(vec2(1.0, 0.0), vOffset);             // offset projected on tangent in UV-space
+            
+            if (uncVisMode == UNC_VIS_SIN_U) { // U
+                if(fU > 0.0) {
+                    disp   *= ampLevel;
+                }            
+                mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
+                n           = normalize(n + uNdisp * tangent);
             }
-            mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
-            n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
+            else if (uncVisMode == UNC_VIS_SIN_V) { // V
+                if(fV > 0.0) {
+                    disp   *= ampLevel;
+                }            
+                mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
+                n           = normalize(n + vNdisp * normalize(cross(n, tangent)));
+            }    
+            else if (uncVisMode == UNC_VIS_SIN_UV) {  // U,V
+                if ((fU > 0.0) && (fV > 0.0)) {
+                    disp    = (pipeWidth/2.0)*(fU * fV);                    
+                    disp   *= ampLevel;
+                }
+                mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
+                n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
+            }
+            
+            gl_Position = mypos;
         }
-        
-        
-        gl_Position = mypos;
     }
 -->
       </snippet>
@@ -620,13 +653,17 @@
     //////// 
     in vec4 color[];
     in vec3 n[];
+
+    in float dith[];                                                    // DITHERING - dithering threshold from tesselation eval 
     
     //////////
     // OUT //
     /////////  
     out vec4 mycol;
     out vec3 normal;
-
+    
+    out float dithThresh;                                               // DITHERING - pass dithering threshold to frag shader
+    
     /////////////////////
     // INPUT variables //
     /////////////////////
@@ -637,18 +674,20 @@
     // MAIN //
     //////////
     void main() {
-    
-      for(int i = 0; i < gl_in.length(); i++) {            // length = 4 ?
-      
-        gl_Position  = MVP * gl_in[i].gl_Position;
-        mycol        = color[i];
-        vec4 normal4 = MVinvtrans * vec4(n[i], 0);
-        normal       = normalize(normal4.xyz);
         
-        EmitVertex();
-      }
-      
-      EndPrimitive();
+        for(int i = 0; i < gl_in.length(); i++) {                       // length = ?
+
+            gl_Position  = MVP * gl_in[i].gl_Position;
+            mycol        = color[i];
+            vec4 normal4 = MVinvtrans * vec4(n[i], 0);
+            normal       = normalize(normal4.xyz);
+
+            dithThresh = dith[i];
+            
+            EmitVertex();
+        }
+
+        EndPrimitive();
       
     }
 -->
@@ -683,7 +722,9 @@
     //////// 
     in vec4 mycol;
     in vec3 normal;
-
+    
+    in float dithThresh;                                                // DITHERING - the threshold for dithering
+                          
     //////////
     // OUT //
     /////////
@@ -706,19 +747,47 @@
     uniform vec4 specularColor = vec4(1.0);    
     uniform vec4 phong         = vec4(0.6, 0.6, 0.8, 10.0);
   
+    uniform int ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of sec truct types - 1]
+    uniform float dithM[4][20];                                         // DITHERING - dither matrix
+    /*
+     
+    dithM[4][20] = {14,  6,  9,  3,  7,  2, 10,  6, 12, 11, 13,  5, 10,  0,  4,  1,  9,  5, 15,  8, 
+                     4,  1,  5, 15,  0,  8, 14,  9,  3, 15,  7,  2,  6, 12,  3, 11, 13, 10,  0, 12, 
+                    11,  7, 13, 10, 12,  4, 11,  1,  5,  0,  8,  4, 14,  9, 15,  7,  8,  2,  6,  3,
+                    15,  8,  2, 14,  6,  3,  7, 13,  2, 10, 12, 11,  1, 13,  5,  0,  4, 14,  1,  9}; 
+    
+    1/16   2/16   3/16   4/16   5/16   6/16   7/16   8/16   9/16   10/16  11/16  12/16  13/16  14/16  15/16  16/16   
+    0,0625 0,125  0,1875 0,25   0,3125 0,375  0,4375 0,5    0,5625 0,625  0,6875 0,75   0,8125 0,875  0,9375 1,0
+    
+    in 6,25%-Schritten
+    
+    */
+                    
     //////////
     // MAIN //
     //////////
     void main(void) {
     
+        // dithering - check if fragment is discarded
+        if (ditherCount > 0) {
+            if (dithThresh < 0.0001) {
+                discard;  
+            }
+            else {
+                float t = dithM[int(gl_FragCoord.y)%4][int(gl_FragCoord.x)%20] / 16.0;
+                if (t > dithThresh) { // draw fragment only if t <= dithThresh
+                    discard;
+                }
+            }
+        }
+            
         outCol        = mycol;
         vec4 pos      = ProjInv * gl_FragCoord.xyzw;
         vec4 light    = MV * lightPos;
-       
-        //vec3 lightDir = normalize(light.xyz - pos.xyz);
         
         vec3 lightDir = normalize(lightPos.xyz);
-    
+            //vec3 lightDir = normalize(light.xyz - pos.xyz);
+            
         vec3 n  = normal;
         vec3 e  = pos.xyz;
         vec3 h  = normalize(lightDir + e);
@@ -736,6 +805,7 @@
         }
         
         outCol = vec4(c, 1.0);
+    
     }
 -->
         </snippet>

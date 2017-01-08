@@ -49,8 +49,8 @@
 #include <iostream> // DEBUG
 
 
-#define U_PI 3.1415926535897932384626433832795
-
+#define U_PI        3.1415926535897932384626433832795
+#define U_FLOAT_EPS 0.00001
 
 using namespace megamol;
 using namespace megamol::core;
@@ -1142,7 +1142,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
     for (unsigned int i = 0; i < this->aminoAcidCount; i++) { // loop over all amino-acids
         
         // ignore as missing flagged amino-acids and ignore if all structure types are NOTDEFINED resulting in maximum uncerainty equals 0
-        if ((this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) || (this->secUncertainty[i][this->sortedUncertainty[i][0]] == 0.0f)) {
+        if ((this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) || (this->secUncertainty[i][this->sortedUncertainty[i][0]] < U_FLOAT_EPS)) {
 
             // default
             posOffset.SetX(this->vertices[2 * i]);
@@ -1348,7 +1348,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                             index = 0;
                             for (unsigned int k = 0; k < (diffStruct-1); k++) {
                                 // get data for first structure type
-                                while (this->secUncertainty[i][sortedStructLR[index]] == 0.0f) {
+                                while (this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1364,7 +1364,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     
                                 // get data for second structure type
                                 index++;
-                                while(this->secUncertainty[i][sortedStructLR[index]] == 0.0f) {
+                                while(this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1403,10 +1403,10 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                         colTemp[1] = aStart*colStart[1] + aEnd*colEnd[1]; // interpolate S
                                         colTemp[2] = aStart*colStart[2] + aEnd*colEnd[2]; // interpolate L
                                         
-                                        if (colStart[1] == 0.0f) { // S = 0
+                                        if (colStart[1] < U_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colEnd[0];
                                         }
-                                        else if (colEnd[1] == 0.0f) { // S = 0
+                                        else if (colEnd[1] < U_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colStart[0];
                                             
                                         } // interpolate hue
@@ -1781,7 +1781,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                             index = 0;
                             for (unsigned int k = 0; k < (diffStruct-1); k++) {
                                 // get data for first structure type
-                                while (this->secUncertainty[i][sortedStructLR[index]] == 0.0f) {
+                                while (this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1797,7 +1797,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     
                                 // get data for second structure type
                                 index++;
-                                while(this->secUncertainty[i][sortedStructLR[index]] == 0.0f) {
+                                while(this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1834,10 +1834,10 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                         colTemp[1] = aStart*colStart[1] + aEnd*colEnd[1]; // interpolate S
                                         colTemp[2] = aStart*colStart[2] + aEnd*colEnd[2]; // interpolate L
                                         
-                                        if (colStart[1] == 0.0f) { // S = 0
+                                        if (colStart[1] < U_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colEnd[0];
                                         }
-                                        else if (colEnd[1] == 0.0f) { // S = 0
+                                        else if (colEnd[1] < U_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colStart[0];
                                             
                                         } // interpolate hue
