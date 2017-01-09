@@ -361,7 +361,7 @@ void view::SplitView::SetCursor2DButtonState(unsigned int btn, bool down) {
         // take focus!
         if (this->client1Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))) {
             this->mouseFocus = 1;
-        } else if (this->client1Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))) {
+        } else if (this->client2Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))) {
             this->mouseFocus = 2;
         } else {
             this->mouseFocus = 0;
@@ -371,10 +371,11 @@ void view::SplitView::SetCursor2DButtonState(unsigned int btn, bool down) {
     CallRenderView *crv = NULL;
     if (this->mouseFocus == 1) {
         crv = this->render1();
-    } else {
+    } else if (this->mouseFocus == 2) {
         crv = this->render2();
     }
     if (crv != NULL) {
+        SetCursor2DPosition(this->mouseX, this->mouseY);
         crv->SetMouseButton(btn, down);
         (*crv)(CallRenderView::CALL_SETCURSOR2DBUTTONSTATE);
     }
@@ -399,14 +400,20 @@ void view::SplitView::SetCursor2DPosition(float x, float y) {
         crv->SetMousePosition(
             (x - this->client1Area.Left()) / this->client1Area.Width(),
             (y - this->client1Area.Bottom()) / this->client1Area.Height());
-        (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
+        if ((this->mouseFocus == 1)
+            || ((this->mouseFocus == 0) && (this->client1Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))))) {
+            (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
+        }
     }
     crv = this->render2();
     if (crv != NULL) {
         crv->SetMousePosition(
             (x - this->client2Area.Left()) / this->client2Area.Width(),
             (y - this->client2Area.Bottom()) / this->client2Area.Height());
-        (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
+        if ((this->mouseFocus == 2)
+            || ((this->mouseFocus == 0) && (this->client2Area.Contains(vislib::math::Point<float, 2>(this->mouseX, this->mouseY))))) {
+            (*crv)(CallRenderView::CALL_SETCURSOR2DPOSITION);
+        }
     }
 }
 
