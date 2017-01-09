@@ -151,13 +151,14 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
 		uncVisParam(            "08 Uncertainty visualisation", "The uncertainty visualisation."),
 		uncDistorParam(         "09 Uncertainty distortion", "(0) amplification, (1) repeat of sin(2*PI), (2) apply uncertainty all over (true if value = 0.0), (3) unused."),
-        ditherParam(            "10 Dithering", "Add additional dithering passes."),
-		lightPosParam(          "11 Light position", "The light position."),
-		materialParam(          "12 Material", "Ambient, diffuse, specular components + exponent."),
-		colorModeParam(         "13 Color mode", "Coloring mode for secondary structure."),
-		colorInterpolationParam("14 Color interpolation", "Should the colors be interpolated?"),
-		buttonParam(            "15 Reload shaders", "Reload the shaders."),
-		colorTableFileParam(    "16 Color Table Filename", "The filename of the color table."),
+        ditherParam(            "10 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
+		uncertainMaterialParam( "11 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
+		lightPosParam(          "12 Light position", "The light position."),
+		materialParam(          "13 Material", "Ambient, diffuse, specular components + exponent."),
+		colorModeParam(         "14 Color mode", "Coloring mode for secondary structure."),
+		colorInterpolationParam("15 Color interpolation", "Should the colors be interpolated?"),
+		buttonParam(            "16 Reload shaders", "Reload the shaders."),
+		colorTableFileParam(    "17 Color Table Filename", "The filename of the color table."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
@@ -198,7 +199,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
 	this->MakeSlotAvailable(&this->buttonParam);
                                               // init min max
-	this->ditherParam << new core::param::IntParam(0, 0, this->structCount-1);
+	this->ditherParam << new core::param::IntParam(0, 0, this->structCount);
 	this->MakeSlotAvailable(&this->ditherParam);
 	                                              // init min max
 	this->tessLevelParam << new core::param::IntParam(16, 1, 64);
@@ -213,6 +214,9 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	vislib::math::Vector<float, 4> tmpVec4(0.2f, 0.8f, 0.4f, 10.0f);
 	this->materialParam << new core::param::Vector4fParam(tmpVec4);
 	this->MakeSlotAvailable(&this->materialParam);
+
+	this->uncertainMaterialParam << new core::param::Vector4fParam(tmpVec4);
+	this->MakeSlotAvailable(&this->uncertainMaterialParam);
 
 	tmpVec4 = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
 	this->lightPosParam << new core::param::Vector4fParam(tmpVec4);
@@ -245,17 +249,18 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->MakeSlotAvailable(&this->colorTableFileParam);
 	UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
 
-	this->currentTessLevel     = 16;
-	this->currentUncVis        = uncVisualisations::UNC_VIS_SIN_U;
-	this->currentColoringMode  = coloringModes::COLOR_MODE_STRUCT;
-	this->currentScaling       = 1.0f;
-	this->currentBackboneWidth = 0.2f;
-	this->currentMaterial      = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);;
-	this->currentColoringMode  = coloringModes::COLOR_MODE_STRUCT;
-	this->currentUncVis        = uncVisualisations::UNC_VIS_SIN_UV;
-	this->currentLightPos      = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
-	this->currentUncDist       = vislib::math::Vector<float, 4>(1.0f, 5.0f, 0.0f, 0.0f);
-    this->currentDitherMode    = 0;
+	this->currentTessLevel         = 16;
+	this->currentUncVis            = uncVisualisations::UNC_VIS_SIN_U;
+	this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
+	this->currentScaling           = 1.0f;
+	this->currentBackboneWidth     = 0.2f;
+	this->currentMaterial          = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
+	this->currentUncertainMaterial = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
+	this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
+	this->currentUncVis            = uncVisualisations::UNC_VIS_SIN_UV;
+	this->currentLightPos          = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
+	this->currentUncDist           = vislib::math::Vector<float, 4>(1.0f, 5.0f, 0.0f, 0.0f);
+    this->currentDitherMode        = 0;
     
 	this->fences.resize(this->numBuffers);
 
@@ -516,10 +521,10 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 	if (!mol) return false;
 
     // execute the call
-    if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
+    if( !(*udc)(UncertaintyDataCall::CallForGetData)) return false;
     
 	// check molecular data
-	if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+	// if (!(*mol)(MolecularDataCall::CallForGetData)) return false; // don't call twice ... ?
 
 	// initialization
 	this->aminoAcidCount = udc->GetAminoAcidCount();
@@ -723,6 +728,11 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	if (this->materialParam.IsDirty()) {
 		this->materialParam.ResetDirty();
 		this->currentMaterial = static_cast<vislib::math::Vector<float, 4>>(this->materialParam.Param<param::Vector4fParam>()->Value());
+	}
+	// get material lighting properties
+	if (this->uncertainMaterialParam.IsDirty()) {
+		this->uncertainMaterialParam.ResetDirty();
+		this->currentUncertainMaterial = static_cast<vislib::math::Vector<float, 4>>(this->uncertainMaterialParam.Param<param::Vector4fParam>()->Value());
 	}
 	// get uncertainty distortion
 	if (this->uncDistorParam.IsDirty()) {
@@ -1036,18 +1046,24 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform4f(this->tubeShader.ParameterLocation("diffuseColor"), lightDiffuse[0], lightDiffuse[1], lightDiffuse[2], lightDiffuse[3]);
 		glUniform4f(this->tubeShader.ParameterLocation("specularColor"), lightSpecular[0], lightSpecular[1], lightSpecular[2], lightSpecular[3]);
 		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->currentMaterial.PeekComponents());
+		glUniform4fv(this->tubeShader.ParameterLocation("phongUncertain"), 1, (GLfloat *)this->currentUncertainMaterial.PeekComponents());
         
         // dither matrix
-        GLfloat dithM[4][20] = {{14,  6,  9,  3,  7,  2, 10,  6, 12, 11, 13,  5, 10,  0,  4,  1,  9,  5, 15,  8}, 
-                                { 4,  1,  5, 15,  0,  8, 14,  9,  3, 15,  7,  2,  6, 12,  3, 11, 13, 10,  0, 12}, 
-                                {11,  7, 13, 10, 12,  4, 11,  1,  5,  0,  8,  4, 14,  9, 15,  7,  8,  2,  6,  3},
-                                {15,  8,  2, 14,  6,  3,  7, 13,  2, 10, 12, 11,  1, 13,  5,  0,  4, 14,  1,  9}}; 
+        GLfloat dithM[80] = {14,  6,  9,  3,  7,  2, 10,  6, 12, 11, 13,  5, 10,  0,  4,  1,  9,  5, 15,  8, 
+                              4,  1,  5, 15,  0,  8, 14,  9,  3, 15,  7,  2,  6, 12,  3, 11, 13, 10,  0, 12, 
+                             11,  7, 13, 10, 12,  4, 11,  1,  5,  0,  8,  4, 14,  9, 15,  7,  8,  2,  6,  3,
+                             15,  8,  2, 14,  6,  3,  7, 13,  2, 10, 12, 11,  1, 13,  5,  0,  4, 14,  1,  9}; 
                                     
-        glUniform1fv(this->tubeShader.ParameterLocation("dithM"), 40, dithM);
+		glUniform1fv(this->tubeShader.ParameterLocation("dithM"), 80, (GLfloat *)dithM);
                                 
         // DITHERING 
-        for (unsigned int d = 0; d <= this->currentDitherMode; d++) {
+        for (int d = 0; d <= this->currentDitherMode; d++) {
         
+			// if dithering is enabled skip first render pass for d = 0 and start with d = 1
+			if ((this->currentDitherMode > 0) && (d == 0)) {
+				continue;
+			}
+
             // fragment and tesselation eval
             glUniform1i(this->tubeShader.ParameterLocation("ditherCount"), (GLint)d);                                                                  // dithering pass
             

@@ -250,6 +250,7 @@ namespace megamol {
 		core::param::ParamSlot backboneParam;
 		core::param::ParamSlot backboneWidthParam;
 		core::param::ParamSlot materialParam;
+		core::param::ParamSlot uncertainMaterialParam;
 		core::param::ParamSlot lineDebugParam;
 		core::param::ParamSlot buttonParam;
 		core::param::ParamSlot colorInterpolationParam;
@@ -280,6 +281,7 @@ namespace megamol {
 		float                          currentScaling;
 		float                          currentBackboneWidth;
 		vislib::math::Vector<float, 4> currentMaterial;
+		vislib::math::Vector<float, 4> currentUncertainMaterial;
 		vislib::math::Vector<float, 4> currentUncDist;
         int                            currentDitherMode;
 
