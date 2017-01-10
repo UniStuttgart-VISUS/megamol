@@ -346,9 +346,14 @@
             n           = vec3(0.0, 0.0, 0.0);
             color       = vec4(0.0, 0.0, 0.0, 0.0);
         }
+        else {
+            // pass current uncertainty to fragment shader (as flag for choosing right phong material)
+            dith[1] = 1.0 - atoms[id[1]].unc[atoms[id[1]].sortedStruct[0]];
+        }
         
-        if ((dith[0] - dith[1]) > 0.00001) {
-            
+        
+        if ((dith[0] - dith[1]) > 0.00001) { // threshold for uncertainty values ? ...
+                      
             CAlpha alph0 = atoms[id[0] - 1];                            // (id[0] - 1) doesn't exist for first vertex call ?
             CAlpha alph1 = atoms[id[0]];
             CAlpha alph2 = atoms[id[1]];
@@ -398,7 +403,7 @@
             vec3 nDir    = dir;
             nDir         = dir -  dot(dir, tangent) * tangent;
             nDir         = -normalize(nDir);
-            
+                                   
             // assign current structure type
             int mytype   = alph2.sortedStruct[structIndex];
                     
@@ -579,7 +584,7 @@
             // uncertainty visualisation
             
             // apply surface displacement parameter
-            float uncFac    = 1.0;
+            float uncFac = 0.0;
             if (uncDistor[2] > 0.0) {
                 // if dithering is enabled use structure uncertainty else use uncertainty difference
                 if (ditherCount > 0)  {
@@ -589,59 +594,76 @@
                     }
                 }
                 else {
-                    uncFac  = alph2.diff;                                 // in range [0,1]
+                    uncFac  = alph2.diff;                               // in range [0,1]
                 }
             }    
             float distorLev = uncDistor[1];  
             float ampLevel  = uncDistor[0];
-                
-            // displacment of geometry
-            float uDisp     = distorLev * 2.0 * M_PI * gl_TessCoord.x;
-            float vDisp     = distorLev * 2.0 * M_PI * gl_TessCoord.y;
-            float fU        = uncFac*sin(uDisp);                        // in range [-1,1]
-            float fV        = uncFac*sin(vDisp);                        // in range [-1,1]
-            float disp      = (pipeWidth/2.0)*(fU);                     // in range [-(pipeWidth/2.0), (pipeWidth/2.0)]
-            
-            // adjusting normal
-            float uM        = uncFac*cos(uDisp);                        // derivation = gradient of fU
-            vec2  uNormal   = normalize(vec2(0.0, 1.0));                // normal in UV-space
-            vec2  uGrad     = normalize(vec2(1.0, uM));                 // tangent of fU in UV-space
-            vec2  uOffset   = (-dot(uGrad, uNormal))*uGrad;             // offset vector for normal in UV-space
-            float uNdisp     = dot(vec2(1.0, 0.0), uOffset);            // offset projected on tangent in UV-space
-            
-            float vM        = uncFac*cos(vDisp);                        // derivation = gradient of fU
-            vec2  vNormal   = normalize(vec2(0.0, 1.0));                // normal in UV-space
-            vec2  vGrad     = normalize(vec2(1.0, vM));                 // tangent of fU in UV-space
-            vec2  vOffset   = (-dot(vGrad, vNormal))*vGrad;             // offset vector for normal in UV-space
-            float vNdisp    = dot(vec2(1.0, 0.0), vOffset);             // offset projected on tangent in UV-space
+
+            float uNdisp = 0.0;
+            float vNdisp = 0.0;
+            float disp   = 0.0;
             
             if (uncVisMode == UNC_VIS_SIN_U) { // U
-                disp        = (pipeWidth/2.0)*(fU);
-                if(fU > 0.0) {
-                    disp   *= ampLevel;
-                }            
-                mypos.xyz  += (disp + pipeWidth) * n;
-                n           = normalize(n + uNdisp * tangent);
+                float uDisp = distorLev * 2.0 * M_PI * gl_TessCoord.x;  // 
+                float facU  = (pipeWidth/2.0) * uncFac;                 // 
+                disp = sin(uDisp);
+                if(disp > 0.0) {
+                    facU *= ampLevel;
+                }
+                disp *= facU;                
+                
+                float uM      = facU * cos(uDisp);                      // derivation = gradient of fU
+                vec2  uNormal = normalize(vec2(0.0, 1.0));              // normal in UV-space
+                vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fU in UV-space
+                vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
+                uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent in UV-space
+                vNdisp        = 0.0;
             }
-            else if (uncVisMode == UNC_VIS_SIN_V) { // V
-                disp        = (pipeWidth/2.0)*(fV);
-                if(fV > 0.0) {
-                    disp   *= ampLevel;
-                }            
-                mypos.xyz  += (disp + pipeWidth) * n;
-                n           = normalize(n + vNdisp * normalize(cross(n, tangent)));
+            else if (uncVisMode == UNC_VIS_SIN_V) { // V    
+                float vDisp   = distorLev * 2.0 * M_PI * gl_TessCoord.y;
+                float facV    = (pipeWidth/2.0) * uncFac;         
+                disp = sin(vDisp);
+                if(disp > 0.0) {
+                    facV *= ampLevel;
+                }
+                disp *= facV; 
+                
+                float vM      = facV * cos(vDisp);                      // derivation = gradient of fU
+                vec2  vNormal = normalize(vec2(0.0, 1.0));              // normal in UV-space
+                vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fU in UV-space
+                vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
+                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on tangent in UV-space
+                uNdisp        = 0.0;            
             }    
             else if (uncVisMode == UNC_VIS_SIN_UV) {  // U,V
-                disp        = (pipeWidth/2.0)*(fU);
-                if ((fU > 0.0) && (fV > 0.0)) {
-                    disp    = (pipeWidth/2.0)*(fU * fV) / uncFac;              
-                        // disp    = (pipeWidth/2.0)*(max(fU,fV));                    
-                        // disp    = (pipeWidth/2.0)*(fU * fV);
-                    disp   *= ampLevel;
+                float uDisp = distorLev * 2.0 * M_PI * gl_TessCoord.x;  // 
+                float vDisp = distorLev * 2.0 * M_PI * gl_TessCoord.y;
+                float fac   = (pipeWidth/2.0) * uncFac;     
+                float dispU = sin(uDisp);
+                float dispV = sin(vDisp);
+                disp = (dispU + dispV);
+                if ((dispU > 0.0) && (dispV > 0.0)) {
+                    fac *= ampLevel;
                 }
-                mypos.xyz  += (disp + (pipeWidth/2.0) + pipeWidth) * n;
-                n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
+                disp *= fac; 
+                
+                float vM      = fac * cos(vDisp);                       // derivation = gradient of fU
+                vec2  vNormal = normalize(vec2(0.0, 1.0));              // normal in UV-space
+                vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fU in UV-space
+                vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
+                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on tangent in UV-space
+
+                float uM      = fac * cos(uDisp);                       // derivation = gradient of fU
+                vec2  uNormal = normalize(vec2(0.0, 1.0));              // normal in UV-space
+                vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fU in UV-space
+                vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
+                uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent in UV-space
             }
+            
+            mypos.xyz  += (disp + pipeWidth) * n;            
+            n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
+          
             
             gl_Position = mypos;
         }
@@ -789,7 +811,7 @@
     
         // dithering - check if fragment is discarded
         if (ditherCount > 0) {
-            if ((dithThresh[0] - dithThresh[1])  < 0.1) {
+            if ((dithThresh[0] - dithThresh[1])  < 0.00001) {
                 discard;  
             }
             else {
@@ -802,7 +824,7 @@
             }
         }
         
-        if (dithThresh[1] > 0.00001) {
+        if ((dithThresh[0] - dithThresh[1]) < (1.0 - 0.00001)) {
             material = phongUncertain;
         }
                 
