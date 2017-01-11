@@ -37,6 +37,7 @@
 
 #include <iostream> // DEBUG
 
+#define DATA_FLOAT_EPS 0.00001
 
 using namespace megamol::core;
 using namespace megamol::protein_uncertainty;
@@ -406,7 +407,7 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	using vislib::sys::Log;
 
-	float methodCount;
+	int methodCount;
 	float tmpChange;
 
 	// Reset uncertainty data 
@@ -441,7 +442,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 		this->secStructUncertainty.Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
 		this->sortedSecStructUncertainty.Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
 
-		methodCount = static_cast<float>(UncertaintyDataCall::assMethod::NOM);
+		methodCount = static_cast<int>(UncertaintyDataCall::assMethod::NOM);
 
 		// loop over all possible secondary strucutres
 		for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
@@ -456,7 +457,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 				if (this->secStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i] == static_cast<UncertaintyDataCall::secStructure>(j)) {
 					// ignore NOTDEFINED structure type for uncerainty calculation
 					if (static_cast<UncertaintyDataCall::secStructure>(j) == UncertaintyDataCall::secStructure::NOTDEFINED) {
-						methodCount -= 1.0f;
+						methodCount -= 1;
 					}
 					else {
 						this->secStructUncertainty.Last()[j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
@@ -470,7 +471,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 
 		// normalise
 		for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
-			this->secStructUncertainty.Last()[j] /= abs(methodCount);
+			this->secStructUncertainty.Last()[j] /= static_cast<float>(abs(methodCount));
 		}
 
 		// using quicksort for sorting ...
@@ -478,8 +479,12 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 
 		// calculate change measure 
 		tmpChange = 0.0f;
-		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM) - 1; k++) {
-			tmpChange += (this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k]] - this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k + 1]]);
+        tmpChange += (this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[0]]); // max
+		for (unsigned int k = 1; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
+            if (this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k + 1]] < DATA_FLOAT_EPS) {
+                tmpChange -= (this->secStructUncertainty.Last()[this->sortedSecStructUncertainty.Last()[k]]); // min (> 0.0)
+            }
+            break;
 		}
 		this->diffUncertainty.Add(1.0f - tmpChange);
 

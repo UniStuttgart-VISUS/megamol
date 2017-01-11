@@ -49,8 +49,8 @@
 #include <iostream> // DEBUG
 
 
-#define U_PI        3.1415926535897932384626433832795
-#define U_FLOAT_EPS 0.00001
+#define SEQ_PI          3.1415926535897932384626433832795
+#define SEQ_FLOAT_EPS 0.00001
 
 using namespace megamol;
 using namespace megamol::core;
@@ -313,7 +313,7 @@ bool UncertaintySequenceRenderer::create() {
             case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
             case (UncertaintyDataCall::secStructure::G_310_HELIX) :
             case (UncertaintyDataCall::secStructure::I_PI_HELIX) :
-                 offset = flip*(height / 2.0f) + sin(dS*2.0f*(float)U_PI)*0.25f;
+                 offset = flip*(height / 2.0f) + sin(dS*2.0f*(float)SEQ_PI)*0.25f;
                 break;
             case (UncertaintyDataCall::secStructure::B_BRIDGE) :
                 offset = ((dS > 1.0f/7.0f) ? (flip*(0.5f-(height/2.0f))*(7.0f-dS*7.0f)/6.0f + flip*(height/2.0f)) : (flip*(heightStrand/2.0f))); 
@@ -342,7 +342,7 @@ bool UncertaintySequenceRenderer::create() {
 
 	for (unsigned int i = 0; i < structCount; i++) {
 
-		angle = 2.0f*(float)U_PI / static_cast<float>(structCount)* static_cast<float>(i);
+		angle = 2.0f*(float)SEQ_PI / static_cast<float>(structCount)* static_cast<float>(i);
 
 		if (i == 0) {
 			tmpVec = initVec;
@@ -1142,7 +1142,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
     for (unsigned int i = 0; i < this->aminoAcidCount; i++) { // loop over all amino-acids
         
         // ignore as missing flagged amino-acids and ignore if all structure types are NOTDEFINED resulting in maximum uncerainty equals 0
-        if ((this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) || (this->secUncertainty[i][this->sortedUncertainty[i][0]] < U_FLOAT_EPS)) {
+        if ((this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) || (this->secUncertainty[i][this->sortedUncertainty[i][0]] < SEQ_FLOAT_EPS)) {
 
             // default
             posOffset.SetX(this->vertices[2 * i]);
@@ -1348,7 +1348,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                             index = 0;
                             for (unsigned int k = 0; k < (diffStruct-1); k++) {
                                 // get data for first structure type
-                                while (this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
+                                while (this->secUncertainty[i][sortedStructLR[index]] < SEQ_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1364,7 +1364,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     
                                 // get data for second structure type
                                 index++;
-                                while(this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
+                                while(this->secUncertainty[i][sortedStructLR[index]] < SEQ_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1403,10 +1403,10 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                         colTemp[1] = aStart*colStart[1] + aEnd*colEnd[1]; // interpolate S
                                         colTemp[2] = aStart*colStart[2] + aEnd*colEnd[2]; // interpolate L
                                         
-                                        if (colStart[1] < U_FLOAT_EPS) { // S = 0
+                                        if (colStart[1] < SEQ_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colEnd[0];
                                         }
-                                        else if (colEnd[1] < U_FLOAT_EPS) { // S = 0
+                                        else if (colEnd[1] < SEQ_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colStart[0];
                                             
                                         } // interpolate hue
@@ -1781,7 +1781,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                             index = 0;
                             for (unsigned int k = 0; k < (diffStruct-1); k++) {
                                 // get data for first structure type
-                                while (this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
+                                while (this->secUncertainty[i][sortedStructLR[index]] < SEQ_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1797,7 +1797,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                     
                                 // get data for second structure type
                                 index++;
-                                while(this->secUncertainty[i][sortedStructLR[index]] < U_FLOAT_EPS) {
+                                while(this->secUncertainty[i][sortedStructLR[index]] < SEQ_FLOAT_EPS) {
                                     index++;
 									if (index >= structCount) {
                                         break; // shouldn't happen?
@@ -1834,10 +1834,10 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                                         colTemp[1] = aStart*colStart[1] + aEnd*colEnd[1]; // interpolate S
                                         colTemp[2] = aStart*colStart[2] + aEnd*colEnd[2]; // interpolate L
                                         
-                                        if (colStart[1] < U_FLOAT_EPS) { // S = 0
+                                        if (colStart[1] < SEQ_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colEnd[0];
                                         }
-                                        else if (colEnd[1] < U_FLOAT_EPS) { // S = 0
+                                        else if (colEnd[1] < SEQ_FLOAT_EPS) { // S = 0
                                             colTemp[0] = colStart[0];
                                             
                                         } // interpolate hue
