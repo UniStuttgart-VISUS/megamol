@@ -112,7 +112,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include;$(TrisoupPath)include;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -123,8 +123,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mmstd_trisoup.lib;ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\;$(TrisoupPath)lib\$(PlatformName)\$(Configuration)\</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -147,7 +147,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include;$(TrisoupPath)include;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -158,8 +158,8 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mmstd_trisoup.lib;ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\;$(TrisoupPath)lib\$(PlatformName)\$(Configuration)\</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -180,7 +180,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include;$(TrisoupPath)include;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -190,8 +190,8 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mmstd_trisoup.lib;ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\;$(TrisoupPath)lib\$(PlatformName)\$(Configuration)\</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -217,7 +217,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include\;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(OSPRayPath);$(OSPRayPath)include;$(TrisoupPath)include;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;OSPRAY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -227,8 +227,8 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mmstd_trisoup.lib;ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);$(OSPRayPath)lib\;$(TrisoupPath)lib\$(PlatformName)\$(Configuration)\</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -258,8 +258,10 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\OSPRay\OSPRay.h" />
+    <ClInclude Include="include\OSPRay_plugin\OSPRay.h" />
     <ClInclude Include="src\OSPRayRenderer.h" />
     <ClInclude Include="src\OSPRaySphereRenderer.h" />
+    <ClInclude Include="src\OSPRayTriangleMeshRenderer.h" />
     <ClInclude Include="src\OSPRayVolumeRenderer.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\targetver.h" />
@@ -269,6 +271,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile Include="src\OSPRay.cpp" />
     <ClCompile Include="src\OSPRayRenderer.cpp" />
     <ClCompile Include="src\OSPRaySphereRenderer.cpp" />
+    <ClCompile Include="src\OSPRayTriangleMeshRenderer.cpp" />
     <ClCompile Include="src\OSPRayVolumeRenderer.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

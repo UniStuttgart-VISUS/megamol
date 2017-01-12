@@ -408,6 +408,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
             vd.clear();
             cd.clear();
+            cd_rgba.clear();
 
         }
     } else {

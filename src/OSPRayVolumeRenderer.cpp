@@ -244,7 +244,9 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
         ospCommit(voxels);
 
 
-        
+        volume = ospNewVolume("shared_structured_volume");
+
+
         ospSetString(volume, "voxelType", "float"); 
         // scaling properties of the volume
         ospSet3iv(volume, "dimensions", (const int*)vd->VolumeDimension().PeekDimension());
@@ -304,7 +306,7 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
         // isosurface
         if (this->showIsosurface.Param<core::param::BoolParam>()->Value()) {
             isosurface = ospNewGeometry("isosurfaces");
-            std::vector<float> iv = { 0.2f, 0.8f };
+            std::vector<float> iv = { 0.5f };
             OSPData isovalues = ospNewData(2, OSP_FLOAT, iv.data());
             ospCommit(isovalues);
             ospSetData(isosurface, "isovalues", isovalues);
@@ -317,7 +319,11 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
         // slices
         if (this->showSlice.Param<core::param::BoolParam>()->Value()) {
             slice = ospNewGeometry("slices");
-            std::vector<float> pln = { 1.0f, 0.0f, 0.0f, 0.0f };
+            std::vector<float> pln(4);
+            pln[0] = this->sliceNormal.Param<core::param::Vector3fParam>()->Value().X();
+            pln[1] = this->sliceNormal.Param<core::param::Vector3fParam>()->Value().Y();
+            pln[2] = this->sliceNormal.Param<core::param::Vector3fParam>()->Value().Z();
+            pln[3] = this->sliceDist.Param<core::param::FloatParam>()->Value();
             OSPData planes = ospNewData(1, OSP_FLOAT4, pln.data());
             ospCommit(planes);
             ospSetData(slice, "planes", planes);
@@ -356,7 +362,7 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
         this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
         ospUnmapFrameBuffer(fb, framebuffer);
         ospRelease(voxels);
-        
+        //ospRelease(volume);
 
 
 
@@ -371,7 +377,7 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
     vd->Unlock();
     osprayShader.Disable();
 
-
+  
     return true;
 }
 

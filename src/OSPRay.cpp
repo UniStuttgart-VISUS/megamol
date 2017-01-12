@@ -13,6 +13,7 @@
 #include "vislib/vislibversion.h"
 #include "OSPRaySphereRenderer.h"
 #include "OSPRayVolumeRenderer.h"
+#include "OSPRayTriangleMeshRenderer.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -43,7 +44,7 @@ namespace {
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereRenderer>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVolumeRenderer>();
-
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMeshRenderer>();
             // register calls here:
 
             //

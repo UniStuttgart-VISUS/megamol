@@ -241,6 +241,15 @@ void ospray::OSPRayRenderer::setupOSPRay(OSPRenderer &renderer, OSPCamera &camer
 
 }
 
+void ospray::OSPRayRenderer::setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, const char * volume_name, const char * renderer_name) {
+    // create and setup renderer
+    renderer = ospNewRenderer(renderer_name);
+    camera = ospNewCamera("perspective");
+    world = ospNewModel();
+    ospSetObject(renderer, "model", world);
+    ospSetObject(renderer, "camera", camera);
+}
+
 void ospray::OSPRayRenderer::colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray) {
   
     float gray_max = *std::max_element(grayArray.begin(), grayArray.end());

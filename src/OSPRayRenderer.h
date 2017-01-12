@@ -76,6 +76,17 @@ namespace ospray {
         */
         void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, OSPVolume &volume, const char * volume_name, const char * renderer_name);
 
+        /**
+        * helper function for initializing OSPRay
+        * @param OSPRay renderer object
+        * @param OSPRay camera object
+        * @param OSPRay world object
+        * @param volume name/type
+        * @param renderer type
+        */
+        void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, const char * volume_name, const char * renderer_name);
+
+
         /** 
         * color transfer helper
         * @param array with gray scales
