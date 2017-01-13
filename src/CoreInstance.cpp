@@ -308,7 +308,7 @@ void megamol::core::CoreInstance::Initialise(void) {
         if (next == vislib::StringW::INVALID_POS)
             next = overrides.Length();
         do {
-            auto& sub = overrides.Substring(pos, next - pos);
+            auto sub = overrides.Substring(pos, next - pos);
             int split = sub.Find('\a');
             if (split != vislib::StringW::INVALID_POS) {
                 auto name = sub.Substring(0, split);
