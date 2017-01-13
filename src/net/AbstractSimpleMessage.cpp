@@ -9,6 +9,7 @@
 #include "vislib/assert.h"
 
 #include <climits>
+#include <cstring>
 
 
 /*
@@ -69,7 +70,7 @@ void vislib::net::AbstractSimpleMessage::SetBody(const void *body,
         b = this->GetBody();
         ASSERT(b != NULL);
 
-        ::memcpy(b, body, bs);
+        std::memcpy(b, body, bs);
 
     } else {
         /* No body was passed, force size to zero bytes. */
@@ -102,7 +103,7 @@ vislib::net::AbstractSimpleMessage::operator =(
     if ((this != &rhs) && (static_cast<const void *>(*this) 
             != static_cast<const void *>(rhs))) {
         void *data = this->assertStorage(rhs.GetHeader().GetBodySize());
-        ::memcpy(data, static_cast<const void *>(rhs), rhs.GetMessageSize());
+        std::memcpy(data, static_cast<const void *>(rhs), rhs.GetMessageSize());
     }
 
     return *this;
@@ -117,7 +118,7 @@ bool vislib::net::AbstractSimpleMessage::operator ==(
 
     // Note: Order of tests ensures correct test range and performance
     if (this->GetHeader() == rhs.GetHeader()) {
-        return (::memcmp(this->GetBody(), rhs.GetBody(), 
+        return (std::memcmp(this->GetBody(), rhs.GetBody(), 
             this->GetHeader().GetBodySize()) == 0);
     } else {
         return false;

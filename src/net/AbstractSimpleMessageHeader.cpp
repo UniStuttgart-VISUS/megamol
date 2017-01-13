@@ -10,6 +10,8 @@
 #include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
 
+#include <cstring>
+
 
 /*
  * vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader
@@ -42,7 +44,7 @@ vislib::net::AbstractSimpleMessageHeader::operator =(
 		const AbstractSimpleMessageHeader& rhs) {
 
 	if (this != &rhs) {
-		::memcpy(this->PeekData(), rhs.PeekData(), this->GetHeaderSize());
+		std::memcpy(this->PeekData(), rhs.PeekData(), this->GetHeaderSize());
 	}
 
 	return *this;
@@ -57,7 +59,7 @@ vislib::net::AbstractSimpleMessageHeader::operator =(
 		const SimpleMessageHeaderData& rhs) {
 
 	if (this->PeekData() != &rhs) {
-		::memcpy(this->PeekData(), &rhs, this->GetHeaderSize());
+		std::memcpy(this->PeekData(), &rhs, this->GetHeaderSize());
 	}
 
 	return *this;
@@ -73,7 +75,7 @@ vislib::net::AbstractSimpleMessageHeader::operator =(
 	ASSERT(rhs != NULL);
 
 	if (this->PeekData() != rhs) {
-		::memcpy(this->PeekData(), rhs, this->GetHeaderSize());
+		std::memcpy(this->PeekData(), rhs, this->GetHeaderSize());
 	}
 
 	return *this;
@@ -86,7 +88,7 @@ vislib::net::AbstractSimpleMessageHeader::operator =(
 bool vislib::net::AbstractSimpleMessageHeader::operator ==(
 		const AbstractSimpleMessageHeader& rhs) const {
 
-	return (::memcmp(this->PeekData(), rhs.PeekData(),
+	return (std::memcmp(this->PeekData(), rhs.PeekData(),
 		this->GetHeaderSize()) == 0);
 }
 
