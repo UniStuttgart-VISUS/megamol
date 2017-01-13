@@ -95,6 +95,8 @@ class UncertaintyInputData:
     # Parameters:
     #     Param_PDBId      = An PDB ID.
     #     Param_Debug      = Debug flag. When TRUE you get additional debug output.
+    #     Param_Offline    = Offline flag. When TRUE use only offline assignment 
+    #                        programs.
     #     Param_ScriptPath = Need path to script location if current execution 
     #                        path is different.
     # Return value:
@@ -102,10 +104,11 @@ class UncertaintyInputData:
     # 
     # #########################################################################
     
-    def __init__(self, Param_PDBId = 'undefined', Param_Debug = False, Param_ScriptPath='.'):
+    def __init__(self, Param_PDBId = 'undefined', Param_Debug = False, Param_Offline = False, Param_ScriptPath='.'):
            
         self.Param_PDBId      = Param_PDBId
         self.Param_Debug      = Param_Debug
+        self.Param_Offline    = Param_Offline
         self.Param_ScriptPath = Param_ScriptPath      
             
         # Checking if Param_PDBId is a valid PDB ID
@@ -161,7 +164,7 @@ class UncertaintyInputData:
         DSSPOutFile       = os.path.join(CacheLocation, (PDBId + '.dssp'))          # DSSP output file path
         OUTFile           = os.path.join(CacheLocation, (PDBId + '.uid'))           # Result Outfile: uid = uncertainty input data 
         PDBUrl            = 'http://files.rcsb.org/download/' + PDBFileName        # PDB file download url
-        # PDBUrl            = 'https://files.rcsb.org/download/' + PDBFileName        # PDB file download url
+        # PDBUrl            = 'https://files.rcsb.org/download/' + PDBFileName        # PDB file download url using httpS
      
         
         # Choosing 64bit or 32bit version of program files
@@ -217,15 +220,21 @@ class UncertaintyInputData:
         logging.debug('  Check if output file of \"{0}\" for \"{1}\" exists'.format(STRIDEProgName, PDBFileName))  
         if (not os.path.isfile(STRIDEOutFile)):
             logging.debug('  Found no output file') 
-            # First: Try to get STRIDE file from web server
-            if (not self.GetDataFromSTRIDEServer(PDBId, STRIDEOutFile)):
-                # Second: Call program STRIDE to generate output file for specified PDB-Id
-                if (not self.GetDataFromProgram(STRIDEProg, '', PDBFile, '-f', STRIDEOutFile)):
-                    try:
+            online = False
+            offline = False
+            if (not self.Param_Offline):
+                # Try to get STRIDE file from web server
+                online = self.GetDataFromSTRIDEServer(PDBId, STRIDEOutFile)
+                    
+            # Call program STRIDE to generate output file for specified PDB-Id
+            if ((not online) or self.Param_Offline):
+                offline = self.GetDataFromProgram(STRIDEProg, '', PDBFile, '-f', STRIDEOutFile)
+                try:
+                    if ((not online) and (not offline)):
                         raise AssertionError('  Failed to create \"{0}\"'.format(STRIDEOutFile))
-                    except Exception as Error:          
-                        logging.error('  Receiving STRIDE file from web server and program failed with error:')
-                        logging.error('>>>   {0}'.format(Error))
+                except Exception as Error:          
+                    logging.error('  Receiving STRIDE file from web server and program failed with error:')
+                    logging.error('>>>   {0}'.format(Error))
         else:
             logging.info('  Found file \"{0}\"'.format(STRIDEOutFile))
     
@@ -233,16 +242,22 @@ class UncertaintyInputData:
         # Check if DSSP output file alredy exists
         logging.debug('  Check if output file of \"{0}\" for \"{1}\"exists'.format(DSSPProgName, PDBFileName))  
         if (not os.path.isfile(DSSPOutFile)):    
-            logging.debug('  Found no output file')     
-            # First: Try to get DSSP file from web server
-            if (not self.GetDataFromDSSPServer(PDBId, DSSPOutFile)):
-                # Second: Call program DSSP to generate output file for specified PDB-Id
-                if (not self.GetDataFromProgram(DSSPProg, '-i', PDBFile, '-o', DSSPOutFile)):
-                    try:
+            logging.debug('  Found no output file') 
+            online = False
+            offline = False   
+            if (not self.Param_Offline):            
+                #  Try to get DSSP file from web server
+                online = self.GetDataFromDSSPServer(PDBId, DSSPOutFile)
+                
+            #  Call program DSSP to generate output file for specified PDB-Id
+            if ((not online) or self.Param_Offline):
+                offline = self.GetDataFromProgram(DSSPProg, '-i', PDBFile, '-o', DSSPOutFile)
+                try:
+                    if ((not online) and (not offline)):
                         raise AssertionError('  Failed to create \"{0}\"'.format(DSSPOutFile))
-                    except Exception as Error:          
-                        logging.error('  Receiving DSSP file from web server and program failed with error:')
-                        logging.error('>>>   {0}'.format(Error))
+                except Exception as Error:          
+                    logging.error('  Receiving DSSP file from web server and program failed with error:')
+                    logging.error('>>>   {0}'.format(Error))
         else:
             logging.info('  Found file \"{0}\"'.format(DSSPOutFile))
 
@@ -761,7 +776,7 @@ class UncertaintyInputData:
             logging.debug('  Completed to parse file \"{0}\"'.format(Param_PDBFile))  
         else:
             logging.warn('  Didn\'t find file \"{0}\"'.format(Param_PDBFile))    
-            return False                                                                       # This case should be handles earlier ... !
+            return False                                                                       # This case should be handled earlier ... !
         
         
         # Parsing STRIDE file -------------------------------------------------
@@ -776,17 +791,17 @@ class UncertaintyInputData:
                 return False
 
             # Init list buffer with STRIDE header
-            OutFileBuffer[2] += ('------------------------------------------------------------------------|') 
-            OutFileBuffer[3] += (' STRIDE                                                                 |') 
-            OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|-Phi-----|-Psi-----|-Area----|') 
-            OutFileBuffer[7] += ('-------|------|---------|-----------------|---------|---------|---------|')  
-            # Length of columns:     7       6       9        17                 9         9         9
+            OutFileBuffer[2] += ('-----------------------------------------------------------------------------------------------------------------------------------------------------|') 
+            OutFileBuffer[3] += (' STRIDE                                                                                                                                              |') 
+            OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|-Phi-----|-Psi-----|-Area----|---T1a----|---T2a----|---T3a----|---T1b----|---T2b----|--HB-En1--|--HB-En2--|') 
+            OutFileBuffer[7] += ('-------|------|---------|-----------------|---------|---------|---------|----------|----------|----------|----------|----------|----------|----------|')  
+            # Length of columns:     7       6       9        17                 9         9         9         10        10         10         10          10         10         10
             
             # ColumnWidth of STRIDE file entries
             #  - First Index of substrings -1 
-            #  - Code     AA    ChainID   Nr      Structure  Phi      Psi      saa
-            #  - #: 3      3       1      5         15       7        7        7
-            CW = [[0,3], [5,8], [9,10], [10,15], [24,39], [42,49], [52,59], [62,69]] 
+            #  - Code     AA    ChainID   Nr      Structure  Phi      Psi     Area    T1a       T2a      T3a       T1b         T2b      HB-En1     HB-En2
+            #  - #: 3      3       1      5         15       7        7        7       10       10        10        10         10         10        10
+            CW = [[0,3], [5,8], [9,10], [10,15], [24,39], [42,49], [52,59], [62,69], [72,82], [83,93], [94,104], [105,115], [116,126], [127,137], [138,148]] 
             
             LineOffset = 8                                                                     # ...
             ChainID = ''                                                                       # ...
@@ -821,27 +836,35 @@ class UncertaintyInputData:
                         OutFileBuffer[LineOffset] += (' '+FileLine[CW[3][0]:CW[3][1]]+' |  '+FileLine[CW[1][0]:CW[1][1]]+' |       '+
                                                   FileLine[CW[2][0]:CW[2][1]]+' | '+FileLine[CW[4][0]:CW[4][1]]+' | '+
                                                   FileLine[CW[5][0]:CW[5][1]]+' | '+FileLine[CW[6][0]:CW[6][1]]+' | '+
-                                                  FileLine[CW[7][0]:CW[7][1]]+' |')                                                 
+                                                  FileLine[CW[7][0]:CW[7][1]]+' |')
+                                          
+                        if (len(FileLine) > CW[14][1]):
+                            OutFileBuffer[LineOffset] += (FileLine[CW[8][0]:CW[8][1]]+'|'+FileLine[CW[9][0]:CW[9][1]]+'|'+FileLine[CW[10][0]:CW[10][1]]+'|'
+                                                         +FileLine[CW[11][0]:CW[11][1]]+'|'+FileLine[CW[12][0]:CW[12][1]]+'|'+FileLine[CW[13][0]:CW[13][1]]+'|'
+                                                         +FileLine[CW[14][0]:CW[14][1]]+'|')
+                        else:
+                            OutFileBuffer[LineOffset] += ('          |          |          |          |          |          |          |')   
+                        
+                                                       
                         LineOffset += 1   
                         
                         if(LineOffset > len(OutFileBuffer)-1):
                             LineOffset = 8                  
-    
-                            
-            # Fill empty lines ...
-            LineOffset = 8                                                                     # Only buffer line offset
-            for x in range(LineOffset, len(OutFileBuffer)):
-                LengthDiff = len(OutFileBuffer[2]) - len(OutFileBuffer[x])                     # Length of line 2 as reference 
-                if LengthDiff > 0:
-                    OutFileBuffer[x] += ('       |      |         |                 |         |         |         |') 
-                        
+
             STRIDEFile.close()   
             logging.debug('  Completed to parse file \"{0}\"'.format(Param_STRIDEFile))  
         else:
             logging.warn('  Didn\'t find file \"{0}\"'.format(Param_STRIDEFile))    
             # return False - NOT: Because missing STRIDE file is not essential ...
         
-        
+        # Fill empty lines ...
+        LineOffset = 8                                                                     # Only buffer line offset
+        for x in range(LineOffset, len(OutFileBuffer)):
+            LengthDiff = len(OutFileBuffer[2]) - len(OutFileBuffer[x])                     # Length of line 2 as reference 
+            if LengthDiff > 0:
+                OutFileBuffer[x] += ('       |      |         |                 |         |         |         |          |          |          |          |          |          |          |') 
+                            
+                            
         # Parsing DSSP file ---------------------------------------------------
         logging.debug('  Opening DSSP file')
         logging.info('  Parsing DSSP file ...')        
@@ -854,22 +877,18 @@ class UncertaintyInputData:
                 return False
 
             # Init list buffer with DSSP header
-            OutFileBuffer[2] += ('--------------------------------------------------------------------------------------------------------------------------------|') 
-            OutFileBuffer[3] += (' DSSP                                                                                                                           |')
-            OutFileBuffer[4] += ('-Nr----|-AA-|-ChainID-|-Structure-|-BP1--|-BP2--|-ACC--|-TCO-----|-KAPPA--|-ALPHA--|-PHI----|-PSI----|-X-CA---|-Y-CA---|-Z-CA---|')
-            OutFileBuffer[7] += ('-------|----|---------|-----------|------|------|------|---------|--------|--------|--------|--------|--------|--------|--------|')
-            # Length of columns:   7        4       9       11         6       6       6       9        8        8        8        8        8         8        8
+            OutFileBuffer[2] += ('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|') 
+            OutFileBuffer[3] += (' DSSP                                                                                                                                                                       |')
+            OutFileBuffer[4] += ('-Nr----|-AA-|-ChainID-|-Structure-|-BP1--|-BP2--|-ACC--|-TCO-----|-KAPPA--|-ALPHA--|-PHI----|-PSI----|-X-CA---|-Y-CA---|-Z-CA---|-HBondAc0-|-HBondAc1-|-HBondDo0-|-HBondDo1-|')
+            OutFileBuffer[7] += ('-------|----|---------|-----------|------|------|------|---------|--------|--------|--------|--------|--------|--------|--------|----------|----------|----------|----------|')
+            # Length of columns:   7        4       9       11         6       6       6       9        8        8        8        8        8         8        8       8           8          8           8
             
             # ColumnWidth of DSSP file entries
             # - First Index of substring indices: -1 | Second Index of substring indices: +1
-            # - Number  Amino.   ChainID  Struc.   BP1      BP2      AC C      TCO      KAPPA    ALPHA     PHI        PSI        X-CA       Y-CA       Z-CA
-            # - #:  5        1        1        9        4       4          4       7        6        6        6           6         6          6          6
-            CW = [[6,11], [13,14], [11,12], [16,25], [25,29], [30,34], [34,38], [84,91], [91,97], [97,103], [103,109], [109,115], [116,122], [123,129], [130,136]] 
+            # - Number  Amino.   ChainID     Struc.   BP1      BP2      AC C      TCO      KAPPA    ALPHA     PHI       PSI       X-CA       Y-CA       Z-CA      HBondAc0   HBondAc1   HBondDo0  HBondDo1
+            # - #:  5        1        1        9        4       4          4       7        6        6        6           6         6          6          6           8          8            8        8
+            CW = [[6,11], [13,14], [11,12], [16,25], [25,29], [30,34], [34,38], [84,91], [91,97], [97,103], [103,109], [109,115], [116,122], [123,129], [130,136], [139,147], [149,157], [159,167], [169,177]] 
 
-            # Not used any more ...
-            # AmoniAciodOneLetter = {'A': 'ALA', 'R': 'ARG', 'N': 'ASN', 'D': 'ASP', 'B': 'ASX', 'C': 'CYS', 'E': 'GLU', 'Q': 'GLN', 'Z': 'GLX', 'G': 'GLY', 'H': 'HIS',
-            #                        'I': 'ILE', 'L': 'LEU', 'K': 'LYS', 'M': 'MET', 'F': 'PHE', 'P': 'PRO', 'S': 'SER', 'T': 'THR', 'W': 'TRP', 'Y': 'TYR', 'V': 'VAL'}
-            
             LineOffset = 8
             ChainID = ''              
             EndOfFile = False
@@ -914,25 +933,32 @@ class UncertaintyInputData:
                                                   FileLine[CW[6][0]:CW[6][1]]+' | '+FileLine[CW[7][0]:CW[7][1]]+' | '+FileLine[CW[8][0]:CW[8][1]]+' | '+
                                                   FileLine[CW[9][0]:CW[9][1]]+' | '+FileLine[CW[10][0]:CW[10][1]]+' | '+FileLine[CW[11][0]:CW[11][1]]+' | '+
                                                   FileLine[CW[12][0]:CW[12][1]]+' | '+FileLine[CW[13][0]:CW[13][1]]+' | '+FileLine[CW[14][0]:CW[14][1]]+' |')
+                                                  
+                        if (len(FileLine) > CW[18][1]):
+                            OutFileBuffer[LineOffset] += (' '+FileLine[CW[15][0]:CW[15][1]]+' | '+FileLine[CW[16][0]:CW[16][1]]+' | '
+                                                         +FileLine[CW[17][0]:CW[17][1]]+' | '+FileLine[CW[18][0]:CW[18][1]]+' | ')
+                        else: 
+                            OutFileBuffer[LineOffset] += ('          |          |          |          |')
+                        
+                        
                         LineOffset += 1
                         
                         if(LineOffset > len(OutFileBuffer)-1):
                             LineOffset = 8
-                        
-          
-            # Fill empty lines ...
-            LineOffset = 8 
-            for x in range(LineOffset, len(OutFileBuffer)):
-                LengthDiff = len(OutFileBuffer[2]) - len(OutFileBuffer[x]) 
-                if LengthDiff > 0:
-                    OutFileBuffer[x] += ('       |    |         |           |      |      |      |         |        |        |        |        |        |        |        |')
-                        
+
             DSSPFile.close()   
             logging.debug('  Completed to parse file \"{0}\"'.format(Param_DSSPFile))  
         else:
             logging.warn('  Didn\'t find file \"{0}\"'.format(Param_DSSPFile))    
             # return False - NOT: Because missing DSSP file is not essential ...
         
+        # Fill empty lines ...
+        LineOffset = 8 
+        for x in range(LineOffset, len(OutFileBuffer)):
+            LengthDiff = len(OutFileBuffer[2]) - len(OutFileBuffer[x]) 
+            if LengthDiff > 0:
+                OutFileBuffer[x] += ('       |    |         |           |      |      |      |         |        |        |        |        |        |        |        |          |          |          |          |')
+                                
         
         # Adding column numbers to buffer lines 5 and 6 - Index is starting with 0!
         logging.debug('  Writing column numbers to buffer lines 5 and 6')
@@ -1000,12 +1026,17 @@ if __name__ == "__main__":
     
     # required argument which passes the PDB Id:
     parser.add_argument('PDBId', action='store', help='Specify a PDB ID in the four letter code')
+    
     # optional argument defining if logging level is debug or info (default):
     parser.add_argument('-d', '--debug', action='store_true', help='Flag to enable debug output')
+    
+    # optional argument for forced use of offline assignment programs:
+    parser.add_argument('-o', '--offline', action='store_true', help='Flag to force use of offline assignment programs')
+    
     args = parser.parse_args()
 
     
-    myUID = UncertaintyInputData(args.PDBId, args.debug, sys.argv[0])
+    myUID = UncertaintyInputData(args.PDBId, args.debug, args.offline, sys.argv[0])
     myUID.GenerateDataFile()
     del myUID
     

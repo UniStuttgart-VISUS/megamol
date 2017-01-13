@@ -184,6 +184,13 @@ namespace megamol {
 			/** The difference of secondary structure assignment for each amino-acid */
 			vislib::Array<float> diffUncertainty;
 
+
+            /** Add threshold values for each assignment mehod (max: 5 per method and amino-acid) */
+            vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > >secStructThreshold
+            /** Add energy values for each assignment mehod (max: 5 per method and amino-acid) */
+            vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > > secStructEnergy
+
+
             /** The pdb id */
             vislib::StringA pdbID;
             

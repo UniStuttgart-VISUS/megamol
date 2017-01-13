@@ -149,16 +149,17 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		tessLevelParam(         "05 Tesselation level", "The tesselation level."),
 		lineDebugParam(         "06 Wireframe", "Render in wireframe mode."),
 		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
-		uncVisParam(            "08 Uncertainty visualisation", "The uncertainty visualisation."),
-		uncDistorParam(         "09 Uncertainty distortion", "(0) amplification, (1) repeat of sin(2*PI), (2) apply uncertainty all over (true if value = 0.0), (3) unused."),
-        ditherParam(            "10 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
-		uncertainMaterialParam( "11 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
-		materialParam(          "12 Material", "Ambient, diffuse, specular components + exponent."),
-		colorModeParam(         "13 Color mode", "Coloring mode for secondary structure."),
-		colorInterpolationParam("14 Color interpolation", "Should the colors be interpolated?"),
-		lightPosParam(          "15 Light position", "The light position."),
-		buttonParam(            "16 Reload shaders", "Reload the shaders."),
-		colorTableFileParam(    "17 Color Table Filename", "The filename of the color table."),
+        methodDataParam(        "08 Method data", "Choose data of secondary structure assignment method."),
+		uncVisParam(            "09 Uncertainty visualisation", "The uncertainty visualisation."),
+		uncDistorParam(         "10 Uncertainty distortion", "(0) amplification, (1) repeat of sin(2*PI), (2) apply uncertainty all over (true if value = 0.0), (3) unused."),
+        ditherParam(            "11 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
+		uncertainMaterialParam( "12 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
+		materialParam(          "13 Material", "Ambient, diffuse, specular components + exponent."),
+		colorModeParam(         "14 Color mode", "Coloring mode for secondary structure."),
+		colorInterpolationParam("15 Color interpolation", "Should the colors be interpolated?"),
+		lightPosParam(          "16 Light position", "The light position."),
+		buttonParam(            "17 Reload shaders", "Reload the shaders."),
+		colorTableFileParam(    "18 Color Table Filename", "The filename of the color table."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
@@ -202,7 +203,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->ditherParam << new core::param::IntParam(0, 0, this->structCount);
 	this->MakeSlotAvailable(&this->ditherParam);
 	                                              // init min max
-	this->tessLevelParam << new core::param::IntParam(16, 1, 64);
+	this->tessLevelParam << new core::param::IntParam(16, 6, 64);
 	this->MakeSlotAvailable(&this->tessLevelParam);
 
 	this->scalingParam << new core::param::FloatParam(1.0f);
@@ -242,6 +243,14 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	tmpEnum->SetTypePair(UNC_VIS_SIN_UV, "Sinus UV");
 	this->uncVisParam << tmpEnum;
 	this->MakeSlotAvailable(&this->uncVisParam);
+    
+	tmpEnum = new param::EnumParam(static_cast<int>(UncertaintyDataCall::assMethod::NOM));
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::PDB,    "PDB");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::STRIDE, "STRIDE");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::DSSP,   "DSSP");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::NOM,    "Uncertainty");
+	this->methodDataParam << tmpEnum;
+	this->MakeSlotAvailable(&this->methodDataParam);    
 
 	// fill color table with default values and set the filename param
 	vislib::StringA filename("colors.txt");
@@ -261,6 +270,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->currentLightPos          = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
 	this->currentUncDist           = vislib::math::Vector<float, 4>(1.0f, 5.0f, 0.0f, 0.0f);
     this->currentDitherMode        = 0;
+    this->currentMethodData        = UncertaintyDataCall::assMethod::NOM; // here: use uncertainty data
     
 	this->fences.resize(this->numBuffers);
 
@@ -599,17 +609,12 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 			currentChainID = udc->GetChainID(aa);
 			cCnt++;
 		}
-		this->chainColors.Add(this->colorTable[cCnt]);
+        // number of different chains: [A-Z] + [a-z] = 52
+		this->chainColors.Add(this->colorTable[(cCnt % this->colorTable.Count())]);
 		
-		// set colors for amino acids
-		
-		char tmpAA = udc->GetAminoAcidOneLetterCode(aa);
-		if (tmpAA == '?') {
-			this->aminoAcidColors.Add(this->colorTable[this->colorTable.Count()-1]);
-		}
-		else {
-			this->aminoAcidColors.Add(this->colorTable[((unsigned int)tmpAA - 65)]);
-		}
+		// set colors for amino-acids [A-Z] +'?' = 27
+		unsigned int tmpAA = static_cast<unsigned int>(udc->GetAminoAcidOneLetterCode(aa));
+        this->aminoAcidColors.Add(this->colorTable[(tmpAA % this->colorTable.Count())]);
 	}
 
 
@@ -652,12 +657,11 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 					}
 
 					// when indices in molecular data are missing, fill 'synchronizedIndex' with 'dummy' indices.
-					// in the end molecular index must always match array length !
+					// in the end maximum molecular index must always match length of synchronizedIndex array!
 					molIndex = mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt;
 					while (this->synchronizedIndex.Count() < molIndex) {
 						this->synchronizedIndex.Add(0);
 					}
-
 					this->synchronizedIndex.Add(uncIndex); 
 
 					// DEBUG
@@ -709,6 +713,11 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	}
 
 
+	// get method data choice
+	if (this->methodDataParam.IsDirty()) {
+		this->methodDataParam.ResetDirty();
+		this->currentMethodData = static_cast<int>(this->methodDataParam.Param<param::EnumParam>()->Value());
+	}
 	// get dither mode
 	if (this->ditherParam.IsDirty()) {
 		this->ditherParam.ResetDirty();
@@ -911,28 +920,26 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					*/
 					uncIndex = this->synchronizedIndex[aaIdx];
 					for (unsigned int k = 0; k < this->structCount; k++) {
-						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP][uncIndex]);
-						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB][uncIndex]);
-						// calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE][uncIndex]);
-						calpha.sortedStruct[k] = static_cast<int>(this->sortedUncertainty[uncIndex][k]);
-
-						calpha.unc[k] = this->secUncertainty[uncIndex][k];
+                        if (this->currentMethodData == UncertaintyDataCall::assMethod::NOM) { // use uncertainty secondary structure data
+                            calpha.sortedStruct[k] = static_cast<int>(this->sortedUncertainty[uncIndex][k]);
+                            calpha.unc[k] = this->secUncertainty[uncIndex][k];
+                        }
+                        else { // use assignment method data
+                            calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)this->currentMethodData][uncIndex]);
+                            calpha.unc[k] = 1.0f;
+                        }
 					}
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
-						for (unsigned int k = 0; k < 3; k++) {
+						for (unsigned int k = 0; k < 3; k++)
 							calpha.col[k] = this->chainColors[uncIndex][k];
-						}
 					}
 					else if (this->currentColoringMode == (int)COLOR_MODE_AMINOACID) {
-						for (unsigned int k = 0; k < 3; k++) {
+						for (unsigned int k = 0; k < 3; k++)
 							calpha.col[k] = this->aminoAcidColors[uncIndex][k];
-						}
 					}
-					else
-					{
-						for (unsigned int k = 0; k < 3; k++) {
+					else {
+						for (unsigned int k = 0; k < 3; k++)
 							calpha.col[k] = 0.0f;
-						}
 					}
 					calpha.flag = this->residueFlag[uncIndex];
 					calpha.diff = this->diffUncertainty[uncIndex];
@@ -1004,7 +1011,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 		glUniform4fv(this->tubeShader.ParameterLocation("viewAttr"), 1, viewportStuff);
 
-		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->currentScaling);
+		glUniform1f(this->tubeShader.ParameterLocation("scaling"), this->currentScaling); // UNUSED
 
 		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
 		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
@@ -1053,7 +1060,10 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
                               4,  1,  5, 15,  0,  8, 14,  9,  3, 15,  7,  2,  6, 12,  3, 11, 13, 10,  0, 12, 
                              11,  7, 13, 10, 12,  4, 11,  1,  5,  0,  8,  4, 14,  9, 15,  7,  8,  2,  6,  3,
                              15,  8,  2, 14,  6,  3,  7, 13,  2, 10, 12, 11,  1, 13,  5,  0,  4, 14,  1,  9}; 
-                                    
+        //   1/16   | 2/16  | 3/16   | 4/16 | 5/16   | 6/16  | 7/16   | 8/16 | 9/16   | 10/16 | 11/16  | 12/16 | 13/16  | 14/16 | 15/16  | 16/16   
+        //   0,0625 | 0,125 | 0,1875 | 0,25 | 0,3125 | 0,375 | 0,4375 | 0,5  | 0,5625 | 0,625 | 0,6875 | 0,75  | 0,8125 | 0,875 | 0,9375 | 1,0
+        //   -> in 6,25%-Schritten
+                                       
 		glUniform1fv(this->tubeShader.ParameterLocation("dithM"), 80, (GLfloat *)dithM);
                                 
         // DITHERING 
@@ -1065,7 +1075,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			}
 
             // fragment and tesselation eval
-            glUniform1i(this->tubeShader.ParameterLocation("ditherCount"), (GLint)d);                                                                  // dithering pass
+            glUniform1i(this->tubeShader.ParameterLocation("ditherCount"), (GLint)d);                                                                    // dithering pass
             
             UINT64 numVerts;
             numVerts = this->bufSize / vertStride;                                                                                                       // bufSize = 32*1024*1024 - WHY? | vertStride = (unsigned int)sizeof(CAlpha)

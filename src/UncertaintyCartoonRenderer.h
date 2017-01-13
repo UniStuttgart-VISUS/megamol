@@ -209,7 +209,7 @@ namespace megamol {
 		bool loadTubeShader(void);
 
 		/**
-		* structure color for uncertain structure assignment
+		* Enumeration of secondary structure colorings
 		*/
 		enum coloringModes {
 			COLOR_MODE_STRUCT        = 0,
@@ -220,7 +220,7 @@ namespace megamol {
 		};
 
 		/**
-		* structure for uncertain visualisations
+		* Enumeration of uncertainty geometrical visualisations
 		*/
 		enum uncVisualisations {
 			UNC_VIS_NONE   = 0,
@@ -262,7 +262,21 @@ namespace megamol {
 		core::param::ParamSlot uncVisParam;
 		core::param::ParamSlot uncDistorParam;
         core::param::ParamSlot ditherParam;
+        core::param::ParamSlot methodDataParam;
                 
+        // local parameter values 
+		int                            currentTessLevel;
+		uncVisualisations              currentUncVis;
+	    coloringModes                  currentColoringMode;
+		vislib::math::Vector<float, 4> currentLightPos;
+		float                          currentScaling;           // UNUSED ...
+		float                          currentBackboneWidth;
+		vislib::math::Vector<float, 4> currentMaterial;
+		vislib::math::Vector<float, 4> currentUncertainMaterial;
+		vislib::math::Vector<float, 4> currentUncDist;
+        int                            currentDitherMode;
+        UncertaintyDataCall::assMethod currentMethodData;
+                        
         GLuint              vertArray;
         std::vector<GLsync> fences;           // (?)
 		GLuint              theSingleBuffer;
@@ -273,17 +287,6 @@ namespace megamol {
 		void               *theSingleMappedMem;
 		GLuint              singleBufferCreationBits;
         GLuint              singleBufferMappingBits;
-
-		int                            currentTessLevel;
-		uncVisualisations              currentUncVis;
-	    coloringModes                  currentColoringMode;
-		vislib::math::Vector<float, 4> currentLightPos;
-		float                          currentScaling;
-		float                          currentBackboneWidth;
-		vislib::math::Vector<float, 4> currentMaterial;
-		vislib::math::Vector<float, 4> currentUncertainMaterial;
-		vislib::math::Vector<float, 4> currentUncDist;
-        int                            currentDitherMode;
 
 		/** shader for the tubes */
 		vislib::graphics::gl::GLSLTesselationShader tubeShader;

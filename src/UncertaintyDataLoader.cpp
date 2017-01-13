@@ -194,14 +194,27 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
     this->chainID.Clear();
     this->aminoAcidName.Clear();
     this->residueFlag.Clear();
+    
     for (unsigned int i = 0; i < secStructAssignment.Count(); i++) {
         this->secStructAssignment[i].Clear();
     }
     this->secStructAssignment.Clear();
+    
 	for (unsigned int i = 0; i < secStructLength.Count(); i++) {
 		this->secStructLength[i].Clear();
 	}
 	this->secStructLength.Clear();
+
+	for (unsigned int i = 0; i < secStructThreshold.Count(); i++) {
+		this->secStructThreshold[i].Clear();
+	}
+	this->secStructThreshold.Clear();
+    
+	for (unsigned int i = 0; i < secStructEnergy.Count(); i++) {
+		this->secStructEnergy[i].Clear();
+	}
+	this->secStructEnergy.Clear();
+    
 
     // check if file ending matches ".uid"
     if(!filenameA.Contains(".uid")) {
@@ -220,26 +233,31 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
         for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
             this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
             this->secStructAssignment.Last().AssertCapacity(file.Count());
+            
+            this->secStructThreshold.Add(vislib::Array<vislib::math::Vector<float, 5> >());
+            this->secStructThreshold.Last().AssertCapacity(file.Count());
+            
+            this->secStructEnergy.Add(vislib::Array<vislib::math::Vector<float, 5> >());
+            this->secStructEnergy.Last().AssertCapacity(file.Count());
         }
         this->chainID.AssertCapacity(file.Count());
         this->aminoAcidName.AssertCapacity(file.Count());
         this->residueFlag.AssertCapacity(file.Count());
         this->pdbIndex.AssertCapacity(file.Count());
 
+
 		// Run through file lines
 		lineCnt = 0;
 		while (lineCnt < file.Count() && !line.StartsWith("END")) {
             
 			line = file.Line(lineCnt);
-            
-            // get pdb id
-            if(line.StartsWith("PDB")) {
-
+           
+            if(line.StartsWith("PDB")) {                                // get pdb id 
+                
                 this->pdbID = line.Substring(9,4);
             }
-			else if (line.StartsWith("METHOD")) {
+			else if (line.StartsWith("METHOD")) {                       // parse assignment method for pdb
 
-				// parse assignment method for pdb
 				// helix
 				tmpString = line.Substring(42, 32);
 				if (tmpString.Contains(" AUTHOR "))
@@ -250,6 +268,7 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF;
 				else
 					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_UNKNOWN;
+                    
 				// sheet
 				tmpString = line.Substring(105, 32);
 				if (tmpString.Contains(" AUTHOR "))
@@ -261,23 +280,24 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 				else
 					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_UNKNOWN;
 			}
-            // parsing lines beginning with DATA
-            else if (line.StartsWith("DATA")) {
+            else if (line.StartsWith("DATA")) {                         // parsing data lines
                 
                 // Truncate line beginning (first 8 charachters), so character 
                 // indices of line matches column indices given in input file
 			    line = line.Substring(8); 
 
                 // PDB index of amino-acids 
-                tmpString = line.Substring(32,6);
+                tmpString = line.Substring(32,6); // first parameter of substring is start (beginning with 0), second parameter is range
                 // remove spaces
                 tmpString.Remove(" ");
-                this->pdbIndex.Add(tmpString.PeekBuffer()); // first parameter of substring is start (beginning with 0), second parameter is range
+                this->pdbIndex.Add(tmpString.PeekBuffer()); 
                 
                 // PDB three letter code of amino-acids
                 this->aminoAcidName.Add(line.Substring(10,3)); 
+                
                 // PDB one letter chain id 
                 this->chainID.Add(line[22]);
+                
                 // The Missing amino-acid flag
                 if (line[26] == 'M')
                     this->residueFlag.Add(UncertaintyDataCall::addFlags::MISSING);
@@ -286,32 +306,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                 else
                     this->residueFlag.Add(UncertaintyDataCall::addFlags::NOTHING);
                                    
-                // Translate DSSP one letter secondary structure summary 
-                switch (line[228]) {
-                    case 'H': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
-					case 'G': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
-					case 'I': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
-					case 'E': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
-					case 'B': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
-					case 'T': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
-					case 'S': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::S_BEND); break;
-					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::C_COIL); break;
-					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
-                }
-
-                // Translate STRIDE one letter secondary structure
-                switch (line[157]) {
-					case 'H': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
-					case 'G': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
-					case 'I': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
-					case 'E': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
-					case 'B': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
-					case 'b': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
-					case 'T': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
-					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::C_COIL); break;
-					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
-                }
-
                 // Translate first letter of PDB secondary structure definition
                 tmpSecStruct = line[44];
                 if (tmpSecStruct == 'H') {
@@ -335,6 +329,71 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                 else {
 					this->secStructAssignment[(int)UncertaintyDataCall::assMethod::PDB].Add(UncertaintyDataCall::secStructure::C_COIL);
                 }
+                
+                // Translate STRIDE one letter secondary structure
+                switch (line[157]) {
+					case 'H': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
+					case 'G': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
+					case 'I': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
+					case 'E': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
+					case 'B': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+					case 'b': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+					case 'T': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
+                    case 't': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
+					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::C_COIL); break;
+					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+                }
+                // Read threshold and energy values
+                float T1a   = 0.0;
+                float T2a   = 0.0;
+                float T3a   = 0.0;
+                float T1b   = 0.0;
+                float T2b   = 0.0;
+                float HBEn1 = 0.0;
+                float HBEn2 = 0.0;
+                
+                // char* end;
+                // std:strtof(string, end);   - float strtof( const char* str, char** str_end );
+                // std::atof                  - double atof (const char* str);
+                
+                T1a         = (float)std::atof(line.Substring(204,10));
+                T2a         = std::atof(line.Substring(215,10));
+                T3a         = std::atof(line.Substring(226,10));
+                T1b         = std::atof(line.Substring(237,10));
+                T2b         = std::atof(line.Substring(248,10));
+                HBEn1       = std::atof(line.Substring(259,10));
+                HBEn2       = std::atof(line.Substring(207,10));
+                
+                this->secStructThreshold[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(T1a, T2a, T3a, T1b, T2b));
+                this->secStructEnergy[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(HBEn1, HBEn2, 0.0f, 0.0f, 0.0f));
+                
+            
+                // Translate DSSP one letter secondary structure summary 
+                switch (line[305]) {
+                    case 'H': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
+					case 'G': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::G_310_HELIX); break;
+					case 'I': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::I_PI_HELIX); break;
+					case 'E': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::E_EXT_STRAND); break;
+					case 'B': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::B_BRIDGE); break;
+					case 'T': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::T_H_TURN); break;
+					case 'S': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::S_BEND); break;
+					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::C_COIL); break;
+					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
+                }
+                // Read threshold and energy values
+                float HBondAc0 = 0.0;
+                float HBondAc1 = 0.0;
+                float HBondDo0 = 0.0;
+                float HBondDo1 = 0.0;
+
+                HBondAc0 = std::atof(line.Substring(411,8));
+                HBondAc1 = std::atof(line.Substring(422,8));
+                HBondDo0 = std::atof(line.Substring(433,8));
+                HBondDo1 = std::atof(line.Substring(444,8));  
+            
+                this->secStructThreshold[(int)UncertaintyDataCall::assMethod::DSSP].Add(vislib::math::Vector<float, 5>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f));
+                this->secStructEnergy[(int)UncertaintyDataCall::assMethod::DSSP].Add(vislib::math::Vector<float, 5>(HBondAc0, HBondAc1, HBondADo0, HBondDo1, 0.0f));
+                              
             }
 			// Next line
 			lineCnt++;
@@ -384,7 +443,10 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 		// DEBUG
 		/*
 		for (int i = 0; i < this->pdbIndex.Count(); i++) {
-			std::cout << this->secStructLength[0][i] << std::endl;
+            for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
+                std::cout << this->secStructAssignment[k][i] << " - " << this->secStructLength[k][i] << " | ";
+            }
+            std::cout << std::endl;
 		}
 		*/
 
@@ -407,6 +469,18 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	using vislib::sys::Log;
 
+    // [DSSP - structure.cpp line 38: kMaxHBondEnergy]
+    const float DSSP_Energy = -0.5f; // kcal/mol 
+
+    // [STRIDE - stride.c line 311ff]
+    const float STRIDE_TresholdH1 = -230.0;
+    const float STRIDE_TresholdH3 =  0.12; 
+    const float STRIDE_TresholdH4 =  0.06; 
+    const float STRIDE_TresholdE1 = -240.0;
+    const float STRIDE_TresholdE2 = -310.0;
+  
+  
+  
 	int methodCount;
 	float tmpChange;
 
@@ -423,7 +497,8 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	this->diffUncertainty.AssertCapacity(this->pdbIndex.Count());
 
 
-
+    // this->secStructThreshold[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f));
+    // this->secStructEnergy[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f));
 
 
 	// initialize structure factors for all three methods with 1.0f
