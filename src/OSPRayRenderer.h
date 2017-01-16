@@ -10,7 +10,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <stdint.h>
-#include <vector>
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "ospray/ospray.h"
 #include "mmcore/view/Renderer3DModule.h"
@@ -28,7 +27,7 @@ namespace ospray {
         /**
         * initializes OSPRay
         */
-        void OSPRayRenderer::initOSPRay();
+        void initOSPRay();
 
         /**
         * helper function for rendering the OSPRay texture
@@ -104,7 +103,7 @@ namespace ospray {
         OSPTexture2D TextureFromFile(vislib::TString fileName);
 
         // TODO: Documentation
-        void ospray::OSPRayRenderer::OSPRayLights(OSPRenderer &renderer, core::Call& call);
+        void OSPRayLights(OSPRenderer &renderer, core::Call& call);
         bool AbstractIsDirty();
         void AbstractResetDirty();
         void RendererSettings(OSPRenderer &renderer);
