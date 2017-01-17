@@ -36,6 +36,7 @@
 #include "vislib/math/mathfunctions.h"
 
 #include <iostream> // DEBUG
+#include <iomanip>  // DEBUG
 
 #define DATA_FLOAT_EPS 0.00001
 
@@ -138,7 +139,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
         }
         udc->SetRecalcFlag(true);
         
-        // DEBUG
+        // DEBUG - uncertainty values and sorted structure
 		/*
         for (int i = 0; i < this->pdbIndex.Count(); i++) {
             std::cout << "U: ";
@@ -343,31 +344,31 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::C_COIL); break;
 					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
-                // Read threshold and energy values
-                float T1a   = 0.0;
-                float T2a   = 0.0;
-                float T3a   = 0.0;
-                float T1b   = 0.0;
-                float T2b   = 0.0;
-                float HBEn1 = 0.0;
-                float HBEn2 = 0.0;
+                // Read threshold and energy values of STRIDE
+				float T1a   = (float)std::atof(line.Substring(204, 10));
+				float T2a   = (float)std::atof(line.Substring(215, 10));
+				float T3a   = (float)std::atof(line.Substring(226, 10));
+				float T1b   = (float)std::atof(line.Substring(237, 10));
+				float T2b   = (float)std::atof(line.Substring(248, 10));
+				float HBEn1 = (float)std::atof(line.Substring(259, 10));
+				float HBEn2 = (float)std::atof(line.Substring(207, 10));
                 
-                // char* end;
-                // std:strtof(string, end);   - float strtof( const char* str, char** str_end );
-                // std::atof                  - double atof (const char* str);
-                
-                T1a         = (float)std::atof(line.Substring(204,10));
-                T2a         = std::atof(line.Substring(215,10));
-                T3a         = std::atof(line.Substring(226,10));
-                T1b         = std::atof(line.Substring(237,10));
-                T2b         = std::atof(line.Substring(248,10));
-                HBEn1       = std::atof(line.Substring(259,10));
-                HBEn2       = std::atof(line.Substring(207,10));
-                
-                this->secStructThreshold[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(T1a, T2a, T3a, T1b, T2b));
-                this->secStructEnergy[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(HBEn1, HBEn2, 0.0f, 0.0f, 0.0f));
-                
-            
+				vislib::math::Vector<float, 5> tmpVec;
+				tmpVec[0] = T1a;
+				tmpVec[1] = T2a;
+				tmpVec[2] = T3a;
+				tmpVec[3] = T1b;
+				tmpVec[4] = T2b;
+				this->secStructThreshold[(int)UncertaintyDataCall::assMethod::STRIDE].Add(tmpVec);
+
+				tmpVec[0] = HBEn1;
+				tmpVec[1] = HBEn2;
+				tmpVec[2] = 0.0f;
+				tmpVec[3] = 0.0f;
+				tmpVec[4] = 0.0f;
+				this->secStructEnergy[(int)UncertaintyDataCall::assMethod::STRIDE].Add(tmpVec);
+
+
                 // Translate DSSP one letter secondary structure summary 
                 switch (line[305]) {
                     case 'H': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::H_ALPHA_HELIX); break;
@@ -380,25 +381,50 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 					case 'C': this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::C_COIL); break;
 					default:  this->secStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP].Add(UncertaintyDataCall::secStructure::NOTDEFINED); break;
                 }
-                // Read threshold and energy values
-                float HBondAc0 = 0.0;
-                float HBondAc1 = 0.0;
-                float HBondDo0 = 0.0;
-                float HBondDo1 = 0.0;
+                // Read threshold and energy values of DSSP
+				float HBondAc0 = (float)std::atof(line.Substring(411, 8));
+				float HBondAc1 = (float)std::atof(line.Substring(422, 8));
+				float HBondDo0 = (float)std::atof(line.Substring(433, 8));
+				float HBondDo1 = (float)std::atof(line.Substring(444, 8));
 
-                HBondAc0 = std::atof(line.Substring(411,8));
-                HBondAc1 = std::atof(line.Substring(422,8));
-                HBondDo0 = std::atof(line.Substring(433,8));
-                HBondDo1 = std::atof(line.Substring(444,8));  
-            
-                this->secStructThreshold[(int)UncertaintyDataCall::assMethod::DSSP].Add(vislib::math::Vector<float, 5>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f));
-                this->secStructEnergy[(int)UncertaintyDataCall::assMethod::DSSP].Add(vislib::math::Vector<float, 5>(HBondAc0, HBondAc1, HBondADo0, HBondDo1, 0.0f));
-                              
+				tmpVec[0] = 0.0f;
+				tmpVec[1] = 0.0f;
+				tmpVec[2] = 0.0f;
+				tmpVec[3] = 0.0f;
+				tmpVec[4] = 0.0f;
+				this->secStructThreshold[(int)UncertaintyDataCall::assMethod::DSSP].Add(tmpVec);
+
+				tmpVec[0] = HBondAc0;
+				tmpVec[1] = HBondAc1;
+				tmpVec[2] = HBondDo0;
+				tmpVec[3] = HBondDo1;
+				tmpVec[4] = 0.0f;
+				this->secStructEnergy[(int)UncertaintyDataCall::assMethod::DSSP].Add(tmpVec);              
             }
 			// Next line
 			lineCnt++;
 		}
 		
+		// DEBUG - thresholds and energies
+		/*
+		for (int i = 0; i < this->pdbIndex.Count(); i++) {
+			std::cout << i << ": ";
+			for (unsigned int k = 1; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
+				std::cout << "Thresholds: ";
+				for (unsigned int j = 0; j < 5; j++) {
+					std::cout << std::fixed << std::setw(9) << std::setprecision(3) << std::setfill(' ') << this->secStructThreshold[k][i][j] << "|";
+				}
+				std::cout << "|=|";
+				std::cout << "Energy: ";
+				for (unsigned int j = 0; j < 5; j++) {
+					std::cout << std::fixed << std::setw(9) << std::setprecision(3) << std::setfill(' ') << this->secStructEnergy[k][i][j] << "|";
+				}
+				std::cout << "|=|";
+			}
+			std::cout << std::endl;
+		}
+		*/
+
 		// calculate length of continuos secondary structure assignments
         this->secStructLength.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
         for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
@@ -440,7 +466,7 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 			}
 		}
 
-		// DEBUG
+		// DEBUG - assignment and structure length
 		/*
 		for (int i = 0; i < this->pdbIndex.Count(); i++) {
             for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
@@ -473,11 +499,11 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
     const float DSSP_Energy = -0.5f; // kcal/mol 
 
     // [STRIDE - stride.c line 311ff]
-    const float STRIDE_TresholdH1 = -230.0;
-    const float STRIDE_TresholdH3 =  0.12; 
-    const float STRIDE_TresholdH4 =  0.06; 
-    const float STRIDE_TresholdE1 = -240.0;
-    const float STRIDE_TresholdE2 = -310.0;
+    const float STRIDE_TresholdH1 = -230.0f;
+    const float STRIDE_TresholdH3 =    0.12f; 
+    const float STRIDE_TresholdH4 =    0.06f; 
+    const float STRIDE_TresholdE1 = -240.0f;
+    const float STRIDE_TresholdE2 = -310.0f;
   
   
   
@@ -563,7 +589,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 		}
 		this->diffUncertainty.Add(1.0f - tmpChange);
 
-		// DEBUG
+		// DEBUG - difference
 		// std::cout << this->diffUncertainty.Last() << std::endl;
 	}
 
@@ -654,7 +680,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
 		}
 		this->diffUncertainty.Add(1.0f - tmpChange);
 
-		// DEBUG
+		// DEBUG - difference
 		// std::cout << this->diffUncertainty.Last() << std::endl;
     }
 

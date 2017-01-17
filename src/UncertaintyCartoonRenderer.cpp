@@ -716,7 +716,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	// get method data choice
 	if (this->methodDataParam.IsDirty()) {
 		this->methodDataParam.ResetDirty();
-		this->currentMethodData = static_cast<int>(this->methodDataParam.Param<param::EnumParam>()->Value());
+		this->currentMethodData = static_cast<UncertaintyDataCall::assMethod>(this->methodDataParam.Param<param::EnumParam>()->Value());
 	}
 	// get dither mode
 	if (this->ditherParam.IsDirty()) {

@@ -186,9 +186,9 @@ namespace megamol {
 
 
             /** Add threshold values for each assignment mehod (max: 5 per method and amino-acid) */
-            vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > >secStructThreshold
+			vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > >secStructThreshold;
             /** Add energy values for each assignment mehod (max: 5 per method and amino-acid) */
-            vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > > secStructEnergy
+			vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > > secStructEnergy;
 
 
             /** The pdb id */
