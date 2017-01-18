@@ -10,7 +10,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <stdint.h>
-#include <vector>
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "ospray/ospray.h"
 #include "mmcore/view/Renderer3DModule.h"
