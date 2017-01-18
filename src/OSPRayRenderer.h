@@ -28,7 +28,7 @@ namespace ospray {
         /**
         * initializes OSPRay
         */
-        void OSPRayRenderer::initOSPRay();
+        void initOSPRay();
 
         /**
         * helper function for rendering the OSPRay texture
@@ -104,7 +104,7 @@ namespace ospray {
         OSPTexture2D TextureFromFile(vislib::TString fileName);
 
         // TODO: Documentation
-        void ospray::OSPRayRenderer::OSPRayLights(OSPRenderer &renderer, core::Call& call);
+        void OSPRayLights(OSPRenderer &renderer, core::Call& call);
         bool AbstractIsDirty();
         void AbstractResetDirty();
         void RendererSettings(OSPRenderer &renderer);

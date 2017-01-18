@@ -5,7 +5,7 @@
  */
 
 #include "stdafx.h"
-#include "OSPRay_plugin/OSPRay.h"
+#include "OSPRay_plugin/OSPRay_plugin.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -14,6 +14,7 @@
 #include "OSPRaySphereRenderer.h"
 #include "OSPRayVolumeRenderer.h"
 #include "OSPRayTriangleMeshRenderer.h"
+
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -26,7 +27,7 @@ namespace {
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
-                "OSPRay", // TODO: Change this!
+                "OSPRay_plugin", // TODO: Change this!
 
                 /* human-readable plugin description */
                 "CPU Raytracing") {
@@ -64,7 +65,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-OSPRAY_API int mmplgPluginAPIVersion(void) {
+OSPRAY_PLUGIN_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 
@@ -72,7 +73,7 @@ OSPRAY_API int mmplgPluginAPIVersion(void) {
 /*
  * mmplgGetPluginCompatibilityInfo
  */
-OSPRAY_API
+OSPRAY_PLUGIN_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -114,7 +115,7 @@ mmplgGetPluginCompatibilityInfo(
 /*
  * mmplgReleasePluginCompatibilityInfo
  */
-OSPRAY_API
+OSPRAY_PLUGIN_API
 void mmplgReleasePluginCompatibilityInfo(
         ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
     // release compatiblity data on the correct heap
@@ -125,7 +126,7 @@ void mmplgReleasePluginCompatibilityInfo(
 /*
  * mmplgGetPluginInstance
  */
-OSPRAY_API
+OSPRAY_PLUGIN_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance(
         ::megamol::core::utility::plugins::ErrorCallback onError) {
@@ -136,7 +137,7 @@ mmplgGetPluginInstance(
 /*
  * mmplgReleasePluginInstance
  */
-OSPRAY_API
+OSPRAY_PLUGIN_API
 void mmplgReleasePluginInstance(
         ::megamol::core::utility::plugins::AbstractPluginInstance* pi) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)

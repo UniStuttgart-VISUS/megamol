@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MegaMol OSPRay
+# MegaMol OSPRay_plugin
 # building utilty script
 # Copyright 2015 by MegaMol Team
 # All rights reserved
@@ -21,21 +21,20 @@ invoke_make=1
 invoke_make_install=0
 invoke_default=1
 cmake_extra_cmd=
-MegaMolCore_DIR=
-use_mmcore_install_prefix=1
-register_build_trees=0
-
+vislib_DIR=
+no_register_build_trees=0
+make_jobs=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
 
 # be proud of yourself
 echo
-echo "  MegaMol(TM) OSPRay"
+echo "  MegaMol(TM) Core"
 echo "  cmake_build.sh utilty script"
 echo "  Copyright 2015, by MegaMol Team"
 echo "  All rights reserved"
 echo 
 
 #parse user commands
-while getopts "hp:dDcC:mirf:" opt; do
+while getopts "hp:dDcC:mj:inv:" opt; do
   case $opt in
   h)
     echo "Available command line options:"
@@ -46,9 +45,10 @@ while getopts "hp:dDcC:mirf:" opt; do
     echo "  -c    (cmake) invokes 'cmake'. This also deletes all files and subdirectories which might be present in the build tree subdirectory"
     echo "  -C XX (cmake option) additional command to be passed to 'cmake'"
     echo "  -m    (make) invokes 'make'"
+    echo "  -j XX (jobs) the number of parallel make jobs to be started (Similar to 'make -j XX'). The default value is the number of cores of your system are returned by ''."
     echo "  -i    (install) invokes 'make install'"
-    echo "  -r    (register) registers the cmake build tree results in the user package repository, making them available for find_package commands"
-    echo "  -f XX (find hint) specifies the find hint path where the MegaMolCore is located"
+    echo "  -n    (not register) Tells cmake to *not* register the cmake build tree results in the user package repository, making them *not* available for find_package commands"
+    echo "  -v XX (vislib) specifies an optional hint in which directory the vislib is located"
     echo
     echo "Default behavior (when no arguments are given):"
     echo "  - creates build tree subdirector 'build.release'"
@@ -64,15 +64,14 @@ while getopts "hp:dDcC:mirf:" opt; do
     echo
     echo "  creates the build tree subdirectory for the debug version, not for the release version, and invokes 'cmake', but does not invoke 'make' or 'make install'-"
     echo
-    echo "$0 -dcmi -p ~/my_inst -f ~/mmcore_inst"
+    echo "$0 -dcmi -p ~/my_inst -v ~/vislib_inst"
     echo
-    echo "  creates the build tree subdirectors for release and debug, and invokes 'cmake', 'make' and 'make install' in both build trees. Additionally the installation prefix is set to '~/my_inst' and as search hint for the MegaMolCore package '~/mmcore_inst' is passed to cmake."
+    echo "  creates the build tree subdirectors for release and debug, and invokes 'cmake', 'make' and 'make install' in both build trees. Additionally the installation prefix is set to '~/my_inst' and as search hint for the vislib package '~/vislib_inst' is passed to cmake."
     echo
     exit 0
     ;;
   p)
     install_prefix=$OPTARG
-    use_mmcore_install_prefix=0
     ;;
   d)
     build_debug=1
@@ -92,15 +91,18 @@ while getopts "hp:dDcC:mirf:" opt; do
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make=1
     ;;
+  j)
+    make_jobs=$OPTARG
+    ;;
   i)
     if [ $invoke_default -eq 1 ] ; then invoke_default=0; invoke_cmake=0; invoke_make=0; invoke_make_install=0; fi
     invoke_make_install=1
     ;;
-  r)
-    register_build_trees=1
+  n)
+    no_register_build_trees=1
     ;;
-  f)
-    MegaMolCore_DIR=$OPTARG
+  v)
+    vislib_DIR=$OPTARG
     ;;
   \?)
     echo "Invalid option: -$OPTARG" >&2
@@ -116,10 +118,13 @@ done
 # prepare command line for cmake
 cmake_cmd=""
 if [ $install_prefix ] ; then cmake_cmd="$cmake_cmd -DCMAKE_INSTALL_PREFIX=$install_prefix"; fi
-if [ $MegaMolCore_DIR ] ; then cmake_cmd="$cmake_cmd -DMegaMolCore_DIR=$MegaMolCore_DIR"; fi
-if [ $use_mmcore_install_prefix ] ; then cmake_cmd="$cmake_cmd -DUSE_MEGAMOLCORE_INSTALL_PREFIX=1"; fi
-if [ $register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dregister_build_trees=1"; fi
+if [ $vislib_DIR ] ; then cmake_cmd="$cmake_cmd -Dvislib_DIR=$vislib_DIR"; fi
+if [ $no_register_build_trees -eq 1 ] ; then cmake_cmd="$cmake_cmd -Dno_register_build_trees=1"; fi
 cmake_cmd="$cmake_cmd $cmake_extra_cmd"
+
+# prepare command line for make
+make_cmd=""
+if [ $make_jobs -gt 1 ] ; then make_cmd="$make_cmd -j$make_jobs"; fi
 
 # debug output of settings
 #echo "Specified settings:"
@@ -130,7 +135,7 @@ cmake_cmd="$cmake_cmd $cmake_extra_cmd"
 #echo "  invoke_make=$invoke_make"
 #echo "  invoke_make_install=$invoke_make_install"
 #echo "  invoke_default=$invoke_default"
-#echo "  MegaMolCore_DIR=$MegaMolCore_DIR"
+#echo "  vislib_DIR=$vislib_DIR"
 #echo "  cmake_cmd=$cmake_cmd"
 
 if [ $build_release -eq 1 ] ; then
@@ -146,9 +151,9 @@ if [ $build_release -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then
@@ -172,9 +177,9 @@ if [ $build_debug -eq 1 ] ; then
     cd ..
   fi
   if [ $invoke_make -eq 1 ] ; then
-    echo "invoke 'make'"
+    echo "invoke 'make$make_cmd'"
     cd $build_dir
-    make
+    make $make_cmd
     cd ..
   fi
   if [ $invoke_make_install -eq 1 ] ; then
