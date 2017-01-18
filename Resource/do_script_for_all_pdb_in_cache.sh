@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo Executing \"UncertaintyInputData.py\" for PDB-files in \"../cache\":
+echo ====================================================================
 
 python3.5 UncertaintyInputData.py -o 1aon
 python3.5 UncertaintyInputData.py -o 1tii

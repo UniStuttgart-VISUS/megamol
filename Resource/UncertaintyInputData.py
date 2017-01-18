@@ -729,10 +729,16 @@ class UncertaintyInputData:
                     PDBCode = FileLine[0:5]      
                     if (PDBCode == 'HELIX'):
                         LineOffset = 8   
+                        
+                        startIdx = FileLine[CWh[6][0]:CWh[6][1]]
+                        endIdx   = FileLine[CWh[8][0]:CWh[8][1]]
+                        if (startIdx > endIdx):                                                # if start index is greater than end index: use smaller index as start index
+                            startIdx = FileLine[CWh[8][0]:CWh[8][1]]
+                                                    
                         # Determining starting index of HELIX in chain
                         for x in range(LineOffset, len(OutFileBuffer)):
                             if (OutFileBuffer[x][30:31] == FileLine[19:20]):                   # Chain ID == chain ID HELIX
-                                if (OutFileBuffer[x][41:46] == FileLine[CWh[6][0]:CWh[6][1]]): # Amino-acid number of chain  == amino-acid start number of HELIX in chain          
+                                if (OutFileBuffer[x][41:46] == startIdx):                      # Amino-acid number of chain  == amino-acid start number of HELIX in chain          
                                         LineOffset = x
                                         break                                 
                                     
@@ -744,24 +750,30 @@ class UncertaintyInputData:
                                                      FileLine[CWh[5][0]:CWh[5][1]]+' |   '+FileLine[CWh[6][0]:CWh[6][1]]+' |    '+
                                                      FileLine[CWh[7][0]:CWh[7][1]]+' | '+FileLine[CWh[8][0]:CWh[8][1]]+' |')
 
-
                     elif (PDBCode == 'SHEET'):
                         LineOffset = 8 
+                        
+                        startIdx = FileLine[CWs[6][0]:CWs[6][1]]
+                        endIdx   = FileLine[CWs[8][0]:CWs[8][1]]
+                        if (startIdx > endIdx):                                                # if start index is greater than end index: switch them
+                            endIdx   = startIdx
+                            startIdx = FileLine[CWs[8][0]:CWs[8][1]]
+                            
                         # Determining starting index of SHEET in chain
                         for x in range(LineOffset, len(OutFileBuffer)):
                             if (OutFileBuffer[x][30:31] == FileLine[21:22]):                   # Chain ID == chain ID SHEET
-                                if (OutFileBuffer[x][41:46] == FileLine[CWs[6][0]:CWs[6][1]]): # Amino-acid number of chain  == amino-acid start number of SHEET in chain              
+                                if (OutFileBuffer[x][41:46] == startIdx):                      # Amino-acid number of chain  == amino-acid start number of SHEET in chain              
                                     LineOffset = x
                                     break  
-                        if (LineOffset < 420): 
-                            while (OutFileBuffer[LineOffset-1][41:46] != FileLine[CWs[8][0]:CWs[8][1]]):  # index of ending amino-acid must be there ....                                    
-                                # IGNORING if same strand belongs to different sheets -> only one SHEET ID is assigned ... 
-                                if (len(OutFileBuffer[2]) - len(OutFileBuffer[LineOffset]) > 0):          # ... determined by checking if buffer line is alredy 'filled'                
-                                    OutFileBuffer[LineOffset] += ('    '+FileLine[CWs[0][0]:CWs[0][1]]+' |  '+FileLine[CWs[1][0]:CWs[1][1]]+' |   '+
-                                                         FileLine[CWs[2][0]:CWs[2][1]]+' |    '+FileLine[CWs[3][0]:CWs[3][1]]+' |         |    '+FileLine[CWs[4][0]:CWs[4][1]]+' |      '+
-                                                         FileLine[CWs[5][0]:CWs[5][1]]+' |   '+FileLine[CWs[6][0]:CWs[6][1]]+' |    '+
-                                                         FileLine[CWs[7][0]:CWs[7][1]]+' | '+FileLine[CWs[8][0]:CWs[8][1]]+' |')
-                                LineOffset += 1
+
+                        while (OutFileBuffer[LineOffset-1][41:46] != endIdx):                  # index of ending amino-acid must be there ....                                    
+                            # IGNORING if same strand belongs to different sheets -> only one SHEET ID is assigned ... 
+                            if (len(OutFileBuffer[2]) - len(OutFileBuffer[LineOffset]) > 0):          # ... determined by checking if buffer line is alredy 'filled'                
+                                OutFileBuffer[LineOffset] += ('    '+FileLine[CWs[0][0]:CWs[0][1]]+' |  '+FileLine[CWs[1][0]:CWs[1][1]]+' |   '+
+                                                     FileLine[CWs[2][0]:CWs[2][1]]+' |    '+FileLine[CWs[3][0]:CWs[3][1]]+' |         |    '+FileLine[CWs[4][0]:CWs[4][1]]+' |      '+
+                                                     FileLine[CWs[5][0]:CWs[5][1]]+' |   '+FileLine[CWs[6][0]:CWs[6][1]]+' |    '+
+                                                     FileLine[CWs[7][0]:CWs[7][1]]+' | '+FileLine[CWs[8][0]:CWs[8][1]]+' |')
+                            LineOffset += 1
       
                     elif (PDBCode == 'ATOM '):                                                 # Stop reading file when PDB code ATOM is read ...ATOM comes after HELIX and SHEET
                         break 
