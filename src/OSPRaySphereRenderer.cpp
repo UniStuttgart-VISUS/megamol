@@ -201,8 +201,8 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     // new framebuffer at resize action
     if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() || imgSize.y != cr->GetCameraParameters()->TileRect().Height()) {
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
-        imgSize.x = cr->GetCameraParameters()->TileRect().Width();
-        imgSize.y = cr->GetCameraParameters()->TileRect().Height();
+        imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
+        imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
         framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
     }
 
@@ -228,13 +228,27 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         this->rd_type.ResetDirty();
     }
 
+    // calculate image parts for e.g. screenshooter
+    std::vector<float> imgStart(2, 0);
+    std::vector<float> imgEnd(2, 0);
+    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
+    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+
+    imgEnd[0] = cr->GetCameraParameters()->TileRect().GetRight() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
+    imgEnd[1] = cr->GetCameraParameters()->TileRect().GetTop() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+
+
     // setup camera
+    ospSet2fv(camera, "image_start", imgStart.data());
+    ospSet2fv(camera, "image_end", imgEnd.data());
     ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
     ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
     ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
     ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
     ospSet1f(camera, "fovy", cr->GetCameraParameters()->ApertureAngle());
     ospCommit(camera);
+
+
 
 
     osprayShader.Enable();

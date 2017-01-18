@@ -1,11 +1,11 @@
 /*
- * OSPRay.cpp
+ * OSPRay_plugin.cpp
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "OSPRay_plugin/OSPRay.h"
+#include "OSPRay_plugin/OSPRay_plugin.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
