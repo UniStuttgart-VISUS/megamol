@@ -1055,7 +1055,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->currentMaterial.PeekComponents());
 		glUniform4fv(this->tubeShader.ParameterLocation("phongUncertain"), 1, (GLfloat *)this->currentUncertainMaterial.PeekComponents());
         
-        // dither matrix
+        // dither matrix bayer 4x4 45° rotated 
         GLfloat dithM[80] = {14,  6,  9,  3,  7,  2, 10,  6, 12, 11, 13,  5, 10,  0,  4,  1,  9,  5, 15,  8, 
                               4,  1,  5, 15,  0,  8, 14,  9,  3, 15,  7,  2,  6, 12,  3, 11, 13, 10,  0, 12, 
                              11,  7, 13, 10, 12,  4, 11,  1,  5,  0,  8,  4, 14,  9, 15,  7,  8,  2,  6,  3,
@@ -1063,8 +1063,18 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
         //   1/16   | 2/16  | 3/16   | 4/16 | 5/16   | 6/16  | 7/16   | 8/16 | 9/16   | 10/16 | 11/16  | 12/16 | 13/16  | 14/16 | 15/16  | 16/16   
         //   0,0625 | 0,125 | 0,1875 | 0,25 | 0,3125 | 0,375 | 0,4375 | 0,5  | 0,5625 | 0,625 | 0,6875 | 0,75  | 0,8125 | 0,875 | 0,9375 | 1,0
         //   -> in 6,25%-Schritten
-                                       
-		glUniform1fv(this->tubeShader.ParameterLocation("dithM"), 80, (GLfloat *)dithM);
+        glUniform1fv(this->tubeShader.ParameterLocation("dithM"), 80, (GLfloat *)dithM);
+
+        // dither matrix bayer 8x8
+        GLfloat dithB[64] = { 0, 32,  8, 40,  2, 34, 10, 42, 
+                             48, 16, 56, 24, 50, 18, 58, 26,
+                             12, 44,  4, 36, 14, 46,  6, 38, 
+                             60, 28, 52, 20, 62, 30, 54, 22,
+                              3, 35, 11, 43,  1, 33,  9, 41,
+                             51, 19, 59, 27, 49, 17, 57, 25,
+                             15, 47,  7, 39, 13, 45,  5, 37,
+                             63, 31, 55, 23, 61, 29, 53, 21}; 
+		glUniform1fv(this->tubeShader.ParameterLocation("dithB"), 64, (GLfloat *)dithB);
                                 
         // DITHERING 
         for (int d = 0; d <= this->currentDitherMode; d++) {

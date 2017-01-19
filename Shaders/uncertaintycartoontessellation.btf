@@ -786,7 +786,8 @@
     uniform vec4 phongUncertain = vec4(0.6, 0.6, 0.8, 10.0);    
   
     uniform int ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of sec truct types - 1]
-    uniform float dithM[80];                                            // DITHERING - dither matrix
+    uniform float dithM[80];                                            // DITHERING - dither matrix bayer 4x4 45° rotated
+    uniform float dithB[64];                                            // DITHERING - dither matrix bayer 8x8
                     
     //////////
     // MAIN //
@@ -795,6 +796,8 @@
     
         outCol        = mycol;
         vec4 material = phong;
+        
+        bool useBayerRotated = true;
     
         // dithering - check if fragment is discarded
         if (ditherCount > 0) {
@@ -802,11 +805,21 @@
                 discard;  
             }
             else {
-                int index = (int(gl_FragCoord.y)%4 * 20 + int(gl_FragCoord.x)%20);
-                float t   = dithM[index] / 16.0;
-                // draw fragment only if (dithThresht[0] = start = max) >= t >=  (dithThresht[1] = end = min)
-                if ((t > dithThresh[0]) || (dithThresh[1] > t)) { 
-                    discard;
+                if (useBayerRotated) {
+                    int index = (int(gl_FragCoord.y)%4 * 20 + int(gl_FragCoord.x)%20);
+                    float t   = dithM[index] / 16.0;
+                    // draw fragment only if (dithThresht[0] = start = max) >= t >=  (dithThresht[1] = end = min)
+                    if ((t > dithThresh[0]) || (dithThresh[1] > t)) { 
+                        discard;
+                    }
+                }
+                else {
+                    int index = (int(gl_FragCoord.y)%8 * 8 + int(gl_FragCoord.x)%8);
+                    float t   = dithB[index] / 64.0;
+                    // draw fragment only if (dithThresht[0] = start = max) >= t >=  (dithThresht[1] = end = min)
+                    if ((t > dithThresh[0]) || (dithThresh[1] > t)) { 
+                        discard;
+                    }   
                 }
             }
         }
