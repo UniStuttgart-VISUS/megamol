@@ -436,7 +436,7 @@ namespace vislib {
          * @param str The input string.
          */
         inline void SetInputString(const String<T> &str) {
-            this->SetInputString(str);
+            this->SetInputString(str.PeekBuffer());
         }
 
         /**
