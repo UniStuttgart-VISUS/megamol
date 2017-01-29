@@ -505,8 +505,6 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
     const float STRIDE_TresholdE1 = -240.0f;
     const float STRIDE_TresholdE2 = -310.0f;
   
-  
-  
 	int methodCount;
 	float tmpChange;
 
