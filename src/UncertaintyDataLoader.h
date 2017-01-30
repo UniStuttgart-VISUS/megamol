@@ -182,7 +182,7 @@ namespace megamol {
             vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedSecStructUncertainty;
             
 			/** The difference of secondary structure assignment for each amino-acid */
-			vislib::Array<float> diffUncertainty;
+			vislib::Array<float> uncertainty;
 
 
             /** Add threshold values for each assignment mehod (max: 5 per method and amino-acid) */

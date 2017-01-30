@@ -342,9 +342,9 @@ namespace megamol {
         ////////////////////////////////////////////////        
         
         // parameter to show/hide disagreements in secondary structure assignment
-		megamol::core::param::ParamSlot toggleDifferenceParam;
+		megamol::core::param::ParamSlot toggleUncertaintyParam;
         // parameter to show/hide secondary structure uncertainty visualization
-        megamol::core::param::ParamSlot toggleUncertaintyParam;
+        megamol::core::param::ParamSlot toggleUncertainStructParam;
         // parameter to show/hide separator line for amino-acids in uncertainty visualization 
         megamol::core::param::ParamSlot toggleUncSeparatorParam;        
                 
@@ -429,15 +429,13 @@ namespace megamol {
         // The sorted structure types of the uncertainty values
         vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
 		// the array of the secondary structure type difference for each amino-acid tile
-		vislib::Array<float> diffUncertainty;
+		vislib::Array<float> uncertainty;
 
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;
 		
 		// secondary structure type colors as RGB(A)
-		vislib::Array<vislib::math::Vector<float, 4> > secStructColorRGB;
-		// secondary structure type colors as HSL(A)
-		vislib::Array<vislib::math::Vector<float, 4> > secStructColorHSL;		
+		vislib::Array<vislib::math::Vector<float, 4> > secStructColor;		
 		// secondary structure type descriptions
 		vislib::Array<vislib::StringA>                 secStructDescription;
         

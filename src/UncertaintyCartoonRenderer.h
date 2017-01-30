@@ -263,6 +263,7 @@ namespace megamol {
 		core::param::ParamSlot uncDistorParam;
         core::param::ParamSlot ditherParam;
         core::param::ParamSlot methodDataParam;
+		core::param::ParamSlot outlineScaleParam;
                 
         // local parameter values 
 		int                            currentTessLevel;
@@ -273,9 +274,10 @@ namespace megamol {
 		float                          currentBackboneWidth;
 		vislib::math::Vector<float, 4> currentMaterial;
 		vislib::math::Vector<float, 4> currentUncertainMaterial;
-		vislib::math::Vector<float, 4> currentUncDist;
+		vislib::math::Vector<float, 2> currentUncDist;
         int                            currentDitherMode;
         UncertaintyDataCall::assMethod currentMethodData;
+		int                            currentOutlineScaling;
                         
         GLuint              vertArray;
         std::vector<GLsync> fences;           // (?)
@@ -322,7 +324,7 @@ namespace megamol {
 		// the array for the residue flag
 		vislib::Array<unsigned int> residueFlag;
 		/** The uncertainty difference of secondary structure types */
-		vislib::Array<float> diffUncertainty;
+		vislib::Array<float> uncertainty;
 		// The secondary structure assignment methods and their secondary structure type assignments
 		vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
 		// The values of the secondary structure uncertainty for each amino-acid 

@@ -38,8 +38,7 @@ void main() {
 in vec4 quadPos;	                                       // input from vertex shader
 layout( location = 0 ) out vec4 fragColor;                 // output fragment color
 
-uniform vec4[STRUCT_COUNT]  structColRGB;                  // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
-uniform vec4[STRUCT_COUNT]  structColHSL;                  // the HSL colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
+uniform vec4[STRUCT_COUNT]  structCol;                  // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
 uniform int[STRUCT_COUNT]   sortedStruct;                  // the sorted structure types from left to right corresponding to 'quadPos.x'
 uniform float[STRUCT_COUNT] structUnc;                     // uncertainty values for structure types (order as in 'UncertaintyDataCall::secStructure')
 uniform float               gradientInt;                   // gradient intervall in which color interpolation will be applied
@@ -95,10 +94,10 @@ void main()
         middle   = ((k == 0)?(uTemp):(start+(uTemp/2.0)));
         
         if(colorInterpol == 1) {
-            startCol = structColHSL[sortedStruct[index]];    
+            startCol = rgb2hsl(structCol[sortedStruct[index]]);    
         }
         else { // RGB
-			startCol = structColRGB[sortedStruct[index]];    
+			startCol = structCol[sortedStruct[index]];    
         }
                           
         
@@ -114,10 +113,10 @@ void main()
         end    = ((k == (diffStruct-2))?(middle+uTemp):(middle+(uTemp/2.0)));
         
         if(colorInterpol == 1) {
-            endCol = structColHSL[sortedStruct[index]];    
+            endCol = rgb2hsl(structCol[sortedStruct[index]]);    
         }
         else { // RGB
-			endCol = structColRGB[sortedStruct[index]];  
+			endCol = structCol[sortedStruct[index]];  
         }
 
         // check if fragment position in x direction is in current intervall
@@ -198,25 +197,11 @@ vec4 hpcb(in vec4 c1, in vec4 c2) {
     
 	float tmpHue;
     
-	if (HSL1.x == HSL2.x) {
+	if (abs(HSL1.x - HSL2.x) < 0.000001) {
 		cnew = c1 + c2;
 	}
 	else {
-        if (HSL1.y > HSL2.y) { // c1 is dominant
-			tmpHue = (HSL1.x + 180.0);
-			if (tmpHue >= 360.0) {
-				tmpHue -= 360.0;
-			}
-			cnew = c1 + hsl2rgb(vec4(tmpHue, HSL2.y, HSL2.z, 1.0));
-		}
-		else if (HSL1.y < HSL2.y)  {// c2 is dominant
-			tmpHue = (HSL2.x + 180.0);
-			if (tmpHue >= 360.0) {
-				tmpHue -= 360.0;
-			}
-			cnew = c2 + hsl2rgb(vec4(tmpHue, HSL1.y, HSL1.z, 1.0));
-		}
-        else { // (HSL1.y == HSL2.y) - if c1 and c2 have same saturation decide for brighter one 
+        if (abs(HSL1.y - HSL2.y) < 0.000001) { // (HSL1.y == HSL2.y) - if c1 and c2 have same saturation decide for brighter one 
             if (HSL1.z >= HSL2.z) { // c1 is brighter or equal bright as c2
                 tmpHue = (HSL1.x + 180.0);
                 if (tmpHue >= 360.0) {
@@ -232,6 +217,21 @@ vec4 hpcb(in vec4 c1, in vec4 c2) {
                 cnew = c2 + hsl2rgb(vec4(tmpHue, HSL1.y, HSL1.z, 1.0));
             }
         }
+        else if (HSL1.y > HSL2.y) { // c1 is dominant
+			tmpHue = (HSL1.x + 180.0);
+			if (tmpHue >= 360.0) {
+				tmpHue -= 360.0;
+			}
+			cnew = c1 + hsl2rgb(vec4(tmpHue, HSL2.y, HSL2.z, 1.0));
+		}
+		else if (HSL1.y < HSL2.y)  {// c2 is dominant
+			tmpHue = (HSL2.x + 180.0);
+			if (tmpHue >= 360.0) {
+				tmpHue -= 360.0;
+			}
+			cnew = c2 + hsl2rgb(vec4(tmpHue, HSL1.y, HSL1.z, 1.0));
+		}
+        
     }
 
 	return cnew;

@@ -336,18 +336,18 @@ namespace megamol {
         }        
 
 		/**
-		* Get the difference of the secondary structure assignment.
+		* Get the uncertainty.
 		*
 		* @param i The index of the amino-acid.
-		* @return The difference of secondary structure type assignment.
+		* @return The uncertainty value.
 		*/
-		inline float GetDifference(unsigned int i) const {
-			if (!this->diffUncertainty)
+		inline float GetUncertainty(unsigned int i) const {
+			if (!this->uncertainty)
 				return 0.0f;
-			else if (this->diffUncertainty->Count() <= i)
+			else if (this->uncertainty->Count() <= i)
 				return 0.0f;
 			else
-				return (this->diffUncertainty->operator[](i));
+				return (this->uncertainty->operator[](i));
 		}
 
                 
@@ -453,12 +453,12 @@ namespace megamol {
         }  
         
 		/**
-		* Set the pointer to the difference.
+		* Set the pointer to the uncertainty.
 		*
 		* @param rnPtr The pointer.
 		*/
-		inline void SetDifference(vislib::Array<float> *rnPtr) {
-			this->diffUncertainty = rnPtr;
+		inline void SetUncertainty(vislib::Array<float> *rnPtr) {
+			this->uncertainty = rnPtr;
 		}
 
 	private:
@@ -494,8 +494,8 @@ namespace megamol {
         /** Pointer to the sorted structure types of the uncertainty values */
         vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NOE)> > *sortedSecStructUncertainty;
         
-		/** Pointer to the diffUncertainty of secondary structure types */
-		vislib::Array<float> *diffUncertainty;
+		/** Pointer to the uncertainty of secondary structure types */
+		vislib::Array<float> *uncertainty;
 
         /** Flag indicating that uncertainty was recalculated */
         bool recalcUncertainty;

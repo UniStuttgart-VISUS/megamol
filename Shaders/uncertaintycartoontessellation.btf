@@ -293,10 +293,8 @@
     uniform int                 colorMode         = 0;
     uniform int                 uncVisMode        = 0;
     uniform vec4[STRUCT_COUNT]  structColRGB;                           // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
-    uniform vec4                uncDistor;                              // uncertainty distortion parameters: (0) amplification for sin>0, 
-                                                                        //                                    (1) repeat of sin(2*PI), 
-                                                                        //                                    (2) uncertainty overall (true if value = 0.0),
-                                                                        //                                    (3) UNUSED
+    uniform vec2                uncDistor;                              // uncertainty distortion parameters: (0) amplification for sin>0, (1) repeat of sin(2*PI)
+    
     struct CAlpha                                       
     {
         vec4  pos;
@@ -585,7 +583,7 @@
             float uncFac = 0.0;
             float distorLev = uncDistor[1];  
             float ampLevel  = uncDistor[0];            
-            if (uncDistor[2] > 0.0) {
+            if ((uncDistor[0] > 0.0) || (uncDistor[1] > 0.0)) {
                 // if dithering is enabled use structure uncertainty else use uncertainty difference
                 if (ditherCount > 0)  {
                     uncFac = 0.0;
@@ -692,7 +690,7 @@
     in vec3 n[];
 
     in vec2 dith[];                                                     // DITHERING - dithering threshold from tesselation eval 
-    
+        
     //////////
     // OUT //
     /////////  
@@ -720,7 +718,7 @@
             normal       = normalize(normal4.xyz);
 
             dithThresh = dith[i];
-            
+           
             EmitVertex();
         }
 
@@ -732,7 +730,7 @@
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">140</snippet>
+        <snippet type="version">430</snippet>
         <snippet name="common::defines"/>
         <snippet name="common::lighting::simple"/>
         <snippet name="body1" type="string">
@@ -794,59 +792,67 @@
                                   3, 35, 11, 43,  1, 33,  9, 41,
                                  51, 19, 59, 27, 49, 17, 57, 25,
                                  15, 47,  7, 39, 13, 45,  5, 37,
-                                 63, 31, 55, 23, 61, 29, 53, 21};                
+                                 63, 31, 55, 23, 61, 29, 53, 21};   
+                                 
+    uniform int   outlinePass  = 0;
+    
+   
     //////////
     // MAIN //
     //////////
     void main(void) {
     
-        outCol        = mycol;
-        vec4 material = phong;
-    
-        // dithering - check if fragment is discarded
-        if (ditherCount > 0) {
-            if ((dithThresh[0] - dithThresh[1])  < 0.00001) {
-                discard;  
-            }
-            else {
-                int index = (int(gl_FragCoord.y)%8 * 8 + int(gl_FragCoord.x)%8);
-                float t   = dithMat[index] / 64.0;
-                // draw fragment only if (dithThresht[0] = start = max) >= t >=  (dithThresht[1] = end = min)
-                if ((t > dithThresh[0]) || (dithThresh[1] > t)) { 
-                    discard;
-                }   
-            }
-        }
-        
-        // assign uncertain material properties if difference of max-min < 1.0
-        if ((dithThresh[0] - dithThresh[1]) < (1.0 - 0.00001)) {
-            material = phongUncertain;
-        }
-                
-        vec4 pos      = ProjInv * gl_FragCoord.xyzw;
-        vec4 light    = MV * lightPos;
-        
-        vec3 lightDir = normalize(lightPos.xyz);
-            //vec3 lightDir = normalize(light.xyz - pos.xyz);
-            
-        vec3 n  = normal;
-        vec3 e  = pos.xyz;
-        vec3 h  = normalize(lightDir + e);
-        float d = dot(n, lightDir);
-        vec3 r  = normalize(2.0 * d * n - lightDir);
-        vec3 c  = material.x * mycol.xyz + material.y * mycol.xyz * max(d, 0.0);
-        
-        vec4 eyenew = vec4(0.0, 0.0, 0.0, 1.0);
-    
-        if(dot(lightDir, n) < 0.0) {
-            c += vec3(0.0);
+        if (outlinePass == 1) {
+            outCol = vec4(0.0);
         }
         else {
-            c += material.z * vec3(pow(max(dot(r, lightDir), 0.0), material.w));
-        }
-        
-        outCol = vec4(c, 1.0);
+            outCol        = mycol;
+            vec4 material = phong;
     
+            // dithering - check if fragment is discarded
+            if (ditherCount > 0) {
+                if ((dithThresh[0] - dithThresh[1])  < 0.00001) {
+                    discard;  
+                }
+                else {
+                    int index = (int(gl_FragCoord.y)%8 * 8 + int(gl_FragCoord.x)%8);
+                    float t   = dithMat[index] / 64.0;
+                    // draw fragment only if (dithThresht[0] = start = max) >= t >=  (dithThresht[1] = end = min)
+                    if ((t > dithThresh[0]) || (dithThresh[1] > t)) { 
+                        discard;
+                    }   
+                }
+            }
+        
+            // assign uncertain material properties if difference of max-min < 1.0
+            if ((dithThresh[0] - dithThresh[1]) < (1.0 - 0.00001)) {
+                material = phongUncertain;
+            }
+                
+            vec4 pos      = ProjInv * gl_FragCoord.xyzw;
+            vec4 light    = MV * lightPos;
+        
+            vec3 lightDir = normalize(lightPos.xyz);
+                //vec3 lightDir = normalize(light.xyz - pos.xyz);
+            
+            vec3 n  = normal;
+            vec3 e  = pos.xyz;
+            vec3 h  = normalize(lightDir + e);
+            float d = dot(n, lightDir);
+            vec3 r  = normalize(2.0 * d * n - lightDir);
+            vec3 c  = material.x * mycol.xyz + material.y * mycol.xyz * max(d, 0.0);
+        
+            vec4 eyenew = vec4(0.0, 0.0, 0.0, 1.0);
+    
+            if(dot(lightDir, n) < 0.0) {
+                c += vec3(0.0);
+            }
+            else {
+                c += material.z * vec3(pow(max(dot(r, lightDir), 0.0), material.w));
+            }
+        
+            outCol = vec4(c, 1.0);
+        }
     }
 -->
         </snippet>

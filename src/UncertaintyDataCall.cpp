@@ -66,16 +66,16 @@ vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(Uncertaint
     color.Set(1.0f, 1.0f, 1.0f, 1.0f);
 
     switch (s) {  
-                                                                     //  R       G       B       A
-    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(0.831f, 0.831f, 0.000f, 1.0f); break; // HSL: H= 60°, S=1.00, L=0.417  | Gelb         | PI                                                           
-    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(0.219f, 0.663f, 0.000f, 1.0f); break; // HSL: H=100°, S=1.00, L=0.333  | Gelb-Grün    | alpha
-    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(0.145f, 0.831f, 0.274f, 1.0f); break; // HSL: H=140°, S=1.00, L=0.417  | Grün         | 310
-    case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(0.000f, 0.678f, 0.678f, 1.0f); break; // HSL: H=180°, S=1.00, L=0.333  | Cyan         | trun
-    case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(0.000f, 0.247f, 0.498f, 1.0f); break; // HSL: H=210°, S=1.00, L=0.250  | Blau-(Grün)  | bend
-    case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(0.000f, 0.000f, 0.337f, 1.0f); break; // HSL: H=240°, S=1.00, L=0.166  | Blau         | coil
-    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(0.580f, 0.000f, 0.580f, 1.0f); break; // HSL: H=300°, S=1.00, L=0.292  | Magenta      | bridge
-    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(0.831f, 0.000f, 0.000f, 1.0f); break; // HSL: H=  0°, S=1.00, L=0.417  | Rot          | strand
-    case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(0.000f, 0.000f, 0.000f, 1.0f); break; // HSL: H=  0°, S=1.00, L=0.000  | Black
+                                                                     //  R               G                B                A
+	case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(204.0f / 255.0f,   0.0f / 255.0f, 136.0f / 255.0f, 1.0f); break; // HSL: H=320°, S=1.00, L=0.40  | PI                                                           
+	case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(170.0f / 255.0f,   0.0f / 255.0f, 255.0f / 255.0f, 1.0f); break; // HSL: H=280°, S=1.00, L=0.50  | alpha
+	case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(  0.0f / 255.0f,   0.0f / 255.0f, 204.0f / 255.0f, 1.0f); break; // HSL: H=240°, S=1.00, L=0.40  | 310
+	case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(  0.0f / 255.0f, 170.0f / 255.0f, 255.0f / 255.0f, 1.0f); break; // HSL: H=200°, S=1.00, L=0.50  | turn
+	case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(  0.0f / 255.0f, 204.0f / 255.0f, 136.0f / 255.0f, 1.0f); break; // HSL: H=160°, S=1.00, L=0.40  | bend
+	case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set( 21.0f / 255.0f, 128.0f / 255.0f,   0.0f / 255.0f, 1.0f); break; // HSL: H=110°, S=1.00, L=0.25  | coil
+	case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(204.0f / 255.0f, 204.0f / 255.0f,   0.0f / 255.0f, 1.0f); break; // HSL: H= 60°, S=1.00, L=0.40  | bridge
+	case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  color.Set(153.0f / 255.0f,  25.0f / 255.0f,   0.0f / 255.0f, 1.0f); break; // HSL: H= 10°, S=1.00, L=0.30  | strand
+	case (UncertaintyDataCall::secStructure::NOTDEFINED) :    color.Set(  0.0f / 255.0f,   0.0f / 255.0f,   0.0f / 255.0f, 1.0f); break; // HSL: H=  0°, S=1.00, L=0.00  | -
     default: break;
     
     }
