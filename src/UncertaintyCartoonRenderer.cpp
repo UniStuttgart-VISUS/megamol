@@ -154,7 +154,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		uncVisParam(            "09 Uncertainty visualisation", "The uncertainty visualisation."),
 		uncDistorParam(         "10 Uncertainty distortion", "(0) amplification, (1) repeat of sin(2*PI)"),
         ditherParam(            "11 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
-		outlineScaleParam(      "12 Outlining", "enabled if > 0"),
+        outlineParam(           "12 Outlining", "enable outlining"),
 		uncertainMaterialParam( "13 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
 		materialParam(          "14 Material", "Ambient, diffuse, specular components + exponent."),
 		colorModeParam(         "15 Color mode", "Coloring mode for secondary structure."),
@@ -214,8 +214,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->backboneWidthParam << new core::param::FloatParam(0.2f);
 	this->MakeSlotAvailable(&this->backboneWidthParam);
 
-	this->outlineScaleParam << new core::param::IntParam(0);
-	this->MakeSlotAvailable(&this->outlineScaleParam);
+    this->outlineParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->outlineParam);
 
 	vislib::math::Vector<float, 4> tmpVec4(0.2f, 0.8f, 0.4f, 10.0f);
 	this->materialParam << new core::param::Vector4fParam(tmpVec4);
@@ -276,7 +276,6 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->currentUncDist           = vislib::math::Vector<float, 2>(1.0f, 5.0f);
     this->currentDitherMode        = 0;
     this->currentMethodData        = UncertaintyDataCall::assMethod::NOM; // here: use uncertainty data
-	this->currentOutlineScaling    = 0;
 
 	this->fences.resize(this->numBuffers);
 
@@ -547,8 +546,8 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 	this->molAtomCount = mol->AtomCount();
 
 	// reset arrays
-	this->secStructColorRGB.Clear();
-	this->secStructColorRGB.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
+	this->secStructColor.Clear();
+	this->secStructColor.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
 
 	// reset arrays
 	this->secUncertainty.Clear();
@@ -584,7 +583,7 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 
 	// get secondary structure type colors 
 	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
-		this->secStructColorRGB.Add(udc->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(i)));
+		this->secStructColor.Add(udc->GetSecStructColor(static_cast<UncertaintyDataCall::secStructure>(i)));
 	}
 
 	unsigned int cCnt = 0;
@@ -738,11 +737,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	if (this->backboneWidthParam.IsDirty()) {
 		this->backboneWidthParam.ResetDirty();
 		this->currentBackboneWidth = static_cast<float>(this->backboneWidthParam.Param<param::FloatParam>()->Value());
-	}
-	// get outline scaling factor
-	if (this->outlineScaleParam.IsDirty()) {
-		this->outlineScaleParam.ResetDirty();
-		this->currentOutlineScaling = static_cast<int>(this->outlineScaleParam.Param<param::IntParam>()->Value());
 	}
 	// get material lighting properties
 	if (this->materialParam.IsDirty()) {
@@ -953,7 +947,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 							calpha.col[k] = 0.0f;
 					}
 					calpha.flag = this->residueFlag[uncIndex];
-					calpha.diff = this->uncertainty[uncIndex];
+					calpha.uncertainty = this->uncertainty[uncIndex];
 					
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
 					calpha.pos[1] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 1];
@@ -1050,7 +1044,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		// only tesselation evaluation 
 		glUniform1f(this->tubeShader.ParameterLocation("pipeWidth"), this->currentBackboneWidth);
 		glUniform1i(this->tubeShader.ParameterLocation("interpolateColors"), (GLint)this->colorInterpolationParam.Param<param::BoolParam>()->Value());
-		glUniform4fv(this->tubeShader.ParameterLocation("structColRGB"), this->structCount, (GLfloat *)this->secStructColorRGB.PeekElements());
+		glUniform4fv(this->tubeShader.ParameterLocation("structCol"), this->structCount, (GLfloat *)this->secStructColor.PeekElements());
 		glUniform1i(this->tubeShader.ParameterLocation("colorMode"), (GLint)this->currentColoringMode);
 		glUniform1i(this->tubeShader.ParameterLocation("onlyTubes"), (GLint)this->onlyTubesParam.Param<param::BoolParam>()->Value());
 		glUniform1i(this->tubeShader.ParameterLocation("uncVisMode"), (GLint)this->currentUncVis);
@@ -1076,9 +1070,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 			// OUTLINING
 			int outlinePass = 0;
-			glDisable(GL_CULL_FACE);
+			//glDisable(GL_CULL_FACE);
 			// drawing an outline is enabled if > 0.0
-			if (this->currentOutlineScaling > 0) {
+            if (this->outlineParam.Param<param::BoolParam>()->Value()) {
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
 				outlinePass = 1;
@@ -1088,10 +1082,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 				// draw back faces in second outline pass
 				if (s == 1) {
 					glCullFace(GL_FRONT);
-					glPolygonMode(GL_BACK, GL_LINE);
-					glLineWidth((float)this->currentOutlineScaling);
+					//glPolygonMode(GL_BACK, GL_LINE);
+					//glLineWidth((float)this->currentOutlineScaling);
 				}
-				// 
 				glUniform1i(this->tubeShader.ParameterLocation("outlinePass"), (GLint)s);
 
 				// fragment and tesselation eval

@@ -49,7 +49,7 @@
 #include <iostream> // DEBUG
 
 
-#define SEQ_PI          3.1415926535897932384626433832795
+#define SEQ_PI        3.1415926535897932384626433832795
 #define SEQ_FLOAT_EPS 0.00001
 
 using namespace megamol;
@@ -285,7 +285,7 @@ bool UncertaintySequenceRenderer::create() {
         
         // default values
         unsigned int samples = 30;
-        float        height  = 0.2f;  // in range ]0.0-1.0[
+        float        height  = 0.3f;  // in range ]0.0-1.0[
 
 
         this->secStructVertices.Add(vislib::Array<vislib::math::Vector<float, 2>>());
@@ -803,8 +803,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         for( unsigned int i = 0; i < this->chainVertices.Count() / 2; i++ ) {
             glColor3fv( (&this->chainColors[i*3]));
             glVertex2f( this->chainVertices[2*i]       , -this->chainVertices[2*i+1] - 0.2f);
-            glVertex2f( this->chainVertices[2*i]       , -this->chainVertices[2*i+1] - 0.3f);
-            glVertex2f( this->chainVertices[2*i] + 1.0f, -this->chainVertices[2*i+1] - 0.3f);
+            glVertex2f( this->chainVertices[2*i]       , -this->chainVertices[2*i+1] - 0.4f);
+            glVertex2f( this->chainVertices[2*i] + 1.0f, -this->chainVertices[2*i+1] - 0.4f);
             glVertex2f( this->chainVertices[2*i] + 1.0f, -this->chainVertices[2*i+1] - 0.2f);
         }
         glEnd();

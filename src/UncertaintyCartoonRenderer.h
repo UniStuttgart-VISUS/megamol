@@ -195,7 +195,7 @@ namespace megamol {
 			float dir[3];                                               // direction of the amino-acid
 			int   colIdx;                                               // UNUSED - don't delete ... shader is corrupt otherwise - WHY?
 			float col[4];                                               // the color of the amino-acid or chain (depending on coloring mode)
-			float diff;                                                 // the uncertainty difference
+			float uncertainty;                                          // the uncertainty
 			int   flag;                                                 // UNUSED - the amino-acid flag (none, missing, heterogen)
 			float unc[UncertaintyDataCall::secStructure::NOE];          // the uncertainties of the sctructure assignments                    - used for dithering
 			int   sortedStruct[UncertaintyDataCall::secStructure::NOE]; // the sorted structure assignments: max=[0] to min=[NOE]             - used for dithering
@@ -263,7 +263,7 @@ namespace megamol {
 		core::param::ParamSlot uncDistorParam;
         core::param::ParamSlot ditherParam;
         core::param::ParamSlot methodDataParam;
-		core::param::ParamSlot outlineScaleParam;
+		core::param::ParamSlot outlineParam;
                 
         // local parameter values 
 		int                            currentTessLevel;
@@ -277,7 +277,6 @@ namespace megamol {
 		vislib::math::Vector<float, 2> currentUncDist;
         int                            currentDitherMode;
         UncertaintyDataCall::assMethod currentMethodData;
-		int                            currentOutlineScaling;
                         
         GLuint              vertArray;
         std::vector<GLsync> fences;           // (?)
@@ -337,7 +336,7 @@ namespace megamol {
 		// color table for amino acid per amino acid
 		vislib::Array<vislib::math::Vector<float, 3> > aminoAcidColors;
 		// secondary structure type colors as RGB(A)
-		vislib::Array<vislib::math::Vector<float, 4> > secStructColorRGB;
+		vislib::Array<vislib::math::Vector<float, 4> > secStructColor;
 		// color table
 		vislib::Array<vislib::math::Vector<float, 3> > colorTable;
 

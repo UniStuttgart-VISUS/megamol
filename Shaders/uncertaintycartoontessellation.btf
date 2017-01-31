@@ -175,10 +175,10 @@
         vec3  dir;
         int   colIdx;        
         vec4  col;
-	    float diff;
-		int   flag; 
-		float unc[STRUCT_COUNT];
-	    int   sortedStruct[STRUCT_COUNT];
+	      float uncertainty;
+		    int   flag; 
+		    float unc[STRUCT_COUNT];
+	      int   sortedStruct[STRUCT_COUNT];
     };
 
     layout(std430, binding = 2) buffer shader_data {
@@ -243,17 +243,17 @@
     #define STRUCT_COUNT  9                                   
     
     // should be equal to 'UncertaintyCartoonRenderer::coloringModes':    
-	#define COLOR_MODE_STRUCT        0
+    #define COLOR_MODE_STRUCT        0
     #define COLOR_MODE_UNCERTAIN     1
-	#define COLOR_MODE_CHAIN         2
-	#define COLOR_MODE_AMINOACID     3
+    #define COLOR_MODE_CHAIN         2
+    #define COLOR_MODE_AMINOACID     3
     #define COLOR_MODE_RESIDUE_DEBUG 4
             
     // should be equal to 'UncertaintyCartoonRenderer::uncVisModeualisations':   
     #define UNC_VIS_NONE   0
-	#define UNC_VIS_SIN_U  1
-	#define UNC_VIS_SIN_V  2    
-	#define UNC_VIS_SIN_UV 3
+    #define UNC_VIS_SIN_U  1
+    #define UNC_VIS_SIN_V  2    
+    #define UNC_VIS_SIN_UV 3
     
     ////////////////
     // EXTENSIONS //
@@ -278,7 +278,7 @@
     out vec4 color;
     out vec3 n;
     
-    out vec2 dith;                                                      // DITHERING - pass start and end value for dithering threshold to fragment shader
+    out vec3 uncVal;                                                    // Uncertainty and DITHERING values - from tess eval
 
     ///////////////
     // variables //
@@ -292,8 +292,9 @@
     uniform float               pipeWidth         = 1.0;
     uniform int                 colorMode         = 0;
     uniform int                 uncVisMode        = 0;
-    uniform vec4[STRUCT_COUNT]  structColRGB;                           // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
+    uniform vec4[STRUCT_COUNT]  structCol;                              // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
     uniform vec2                uncDistor;                              // uncertainty distortion parameters: (0) amplification for sin>0, (1) repeat of sin(2*PI)
+    uniform int                 outlinePass;
     
     struct CAlpha                                       
     {
@@ -301,10 +302,10 @@
         vec3  dir;
         int   colIdx;                                                   // UNUSED - don't delete ! ... otherwise shader has 'strange' behaviour - WHY?
         vec4  col;
-	    float diff;
-		int   flag;                                        
-		float unc[STRUCT_COUNT];
-	    int   sortedStruct[STRUCT_COUNT];
+	      float uncertainty;
+		    int   flag;                                        
+		    float unc[STRUCT_COUNT];
+	      int   sortedStruct[STRUCT_COUNT];
     };
 
     layout(std430, binding = 2) buffer shader_data {
@@ -322,33 +323,32 @@
     void main() {
     
         // start(max) and end(min) values for dithering threshold
-        dith = vec2(1.0, 0.0);
+        uncVal[0] = atoms[id[1]].uncertainty;  // uncertainty
+        uncVal[1] = 1.0;                       // dithering threshol max
+        uncVal[2] = 0.0;                       // dithering threshold min
+
+        // default assignment 
+        gl_Position = vec4(0.0);
+        n           = vec3(0.0);
+        color       = vec4(0.0);
+            
+        // visualised structure typ (0 = structure which is most likely)
         int structIndex = 0;
         
         // for dithering passes: calculate start and end value for dithering threshold
         if (ditherCount > 0) { 
             CAlpha alpha = atoms[id[1]];  
             structIndex = ditherCount-1;
-            dith = vec2(1.0, 0.0);
              
             // accumulate all uncertainties up to current structure type (sum uncertainty from minimum to current)
             for (int i = 0; i < structIndex; i++) {
-                dith[0] -= alpha.unc[alpha.sortedStruct[i]];
+                uncVal[1] -= alpha.unc[alpha.sortedStruct[i]];
             }
-            dith[1] = dith[0] - alpha.unc[alpha.sortedStruct[structIndex]];
-            
-            // default assignment 
-            gl_Position = vec4(0.0);
-            n           = vec3(0.0);
-            color       = vec4(0.0);
+            uncVal[2] = uncVal[1] - alpha.unc[alpha.sortedStruct[structIndex]];
         }
-        else {
-            // pass current uncertainty to fragment shader (as flag for choosing right phong material)
-            dith[1] = 1.0 - atoms[id[1]].unc[atoms[id[1]].sortedStruct[0]];
-        }
-        
-        
-        if ((dith[0] - dith[1]) > 0.00001) { // threshold for uncertainty values ? ...
+       
+        // calculate geometry
+        if ((uncVal[1] - uncVal[2]) > 0.00001) { // threshold for uncertainty values ? ...
                       
             CAlpha alph0 = atoms[id[0] - 1];                            // (id[0] - 1) doesn't exist for first vertex call ?
             CAlpha alph1 = atoms[id[0]];
@@ -411,10 +411,10 @@
                 for(int i = 0; i < 4; i++)
                 {        
                     if (colorMode == COLOR_MODE_STRUCT) {
-                        colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[structIndex]];
+                        colors[i] = structCol[atoms[id[0] + i - 1].sortedStruct[structIndex]];
                     }     
                     else if (colorMode == COLOR_MODE_UNCERTAIN) {
-                        colors[i] = structColRGB[atoms[id[0] + i - 1].sortedStruct[structIndex]];
+                        colors[i] = structCol[atoms[id[0] + i - 1].sortedStruct[structIndex]];
                     }                    
                     else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
                         colors[i] = atoms[id[0] + i - 1].col; 
@@ -437,10 +437,10 @@
             else // current C-alpha is alph2
             {
                 if (colorMode == COLOR_MODE_STRUCT) {
-                    color = structColRGB[mytype];
+                    color = structCol[mytype];
                 }     
                 else if (colorMode == COLOR_MODE_UNCERTAIN) {
-                    color= structColRGB[mytype];
+                    color= structCol[mytype];
                 }                    
                 else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
                     color = alph2.col; 
@@ -578,24 +578,12 @@
             
             
             // uncertainty visualisation
-            
+           
             // apply surface displacement parameter
-            float uncFac = 0.0;
-            float distorLev = uncDistor[1];  
-            float ampLevel  = uncDistor[0];            
-            if ((uncDistor[0] > 0.0) || (uncDistor[1] > 0.0)) {
-                // if dithering is enabled use structure uncertainty else use uncertainty difference
-                if (ditherCount > 0)  {
-                    uncFac = 0.0;
-                    if (alph2.unc[alph2.sortedStruct[0]] < 1.0) {
-                        uncFac  = alph2.unc[alph2.sortedStruct[structIndex]]; // in range [0,1]
-                    }
-                }
-                else {
-                    uncFac  = alph2.diff;                               // in range [0,1]
-                }
-            }    
-            
+            float ampLevel  = uncDistor[0];  
+            float distorLev = uncDistor[1];       
+            float uncFac    = uncVal[0];
+ 
             // displacement of geometry and adjustment of normal vector
             float uNdisp = 0.0;
             float vNdisp = 0.0;
@@ -616,6 +604,9 @@
                 vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
                 uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
                 vNdisp        = 0.0;
+                
+                mypos.xyz  += disp * n;           
+                n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));                
             }
             else if (uncVisMode == UNC_VIS_SIN_V) { // V    
                 float vDisp   = distorLev * 2.0 * M_PI * gl_TessCoord.y;
@@ -631,7 +622,10 @@
                 vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fac*sin(vDisp) in UV-space
                 vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
                 vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction
-                uNdisp        = 0.0;            
+                uNdisp        = 0.0;     
+                
+                mypos.xyz  += disp * n;            
+                n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));                
             }    
             else if (uncVisMode == UNC_VIS_SIN_UV) {  // U,V
                 float uDisp = distorLev * 2.0 * M_PI * gl_TessCoord.x; 
@@ -655,11 +649,41 @@
                 vec2  vNormal = normalize(vec2(0.0, 1.0));              // normal in UV-space
                 vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fac*sin(vDisp) in UV-space
                 vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
-                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction             
+                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction      
+                
+                mypos.xyz  += disp * n;        
+                n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
             }
             
-            mypos.xyz  += (disp + pipeWidth) * n;            
-            n           = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
+
+            // outlining
+            u = gl_TessCoord.x;
+            if (outlinePass == 1) {
+            
+                // mypos.xyz = mypos.xyz + 0.2*n;
+            
+                /* */
+                mypos.xyz = mypos.xyz + (uncFac/3.0)*n;
+                
+                float factor = 0.001;
+                if(u > (1.0 - factor))
+                {
+                    vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
+                    vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
+                
+                    mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);
+                    mypos.xyz += factor * tangent;
+                }
+                if(u < factor)
+                {
+                    vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
+                    vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
+                
+                    mypos.xyz = mix(newpos, mypos.xyz, u / factor);
+                    mypos.xyz += factor * (-tangent);
+                }  
+                /*  */
+            }          
           
             gl_Position = mypos;
         }
@@ -689,7 +713,7 @@
     in vec4 color[];
     in vec3 n[];
 
-    in vec2 dith[];                                                     // DITHERING - dithering threshold from tesselation eval 
+    in vec3 uncVal[];                                                  // Uncertainty and DITHERING values - from tess eval
         
     //////////
     // OUT //
@@ -697,7 +721,7 @@
     out vec4 mycol;
     out vec3 normal;
     
-    out vec2 dithThresh;                                                // DITHERING - pass dithering threshold to frag shader
+    out vec3 uncValues;                                                // Uncertainty and DITHERING values  - pass to frag shader
     
     /////////////////////
     // INPUT variables //
@@ -717,7 +741,7 @@
             vec4 normal4 = MVinvtrans * vec4(n[i], 0);
             normal       = normalize(normal4.xyz);
 
-            dithThresh = dith[i];
+            uncValues    = uncVal[i];
            
             EmitVertex();
         }
@@ -758,7 +782,7 @@
     in vec4 mycol;
     in vec3 normal;
     
-    in vec2 dithThresh;                                                 // DITHERING - the threshold for dithering
+    in vec3 uncValues;                                                 // Uncertainty and DITHERING values ([0]uncertainty, [1]dithering threshold max, [2]dithering threshold min)
                           
     //////////
     // OUT //
@@ -783,7 +807,7 @@
     uniform vec4 phong          = vec4(0.6, 0.6, 0.8, 10.0);
     uniform vec4 phongUncertain = vec4(0.6, 0.6, 0.8, 10.0);    
   
-    uniform int ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of sec truct types - 1]
+    uniform int ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of struct types - 1]
                     
     const float dithMat[64] =   { 0, 32,  8, 40,  2, 34, 10, 42,        // DITHERING - dither matrix bayer 8x8
                                  48, 16, 56, 24, 50, 18, 58, 26,
@@ -811,21 +835,21 @@
     
             // dithering - check if fragment is discarded
             if (ditherCount > 0) {
-                if ((dithThresh[0] - dithThresh[1])  < 0.00001) {
+                if ((uncValues[1] - uncValues[2]) < 0.00001) {
                     discard;  
                 }
                 else {
                     int index = (int(gl_FragCoord.y)%8 * 8 + int(gl_FragCoord.x)%8);
                     float t   = dithMat[index] / 64.0;
-                    // draw fragment only if (dithThresht[0] = start = max) >= t >=  (dithThresht[1] = end = min)
-                    if ((t > dithThresh[0]) || (dithThresh[1] > t)) { 
+                    // draw fragment only if (uncValues[1] = start = max) >= t >=  (uncValues[2] = end = min)
+                    if ((t > uncValues[1]) || (uncValues[2] > t)) { 
                         discard;
                     }   
                 }
             }
         
-            // assign uncertain material properties if difference of max-min < 1.0
-            if ((dithThresh[0] - dithThresh[1]) < (1.0 - 0.00001)) {
+            // assign uncertain material properties if uncertainty > 0.0
+            if (uncValues[0]  > 0.00001) {
                 material = phongUncertain;
             }
                 
