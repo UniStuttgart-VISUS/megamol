@@ -31,6 +31,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
@@ -154,14 +155,16 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		uncVisParam(            "09 Uncertainty visualisation", "The uncertainty visualisation."),
 		uncDistorParam(         "10 Uncertainty distortion", "(0) amplification, (1) repeat of sin(2*PI)"),
         ditherParam(            "11 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
-        outlineParam(           "12 Outlining", "enable outlining"),
-		uncertainMaterialParam( "13 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
-		materialParam(          "14 Material", "Ambient, diffuse, specular components + exponent."),
-		colorModeParam(         "15 Color mode", "Coloring mode for secondary structure."),
-		colorInterpolationParam("16 Color interpolation", "Should the colors be interpolated?"),
-		lightPosParam(          "17 Light position", "The light position."),
-		buttonParam(            "18 Reload shaders", "Reload the shaders."),
-		colorTableFileParam(    "19 Color Table Filename", "The filename of the color table."),
+        outlineParam(           "12 Outlining", "The oulining visualisations."),
+        outlineScalingParam(    "13 Outline scaling", "The scaling of the ouline."),
+        outlineColorParam(      "14 Outline color", "The color of the outline."),
+		uncertainMaterialParam( "15 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
+		materialParam(          "16 Material", "Ambient, diffuse, specular components + exponent."),
+		colorModeParam(         "17 Color mode", "Coloring mode for secondary structure."),
+		colorInterpolationParam("18 Color interpolation", "Should the colors be interpolated?"),
+		lightPosParam(          "19 Light position", "The light position."),
+		buttonParam(            "20 Reload shaders", "Reload the shaders."),
+		colorTableFileParam(    "21 Color Table Filename", "The filename of the color table."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
@@ -182,7 +185,23 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	// residue selection caller slot
 	this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
 	this->MakeSlotAvailable(&this->resSelectionCallerSlot);
-
+    
+    this->currentTessLevel         = 16;
+    this->currentUncVis            = uncVisualisations::UNC_VIS_SIN_U;
+    this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
+    this->currentScaling           = 1.0f;
+    this->currentBackboneWidth     = 0.2f;
+    this->currentMaterial          = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
+    this->currentUncertainMaterial = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
+    this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
+    this->currentUncVis            = uncVisualisations::UNC_VIS_SIN_UV;
+    this->currentLightPos          = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
+    this->currentUncDist           = vislib::math::Vector<float, 2>(1.0f, 5.0f);
+    this->currentDitherMode        = 0;
+    this->currentMethodData        = UncertaintyDataCall::assMethod::NOM; // here: use uncertainty data
+    this->currentOutlineMode       = outlineOptions::OUTLINE_NONE;
+    this->currentOutlineScaling    = 1.0;
+    this->currentOutlineColor      = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
 
 	this->onlyTubesParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->onlyTubesParam);
@@ -202,37 +221,37 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->buttonParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
 	this->MakeSlotAvailable(&this->buttonParam);
                                               // init min max
-	this->ditherParam << new core::param::IntParam(0, 0, this->structCount);
+    this->ditherParam << new core::param::IntParam(this->currentDitherMode, 0, this->structCount);
 	this->MakeSlotAvailable(&this->ditherParam);
 	                                              // init min max
-	this->tessLevelParam << new core::param::IntParam(16, 6, 64);
+    this->tessLevelParam << new core::param::IntParam(this->currentTessLevel, 6, 64);
 	this->MakeSlotAvailable(&this->tessLevelParam);
 
-	this->scalingParam << new core::param::FloatParam(1.0f);
+    this->scalingParam << new core::param::FloatParam(this->currentScaling);
 	this->MakeSlotAvailable(&this->scalingParam);
 
-	this->backboneWidthParam << new core::param::FloatParam(0.2f);
+    this->outlineScalingParam << new core::param::FloatParam(this->currentOutlineScaling, 1.0f);
+    this->MakeSlotAvailable(&this->outlineScalingParam);
+
+    this->backboneWidthParam << new core::param::FloatParam(this->currentBackboneWidth);
 	this->MakeSlotAvailable(&this->backboneWidthParam);
 
-    this->outlineParam << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->outlineParam);
-
-	vislib::math::Vector<float, 4> tmpVec4(0.2f, 0.8f, 0.4f, 10.0f);
-	this->materialParam << new core::param::Vector4fParam(tmpVec4);
+    this->materialParam << new core::param::Vector4fParam(this->currentMaterial);
 	this->MakeSlotAvailable(&this->materialParam);
 
-	this->uncertainMaterialParam << new core::param::Vector4fParam(tmpVec4);
+    this->uncertainMaterialParam << new core::param::Vector4fParam(this->currentUncertainMaterial);
 	this->MakeSlotAvailable(&this->uncertainMaterialParam);
 
-	tmpVec4 = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
-	this->lightPosParam << new core::param::Vector4fParam(tmpVec4);
+    this->lightPosParam << new core::param::Vector4fParam(this->currentLightPos);
 	this->MakeSlotAvailable(&this->lightPosParam);
 
-	vislib::math::Vector<float, 2> tmpVec2 = vislib::math::Vector<float, 2>(1.0f, 5.0f);
-	this->uncDistorParam << new core::param::Vector2fParam(tmpVec2);
+    this->uncDistorParam << new core::param::Vector2fParam(this->currentUncDist);
 	this->MakeSlotAvailable(&this->uncDistorParam);
 
-	param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(COLOR_MODE_STRUCT));
+    this->outlineColorParam << new core::param::Vector3fParam(this->currentOutlineColor);
+    this->MakeSlotAvailable(&this->outlineColorParam);
+
+    param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentColoringMode));
 	tmpEnum->SetTypePair(COLOR_MODE_STRUCT,        "Secondary Structure");
 	tmpEnum->SetTypePair(COLOR_MODE_UNCERTAIN,     "Uncertainty");
 	tmpEnum->SetTypePair(COLOR_MODE_CHAIN,         "Chains");
@@ -241,7 +260,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->colorModeParam << tmpEnum;
 	this->MakeSlotAvailable(&this->colorModeParam);
 
-	tmpEnum = new param::EnumParam(static_cast<int>(UNC_VIS_SIN_UV));
+    tmpEnum = new param::EnumParam(static_cast<int>(this->currentUncVis));
 	tmpEnum->SetTypePair(UNC_VIS_NONE,   "None");
 	tmpEnum->SetTypePair(UNC_VIS_SIN_U,  "Sinus U");
 	tmpEnum->SetTypePair(UNC_VIS_SIN_V,  "Sinus V");
@@ -249,7 +268,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->uncVisParam << tmpEnum;
 	this->MakeSlotAvailable(&this->uncVisParam);
     
-	tmpEnum = new param::EnumParam(static_cast<int>(UncertaintyDataCall::assMethod::NOM));
+    tmpEnum = new param::EnumParam(static_cast<int>(this->currentMethodData));
 	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::PDB,    "PDB");
 	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::STRIDE, "STRIDE");
 	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::DSSP,   "DSSP");
@@ -257,25 +276,18 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->methodDataParam << tmpEnum;
 	this->MakeSlotAvailable(&this->methodDataParam);    
 
+    tmpEnum = new param::EnumParam(static_cast<int>(this->currentOutlineMode));
+    tmpEnum->SetTypePair(OUTLINE_NONE, "None");
+    tmpEnum->SetTypePair(OUTLINE_LINE, "Line rendering");
+    tmpEnum->SetTypePair(OUTLINE_FULL, "Full rendering");
+    this->outlineParam << tmpEnum;
+    this->MakeSlotAvailable(&this->outlineParam);
+
 	// fill color table with default values and set the filename param
 	vislib::StringA filename("colors.txt");
 	this->colorTableFileParam.SetParameter(new param::FilePathParam(A2T(filename)));
 	this->MakeSlotAvailable(&this->colorTableFileParam);
 	UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
-
-	this->currentTessLevel         = 16;
-	this->currentUncVis            = uncVisualisations::UNC_VIS_SIN_U;
-	this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
-	this->currentScaling           = 1.0f;
-	this->currentBackboneWidth     = 0.2f;
-	this->currentMaterial          = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
-	this->currentUncertainMaterial = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
-	this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
-	this->currentUncVis            = uncVisualisations::UNC_VIS_SIN_UV;
-	this->currentLightPos          = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
-	this->currentUncDist           = vislib::math::Vector<float, 2>(1.0f, 5.0f);
-    this->currentDitherMode        = 0;
-    this->currentMethodData        = UncertaintyDataCall::assMethod::NOM; // here: use uncertainty data
 
 	this->fences.resize(this->numBuffers);
 
@@ -758,6 +770,21 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		this->uncVisParam.ResetDirty();
 		this->currentUncVis = static_cast<uncVisualisations>(this->uncVisParam.Param<param::EnumParam>()->Value());
 	}
+    // get outlining visualisation mode
+    if (this->outlineParam.IsDirty()) {
+        this->outlineParam.ResetDirty();
+        this->currentOutlineMode = static_cast<outlineOptions>(this->outlineParam.Param<param::EnumParam>()->Value());
+    }
+    // get scaling of the outline
+    if (this->outlineScalingParam.IsDirty()) {
+        this->outlineScalingParam.ResetDirty();
+        this->currentOutlineScaling = static_cast<float>(this->outlineScalingParam.Param<param::FloatParam>()->Value());
+    }
+    // get color of the outline
+    if (this->outlineColorParam.IsDirty()) {
+        this->outlineColorParam.ResetDirty();
+        this->currentOutlineColor = static_cast<vislib::math::Vector<float, 3>>(this->outlineColorParam.Param<param::Vector3fParam>()->Value());
+    }
 	// read and update the color table, if necessary
 	if (this->colorTableFileParam.IsDirty()) {
 		UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
@@ -850,7 +877,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
 
 	unsigned int firstResIdx = 0;
 	unsigned int lastResIdx = 0;
@@ -1021,6 +1047,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
 		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
 		glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+        
+        glUniform3fv(this->tubeShader.ParameterLocation("camPos"), 1, cr->GetCameraParameters()->Position().PeekCoordinates());
+
 		
 		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
 		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
@@ -1032,6 +1061,8 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+
+        
 
 		// only vertex shader
 		float minC = 0.0f, maxC = 0.0f;
@@ -1060,6 +1091,10 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->currentMaterial.PeekComponents());
 		glUniform4fv(this->tubeShader.ParameterLocation("phongUncertain"), 1, (GLfloat *)this->currentUncertainMaterial.PeekComponents());
         
+        glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)0);
+        glUniform1f(this->tubeShader.ParameterLocation("outlineScale"), (GLfloat)this->currentOutlineScaling);
+        glUniform3fv(this->tubeShader.ParameterLocation("outlineColor"), 1, (GLfloat *)this->currentOutlineColor.PeekComponents());
+
         // DITHERING 
         for (int d = 0; d <= this->currentDitherMode; d++) {
         
@@ -1067,12 +1102,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			if ((this->currentDitherMode > 0) && (d == 0)) {
 				continue;
 			}
+            // fragment and tesselation eval
+            glUniform1i(this->tubeShader.ParameterLocation("ditherCount"), (GLint)d);                                                                        // current dithering pass
 
 			// OUTLINING
 			int outlinePass = 0;
 			//glDisable(GL_CULL_FACE);
 			// drawing an outline is enabled if > 0.0
-            if (this->outlineParam.Param<param::BoolParam>()->Value()) {
+            if (this->currentOutlineMode != OUTLINE_NONE) {
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
 				outlinePass = 1;
@@ -1080,16 +1117,22 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			// draw front faces in first outline pass
 			for (int s = 0; s <= outlinePass; s++){
 				// draw back faces in second outline pass
+
 				if (s == 1) {
 					glCullFace(GL_FRONT);
-					//glPolygonMode(GL_BACK, GL_LINE);
-					//glLineWidth((float)this->currentOutlineScaling);
+                    if (this->currentOutlineMode == OUTLINE_LINE) {
+					    glPolygonMode(GL_BACK, GL_LINE);
+                        glEnable(GL_LINE_SMOOTH);
+					    glLineWidth((float)this->currentOutlineScaling);
+                        glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)static_cast<int>(OUTLINE_LINE));
+                    }
+                    else if (this->currentOutlineMode == OUTLINE_FULL)  {
+                        glPolygonMode(GL_BACK, GL_FILL);
+                        glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)static_cast<int>(OUTLINE_FULL));
+                    }
 				}
-				glUniform1i(this->tubeShader.ParameterLocation("outlinePass"), (GLint)s);
 
-				// fragment and tesselation eval
-				glUniform1i(this->tubeShader.ParameterLocation("ditherCount"), (GLint)d);                                                                    // dithering pass
-
+                // drawing geometry
 				UINT64 numVerts;
 				numVerts = this->bufSize / vertStride;                                                                                                       // bufSize = 32*1024*1024 - WHY? | vertStride = (unsigned int)sizeof(CAlpha)
 				// numVert = number of vertices fitting into bufSize

@@ -294,7 +294,8 @@
     uniform int                 uncVisMode        = 0;
     uniform vec4[STRUCT_COUNT]  structCol;                              // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
     uniform vec2                uncDistor;                              // uncertainty distortion parameters: (0) amplification for sin>0, (1) repeat of sin(2*PI)
-    uniform int                 outlinePass;
+    uniform int                 outlineMode       = 0;
+    uniform float               outlineScale      = 1.0f;
     
     struct CAlpha                                       
     {
@@ -576,19 +577,15 @@
                 
             }
             
-            
-            // uncertainty visualisation
-           
+            // UNCERTAINTY visualisation
             // apply surface displacement parameter
             float ampLevel  = uncDistor[0];  
             float distorLev = uncDistor[1];       
             float uncFac    = uncVal[0];
- 
             // displacement of geometry and adjustment of normal vector
             float uNdisp = 0.0;
             float vNdisp = 0.0;
             float disp   = 0.0;
-            
             if (uncVisMode == UNC_VIS_SIN_U) { // U
                 float uDisp = distorLev * 2.0 * M_PI * gl_TessCoord.x; 
                 float fac   = (pipeWidth/2.0) * uncFac;                
@@ -656,16 +653,11 @@
             }
             
 
-            // outlining
-            u = gl_TessCoord.x;
-            if (outlinePass == 1) {
-            
-                // mypos.xyz = mypos.xyz + 0.2*n;
-            
-                /* */
-                mypos.xyz = mypos.xyz + (uncFac/3.0)*n;
-                
-                float factor = 0.001;
+            // OUTLINING
+            if (outlineMode == 2) {
+                mypos.xyz = mypos.xyz + (outlineScale/10.0)*(uncFac/3.0)*n;
+                u = gl_TessCoord.x;
+                float factor = 0.0001;
                 if(u > (1.0 - factor))
                 {
                     vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
@@ -682,8 +674,8 @@
                     mypos.xyz = mix(newpos, mypos.xyz, u / factor);
                     mypos.xyz += factor * (-tangent);
                 }  
-                /*  */
-            }          
+            }     
+ 
           
             gl_Position = mypos;
         }
@@ -798,13 +790,15 @@
     uniform mat4 MV;
     uniform mat4 MVPinv;
     uniform mat4 MVPtransp;
-    
     uniform mat4 ProjInv;
+
+    uniform vec3 camPos;
+
     uniform vec4 lightPos;
     uniform vec4 diffuseColor   = vec4(1.0);
     uniform vec4 ambientColor   = vec4(1.0); 
     uniform vec4 specularColor  = vec4(1.0);    
-    uniform vec4 phong          = vec4(0.6, 0.6, 0.8, 10.0);
+    uniform vec4 phong          = vec4(0.6, 0.6, 0.8, 10.0);           // ambient - diffuse - specular - exponent
     uniform vec4 phongUncertain = vec4(0.6, 0.6, 0.8, 10.0);    
   
     uniform int ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of struct types - 1]
@@ -818,7 +812,8 @@
                                  15, 47,  7, 39, 13, 45,  5, 37,
                                  63, 31, 55, 23, 61, 29, 53, 21};   
                                  
-    uniform int   outlinePass  = 0;
+    uniform int   outlineMode  = 0;
+    uniform vec3  outlineColor;
     
    
     //////////
@@ -826,8 +821,8 @@
     //////////
     void main(void) {
     
-        if (outlinePass == 1) {
-            outCol = vec4(0.0);
+        if (outlineMode > 0) {
+            outCol = vec4(outlineColor.xyz, 1.0);
         }
         else {
             outCol        = mycol;
@@ -853,9 +848,14 @@
                 material = phongUncertain;
             }
                 
+
             vec4 pos      = ProjInv * gl_FragCoord.xyzw;
             vec4 light    = MV * lightPos;
+            vec4 posMV    = pos;
         
+            // distance falloff of diffuse component
+            float dist = abs(length(posMV.xyz - camPos.xyz));
+
             vec3 lightDir = normalize(lightPos.xyz);
                 //vec3 lightDir = normalize(light.xyz - pos.xyz);
             
@@ -864,7 +864,7 @@
             vec3 h  = normalize(lightDir + e);
             float d = dot(n, lightDir);
             vec3 r  = normalize(2.0 * d * n - lightDir);
-            vec3 c  = material.x * mycol.xyz + material.y * mycol.xyz * max(d, 0.0);
+            vec3 c  = material.x * mycol.xyz + material.y * mycol.xyz * max(d, 0.0) * 100000.0/(dist*dist);
         
             vec4 eyenew = vec4(0.0, 0.0, 0.0, 1.0);
     

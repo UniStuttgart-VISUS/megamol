@@ -230,6 +230,15 @@ namespace megamol {
 
 		};
 
+        /**
+        * Enumeration of oulining visualisations
+        */
+        enum outlineOptions {
+            OUTLINE_NONE = 0,
+            OUTLINE_LINE = 1,
+            OUTLINE_FULL = 2,
+        };
+
         /**********************************************************************
          * variables
          **********************************************************************/
@@ -264,6 +273,8 @@ namespace megamol {
         core::param::ParamSlot ditherParam;
         core::param::ParamSlot methodDataParam;
 		core::param::ParamSlot outlineParam;
+        core::param::ParamSlot outlineScalingParam;
+        core::param::ParamSlot outlineColorParam;
                 
         // local parameter values 
 		int                            currentTessLevel;
@@ -277,7 +288,10 @@ namespace megamol {
 		vislib::math::Vector<float, 2> currentUncDist;
         int                            currentDitherMode;
         UncertaintyDataCall::assMethod currentMethodData;
-                        
+        outlineOptions                 currentOutlineMode;
+        float                          currentOutlineScaling;
+        vislib::math::Vector<float, 3> currentOutlineColor;
+
         GLuint              vertArray;
         std::vector<GLsync> fences;           // (?)
 		GLuint              theSingleBuffer;
