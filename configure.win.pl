@@ -40,6 +40,7 @@ $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
+
 $a = PathParameter->new();
     $a->id("vislib");
     $a->description("Path to the vislib directory");
@@ -50,6 +51,7 @@ $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
+
 $a = PathParameter->new();
     $a->id("mmstd_trisoup");
     $a->description("Path to the mmstd_trisoup directory");
@@ -60,11 +62,23 @@ $a = PathParameter->new();
     $a->directorySeparator("\\");
     $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
+
 $a = PathParameter->new();
     $a->id("ospray");
     $a->description("Path to the ospray directory");
     $a->placeholder("%ospray%");
     $a->markerFile("ospray.dll");
+    $a->relativeLocation("../");
+    $a->autoDetect(1);
+    $a->directorySeparator("\\");
+    $a->enforceTrailingDirectorySeparator(1);
+    push @pps, $a;
+
+$a = PathParameter->new();
+    $a->id("protein_calls");
+    $a->description("Path to the protein_calls directory");
+    $a->placeholder("%protein_calls%");
+    $a->markerFile("protein_calls.sln");
     $a->relativeLocation("../");
     $a->autoDetect(1);
     $a->directorySeparator("\\");

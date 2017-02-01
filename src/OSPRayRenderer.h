@@ -14,6 +14,7 @@
 #include "ospray/ospray.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallRender3D.h"
 
 
 namespace megamol {
@@ -85,6 +86,12 @@ namespace ospray {
         */
         void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, const char * volume_name, const char * renderer_name);
 
+        /**
+        * helper function for initializing OSPRays Camera
+        * @param OSPRay camera object
+        * @param CallRenderer3D object
+        */
+        void setupOSPRayCamera(OSPCamera& cam, core::view::CallRender3D* cr);
 
         /** 
         * color transfer helper

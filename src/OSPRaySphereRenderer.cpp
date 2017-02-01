@@ -1,6 +1,6 @@
 /*
  * OSPRaySphereRenderer.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2009-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -24,6 +24,7 @@
 
 #include "ospray/ospray.h"
 
+#include <stdint.h>
 
 using namespace megamol;
 
@@ -35,7 +36,12 @@ VISLIB_FORCEINLINE float floatFromVoidArray(const megamol::core::moldyn::MultiPa
     return static_cast<const float*>(p.GetVertexData())[index];
 }
 
+VISLIB_FORCEINLINE float unit8FromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+	return static_cast<const uint8_t*>(p.GetVertexData())[index];
+}
+
 typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef float(*uint8FromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
 /*
 ospray::OSPRaySphereRenderer::OSPRaySphereRenderer
@@ -206,6 +212,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
     }
 
+
     // if user wants to switch renderer
     if (this->rd_type.IsDirty()) {
         switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
@@ -264,8 +271,8 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
                 vertexLength = 3;
                 vertexType = OSP_FLOAT3;
             } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-                vertexLength = 4;
-                vertexType = OSP_FLOAT4;
+                vertexLength = 3;
+                vertexType = OSP_FLOAT3;
             }
             // Color data type check
             if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
@@ -277,24 +284,63 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
                 colorLength = 3;
                 colorType = OSP_FLOAT3;
+            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+                colorLength = 4;
+                colorType = OSP_UINT4; // TODO
+            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
+                colorLength = 3;
+                colorType = OSP_UINT3; // TODO
             }
 
-
-            floatFromArrayFunc ffaf;
-            ffaf = floatFromVoidArray;
-            std::vector<float> vd;
-            std::vector<float> cd;
             std::vector<float> cd_rgba;
-            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride()/sizeof(float)); loop++) {
-                if (loop % (vertexLength+colorLength) >= vertexLength) {
-                    cd.push_back(ffaf(parts, loop));
-                } else {
-                    vd.push_back(ffaf(parts, loop));
+            cd_rgba.reserve(parts.GetCount() * 4);
+            std::vector<unsigned char> vd_bytes;
+            vd_bytes.reserve(parts.GetCount() * (parts.GetVertexDataStride() - colorLength));
+            std::vector<float> vd;
+            vd.reserve(parts.GetCount() * vertexLength);
+            if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
+                //uint8FromArrayFunc ufaf;
+                //ufaf = floatFromVoidArray;
+                for (size_t loop = 1; loop < (parts.GetCount() + 1); loop++) {
+                    for (size_t i = parts.GetVertexDataStride(); i > colorLength ; i--) {
+                        vd_bytes.push_back(static_cast<const unsigned char*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - i]);
+                    }
+                    ASSERT(vd_bytes.size() % 12 == 0);
+                    cd_rgba.push_back((float)static_cast<const uint8_t*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - 3] / 255.0f);
+                    cd_rgba.push_back((float)static_cast<const uint8_t*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - 2] / 255.0f);
+                    cd_rgba.push_back((float)static_cast<const uint8_t*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - 1] / 255.0f);
+                    cd_rgba.push_back(1.0f);
+
                 }
+
+                //floatFromArrayFunc ffaf;
+                //ffaf = floatFromVoidArray;
+                //for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+                //    if (!(loop % (vertexLength + colorLength) >= vertexLength)) {
+                //        vd.push_back(ffaf(parts, loop));
+                //    }
+                //}
+
+                auto blub = reinterpret_cast<float*>(vd_bytes.data());
+                vd.assign(blub, blub + parts.GetCount()*vertexLength);
             }
-            // Color transfer call and calculation
-            core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+
+
             if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+                floatFromArrayFunc ffaf;
+                ffaf = floatFromVoidArray;
+                std::vector<float> cd;
+
+                for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+                    if (loop % (vertexLength + colorLength) >= vertexLength) {
+                        cd.push_back(ffaf(parts, loop));
+                    } else {
+                        vd.push_back(ffaf(parts, loop));
+                    }
+                }
+
+                // Color transfer call and calculation
+                core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
                 if (cgtf != NULL && ((*cgtf)())) {
                     float const* tf_tex = cgtf->GetTextureData();
                     tex_size = cgtf->TextureSize();
@@ -329,14 +375,27 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             }
             */
 
-            vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
-            colorData = ospNewData(parts.GetCount(), colorType, cd_rgba.data());
-            ospCommit(vertexData);
-            ospCommit(colorData);
+   //         vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
+			//if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+			//	colorData = ospNewData(parts.GetCount(), colorType, cd_rgba.data());
+			//}
+			//else {
+			//	colorData = ospNewData(parts.GetCount(), OSP_FLOAT3, cd.data());
+			//}
+   //         ospCommit(vertexData);
+   //         ospCommit(colorData);
+			vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
+			colorData = ospNewData(parts.GetCount(), OSP_FLOAT4, cd_rgba.data());
+			ospCommit(vertexData);
+			ospCommit(colorData);
 
-            ospSet1i(spheres, "bytes_per_sphere", (vertexLength * sizeof(float)));
-            ospSet1i(spheres, "color_stride", (colorLength * sizeof(float)));
-            ospSetData(spheres, "spheres", vertexData);
+			//ospSet1i(spheres, "bytes_per_sphere", parts.GetVertexDataStride());
+            ospSet1i(spheres, "bytes_per_sphere", vertexLength*sizeof(float));
+
+			//ospSet1i(spheres, "color_stride", parts.GetVertexDataStride());
+			//ospSet1i(spheres, "color_offset", 12);
+			//ospSet1i(spheres, "color_stride", 3);
+			ospSetData(spheres, "spheres", vertexData);
             ospSetData(spheres, "color", colorData);
             ospSet1f(spheres, "radius", parts.GetGlobalRadius());
 
@@ -420,8 +479,8 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             ospRelease(colorData);
             ospRelease(material);
 
-            vd.clear();
-            cd.clear();
+            //vd.clear();
+            //cd.clear();
             cd_rgba.clear();
 
         }
@@ -535,27 +594,39 @@ bool ospray::OSPRaySphereRenderer::GetCapabilities(core::Call& call) {
 * moldyn::AbstractSimpleSphereRenderer::GetExtents
 */
 bool ospray::OSPRaySphereRenderer::GetExtents(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
+    //core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+    //if (cr == NULL) return false;
 
-    core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-    c2->SetFrameID(static_cast<unsigned int>(cr->Time()), true); // isTimeForced flag set to true
-    if ((c2 != NULL) && ((*c2)(1))) {
-        cr->SetTimeFramesCount(c2->FrameCount());
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+    //core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    //c2->SetFrameID(static_cast<unsigned int>(cr->Time()), true); // isTimeForced flag set to true
+    //if ((c2 != NULL) && ((*c2)(1))) {
+    //    cr->SetTimeFramesCount(c2->FrameCount());
+    //    cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
 
-        float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-        if (scaling > 0.0000001) {
-            scaling = 10.0f / scaling;
-        } else {
-            scaling = 1.0f;
-        }
-        cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
+    //    float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+    //    if (scaling > 0.0000001) {
+    //        scaling = 10.0f / scaling;
+    //    } else {
+    //        scaling = 1.0f;
+    //    }
+    //    cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
 
-    } else {
-        cr->SetTimeFramesCount(1);
-        cr->AccessBoundingBoxes().Clear();
-    }
+    //} else {
+    //    cr->SetTimeFramesCount(1);
+    //    cr->AccessBoundingBoxes().Clear();
+    //}
+
+	core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+	if (cr == NULL) return false;
+	core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+	if (c2 == NULL) return false;
+	c2->SetFrameID(static_cast<int>(cr->Time()));
+	if (!(*c2)(1)) return false;
+
+	cr->SetTimeFramesCount(c2->FrameCount());
+	cr->AccessBoundingBoxes().Clear();
+	cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+	cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
 
     return true;
 }

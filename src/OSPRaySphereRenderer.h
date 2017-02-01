@@ -1,6 +1,6 @@
 /*
  * OSPRaySphereRenderer.h
- * Copyright (C) 2009-2016 by MegaMol Team
+ * Copyright (C) 2009-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef OSPRAY_SPHERERENDERER_H_INCLUDED

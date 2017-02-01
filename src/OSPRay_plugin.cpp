@@ -14,6 +14,7 @@
 #include "OSPRaySphereRenderer.h"
 #include "OSPRayVolumeRenderer.h"
 #include "OSPRayTriangleMeshRenderer.h"
+#include "OSPRayStreamLineRenderer.h"
 
 
 
@@ -46,6 +47,8 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereRenderer>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVolumeRenderer>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMeshRenderer>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStreamLineRenderer>();
+
             // register calls here:
 
             //
