@@ -792,8 +792,6 @@
     uniform mat4 MVPtransp;
     uniform mat4 ProjInv;
 
-    uniform vec3 camPos;
-
     uniform vec4 lightPos;
     uniform vec4 diffuseColor   = vec4(1.0);
     uniform vec4 ambientColor   = vec4(1.0); 
@@ -852,9 +850,7 @@
             vec4 pos      = ProjInv * gl_FragCoord.xyzw;
             vec4 light    = MV * lightPos;
             vec4 posMV    = pos;
-        
-            // distance falloff of diffuse component
-            float dist = abs(length(posMV.xyz - camPos.xyz));
+
 
             vec3 lightDir = normalize(lightPos.xyz);
                 //vec3 lightDir = normalize(light.xyz - pos.xyz);
@@ -864,7 +860,7 @@
             vec3 h  = normalize(lightDir + e);
             float d = dot(n, lightDir);
             vec3 r  = normalize(2.0 * d * n - lightDir);
-            vec3 c  = material.x * mycol.xyz + material.y * mycol.xyz * max(d, 0.0) * 100000.0/(dist*dist);
+            vec3 c  = material.x * mycol.xyz + material.y * mycol.xyz * max(d, 0.0);
         
             vec4 eyenew = vec4(0.0, 0.0, 0.0, 1.0);
     

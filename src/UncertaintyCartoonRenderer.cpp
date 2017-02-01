@@ -1047,10 +1047,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform3fv(this->tubeShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
 		glUniform3fv(this->tubeShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
 		glUniform3fv(this->tubeShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-        
-        glUniform3fv(this->tubeShader.ParameterLocation("camPos"), 1, cr->GetCameraParameters()->Position().PeekCoordinates());
 
-		
 		glUniform4fv(this->tubeShader.ParameterLocation("clipDat"), 1, clipDat);
 		glUniform4fv(this->tubeShader.ParameterLocation("clipCol"), 1, clipCol);
 
@@ -1061,9 +1058,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
 		glUniformMatrix4fv(this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
-
         
-
 		// only vertex shader
 		float minC = 0.0f, maxC = 0.0f;
 		unsigned int colTabSize = 0;
@@ -1114,10 +1109,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 				glCullFace(GL_BACK);
 				outlinePass = 1;
 			}
-			// draw front faces in first outline pass
+			// draw front faces in first outline pass (s = 0)
 			for (int s = 0; s <= outlinePass; s++){
-				// draw back faces in second outline pass
-
+				// draw back faces in second outline pass (s = 1)
 				if (s == 1) {
 					glCullFace(GL_FRONT);
                     if (this->currentOutlineMode == OUTLINE_LINE) {
