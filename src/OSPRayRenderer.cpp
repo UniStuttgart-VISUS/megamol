@@ -63,6 +63,7 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
     rd_ptBackground("Renderer::PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity") {
 
     light = NULL;
+    lightArray = NULL;
 
     core::param::EnumParam *lt = new core::param::EnumParam(NONE);
     lt->SetTypePair(NONE, "None");
@@ -619,4 +620,10 @@ void ospray::OSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, core::view::Ca
     //ospSet1f(camera, "apertureRadius", cr->GetCameraParameters()->ApertureAngle);
     //ospSet1f(camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
 
+}
+
+
+ospray::OSPRayRenderer::~OSPRayRenderer(void) {
+    if (light != NULL) ospRelease(light);
+    if (lightArray != NULL) ospRelease(lightArray);
 }

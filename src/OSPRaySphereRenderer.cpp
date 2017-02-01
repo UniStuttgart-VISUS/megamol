@@ -74,6 +74,13 @@ mat_type("Material::Type", "Switches material types") {
     imgSize.y = 0;
     time = 0;
     framebuffer = NULL;
+    renderer = NULL;
+    camera = NULL;
+    world = NULL;
+    spheres = NULL;
+    pln = NULL;
+    vertexData = NULL;
+    colorData = NULL;
 
 
     // Material
@@ -161,13 +168,11 @@ bool ospray::OSPRaySphereRenderer::create() {
 ospray::OSPRaySphereRenderer::release
 */
 void ospray::OSPRaySphereRenderer::release() {
-    ospRelease(camera);
-    ospRelease(world);
-    ospRelease(renderer);
-    ospRelease(spheres);
-    ospRelease(light);
-    ospRelease(lightArray);
-    ospRelease(pln);
+    if (camera != NULL) ospRelease(camera);
+    if (world != NULL) ospRelease(world);
+    if (renderer != NULL) ospRelease(renderer);
+    if (spheres != NULL) ospRelease(spheres);
+    if (pln != NULL) ospRelease(pln);
     releaseTextureScreen();
 }
 
@@ -294,13 +299,11 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
             std::vector<float> cd_rgba;
             cd_rgba.reserve(parts.GetCount() * 4);
-            std::vector<unsigned char> vd_bytes;
-            vd_bytes.reserve(parts.GetCount() * (parts.GetVertexDataStride() - colorLength));
             std::vector<float> vd;
             vd.reserve(parts.GetCount() * vertexLength);
             if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-                //uint8FromArrayFunc ufaf;
-                //ufaf = floatFromVoidArray;
+                std::vector<unsigned char> vd_bytes;
+                vd_bytes.reserve(parts.GetCount() * (parts.GetVertexDataStride() - colorLength));
                 for (size_t loop = 1; loop < (parts.GetCount() + 1); loop++) {
                     for (size_t i = parts.GetVertexDataStride(); i > colorLength ; i--) {
                         vd_bytes.push_back(static_cast<const unsigned char*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - i]);
@@ -479,8 +482,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
             ospRelease(colorData);
             ospRelease(material);
 
-            //vd.clear();
-            //cd.clear();
+            vd.clear();
             cd_rgba.clear();
 
         }

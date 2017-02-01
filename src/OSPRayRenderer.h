@@ -25,6 +25,9 @@ namespace ospray {
         // Ctor
         OSPRayRenderer(void);
 
+        // Dtor
+        ~OSPRayRenderer(void);
+
         /**
         * initializes OSPRay
         */
