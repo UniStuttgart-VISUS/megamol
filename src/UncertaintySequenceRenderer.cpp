@@ -66,35 +66,38 @@ using vislib::sys::Log;
  * UncertaintySequenceRenderer::UncertaintySequenceRenderer (CTOR)
  */
 UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DModule (),
-            uncertaintyDataSlot( "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage."),
-            bindingSiteCallerSlot( "getBindingSites", "Connects the sequence diagram rendering with binding site storage."),
+            uncertaintyDataSlot(    "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage."),
+            bindingSiteCallerSlot(  "getBindingSites", "Connects the sequence diagram rendering with binding site storage."),
             resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage."),
             toggleStrideParam(                  "01 Stride", "Show/hide STRIDE secondary structure row."),
-            toggleDsspParam(                    "02 Dssp", "Show/hide DSSP secondary structure row."),
-            togglePdbParam(                     "03 PDB", "Show/hide PDB secondary structure row."),
+			toggleStrideThreshParam(            "02 Stride Threshold", "Show/hide STRIDE threshold(s)."),
+            toggleDsspParam(                    "03 Dssp", "Show/hide DSSP secondary structure row."),
+			toggleDsspThreshParam(              "04 Dssp Threshold", "Show/hide DSSP threshold(s)."),
+            togglePdbParam(                     "05 PDB", "Show/hide PDB secondary structure row."),
             
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
             ////////////////////////////////////////////////     
                    
-			toggleUncertaintyParam(             "04 Uncertainty", "Show/hide uncertainty row."),
-            toggleUncertainStructParam(         "05 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
-            certainBlockChartColorParam(        "06 Certain: Block chart color", "Choose color of block chart for certain structure."),
-            certainStructColorParam(            "07 Certain: Structure color", "Choose color of structure for certain structure."),
-            uncertainBlockChartColorParam(      "08 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
-            uncertainBlockChartOrientationParam("09 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
-            uncertainStructColorParam(          "10 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
-            uncertainStructGeometryParam(       "11 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
-            uncertainColorInterpolParam(        "12 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
-            uncertainGardientIntervalParam(     "13 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
-            toggleUncSeparatorParam(            "14 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
-            toggleLegendParam(                  "15 Legend Drawing", "Show/hide row legend/key on the left."),
-            toggleTooltipParam(                 "16 ToolTip", "Show/hide tooltip information."),
-            resCountPerRowParam(                "17 Residues Per Row", "The number of residues per row."),
-            clearResSelectionParam(             "18 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
-            colorTableFileParam(                "19 Color Table Filename", "The filename of the color table."),
-			reloadShaderParam(                  "20 Reload shaders", "Reload the shaders."),
-            dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), 
+			toggleUncertaintyParam(             "06 Uncertainty", "Show/hide uncertainty row."),
+            toggleUncertainStructParam(         "07 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
+            certainBlockChartColorParam(        "08 Certain: Block chart color", "Choose color of block chart for certain structure."),
+            certainStructColorParam(            "09 Certain: Structure color", "Choose color of structure for certain structure."),
+            uncertainBlockChartColorParam(      "10 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
+            uncertainBlockChartOrientationParam("11 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
+            uncertainStructColorParam(          "12 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
+            uncertainStructGeometryParam(       "13 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
+            geometryTessParam(                  "14 Geometry tesselation", "The geometry tesselation level."),
+            uncertainColorInterpolParam(        "15 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
+            uncertainGardientIntervalParam(     "16 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
+            toggleUncSeparatorParam(            "17 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
+            toggleLegendParam(                  "18 Legend Drawing", "Show/hide row legend/key on the left."),
+            toggleTooltipParam(                 "19 ToolTip", "Show/hide tooltip information."),
+            resCountPerRowParam(                "20 Residues Per Row", "The number of residues per row."),
+            clearResSelectionParam(             "21 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
+            colorTableFileParam(                "22 Color Table Filename", "The filename of the color table."),
+			reloadShaderParam(                  "23 Reload shaders", "Reload the shaders."),
+            dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), currentGeometryTess(25),
             markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), secStructRows(0), pdbID(""), pdbLegend("")
 #ifndef USE_SIMPLE_FONT
             ,theFont(FontInfo_Verdana)
@@ -117,6 +120,9 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->resCountPerRowParam.SetParameter( new param::IntParam(50, 1));
     this->MakeSlotAvailable( &this->resCountPerRowParam);
     
+    this->geometryTessParam << new core::param::IntParam(this->currentGeometryTess, 4);
+    this->MakeSlotAvailable(&this->geometryTessParam);
+
     // fill color table with default values and set the filename param
     vislib::StringA filename( "colors.txt");
     this->colorTableFileParam.SetParameter(new param::FilePathParam( A2T( filename)));
@@ -131,7 +137,6 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->toggleLegendParam.SetParameter( new param::BoolParam(true));
     this->MakeSlotAvailable(&this->toggleLegendParam);
 
-
     // param slot for STRIDE toggling
     this->toggleStrideParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->toggleStrideParam);
@@ -144,6 +149,14 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->togglePdbParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->togglePdbParam);
 
+	// param slot for STRIDE threshold toggling
+    this->toggleStrideThreshParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->toggleStrideThreshParam);
+	
+    // param slot for DSSP threshold toggling
+    this->toggleDsspThreshParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->toggleDsspThreshParam);
+	
     ////////////////////////////////////////////////
     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
     ////////////////////////////////////////////////    
@@ -236,11 +249,15 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->secStructRows = 5;
     this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);   
 
+	this->strideThresholdCount = 5;
+	this->dsspThresholdCount   = 1;
+		
     // init animation timer
     this->animTimer = std::clock();
     
     this->showSeparatorLine = true;
 }
+
 
 /*
  * UncertaintySequenceRenderer::~UncertaintySequenceRenderer (DTOR)
@@ -248,6 +265,17 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 UncertaintySequenceRenderer::~UncertaintySequenceRenderer( void ) {
     this->Release(); // DON'T change !
 }
+
+
+/*
+* UncertaintySequenceRenderer::release
+*/
+void UncertaintySequenceRenderer::release() {
+
+    this->shader.Release();
+    /** intentionally left empty ... */
+}
+
 
 /*
  * UncertaintySequenceRenderer::create
@@ -259,7 +287,8 @@ bool UncertaintySequenceRenderer::create() {
 		return false;
 	}
 
-    // load textures
+    // OLD: load textures
+    /*
     this->LoadTexture("secStruct-white.png");       // markerTextures[0]
     this->LoadTexture("secStruct-coil.png");        // markerTextures[1]
     this->LoadTexture("secStruct-sheet.png");       // markerTextures[2]
@@ -267,83 +296,20 @@ bool UncertaintySequenceRenderer::create() {
     this->LoadTexture("secStruct-helix-left.png");  // markerTextures[4]
     this->LoadTexture("secStruct-helix2.png");      // markerTextures[5]
     this->LoadTexture("secStruct-helix-right.png"); // markerTextures[6]
+    */
     
-    // calculate secondary structure vertices
-    for (unsigned int i = 0; i < this->secStructVertices.Count(); i++) {
-        this->secStructVertices[i].Clear();
-    }
-    this->secStructVertices.Clear();
-        
-    // B_BRIDGE     = arrow    => end of E_EXT_STRAND, too!
-    // E_EXT_STRAND = quadrat
-    for (unsigned int i = 0; i < UncertaintyDataCall::secStructure::NOE; i++) {
-
-        UncertaintyDataCall::secStructure s = static_cast<UncertaintyDataCall::secStructure>(i);
-        vislib::math::Vector<float, 2 > pos;
-        float flip, dS, offset, heightStrand;
-        
-        
-        // default values
-        unsigned int samples = 30;
-        float        height  = 0.3f;  // in range ]0.0-1.0[
-
-
-        this->secStructVertices.Add(vislib::Array<vislib::math::Vector<float, 2>>());
-        pos.SetX(0.0f);
-        pos.SetY(-height / 2.0f);
-
-        if ((s == UncertaintyDataCall::secStructure::E_EXT_STRAND) ||
-            (s == UncertaintyDataCall::secStructure::B_BRIDGE)) {
-            heightStrand = 0.6f;
-            pos.SetY(-heightStrand / 2.0f);
-        }
-                
-        this->secStructVertices.Last().Add(pos);
-
-        for (unsigned int j = 0; j < (samples + 1); j++) { // loop over sample count
-		
-            flip = ((j % 2 == 0) ? (1.0f) : (-1.0f));
-            offset = flip*(height / 2.0f);
-            dS = static_cast<float>(j) / static_cast<float>(samples - 1);
-
-            if (j == samples) // for last vertex
-                dS = 1.0f;
-
-            switch (s) {
-            case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
-            case (UncertaintyDataCall::secStructure::G_310_HELIX) :
-            case (UncertaintyDataCall::secStructure::I_PI_HELIX) :
-                 offset = flip*(height / 2.0f) + sin(dS*2.0f*(float)SEQ_PI)*0.25f;
-                break;
-            case (UncertaintyDataCall::secStructure::B_BRIDGE) :
-                offset = ((dS > 1.0f/7.0f) ? (flip*(0.5f-(height/2.0f))*(7.0f-dS*7.0f)/6.0f + flip*(height/2.0f)) : (flip*(heightStrand/2.0f))); 
-                break;
-            case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :
-                offset = flip*(heightStrand / 2.0f);
-                break;
-            default: break;
-            }
-            pos.SetX(dS);
-            pos.SetY(offset);
-            this->secStructVertices.Last().Add(pos);
-        }
-    }        
+    // calculate geometry
+    this->calculateGeometryVertices(this->currentGeometryTess);
 
 	// compute glyph axes
 	unsigned int structCount = 3; // static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); // or: 3-4 for reduced strucutre type set ...
-
 	vislib::math::Vector<float, 2> initVec, tmpVec;
 	float angle;
-
 	this->glyphAxis.Clear();
 	this->glyphAxis.AssertCapacity(structCount);
-
 	initVec = vislib::math::Vector<float, 2>(0.0f, -0.5f);
-
 	for (unsigned int i = 0; i < structCount; i++) {
-
 		angle = 2.0f*(float)SEQ_PI / static_cast<float>(structCount)* static_cast<float>(i);
-
 		if (i == 0) {
 			tmpVec = initVec;
 		}
@@ -359,12 +325,67 @@ bool UncertaintySequenceRenderer::create() {
 
 
 /*
- * UncertaintySequenceRenderer::release
- */
-void UncertaintySequenceRenderer::release() {
+* UncertaintySequenceRenderer::calculateGeometryVertices
+*/
+void UncertaintySequenceRenderer::calculateGeometryVertices(int samples) {
 
-	this->shader.Release();
-    /** intentionally left empty ... */
+    // calculate secondary structure vertices
+    for (unsigned int i = 0; i < this->secStructVertices.Count(); i++) {
+        this->secStructVertices[i].Clear();
+    }
+    this->secStructVertices.Clear();
+
+    // B_BRIDGE     = arrow    => end of E_EXT_STRAND, too!
+    // E_EXT_STRAND = quadrat
+    for (unsigned int i = 0; i < UncertaintyDataCall::secStructure::NOE; i++) {
+
+        UncertaintyDataCall::secStructure s = static_cast<UncertaintyDataCall::secStructure>(i);
+        vislib::math::Vector<float, 2 > pos;
+        float flip, dS, offset, heightStrand;
+
+        // default height
+        float height = 0.3f;  // in range ]0.0-1.0[
+
+        this->secStructVertices.Add(vislib::Array<vislib::math::Vector<float, 2>>());
+        pos.SetX(0.0f);
+        pos.SetY(-height / 2.0f);
+
+        if ((s == UncertaintyDataCall::secStructure::E_EXT_STRAND) ||
+            (s == UncertaintyDataCall::secStructure::B_BRIDGE)) {
+            heightStrand = 0.6f; 
+            pos.SetY(-heightStrand / 2.0f);
+        }
+
+        this->secStructVertices.Last().Add(pos);
+
+        for (int j = 0; j < (samples + 1); j++) { // loop over sample count
+
+            flip = ((j % 2 == 0) ? (1.0f) : (-1.0f));
+            offset = flip*(height / 2.0f);
+            dS = static_cast<float>(j) / static_cast<float>(samples - 1);
+
+            if (j == samples) // for last vertex
+                dS = 1.0f;
+
+            switch (s) {
+            case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) :
+            case (UncertaintyDataCall::secStructure::G_310_HELIX) :
+            case (UncertaintyDataCall::secStructure::I_PI_HELIX) :
+                                                                 offset = flip*(height / 2.0f) + sin(dS*2.0f*(float)SEQ_PI)*0.25f;
+                break;
+            case (UncertaintyDataCall::secStructure::B_BRIDGE) :
+                offset = ((dS > 1.0f / 7.0f) ? (flip*(0.5f - (height / 2.0f))*(7.0f - dS*7.0f) / 6.0f + flip*(height / 2.0f)) : (flip*(heightStrand / 2.0f)));
+                break;
+            case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :
+                offset = flip*(heightStrand / 2.0f);
+                break;
+            default: break;
+            }
+            pos.SetX(dS);
+            pos.SetY(offset);
+            this->secStructVertices.Last().Add(pos);
+        }
+    }
 }
 
 
@@ -463,6 +484,13 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
     if(this->togglePdbParam.IsDirty()) {
         this->dataPrepared = false;
     }    
+    if(this->toggleStrideThreshParam.IsDirty()) {
+        this->dataPrepared = false;
+    }   
+	    if(this->toggleDsspThreshParam.IsDirty()) {
+        this->dataPrepared = false;
+    }   
+	
     ////////////////////////////////////////////////
     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
     ////////////////////////////////////////////////
@@ -491,6 +519,10 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->secStructRows++;
         if (this->togglePdbParam.Param<param::BoolParam>()->Value())
             this->secStructRows++;
+        if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value())
+            this->secStructRows += this->strideThresholdCount;
+		if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value())
+            this->secStructRows += this->dsspThresholdCount;
                         
         ////////////////////////////////////////////////
         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -525,7 +557,9 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->toggleUncertaintyParam.ResetDirty();
             this->toggleUncertainStructParam.ResetDirty();
             this->togglePdbParam.ResetDirty();
-                        
+            this->toggleStrideThreshParam.ResetDirty();
+			this->toggleDsspThreshParam.ResetDirty();	
+			
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
             ////////////////////////////////////////////////            
@@ -564,6 +598,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 		this->reloadShaderParam.ResetDirty();
 		if (!this->LoadShader()) return false;
 	}
+
+    // recalculate geometry vertices
+    if (this->geometryTessParam.IsDirty()) {
+        this->geometryTessParam.ResetDirty();
+        this->currentGeometryTess = static_cast<int>(this->geometryTessParam.Param<param::IntParam>()->Value());
+        this->calculateGeometryVertices(this->currentGeometryTess);
+    }
 
     // check uncertainty visualization options
     if (this->certainBlockChartColorParam.IsDirty()) {
@@ -689,6 +730,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             } 
             yPos += 1.0f;
         }
+		// STRIDE thresholds
+        if(this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
+            for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
+				// ...
+			}
+            yPos += (float)this->strideThresholdCount;
+        }		
         // DSSP
         if(this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
@@ -698,6 +746,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             }
             yPos += 1.0f;
         }  
+        // DSSP thresholds
+        if(this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
+            for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+				// ...
+			}
+            yPos += (float)this->dsspThresholdCount;
+        }  		
         // PDB 
         if(this->togglePdbParam.Param<param::BoolParam>()->Value()) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
@@ -891,6 +946,15 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
+					if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
+						for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
+							tmpStr = "STRIDE Threshold";
+							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
+											   fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+						}
+                        yPos += (float)this->strideThresholdCount;
+                    }
                     if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "DSSP";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
@@ -898,6 +962,15 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
+                    if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
+						for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+							tmpStr = "DSSP Threshold";
+							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
+											   fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+						}
+                        yPos += (float)this->dsspThresholdCount;
+                    }					
                     if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = this->pdbLegend;
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
@@ -1030,6 +1103,24 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         start += perCentRow;
                         end += perCentRow;
                     }
+                    if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
+						for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
+							if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+								switch (j) {
+									case (0): tmpStr = "Stride Threshold - T1:"; break;
+									case (1): tmpStr = "Stride Threshold - T2:"; break;
+									case (2): tmpStr = "Stride Threshold - T3:"; break;
+									case (3): tmpStr = "Stride Threshold - T4:"; break;
+									case (4): tmpStr = "Stride Threshold - T5:"; break;
+									default:  tmpStr = "Stride UNKNOWN Threshold"; break;
+								}
+                                tmpStr2.Format("%.3f", 1.0f);
+								this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+							}
+							start += perCentRow;
+							end += perCentRow;
+						}
+                    }					
                     if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Dssp:";
@@ -1038,6 +1129,20 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         }
                         start += perCentRow;
                         end += perCentRow;
+                    }
+                    if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
+						for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+							if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+								switch (j) {
+									case (0): tmpStr = "Dssp Threshold -Energy:"; break;
+									default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
+								}
+                                tmpStr2.Format("%.3f", 1.0f);
+								this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+							}
+							start += perCentRow;
+							end += perCentRow;
+						}
                     }
                     if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
@@ -1061,8 +1166,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         }
                         start += perCentRow;
                         end += perCentRow;
-                    }
-                                        
+                    }             
                     if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Structure:";
@@ -1113,7 +1217,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
  */
 void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4], float bgColor[4]) {
 
-    vislib::math::Vector<float, 4> grayColor = this->secStructColor[(unsigned int)UncertaintyDataCall::secStructure::C_COIL];
+    vislib::math::Vector<float, 4> grayColor = {0.2f, 0.2f, 0.2f, 1.0f}; //this->secStructColor[(unsigned int)UncertaintyDataCall::secStructure::C_COIL];
 
     unsigned int sMax, sTemp;                          // structure types 
     float uMax, uDelta, uTemp;                         // uncertainty

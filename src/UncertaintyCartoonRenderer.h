@@ -197,7 +197,7 @@ namespace megamol {
 			float col[4];                                               // the color of the amino-acid or chain (depending on coloring mode)
 			float uncertainty;                                          // the uncertainty
 			int   flag;                                                 // UNUSED - the amino-acid flag (none, missing, heterogen)
-			float unc[UncertaintyDataCall::secStructure::NOE];          // the uncertainties of the sctructure assignments                    - used for dithering
+			float unc[UncertaintyDataCall::secStructure::NOE];          // the uncertainties of the different sctructure assignments          - used for dithering
 			int   sortedStruct[UncertaintyDataCall::secStructure::NOE]; // the sorted structure assignments: max=[0] to min=[NOE]             - used for dithering
 		};
 
@@ -227,16 +227,18 @@ namespace megamol {
 			UNC_VIS_SIN_U  = 1,
 			UNC_VIS_SIN_V  = 2,
 			UNC_VIS_SIN_UV = 3,
-
+			UNC_VIS_TRI_U  = 4,
+			UNC_VIS_TRI_UV = 5
 		};
 
         /**
         * Enumeration of oulining visualisations
         */
         enum outlineOptions {
-            OUTLINE_NONE = 0,
-            OUTLINE_LINE = 1,
-            OUTLINE_FULL = 2,
+            OUTLINE_NONE           = 0,
+            OUTLINE_LINE           = 1,
+            OUTLINE_FULL_UNCERTAIN = 2,
+			OUTLINE_FULL_CERTAIN   = 3
         };
 
         /**********************************************************************

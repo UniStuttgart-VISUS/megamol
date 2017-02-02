@@ -305,6 +305,12 @@ namespace megamol {
 		* @return The ... .
 		*/
 		bool LoadShader(void);
+
+        /**
+        * ... .
+        *
+        */
+        void calculateGeometryVertices(int samples);
 		
         /**********************************************************************
          * variables
@@ -337,6 +343,13 @@ namespace megamol {
         // parameter to show/hide pdb secondary structure 
         megamol::core::param::ParamSlot togglePdbParam;
                 
+        // parameter to show/hide thresholds of stride 
+        megamol::core::param::ParamSlot toggleStrideThreshParam;
+		unsigned int                    strideThresholdCount;
+		// parameter to show/hide threshold of dssp
+        megamol::core::param::ParamSlot toggleDsspThreshParam;
+		unsigned int                    dsspThresholdCount;
+		
         ////////////////////////////////////////////////
         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
         ////////////////////////////////////////////////        
@@ -357,6 +370,7 @@ namespace megamol {
         megamol::core::param::ParamSlot uncertainStructGeometryParam;
         megamol::core::param::ParamSlot uncertainColorInterpolParam;
         megamol::core::param::ParamSlot uncertainGardientIntervalParam;
+        megamol::core::param::ParamSlot geometryTessParam;
 
         // the current uncertainty visualization selection
         certainBlockChartColor         currentCertainBlockChartColor;
@@ -368,6 +382,7 @@ namespace megamol {
         uncertainColorInterpol         currentUncertainColorInterpol;
         float                          currentUncertainGardientInterval;
         bool                           showSeparatorLine;
+        int                            currentGeometryTess;
         
 		// parameter to reload shader
 		megamol::core::param::ParamSlot reloadShaderParam;

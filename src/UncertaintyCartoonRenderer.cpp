@@ -265,6 +265,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	tmpEnum->SetTypePair(UNC_VIS_SIN_U,  "Sinus U");
 	tmpEnum->SetTypePair(UNC_VIS_SIN_V,  "Sinus V");
 	tmpEnum->SetTypePair(UNC_VIS_SIN_UV, "Sinus UV");
+	tmpEnum->SetTypePair(UNC_VIS_TRI_U,  "Triangle U");
+	tmpEnum->SetTypePair(UNC_VIS_TRI_UV, "Triangle UV");
 	this->uncVisParam << tmpEnum;
 	this->MakeSlotAvailable(&this->uncVisParam);
     
@@ -277,9 +279,10 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->MakeSlotAvailable(&this->methodDataParam);    
 
     tmpEnum = new param::EnumParam(static_cast<int>(this->currentOutlineMode));
-    tmpEnum->SetTypePair(OUTLINE_NONE, "None");
-    tmpEnum->SetTypePair(OUTLINE_LINE, "Line rendering");
-    tmpEnum->SetTypePair(OUTLINE_FULL, "Full rendering");
+    tmpEnum->SetTypePair(OUTLINE_NONE,           "None");
+    tmpEnum->SetTypePair(OUTLINE_LINE,           "Line rendering");
+    tmpEnum->SetTypePair(OUTLINE_FULL_UNCERTAIN, "Full rendering Uncertainty");
+	tmpEnum->SetTypePair(OUTLINE_FULL_CERTAIN,   "Full rendering Certainty");
     this->outlineParam << tmpEnum;
     this->MakeSlotAvailable(&this->outlineParam);
 
@@ -1086,7 +1089,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glUniform4fv(this->tubeShader.ParameterLocation("phong"), 1, (GLfloat *)this->currentMaterial.PeekComponents());
 		glUniform4fv(this->tubeShader.ParameterLocation("phongUncertain"), 1, (GLfloat *)this->currentUncertainMaterial.PeekComponents());
         
-        glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)0);
+        glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)0); // init 
         glUniform1f(this->tubeShader.ParameterLocation("outlineScale"), (GLfloat)this->currentOutlineScaling);
         glUniform3fv(this->tubeShader.ParameterLocation("outlineColor"), 1, (GLfloat *)this->currentOutlineColor.PeekComponents());
 
@@ -1102,14 +1105,12 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 			// OUTLINING
 			int outlinePass = 0;
-			//glDisable(GL_CULL_FACE);
-			// drawing an outline is enabled if > 0.0
+			// draw front faces in first outline pass (s = 0)
             if (this->currentOutlineMode != OUTLINE_NONE) {
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
 				outlinePass = 1;
 			}
-			// draw front faces in first outline pass (s = 0)
 			for (int s = 0; s <= outlinePass; s++){
 				// draw back faces in second outline pass (s = 1)
 				if (s == 1) {
@@ -1118,15 +1119,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					    glPolygonMode(GL_BACK, GL_LINE);
                         glEnable(GL_LINE_SMOOTH);
 					    glLineWidth((float)this->currentOutlineScaling);
-                        glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)static_cast<int>(OUTLINE_LINE));
                     }
-                    else if (this->currentOutlineMode == OUTLINE_FULL)  {
+                    else {
                         glPolygonMode(GL_BACK, GL_FILL);
-                        glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)static_cast<int>(OUTLINE_FULL));
                     }
+					glUniform1i(this->tubeShader.ParameterLocation("outlineMode"), (GLint)static_cast<int>(this->currentOutlineMode));
 				}
 
-                // drawing geometry
+                // drawing GEOMETRY
 				UINT64 numVerts;
 				numVerts = this->bufSize / vertStride;                                                                                                       // bufSize = 32*1024*1024 - WHY? | vertStride = (unsigned int)sizeof(CAlpha)
 				// numVert = number of vertices fitting into bufSize
