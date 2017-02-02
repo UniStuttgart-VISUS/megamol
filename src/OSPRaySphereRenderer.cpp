@@ -190,6 +190,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     if (c2 == NULL)
         return false;
 
+
     // check data and camera hash
     if (camParams == NULL)
         camParams = new vislib::graphics::CameraParamsStore();
@@ -211,10 +212,13 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
     // new framebuffer at resize action
     if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() || imgSize.y != cr->GetCameraParameters()->TileRect().Height()) {
+        // Breakpoint for Screenshooter debugging
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
         imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
         imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-        framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
+        //framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
+        framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR);
+
     }
 
 
@@ -466,8 +470,10 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
             
             // setup framebuffer
-            ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+            ospFrameBufferClear(framebuffer, OSP_FB_COLOR);
+            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR);
+            //ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
+            //ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
 
             // get the texture from the framebuffer
             fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
@@ -487,7 +493,8 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
         }
     } else {
-            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR);
+            //ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
             fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
             this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
             ospUnmapFrameBuffer(fb, framebuffer);
