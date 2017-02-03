@@ -171,8 +171,23 @@ namespace megamol {
          * @param bgColor The the default color
          */
         void DrawSecStructGeometryTiles(UncertaintyDataCall::secStructure cur, UncertaintyDataCall::secStructure fol, 
-                                       UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]);
-                                       
+                                        UncertaintyDataCall::addFlags f, float x, float y, float bgColor[4]);
+                          
+        /**
+        * Draws the threshold/energy value tiles.
+        *
+        * @param str     The secondary structure type on position i
+        * @param f       The residue flag
+        * @param x       The x position
+        * @param y       The y position
+        * @param value   The ... .
+        * @param min     The ... .
+        * @param max     The ... .
+        * @param thresh  The ... .
+        */
+        void DrawThresholdEnergyValueTiles(UncertaintyDataCall::secStructure str, UncertaintyDataCall::addFlags f, 
+                                           float x, float y, float value, float min, float max, float thresh);
+
         /**
         * Renders a two lined tooltip text.
         *
@@ -312,6 +327,7 @@ namespace megamol {
         */
         void calculateGeometryVertices(int samples);
 		
+
         /**********************************************************************
          * variables
          **********************************************************************/
@@ -445,6 +461,13 @@ namespace megamol {
         vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
 		// the array of the secondary structure type difference for each amino-acid tile
 		vislib::Array<float> uncertainty;
+
+        /** The 5 STRIDE threshold values per amino-acid */
+        vislib::Array<vislib::math::Vector<float, 5> > strideStructThreshold;
+        /** The 2 STRIDE energy values per amino-acid */
+        vislib::Array<vislib::math::Vector<float, 2> > strideStructEnergy;
+        /** The 4 DSSP energy values per amino-acid */
+        vislib::Array<vislib::math::Vector<float, 4> > dsspStructEnergy;
 
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;

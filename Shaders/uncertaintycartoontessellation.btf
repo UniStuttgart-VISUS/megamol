@@ -348,15 +348,30 @@
         // for dithering passes: calculate start and end value for dithering threshold
         if (ditherCount > 0) { 
             CAlpha alpha = atoms[id[1]];  
-            structIndex = ditherCount-1;
-             
-            // accumulate all uncertainties up to current structure type (sum uncertainty from minimum to current)
-            for (int i = 0; i < structIndex; i++) {
-                uncVal[1] -= alpha.unc[alpha.sortedStruct[i]];
+            if (outlineMode == OUTLINE_NONE) {
+                structIndex = ditherCount-1;
+                // accumulate all uncertainties up to current structure type (sum uncertainty from minimum to current)
+                for (int i = 0; i < structIndex; i++) {
+                    uncVal[1] -= alpha.unc[alpha.sortedStruct[i]];
+                }
+                uncVal[2] = uncVal[1] - alpha.unc[alpha.sortedStruct[structIndex]];
             }
-            uncVal[2] = uncVal[1] - alpha.unc[alpha.sortedStruct[structIndex]];
+            else { // draw ouline for structure with "biggest" geometry (helix or strand)
+                for (int i = 0; i < ditherCount; i++) {
+                    int structure =  alpha.sortedStruct[i];
+                    if (alpha.unc[structure] > EPS) {
+                        if ((structure == E_EXT_STRAND) || (structure == B_BRIDGE)){
+                            structIndex = i;
+                            break;
+                        }
+                        else if ((structure == H_ALPHA_HELIX) || (structure == G_310_HELIX) || (structure == I_PI_HELIX)){
+                            structIndex = i;
+                        }
+                    }
+                }
+            }
         }
-       
+
         // calculate geometry
         if ((uncVal[1] - uncVal[2]) > EPS) { // threshold for uncertainty values ? ...
                       
@@ -461,19 +476,35 @@
                 }
             }
             
-            // check if geometry type changes at the beginning from tube to helix or strand
-            bool changeStart = false;   
-            int edgeType     = alph1.sortedStruct[0];
-            if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
-                ((mytype != C_COIL) && (mytype != S_BEND) && (mytype != T_H_TURN) && (mytype != NOTDEFINED))) {
-                changeStart = true;
+
+            if(onlyTubes || (mytype == S_BEND) || (mytype == T_H_TURN) || (mytype == NOTDEFINED)) {
+                mytype = C_COIL;
             }
-            // check if geometry type changes at the end      
-            bool changeEnd = false;
-            edgeType       = alph3.sortedStruct[0];        
-            if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED)) && 
-                ((mytype != C_COIL) && (mytype != S_BEND) && (mytype != T_H_TURN) && (mytype != NOTDEFINED))) {
-                changeEnd = true;
+
+            bool changeStart = false; 
+            bool changeEnd   = false;
+
+            if (uncVal[0] > EPS) {
+                changeStart = true; 
+                changeEnd   = true;
+            }
+            if (mytype != C_COIL) {
+                // check if geometry type changes at the beginning from tube to helix or strand
+                int edgeType     = alph1.sortedStruct[0];
+                if (alph1.unc[edgeType] < (1.0 - EPS)) {
+                    changeStart = true;
+                }
+                else if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED))) {
+                    changeStart = true;
+                }
+                // check if geometry type changes at the end      
+                edgeType       = alph3.sortedStruct[0];        
+                if (alph3.unc[edgeType] < (1.0 - EPS)) {
+                    changeEnd = true;
+                }
+                else if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED))) {
+                    changeEnd = true;
+                }
             }
             
             // DEBUG - mark the position of the arrow heads white
@@ -484,7 +515,7 @@
             }*/
             
             // calculate geometry and normal
-            if ((onlyTubes) || ((mytype == C_COIL) || (mytype == S_BEND) || (mytype == T_H_TURN) || (mytype == NOTDEFINED)))  // backbone
+            if (mytype == C_COIL)  // backbone
             {
                 // rotate negative dir vector around tangent vector
                 float a = 2.0 * M_PI - v * 2.0 * M_PI;            // has to be this angle because of backface culling
@@ -503,8 +534,8 @@
                 u = gl_TessCoord.x;
                 v = gl_TessCoord.y;
 
-                float factor = 0.01;
-                float thresh = 0.01;
+                float factor = EPS;
+                float thresh = EPS;
             
                 float val = 1.0 / float(gl_TessLevelOuter[1]);
 
@@ -557,7 +588,7 @@
                 }
             
                 // if change in secondary structure is at the beginning: make transition from spline to tube surface
-                if(changeStart && (u < factor)) {
+                if((changeStart) && (u < factor)) {
                     vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
                     vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
                     mypos.xyz = mix(newpos, mypos.xyz, u / factor);
@@ -566,7 +597,7 @@
                 }
                 
                 // if change in secondary structure is at the end: make transition from spline to tube surface
-                if(changeEnd && (u > (1.0 - factor))) {
+                if((changeEnd) && (u > (1.0 - factor))) {
                     vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
                     vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
                     mypos.xyz = mix(mypos.xyz, newpos, (u - (1.0 - factor))/ factor);
@@ -575,7 +606,7 @@
                 }
             }
             
-            // UNCERTAINTY visualisation
+
             // apply surface displacement parameter
             u = gl_TessCoord.x;
             v = gl_TessCoord.y;
@@ -587,14 +618,12 @@
             float vNdisp = 0.0;
             float disp   = 0.0;
 
+            // UNCERTAINTY visualisation
             if (uncVisMode == UNC_VIS_SIN_U) { // SINUS U
-                float uDisp = distorLev * 2.0 * M_PI * u; 
-                float fac   = (pipeWidth/2.0) * uncFac;                
-                disp = sin(uDisp);
-                if(disp > 0.0) {
-                    fac *= ampLevel;
-                }
-                disp *= fac;                
+                float uDisp   = distorLev * 2.0 * M_PI * u; 
+                float fac     = uncFac * ampLevel / 10.0;                
+                disp          = sin(uDisp - M_PI/2.0);
+                disp         *= fac;                
                 
                 float uM      = fac * cos(uDisp);                       // derivation = gradient of fac*sin(uDisp)
                 vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
@@ -602,17 +631,14 @@
                 vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
                 uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
                 
-                mypos.xyz  += disp * n;           
-                n           = normalize(n + uNdisp * tangent);                
+                mypos.xyz    += (disp + fac) * n;           
+                n             = normalize(n + uNdisp * tangent);                
             }
             else if (uncVisMode == UNC_VIS_SIN_V) { // SINUS V    
                 float vDisp   = distorLev * 2.0 * M_PI * v;
-                float fac     = (pipeWidth/2.0) * uncFac;         
-                disp = sin(vDisp);
-                if(disp > 0.0) {
-                    fac *= ampLevel;
-                }
-                disp *= fac; 
+                float fac     = uncFac * ampLevel / 10.0;                
+                disp          = sin(vDisp - M_PI/2.0);
+                disp         *= fac;      
                 
                 float vM      = fac * cos(vDisp);                       // derivation = gradient of fac*sin(vDisp)
                 vec2  vNormal = vec2(0.0, 1.0);                         // normal in UV-space
@@ -620,21 +646,19 @@
                 vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
                 vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction  
                 
-                mypos.xyz  += disp * n;            
-                n           = normalize(n + vNdisp * normalize(cross(n, tangent)));                
+				if (((1.0 - EPS) > u) && (u > EPS)) {
+                    mypos.xyz    += (disp + fac) * n;
+                }        
+                n             = normalize(n + vNdisp * normalize(cross(n, tangent)));                
             }    
             else if (uncVisMode == UNC_VIS_SIN_UV) {  // SINUS U,V
-                float uDisp = distorLev * 2.0 * M_PI * u; 
-                float vDisp = distorLev * 2.0 * M_PI * v;
-                float fac   = (pipeWidth/2.0) * uncFac;     
-                float dispU = sin(uDisp);
-                float dispV = sin(vDisp);
-                disp = (dispU + dispV);
-                fac /= 2.0;
-                if ((dispU > 0.0) && (dispV > 0.0)) {
-                    fac *= ampLevel;
-                }
-                disp *= fac; 
+                float uDisp   = distorLev * 2.0 * M_PI * u; 
+                float vDisp   = distorLev * 2.0 * M_PI * v;
+                float fac     = uncFac * ampLevel / 10.0;    
+                float dispU   = sin(uDisp - M_PI/2.0);
+                float dispV   = sin(vDisp - M_PI/2.0);
+                disp          = (dispU + dispV)/2.0;
+                disp         *= fac; 
 
                 float uM      = fac * cos(uDisp);                       // derivation = gradient of fac*sin(uDisp)
                 vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
@@ -648,59 +672,79 @@
                 vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
                 vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction      
                 
-                float factor = 0.01;
-				if (((1.0 - factor) > u) && (u > factor)) {
-                    mypos.xyz  += disp * n;     
+				if (((1.0 - EPS) > u) && (u > EPS)) {
+                    mypos.xyz    += (disp + fac) * n;
                 }
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
             }
             else if (uncVisMode == UNC_VIS_TRI_U) {  // TRIANGLE U
-                float uMod   = u*distorLev;
-                float uTri   = 0.5 - (uMod - floor(uMod));
-                float uFunc  = (0.5 - abs(uTri));
+                float uMod    = u*distorLev;
+                float uFunc   = 0.5 - (uMod - floor(uMod));
+                float uTri    = (0.5 - abs(uFunc));
+                float fac     = uncFac * ampLevel;
 
-			    mypos.xyz   += (n * uFunc * uncFac * ampLevel); 
-
-                float uM = 0.0;
-                if (uTri < 0.0) {
-                    uFunc    *= -1.0;
+                float uM      = fac;
+                if (uFunc < 0.0) {
+                    uM       *= -1.0;
                 }
-                if (uFunc > EPS) {
-                    uM        = uncFac * ampLevel * 1.0/uFunc;
-                }
-                vec2  uNormal = normalize(vec2(0.0, 1.0));              // normal in UV-space
+                vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
                 vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fac*sin(uDisp) in UV-space
                 vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
                 uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
 
-			    n             = normalize(n + uNdisp * tangent);                
+			    mypos.xyz    += (n * uTri * fac); 
+			    n             = normalize(n + uNdisp * tangent);    
+
 			}
 			else if (uncVisMode == UNC_VIS_TRI_UV) {  // TRIANGLE U,V
-                float uMod   = u*distorLev;
-                float vMod   = v*distorLev;
-                float uTri   = (0.5 - abs(0.5 - (uMod-floor(uMod))));
-                float vTri   = (0.5 - abs(0.5 - (vMod-floor(vMod))));
+                float uMod    = u*distorLev;
+                float vMod    = v*distorLev;
+                float uFunc   = 0.5 - (uMod - floor(uMod));
+                float vFunc   = 0.5 - (vMod - floor(vMod));
+                float uTri    = (0.5 - abs(uFunc));
+                float vTri    = (0.5 - abs(vFunc));
+                float fac     = uncFac * ampLevel;
+                fac /= 2.0;
 
-			    mypos.xyz   += n * (uTri * vTri) * uncFac * ampLevel;     
-
-
-
+                float uM      = fac;
+                if (uFunc < 0.0) {
+                    uM       *= -1.0;
+                }
+                vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
+                vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fac*sin(uDisp) in UV-space
+                vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
+                uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
+                
+                float vM      = fac;
+                if (vFunc < 0.0) {
+                    vM       *= -1.0;
+                }
+                vec2  vNormal = vec2(0.0, 1.0);                          // normal in UV-space
+                vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fac*sin(vDisp) in UV-space
+                vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
+                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction      
+                
+                float factor = EPS;
+				if (((1.0 - factor) > u) && (u > factor)) {
+                    mypos.xyz   += (n * (uTri + vTri) * fac);  
+                }
+                n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
 			}
 
             // OUTLINING
 			if ((outlineMode == OUTLINE_FULL_UNCERTAIN) || (outlineMode == OUTLINE_FULL_CERTAIN)) {
 
-                uncFac = uncVal[0];
-			    // shift and scale vertex position in normal direction
+                // invert uncertainty factor if certainty should be shown
 			    if (outlineMode == OUTLINE_FULL_CERTAIN) {
-                    uncFac = 1.0 - uncVal[0];
+                    uncFac = 1.0 - uncFac;
                 }
+			    // shift and scale vertex position in normal direction
                 mypos.xyz = mypos.xyz + (outlineScale/10.0)*(uncFac)*n; 
 
-                // add caps for OUTLINING
-                if ((onlyTubes) || ((mytype == C_COIL) || (mytype == S_BEND) || (mytype == T_H_TURN) || (mytype == NOTDEFINED)))  // backbone
+                // add caps for OUTLINING to tube strucutres and if dithering is enabled to helix and strand too
+                if (mytype == C_COIL)  // backbone
                 {
-					float factor = 0.001;
+					float factor = EPS;
 					if(u > (1.0 - factor)) {
                         vec3 surfdir = mypos.xyz - savepos.xyz;             // direction from spline to tube surface.
                         vec3 newpos = savepos.xyz + normalize(surfdir) * pipeWidth;
@@ -859,6 +903,9 @@
     
         if (outlineMode > 0) {
             outCol = vec4(outlineColor.xyz, 1.0);
+            if (ditherCount > 0) {
+                // outCol = vec4(1.0, 1.0, 1.0, 1.0);
+            }
         }
         else {
             // dithering - check if fragment is discarded
@@ -878,7 +925,7 @@
         
 		    vec4 material = phong;
             // assign uncertain material properties if probability of assigned structure is > 0.0
-            if (uncValues[0]  > EPS) {
+            if (uncValues[0]  > 0.0) {
                 material = phongUncertain;
             }
                 

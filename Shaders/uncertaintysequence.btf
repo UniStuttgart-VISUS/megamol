@@ -155,20 +155,22 @@ void main()
                     tmpCol.x = startCol.x;              
                 } 
                 else if (startCol.x > endCol.x) {
-                    if ((startCol.x - endCol.x) < (360.0 - startCol.x + endCol.x)) {
+                    tmpCol.x = endCol.x + aStart*(startCol.x - endCol.x);
+                    /*OLD: if ((startCol.x - endCol.x) < (360.0 - startCol.x + endCol.x)) {
                         tmpCol.x = endCol.x + aStart*(startCol.x - endCol.x);
                     }
                     else {
                         tmpCol.x = endCol.x - aStart*(360.0 - startCol.x + endCol.x);
-                    }
+                    }*/
                 }
                 else if (startCol.x < endCol.x){
-                    if ((endCol.x - startCol.x) < (360.0 - endCol.x + startCol.x)) {
+                    tmpCol.x = startCol.x + aEnd*(endCol.x - startCol.x);
+                    /*OLD: if ((endCol.x - startCol.x) < (360.0 - endCol.x + startCol.x)) {
                         tmpCol.x = startCol.x + aEnd*(endCol.x - startCol.x);
                     }
                     else {
                         tmpCol.x = startCol.x - aEnd*(360.0 - endCol.x + startCol.x);
-                    }
+                    }*/
                 }
                 else { // startCol.x == endCol.x
                     tmpCol.x = startCol.x;

@@ -185,10 +185,12 @@ namespace megamol {
 			vislib::Array<float> uncertainty;
 
 
-            /** Add threshold values for each assignment mehod (max: 5 per method and amino-acid) */
-			vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > >secStructThreshold;
-            /** Add energy values for each assignment mehod (max: 5 per method and amino-acid) */
-			vislib::Array<vislib::Array<vislib::math::Vector<float, 5> > > secStructEnergy;
+            /** The 5 STRIDE threshold values per amino-acid */
+			vislib::Array<vislib::math::Vector<float, 5> > strideStructThreshold;
+            /** The 2 STRIDE energy values per amino-acid */
+			vislib::Array<vislib::math::Vector<float, 2> > strideStructEnergy;
+            /** The 4 DSSP energy values per amino-acid */
+            vislib::Array<vislib::math::Vector<float, 4> > dsspStructEnergy;
 
 
             /** The pdb id */

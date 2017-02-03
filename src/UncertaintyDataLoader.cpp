@@ -170,6 +170,11 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetPdbAssMethodHelix(&this->pdbAssignmentHelix);
         udc->SetPdbAssMethodSheet(&this->pdbAssignmentSheet);
 		udc->SetUncertainty(&this->uncertainty);
+
+        udc->SetStrideThreshold(&this->strideStructThreshold);
+        udc->SetStrideEnergy(&this->strideStructEnergy);
+        udc->SetDsspEnergy(&this->dsspStructEnergy);
+
         return true;
     }
 }
@@ -206,16 +211,10 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 	}
 	this->secStructLength.Clear();
 
-	for (unsigned int i = 0; i < secStructThreshold.Count(); i++) {
-		this->secStructThreshold[i].Clear();
-	}
-	this->secStructThreshold.Clear();
-    
-	for (unsigned int i = 0; i < secStructEnergy.Count(); i++) {
-		this->secStructEnergy[i].Clear();
-	}
-	this->secStructEnergy.Clear();
-    
+    this->strideStructThreshold.Clear();
+    this->strideStructEnergy.Clear();
+    this->dsspStructEnergy.Clear();
+
 
     // check if file ending matches ".uid"
     if(!filenameA.Contains(".uid")) {
@@ -234,13 +233,12 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
         for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
             this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
             this->secStructAssignment.Last().AssertCapacity(file.Count());
-            
-            this->secStructThreshold.Add(vislib::Array<vislib::math::Vector<float, 5> >());
-            this->secStructThreshold.Last().AssertCapacity(file.Count());
-            
-            this->secStructEnergy.Add(vislib::Array<vislib::math::Vector<float, 5> >());
-            this->secStructEnergy.Last().AssertCapacity(file.Count());
         }
+
+        this->strideStructThreshold.AssertCapacity(file.Count());
+        this->strideStructEnergy.AssertCapacity(file.Count());
+        this->dsspStructEnergy.AssertCapacity(file.Count());
+
         this->chainID.AssertCapacity(file.Count());
         this->aminoAcidName.AssertCapacity(file.Count());
         this->residueFlag.AssertCapacity(file.Count());
@@ -353,20 +351,18 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 				float HBEn1 = (float)std::atof(line.Substring(259, 10));
 				float HBEn2 = (float)std::atof(line.Substring(207, 10));
                 
-				vislib::math::Vector<float, 5> tmpVec;
-				tmpVec[0] = T1a;
-				tmpVec[1] = T2a;
-				tmpVec[2] = T3a;
-				tmpVec[3] = T1b;
-				tmpVec[4] = T2b;
-				this->secStructThreshold[(int)UncertaintyDataCall::assMethod::STRIDE].Add(tmpVec);
+                vislib::math::Vector<float, 5> tmpVec5;
+                tmpVec5[0] = T1a;
+                tmpVec5[1] = T2a;
+                tmpVec5[2] = T3a;
+                tmpVec5[3] = T1b;
+                tmpVec5[4] = T2b;
+                this->strideStructThreshold.Add(tmpVec5);
 
-				tmpVec[0] = HBEn1;
-				tmpVec[1] = HBEn2;
-				tmpVec[2] = 0.0f;
-				tmpVec[3] = 0.0f;
-				tmpVec[4] = 0.0f;
-				this->secStructEnergy[(int)UncertaintyDataCall::assMethod::STRIDE].Add(tmpVec);
+                vislib::math::Vector<float, 2> tmpVec2;
+                tmpVec2[0] = HBEn1;
+                tmpVec2[1] = HBEn2;
+                this->strideStructEnergy.Add(tmpVec2);
 
 
                 // Translate DSSP one letter secondary structure summary 
@@ -387,44 +383,17 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 				float HBondDo0 = (float)std::atof(line.Substring(433, 8));
 				float HBondDo1 = (float)std::atof(line.Substring(444, 8));
 
-				tmpVec[0] = 0.0f;
-				tmpVec[1] = 0.0f;
-				tmpVec[2] = 0.0f;
-				tmpVec[3] = 0.0f;
-				tmpVec[4] = 0.0f;
-				this->secStructThreshold[(int)UncertaintyDataCall::assMethod::DSSP].Add(tmpVec);
-
-				tmpVec[0] = HBondAc0;
-				tmpVec[1] = HBondAc1;
-				tmpVec[2] = HBondDo0;
-				tmpVec[3] = HBondDo1;
-				tmpVec[4] = 0.0f;
-				this->secStructEnergy[(int)UncertaintyDataCall::assMethod::DSSP].Add(tmpVec);              
+                vislib::math::Vector<float, 4> tmpVec4;
+                tmpVec4[0] = HBondAc0;
+                tmpVec4[1] = HBondDo0; 
+                tmpVec4[2] = HBondAc1;
+                tmpVec4[3] = HBondDo1;
+                this->dsspStructEnergy.Add(tmpVec4);
             }
 			// Next line
 			lineCnt++;
 		}
 		
-		// DEBUG - thresholds and energies
-		/*
-		for (int i = 0; i < this->pdbIndex.Count(); i++) {
-			std::cout << i << ": ";
-			for (unsigned int k = 1; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
-				std::cout << "Thresholds: ";
-				for (unsigned int j = 0; j < 5; j++) {
-					std::cout << std::fixed << std::setw(9) << std::setprecision(3) << std::setfill(' ') << this->secStructThreshold[k][i][j] << "|";
-				}
-				std::cout << "|=|";
-				std::cout << "Energy: ";
-				for (unsigned int j = 0; j < 5; j++) {
-					std::cout << std::fixed << std::setw(9) << std::setprecision(3) << std::setfill(' ') << this->secStructEnergy[k][i][j] << "|";
-				}
-				std::cout << "|=|";
-			}
-			std::cout << std::endl;
-		}
-		*/
-
 		// calculate length of continuos secondary structure assignments
         this->secStructLength.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
         for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
@@ -494,16 +463,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 */
 bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	using vislib::sys::Log;
-
-    // [DSSP - structure.cpp line 38: kMaxHBondEnergy]
-    const float DSSP_Energy = -0.5f; // kcal/mol 
-
-    // [STRIDE - stride.c line 311ff]
-    const float STRIDE_TresholdH1 = -230.0f;
-    const float STRIDE_TresholdH3 =    0.12f; 
-    const float STRIDE_TresholdH4 =    0.06f; 
-    const float STRIDE_TresholdE1 = -240.0f;
-    const float STRIDE_TresholdE2 = -310.0f;
   
 	int methodCount;
 	float tmpChange;
@@ -519,11 +478,6 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	this->secStructUncertainty.AssertCapacity(this->pdbIndex.Count());
 	this->sortedSecStructUncertainty.AssertCapacity(this->pdbIndex.Count());
 	this->uncertainty.AssertCapacity(this->pdbIndex.Count());
-
-
-    // this->secStructThreshold[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f));
-    // this->secStructEnergy[(int)UncertaintyDataCall::assMethod::STRIDE].Add(vislib::math::Vector<float, 5>(0.0f, 0.0f, 0.0f, 0.0f, 0.0f));
-
 
 	// initialize structure factors for all three methods with 1.0f
 	vislib::Array<vislib::Array<float> > structFactor;

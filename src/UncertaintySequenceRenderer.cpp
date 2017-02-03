@@ -13,7 +13,7 @@
 //
 // TODO:
 //
-//    - color interpolation for glyphs (~ line 1495)
+//    
 // 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -117,7 +117,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->MakeSlotAvailable(&this->resSelectionCallerSlot);
     
     // param slot for number of residues per row
-    this->resCountPerRowParam.SetParameter( new param::IntParam(50, 1));
+    this->resCountPerRowParam.SetParameter(new param::IntParam(50, 1));
     this->MakeSlotAvailable( &this->resCountPerRowParam);
     
     this->geometryTessParam << new core::param::IntParam(this->currentGeometryTess, 4);
@@ -250,7 +250,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);   
 
 	this->strideThresholdCount = 5;
-	this->dsspThresholdCount   = 1;
+	this->dsspThresholdCount   = 2;
 		
     // init animation timer
     this->animTimer = std::clock();
@@ -683,6 +683,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
     }
     
     glDisable(GL_CULL_FACE); 
+    glLineWidth(2.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // get the text color (inverse background color)
@@ -696,6 +697,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
     if(this->dataPrepared) {
         
         // temporary variables and constants
+        UncertaintyDataCall::secStructure tmpStruct;
         unsigned int tmpMethod;
         vislib::StringA tmpStr;
         vislib::StringA tmpStr2;
@@ -732,9 +734,41 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         }
 		// STRIDE thresholds
         if(this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
-            for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-				// ...
-			}
+            float min = -10.0f;
+            float max = 10.0f;
+            float threshold = 0.0;
+
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                tmpStruct = this->secStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE)][i];
+                for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
+                    switch(j) {
+                        case(0) : threshold = STRIDE_THRESHOLDH1; 
+                                  min = -500.0f;
+                                  max = 500.0f; 
+                                  break;
+                        case(1) : threshold = STRIDE_THRESHOLDH3;
+                                  min = -1.0f;
+                                  max =  1.0f;
+                                  break;
+                        case(2) : threshold = STRIDE_THRESHOLDH4;
+                                  min = -1.0f;
+                                  max =  1.0f;
+                                  break;
+                        case(3) : threshold = STRIDE_THRESHOLDE1;
+                                  min = -500.0f;
+                                  max =  500.0f;
+                                  break;
+                        case(4) : threshold = STRIDE_THRESHOLDE2;
+                                  min = -500.0f;
+                                  max =  500.0f;
+                                  break;
+                        default: break;
+                    }
+                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + float(j)), 
+                                                        this->strideStructThreshold[i][j], min, max, threshold);
+                    // this->strideStructEnergy[i][j];
+			    }
+            }
             yPos += (float)this->strideThresholdCount;
         }		
         // DSSP
@@ -748,9 +782,15 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         }  
         // DSSP thresholds
         if(this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
-            for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-				// ...
-			}
+            float min = -5.0f;
+            float max = 5.0f;
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                tmpStruct = this->secStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i];
+                for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + float(j)), 
+                                                        this->dsspStructEnergy[i][j], min, max, DSSP_HBENERGY);
+			    }
+            }
             yPos += (float)this->dsspThresholdCount;
         }  		
         // PDB 
@@ -869,7 +909,6 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         glVertexPointer( 2, GL_FLOAT, 0, this->chainSeparatorVertices.PeekElements());
         glDrawArrays( GL_LINES, 0, (GLsizei)this->chainSeparatorVertices.Count() / 2 );
         glDisable( GL_VERTEX_ARRAY);
-        
 		
         // draw legend/key
         if(this->toggleLegendParam.Param<param::BoolParam>()->Value()) {
@@ -948,9 +987,16 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
 					if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
 						for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-							tmpStr = "STRIDE Threshold";
+                            switch (j) {
+                                case (0) : tmpStr = "Stride Threshold T1alpha"; break;
+                                case (1) : tmpStr = "Stride Threshold T2alpha"; break;
+                                case (2) : tmpStr = "Stride Threshold T3alpha"; break;
+                                case (3) : tmpStr = "Stride Threshold T1beta"; break;
+                                case (4) : tmpStr = "Stride Threshold T2beta"; break;
+                                default:  tmpStr = "Stride UNKNOWN Threshold"; break;
+                            }
 							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
+							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f, 
 											   fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
 						}
                         yPos += (float)this->strideThresholdCount;
@@ -964,9 +1010,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                     if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
 						for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-							tmpStr = "DSSP Threshold";
+                            switch (j) {
+                                case (0) : tmpStr = "Dssp H-Bond Energy Acceptor"; break;
+                                case (1) : tmpStr = "Dssp H-Bond Energy Donor"; break;
+                                default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
+                            }
 							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
+							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f, 
 											   fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
 						}
                         yPos += (float)this->dsspThresholdCount;
@@ -1104,21 +1154,31 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         end += perCentRow;
                     }
                     if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
-						for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-							if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+						    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
 								switch (j) {
-									case (0): tmpStr = "Stride Threshold - T1:"; break;
-									case (1): tmpStr = "Stride Threshold - T2:"; break;
-									case (2): tmpStr = "Stride Threshold - T3:"; break;
-									case (3): tmpStr = "Stride Threshold - T4:"; break;
-									case (4): tmpStr = "Stride Threshold - T5:"; break;
-									default:  tmpStr = "Stride UNKNOWN Threshold"; break;
+									case (0): tmpStr = "T1alpha:"; 
+                                              tmpStr2.Format("%.3f | < T=%.2f", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1); 
+                                              break;
+									case (1): tmpStr = "T2alpha:";
+                                              tmpStr2.Format("%.3f | > T=%.2f", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3); 
+                                              break;
+									case (2): tmpStr = "T3alpha:";
+                                              tmpStr2.Format("%.3f | > T=%.2f", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4); 
+                                              break;
+									case (3): tmpStr = "T1beta:";
+                                              tmpStr2.Format("%.3f | < T=%.2f", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1); 
+                                              break;
+									case (4): tmpStr = "T2beta:";
+                                              tmpStr2.Format("%.3f | < T=%.2f", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2); 
+                                              break;
+									default:  tmpStr = "UNKNOWN value"; break;
 								}
-                                tmpStr2.Format("%.3f", 1.0f);
 								this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+
+                                start += perCentRow;
+                                end += perCentRow;
 							}
-							start += perCentRow;
-							end += perCentRow;
 						}
                     }					
                     if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
@@ -1131,17 +1191,20 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         end += perCentRow;
                     }
                     if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
-						for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-							if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-								switch (j) {
-									case (0): tmpStr = "Dssp Threshold -Energy:"; break;
-									default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
-								}
-                                tmpStr2.Format("%.3f", 1.0f);
-								this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-							}
-							start += perCentRow;
-							end += perCentRow;
+                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+						    for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+							
+							    switch (j) {
+								    case (0): tmpStr = "Acceptor: "; break;
+                                    case (1): tmpStr = "Donor: "; break;
+								    default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
+							    }
+                                tmpStr2.Format("%.3f | < T=%.1f[kcal/mol]", this->dsspStructEnergy[mousePosResIdx][j], DSSP_HBENERGY);
+							    this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+
+							    start += perCentRow;
+							    end += perCentRow;
+                            }
 						}
                     }
                     if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
@@ -1209,6 +1272,38 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
     } // dataPrepared
     
     return true;
+}
+
+
+
+/*
+* UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles
+*/
+void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataCall::secStructure str, UncertaintyDataCall::addFlags f, 
+                                                                float x, float y, float value, float min, float max, float thresh) {
+
+    // ignore as missing flagged amino-acids and NOTDEFINED secondary structure types
+    if ((f != UncertaintyDataCall::addFlags::MISSING) || (str != UncertaintyDataCall::secStructure::NOTDEFINED)) {
+        // draw middle line
+        glColor3f(0.2f, 0.2f, 0.2f);
+        glBegin(GL_LINES);
+            glVertex2f(x,       -(y + 0.5f));
+            glVertex2f(x + 1.0f, -(y + 0.5f));
+        glEnd();
+        //draw value quad
+        float clampVal = (value > max) ? (max) : (value);
+        clampVal       = (clampVal < min) ? (min) : (clampVal);
+        float yDelta   = (clampVal < thresh) ? -std::abs((clampVal / min)/2.0f) : std::abs((clampVal/max)/2.0f);
+        float yOffset  = y + 0.5f;
+        glColor3f(0.5f, 0.5f, 0.5f);
+        glBegin(GL_QUADS);
+            glVertex2f(x,        -(yOffset - yDelta));
+            glVertex2f(x,        -(yOffset));
+            glVertex2f(x + 1.0f, -(yOffset));
+            glVertex2f(x + 1.0f, -(yOffset - yDelta));
+        glEnd();
+
+    }
 }
 
 
@@ -1993,6 +2088,15 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
         this->secStructAssignment.Last().AssertCapacity(this->aminoAcidCount);
     }
 	
+    this->strideStructThreshold.Clear();
+    this->strideStructThreshold.AssertCapacity(this->aminoAcidCount);
+
+    this->strideStructEnergy.Clear();
+    this->strideStructEnergy.AssertCapacity(this->aminoAcidCount);
+
+    this->dsspStructEnergy.Clear();
+    this->dsspStructEnergy.AssertCapacity(this->aminoAcidCount);
+
     this->residueFlag.Clear();
     this->residueFlag.AssertCapacity(this->aminoAcidCount);
     
@@ -2113,7 +2217,15 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
         this->sortedUncertainty.Add(udc->GetSortedSecStructureIndices(aa));
 		// store uncertainty value 
 		this->uncertainty.Add(udc->GetUncertainty(aa));
-                      
+
+        // store stride threshold values
+        this->strideStructThreshold.Add(udc->GetStrideThreshold(aa));
+        // store stride energy values
+        this->strideStructEnergy.Add(udc->GetStrideEnergy(aa));
+        // store dssp energy values
+        this->dsspStructEnergy.Add(udc->GetDsspEnergy(aa));
+
+
         // count different chains and set seperator vertices and chain color
         if (udc->GetChainID(aa) != currentChainID) {
             currentChainID = udc->GetChainID(aa);
