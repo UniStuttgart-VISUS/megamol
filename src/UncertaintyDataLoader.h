@@ -167,21 +167,21 @@ namespace megamol {
             /** The amino-acid name */
             vislib::Array<vislib::StringA> aminoAcidName;
             
-            /** The secondary structure assignment methods and their secondary structure type assignments */
-            vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
 
-			/** The secondary structure assignment methods and th secondary structure assignment length */
+
+            /** The uncertainty of the assigned secondary structure types for each assignment method and for each amino-acid */
+            vislib::Array<vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > secStructUncertainty;
+            
+            /** The sorted assigned secondary structure types (sorted by descending uncertainty values) for each assignment method and for each amino-acid */
+            vislib::Array<vislib::Array<vislib::math::Vector<static_cast<int>(UncertaintyDataCall::secStructure), static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > sortedSecStructAssignment;
+            // sortedSecStructUncertainty
+            // secStructAssignment
+            
+            
+			/** The secondary structure assignment length for each assignment method */
 			vislib::Array<vislib::Array<unsigned int> > secStructLength;
-            
-            /** The values of the secondary structure uncertainty for each amino-acid (index = secStructure) */
-            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secStructUncertainty;
-
-            /** The sorted structure types of the uncertainty values 
-            *   Values are sorted in ascending order -> maximum value in secStructUncertainty has last index
-            *   To get the uncertainty value: use secStructure given here as index in secStructUncertainty */
-            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedSecStructUncertainty;
-            
-			/** The difference of secondary structure assignment for each amino-acid */
+                        
+			/** The uncertainty of secondary structure assignment for each amino-acid */
 			vislib::Array<float> uncertainty;
 
 
