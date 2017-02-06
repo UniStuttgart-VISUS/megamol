@@ -166,24 +166,15 @@ namespace megamol {
 
             /** The amino-acid name */
             vislib::Array<vislib::StringA> aminoAcidName;
-            
-
-
+           
             /** The uncertainty of the assigned secondary structure types for each assignment method and for each amino-acid */
             vislib::Array<vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > secStructUncertainty;
-            
             /** The sorted assigned secondary structure types (sorted by descending uncertainty values) for each assignment method and for each amino-acid */
-            vislib::Array<vislib::Array<vislib::math::Vector<static_cast<int>(UncertaintyDataCall::secStructure), static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > sortedSecStructAssignment;
-            // sortedSecStructUncertainty
-            // secStructAssignment
-            
-            
+            vislib::Array<vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > sortedSecStructAssignment;
 			/** The secondary structure assignment length for each assignment method */
-			vislib::Array<vislib::Array<unsigned int> > secStructLength;
-                        
+			vislib::Array<vislib::Array<unsigned int> > secStructLength;           
 			/** The uncertainty of secondary structure assignment for each amino-acid */
 			vislib::Array<float> uncertainty;
-
 
             /** The 5 STRIDE threshold values per amino-acid */
 			vislib::Array<vislib::math::Vector<float, 5> > strideStructThreshold;

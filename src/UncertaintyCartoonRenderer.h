@@ -340,12 +340,10 @@ namespace megamol {
 		vislib::Array<unsigned int> residueFlag;
 		/** The uncertainty difference of secondary structure types */
 		vislib::Array<float> uncertainty;
-		// The secondary structure assignment methods and their secondary structure type assignments
-		vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
 		// The values of the secondary structure uncertainty for each amino-acid 
-		vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
+        vislib::Array<vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > secStructUncertainty;
 		// The sorted structure types of the uncertainty values
-		vislib::Array<vislib::math::Vector<unsigned int, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
+        vislib::Array<vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > sortedSecStructAssignment;
 
 		// color table for chain id per amino acid
 		vislib::Array<vislib::math::Vector<float, 3> > chainColors;

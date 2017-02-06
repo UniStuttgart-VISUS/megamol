@@ -453,12 +453,10 @@ namespace megamol {
 		// axes for uncertainty glyph
 		vislib::Array<vislib::math::Vector<float, 2> > glyphAxis;
 
-        // The secondary structure assignment methods and their secondary structure type assignments
-        vislib::Array<vislib::Array<UncertaintyDataCall::secStructure> > secStructAssignment;
         // The values of the secondary structure uncertainty for each amino-acid 
-        vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > secUncertainty;
+        vislib::Array<vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > secStructUncertainty;
         // The sorted structure types of the uncertainty values
-        vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > sortedUncertainty;
+        vislib::Array<vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > sortedSecStructAssignment;
 		// the array of the secondary structure type difference for each amino-acid tile
 		vislib::Array<float> uncertainty;
 

@@ -73,10 +73,11 @@ namespace megamol {
         * (!) Indices must be in the range from 0 to NOM-1.
         */
         enum assMethod {
-            PDB    = 0,
-            STRIDE = 1,
-            DSSP   = 2,
-            NOM    = 3   // Number of Methods -> must always be the last index!
+            PDB         = 0,
+            STRIDE      = 1,
+            DSSP        = 2,
+            UNCERTAINTY = 3,
+            NOM         = 4   // Number of Methods -> must always be the last index!
         };
         
         /**
@@ -237,59 +238,49 @@ namespace megamol {
         }
 
         /**
-        * Get the type of the secondary structure for an given method.
+        * Get the the secondary structure uncertainty.
         *
-        * @param m The secondary structure assignment method.
-        * @param i The index of the amino-acid.
-        * @return The DSSP secondary structure type.
-        */
-        inline secStructure GetSecStructure(assMethod m, unsigned int i) const {
-            if (!this->secStructAssignment)
-                return NOTDEFINED;
-            else if (this->secStructAssignment->Count() <= m)
-                return NOTDEFINED;
-            else if (this->secStructAssignment->operator[](m).Count() <= i)
-                return NOTDEFINED;                
-            else
-                return (this->secStructAssignment->operator[](m)[i]);
-        }
-
-        /**
-        * Get the information of the secondary structure uncertainty.
-        *
+        * @param m The assignment method.
         * @param i The index of the amino-acid.
         * @return The array of secondary structure uncertainty.
         */
-        inline vislib::math::Vector<float, static_cast<unsigned int>(secStructure::NOE)> GetSecStructUncertainty(unsigned int i) const {
-            vislib::math::Vector<float, static_cast<unsigned int>(secStructure::NOE)> default;
+        inline vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> GetSecStructUncertainty(assMethod m, unsigned int i) const {
+            vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> default;
+            int index = static_cast<int>(m);
             for (int x = 0; x < static_cast<int>(secStructure::NOE); x++) {
                 default[x] = 0.0f;
             }
             if (!this->secStructUncertainty)
                 return default;
-            else if (this->secStructUncertainty->Count() <= i)
+            else if (this->secStructUncertainty->Count() <= index)
+                return default;
+            else if (this->secStructUncertainty->operator[](index).Count() <= i)
                 return default;
             else
-                return (this->secStructUncertainty->operator[](i));
+                return (this->secStructUncertainty->operator[](index)[i]);
         }
 
         /**
         * Get the sorted secondary structure types.
         *
+        * @param m The assignment method.
         * @param i The index of the amino-acid.
         * @return The sorted secondary structure types.
         */
-        inline vislib::math::Vector<secStructure, static_cast<int>(secStructure::NOE)> GetSortedSecStructureIndices(unsigned int i) const {
-            vislib::math::Vector<secStructure, static_cast<unsigned int>(secStructure::NOE)> default;
+        inline vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> GetSortedSecStructAssignment(assMethod m, unsigned int i) const {
+            vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> default;
+            int index = static_cast<int>(m);
             for (int x = 0; x < static_cast<int>(secStructure::NOE); x++) {
-                default[x] = static_cast<secStructure>(x);
+                default[x] = UncertaintyDataCall::secStructure::NOTDEFINED;
             }
-            if (!this->sortedSecStructUncertainty)
+            if (!this->sortedSecStructAssignment)
                 return default;
-            else if (this->sortedSecStructUncertainty->Count() <= i)
+            else if (this->sortedSecStructAssignment->Count() <= index)
+                return default;
+            else if (this->sortedSecStructAssignment->operator[](index).Count() <= i)
                 return default;
             else
-                return (this->sortedSecStructUncertainty->operator[](i));
+                return (this->sortedSecStructAssignment->operator[](index)[i]);
         }
 
         /**
@@ -415,15 +406,6 @@ namespace megamol {
         // ------------------ SET functions ------------------- 
 
         /**
-        * Set the pointer to the secondary structure type.
-        *
-        * @param rnPtr The pointer.
-        */
-        inline void SetSecStructure(vislib::Array<vislib::Array<secStructure> > *rnPtr) {
-            this->secStructAssignment = rnPtr;
-        }
-
-        /**
         * Set the pointer to the pdb index.
         *
         * @param rnPtr The pointer.
@@ -464,7 +446,7 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetSecStructUncertainty(vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::NOE)> > *rnPtr) {
+        inline void SetSecStructUncertainty(vislib::Array<vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > *rnPtr) {
             this->secStructUncertainty = rnPtr;
         }
 
@@ -473,8 +455,8 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetSortedSecStructTypes(vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NOE)> > *rnPtr) {
-            this->sortedSecStructUncertainty = rnPtr;
+        inline void SetSortedSecStructAssignment(vislib::Array<vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > *rnPtr) {
+            this->sortedSecStructAssignment = rnPtr;
         }
         
         /**
@@ -562,8 +544,6 @@ namespace megamol {
 
         // ------------------ variables ------------------- 
 
-        /** Pointer to the secondary structure assignment methods and their secondary structure type assignments */
-        vislib::Array<vislib::Array<secStructure> > *secStructAssignment;
         
         /** Pointer to the PDB index */
         vislib::Array<vislib::StringA> *pdbIndex;
@@ -577,12 +557,13 @@ namespace megamol {
         /** Pointer to the amino-acid name */
         vislib::Array<vislib::StringA> *aminoAcidName;
 
-        /** Pointer to the values of the secondary structure uncertainty for each amino-acid */
-        vislib::Array<vislib::math::Vector<float, static_cast<int>(secStructure::NOE)> > *secStructUncertainty;
 
-        /** Pointer to the sorted structure types of the uncertainty values */
-        vislib::Array<vislib::math::Vector<secStructure, static_cast<int>(secStructure::NOE)> > *sortedSecStructUncertainty;
-        
+        /** Pointer to the uncertainty of the assigned secondary structure types for each assignment method and for each amino-acid */
+        vislib::Array<vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > *secStructUncertainty;
+        /** Pointer to the sorted assigned secondary structure types (sorted by descending uncertainty values) for each assignment method and for each amino-acid */
+        vislib::Array<vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > *sortedSecStructAssignment;
+
+
 		/** Pointer to the uncertainty of secondary structure types */
 		vislib::Array<float> *uncertainty;
 

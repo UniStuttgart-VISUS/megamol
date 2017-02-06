@@ -198,7 +198,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
     this->currentLightPos          = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);
     this->currentUncDist           = vislib::math::Vector<float, 2>(1.0f, 5.0f);
     this->currentDitherMode        = 0;
-    this->currentMethodData        = UncertaintyDataCall::assMethod::NOM; // here: use uncertainty data
+    this->currentMethodData        = UncertaintyDataCall::assMethod::UNCERTAINTY;
     this->currentOutlineMode       = outlineOptions::OUTLINE_NONE;
     this->currentOutlineScaling    = 1.0;
     this->currentOutlineColor      = vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f);
@@ -271,10 +271,10 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->MakeSlotAvailable(&this->uncVisParam);
     
     tmpEnum = new param::EnumParam(static_cast<int>(this->currentMethodData));
-	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::PDB,    "PDB");
-	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::STRIDE, "STRIDE");
-	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::DSSP,   "DSSP");
-	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::NOM,    "Uncertainty");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::PDB,         "PDB");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::STRIDE,      "STRIDE");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::DSSP,        "DSSP");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::UNCERTAINTY, "Uncertainty");
 	this->methodDataParam << tmpEnum;
 	this->MakeSlotAvailable(&this->methodDataParam);    
 
@@ -565,21 +565,23 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 	this->secStructColor.AssertCapacity(UncertaintyDataCall::secStructure::NOE);
 
 	// reset arrays
-	this->secUncertainty.Clear();
-	this->secUncertainty.AssertCapacity(this->aminoAcidCount);
-
-	this->sortedUncertainty.Clear();
-	this->sortedUncertainty.AssertCapacity(this->aminoAcidCount);
-
-	for (unsigned int i = 0; i < this->secStructAssignment.Count(); i++) {
-		this->secStructAssignment.Clear();
+    for (unsigned int i = 0; i < this->sortedSecStructAssignment.Count(); i++) {
+        this->sortedSecStructAssignment.Clear();
 	}
-	this->secStructAssignment.Clear();
-
+    this->sortedSecStructAssignment.Clear();
 	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
-		this->secStructAssignment.Add(vislib::Array<UncertaintyDataCall::secStructure>());
-		this->secStructAssignment.Last().AssertCapacity(this->aminoAcidCount);
+        this->sortedSecStructAssignment.Add(vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> >());
+        this->sortedSecStructAssignment.Last().AssertCapacity(this->aminoAcidCount);
 	}
+
+    for (unsigned int i = 0; i < this->secStructUncertainty.Count(); i++) {
+        this->secStructUncertainty.Clear();
+    }
+    this->secStructUncertainty.Clear();
+    for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
+        this->secStructUncertainty.Add(vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> >());
+        this->secStructUncertainty.Last().AssertCapacity(this->aminoAcidCount);
+    }
 
 	this->residueFlag.Clear();
 	this->residueFlag.AssertCapacity(this->aminoAcidCount);
@@ -609,15 +611,12 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 
 		// store the secondary structure element type of the current amino-acid for each assignment method
 		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
-			this->secStructAssignment[k].Add(udc->GetSecStructure(static_cast<UncertaintyDataCall::assMethod>(k), aa));
+            this->sortedSecStructAssignment[k].Add(udc->GetSortedSecStructAssignment(static_cast<UncertaintyDataCall::assMethod>(k), aa));
+            this->secStructUncertainty[k].Add(udc->GetSecStructUncertainty(static_cast<UncertaintyDataCall::assMethod>(k), aa));
 		}
 
 		// store residue flag
 		this->residueFlag.Add(static_cast<unsigned int>(udc->GetResidueFlag(aa)));
-		// store uncerteiny values
-		this->secUncertainty.Add(udc->GetSecStructUncertainty(aa));
-		// store sorted uncertainty structure types
-		this->sortedUncertainty.Add(udc->GetSortedSecStructureIndices(aa));
 		// store the uncertainty difference
 		this->uncertainty.Add(udc->GetUncertainty(aa));
 		// store the original pdb index
@@ -954,16 +953,8 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					*/
 					uncIndex = this->synchronizedIndex[aaIdx];
 					for (unsigned int k = 0; k < this->structCount; k++) {
-                        if (this->currentMethodData == UncertaintyDataCall::assMethod::NOM) { // use uncertainty secondary structure data
-                            calpha.sortedStruct[k] = static_cast<int>(this->sortedUncertainty[uncIndex][k]);
-                            calpha.unc[k] = this->secUncertainty[uncIndex][k];
-                        }
-                        else { // use assignment method data
-                            calpha.sortedStruct[k] = static_cast<int>(this->secStructAssignment[(int)this->currentMethodData][uncIndex]);
-                            calpha.unc[k] = this->secUncertainty[uncIndex][k];
-                        }
-                        // calpha.sortedStruct[k] = static_cast<int>(this->secStructSortedAssignment[(int)this->currentMethodData][uncIndex]);
-                        // calpha.unc[k]          =                  this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
+                        calpha.sortedStruct[k] = static_cast<int>(this->sortedSecStructAssignment[(int)this->currentMethodData][uncIndex][k]);
+                        calpha.unc[k]          =                  this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
 					}
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
 						for (unsigned int k = 0; k < 3; k++)

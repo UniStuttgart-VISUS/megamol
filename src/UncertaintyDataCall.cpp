@@ -28,10 +28,10 @@ const unsigned int UncertaintyDataCall::CallForGetData = 0;
 * UncertaintyDataCall::UncertaintyDataCall
 */
 UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
-                                                 secStructAssignment(NULL), sortedSecStructUncertainty(NULL), 
-                                                 secStructUncertainty(NULL), pdbIndex(NULL), 
-                                                 chainID(NULL), residueFlag(NULL), aminoAcidName(NULL), pdbID(NULL),
-												 recalcUncertainty(NULL), pdbAssignmentHelix(NULL), pdbAssignmentSheet(NULL){
+                                                 sortedSecStructAssignment(NULL), secStructUncertainty(NULL), 
+                                                 pdbIndex(NULL), chainID(NULL), residueFlag(NULL), aminoAcidName(NULL), pdbID(NULL),
+												 recalcUncertainty(NULL), pdbAssignmentHelix(NULL), pdbAssignmentSheet(NULL),
+                                                 strideStructThreshold(NULL), strideStructEnergy(NULL), dsspStructEnergy(NULL) {
                                                      
 }
 
@@ -40,18 +40,19 @@ UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
 * UncertaintyDataCall::~UncertaintyDataCall
 */
 UncertaintyDataCall::~UncertaintyDataCall(void) {
-    this->secStructAssignment = NULL;
     this->pdbIndex = NULL;
     this->chainID = NULL;
     this->residueFlag = NULL;
     this->aminoAcidName = NULL;
     this->secStructUncertainty = NULL;
-    this->sortedSecStructUncertainty = NULL;
+    this->sortedSecStructAssignment = NULL;
 	this->recalcUncertainty = NULL;
 	this->pdbID = NULL;
 	this->pdbAssignmentHelix = NULL;
 	this->pdbAssignmentSheet = NULL;
-
+    this->strideStructThreshold = NULL;
+    this->strideStructEnergy = NULL;
+    this->dsspStructEnergy = NULL;
 }
 
 
