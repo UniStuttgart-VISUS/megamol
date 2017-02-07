@@ -19,6 +19,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 
+#include <stdio.h>
+
 using namespace megamol;
 
 ospray::OSPRayRenderer::OSPRayRenderer(void) :
@@ -64,6 +66,7 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
 
     light = NULL;
     lightArray = NULL;
+    framebufferIsDirty = true;
 
     core::param::EnumParam *lt = new core::param::EnumParam(NONE);
     lt->SetTypePair(NONE, "None");
@@ -458,7 +461,8 @@ bool ospray::OSPRayRenderer::AbstractIsDirty() {
             this->rd_epsilon.IsDirty() ||
             this->rd_spp.IsDirty() ||
             this->rd_maxRecursion.IsDirty() ||
-            this->rd_ptBackground.IsDirty() )
+            this->rd_ptBackground.IsDirty() ||
+            this->framebufferIsDirty)
         {
             return true;
         } else {
@@ -495,6 +499,7 @@ void ospray::OSPRayRenderer::AbstractResetDirty() {
     this->rd_spp.ResetDirty();
     this->rd_maxRecursion.ResetDirty();
     this->rd_ptBackground.ResetDirty();
+    this->framebufferIsDirty = false;
 }
 
 void ospray::OSPRayRenderer::OSPRayLights(OSPRenderer &renderer, core::Call& call) {
@@ -622,8 +627,34 @@ void ospray::OSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, core::view::Ca
 
 }
 
+OSPFrameBuffer ospray::OSPRayRenderer::newFrameBuffer(osp::vec2i& imgSize, const OSPFrameBufferFormat format, const uint32_t frameBufferChannels) {
+    OSPFrameBuffer frmbuff = ospNewFrameBuffer(imgSize, format, frameBufferChannels);
+    this->framebufferIsDirty = true;
+    return frmbuff;
+}
+
 
 ospray::OSPRayRenderer::~OSPRayRenderer(void) {
     if (light != NULL) ospRelease(light);
     if (lightArray != NULL) ospRelease(lightArray);
+}
+
+// helper function to write the rendered image as PPM file
+void ospray::OSPRayRenderer::writePPM(const char *fileName, const osp::vec2i &size, const uint32_t *pixel) {
+    //std::ofstream file;
+    //file << "P6\n" << size.x << " " << size.y << "\n255\n";
+    FILE *file = fopen(fileName, "wb");
+    fprintf(file, "P6\n%i %i\n255\n", size.x, size.y);
+    unsigned char *out = (unsigned char *)alloca(3 * size.x);
+    for (int y = 0; y < size.y; y++) {
+        const unsigned char *in = (const unsigned char *)&pixel[(size.y - 1 - y)*size.x];
+        for (int x = 0; x < size.x; x++) {
+            out[3 * x + 0] = in[4 * x + 0];
+            out[3 * x + 1] = in[4 * x + 1];
+            out[3 * x + 2] = in[4 * x + 2];
+        }
+        fwrite(out, 3 * size.x, sizeof(char), file);
+    }
+    fprintf(file, "\n");
+    fclose(file);
 }

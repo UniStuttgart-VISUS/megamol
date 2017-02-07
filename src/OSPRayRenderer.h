@@ -111,12 +111,15 @@ namespace ospray {
         * @return 2
         */
         OSPTexture2D TextureFromFile(vislib::TString fileName);
+        // helper function to write the rendered image as PPM file
+        void writePPM(const char *fileName, const osp::vec2i &size, const uint32_t *pixel);
 
         // TODO: Documentation
         void OSPRayLights(OSPRenderer &renderer, core::Call& call);
         bool AbstractIsDirty();
         void AbstractResetDirty();
         void RendererSettings(OSPRenderer &renderer);
+        OSPFrameBuffer newFrameBuffer(osp::vec2i& imgSize, const OSPFrameBufferFormat format = OSP_FB_RGBA8, const uint32_t frameBufferChannels = OSP_FB_COLOR);
 
         // vertex array, vertex buffer object, texture
         GLuint vaScreen, vbo, tex;
@@ -178,6 +181,9 @@ namespace ospray {
         // light
         OSPLight light;
         OSPData lightArray;
+
+        // framebuffer dirtyness
+        bool framebufferIsDirty;
     };
 
 } // end namespace ospray

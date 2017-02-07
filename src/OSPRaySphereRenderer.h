@@ -141,6 +141,8 @@ namespace ospray {
         core::param::ParamSlot mat_type;
         core::param::ParamSlot particleList;
 
+        //tmp variable
+        unsigned int number;
 
         // Interface dirty flag
         bool InterfaceIsDirty();

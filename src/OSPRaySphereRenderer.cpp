@@ -25,7 +25,7 @@
 #include "ospray/ospray.h"
 
 #include <stdint.h>
-
+#include <sstream>
 
 using namespace megamol;
 
@@ -84,6 +84,8 @@ particleList("General::ParticleList", "Switches between particle lists")
     vertexData = NULL;
     colorData = NULL;
 
+    //tmp variable
+    number = 0;
 
     // Material
     core::param::EnumParam *mt = new core::param::EnumParam(OBJMATERIAL);
@@ -222,9 +224,9 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
         // Rendering high resolution (> 10k) picutres does not like the accumulation buffer
         if (extraSamles.Param<core::param::BoolParam>()->Value()) {
-            framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
+            framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
         } else {
-            framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR);
+            framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR);
         }
     }
 
@@ -486,8 +488,17 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
 
-        //writePPM("ospframe.ppm", imgSize, fb);
-
+        // write a sequence of single pictures while the screenshooter is running
+        // only for debugging
+        //if (triggered) {
+        //    std::ostringstream oss;
+        //    oss << "ospframe" << this->number << ".ppm";
+        //    std::string bla = oss.str();
+        //    const char* fname = bla.c_str();
+        //    writePPM(fname, imgSize, fb);
+        //    this->number++;
+        //    triggered = false;
+        //}
         this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
 
         // clear stuff
