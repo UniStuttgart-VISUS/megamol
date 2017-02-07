@@ -36,7 +36,6 @@
 #include "vislib/math/mathfunctions.h"
 
 #include <iostream> // DEBUG
-#include <iomanip>  // DEBUG
 
 #define DATA_FLOAT_EPS 0.00001
 
@@ -140,22 +139,22 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetRecalcFlag(true);
         
 
-        // DEBUG - sorted structure assignments and uncertainty
-        /*
+        // DEBUG - sorted structure assignments, secondary structure length and uncertainty
+        
         for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
             for (int i = 0; i < this->pdbIndex.Count(); i++) {
-                std::cout << k << " - " << i << " - ";
+                std::cout << "M: " << k << " - A: " << i << " - L: " << this->secStructLength[k][i] << " - S: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
                     std::cout << this->sortedSecStructAssignment[k][i][n] << "|";
                 }
-                std::cout << "-|";
+                std::cout << " - U: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
                     std::cout << this->secStructUncertainty[k][i][n] << "|";
                 }
                 std::cout << std::endl;
             }
         }
-        */
+        
     }
     
     // pass secondary strucutre data to call, if available
@@ -494,16 +493,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 			}
 		}
 
-		// DEBUG - assignment and structure length
-		/*
-		for (int i = 0; i < this->pdbIndex.Count(); i++) {
-            for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
-                std::cout << this->sortedSecStructAssignment[k][i] << " - " << this->secStructLength[k][i] << " | ";
-            }
-            std::cout << std::endl;
-		}
-		*/
-
         //Clear ascii file buffer
 		file.Clear();
 		Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Retrieved secondary structure assignments for %i amino-acids.", this->pdbIndex.Count()); // INFO
@@ -524,10 +513,91 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	using vislib::sys::Log;
   
 
+    float methodCount;
+	float tmpChange;
+    
+    // return if no data is present ...
+    if (this->pdbIndex.IsEmpty()) { 
+        return false;
+    }
+
+    // Reset uncertainty data 
+    this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY].Clear();
+    this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY].Clear();
+    this->uncertainty.Clear();
+    this->uncertainty.AssertCapacity(this->pdbIndex.Count());
+
+    // tmp pointers
+    vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> >                             *tmpSSU;
+    vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSSA;
+    tmpSSU  = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+    
+    
+	// initialize structure factors for all three methods with 1.0f
+	vislib::Array<vislib::Array<float> > structFactor;
+	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; i++) {
+		structFactor.Add(vislib::Array<float>());
+		for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); j++) {
+			structFactor[i].Add(1.0f);
+		}
+	}
 
 
+    // Initialize and calculate uncertainty data
+    for (int i = 0; i < this->pdbIndex.Count(); i++) {
 
-	return true;
+        // create new entry for amino-acid
+        tmpSSU->Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
+        tmpSSSA->Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
+
+        methodCount = static_cast<float>(UncertaintyDataCall::assMethod::NOM)-1;
+
+        // loop over all possible secondary strucutres
+        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
+
+            // initialising
+            tmpSSU->Last()[j] = 0.0f;
+            tmpSSSA->Last()[j] = static_cast<UncertaintyDataCall::secStructure>(j);
+
+            // loop over all assignment methods except UNCERTINATY -> NOM-1
+            for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
+                
+                if (this->sortedSecStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i][0] == static_cast<UncertaintyDataCall::secStructure>(j)) {
+					// ignore NOTDEFINED structure type for uncerainty calculation
+					if (static_cast<UncertaintyDataCall::secStructure>(j) == UncertaintyDataCall::secStructure::NOTDEFINED) {
+						methodCount -= 1.0f;
+					}
+					else {
+                        tmpSSU->Last()[j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
+					}
+                }
+                else {
+                    tmpSSU->Last()[j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
+                }
+            }
+        }
+        
+        // normalise
+        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
+            tmpSSU->Last()[j] /= abs(methodCount);
+        }
+            
+        // using quicksort for sorting ...
+        this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+
+		// calculate uncertainty
+		tmpChange = 0.0f;
+		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
+            tmpChange += (tmpSSU->Last()[tmpSSSA->Last()[k]] - tmpSSU->Last()[tmpSSSA->Last()[k + 1]]);
+		}
+		this->uncertainty.Add(1.0f - tmpChange);
+
+    }
+
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
+
+    return true;
 }
 
 
@@ -552,8 +622,10 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
     this->uncertainty.AssertCapacity(this->pdbIndex.Count());
 
     // tmp pointers
-    vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> >                             *tmpSSU  =  &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
-    vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSSA =  &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+    vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> >                             *tmpSSU;
+    vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSSA;
+    tmpSSU  = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
 
 
 	// initialize structure factors for all three methods with 1.0f
@@ -615,8 +687,6 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
 		}
 		this->uncertainty.Add(1.0f - tmpChange);
 
-		// DEBUG - uncertainty
-		// std::cout << this->uncertainty.Last() << std::endl;
     }
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
