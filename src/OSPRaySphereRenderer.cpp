@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 
+
 using namespace megamol;
 
 
@@ -36,12 +37,12 @@ VISLIB_FORCEINLINE float floatFromVoidArray(const megamol::core::moldyn::MultiPa
     return static_cast<const float*>(p.GetVertexData())[index];
 }
 
-VISLIB_FORCEINLINE float unit8FromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
-	return static_cast<const uint8_t*>(p.GetVertexData())[index];
+VISLIB_FORCEINLINE unsigned char byteFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+	return static_cast<const unsigned char*>(p.GetVertexData())[index];
 }
 
 typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef float(*uint8FromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
 /*
 ospray::OSPRaySphereRenderer::OSPRaySphereRenderer
@@ -59,8 +60,9 @@ mat_Ks("Material::OBJMaterial::SpecularColor", "Specular color"),
 mat_Ns("Material::OBJMaterial::Shininess", "Phong exponent"),
 mat_d("Material::OBJMaterial::Opacity", "Opacity"),
 mat_Tf("Material::OBJMaterial::TransparencyFilterColor", "Transparency filter color"),
-mat_type("Material::Type", "Switches material types") {
-
+mat_type("Material::Type", "Switches material types"),
+particleList("General::ParticleList", "Switches between particle lists")
+{
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
@@ -107,6 +109,8 @@ mat_type("Material::Type", "Switches material types") {
     this->MakeSlotAvailable(&this->mat_Tf);
     this->MakeSlotAvailable(&this->mat_type);
 
+    this->particleList << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->particleList);
 }
 
 
@@ -211,14 +215,17 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     glDisable(GL_CULL_FACE);
 
     // new framebuffer at resize action
-    if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() || imgSize.y != cr->GetCameraParameters()->TileRect().Height()) {
+    if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() || imgSize.y != cr->GetCameraParameters()->TileRect().Height() || extraSamles.IsDirty()) {
         // Breakpoint for Screenshooter debugging
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
         imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
         imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-        //framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
-        framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR);
-
+        // Rendering high resolution (> 10k) picutres does not like the accumulation buffer
+        if (extraSamles.Param<core::param::BoolParam>()->Value()) {
+            framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
+        } else {
+            framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR);
+        }
     }
 
 
@@ -273,228 +280,227 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         time = cr->Time();
         renderer_changed = false;
 
-        for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
-            core::moldyn::MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
-            // Vertex data type check
-            if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
-                vertexLength = 3;
-                vertexType = OSP_FLOAT3;
-            } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-                vertexLength = 3;
-                vertexType = OSP_FLOAT3;
-            }
-            // Color data type check
-            if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
-                colorLength = 4;
-                colorType = OSP_FLOAT4;
-            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-                colorLength = 1;
-                colorType = OSP_FLOAT4;
-            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-                colorLength = 3;
-                colorType = OSP_FLOAT3;
-            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-                colorLength = 4;
-                colorType = OSP_UINT4; // TODO
-            } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-                colorLength = 3;
-                colorType = OSP_UINT3; // TODO
-            }
+        if (this->particleList.Param<core::param::IntParam>()->Value() > (c2->GetParticleListCount() - 1)) {
+            this->particleList.Param<core::param::IntParam>()->SetValue(0);
+        }
 
-            std::vector<float> cd_rgba;
-            cd_rgba.reserve(parts.GetCount() * 4);
-            std::vector<float> vd;
-            vd.reserve(parts.GetCount() * vertexLength);
-            if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-                std::vector<unsigned char> vd_bytes;
-                vd_bytes.reserve(parts.GetCount() * (parts.GetVertexDataStride() - colorLength));
-                for (size_t loop = 1; loop < (parts.GetCount() + 1); loop++) {
-                    for (size_t i = parts.GetVertexDataStride(); i > colorLength ; i--) {
-                        vd_bytes.push_back(static_cast<const unsigned char*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - i]);
-                    }
-                    ASSERT(vd_bytes.size() % 12 == 0);
-                    cd_rgba.push_back((float)static_cast<const uint8_t*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - 3] / 255.0f);
-                    cd_rgba.push_back((float)static_cast<const uint8_t*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - 2] / 255.0f);
-                    cd_rgba.push_back((float)static_cast<const uint8_t*>(parts.GetVertexData())[loop * parts.GetVertexDataStride() - 1] / 255.0f);
-                    cd_rgba.push_back(1.0f);
+        core::moldyn::MultiParticleDataCall::Particles &parts = c2->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
 
-                }
-
-                //floatFromArrayFunc ffaf;
-                //ffaf = floatFromVoidArray;
-                //for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
-                //    if (!(loop % (vertexLength + colorLength) >= vertexLength)) {
-                //        vd.push_back(ffaf(parts, loop));
-                //    }
-                //}
-
-                auto blub = reinterpret_cast<float*>(vd_bytes.data());
-                vd.assign(blub, blub + parts.GetCount()*vertexLength);
-            }
-
-
-            if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-                floatFromArrayFunc ffaf;
-                ffaf = floatFromVoidArray;
-                std::vector<float> cd;
-
-                for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
-                    if (loop % (vertexLength + colorLength) >= vertexLength) {
-                        cd.push_back(ffaf(parts, loop));
-                    } else {
-                        vd.push_back(ffaf(parts, loop));
-                    }
-                }
-
-                // Color transfer call and calculation
-                core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-                if (cgtf != NULL && ((*cgtf)())) {
-                    float const* tf_tex = cgtf->GetTextureData();
-                    tex_size = cgtf->TextureSize();
-                    this->colorTransferGray(cd, tf_tex, tex_size, cd_rgba);
-                } else {
-                    this->colorTransferGray(cd, NULL, 0, cd_rgba);
-                }
-                colorLength = 4;
-            }
-
-            // test for spheres with inidividual radii
-            /*
-         
-            std::vector<float> vd_test = { 1.0f, 0.0f, 0.0f, 1.0f,
-                0.0f, 10.0f, 0.0f, 10.0f };
-            std::vector<float> cd_rgba_test = { 0.5f, 0.5f, 0.5f, 1.0f,
-                1.0f, 0.0f, 0.0f, 1.0f };
-
-            vertexData = ospNewData(2, OSP_FLOAT4, vd_test.data());
-            colorData = ospNewData(2, colorType, cd_rgba_test.data());
-
-            for (int i = 0; i < (vd_test.size() / 4); i++) {
-                OSPGeometry sphere = ospNewGeometry("spheres");
-                std::vector<float> tmp = { vd_test[4 * i + 0], vd_test[4 * i + 1], vd_test[4 * i + 2], vd_test[4 * i + 3] };
-                OSPData ospvd = ospNewData(1, OSP_FLOAT4, tmp.data());
-                ospCommit(ospvd);
-                ospSetData(sphere, "spheres", ospvd);
-                ospSet1f(sphere, "radius", vd_test[4 * i + 3]);
-                ospCommit(sphere);
-                ospAddGeometry(world, sphere);
-                ospCommit(world);
-            }
-            */
-
-   //         vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
-			//if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-			//	colorData = ospNewData(parts.GetCount(), colorType, cd_rgba.data());
-			//}
-			//else {
-			//	colorData = ospNewData(parts.GetCount(), OSP_FLOAT3, cd.data());
-			//}
-   //         ospCommit(vertexData);
-   //         ospCommit(colorData);
-			vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
-			colorData = ospNewData(parts.GetCount(), OSP_FLOAT4, cd_rgba.data());
-			ospCommit(vertexData);
-			ospCommit(colorData);
-
-			//ospSet1i(spheres, "bytes_per_sphere", parts.GetVertexDataStride());
-            ospSet1i(spheres, "bytes_per_sphere", vertexLength*sizeof(float));
-
-			//ospSet1i(spheres, "color_stride", parts.GetVertexDataStride());
-			//ospSet1i(spheres, "color_offset", 12);
-			//ospSet1i(spheres, "color_stride", 3);
-			ospSetData(spheres, "spheres", vertexData);
-            ospSetData(spheres, "color", colorData);
+        // Vertex data type check
+        if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+            vertexLength = 3;
+            vertexType = OSP_FLOAT3;
+            ospSet1i(spheres, "bytes_per_sphere", vertexLength * sizeof(float));
             ospSet1f(spheres, "radius", parts.GetGlobalRadius());
+        } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+            vertexLength = 4;
+            vertexType = OSP_FLOAT4;
+            ospSet1i(spheres, "bytes_per_sphere", vertexLength * sizeof(float));
+            ospSet1i(spheres, "offset_radius", (vertexLength - 1) * sizeof(float));
+        }
+        // reserve space for vertex data object
+        vd.reserve(parts.GetCount() * vertexLength);
 
-            // clipPlane setup
-            std::vector<float> clipDat(4);
-            std::vector<float> clipCol(4);
-            this->getClipData(clipDat.data(), clipCol.data());
+        // Color data type check
+        if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+            colorLength = 4;
+            convertedColorType = OSP_FLOAT4;
+            cd_rgba.reserve(parts.GetCount() * colorLength);
 
-            if (!std::all_of(clipDat.begin(), clipDat.end() - 1, [](float i) { return i == 0; })) {
-                pln = ospNewPlane("clipPlane");
-                ospSet1f(pln, "dist", clipDat[3]);
-                ospSet3fv(pln, "normal", clipDat.data());
-                ospSet4fv(pln, "color", clipCol.data());
-                ospCommit(pln);
-                ospSetObject(spheres, "clipPlane", pln);
+            floatFromArrayFunc ffaf;
+            ffaf = floatFromVoidArray;
+
+            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+                if (loop % (vertexLength + colorLength) >= vertexLength) {
+                    cd_rgba.push_back(ffaf(parts, loop));
+                } else {
+                    vd.push_back(ffaf(parts, loop));
+                }
+            }
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+            // this colorType will be transformed to:
+            convertedColorType = OSP_FLOAT4;
+            colorLength = 4;
+            cd_rgba.reserve(parts.GetCount() * colorLength);
+
+            floatFromArrayFunc ffaf;
+            ffaf = floatFromVoidArray;
+            std::vector<float> cd;
+
+            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+                if (loop % (vertexLength + 1) >= vertexLength) {
+                    cd.push_back(ffaf(parts, loop));
+                } else {
+                    vd.push_back(ffaf(parts, loop));
+                }
+            }
+
+            // Color transfer call and calculation
+            core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+            if (cgtf != NULL && ((*cgtf)())) {
+                float const* tf_tex = cgtf->GetTextureData();
+                tex_size = cgtf->TextureSize();
+                this->colorTransferGray(cd, tf_tex, tex_size, cd_rgba);
             } else {
-                ospSetObject(spheres, "clipPlane", NULL);
+                this->colorTransferGray(cd, NULL, 0, cd_rgba);
             }
 
-            // custom material settings
-            OSPMaterial material;
-            switch (this->mat_type.Param<core::param::EnumParam>()->Value()) {
-            case OBJMATERIAL:
-                material = ospNewMaterial(renderer, "OBJMaterial");
-                ospSet3fv(material, "Kd", this->mat_Kd.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-                ospSet3fv(material, "Ks", this->mat_Ks.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-                ospSet1f(material, "Ns", this->mat_Ns.Param<core::param::FloatParam>()->Value());
-                ospSet1f(material, "d", this->mat_d.Param<core::param::FloatParam>()->Value());
-                ospSet3fv(material, "Tf", this->mat_Tf.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-                break;
-            case GLASS:
-                material = ospNewMaterial(renderer, "Glass");
-                break;
-            case MATTE:
-                material = ospNewMaterial(renderer, "Matte");
-                break;
-            case METAL:
-                material = ospNewMaterial(renderer, "Metal");
-                break;
-            case METALLICPAINT:
-                material = ospNewMaterial(renderer, "MetallicPaint");
-                break;
-            case PLASTIC:
-                material = ospNewMaterial(renderer, "Plastic");
-                break;
-            case THINGLASS:
-                material = ospNewMaterial(renderer, "ThinGlass");
-                break;
-            case VELVET:
-                material = ospNewMaterial(renderer, "Velvet");
-                break;
+
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+            colorLength = 3;
+            convertedColorType = OSP_FLOAT3;
+            cd_rgba.reserve(parts.GetCount() * colorLength);
+
+            floatFromArrayFunc ffaf;
+            ffaf = floatFromVoidArray;
+
+            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+                if (loop % (vertexLength + colorLength) >= vertexLength) {
+                    cd_rgba.push_back(ffaf(parts, loop));
+                } else {
+                    vd.push_back(ffaf(parts, loop));
+                }
             }
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+            colorLength = 4;
+            convertedColorType = OSP_FLOAT4;
+            cd_rgba.reserve(parts.GetCount() * colorLength);
 
-            ospCommit(material);
-            ospSetMaterial(spheres, material);
-            ospCommit(spheres);
-            ospCommit(world);
+            float alpha = 1.0f;
+            byteFromArrayFunc bfaf;
+            bfaf = byteFromVoidArray;
+
+            vd.resize(parts.GetCount() * vertexLength);
+            auto data = static_cast<const float*>(parts.GetVertexData());
+
+            for (size_t i = 0; i < parts.GetCount(); i++) {
+                std::copy_n(data + (i * parts.GetVertexDataStride() / sizeof(float)),
+                    vertexLength,
+                    vd.begin() + (i * vertexLength));
+                for (size_t j = 0; j < colorLength; j++) {
+                    cd_rgba.push_back((float)bfaf(parts, i * parts.GetVertexDataStride() + vertexLength * sizeof(float) + j) / 255.0f);
+                }
+            }
+        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
+            vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
+        }
 
 
 
-            RendererSettings(renderer);
+        if (parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+            vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
+            ospCommit(vertexData);
+            ospSetData(spheres, "spheres", vertexData);
 
-            OSPRayLights(renderer, call);
-            ospCommit(renderer);
+            colorData = ospNewData(parts.GetCount(), convertedColorType, cd_rgba.data());
+            ospCommit(colorData);
+            ospSetData(spheres, "color", colorData);
 
-            
-            // setup framebuffer
+            //OSPData data = ospNewData(parts.GetCount(), OSP_FLOAT4, parts.GetVertexData());
+            //ospCommit(data);
+            //ospSetData(spheres, "spheres", data);
+            //ospSet1i(spheres, "bytes_per_sphere", 4*sizeof(float));
+            //ospSet1i(spheres, "color_offset", 3*sizeof(float));
+            //ospSet1i(spheres, "color_stride", 1*sizeof(float));
+        } else {
+
+            vertexData = ospNewData(parts.GetCount(), vertexType, parts.GetVertexData());
+            ospCommit(vertexData);
+            ospSetData(spheres, "spheres", vertexData);
+        }
+
+
+
+        // clipPlane setup
+        std::vector<float> clipDat(4);
+        std::vector<float> clipCol(4);
+        this->getClipData(clipDat.data(), clipCol.data());
+
+        if (!std::all_of(clipDat.begin(), clipDat.end() - 1, [](float i) { return i == 0; })) {
+            pln = ospNewPlane("clipPlane");
+            ospSet1f(pln, "dist", clipDat[3]);
+            ospSet3fv(pln, "normal", clipDat.data());
+            ospSet4fv(pln, "color", clipCol.data());
+            ospCommit(pln);
+            ospSetObject(spheres, "clipPlane", pln);
+        } else {
+            ospSetObject(spheres, "clipPlane", NULL);
+        }
+
+        // custom material settings
+        OSPMaterial material;
+        switch (this->mat_type.Param<core::param::EnumParam>()->Value()) {
+        case OBJMATERIAL:
+            material = ospNewMaterial(renderer, "OBJMaterial");
+            ospSet3fv(material, "Kd", this->mat_Kd.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+            ospSet3fv(material, "Ks", this->mat_Ks.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+            ospSet1f(material, "Ns", this->mat_Ns.Param<core::param::FloatParam>()->Value());
+            ospSet1f(material, "d", this->mat_d.Param<core::param::FloatParam>()->Value());
+            ospSet3fv(material, "Tf", this->mat_Tf.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+            break;
+        case GLASS:
+            material = ospNewMaterial(renderer, "Glass");
+            break;
+        case MATTE:
+            material = ospNewMaterial(renderer, "Matte");
+            break;
+        case METAL:
+            material = ospNewMaterial(renderer, "Metal");
+            break;
+        case METALLICPAINT:
+            material = ospNewMaterial(renderer, "MetallicPaint");
+            break;
+        case PLASTIC:
+            material = ospNewMaterial(renderer, "Plastic");
+            break;
+        case THINGLASS:
+            material = ospNewMaterial(renderer, "ThinGlass");
+            break;
+        case VELVET:
+            material = ospNewMaterial(renderer, "Velvet");
+            break;
+        }
+
+        ospCommit(material);
+        ospSetMaterial(spheres, material);
+        ospCommit(spheres);
+        ospCommit(world);
+
+
+
+        RendererSettings(renderer);
+
+        OSPRayLights(renderer, call);
+        ospCommit(renderer);
+
+
+        // setup framebuffer
+        if (extraSamles.Param<core::param::BoolParam>()->Value()) {
+            ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
+            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+        } else {
             ospFrameBufferClear(framebuffer, OSP_FB_COLOR);
             ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR);
-            //ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-            //ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
-
-            // get the texture from the framebuffer
-            fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
-
-            //writePPM("ospframe.ppm", imgSize, fb);
-
-            this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
-
-            // clear stuff
-            ospUnmapFrameBuffer(fb, framebuffer);
-            ospRelease(vertexData);
-            ospRelease(colorData);
-            ospRelease(material);
-
-            vd.clear();
-            cd_rgba.clear();
-
         }
+
+        // get the texture from the framebuffer
+        fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
+
+        //writePPM("ospframe.ppm", imgSize, fb);
+
+        this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
+
+        // clear stuff
+        ospUnmapFrameBuffer(fb, framebuffer);
+        ospRelease(vertexData);
+        ospRelease(colorData);
+        ospRelease(material);
+
+        vd.clear();
+        cd_rgba.clear();
+
     } else {
-            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR);
-            //ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
             fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
             this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
             ospUnmapFrameBuffer(fb, framebuffer);
@@ -516,7 +522,8 @@ bool ospray::OSPRaySphereRenderer::InterfaceIsDirty() {
         this->mat_Ks.IsDirty() ||
         this->mat_Ns.IsDirty() ||
         this->mat_d.IsDirty() ||
-        this->mat_Tf.IsDirty())
+        this->mat_Tf.IsDirty() ||
+        this->particleList.IsDirty())
     {
         this->AbstractResetDirty();
         this->mat_Kd.ResetDirty();
@@ -524,6 +531,7 @@ bool ospray::OSPRaySphereRenderer::InterfaceIsDirty() {
         this->mat_Ns.ResetDirty();
         this->mat_d.ResetDirty();
         this->mat_Tf.ResetDirty();
+        this->particleList.ResetDirty();
         return true;
     } else {
         return false;

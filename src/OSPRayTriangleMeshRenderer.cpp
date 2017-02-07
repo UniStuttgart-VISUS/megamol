@@ -28,6 +28,12 @@ ospray::OSPRayTriangleMeshRenderer::OSPRayTriangleMeshRenderer(void) :
     imgSize.y = 0;
     time = 0;
     framebuffer = NULL;
+
+    vertexdata = NULL;
+    normaldata = NULL;
+    coldata = NULL;
+    texdata = NULL;
+    indexdata = NULL;
 }
 
 
@@ -47,11 +53,11 @@ void ospray::OSPRayTriangleMeshRenderer::release() {
     for (unsigned int i = 0; i < this->objectCount; i++) {
         ospRelease(trimesh[i]);
     }
-    ospRelease(vertexdata);
-    ospRelease(normaldata);
-    ospRelease(coldata);
-    ospRelease(texdata);
-    ospRelease(indexdata);
+    if (vertexdata != NULL) ospRelease(vertexdata);
+    if (normaldata != NULL) ospRelease(normaldata);
+    if (coldata != NULL) ospRelease(coldata);
+    if (texdata != NULL) ospRelease(texdata);
+    if (indexdata != NULL) ospRelease(indexdata);
 
     return;
 }
@@ -139,7 +145,7 @@ bool ospray::OSPRayTriangleMeshRenderer::Render(core::Call& call) {
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
         imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
         imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-        framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_ACCUM);
+        framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
     }
 
     // if user wants to switch renderer
@@ -322,8 +328,8 @@ bool ospray::OSPRayTriangleMeshRenderer::Render(core::Call& call) {
 
 
             // setup framebuffer
-            ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+            ospFrameBufferClear(framebuffer, OSP_FB_COLOR);
+            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR);
 
             // get the texture from the framebuffer
             fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);

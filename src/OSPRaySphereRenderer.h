@@ -139,6 +139,7 @@ namespace ospray {
         core::param::ParamSlot mat_d;
         core::param::ParamSlot mat_Tf;
         core::param::ParamSlot mat_type;
+        core::param::ParamSlot particleList;
 
 
         // Interface dirty flag
@@ -149,9 +150,11 @@ namespace ospray {
         bool cam_has_changed;
         SIZE_T m_datahash;
         vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
-        int extra_samples;
         float time;
 
+        //data objects
+        std::vector<float> cd_rgba;
+        std::vector<float> vd;
 
         // OSP objects
         OSPRenderer renderer;
@@ -192,7 +195,7 @@ namespace ospray {
         size_t vertexLength;
         OSPDataType vertexType;
         size_t colorLength;
-        OSPDataType colorType;
+        OSPDataType convertedColorType;
 
         // color transfer data
         unsigned int tex_size;

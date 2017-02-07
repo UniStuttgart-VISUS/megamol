@@ -188,7 +188,7 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
         imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
         imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-        framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_ACCUM);
+        framebuffer = ospNewFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
     }
 
     // if user wants to switch renderer
@@ -362,11 +362,10 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
         ospCommit(renderer);
 
 
-
-
         // setup framebuffer
         ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+
 
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
