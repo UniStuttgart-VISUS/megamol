@@ -511,89 +511,17 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 */
 bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	using vislib::sys::Log;
-  
-
-    float methodCount;
-	float tmpChange;
-    
-    // return if no data is present ...
-    if (this->pdbIndex.IsEmpty()) { 
-        return false;
-    }
-
-    // Reset uncertainty data 
-    this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY].Clear();
-    this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY].Clear();
-    this->uncertainty.Clear();
-    this->uncertainty.AssertCapacity(this->pdbIndex.Count());
-
-    // tmp pointers
-    vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> >                             *tmpSSU;
-    vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSSA;
-    tmpSSU  = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
-    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
-    
-    
-	// initialize structure factors for all three methods with 1.0f
-	vislib::Array<vislib::Array<float> > structFactor;
-	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; i++) {
-		structFactor.Add(vislib::Array<float>());
-		for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); j++) {
-			structFactor[i].Add(1.0f);
-		}
-	}
 
 
-    // Initialize and calculate uncertainty data
-    for (int i = 0; i < this->pdbIndex.Count(); i++) {
 
-        // create new entry for amino-acid
-        tmpSSU->Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
-        tmpSSSA->Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
 
-        methodCount = static_cast<float>(UncertaintyDataCall::assMethod::NOM)-1;
 
-        // loop over all possible secondary strucutres
-        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
 
-            // initialising
-            tmpSSU->Last()[j] = 0.0f;
-            tmpSSSA->Last()[j] = static_cast<UncertaintyDataCall::secStructure>(j);
 
-            // loop over all assignment methods except UNCERTINATY -> NOM-1
-            for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
-                
-                if (this->sortedSecStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i][0] == static_cast<UncertaintyDataCall::secStructure>(j)) {
-					// ignore NOTDEFINED structure type for uncerainty calculation
-					if (static_cast<UncertaintyDataCall::secStructure>(j) == UncertaintyDataCall::secStructure::NOTDEFINED) {
-						methodCount -= 1.0f;
-					}
-					else {
-                        tmpSSU->Last()[j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
-					}
-                }
-                else {
-                    tmpSSU->Last()[j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
-                }
-            }
-        }
-        
-        // normalise
-        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
-            tmpSSU->Last()[j] /= abs(methodCount);
-        }
-            
-        // using quicksort for sorting ...
-        this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
 
-		// calculate uncertainty
-		tmpChange = 0.0f;
-		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
-            tmpChange += (tmpSSU->Last()[tmpSSSA->Last()[k]] - tmpSSU->Last()[tmpSSSA->Last()[k + 1]]);
-		}
-		this->uncertainty.Add(1.0f - tmpChange);
 
-    }
+
+
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
 
@@ -607,89 +535,90 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
     using vislib::sys::Log;
 
-    float methodCount;
-	float tmpChange;
-    
     // return if no data is present ...
     if (this->pdbIndex.IsEmpty()) { 
         return false;
     }
 
+    const unsigned int methodCnt   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM) - 1;  // UNCERTAINTY is not taken into account
+    const unsigned int structTypes = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
+    const unsigned int uncMethod   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY;
+    
     // Reset uncertainty data 
-    this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY].Clear();
-    this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY].Clear();
-    this->uncertainty.Clear();
+    this->secStructUncertainty[uncMethod].Clear();
+    this->sortedSecStructAssignment[uncMethod].Clear();    
+    this->uncertainty.Clear();    
+    this->secStructUncertainty[uncMethod].AssertCapacity(this->pdbIndex.Count());
+    this->sortedSecStructAssignment[uncMethod].AssertCapacity(this->pdbIndex.Count());  
     this->uncertainty.AssertCapacity(this->pdbIndex.Count());
 
-    // tmp pointers
-    vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> >                             *tmpSSU;
-    vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSSA;
-    tmpSSU  = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
-    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
-
-
-	// initialize structure factors for all three methods with 1.0f
+    // Create tmp structure type and structure uncertainty vectors for amino-acid
+    vislib::math::Vector<float, structTypes>                             ssu;
+    vislib::math::Vector<UncertaintyDataCall::secStructure, structTypes> ssa;
+    
+	// Initialize structure factors for all three methods with 1.0f
 	vislib::Array<vislib::Array<float> > structFactor;
-	for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; i++) {
+	for (unsigned int i = 0; i < methodCnt; i++) {
 		structFactor.Add(vislib::Array<float>());
-		for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); j++) {
+		for (unsigned int j = 0; j < structTypes; j++) {
 			structFactor[i].Add(1.0f);
 		}
 	}
 
-
-    // Initialize and calculate uncertainty data
+    // Calculate uncertainty
+    // Loop over all amino-acids
     for (int i = 0; i < this->pdbIndex.Count(); i++) {
+        consideredMethods = methodCnt;
+        
+        // Loop over all secondary strucutre types
+        for (int j = 0; j < structTypes; j++) {
+            UncertaintyDataCall::secStructure curStruct = static_cast<UncertaintyDataCall::secStructure>(j);
+            
+            // Init tmp structure type and structure uncertainty vectors
+            ssu[j] = 0.0f;
+            ssa[j] = curStruct;
 
-        // create new entry for amino-acid
-        tmpSSU->Add(vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
-        tmpSSSA->Add(vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)>());
-
-        methodCount = static_cast<float>(UncertaintyDataCall::assMethod::NOM)-1;
-
-        // loop over all possible secondary strucutres
-        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
-
-            // initialising
-            tmpSSU->Last()[j] = 0.0f;
-            tmpSSSA->Last()[j] = static_cast<UncertaintyDataCall::secStructure>(j);
-
-            // loop over all assignment methods except UNCERTINATY -> NOM-1
-            for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
+            // Loop over all assignment methods 
+            for (unsigned int k = 0; k < methodCnt; k++) {
+                UncertaintyDataCall::assMethod curMethod = static_cast<UncertaintyDataCall::assMethod>(k);
                 
-                if (this->sortedSecStructAssignment[static_cast<UncertaintyDataCall::assMethod>(k)][i][0] == static_cast<UncertaintyDataCall::secStructure>(j)) {
-					// ignore NOTDEFINED structure type for uncerainty calculation
-					if (static_cast<UncertaintyDataCall::secStructure>(j) == UncertaintyDataCall::secStructure::NOTDEFINED) {
-						methodCount -= 1.0f;
+                if (curStruct == this->sortedSecStructAssignment[curMethod][i][0]) {
+					// Ignore NOTDEFINED structure type
+					if (curStruct == UncertaintyDataCall::secStructure::NOTDEFINED) {
+						consideredMethods -= 1;
 					}
 					else {
-                        tmpSSU->Last()[j] += structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j];
+                        ssu[j] += structFactor[curMethod][j];
 					}
                 }
                 else {
-                    tmpSSU->Last()[j] += ((1.0f - structFactor[static_cast<UncertaintyDataCall::assMethod>(k)][j]) / (static_cast<float>(UncertaintyDataCall::secStructure::NOE) - 1.0f));
+                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float)structTypes - 1.0f));
                 }
             }
         }
         
-        // normalise
-        for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
-            tmpSSU->Last()[j] /= abs(methodCount);
+        // Normalise structure uncertainty to [0.0,1.0]
+        for (int j = 0; j < structTypes; j++) {
+            ssu[j] /= abs((float)consideredMethods);
         }
             
-        // using quicksort for sorting ...
-        this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+        // Sorting structure types by their uncertainty
+        this->QuickSortUncertainties(&(ssu), &(ssa), 0, (structTypes-1));
 
-		// calculate uncertainty
-		tmpChange = 0.0f;
-		for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)-1; k++) {
-            tmpChange += (tmpSSU->Last()[tmpSSSA->Last()[k]] - tmpSSU->Last()[tmpSSSA->Last()[k + 1]]);
+		// Calculate reduced uncertainty value
+		float unc = 0.0f;
+		for (unsigned int k = 0; k < methodCnt; k++) {
+            unc += (ssu[ssa[k]] - ssu[ssa[k + 1]]);
 		}
-		this->uncertainty.Add(1.0f - tmpChange);
-
+        unc = 1.0f - unc;
+        
+        // Assign values to arrays
+        this->secStructUncertainty[uncMethod].Add(ssu);
+        this->sortedSecStructAssignment[uncMethod].Add(ssa);
+        this->uncertainty.Add(unc);
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculated AVERAGE uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
 
     return true;
 }
