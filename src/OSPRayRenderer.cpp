@@ -341,7 +341,7 @@ OSPTexture2D ospray::OSPRayRenderer::TextureFromFile(vislib::TString fileName) {
             rc = fscanf(file, "%i", &maxVal);
             peekchar = getc(file);
 
-            void* data;
+            unsigned char* data;
             data = new unsigned char[width * height * 3];
             rc = fread(data, width*height * 3, 1, file);
             // flip in y, because OSPRay's textures have the origin at the lower left corner
@@ -402,7 +402,7 @@ OSPTexture2D ospray::OSPRayRenderer::TextureFromFile(vislib::TString fileName) {
             float scaleFactor = std::abs(scaleEndian);
 
             int depth = sizeof(float);
-            void* data;
+            float* data;
             data = new float[width * height * numChannels];
             if (fread(data, sizeof(float), width * height * numChannels, file) != width * height * numChannels) {
                 throw std::runtime_error("could not fread");

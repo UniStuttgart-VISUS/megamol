@@ -217,7 +217,9 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
     glDisable(GL_CULL_FACE);
 
     // new framebuffer at resize action
+    //bool triggered = false;
     if (imgSize.x != cr->GetCameraParameters()->TileRect().Width() || imgSize.y != cr->GetCameraParameters()->TileRect().Height() || extraSamles.IsDirty()) {
+        //triggered = true;
         // Breakpoint for Screenshooter debugging
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
         imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
@@ -495,9 +497,11 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         //    oss << "ospframe" << this->number << ".ppm";
         //    std::string bla = oss.str();
         //    const char* fname = bla.c_str();
-        //    writePPM(fname, imgSize, fb);
+        //    osp::vec2i isize;
+        //    isize.x = cr->GetCameraParameters()->TileRect().GetSize().GetWidth();
+        //    isize.y = cr->GetCameraParameters()->TileRect().GetSize().GetHeight();
+        //    writePPM(fname, isize, fb);
         //    this->number++;
-        //    triggered = false;
         //}
         this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
 
