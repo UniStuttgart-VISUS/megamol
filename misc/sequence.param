@@ -1,0 +1,57 @@
+#
+# Parameter file created by MegaMol™ Console
+#
+
+::instS::UncertaintyDataLoader::uidFilename=H:\__Diplomarbeit__\megamol\bin\cache\4ufd.uid
+::instS::UncertaintyDataLoader::calculationMethod=AVERAGE
+::instS::View2D::backCol=white
+::instS::View2D::softCursor=false
+# ::instS::View2D::resetView=
+::instS::View2D::showBBox=false
+::instS::View2D::resetViewOnBBoxChange=false
+::instS::View2D::anim::play=false
+::instS::View2D::anim::speed=4.000000
+::instS::View2D::anim::time=0.000000
+# ::instS::View2D::anim::togglePlay=
+# ::instS::View2D::anim::SpeedUp=
+# ::instS::View2D::anim::SpeedDown=
+::instS::BindingSiteDataSource::pdbFilename=H:\__Diplomarbeit__\megamol\bin\cache\4ufd.pdb
+::instS::BindingSiteDataSource::ColorTableFilename=H:\__Diplomarbeit__\megamol\bin\x64\Release\colors.txt
+::instS::ScreenShooter::view=instS
+::instS::ScreenShooter::imgWidth=4096
+::instS::ScreenShooter::imgHeight=2160
+::instS::ScreenShooter::tileWidth=4096
+::instS::ScreenShooter::tileHeight=2160
+::instS::ScreenShooter::filename=sequence_05.png
+::instS::ScreenShooter::background=Scene Background
+# ::instS::ScreenShooter::trigger=
+::instS::ScreenShooter::closeAfter=false
+::instS::ScreenShooter::anim::from=0
+::instS::ScreenShooter::anim::to=0
+::instS::ScreenShooter::anim::step=1.000000
+::instS::ScreenShooter::anim::addTime2Fname=true
+::instS::ScreenShooter::anim::makeAnim=false
+::instS::ScreenShooter::anim::paramname=
+::instS::UncertaintySequenceRenderer::20 Residues Per Row=50
+::instS::UncertaintySequenceRenderer::14 Geometry tesselation=32
+::instS::UncertaintySequenceRenderer::22 Color Table Filename=H:\__Diplomarbeit__\megamol\bin\x64\Release\colors.txt
+# ::instS::UncertaintySequenceRenderer::21 Clear Residue Selection=
+::instS::UncertaintySequenceRenderer::18 Legend Drawing=true
+::instS::UncertaintySequenceRenderer::01 Stride=true
+::instS::UncertaintySequenceRenderer::03 Dssp=true
+::instS::UncertaintySequenceRenderer::05 PDB=true
+::instS::UncertaintySequenceRenderer::02 Stride Threshold=true
+::instS::UncertaintySequenceRenderer::04 Dssp Threshold=true
+::instS::UncertaintySequenceRenderer::17 Separator Line=true
+::instS::UncertaintySequenceRenderer::06 Uncertainty=true
+::instS::UncertaintySequenceRenderer::07 Uncertain Structure=true
+::instS::UncertaintySequenceRenderer::19 ToolTip=true
+::instS::UncertaintySequenceRenderer::08 Certain: Block chart color=no coloring (background)
+::instS::UncertaintySequenceRenderer::09 Certain: Structure color=colored
+::instS::UncertaintySequenceRenderer::10 Uncertain: Block chart color=no coloring (background)
+::instS::UncertaintySequenceRenderer::11 Uncertain: Block orientation=vertical
+::instS::UncertaintySequenceRenderer::12 Uncertain: Structure color=colored
+::instS::UncertaintySequenceRenderer::13 Uncertain: Structure geometry=Static - morphed
+::instS::UncertaintySequenceRenderer::15 Uncertain: Color interpolation=HSL - linear
+::instS::UncertaintySequenceRenderer::16 Uncertain: Gradient interval=0.200000
+# ::instS::UncertaintySequenceRenderer::23 Reload shaders=
