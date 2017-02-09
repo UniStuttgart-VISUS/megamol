@@ -137,13 +137,16 @@ bool UncertaintyDataLoader::getData(Call& call) {
             default: return false;
         }
         udc->SetRecalcFlag(true);
-        
 
-        // DEBUG - sorted structure assignments, secondary structure length and uncertainty
+        if (!this->CalculateStructureLength()) {
+            return false;
+        }
         
+        // DEBUG - sorted structure assignments, secondary structure length and uncertainty
+        /*
         for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
             for (int i = 0; i < this->pdbIndex.Count(); i++) {
-                std::cout << "M: " << k << " - A: " << i << " - L: " << this->secStructLength[k][i] << " - S: ";
+                std::cout << "M: " << k << " - A: " << i << " - L: " << this->secStructLength[k][i] << " - Unc: " << this->uncertainty[i] << " - S: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
                     std::cout << this->sortedSecStructAssignment[k][i][n] << "|";
                 }
@@ -154,7 +157,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
                 std::cout << std::endl;
             }
         }
-        
+        */
     }
     
     // pass secondary strucutre data to call, if available
@@ -192,7 +195,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
     vislib::sys::ASCIIFileBuffer file;          // ascii buffer of file
     vislib::StringA              filenameA = T2A(filename);
     vislib::StringA              tmpString;
-	vislib::math::Vector<unsigned int, static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM)> tmpStructLength;
 
     // reset data (or just if new file can be loaded?)
     this->pdbIndex.Clear();
@@ -210,16 +212,10 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
         this->secStructUncertainty[i].Clear();
     }
     this->secStructUncertainty.Clear();
-    // clear secStructLength
-	for (unsigned int i = 0; i < secStructLength.Count(); i++) {
-		this->secStructLength[i].Clear();
-	}
-	this->secStructLength.Clear();
 
     this->strideStructThreshold.Clear();
     this->strideStructEnergy.Clear();
     this->dsspStructEnergy.Clear();
-
 
     // check if file ending matches ".uid"
     if(!filenameA.Contains(".uid")) {
@@ -451,47 +447,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 			// Next line
 			lineCnt++;
 		}
-        
-		// calculate length of continuos secondary structure assignments
-        this->secStructLength.AssertCapacity(static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM));
-        for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); i++) {
-			this->secStructLength.Add(vislib::Array<unsigned int>());
-			this->secStructLength.Last().AssertCapacity(file.Count());
-        }
-        for (unsigned int j = 0; j < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); j++) {
-		    for (int i = 0; i < this->pdbIndex.Count(); i++) {
-				// init struct length
-				if (i == 0) {
-					tmpStructLength[j] = 1;
-				}
-				else if (i == this->pdbIndex.Count()-1) {
-                    if (this->sortedSecStructAssignment[j][i][0] != this->sortedSecStructAssignment[j][i - 1][0]) { // if last entry is different to previous
-						for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
-							this->secStructLength[j].Add(tmpStructLength[j]);
-						}
-						tmpStructLength[j] = 1;
-						this->secStructLength[j].Add(tmpStructLength[j]); // adding last entry (=1)
-					}
-					else { // last entry is same as previous
-						tmpStructLength[j]++;
-						for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
-							this->secStructLength[j].Add(tmpStructLength[j]);
-						}
-					}
-				}
-				else {
-                    if (this->sortedSecStructAssignment[j][i][0] != this->sortedSecStructAssignment[j][i - 1][0]) {
-						for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
-							this->secStructLength[j].Add(tmpStructLength[j]);
-						}
-						tmpStructLength[j] = 1;
-					}
-					else {
-						tmpStructLength[j]++;
-					}
-				}
-			}
-		}
 
         //Clear ascii file buffer
 		file.Clear();
@@ -503,6 +458,65 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Coudn't find uncertainty input data file: \"%s\"", T2A(filename.PeekBuffer())); // ERROR
         return false;
 	}
+}
+
+
+/*
+* UncertaintyDataLoader::CalculateStructureLength
+*/
+bool UncertaintyDataLoader::CalculateStructureLength(void) {
+
+    const unsigned int methodCnt = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM);
+
+    vislib::math::Vector<unsigned int, methodCnt> tmpStructLength;
+
+    // clear 
+    for (unsigned int i = 0; i < secStructLength.Count(); i++) {
+        this->secStructLength[i].Clear();
+    }
+    this->secStructLength.Clear();
+    this->secStructLength.AssertCapacity(methodCnt);
+    for (unsigned int i = 0; i < methodCnt; i++) {
+        this->secStructLength.Add(vislib::Array<unsigned int>());
+        this->secStructLength.Last().AssertCapacity(this->pdbIndex.Count());
+    }
+
+    for (unsigned int j = 0; j < methodCnt; j++) {
+        for (int i = 0; i < this->pdbIndex.Count(); i++) {
+            // init struct length
+            if (i == 0) {
+                tmpStructLength[j] = 1;
+            }
+            else if (i == this->pdbIndex.Count() - 1) {
+                if (this->sortedSecStructAssignment[j][i][0] != this->sortedSecStructAssignment[j][i - 1][0]) { // if last entry is different to previous
+                    for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
+                        this->secStructLength[j].Add(tmpStructLength[j]);
+                    }
+                    tmpStructLength[j] = 1;
+                    this->secStructLength[j].Add(tmpStructLength[j]); // adding last entry (=1)
+                }
+                else { // last entry is same as previous
+                    tmpStructLength[j]++;
+                    for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
+                        this->secStructLength[j].Add(tmpStructLength[j]);
+                    }
+                }
+            }
+            else {
+                if (this->sortedSecStructAssignment[j][i][0] != this->sortedSecStructAssignment[j][i - 1][0]) {
+                    for (unsigned int k = 0; k < tmpStructLength[j]; k++) {
+                        this->secStructLength[j].Add(tmpStructLength[j]);
+                    }
+                    tmpStructLength[j] = 1;
+                }
+                else {
+                    tmpStructLength[j]++;
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 
@@ -542,14 +556,14 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
 
     const unsigned int methodCnt   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM) - 1;  // UNCERTAINTY is not taken into account
     const unsigned int structTypes = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
-    const unsigned int uncMethod   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY;
+    const unsigned int uncMethod   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
     
     // Reset uncertainty data 
     this->secStructUncertainty[uncMethod].Clear();
-    this->sortedSecStructAssignment[uncMethod].Clear();    
-    this->uncertainty.Clear();    
     this->secStructUncertainty[uncMethod].AssertCapacity(this->pdbIndex.Count());
-    this->sortedSecStructAssignment[uncMethod].AssertCapacity(this->pdbIndex.Count());  
+    this->sortedSecStructAssignment[uncMethod].Clear();    
+    this->sortedSecStructAssignment[uncMethod].AssertCapacity(this->pdbIndex.Count());
+    this->uncertainty.Clear();    
     this->uncertainty.AssertCapacity(this->pdbIndex.Count());
 
     // Create tmp structure type and structure uncertainty vectors for amino-acid
@@ -568,7 +582,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
     // Calculate uncertainty
     // Loop over all amino-acids
     for (int i = 0; i < this->pdbIndex.Count(); i++) {
-        consideredMethods = methodCnt;
+        unsigned int consideredMethods = methodCnt;
         
         // Loop over all secondary strucutre types
         for (int j = 0; j < structTypes; j++) {
@@ -592,13 +606,13 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
 					}
                 }
                 else {
-                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float)structTypes - 1.0f));
+                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float)(structTypes - 1)));
                 }
             }
         }
         
         // Normalise structure uncertainty to [0.0,1.0]
-        for (int j = 0; j < structTypes; j++) {
+        for (unsigned int j = 0; j < structTypes; j++) {
             ssu[j] /= abs((float)consideredMethods);
         }
             
@@ -607,7 +621,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
 
 		// Calculate reduced uncertainty value
 		float unc = 0.0f;
-		for (unsigned int k = 0; k < methodCnt; k++) {
+        for (unsigned int k = 0; k < structTypes-1; k++) {
             unc += (ssu[ssa[k]] - ssu[ssa[k + 1]]);
 		}
         unc = 1.0f - unc;

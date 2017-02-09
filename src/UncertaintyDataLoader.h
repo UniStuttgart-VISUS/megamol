@@ -140,6 +140,15 @@ namespace megamol {
 			*/
 			bool CalculateUncertaintyExtended(void);
 
+
+            /**
+            * Calculate length of continuous secondary structure assignment.
+            *
+            *@return True on success
+            */
+            bool CalculateStructureLength(void);
+
+
 			// ------------------ variables ------------------- 
 
 			/** The data callee slot */
