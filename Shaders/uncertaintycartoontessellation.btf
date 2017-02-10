@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">130</snippet>
+        <snippet type="version">430</snippet>
         <snippet name="common::defines"/>
         <snippet name="attributes" type="string">
 <!--
@@ -120,7 +120,7 @@
 
 
     <shader name="tesscontrol">
-      <snippet type="version">400</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <!--
         
@@ -157,13 +157,13 @@
     ///////////////
     // variables //
     ///////////////
-    uniform int uOuter0 = 16;
-    uniform int uOuter1 = 16;
+    uniform int uOuter0        = 16;
+    uniform int uOuter1        = 16;
 
-    // uniform int minInner = 6;                                        // UNUSED - just as INFO
-    // uniform int maxInner = 30;                                       // UNUSED - just as INFO - why 30?
-    // uniform int minOuter = 6;                                        // UNUSED - just as INFO
-    // uniform int maxOuter = 30;                                       // UNUSED - just as INFO - why 30?
+    // uniform int minInner    = 6;                                     // UNUSED - just as INFO
+    // uniform int maxInner    = 30;                                    // UNUSED - just as INFO - why 30?
+    // uniform int minOuter    = 6;                                     // UNUSED - just as INFO
+    // uniform int maxOuter    = 30;                                    // UNUSED - just as INFO - why 30?
     uniform int instanceOffset = 0;                                     // UNUSED ?
     
     uniform int tessLevel;
@@ -719,7 +719,7 @@
                 if (vFunc < 0.0) {
                     vM       *= -1.0;
                 }
-                vec2  vNormal = vec2(0.0, 1.0);                          // normal in UV-space
+                vec2  vNormal = vec2(0.0, 1.0);                         // normal in UV-space
                 vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fac*sin(vDisp) in UV-space
                 vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
                 vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction      
@@ -768,7 +768,7 @@
     </shader>
 
     <shader name="geometry">
-      <snippet type="version">400</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <!--
         
@@ -902,10 +902,7 @@
     void main(void) {
     
         if (outlineMode > 0) {
-            outCol = vec4(outlineColor.xyz, 1.0);
-            if (ditherCount > 0) {
-                // outCol = vec4(1.0, 1.0, 1.0, 1.0);
-            }
+            outCol = vec4((uncValues[0]*outlineColor.xyz), 1.0);
         }
         else {
             // dithering - check if fragment is discarded

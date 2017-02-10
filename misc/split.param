@@ -1,28 +1,28 @@
 #
-# Parameter file created by MegaMol™ Console
+# Parameter file created by MegaMol Console
 #
 
-::instS::UncertaintyCartoonRenderer::07 Only tubes=false
-::instS::UncertaintyCartoonRenderer::02 Spheres=false
-::instS::UncertaintyCartoonRenderer::03 Backbone=true
-::instS::UncertaintyCartoonRenderer::06 Wireframe=false
-::instS::UncertaintyCartoonRenderer::18 Color interpolation=false
-# ::instS::UncertaintyCartoonRenderer::20 Reload shaders=
-::instS::UncertaintyCartoonRenderer::11 Dithering=0
-::instS::UncertaintyCartoonRenderer::05 Tesselation level=32
-::instS::UncertaintyCartoonRenderer::01 Scaling=1.000000
-::instS::UncertaintyCartoonRenderer::13 Outline scaling=10.000000
-::instS::UncertaintyCartoonRenderer::04 Backbone width=0.200000
-::instS::UncertaintyCartoonRenderer::16 Material=0.400000;0.800000;0.600000;10.000000
-::instS::UncertaintyCartoonRenderer::15 Uncertain material=0.400000;0.800000;0.600000;10.000000
-::instS::UncertaintyCartoonRenderer::19 Light position=0.000000;0.000000;1.000000;0.000000
-::instS::UncertaintyCartoonRenderer::10 Uncertainty distortion=1.000000;5.000000
-::instS::UncertaintyCartoonRenderer::14 Outline color=0.000000;0.000000;0.000000
-::instS::UncertaintyCartoonRenderer::17 Color mode=Secondary Structure
-::instS::UncertaintyCartoonRenderer::09 Uncertainty visualisation=Triangle UV
-::instS::UncertaintyCartoonRenderer::08 Method data=Uncertainty
-::instS::UncertaintyCartoonRenderer::12 Outlining=None
-::instS::UncertaintyCartoonRenderer::21 Color Table Filename=colors.txt
+::instC::UncertaintyCartoonRenderer::07 Only tubes=false
+::instC::UncertaintyCartoonRenderer::02 Spheres=false
+::instC::UncertaintyCartoonRenderer::03 Backbone=true
+::instC::UncertaintyCartoonRenderer::06 Wireframe=false
+::instC::UncertaintyCartoonRenderer::18 Color interpolation=false
+# ::instC::UncertaintyCartoonRenderer::20 Reload shaders=
+::instC::UncertaintyCartoonRenderer::11 Dithering=2
+::instC::UncertaintyCartoonRenderer::05 Tesselation level=32
+::instC::UncertaintyCartoonRenderer::01 Scaling=1.000000
+::instC::UncertaintyCartoonRenderer::13 Outline scaling=3.000000
+::instC::UncertaintyCartoonRenderer::04 Backbone width=0.200000
+::instC::UncertaintyCartoonRenderer::16 Material=0.400000;0.700000;0.600000;10.000000
+::instC::UncertaintyCartoonRenderer::15 Uncertain material=0.400000;0.700000;0.000000;5.000000
+::instC::UncertaintyCartoonRenderer::19 Light position=0.000000;0.000000;1.000000;0.000000
+::instC::UncertaintyCartoonRenderer::10 Distortion (1)gain (2)repeat=1.000000;5.000000
+::instC::UncertaintyCartoonRenderer::14 Outline color=0.000000;0.000000;0.000000
+::instC::UncertaintyCartoonRenderer::17 Color mode=Secondary Structure
+::instC::UncertaintyCartoonRenderer::09 Uncertainty visualisation=None
+::instC::UncertaintyCartoonRenderer::08 Method data=Uncertainty
+::instC::UncertaintyCartoonRenderer::12 Outlining=Full rendering Uncertainty
+::instC::UncertaintyCartoonRenderer::21 Color Table Filename=H:\__Diplomarbeit__\megamol\bin\x64\Release\colors.txt
 ::instS::UncertaintyDataLoader::uidFilename=H:\__Diplomarbeit__\megamol\bin\cache\4ufd.uid
 ::instS::UncertaintyDataLoader::calculationMethod=AVERAGE
 ::instS::PDBLoader::pdbFilename=H:\__Diplomarbeit__\megamol\bin\cache\4ufd.pdb

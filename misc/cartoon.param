@@ -1,5 +1,5 @@
 #
-# Parameter file created by MegaMol™ Console
+# Parameter file created by MegaMol Console
 #
 
 ::instC::UncertaintyCartoonRenderer::07 Only tubes=false
@@ -16,7 +16,7 @@
 ::instC::UncertaintyCartoonRenderer::16 Material=0.400000;0.700000;0.600000;10.000000
 ::instC::UncertaintyCartoonRenderer::15 Uncertain material=0.400000;0.700000;0.000000;5.000000
 ::instC::UncertaintyCartoonRenderer::19 Light position=0.000000;0.000000;1.000000;0.000000
-::instC::UncertaintyCartoonRenderer::10 Distortion [1]gain [2]repeat=1.000000;5.000000
+::instC::UncertaintyCartoonRenderer::10 Distortion (1)gain (2)repeat=1.000000;5.000000
 ::instC::UncertaintyCartoonRenderer::14 Outline color=0.000000;0.000000;0.000000
 ::instC::UncertaintyCartoonRenderer::17 Color mode=Secondary Structure
 ::instC::UncertaintyCartoonRenderer::09 Uncertainty visualisation=None

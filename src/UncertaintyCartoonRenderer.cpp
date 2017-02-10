@@ -153,7 +153,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
         methodDataParam(        "08 Method data", "Choose data of secondary structure assignment method."),
 		uncVisParam(            "09 Uncertainty visualisation", "The uncertainty visualisation."),
-		uncDistorParam(         "10 Distortion [1]gain [2]repeat", "(0) amplification/gain, (1) repetition of function"),
+		uncDistorParam(         "10 Distortion (1)gain (2)repeat", "(0) amplification of function, (1) repetition of function"),
         ditherParam(            "11 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
         outlineParam(           "12 Outlining", "The oulining visualisations."),
         outlineScalingParam(    "13 Outline scaling", "The scaling of the ouline."),

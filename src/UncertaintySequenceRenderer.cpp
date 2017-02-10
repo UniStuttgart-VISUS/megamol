@@ -734,9 +734,9 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         }
 		// STRIDE thresholds
         if(this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
-            float min = -10.0f;
-            float max = 10.0f;
-            float threshold = 0.0;
+            float min;
+            float max;
+            float threshold;
 
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<int>(UncertaintyDataCall::assMethod::STRIDE)][i][0];
@@ -744,7 +744,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     switch(j) {
                         case(0) : threshold = STRIDE_THRESHOLDH1; 
                                   min = -500.0f;
-                                  max = 500.0f; 
+                                  max =  500.0f; 
                                   break;
                         case(1) : threshold = STRIDE_THRESHOLDH3;
                                   min = -1.0f;
@@ -764,12 +764,12 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                   break;
                         default: break;
                     }
-                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + float(j)), 
+                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), 
                                                         this->strideStructThreshold[i][j], min, max, threshold);
                     // this->strideStructEnergy[i][j]; ...
+                    yPos += 1.0f;
 			    }
             }
-            yPos += (float)this->strideThresholdCount;
         }		
         // DSSP
         if(this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
@@ -782,16 +782,18 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         }  
         // DSSP thresholds
         if(this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
-            float min = -5.0f;
-            float max = 5.0f;
+            float min       = -5.0f;
+            float max       =  5.0f;
+            float threshold = DSSP_HBENERGY;
+            
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i][0];
                 for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + float(j)), 
-                                                        this->dsspStructEnergy[i][j], min, max, DSSP_HBENERGY);
+                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), 
+                                                        this->dsspStructEnergy[i][j], min, max, threshold);
+                    yPos += 1.0f;
 			    }
             }
-            yPos += (float)this->dsspThresholdCount;
         }  		
         // PDB 
         if(this->togglePdbParam.Param<param::BoolParam>()->Value()) {
@@ -808,11 +810,11 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         ////////////////////////////////////////////////
                                    
             
-        // draw uncertainty differnece
+        // draw uncertainty 
         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
-            glColor3fv(fgColor);
             glBegin(GL_QUADS);
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                glColor3fv(fgColor*this->uncertainty[i]);
                 if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
                     // assuming values are in range 0.0-1.0
 					glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
@@ -826,7 +828,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         }
         
                     
-        // draw uncertainty visualization
+        // draw structure uncertainty visualization
         if(this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
             
 			this->RenderUncertainty(yPos, fgColor, bgColor);
@@ -1284,25 +1286,29 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataCall::secStructure str, UncertaintyDataCall::addFlags f, 
                                                                 float x, float y, float value, float min, float max, float thresh) {
 
+    float yDMax = 0.49f;
+
     // ignore as missing flagged amino-acids and NOTDEFINED secondary structure types
     if ((f != UncertaintyDataCall::addFlags::MISSING) || (str != UncertaintyDataCall::secStructure::NOTDEFINED)) {
         // draw middle line
+        GLfloat tmpLw = glGet(GL_LINE_WIDTH);
+        glLineWidth(3.0f);
         glColor3f(0.2f, 0.2f, 0.2f);
         glBegin(GL_LINES);
-            glVertex2f(x,       -(y + 0.5f));
+            glVertex2f(x,        -(y + 0.5f));
             glVertex2f(x + 1.0f, -(y + 0.5f));
         glEnd();
+        glLineWidth(tmpLw);
         //draw value quad
-        float clampVal = (value > max) ? (max) : (value);
-        clampVal       = (clampVal < min) ? (min) : (clampVal);
-        float yDelta   = (clampVal < thresh) ? -std::abs((clampVal / min)/2.0f) : std::abs((clampVal/max)/2.0f);
-        float yOffset  = y + 0.5f;
-        glColor3f(0.5f, 0.5f, 0.5f);
+        float clampVal = (value > max)       ? (max)                               : (value);
+        clampVal       = (clampVal < min)    ? (min)                               : (clampVal);
+        float yVar     = (clampVal < thresh) ? (-std::abs((clampVal / min)*yDMax)) : (std::abs((clampVal/max)*yDMax));
+        glColor3f((yDMax - yVar), (yDMax - yVar), (yDMax - yVar));
         glBegin(GL_QUADS);
-            glVertex2f(x,        -(yOffset - yDelta));
-            glVertex2f(x,        -(yOffset));
-            glVertex2f(x + 1.0f, -(yOffset));
-            glVertex2f(x + 1.0f, -(yOffset - yDelta));
+            glVertex2f(x,        -(y + 0.5 - yVar));
+            glVertex2f(x,        -(y + 0.5));
+            glVertex2f(x + 1.0f, -(y + 0.5));
+            glVertex2f(x + 1.0f, -(y + 0.5 - yVar));
         glEnd();
 
     }

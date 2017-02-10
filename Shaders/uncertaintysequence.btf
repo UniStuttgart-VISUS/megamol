@@ -3,7 +3,7 @@
   <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">140</snippet>
+        <snippet type="version">430</snippet>
         <snippet name="main" type="string">
 
 <!--
@@ -28,17 +28,21 @@ void main() {
     </shader>
 
 	<shader name="fragment">
-		<snippet type="version">140</snippet>
+		<snippet type="version">430</snippet>
 		<snippet name="main" type="string">
 <!--
 
 #extension GL_ARB_explicit_attrib_location : enable
 
 #define STRUCT_COUNT 9                                     // must be equal to 'UncertaintyDataCall::secStructure::NOE'
+#define EPS          0.0001
+
 in vec4 quadPos;	                                       // input from vertex shader
+
 layout( location = 0 ) out vec4 fragColor;                 // output fragment color
 
-uniform vec4[STRUCT_COUNT]  structCol;                  // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
+
+uniform vec4[STRUCT_COUNT]  structCol;                     // the RGB colors for the strucutre types (order as in 'UncertaintyDataCall::secStructure')
 uniform int[STRUCT_COUNT]   sortedStruct;                  // the sorted structure types from left to right corresponding to 'quadPos.x'
 uniform float[STRUCT_COUNT] structUnc;                     // uncertainty values for structure types (order as in 'UncertaintyDataCall::secStructure')
 uniform float               gradientInt;                   // gradient intervall in which color interpolation will be applied
@@ -47,9 +51,9 @@ uniform int                 colorInterpol;                 // option for choosin
 
 // function declaration
 float hue2rgb(in float v1, in float v2, in float vH);
-vec4 hsl2rgb(in vec4 hsla);
-vec4 rgb2hsl(in vec4 rgba);
-vec4 hpcb(in vec4 c1, in vec4 c2);                          // Hue Preserving Color Blending
+vec4  hsl2rgb(in vec4 hsla);
+vec4  rgb2hsl(in vec4 rgba);
+vec4  hpcb(in vec4 c1, in vec4 c2);                          // Hue Preserving Color Blending
 
 
 void main()
@@ -83,7 +87,7 @@ void main()
     for (int k = 0; k < (diffStruct-1); k++) {
         
         // get data for first structure with uncertainty > 0
-        while (structUnc[sortedStruct[index]] == 0.0) {                                            
+        while (structUnc[sortedStruct[index]] < EPS) {                                            
             index++;
 		    if (index >= structCount) {
                 break; // shouldn't happen?
@@ -103,7 +107,7 @@ void main()
         
         // get data for second structure with uncertainty > 0
         index++;
-        while(structUnc[sortedStruct[index]] == 0.0) {                                            
+        while(structUnc[sortedStruct[index]] < EPS) {                                            
             index++;
 		    if (index >= structCount) {
                 break; // shouldn't happen?
@@ -148,10 +152,10 @@ void main()
                 tmpCol.z = aStart*startCol.z + aEnd*endCol.z; // interpolate L
                               
                 // interpolate H (hue)
-                if (startCol.y == 0.0) { // startCol S = 0
+                if (startCol.y < EPS) { // startCol S = 0
                     tmpCol.x = endCol.x;
                 }
-                else if (endCol.y == 0.0) { // endCol S = 0
+                else if (endCol.y < EPS) { // endCol S = 0
                     tmpCol.x = startCol.x;              
                 } 
                 else if (startCol.x > endCol.x) {
@@ -177,7 +181,7 @@ void main()
                 }
                 
                 // adjust angle of hue to 0-360°
-                tmpCol.x = (tmpCol.x < 0.0) ? (tmpCol.x + 360.0) : ((tmpCol.x > 360.0) ? (tmpCol.x - 360.0) : (tmpCol.x));
+                tmpCol.x = (tmpCol.x < 0.0) ? (tmpCol.x + 360.0) : ((tmpCol.x >= 360.0) ? (tmpCol.x - 360.0) : (tmpCol.x));
 
                 tmpCol = hsl2rgb(tmpCol);
             } 
@@ -199,11 +203,11 @@ vec4 hpcb(in vec4 c1, in vec4 c2) {
     
 	float tmpHue;
     
-	if (abs(HSL1.x - HSL2.x) < 0.000001) {
+	if (abs(HSL1.x - HSL2.x) < EPS) { // (HSL1.x == HSL2.x)
 		cnew = c1 + c2;
 	}
 	else {
-        if (abs(HSL1.y - HSL2.y) < 0.000001) { // (HSL1.y == HSL2.y) - if c1 and c2 have same saturation decide for brighter one 
+        if (abs(HSL1.y - HSL2.y) < EPS) { // (HSL1.y == HSL2.y) - if c1 and c2 have same saturation decide for brighter one 
             if (HSL1.z >= HSL2.z) { // c1 is brighter or equal bright as c2
                 tmpHue = (HSL1.x + 180.0);
                 if (tmpHue >= 360.0) {
@@ -256,7 +260,7 @@ vec4 rgb2hsl(in vec4 rgba) {
 
     outCol.z = (max + min) / 2.0; // L
 
-    if (delta < 0.000001f)
+    if (delta < EPS)
     {
         outCol.x = 0.0; // H     
         outCol.y = 0.0; // S
@@ -306,7 +310,7 @@ vec4 hsl2rgb(in vec4 hsla) {
 	float tmp1, tmp2;
 	vec4 outCol = vec4(0.0, 0.0, 0.0, 1.0);
 
-	if (hsla.y < 0.000001) { // S
+	if (hsla.y < EPS) { // S = 0
 		outCol.x = hsla.z;   // L
 		outCol.y = hsla.z;   // L
 		outCol.z = hsla.z;   // L
