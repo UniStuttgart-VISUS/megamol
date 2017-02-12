@@ -463,9 +463,13 @@
             {
                 if (colorMode == COLOR_MODE_STRUCT) {
                     color = structCol[mytype];
+                    
+                    color *= uncVal[0];                                 // (TEMP:) When monochrome coloring use lightness as additional "uncertainty variable"
+                    
+                    
                 }     
                 else if (colorMode == COLOR_MODE_UNCERTAIN) {
-                    color= structCol[mytype];
+                    color = structCol[mytype];               
                 }                    
                 else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
                     color = alph2.col; 

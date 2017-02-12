@@ -1359,7 +1359,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
             uMax = secUncertainty->operator[](i)[sMax];
             
             // CERTAIN amino-acids
-            if (uMax == 1.0f) {
+            if (uMax > (1.0f) {
                 
                 // draw something for certain amino-acids only if they have not both no color assigned (= background color)
                 if(!((this->currentCertainBlockChartColor == CERTAIN_BC_NONE) && (this->currentCertainStructColor == CERTAIN_STRUCT_NONE))) {
