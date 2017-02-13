@@ -482,7 +482,7 @@ bool UncertaintyDataLoader::CalculateStructureLength(void) {
     }
 
     for (unsigned int j = 0; j < methodCnt; j++) {
-        for (int i = 0; i < this->pdbIndex.Count(); i++) {
+        for (unsigned int i = 0; i < this->pdbIndex.Count(); i++) {
             // init struct length
             if (i == 0) {
                 tmpStructLength[j] = 1;

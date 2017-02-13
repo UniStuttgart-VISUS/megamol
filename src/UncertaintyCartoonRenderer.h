@@ -35,10 +35,6 @@
 #include "UncertaintyDataCall.h"
 
 
-// DEBUG output secondary strucutre type of first frame
-//#define FIRSTFRAME_CHECK
-
-
 namespace megamol {
 	namespace protein_uncertainty {
 

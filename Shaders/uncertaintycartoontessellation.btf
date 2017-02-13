@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">430</snippet>
+        <snippet type="version">130</snippet>
         <snippet name="common::defines"/>
         <snippet name="attributes" type="string">
 <!--
@@ -120,7 +120,7 @@
 
 
     <shader name="tesscontrol">
-      <snippet type="version">430</snippet>
+      <snippet type="version">400</snippet>
       <snippet type="string">
         <!--
         
@@ -772,7 +772,7 @@
     </shader>
 
     <shader name="geometry">
-      <snippet type="version">430</snippet>
+      <snippet type="version">400</snippet>
       <snippet type="string">
         <!--
         

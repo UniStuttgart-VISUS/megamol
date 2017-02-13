@@ -764,12 +764,12 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                   break;
                         default: break;
                     }
-                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), 
+                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j), 
                                                         this->strideStructThreshold[i][j], min, max, threshold);
                     // this->strideStructEnergy[i][j]; ...
-                    yPos += 1.0f;
 			    }
             }
+			yPos += this->strideThresholdCount;
         }		
         // DSSP
         if(this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
@@ -789,11 +789,11 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i][0];
                 for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), 
+                    this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j), 
                                                         this->dsspStructEnergy[i][j], min, max, threshold);
-                    yPos += 1.0f;
 			    }
             }
+			yPos += this->dsspThresholdCount;
         }  		
         // PDB 
         if(this->togglePdbParam.Param<param::BoolParam>()->Value()) {
@@ -812,9 +812,11 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             
         // draw uncertainty 
         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+			float col;
             glBegin(GL_QUADS);
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                glColor3fv(fgColor*this->uncertainty[i]);
+				col = 1.0f - this->uncertainty[i];
+				glColor3f(col, col, col);
                 if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
                     // assuming values are in range 0.0-1.0
 					glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
@@ -1291,7 +1293,8 @@ void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataC
     // ignore as missing flagged amino-acids and NOTDEFINED secondary structure types
     if ((f != UncertaintyDataCall::addFlags::MISSING) || (str != UncertaintyDataCall::secStructure::NOTDEFINED)) {
         // draw middle line
-        GLfloat tmpLw = glGet(GL_LINE_WIDTH);
+		GLfloat tmpLw;
+		glGetFloatv(GL_LINE_WIDTH, &tmpLw);
         glLineWidth(3.0f);
         glColor3f(0.2f, 0.2f, 0.2f);
         glBegin(GL_LINES);
@@ -1303,12 +1306,13 @@ void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataC
         float clampVal = (value > max)       ? (max)                               : (value);
         clampVal       = (clampVal < min)    ? (min)                               : (clampVal);
         float yVar     = (clampVal < thresh) ? (-std::abs((clampVal / min)*yDMax)) : (std::abs((clampVal/max)*yDMax));
-        glColor3f((yDMax - yVar), (yDMax - yVar), (yDMax - yVar));
+		float col = 0.1f + (0.9f - (yDMax - std::abs(yVar)*0.9f));
+		glColor3f(col, col, col);
         glBegin(GL_QUADS);
-            glVertex2f(x,        -(y + 0.5 - yVar));
-            glVertex2f(x,        -(y + 0.5));
-            glVertex2f(x + 1.0f, -(y + 0.5));
-            glVertex2f(x + 1.0f, -(y + 0.5 - yVar));
+            glVertex2f(x,        -(y + 0.5f - yVar));
+            glVertex2f(x,        -(y + 0.5f));
+            glVertex2f(x + 1.0f, -(y + 0.5f));
+            glVertex2f(x + 1.0f, -(y + 0.5f - yVar));
         glEnd();
 
     }
@@ -1359,7 +1363,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
             uMax = secUncertainty->operator[](i)[sMax];
             
             // CERTAIN amino-acids
-            if (uMax > (1.0f) {
+            if (uMax >= (1.0f)) {
                 
                 // draw something for certain amino-acids only if they have not both no color assigned (= background color)
                 if(!((this->currentCertainBlockChartColor == CERTAIN_BC_NONE) && (this->currentCertainStructColor == CERTAIN_STRUCT_NONE))) {

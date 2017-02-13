@@ -17,7 +17,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-
+ 
 #include "stdafx.h"
 #include "UncertaintyCartoonRenderer.h"
 
@@ -293,11 +293,6 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
 
 	this->fences.resize(this->numBuffers);
-
-#ifdef FIRSTFRAME_CHECK
-	this->firstFrame = true;
-#endif
-
 }
 
 
@@ -684,7 +679,7 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 					this->synchronizedIndex.Add(uncIndex); 
 
 					// DEBUG
-					/*
+                    /*
 					unsigned int molIndex = (mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt);
 					std::cout << " mol index: " << mol->SecondaryStructures()[firstStruct + sCnt].FirstAminoAcidIndex() + rCnt
 					          << " | Chain Name: " << mol->Chains()[cCnt].Name()
@@ -697,7 +692,6 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall *udc, Mo
 			}
 		}
 	}
-
 	return true;
 }
 
@@ -1012,16 +1006,6 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			this->mainChain.push_back(lastCalpha);
 			molSizes[molIdx] += 2;
 		}
-	
-// DEBUG
-#ifdef FIRSTFRAME_CHECK
-		if (this->firstFrame) {
-			for (int i = 0; i < this->mainChain.size(); i++) {
-				std::cout << this->mainChain[i].sortedStruct[0] << std::endl;
-			}
-			this->firstFrame = false;
-		}
-#endif
         
 		// draw backbone as tubes
 		unsigned int colBytes, vertBytes, colStride, vertStride;
@@ -1134,7 +1118,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 					const char *currVert = (const char *)(&this->mainChain[(unsigned int)vertCounter + (unsigned int)stride]);                           // pointer to current vertex data in mainChain
 
-					void *mem = static_cast<char*>(this->theSingleMappedMem) + this->bufSize * this->currBuf;                                            // pointer to the mapped memory - ?
+                    void *mem = static_cast<char*>(this->theSingleMappedMem) + this->bufSize * this->currBuf;                                            // pointer to the mapped memory - ?
 					const char *whence = currVert;                                                                                                       // copy of pointer currVert
 					UINT64 vertsThisTime = vislib::math::Min(molSizes[i] - vertCounter, numVerts);                                                       // try to take all vertices of current secondary structure at once ... 
 					// ... or at least as many as fit into buffer of size bufSize
@@ -1149,7 +1133,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, this->bufSize * this->currBuf, this->bufSize);  // bind Shader Storage Buffer Object
 					glPatchParameteri(GL_PATCH_VERTICES, 1);                                                                                             // set parameter GL_PATCH_VERTICES to 1 (the number of vertices that will be used to make up a single patch primitive)
 					glDrawArrays(GL_PATCHES, 0, (GLsizei)(vertsThisTime - 3));                                                                           // draw as many as (vertsThisTime-3) patches 
-					// -3 ? - because the first atom is added 3 times for each different secondary structure
+					// -3 ? - because the first atom is added 3 times for each different secondary structure ??
 					this->QueueSignal(this->fences[this->currBuf]);                                                                                      // queue signal - tell that mapped memory 'operations' are done - ?
 
 					this->currBuf = (this->currBuf + 1) % this->numBuffers;                                                                              // switch to next buffer in range 0...3

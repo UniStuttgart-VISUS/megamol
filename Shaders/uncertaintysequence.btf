@@ -79,8 +79,8 @@ void main()
     float mTemp;
         
     // determine structures with uncertainty > 0
-	for (int k = 0; k < structCount; k++) {
-	    if (structUnc[sortedStruct[k]] > 0.0)
+    for (int k = 0; k < structCount; k++) {
+        if (structUnc[sortedStruct[k]] > 0.0)
             diffStruct++;
     }
    
@@ -89,7 +89,7 @@ void main()
         // get data for first structure with uncertainty > 0
         while (structUnc[sortedStruct[index]] < EPS) {                                            
             index++;
-		    if (index >= structCount) {
+            if (index >= structCount) {
                 break; // shouldn't happen?
             }
         }
@@ -132,7 +132,7 @@ void main()
             if (gradientInt > 0.0) {
                 aStart = -((1.0 / gradientInt) * (xTemp - (mTemp + gradientInt/2.0)));
                 aStart = (aStart > 1.0) ? (1.0) : ((aStart < 0.0) ? (0.0) : (aStart));
-                aEnd   = -aStart + 1.0;                   // is already in [0,1]
+                aEnd   = 1.0 - aStart;                    // is already in [0,1]
             }
             else {
                 aStart = (xTemp <= mTemp) ? (1.0) : (0.0);
@@ -147,10 +147,10 @@ void main()
                 tmpCol = hpcb((aStart*startCol), (aEnd*endCol));
             }
             else { // if (colorInterpol == 1) { // hsl linear
-                                        
+                              
                 tmpCol.y = aStart*startCol.y + aEnd*endCol.y; // interpolate S
                 tmpCol.z = aStart*startCol.z + aEnd*endCol.z; // interpolate L
-                              
+
                 // interpolate H (hue)
                 if (startCol.y < EPS) { // startCol S = 0
                     tmpCol.x = endCol.x;
