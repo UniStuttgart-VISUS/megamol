@@ -17,6 +17,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractView3D.h"
+#include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -144,9 +145,7 @@ namespace view {
          * @param button The button.
          * @param down Flag whether the button is pressed, or not.
          */
-        virtual void SetCursor2DButtonState(unsigned int btn, bool down) {
-            this->cursor2d.SetButtonState(btn, down);
-        }
+        virtual void SetCursor2DButtonState(unsigned int btn, bool down);
 
         /**
          * Sets the position of the 2d cursor. See 'vislib::graphics::Cursor2D'
@@ -155,9 +154,7 @@ namespace view {
          * @param x The x coordinate
          * @param y The y coordinate
          */
-        virtual void SetCursor2DPosition(float x, float y) {
-            this->cursor2d.SetPosition(x, y, true);
-        }
+        virtual void SetCursor2DPosition(float x, float y);
 
         /**
          * Sets the state of an input modifier.
@@ -523,14 +520,29 @@ namespace view {
         /** Parameter slot for the bounding box colour */
         param::ParamSlot bboxColSlot;
 
+        /** Enable selecting mode of mouse (disables camera movement) */
+        param::ParamSlot enableMouseSelectionSlot;
+
         /** Shows the view cube helper */
         param::ParamSlot showViewCubeSlot;
 
         /** whether to reset the view when the object bounding box changes */
         param::ParamSlot resetViewOnBBoxChangeSlot;
 
+        /** The mouse x coordinate */
+        float mouseX;
+
+        /** The mouse y coordinate */
+        float mouseY;
+
+        /** The mouse flags */
+        MouseFlags mouseFlags;
+
         /** The time control */
         TimeControl timeCtrl;
+
+        /** Flag whether mouse control is to be handed over to the renderer */
+        bool toggleMouseSelection;
 
     };
 

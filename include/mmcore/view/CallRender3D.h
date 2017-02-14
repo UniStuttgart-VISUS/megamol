@@ -14,6 +14,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutput.h"
 
 
@@ -64,7 +65,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return 3;
+            return 4;
         }
 
         /**
@@ -79,6 +80,7 @@ namespace view {
                 case 0: return "Render";
                 case 1: return "GetExtents";
                 case 2: return "GetCapabilities";
+                case 3: return "MouseEvent";
                 default: return NULL;
             }
         }
@@ -90,6 +92,46 @@ namespace view {
         virtual ~CallRender3D(void);
 
         /**
+         * Answer the mouse flags
+         *
+         * @return The mouse flags
+         */
+        inline MouseFlags GetMouseFlags(void) const {
+            return this->mouseFlags;
+        }
+
+        /**
+         * Answer the mouse x coordinate in world space
+         *
+         * @return The mouse x coordinate in world space
+         */
+        inline float GetMouseX(void) const {
+            return this->mouseX;
+        }
+
+        /**
+         * Answer the mouse y coordinate in world space
+         *
+         * @return The mouse y coordinate in world space
+         */
+        inline float GetMouseY(void) const {
+            return this->mouseY;
+        }
+
+        /**
+         * Sets the mouse informations.
+         *
+         * @param x The mouse x coordinate in world space
+         * @param y The mouse y coordinate in world space
+         * @param flags The mouse flags
+         */
+        inline void SetMouseInfo(float x, float y, MouseFlags flags) {
+            this->mouseX = x;
+            this->mouseY = y;
+            this->mouseFlags = flags;
+        }
+
+        /**
          * Assignment operator
          *
          * @param rhs The right hand side operand
@@ -97,6 +139,14 @@ namespace view {
          * @return A reference to this
          */
         CallRender3D& operator=(const CallRender3D& rhs);
+
+        private:
+
+            /** The mouse coordinates for the mouse event */
+            float mouseX, mouseY;
+
+            /** The mouse flags for the mouse event */
+            MouseFlags mouseFlags;
 
     };
 #ifdef _WIN32

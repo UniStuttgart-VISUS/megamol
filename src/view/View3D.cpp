@@ -89,9 +89,12 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
         toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
         bboxCol(192, 192, 192, 255),
         bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
+        enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse"),
         showViewCubeSlot("viewcube::show", "Shows the view cube helper"),
         resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
-        timeCtrl() {
+        mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
+        timeCtrl(),
+        toggleMouseSelection(false) {
     using vislib::sys::KeyCode;
 
     this->camParams = this->cam.Parameters();
@@ -234,6 +237,10 @@ view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam
     this->toggleBBoxSlot.SetUpdateCallback(&View3D::onToggleButton);
     this->MakeSlotAvailable(&this->toggleBBoxSlot);
 
+    this->enableMouseSelectionSlot << new param::ButtonParam(KeyCode::KEY_TAB);
+    this->enableMouseSelectionSlot.SetUpdateCallback(&View3D::onToggleButton);
+    this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
+
     this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
 
@@ -360,11 +367,11 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
         this->removeTitleRenderer();
     }
 
-	// mueller: I moved the following code block before clearing the back buffer,
-	// because in case the FBO is enabled here, the depth buffer is not cleared
-	// (but the one of the previous buffer) and the renderer might not create any
-	// fragment in this case - besides that the FBO content is not cleared, 
-	// which could be a problem if the FBO is reused.
+    // mueller: I moved the following code block before clearing the back buffer,
+    // because in case the FBO is enabled here, the depth buffer is not cleared
+    // (but the one of the previous buffer) and the renderer might not create any
+    // fragment in this case - besides that the FBO content is not cleared, 
+    // which could be a problem if the FBO is reused.
     //if (this->overrideCall != NULL) {
     //    this->overrideCall->EnableOutputBuffer();
     //} else {
@@ -608,6 +615,57 @@ void view::View3D::Resize(unsigned int width, unsigned int height) {
 
 
 /*
+ * view::View3D::SetCursor2DButtonState
+ */
+void view::View3D::SetCursor2DButtonState(unsigned int btn, bool down) {
+    if (!this->toggleMouseSelection) {
+        this->cursor2d.SetButtonState(btn, down);
+    } else {
+        // stuff from protein::View3DMouse
+        switch (btn) {
+        case 0: // left
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                core::view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
+            break;
+        case 1: // right
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN, down);
+            break;
+        case 2: // middle
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                core::view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
+            break;
+        }
+    }
+}
+
+
+/*
+ * view::View3D::SetCursor2DPosition
+ */
+void view::View3D::SetCursor2DPosition(float x, float y) {
+    if (!this->toggleMouseSelection) {
+        this->cursor2d.SetPosition(x, y, true);
+    } else {
+        // stuff from protein::View3DMouse
+        CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
+        if (cr3d) {
+            cr3d->SetMouseInfo(static_cast<int>(x), static_cast<int>(y),
+                this->mouseFlags);
+            if ((*cr3d)(3)) {
+                this->mouseX = (float)static_cast<int>(x);
+                this->mouseY = (float)static_cast<int>(y);
+                view::MouseFlagsResetAllChanged(this->mouseFlags);
+                // mouse event consumed
+                return;
+            }
+            view::MouseFlagsResetAllChanged(this->mouseFlags);
+        }
+    }
+}
+
+
+/*
  * view::View3D::SetInputModifier
  */
 void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
@@ -671,13 +729,13 @@ bool view::View3D::OnRenderView(Call& call) {
     // TODO: Affinity
     this->Render(context);
 
-	if (this->overrideCall != NULL) {
-		// mueller: I added the DisableOutputBuffer (resetting the override was here 
-		// before) in order to make sure that the viewport is reset that has been
-		// set by an override call.
-		this->overrideCall->DisableOutputBuffer();
-		this->overrideCall = NULL;
-	}
+    if (this->overrideCall != NULL) {
+        // mueller: I added the DisableOutputBuffer (resetting the override was here 
+        // before) in order to make sure that the viewport is reset that has been
+        // set by an override call.
+        this->overrideCall->DisableOutputBuffer();
+        this->overrideCall = NULL;
+    }
 
     if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
         this->cam.SetParameters(this->frozenValues ? this->frozenValues->camParams : this->camParams);
@@ -1262,6 +1320,9 @@ bool view::View3D::onToggleButton(param::ParamSlot& p) {
 
     if (&p == &this->toggleSoftCursorSlot) {
         this->toggleSoftCurse();
+        return true;
+    } else if (&p == &this->enableMouseSelectionSlot) {
+        this->toggleMouseSelection = !this->toggleMouseSelection;
         return true;
     } else if (&p == &this->toggleBBoxSlot) {
         bp = this->showBBox.Param<param::BoolParam>();

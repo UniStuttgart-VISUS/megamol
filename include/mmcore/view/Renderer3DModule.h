@@ -14,6 +14,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/view/MouseFlags.h"
 #include "vislib/graphics/graphicstypes.h"
 
 
@@ -66,6 +67,19 @@ namespace view {
          */
         virtual bool Render(Call& call) = 0;
 
+        /**
+         * The mouse event callback called when the mouse moved or a mouse
+         * button changes it's state.
+         *
+         * @param x The x coordinate of the mouse in world space
+         * @param y The y coordinate of the mouse in world space
+         * @param flags The mouse flags
+         *
+         * @return 'true' if the mouse event was consumed by the renderer and
+         *         must be ignored by the view or subsequent renderer modules.
+         */
+        virtual bool MouseEvent(float x, float y, MouseFlags flags);
+
     private:
 
         /**
@@ -103,6 +117,16 @@ namespace view {
         bool RenderCallback(Call& call) {
             return this->Render(call);
         }
+
+        /**
+         * The mouse event callback.
+         *
+         * @param call The calling call.
+         *
+         * @return 'true' if the event got consumed by the renderer and should
+         *         not be passed to the GUI or view.
+         */
+        bool OnMouseEventCallback(Call& call);
 
         /** The render callee slot */
         CalleeSlot renderSlot;
