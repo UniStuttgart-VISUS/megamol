@@ -570,10 +570,10 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
         }
         if (c < 16) {
             col.SetB(b + c);
-            c = hexToNum(inStr[5]);
+            c = hexToNum(inStr[7]);
             if (c < 16) {
                 b = c * 16;
-                c = hexToNum(inStr[6]);
+                c = hexToNum(inStr[8]);
                 if (c > 16) {
                     b = 255;
                     c = 0;
