@@ -66,7 +66,6 @@ namespace utility {
         static SIZE_T LoadTextResource(const Configuration& config, 
             const vislib::StringA & name, char **outData);
 
-    private:
         /**
          * Returns the path of the first file in the resource
          * directories that matches the given name.
