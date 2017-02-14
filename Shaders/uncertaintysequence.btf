@@ -84,6 +84,8 @@ void main()
             diffStruct++;
     }
    
+    index = 0;   
+    // loop through number of intervalls
     for (int k = 0; k < (diffStruct-1); k++) {
         
         // get data for first structure with uncertainty > 0
@@ -185,12 +187,14 @@ void main()
 
                 tmpCol = hsl2rgb(tmpCol);
             } 
+        fragColor = tmpCol;
+        return;
+        
         }
     }
     
-    fragColor = tmpCol;
-   
-    //fragColor = vec4(quadPos.x, quadPos.y, 0.0, 1.0);
+    // fragColor = tmpCol;
+    // fragColor = vec4(quadPos.x, quadPos.y, 0.0, 1.0);
 }
 
 
@@ -210,7 +214,7 @@ vec4 hpcb(in vec4 c1, in vec4 c2) {
         if (abs(HSL1.y - HSL2.y) < EPS) { // (HSL1.y == HSL2.y) - if c1 and c2 have same saturation decide for brighter one 
             if (HSL1.z >= HSL2.z) { // c1 is brighter or equal bright as c2
                 tmpHue = (HSL1.x + 180.0);
-                if (tmpHue >= 360.0) {
+                if (tmpHue >= 360.0) { 
                     tmpHue -= 360.0;
                 }
                 cnew = c1 + hsl2rgb(vec4(tmpHue, HSL2.y, HSL2.z, 1.0));

@@ -463,16 +463,15 @@
             {
                 if (colorMode == COLOR_MODE_STRUCT) {
                     color = structCol[mytype];
-                    
-                    color *= uncVal[0];                                 // (TEMP:) When monochrome coloring use lightness as additional "uncertainty variable"
-                    
-                    
                 }     
                 else if (colorMode == COLOR_MODE_UNCERTAIN) {
                     color = structCol[mytype];               
                 }                    
                 else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
                     color = alph2.col; 
+                    
+                    color *= (1.0 - uncVal[0]);                                 // (TEMP:) When monochrome coloring use lightness as additional "uncertainty variable"
+                                   
                 }
                 else { // if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
                     int colorIndex = id[1];
@@ -883,12 +882,12 @@
     uniform vec4 diffuseColor   = vec4(1.0);
     uniform vec4 ambientColor   = vec4(1.0); 
     uniform vec4 specularColor  = vec4(1.0);    
-    uniform vec4 phong          = vec4(0.6, 0.6, 0.8, 10.0);           // ambient - diffuse - specular - exponent
+    uniform vec4 phong          = vec4(0.6, 0.6, 0.8, 10.0);             // ambient - diffuse - specular - exponent
     uniform vec4 phongUncertain = vec4(0.6, 0.6, 0.8, 10.0);    
   
-    uniform int ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of struct types - 1]                   
-    uniform int   outlineMode  = 0;
-    uniform vec3  outlineColor;
+    uniform int  ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of struct types - 1]                   
+    uniform int  outlineMode    = 0;
+    uniform vec3 outlineColor;
     
     const float dithMat[64] =   { 0, 32,  8, 40,  2, 34, 10, 42,        // DITHERING - dither matrix bayer 8x8
                                  48, 16, 56, 24, 50, 18, 58, 26,
@@ -905,8 +904,15 @@
     //////////
     void main(void) {
     
-        if (outlineMode > 0) {
-            outCol = vec4((uncValues[0]*outlineColor.xyz), 1.0);
+        if (outlineMode > 0) { //  -> != OUTLINE_NONE
+            /*
+            vec3 tmpCol = uncValues[0]*outlineColor.xyz;
+            if (outlineColor.xyz == vec3(0.0)) {
+                tmpCol = (1.0 - uncValues[0])*vec3(1.0);
+            }
+            outCol = vec4(tmpCol.xyz, 1.0);
+            */
+            outCol = vec4(outlineColor.xyz, 1.0);
         }
         else {
             // dithering - check if fragment is discarded
