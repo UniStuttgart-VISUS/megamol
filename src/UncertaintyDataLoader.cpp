@@ -543,52 +543,86 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
     this->sortedSecStructAssignment[uncMethod].AssertCapacity(this->pdbIndex.Count());
     this->uncertainty.Clear();    
     this->uncertainty.AssertCapacity(this->pdbIndex.Count());
-
-    // Create tmp structure type and structure uncertainty vectors for amino-acid
-    vislib::math::Vector<float, structTypes>                             ssu;
-    vislib::math::Vector<UncertaintyDataCall::secStructure, structTypes> ssa;
     
-	// Initialize structure factors for all three methods with 1.0f
-	vislib::Array<vislib::Array<float> > structFactor;
-	for (unsigned int i = 0; i < methodCnt; i++) {
-		structFactor.Add(vislib::Array<float>());
-		for (unsigned int j = 0; j < structTypes; j++) {
-			structFactor[i].Add(1.0f);
-		}
-	}
+    vislib::math::Matrix<GLfloat, 8, vislib::math::COLUMN_MAJOR> M_Dssp_Stride = 
+                   
+    const float M_DS[8][8] = { // DSSP - STRIDE
+                  /*  I,   H,   G,   T,   S,   C,   B,    E */
+            /* I */{   0,  10,  20,  50,  60,  70,  80, 100},               
+            /* H */{  10,   0,  10,  40,  50,  60,  70,  90},
+            /* G */{  20,  10,   0,  30,  40,  50,  60,  80},
+            /* T */{  50,  40,  30,   0,  10,  20,  30,  50},
+            /*(S)*/{  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1},
+            /* C */{  70,  60,  50,  20,  10,   0,  10,  30},
+            /* B */{  80,  70,  60,  30,  20,  10,   0,  20},
+            /* E */{ 100,  90,  80,  50,  40,  30,  20,   0}};
+
+    const float M_DP[8][8] = { // DSSP - PDB
+                  /*  I,   H,   G,  (T), (S),   C,  (B),   E */
+            /* I */{   0,  10,  20,  -1,  -1,  70,  -1, 100},               
+            /* H */{  10,   0,  10,  -1,  -1,  60,  -1,  90},
+            /* G */{  20,  10,   0,  -1,  -1,  50,  -1,  80},
+            /* T */{  50,  40,  30,  -1,  -1,  20,  -1,  50},
+            /* S */{  60,  50,  40,  -1,  -1,  10,  -1,  40},
+            /* C */{  70,  60,  50,  -1,  -1,   0,  -1,  30},
+            /* B */{  80,  70,  60,  -1,  -1,  10,  -1,  20},
+            /* E */{ 100,  90,  80,  -1,  -1,  30,  -1,   0}};
+        
+    const float M_SP[8][8] = { // STRIDE - PDB
+                  /*  I,   H,   G, (T),  (S),   C,  (B),  E */
+            /* I */{   0,  10,  20,  -1,  -1,  70,  -1, 100},               
+            /* H */{  10,   0,  10,  -1,  -1,  60,  -1,  90},
+            /* G */{  20,  10,   0,  -1,  -1,  50,  -1,  80},
+            /* T */{  50,  40,  30,  -1,  -1,  20,  -1,  50},
+            /*(S)*/{  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1},
+            /* C */{  70,  60,  50,  -1,  -1,   0,  -1,  30},
+            /* B */{  80,  70,  60,  -1,  -1,  10,  -1,  20},
+            /* E */{ 100,  90,  80,  -1,  -1,  30,  -1,   0}};
+
 
     // Calculate uncertainty
-    // Loop over all amino-acids
-    for (int i = 0; i < this->pdbIndex.Count(); i++) {
+    
+    for (int a = 0; a < this->pdbIndex.Count(); a++) { // a - The amino-acid loop.
         unsigned int consideredMethods = methodCnt;
         
-        // Loop over all secondary strucutre types
-        for (int j = 0; j < structTypes; j++) {
-            UncertaintyDataCall::secStructure curStruct = static_cast<UncertaintyDataCall::secStructure>(j);
-            
-            // Init tmp structure type and structure uncertainty vectors
-            ssu[j] = 0.0f;
-            ssa[j] = curStruct;
+        for (int mCntO = 0; mCntO < methodCnt; mCntO++) { // mCntO - The outer method loop.
+                    
+            for (int mCntI = 0; mCntI < methodCnt; mCntI++) { // mCntI - The inner method loop.
 
-            // Loop over all assignment methods 
-            for (unsigned int k = 0; k < methodCnt; k++) {
-                UncertaintyDataCall::assMethod curMethod = static_cast<UncertaintyDataCall::assMethod>(k);
-                
-                if (curStruct == this->sortedSecStructAssignment[curMethod][i][0]) {
-					// Ignore NOTDEFINED structure type
-					if (curStruct == UncertaintyDataCall::secStructure::NOTDEFINED) {
-						consideredMethods -= 1;
-					}
-					else {
-                        ssu[j] += structFactor[curMethod][j];
-					}
-                }
-                else {
-                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float)(structTypes - 1)));
-                }
-            }
-        }
-        
+                for (int sCnt = 0; sCnt < structTypes; sCnt++) {  // sCnt - The structure type loop.          
+                                
+                                        
+                                        // Loop over all secondary strucutre types
+                                        for (int j = 0; j < structTypes; j++) {
+                                            UncertaintyDataCall::secStructure curStruct = static_cast<UncertaintyDataCall::secStructure>(j);
+                                            
+                                            // Init tmp structure type and structure uncertainty vectors
+                                            ssu[j] = 0.0f;
+                                            ssa[j] = curStruct;
+
+                                            // Loop over all assignment methods 
+                                            for (unsigned int k = 0; k < methodCnt; k++) {
+                                                UncertaintyDataCall::assMethod curMethod = static_cast<UncertaintyDataCall::assMethod>(k);
+                                                
+                                                if (curStruct == this->sortedSecStructAssignment[curMethod][i][0]) {
+                                                    // Ignore NOTDEFINED structure type
+                                                    if (curStruct == UncertaintyDataCall::secStructure::NOTDEFINED) {
+                                                        consideredMethods -= 1;
+                                                    }
+                                                    else {
+                                                        ssu[j] += structFactor[curMethod][j];
+                                                    }
+                                                }
+                                                else {
+                           
+                           
+                           
+                                                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float)(structTypes - 1)));
+                  
+                } // end: sCnt
+            } // end: mCntI
+        } // end: mCntO
+
         // Normalise structure uncertainty to [0.0,1.0]
         for (unsigned int j = 0; j < structTypes; j++) {
             ssu[j] /= abs((float)consideredMethods);
