@@ -222,8 +222,10 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         //triggered = true;
         // Breakpoint for Screenshooter debugging
         if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
-        imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-        imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+        //imgSize.x = cr->GetCameraParameters()->VirtualViewSize().GetWidth();
+        //imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
+        imgSize.x = cr->GetCameraParameters()->TileRect().Width();
+        imgSize.y = cr->GetCameraParameters()->TileRect().Height();
         // Rendering high resolution (> 10k) picutres does not like the accumulation buffer
         if (extraSamles.Param<core::param::BoolParam>()->Value()) {
             framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
