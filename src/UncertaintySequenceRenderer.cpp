@@ -1240,7 +1240,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Uncertainty:";
-							tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
+							// tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
+							tmpStr2.Format("%.2f", this->uncertainty[mousePosResIdx]);
                             this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
                         start += perCentRow;
@@ -1255,8 +1256,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                                               [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] > 0.0f) {
                                     if (i > 0) {
                                         tmpStr2.Append("|");
-                                    }
-                                    tmpStr3.Format(" %s: %.0f %% ", this->secStructDescription[(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]],
+                                   } 
+                                    tmpStr3.Format(" %s: %.2f %% ", this->secStructDescription[(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]],
                                         this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx] 
                                                                   [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] * 100.0f);
                                     tmpStr2.Append(tmpStr3);

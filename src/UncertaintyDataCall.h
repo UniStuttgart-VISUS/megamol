@@ -54,14 +54,14 @@ namespace megamol {
         * (!) Indices must be in the range from 0 to NOE-1.
         */
         enum secStructure {
-            H_ALPHA_HELIX = 0,
-            G_310_HELIX   = 1,
-            I_PI_HELIX    = 2,
-            E_EXT_STRAND  = 3,
-            T_H_TURN      = 4,
-            B_BRIDGE      = 5,
-            S_BEND        = 6,
-            C_COIL        = 7,
+			I_PI_HELIX    = 0,
+            H_ALPHA_HELIX = 1,
+            G_310_HELIX   = 2,
+			T_H_TURN      = 3,
+			S_BEND        = 4,
+			C_COIL        = 5,
+            B_BRIDGE      = 6,
+			E_EXT_STRAND  = 7,
             NOTDEFINED    = 8,
             NOE           = 9   // Number of Elements -> must always be the last index!
         };

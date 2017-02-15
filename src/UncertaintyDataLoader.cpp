@@ -143,8 +143,8 @@ bool UncertaintyDataLoader::getData(Call& call) {
         }
         
         // DEBUG - sorted structure assignments, secondary structure length and uncertainty
-        /*
-        for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
+		unsigned int k = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
+        //for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
             for (int i = 0; i < this->pdbIndex.Count(); i++) {
                 std::cout << "M: " << k << " - A: " << i << " - L: " << this->secStructLength[k][i] << " - Unc: " << this->uncertainty[i] << " - S: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
@@ -156,8 +156,8 @@ bool UncertaintyDataLoader::getData(Call& call) {
                 }
                 std::cout << std::endl;
             }
-        }
-        */
+        //}
+        
     }
     
     // pass secondary strucutre data to call, if available
@@ -356,6 +356,7 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                     tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f;
                 }
                 // sorting structure types
+				// NE
                 this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
                 
 
@@ -532,10 +533,11 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
         return false;
     }
 
-    const unsigned int methodCnt   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM) - 1;  // UNCERTAINTY is not taken into account
-    const unsigned int structTypes = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
-    const unsigned int uncMethod   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
-    
+    const unsigned int methodCnt    = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM) - 1;  // UNCERTAINTY is not taken into account
+    const unsigned int structCnt    = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
+    const unsigned int uncMethod    = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
+	const unsigned int consStrTypes = structCnt - 1; // NOTDEFINED is ignored
+	 
     // Reset uncertainty data 
     this->secStructUncertainty[uncMethod].Clear();
     this->secStructUncertainty[uncMethod].AssertCapacity(this->pdbIndex.Count());
@@ -543,113 +545,174 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
     this->sortedSecStructAssignment[uncMethod].AssertCapacity(this->pdbIndex.Count());
     this->uncertainty.Clear();    
     this->uncertainty.AssertCapacity(this->pdbIndex.Count());
-    
-    vislib::math::Matrix<GLfloat, 8, vislib::math::COLUMN_MAJOR> M_Dssp_Stride = 
-                   
-    const float M_DS[8][8] = { // DSSP - STRIDE
-                  /*  I,   H,   G,   T,   S,   C,   B,    E */
-            /* I */{   0,  10,  20,  50,  60,  70,  80, 100},               
-            /* H */{  10,   0,  10,  40,  50,  60,  70,  90},
-            /* G */{  20,  10,   0,  30,  40,  50,  60,  80},
-            /* T */{  50,  40,  30,   0,  10,  20,  30,  50},
-            /*(S)*/{  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1},
-            /* C */{  70,  60,  50,  20,  10,   0,  10,  30},
-            /* B */{  80,  70,  60,  30,  20,  10,   0,  20},
-            /* E */{ 100,  90,  80,  50,  40,  30,  20,   0}};
+               
+	// Create tmp structure type and structure uncertainty vectors for amino-acid
+	vislib::math::Vector<float, structCnt>                             ssu; // uncertainty
+	vislib::math::Vector<UncertaintyDataCall::secStructure, structCnt> ssa; // assignment
+
+
+	// Distanz-Matrix
+    const float M_SD[8][8] = { // STRIDE - DSSP
+                  /*      I,      H,      G,      T,      S,      C,      B,      E */
+            /* I */{   0.0f,  10.0f,  20.0f,  50.0f,  60.0f,  70.0f,  80.0f, 100.0f},               
+            /* H */{  10.0f,   0.0f,  10.0f,  40.0f,  50.0f,  60.0f,  70.0f,  90.0f},
+            /* G */{  20.0f,  10.0f,   0.0f,  30.0f,  40.0f,  50.0f,  60.0f,  80.0f},
+            /* T */{  50.0f,  40.0f,  30.0f,   0.0f,  10.0f,  20.0f,  30.0f,  50.0f},
+            /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
+            /* C */{  70.0f,  60.0f,  50.0f,  20.0f,  10.0f,   0.0f,  10.0f,  30.0f},
+            /* B */{  80.0f,  70.0f,  60.0f,  30.0f,  20.0f,  10.0f,   0.0f,  20.0f},
+            /* E */{ 100.0f,  90.0f,  80.0f,  50.0f,  40.0f,  30.0f,  20.0f,   0.0f}};
 
     const float M_DP[8][8] = { // DSSP - PDB
-                  /*  I,   H,   G,  (T), (S),   C,  (B),   E */
-            /* I */{   0,  10,  20,  -1,  -1,  70,  -1, 100},               
-            /* H */{  10,   0,  10,  -1,  -1,  60,  -1,  90},
-            /* G */{  20,  10,   0,  -1,  -1,  50,  -1,  80},
-            /* T */{  50,  40,  30,  -1,  -1,  20,  -1,  50},
-            /* S */{  60,  50,  40,  -1,  -1,  10,  -1,  40},
-            /* C */{  70,  60,  50,  -1,  -1,   0,  -1,  30},
-            /* B */{  80,  70,  60,  -1,  -1,  10,  -1,  20},
-            /* E */{ 100,  90,  80,  -1,  -1,  30,  -1,   0}};
+	           	  /*      I,      H,      G,    (T),    (S),      C,    (B),      E */
+            /* I */{   0.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
+            /* H */{  10.0f,   0.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
+            /* G */{  20.0f,  10.0f,   0.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
+            /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
+            /* S */{  60.0f,  50.0f,  40.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  40.0f},
+            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   0.0f,  -1.0f,  30.0f},
+            /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
+            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   0.0f}};
         
     const float M_SP[8][8] = { // STRIDE - PDB
-                  /*  I,   H,   G, (T),  (S),   C,  (B),  E */
-            /* I */{   0,  10,  20,  -1,  -1,  70,  -1, 100},               
-            /* H */{  10,   0,  10,  -1,  -1,  60,  -1,  90},
-            /* G */{  20,  10,   0,  -1,  -1,  50,  -1,  80},
-            /* T */{  50,  40,  30,  -1,  -1,  20,  -1,  50},
-            /*(S)*/{  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1},
-            /* C */{  70,  60,  50,  -1,  -1,   0,  -1,  30},
-            /* B */{  80,  70,  60,  -1,  -1,  10,  -1,  20},
-            /* E */{ 100,  90,  80,  -1,  -1,  30,  -1,   0}};
+		          /*      I,      H,      G,    (T),    (S),      C,    (B),      E */
+            /* I */{   0.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
+            /* H */{  10.0f,   0.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
+            /* G */{  20.0f,  10.0f,   0.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
+            /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
+            /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
+            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   0.0f,  -1.0f,  30.0f},
+            /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
+            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   0.0f}};
 
 
-    // Calculate uncertainty
-    
-    for (int a = 0; a < this->pdbIndex.Count(); a++) { // a - The amino-acid loop.
-        unsigned int consideredMethods = methodCnt;
-        
-        for (int mCntO = 0; mCntO < methodCnt; mCntO++) { // mCntO - The outer method loop.
-                    
-            for (int mCntI = 0; mCntI < methodCnt; mCntI++) { // mCntI - The inner method loop.
+	// Looping over all amino-acids
+	for (unsigned int a = 0; a < this->pdbIndex.Count(); a++) {
 
-                for (int sCnt = 0; sCnt < structTypes; sCnt++) {  // sCnt - The structure type loop.          
-                                
-                                        
-                                        // Loop over all secondary strucutre types
-                                        for (int j = 0; j < structTypes; j++) {
-                                            UncertaintyDataCall::secStructure curStruct = static_cast<UncertaintyDataCall::secStructure>(j);
-                                            
-                                            // Init tmp structure type and structure uncertainty vectors
-                                            ssu[j] = 0.0f;
-                                            ssa[j] = curStruct;
+		// Calculate structure uncertainty per method =========================
+		/*
+		for (int mCnt = 0; mCnt < methodCnt; mCnt++) { // mCnt - The method loop.
 
-                                            // Loop over all assignment methods 
-                                            for (unsigned int k = 0; k < methodCnt; k++) {
-                                                UncertaintyDataCall::assMethod curMethod = static_cast<UncertaintyDataCall::assMethod>(k);
-                                                
-                                                if (curStruct == this->sortedSecStructAssignment[curMethod][i][0]) {
-                                                    // Ignore NOTDEFINED structure type
-                                                    if (curStruct == UncertaintyDataCall::secStructure::NOTDEFINED) {
-                                                        consideredMethods -= 1;
-                                                    }
-                                                    else {
-                                                        ssu[j] += structFactor[curMethod][j];
-                                                    }
-                                                }
-                                                else {
-                           
-                           
-                           
-                                                    ssu[j] += ((1.0f - structFactor[curMethod][j]) / ((float)(structTypes - 1)));
-                  
-                } // end: sCnt
-            } // end: mCntI
-        } // end: mCntO
+			for (int s = 0; s < structCnt; s++) { // sCnt - The structure type loop.  
+				UncertaintyDataCall::secStructure curStruct = static_cast<UncertaintyDataCall::secStructure>(s);
+				// Init tmp structure type and structure uncertainty vectors
+				ssu[s] = 0.0f;
+				ssa[s] = curStruct;
 
-        // Normalise structure uncertainty to [0.0,1.0]
-        for (unsigned int j = 0; j < structTypes; j++) {
-            ssu[j] /= abs((float)consideredMethods);
-        }
-            
-        // Sorting structure types by their uncertainty
-        this->QuickSortUncertainties(&(ssu), &(ssa), 0, (structTypes-1));
 
-		// Calculate reduced uncertainty value
-		float unc = 0.0f;
-        for (unsigned int k = 0; k < structTypes-1; k++) {
-            unc += (ssu[ssa[k]] - ssu[ssa[k + 1]]);
+			}
+
+			// Assign values to arrays
+			this->secStructUncertainty[uncMethod].Add(ssu);
+			this->sortedSecStructAssignment[uncMethod].Add(ssa);
+			this->uncertainty.Add(unc);
 		}
-        unc = 1.0f - unc;
+		*/
+
+		// Calculate structure uncertainty per amino-acid =====================
+		float propSum = 0.0f;
+
+		// Init structure type propability
+		for (unsigned int sCntO = 0; sCntO < structCnt; sCntO++) {
+			ssu[sCntO] = 0.0f;
+			ssa[sCntO] = static_cast<UncertaintyDataCall::secStructure>(sCntO);
+		}
+
+		for (unsigned int sCntO = 0; sCntO < consStrTypes; sCntO++) {   // sCntO - The outer structure type loop.
+			for (unsigned int mCntO = 0; mCntO < methodCnt; mCntO++) {  // mCntO - The outer method loop.
+				for (unsigned int mCntI = 0; mCntI < methodCnt; mCntI++) {          // mCntI - The inner method loop.
+					for (unsigned int sCntI = 0; sCntI < consStrTypes; sCntI++) {   // sCntI - The inner structure type loop.          
+
+						UncertaintyDataCall::assMethod mPropO = static_cast<UncertaintyDataCall::assMethod>(mCntO);
+						UncertaintyDataCall::assMethod mPropI = static_cast<UncertaintyDataCall::assMethod>(mCntI);
+						float dist = 0.0;
+
+						if ((mPropO == UncertaintyDataCall::assMethod::DSSP) && (mPropI == UncertaintyDataCall::assMethod::STRIDE)) {
+							dist = M_SD[sCntI][sCntO];
+						}
+						else if ((mPropO == UncertaintyDataCall::assMethod::STRIDE) && (mPropI == UncertaintyDataCall::assMethod::DSSP)) {
+							dist = M_SD[sCntO][sCntI];
+						}
+						else if ((mPropO == UncertaintyDataCall::assMethod::STRIDE) && (mPropI == UncertaintyDataCall::assMethod::PDB)) {
+							dist = M_SP[sCntO][sCntI];
+						}
+						else if ((mPropO == UncertaintyDataCall::assMethod::PDB) && (mPropI == UncertaintyDataCall::assMethod::STRIDE)) {
+							dist = M_SP[sCntI][sCntO];
+						}
+						else if ((mPropO == UncertaintyDataCall::assMethod::PDB) && (mPropI == UncertaintyDataCall::assMethod::DSSP)) {
+							dist = M_DP[sCntI][sCntO];
+						}
+						else if ((mPropO == UncertaintyDataCall::assMethod::DSSP) && (mPropI == UncertaintyDataCall::assMethod::PDB)) {
+							dist = M_DP[sCntO][sCntI];
+						}
+
+						ssu[sCntO] += ((1.0f - (dist / 100.0f)) * this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI]);
+
+					} // end: sCnt
+				} // end: mCntI
+			} // end: mCntO
+
+			propSum += ssu[sCntO];
+
+		} // end: sCntO
+
+
+        // Normalizing structure propabilities to [0.0,1.0]
+		for (unsigned int s = 0; s < consStrTypes; s++) {
+			ssu[s] /= propSum;
+        }
         
+		// Sorting structure types by their propability
+		this->QuickSortUncertainties(&(ssu), &(ssa), 0, (structCnt - 1));
+
+		// TODO: Define all uncertainty values > (1.0-dUnc) as sure and set uncertainty to 1.0 ??? -  as Paramter!
+
+
+		// Calculate reduced uncertainty ======================================
+
+		float unc  = 0.0f;
+		float mean = 1.0f / ((float)consStrTypes); 
+
+		// Propability vector with maximum standard deviation
+		vislib::math::Vector<float, consStrTypes> Pmax;
+		for (unsigned int s = 0; s < consStrTypes; s++) {
+			Pmax[s] = 0.0;
+
+		}
+		Pmax[0] = 1.0f;
+
+		// Caluclating maximum standard deviation
+		float variance  = 0.0f;
+		for (unsigned int v = 0; v < consStrTypes; v++) {
+			variance += ((Pmax[v] - mean)*(Pmax[v] - mean));
+		}
+		variance *= mean;
+		float stdDevMax = (float)std::sqrt((double)(variance));
+
+		// Calculating actual standard deviation
+		variance = 0.0f;
+		for (unsigned int v = 0; v < consStrTypes; v++) {
+			variance += ((ssu[v] - mean)*(ssu[v] - mean));
+		}
+		variance *= mean;
+		float stdDev   = (float)std::sqrt((double)(variance));
+
+		// Calulating uncertainty
+		unc = (1.0f - (stdDev / stdDevMax));
+		// Just for rounding
+		if (unc < 0.0f) {
+			unc = 0.0f;
+		}
+		if (unc > 1.0f) {
+			unc = 1.0f;
+		}
+
         // Assign values to arrays
         this->secStructUncertainty[uncMethod].Add(ssu);
         this->sortedSecStructAssignment[uncMethod].Add(ssa);
         this->uncertainty.Add(unc);
     }
     
-    
-    // Define all uncertainty values > (1.0-dUnc) as sure and set uncertainty to 1.0 ???
-    // as Paramter!
-    
-    
-
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
 
     return true;

@@ -232,16 +232,16 @@
     #define EPS           0.0001
     
     // should be equal to 'UncertaintyDataCall::secStructure':
-    #define H_ALPHA_HELIX 0   
-    #define G_310_HELIX   1
-    #define I_PI_HELIX    2
-    #define E_EXT_STRAND  3
-    #define T_H_TURN      4
-    #define B_BRIDGE      5
-    #define S_BEND        6
-    #define C_COIL        7
+    #define I_PI_HELIX    0
+    #define H_ALPHA_HELIX 1
+    #define G_310_HELIX   2
+    #define T_H_TURN      3
+    #define S_BEND        4
+    #define C_COIL        5
+    #define B_BRIDGE      6
+    #define E_EXT_STRAND  7
     #define NOTDEFINED    8
-    #define STRUCT_COUNT  9                                   
+    #define STRUCT_COUNT  9                                  
     
     // should be equal to 'UncertaintyCartoonRenderer::coloringModes':    
     #define COLOR_MODE_STRUCT        0
