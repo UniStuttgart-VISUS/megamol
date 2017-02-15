@@ -31,7 +31,7 @@ namespace ospray {
         /**
         * initializes OSPRay
         */
-        void initOSPRay();
+        void initOSPRay(OSPDevice &dvce);
 
         /**
         * helper function for rendering the OSPRay texture
@@ -125,7 +125,7 @@ namespace ospray {
         GLuint vaScreen, vbo, tex;
 
         // API Variables
-        core::param::ParamSlot AOweight;
+        core::param::ParamSlot AOtransparencyEnabled;
         core::param::ParamSlot AOsamples;
         core::param::ParamSlot AOdistance;
         core::param::ParamSlot extraSamles;
@@ -184,6 +184,10 @@ namespace ospray {
 
         // framebuffer dirtyness
         bool framebufferIsDirty;
+
+        // device
+        OSPDevice device;
+
     };
 
 } // end namespace ospray

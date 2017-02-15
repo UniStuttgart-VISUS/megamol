@@ -100,7 +100,7 @@ bool ospray::OSPRayTriangleMeshRenderer::create() {
         return false;
     }
 
-    this->initOSPRay();
+    this->initOSPRay(device);
     this->setupTextureScreen();
     this->setupOSPRay(renderer, camera, world, "triangles", "scivis");
 
@@ -113,6 +113,9 @@ ospray::OSPRayTriangleMeshRenderer::Render
 */
 bool ospray::OSPRayTriangleMeshRenderer::Render(core::Call& call) {
 
+    if (device != ospGetCurrentDevice()) {
+        ospSetCurrentDevice(device);
+    }
     // cast the call to Render3D
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
@@ -168,32 +171,8 @@ bool ospray::OSPRayTriangleMeshRenderer::Render(core::Call& call) {
         this->rd_type.ResetDirty();
     }
 
-    // calculate image parts for e.g. screenshooter
-    std::vector<float> imgStart(2, 0);
-    std::vector<float> imgEnd(2, 0);
-    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
 
-    imgEnd[0] = cr->GetCameraParameters()->TileRect().GetRight() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgEnd[1] = cr->GetCameraParameters()->TileRect().GetTop() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-
-
-    // setup camera
-    ospSet2fv(camera, "image_start", imgStart.data());
-    ospSet2fv(camera, "image_end", imgEnd.data());
-    ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
-    ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
-    ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
-    ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
-    ospSet1f(camera, "fovy", cr->GetCameraParameters()->ApertureAngle());
-
-    //ospSet1i(camera, "architectural", 1);
-    //ospSet1f(camera, "nearClip", cr->GetCameraParameters()->NearClip());
-    //ospSet1f(camera, "farClip", cr->GetCameraParameters()->FarClip());
-    //ospSet1f(camera, "apertureRadius", cr->GetCameraParameters()->ApertureAngle);
-    //ospSet1f(camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
-
-
+    setupOSPRayCamera(camera, cr);
     ospCommit(camera);
 
 

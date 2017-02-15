@@ -58,7 +58,7 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
     rd_maxRecursion("Renderer::maxRecursion", "Maximum ray recursion depth"),
     rd_type("Renderer::Type", "Select between SciVis and PathTracer"),
     // scivis renderer parameters
-    AOweight("Renderer::SciVis::AOweight", "Amount of ambient occlusion added in shading"),
+    AOtransparencyEnabled("Renderer::SciVis::AOtransparencyEnabled", "Enables or disables AO transparency"),
     AOsamples("Renderer::SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion"),
     AOdistance("Renderer::SciVis::AOdistance", "Maximum distance to consider for ambient occlusion"),
     // pathtracer renderer parameters
@@ -66,6 +66,7 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
 
     light = NULL;
     lightArray = NULL;
+    device = NULL;
     framebufferIsDirty = true;
 
     core::param::EnumParam *lt = new core::param::EnumParam(NONE);
@@ -82,11 +83,11 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
     rdt->SetTypePair(PATHTRACER, "PathTracer");
 
     // Ambient parameters
-    this->AOweight << new core::param::FloatParam(1.0f);
+    this->AOtransparencyEnabled << new core::param::BoolParam(false);
     this->AOsamples << new core::param::IntParam(1);
     this->AOdistance << new core::param::FloatParam(1e20f);
     this->extraSamles << new core::param::BoolParam(true);
-    this->MakeSlotAvailable(&this->AOweight);
+    this->MakeSlotAvailable(&this->AOtransparencyEnabled);
     this->MakeSlotAvailable(&this->AOsamples);
     this->MakeSlotAvailable(&this->AOdistance);
     this->MakeSlotAvailable(&this->extraSamles);
@@ -208,16 +209,14 @@ void ospray::OSPRayRenderer::releaseTextureScreen() {
     glDeleteVertexArrays(1, &vaScreen);
 }
 
-void ospray::OSPRayRenderer::initOSPRay() {
+void ospray::OSPRayRenderer::initOSPRay(OSPDevice &dvce) {
 
-    // init OSPRay
-    // command line arguments
-    int ac = 0;
-    const char *av = " ";
-    /* initialize ospray without commandline arguments
-    instead modify ospray environment vaiables */
-    ospInit(&ac, &av);
+    if (device == NULL) {
+        dvce = ospCreateDevice("default");
+        ospDeviceCommit(dvce);
+    }
 }
+
 
 void ospray::OSPRayRenderer::setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, OSPGeometry &geometry, const char * geometry_name, const char * renderer_name) {
 
@@ -435,7 +434,7 @@ OSPTexture2D ospray::OSPRayRenderer::TextureFromFile(vislib::TString fileName) {
 
 bool ospray::OSPRayRenderer::AbstractIsDirty() {
         if (this->AOsamples.IsDirty() ||
-            this->AOweight.IsDirty() ||
+            this->AOtransparencyEnabled.IsDirty() ||
             this->AOdistance.IsDirty() ||
             this->extraSamles.IsDirty() ||
             this->lightIntensity.IsDirty() ||
@@ -472,7 +471,7 @@ bool ospray::OSPRayRenderer::AbstractIsDirty() {
 
 void ospray::OSPRayRenderer::AbstractResetDirty() {
     this->AOsamples.ResetDirty();
-    this->AOweight.ResetDirty();
+    this->AOtransparencyEnabled.ResetDirty();
     this->AOdistance.ResetDirty();
     this->extraSamles.ResetDirty();
     this->lightIntensity.ResetDirty();
@@ -576,7 +575,7 @@ void ospray::OSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
     switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
     case SCIVIS:
         // scivis renderer settings
-        ospSet1f(renderer, "aoWeight", this->AOweight.Param<core::param::FloatParam>()->Value());
+        ospSet1f(renderer, "aoTransparencyEnabled", this->AOtransparencyEnabled.Param<core::param::BoolParam>()->Value());
         ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
         ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
         ospSet1f(renderer, "aoOcclusionDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());

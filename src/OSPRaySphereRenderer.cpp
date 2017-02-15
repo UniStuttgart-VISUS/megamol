@@ -163,7 +163,7 @@ bool ospray::OSPRaySphereRenderer::create() {
         return false;
     }
 
-    this->initOSPRay();
+    this->initOSPRay(device);
     this->setupTextureScreen();
     this->setupOSPRay(renderer, camera, world, spheres, "spheres", "scivis");
 
@@ -187,6 +187,9 @@ ospray::OSPRaySphereRenderer::Render
 */
 bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
+    if (device != ospGetCurrentDevice()) {
+        ospSetCurrentDevice(device);
+    }
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL)
         return false;
@@ -226,12 +229,7 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         //imgSize.y = cr->GetCameraParameters()->VirtualViewSize().GetHeight();
         imgSize.x = cr->GetCameraParameters()->TileRect().Width();
         imgSize.y = cr->GetCameraParameters()->TileRect().Height();
-        // Rendering high resolution (> 10k) picutres does not like the accumulation buffer
-        if (extraSamles.Param<core::param::BoolParam>()->Value()) {
-            framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
-        } else {
-            framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR);
-        }
+        framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
     }
 
 
@@ -257,28 +255,8 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         this->rd_type.ResetDirty();
     }
 
-    // calculate image parts for e.g. screenshooter
-    std::vector<float> imgStart(2, 0);
-    std::vector<float> imgEnd(2, 0);
-    imgStart[0] = cr->GetCameraParameters()->TileRect().GetLeft() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgStart[1] = cr->GetCameraParameters()->TileRect().GetBottom() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-
-    imgEnd[0] = cr->GetCameraParameters()->TileRect().GetRight() / (float)cr->GetCameraParameters()->VirtualViewSize().GetWidth();
-    imgEnd[1] = cr->GetCameraParameters()->TileRect().GetTop() / (float)cr->GetCameraParameters()->VirtualViewSize().GetHeight();
-
-
-    // setup camera
-    ospSet2fv(camera, "image_start", imgStart.data());
-    ospSet2fv(camera, "image_end", imgEnd.data());
-    ospSetf(camera, "aspect", cr->GetCameraParameters()->TileRect().AspectRatio());
-    ospSet3fv(camera, "pos", cr->GetCameraParameters()->EyePosition().PeekCoordinates());
-    ospSet3fv(camera, "dir", cr->GetCameraParameters()->EyeDirection().PeekComponents());
-    ospSet3fv(camera, "up", cr->GetCameraParameters()->EyeUpVector().PeekComponents());
-    ospSet1f(camera, "fovy", cr->GetCameraParameters()->ApertureAngle());
+    setupOSPRayCamera(camera, cr);
     ospCommit(camera);
-
-
-
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
@@ -481,13 +459,9 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
 
         // setup framebuffer
-        if (extraSamles.Param<core::param::BoolParam>()->Value()) {
-            ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
-            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
-        } else {
-            ospFrameBufferClear(framebuffer, OSP_FB_COLOR);
-            ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR);
-        }
+        ospFrameBufferClear(framebuffer, OSP_FB_COLOR | OSP_FB_ACCUM);
+        ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+
 
         // get the texture from the framebuffer
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);

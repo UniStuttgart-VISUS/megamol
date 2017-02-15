@@ -69,7 +69,7 @@ bool ospray::OSPRayStreamLineRenderer::create() {
         return false;
     }
 
-    this->initOSPRay();
+    this->initOSPRay(device);
     this->setupTextureScreen();
     this->setupOSPRay(renderer, camera, world, lines, "streamlines", "scivis");
 
@@ -99,6 +99,9 @@ ospray::OSPRayStreamLineRenderer::Render
 */
 bool ospray::OSPRayStreamLineRenderer::Render(core::Call& call) {
 
+    if (device != ospGetCurrentDevice()) {
+        ospSetCurrentDevice(device);
+    }
     // cast the call to Render3D
     core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr == NULL)
