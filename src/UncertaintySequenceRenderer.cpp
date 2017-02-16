@@ -1241,7 +1241,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                             tmpStr = "Uncertainty:";
 							// tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
-							tmpStr2.Format("%.2f", this->uncertainty[mousePosResIdx]);
+							tmpStr2.Format("%.3f", this->uncertainty[mousePosResIdx]);
                             this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
                         start += perCentRow;
