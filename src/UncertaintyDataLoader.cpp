@@ -527,7 +527,6 @@ bool UncertaintyDataLoader::CalculateStructureLength(void) {
 bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	using vislib::sys::Log;
 
-
     // return if no data is present ...
     if (this->pdbIndex.IsEmpty()) { 
         return false;
@@ -535,9 +534,12 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 
     const unsigned int methodCnt    = static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM) - 1;  // UNCERTAINTY is not taken into account
     const unsigned int structCnt    = static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE);
-    const unsigned int uncMethod    = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
 	const unsigned int consStrTypes = structCnt - 1; // NOTDEFINED is ignored
-	 
+    const unsigned int dsspMethod   = static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP);
+    const unsigned int strideMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE);
+    const unsigned int pdbMethod    = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PDB);
+    const unsigned int uncMethod    = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
+                            
     // Reset uncertainty data 
     this->secStructUncertainty[uncMethod].Clear();
     this->secStructUncertainty[uncMethod].AssertCapacity(this->pdbIndex.Count());
@@ -585,6 +587,8 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
             /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
             /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   0.0f}};
 
+    const float distMax = 100.0f;    
+    
 
 	// Looping over all amino-acids
 	for (unsigned int a = 0; a < this->pdbIndex.Count(); a++) {
@@ -609,8 +613,8 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 		}
 		*/
 
+
 		// Calculate structure uncertainty per amino-acid =====================
-		float propSum = 0.0f;
 
 		// Init structure type propability
 		for (unsigned int sCntO = 0; sCntO < structCnt; sCntO++) {
@@ -618,64 +622,63 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 			ssa[sCntO] = static_cast<UncertaintyDataCall::secStructure>(sCntO);
 		}
 
+		float propMax = 0.0f;
+        float propSum = 0.0f;
 		for (unsigned int sCntO = 0; sCntO < consStrTypes; sCntO++) {   // sCntO - The outer structure type loop.
+            
 			for (unsigned int mCntO = 0; mCntO < methodCnt; mCntO++) {  // mCntO - The outer method loop.
+                
 				for (unsigned int mCntI = 0; mCntI < methodCnt; mCntI++) {          // mCntI - The inner method loop.
+                    
+                    float distSum = 0.0f;
+                    float dist    = 0.0f;                     
 					for (unsigned int sCntI = 0; sCntI < consStrTypes; sCntI++) {   // sCntI - The inner structure type loop.          
 
-						UncertaintyDataCall::assMethod mCurO = static_cast<UncertaintyDataCall::assMethod>(mCntO);
-						UncertaintyDataCall::assMethod mCurI = static_cast<UncertaintyDataCall::assMethod>(mCntI);
-						float dist = 0.0;
+                        // Compare each method just with different methods, not with itself
+                        if (mCntO != mCntI) {
 
-						// Get distance of structure types
-						 if ((mCurO == UncertaintyDataCall::assMethod::STRIDE) && (mCurI == UncertaintyDataCall::assMethod::DSSP)) {
-							dist = M_SD[sCntO][sCntI];
-						}
-						else if ((mCurO == UncertaintyDataCall::assMethod::DSSP) && (mCurI == UncertaintyDataCall::assMethod::STRIDE)) {
-							dist = M_SD[sCntI][sCntO];
-						}
-						else if ((mCurO == UncertaintyDataCall::assMethod::STRIDE) && (mCurI == UncertaintyDataCall::assMethod::PDB)) {
-							dist = M_SP[sCntO][sCntI];
-						}
-						else if ((mCurO == UncertaintyDataCall::assMethod::PDB) && (mCurI == UncertaintyDataCall::assMethod::STRIDE)) {
-							dist = M_SP[sCntI][sCntO];
-						}  
-						else if ((mCurO == UncertaintyDataCall::assMethod::DSSP) && (mCurI == UncertaintyDataCall::assMethod::PDB)) {
-							dist = M_DP[sCntO][sCntI];
-						}
-						else if ((mCurO == UncertaintyDataCall::assMethod::PDB) && (mCurI == UncertaintyDataCall::assMethod::DSSP)) {
-							dist = M_DP[sCntI][sCntO];
-						}
+                            // Get distance of structure types
+                            if ((mCurO == strideMethod) && (mCurI == dsspMethod)) {
+                                dist = M_SD[sCntO][sCntI];
+                            }
+                            else if ((mCurO == dsspMethod) && (mCurI == strideMethod)) {
+                                dist = M_SD[sCntI][sCntO];
+                            }
+                            else if ((mCurO == strideMethod) && (mCurI == pdbMethod)) {
+                                dist = M_SP[sCntO][sCntI];
+                            }
+                            else if ((mCurO == pdbMethod) && (mCurI == strideMethod)) {
+                                dist = M_SP[sCntI][sCntO];
+                            }  
+                            else if ((mCurO == dsspMethod) && (mCurI == pdbMethod)) {
+                                dist = M_DP[sCntO][sCntI];
+                            }
+                            else if ((mCurO == pdbMethod) && (mCurI == dsspMethod)) {
+                                dist = M_DP[sCntI][sCntO];
+                            }
 
-						// Ignore impossible structure assignment combinations
-						if (dist > -1.0f) {
-
-							// Get propability of structure types
-							float tmpProp = 0.0;;
-							/*
-							if (sCntO == sCntI) {
-								tmpProp = (this->secStructUncertainty[mCntO][a][sCntO] + this->secStructUncertainty[mCntI][a][sCntI]) / 2.0f;
-							}
-							else {
-								tmpProp = this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI];
-							}
-							*/
-							tmpProp = this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI];
-
-							// float tmpDist = (0.001f + (100.0f - dist));
-							float tmpDist = (DATA_FLOAT_EPS + (100.0f - dist));
-							ssu[sCntO] += (tmpProp / std::pow(tmpDist, 2.0f));
-							// ssu[sCntO] += ((1.0f - dist / 100.0f)*(1.0f - dist / 100.0f) * tmpProp);
-							// ssu[sCntO] += ((100.0f - dist)*(100.0f - dist) * tmpProp);
-						}
-
-					} // end: sCnt
-				} // end: mCntI
-			} // end: mCntO
-
-			propSum += ssu[sCntO];
-
-		} // end: sCntO
+                            // Consider only valid structure types for each method
+                            if (dist > -1.0f) {
+                                ssu[sCntO] += ((distMax - dist) * this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI]); 
+                                distSum += dist;
+                            }
+                            
+                        } // mCntO != mCntI
+					} //  sCnt
+                    // ssu[sCntO] /= distSum; // Weighted sum
+                    
+				} // mCntI
+                // ssu[sCntO] /= (float)(methodCnt - 1);
+                
+			} // mCntO
+            // ssu[sCntO] /= (float)methodCnt;
+            
+            propSum += ssu[sCntO];
+            if (ssu[sCntO] > propMax) {
+                propMax = ssu[sCntO];
+            }
+            
+		} // sCntO
 
 
         // Normalizing structure propabilities to [0.0,1.0]
@@ -718,7 +721,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 		variance *= mean;
 		float stdDev   = (float)std::sqrt((double)(variance));
 
-		// Calulating uncertainty
+		// Normalizing standard deviation and calulating uncertainty
 		unc = (1.0f - (stdDev / stdDevMax));
 		// Just for rounding
 		if (unc < 0.0f) {
