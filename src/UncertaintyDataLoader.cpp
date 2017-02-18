@@ -595,6 +595,14 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 
 		// Calculate structure uncertainty per method =========================
 		/*
+        DSSP_HBENERGY        -0.5f
+        STRIDE_THRESHOLDH1 -230.0f
+        STRIDE_THRESHOLDH3    0.12f
+        STRIDE_THRESHOLDH4    0.06f
+        STRIDE_THRESHOLDE1 -240.0f
+        STRIDE_THRESHOLDE2 -310.0f
+        NO_ASSIGNMENT         0.0f
+        * 
 		for (int mCnt = 0; mCnt < methodCnt; mCnt++) { // mCnt - The method loop.
 
 			for (int s = 0; s < structCnt; s++) { // sCnt - The structure type loop.  

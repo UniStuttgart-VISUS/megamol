@@ -250,7 +250,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);   
 
 	this->strideThresholdCount = 5;
-	this->dsspThresholdCount   = 2;
+	this->dsspThresholdCount   = 2; // only showing HBondAc0 and HBondDo0
 		
     // init animation timer
     this->animTimer = std::clock();
@@ -741,7 +741,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<int>(UncertaintyDataCall::assMethod::STRIDE)][i][0];
 				for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-					if (this->strideStructThreshold[i][j] != 0.0f) {
+					if (this->strideStructThreshold[i][j] != NO_ASSIGNMENT) {
 						switch (j) {
 						case(0) : threshold = STRIDE_THRESHOLDH1;
 							min = -500.0f;
@@ -1019,8 +1019,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
 						for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
                             switch (j) {
-                                case (0) : tmpStr = "Dssp H-Bond Energy Acceptor"; break;
-                                case (1) : tmpStr = "Dssp H-Bond Energy Donor"; break;
+                                case (0) : tmpStr = "Dssp H-Bond Energy as Acceptor"; break;
+                                case (1) : tmpStr = "Dssp H-Bond Energy as Donor"; break;
                                 default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
                             }
 							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
@@ -1163,16 +1163,16 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
 						    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-								if (this->strideStructThreshold[mousePosResIdx][j] != 0.0f) {
+								if (this->strideStructThreshold[mousePosResIdx][j] != NO_ASSIGNMENT) {
 									switch (j) {
 										case (0) : tmpStr = "T1alpha:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
 											break;
 										case (1) : tmpStr = "T2alpha:";
-											tmpStr2.Format("%.3f (> T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
+											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
 											break;
 										case (2) : tmpStr = "T3alpha:";
-											tmpStr2.Format("%.3f (> T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
+											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
 											break;
 										case (3) : tmpStr = "T1beta:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
@@ -1207,8 +1207,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 						    for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
 								if (this->dsspStructEnergy[mousePosResIdx][j] != 0.0f) {
 									switch (j) {
-										case (0) : tmpStr = "Acceptor: "; break;
-										case (1) : tmpStr = "Donor: "; break;
+										case (0) : tmpStr = "Hb-E Acc.: "; break;
+										case (1) : tmpStr = "Hb-E Don.: "; break;
 										default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
 									}
 									tmpStr2.Format("%.3f | < T=%.1f[kcal/mol]", this->dsspStructEnergy[mousePosResIdx][j], DSSP_HBENERGY);

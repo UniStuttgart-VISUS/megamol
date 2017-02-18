@@ -38,6 +38,8 @@
 #define STRIDE_THRESHOLDH4    0.06f
 #define STRIDE_THRESHOLDE1 -240.0f
 #define STRIDE_THRESHOLDE2 -310.0f
+// Value for not defined entries
+#define NO_ASSIGNMENT         0.0f
 
 
 namespace megamol {
