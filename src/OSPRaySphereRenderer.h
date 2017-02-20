@@ -159,7 +159,6 @@ namespace ospray {
         std::vector<float> vd;
 
         // OSP objects
-        OSPRenderer renderer;
         OSPFrameBuffer framebuffer;
         OSPCamera camera;
         OSPModel world;

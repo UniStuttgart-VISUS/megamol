@@ -302,7 +302,7 @@ bool ospray::OSPRayTriangleMeshRenderer::Render(core::Call& call) {
 
 
             RendererSettings(renderer);
-            OSPRayLights(renderer, call);
+            //OSPRayLights(renderer, call);
             ospCommit(renderer);
 
 

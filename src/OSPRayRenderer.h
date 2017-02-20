@@ -15,6 +15,9 @@
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/CallerSlot.h"
+#include "OSPRayLight.h"
+
 
 
 namespace megamol {
@@ -115,7 +118,7 @@ namespace ospray {
         void writePPM(const char *fileName, const osp::vec2i &size, const uint32_t *pixel);
 
         // TODO: Documentation
-        void OSPRayLights(OSPRenderer &renderer, core::Call& call);
+        void addLight(std::shared_ptr<OSPRayLightContainer> lc, unsigned int id);
         bool AbstractIsDirty();
         void AbstractResetDirty();
         void RendererSettings(OSPRenderer &renderer);
@@ -130,47 +133,16 @@ namespace ospray {
         core::param::ParamSlot AOdistance;
         core::param::ParamSlot extraSamles;
 
-        core::param::ParamSlot lightIntensity;
-        core::param::ParamSlot lightType;
-        core::param::ParamSlot lightColor;
-        core::param::ParamSlot shadows;
 
-        core::param::ParamSlot dl_angularDiameter;
-        core::param::ParamSlot dl_direction;
-        core::param::ParamSlot dl_eye_direction;
-
-        core::param::ParamSlot pl_position;
-        core::param::ParamSlot pl_radius;
-
-        core::param::ParamSlot sl_position;
-        core::param::ParamSlot sl_direction;
-        core::param::ParamSlot sl_openingAngle;
-        core::param::ParamSlot sl_penumbraAngle;
-        core::param::ParamSlot sl_radius;
-
-        core::param::ParamSlot ql_position;
-        core::param::ParamSlot ql_edgeOne;
-        core::param::ParamSlot ql_edgeTwo;
-
-        core::param::ParamSlot hdri_up;
-        core::param::ParamSlot hdri_direction;
-        core::param::ParamSlot hdri_evnfile;
 
         core::param::ParamSlot rd_epsilon;
         core::param::ParamSlot rd_spp;
         core::param::ParamSlot rd_maxRecursion;
         core::param::ParamSlot rd_type;
         core::param::ParamSlot rd_ptBackground;
+        core::param::ParamSlot shadows;
 
-        enum lightenum {
-            NONE,
-            DISTANTLIGHT,
-            POINTLIGHT,
-            SPOTLIGHT,
-            QUADLIGHT,
-            AMBIENTLIGHT,
-            HDRILIGHT
-        };
+
 
         // renderer type
         enum rdenum {
@@ -179,14 +151,20 @@ namespace ospray {
         };
 
         // light
-        OSPLight light;
+        std::vector<OSPLight> lightsToAdd;
         OSPData lightArray;
+        /** The call for ligtht */
+        core::CallerSlot getLightSlot;
 
         // framebuffer dirtyness
         bool framebufferIsDirty;
 
         // device
         OSPDevice device;
+
+        // renderer
+        OSPRenderer renderer;
+
 
     };
 

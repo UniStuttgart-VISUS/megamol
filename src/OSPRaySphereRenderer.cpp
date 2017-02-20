@@ -10,6 +10,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/Log.h"
 #include "OSPRaySphereRenderer.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"
@@ -21,6 +22,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallClipPlane.h"
+#include <functional>
 
 #include "ospray/ospray.h"
 
@@ -454,7 +456,19 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
         RendererSettings(renderer);
 
-        OSPRayLights(renderer, call);
+        // Light callback
+        LightDelegate delegate_addLight = std::bind(&ospray::OSPRaySphereRenderer::addLight, this, std::placeholders::_1, std::placeholders::_2);
+        CallOSPRayLight *gl = this->getLightSlot.CallAs<CallOSPRayLight>();
+        if (gl != NULL) {
+            gl->SetID(0);
+            gl->SetDelegate(delegate_addLight);
+            if (!(*gl)(0)) {
+                vislib::sys::Log::DefaultLog.WriteError("Error in getLight callback");
+            }
+            lightArray = ospNewData(this->lightsToAdd.size(), OSP_OBJECT, lightsToAdd.data(), 0);
+            ospSetData(renderer, "lights", lightArray);
+        }
+
         ospCommit(renderer);
 
 
@@ -638,4 +652,5 @@ bool ospray::OSPRaySphereRenderer::GetExtents(core::Call& call) {
 
     return true;
 }
+
 

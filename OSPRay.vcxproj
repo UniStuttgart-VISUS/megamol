@@ -261,6 +261,8 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
   <ItemGroup>
     <ClInclude Include="include\OSPRay\OSPRay.h" />
     <ClInclude Include="include\OSPRay_plugin\OSPRay_plugin.h" />
+    <ClInclude Include="src\CallOSPRayLight.h" />
+    <ClInclude Include="src\OSPRayLight.h" />
     <ClInclude Include="src\OSPRayRenderer.h" />
     <ClInclude Include="src\OSPRaySphereRenderer.h" />
     <ClInclude Include="src\OSPRayStreamLineRenderer.h" />
@@ -270,7 +272,9 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClInclude Include="src\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\CallOSPRayLight.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\OSPRayLight.cpp" />
     <ClCompile Include="src\OSPRayStreamLineRenderer.cpp" />
     <ClCompile Include="src\OSPRay_plugin.cpp" />
     <ClCompile Include="src\OSPRayRenderer.cpp" />

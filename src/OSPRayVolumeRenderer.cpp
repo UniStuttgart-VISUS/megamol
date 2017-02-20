@@ -337,7 +337,7 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
         ospRemoveVolume(world, volume);
 
         RendererSettings(renderer);
-        OSPRayLights(renderer, call);
+        //OSPRayLights(renderer, call);
         ospCommit(renderer);
 
 

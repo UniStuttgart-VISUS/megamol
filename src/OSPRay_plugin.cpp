@@ -1,6 +1,6 @@
 /*
  * OSPRay_plugin.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
+ * Copyright (C) 2009-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -15,6 +15,9 @@
 #include "OSPRayVolumeRenderer.h"
 #include "OSPRayTriangleMeshRenderer.h"
 #include "OSPRayStreamLineRenderer.h"
+#include "OSPRayLight.h"
+#include "CallOSPRayLight.h"
+
 
 
 
@@ -48,16 +51,11 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVolumeRenderer>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMeshRenderer>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStreamLineRenderer>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLight>();
 
             // register calls here:
 
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::OSPRay::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::OSPRay::MyCall2>();
-            //   ...
-            //
+               this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayLight>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

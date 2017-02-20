@@ -18,65 +18,42 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
+#include "CallOSPRayLight.h"
+#include "OSPRayLight.h"
 
 #include <stdio.h>
+
 
 using namespace megamol;
 
 ospray::OSPRayRenderer::OSPRayRenderer(void) :
     core::view::Renderer3DModule(),
     extraSamles("General::extraSamples", "Extra sampling when camera is not moved"),
-    // General light parameters
-    lightColor("Light::General::LightColor", "Sets the color of the Light"),
-    shadows("Light::General::Shadows", "Enables/Disables computation of hard shadows"),
-    lightIntensity("Light::General::LightIntensity", "Intensity of the Light"),
-    lightType("Light::Type::LightType", "Type of the light"),
-    // Distant light parameters
-    dl_direction("Light::DistantLight::LightDirection", "Direction of the Light"),
-    dl_angularDiameter("Light::DistantLight::AngularDiameter", "If greater than zero results in soft shadows"),
-    dl_eye_direction("Light::DistantLight::EyeDirection", "Sets the light direction as view direction"),
-    // point light parameters
-    pl_position("Light::PointLight::Position", ""),
-    pl_radius("Light::PointLight::Radius", ""),
-    // spot light parameters
-    sl_position("Light::SpotLight::Position", ""),
-    sl_direction("Light::SpotLight::Direction", ""),
-    sl_openingAngle("Light::SpotLight::openingAngle", ""),
-    sl_penumbraAngle("Light::SpotLight::penumbraAngle", ""),
-    sl_radius("Light::SpotLight::Radius", ""),
-    // quad light parameters
-    ql_position("Light::QuadLight::Position", ""),
-    ql_edgeOne("Light::QuadLight::Edge1", ""),
-    ql_edgeTwo("Light::QuadLight::Edge2", ""),
-    // hdri light parameteres
-    hdri_up("Light::HDRILight::up", ""),
-    hdri_direction("Light::HDRILight::Direction", ""),
-    hdri_evnfile("Light::HDRILight::EvironmentFile", ""),
     // general renderer parameters
     rd_epsilon("Renderer::Epsilon", "Ray epsilon to avoid self-intersections"),
     rd_spp("Renderer::SamplesPerPixel", "Samples per pixel"),
     rd_maxRecursion("Renderer::maxRecursion", "Maximum ray recursion depth"),
     rd_type("Renderer::Type", "Select between SciVis and PathTracer"),
+    shadows("Light::General::Shadows", "Enables/Disables computation of hard shadows"),
     // scivis renderer parameters
     AOtransparencyEnabled("Renderer::SciVis::AOtransparencyEnabled", "Enables or disables AO transparency"),
     AOsamples("Renderer::SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion"),
     AOdistance("Renderer::SciVis::AOdistance", "Maximum distance to consider for ambient occlusion"),
     // pathtracer renderer parameters
-    rd_ptBackground("Renderer::PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity") {
+    rd_ptBackground("Renderer::PathTracer::BackgroundTexture", "Texture image used as background, replacing visible lights in infinity"),
+    // Call lights 
+    getLightSlot("getLight", "Connects to a light source")
+{
 
-    light = NULL;
+    // ospray lights
     lightArray = NULL;
+    this->getLightSlot.SetCompatibleCall<ospray::CallOSPRayLightDescription>();
+    this->MakeSlotAvailable(&this->getLightSlot);
+    // ospray device and framebuffer
     device = NULL;
     framebufferIsDirty = true;
 
-    core::param::EnumParam *lt = new core::param::EnumParam(NONE);
-    lt->SetTypePair(NONE, "None");
-    lt->SetTypePair(DISTANTLIGHT, "DistantLight");
-    lt->SetTypePair(POINTLIGHT, "PointLight");
-    lt->SetTypePair(SPOTLIGHT, "SpotLight");
-    lt->SetTypePair(QUADLIGHT, "QuadLight");
-    lt->SetTypePair(AMBIENTLIGHT, "AmbientLight");
-    lt->SetTypePair(HDRILIGHT, "HDRILight");
+
 
     core::param::EnumParam *rdt = new core::param::EnumParam(SCIVIS);
     rdt->SetTypePair(SCIVIS, "SciVis");
@@ -92,57 +69,7 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
     this->MakeSlotAvailable(&this->AOdistance);
     this->MakeSlotAvailable(&this->extraSamles);
 
-    // general light
-    this->shadows << new core::param::BoolParam(0);
-    this->lightColor << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
-    this->lightType << lt;
-    this->lightIntensity << new core::param::FloatParam(1.0f);
-    this->MakeSlotAvailable(&this->lightIntensity);
-    this->MakeSlotAvailable(&this->lightColor);
-    this->MakeSlotAvailable(&this->shadows);
-    this->MakeSlotAvailable(&this->lightType);
 
-    // distant light
-    this->dl_angularDiameter << new core::param::FloatParam(0.0f);
-    this->dl_direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, -1.0f, 0.0f));
-    this->dl_eye_direction << new core::param::BoolParam(0);
-    this->MakeSlotAvailable(&this->dl_direction);
-    this->MakeSlotAvailable(&this->dl_angularDiameter);
-    this->MakeSlotAvailable(&this->dl_eye_direction);
-
-    // point light
-    this->pl_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
-    this->pl_radius << new core::param::FloatParam(0.0f);
-    this->MakeSlotAvailable(&this->pl_position);
-    this->MakeSlotAvailable(&this->pl_radius);
-
-    // spot light
-    this->sl_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
-    this->sl_direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
-    this->sl_openingAngle << new core::param::FloatParam(0.0f);
-    this->sl_penumbraAngle << new core::param::FloatParam(0.0f);
-    this->sl_radius << new core::param::FloatParam(0.0f);
-    this->MakeSlotAvailable(&this->sl_position);
-    this->MakeSlotAvailable(&this->sl_direction);
-    this->MakeSlotAvailable(&this->sl_openingAngle);
-    this->MakeSlotAvailable(&this->sl_penumbraAngle);
-    this->MakeSlotAvailable(&this->sl_radius);
-
-    // quad light
-    this->ql_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
-    this->ql_edgeOne << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
-    this->ql_edgeTwo << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->ql_position);
-    this->MakeSlotAvailable(&this->ql_edgeOne);
-    this->MakeSlotAvailable(&this->ql_edgeTwo);
-
-    // HDRI light
-    this->hdri_up << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
-    this->hdri_direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
-    this->hdri_evnfile << new core::param::FilePathParam("");
-    this->MakeSlotAvailable(&this->hdri_up);
-    this->MakeSlotAvailable(&this->hdri_direction);
-    this->MakeSlotAvailable(&this->hdri_evnfile);
 
     // General Renderer
     this->rd_epsilon << new core::param::FloatParam(1e-4f);
@@ -153,6 +80,8 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
     this->MakeSlotAvailable(&this->rd_spp);
     this->MakeSlotAvailable(&this->rd_maxRecursion);
     this->MakeSlotAvailable(&this->rd_type);
+    this->shadows << new core::param::BoolParam(0);
+    this->MakeSlotAvailable(&this->shadows);
 
     //PathTracer
     this->rd_ptBackground << new core::param::FilePathParam("");
@@ -211,10 +140,11 @@ void ospray::OSPRayRenderer::releaseTextureScreen() {
 
 void ospray::OSPRayRenderer::initOSPRay(OSPDevice &dvce) {
 
-    if (device == NULL) {
+    if (dvce == NULL) {
         dvce = ospCreateDevice("default");
         ospDeviceCommit(dvce);
     }
+    ospSetCurrentDevice(dvce);
 }
 
 
@@ -437,26 +367,7 @@ bool ospray::OSPRayRenderer::AbstractIsDirty() {
             this->AOtransparencyEnabled.IsDirty() ||
             this->AOdistance.IsDirty() ||
             this->extraSamles.IsDirty() ||
-            this->lightIntensity.IsDirty() ||
-            this->lightType.IsDirty() ||
-            this->lightColor.IsDirty() ||
             this->shadows.IsDirty() ||
-            this->dl_angularDiameter.IsDirty() ||
-            this->dl_direction.IsDirty() ||
-            this->dl_eye_direction.IsDirty() ||
-            this->pl_position.IsDirty() ||
-            this->pl_radius.IsDirty() ||
-            this->sl_position.IsDirty() ||
-            this->sl_direction.IsDirty() ||
-            this->sl_openingAngle.IsDirty() ||
-            this->sl_penumbraAngle.IsDirty() ||
-            this->sl_radius.IsDirty() ||
-            this->ql_position.IsDirty() ||
-            this->ql_edgeOne.IsDirty() ||
-            this->ql_edgeTwo.IsDirty() ||
-            this->hdri_up.IsDirty() ||
-            this->hdri_direction.IsDirty() ||
-            this->hdri_evnfile.IsDirty() ||
             this->rd_epsilon.IsDirty() ||
             this->rd_spp.IsDirty() ||
             this->rd_maxRecursion.IsDirty() ||
@@ -474,26 +385,7 @@ void ospray::OSPRayRenderer::AbstractResetDirty() {
     this->AOtransparencyEnabled.ResetDirty();
     this->AOdistance.ResetDirty();
     this->extraSamles.ResetDirty();
-    this->lightIntensity.ResetDirty();
-    this->lightType.ResetDirty();
-    this->lightColor.ResetDirty();
     this->shadows.ResetDirty();
-    this->dl_angularDiameter.ResetDirty();
-    this->dl_direction.ResetDirty();
-    this->dl_eye_direction.ResetDirty();
-    this->pl_position.ResetDirty();
-    this->pl_radius.ResetDirty();
-    this->sl_position.ResetDirty();
-    this->sl_direction.ResetDirty();
-    this->sl_openingAngle.ResetDirty();
-    this->sl_penumbraAngle.ResetDirty();
-    this->sl_radius.ResetDirty();
-    this->ql_position.ResetDirty();
-    this->ql_edgeOne.ResetDirty();
-    this->ql_edgeTwo.ResetDirty();
-    this->hdri_up.ResetDirty();
-    this->hdri_direction.ResetDirty();
-    this->hdri_evnfile.ResetDirty();
     this->rd_epsilon.ResetDirty();
     this->rd_spp.ResetDirty();
     this->rd_maxRecursion.ResetDirty();
@@ -501,51 +393,55 @@ void ospray::OSPRayRenderer::AbstractResetDirty() {
     this->framebufferIsDirty = false;
 }
 
-void ospray::OSPRayRenderer::OSPRayLights(OSPRenderer &renderer, core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
+
+
+void ospray::OSPRayRenderer::addLight(std::shared_ptr<OSPRayLightContainer> lc, unsigned int id) {
+
     // create custom ospray light
-    switch (this->lightType.Param<core::param::EnumParam>()->Value()) {
+    OSPLight light;
+
+    switch (lc->lightType) {
     case NONE:
         light = NULL;
         break;
     case DISTANTLIGHT:
-        light = ospNewLight(renderer, "distant");
-        if (this->dl_eye_direction.Param<core::param::BoolParam>()->Value() == true) {
+        light = ospNewLight(this->renderer, "distant");
+        if (lc->dl_eye_direction == true) {
             // take the light direction from the View3D
-            //GLfloat lightdir[4];
-            //glGetLightfv(GL_LIGHT0, GL_POSITION, lightdir);
-            //ospSetVec3f(light, "direction", { lightdir[0], lightdir[1], lightdir[2] });
-            ospSet3fv(light, "direction", cr->GetCameraParameters()->EyeDirection().PeekComponents());
+            GLfloat lightdir[4];
+            glGetLightfv(GL_LIGHT0, GL_POSITION, lightdir);
+            ospSetVec3f(light, "direction", { lightdir[0], lightdir[1], lightdir[2] });
+            //ospSet3fv(light, "direction", cr->GetCameraParameters()->EyeDirection().PeekComponents());
         } else {
-            ospSet3fv(light, "direction", this->dl_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+            ospSet3fv(light, "direction", lc->dl_direction.data());
         }
-        ospSet1f(light, "angularDiameter", this->dl_angularDiameter.Param<core::param::FloatParam>()->Value());
+        ospSet1f(light, "angularDiameter", lc->dl_angularDiameter);
         break;
     case POINTLIGHT:
         light = ospNewLight(renderer, "point");
-        ospSet3fv(light, "position", this->pl_position.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-        ospSet1f(light, "radius", this->pl_radius.Param<core::param::FloatParam>()->Value());
+        ospSet3fv(light, "position", lc->pl_position.data());
+        ospSet1f(light, "radius", lc->pl_radius);
         break;
     case SPOTLIGHT:
         light = ospNewLight(renderer, "spot");
-        ospSet3fv(light, "position", this->sl_position.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-        ospSet3fv(light, "direction", this->sl_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-        ospSet1f(light, "openingAngle", this->sl_openingAngle.Param<core::param::FloatParam>()->Value());
-        ospSet1f(light, "penumbraAngle", this->sl_penumbraAngle.Param<core::param::FloatParam>()->Value());
-        ospSet1f(light, "radius", this->sl_radius.Param<core::param::FloatParam>()->Value());
+        ospSet3fv(light, "position", lc->sl_position.data());
+        ospSet3fv(light, "direction", lc->sl_direction.data());
+        ospSet1f(light, "openingAngle", lc->sl_openingAngle);
+        ospSet1f(light, "penumbraAngle", lc->sl_penumbraAngle);
+        ospSet1f(light, "radius", lc->sl_radius);
         break;
     case QUADLIGHT:
         light = ospNewLight(renderer, "quad");
-        ospSet3fv(light, "position", this->ql_position.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-        ospSet3fv(light, "edge1", this->ql_edgeOne.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-        ospSet3fv(light, "edge2", this->ql_edgeTwo.Param<core::param::Vector3fParam>()->Value().PeekComponents());
+        ospSet3fv(light, "position", lc->ql_position.data());
+        ospSet3fv(light, "edge1", lc->ql_edgeOne.data());
+        ospSet3fv(light, "edge2", lc->ql_edgeTwo.data());
         break;
     case HDRILIGHT:
         light = ospNewLight(renderer, "hdri");
-        ospSet3fv(light, "up", this->hdri_up.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-        ospSet3fv(light, "dir", this->hdri_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents());
-        if (this->hdri_evnfile.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
-            OSPTexture2D hdri_tex = this->TextureFromFile(this->hdri_evnfile.Param<core::param::FilePathParam>()->Value());
+        ospSet3fv(light, "up", lc->hdri_up.data());
+        ospSet3fv(light, "dir", lc->hdri_direction.data());
+        if (lc->hdri_evnfile != vislib::TString("")) {
+            OSPTexture2D hdri_tex = this->TextureFromFile(lc->hdri_evnfile);
             ospSetObject(renderer, "backplate", hdri_tex);
         }
         break;
@@ -557,12 +453,16 @@ void ospray::OSPRayRenderer::OSPRayLights(OSPRenderer &renderer, core::Call& cal
     if (light == NULL) {
         ospSetData(renderer, "lights", NULL);
     } else {
-        ospSet1f(light, "intensity", this->lightIntensity.Param<core::param::FloatParam>()->Value());
-        vislib::math::Vector<float, 3> lc = this->lightColor.Param<core::param::Vector3fParam>()->Value();
-        ospSetVec3f(light, "color", { lc.X(), lc.Y(), lc.Z() });
+        ospSet1f(light, "intensity", lc->lightIntensity);
+        ospSet3fv(light, "color", lc->lightColor.data());
         ospCommit(light);
-        lightArray = ospNewData(1, OSP_OBJECT, &light, 0);
-        ospSetData(renderer, "lights", lightArray);
+
+        if (lightsToAdd.size() < (id + 1)) {
+            this->lightsToAdd.push_back(light);
+        } else {
+            this->lightsToAdd[id] = light;
+        }
+
     }
 }
 
@@ -596,6 +496,7 @@ void ospray::OSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
     }
 
 }
+
 
 void ospray::OSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, core::view::CallRender3D* cr) {
 
@@ -634,7 +535,6 @@ OSPFrameBuffer ospray::OSPRayRenderer::newFrameBuffer(osp::vec2i& imgSize, const
 
 
 ospray::OSPRayRenderer::~OSPRayRenderer(void) {
-    if (light != NULL) ospRelease(light);
     if (lightArray != NULL) ospRelease(lightArray);
 }
 

@@ -32,7 +32,7 @@ find_package(vislib REQUIRED HINTS ${MegaMolCore_vislib_DIR})
 MESSAGE( STATUS "vislib_LIBRARIES:" ${vislib_LIBRARIES} )
 MESSAGE( STATUS "vislib_INCLUDE_DIRS:" ${vislib_INCLUDE_DIRS} )
 
-find_package(ospray REQUIRED)
+find_package(OSPRAY REQUIRED)
 
 MESSAGE( STATUS "ospray_LIBRARIES:" ${ospray_LIBRARIES} )
 MESSAGE( STATUS "ospray_INCLUDE_DIRS:" ${ospray_INCLUDE_DIRS} )
@@ -48,8 +48,8 @@ MESSAGE( STATUS "mmstd_trisoup_LIBRARIES:" ${mmstd_trisoup_LIBRARIES} )
 MESSAGE( STATUS "mmstd_trisoup_INCLUDE_DIRS:" ${mmstd_trisoup_INCLUDE_DIRS} )
 
 
-set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES} ${protein_calls_LIBRARIES} ${mmstd_trisoup_LIBRARIES} ${ospray_LIBRARIES} /usr/local/lib64/libtbb.so.2 /usr/local/lib64/libtbbmalloc.so.2 /usr/local/lib64/libembree.so.2 /usr/local/lib64/libospray.so /usr/local/lib64/libospray_common.so)
-include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS} ${protein_calls_INCLUDE_DIRS} ${mmstd_trisoup_INCLUDE_DIRS} ${ospray_INCLUDE_DIRS} /usr/local/include/ospray)
+set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES} ${protein_calls_LIBRARIES} ${mmstd_trisoup_LIBRARIES} ${ospray_LIBRARIES})
+include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS} ${protein_calls_INCLUDE_DIRS} ${mmstd_trisoup_INCLUDE_DIRS} ${ospray_INCLUDE_DIRS})
 
 
 # processor word size detection
