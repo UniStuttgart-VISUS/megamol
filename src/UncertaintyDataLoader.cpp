@@ -262,25 +262,26 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                 this->pdbID = line.Substring(9,4);
             }
 			else if (line.StartsWith("METHOD")) {                       // parse assignment method for pdb
-
+                line = line.Substring(8); 
+                
 				// helix
-				tmpString = line.Substring(42, 32);
-				if (tmpString.Contains(" AUTHOR "))
+				tmpString = line.Substring(34, 35);
+				if (tmpString.Contains("AUTHOR") || tmpString.Contains("DEPOSITOR"))
 					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR;
-				else if (tmpString.Contains(" DSSP "))
+				else if (tmpString.Contains("DSSP") || tmpString.Contains("KABSCH"))
 					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_DSSP;
-				else if (tmpString.Contains(" PROMOTIF "))
+				else if (tmpString.Contains("PROMOTIF"))
 					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF;
 				else
 					this->pdbAssignmentHelix = UncertaintyDataCall::pdbAssMethod::PDB_UNKNOWN;
                     
 				// sheet
-				tmpString = line.Substring(105, 32);
-				if (tmpString.Contains(" AUTHOR "))
+				tmpString = line.Substring(97, 35);
+				if (tmpString.Contains("AUTHOR") || tmpString.Contains("DEPOSITOR"))
 					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR;
-				else if (tmpString.Contains(" DSSP "))
+				else if (tmpString.Contains("DSSP") || tmpString.Contains("KABSCH"))
 					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_DSSP;
-				else if (tmpString.Contains(" PROMOTIF "))
+				else if (tmpString.Contains("PROMOTIF"))
 					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_PROMOTIF;
 				else
 					this->pdbAssignmentSheet = UncertaintyDataCall::pdbAssMethod::PDB_UNKNOWN;
