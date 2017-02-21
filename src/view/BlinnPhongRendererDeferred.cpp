@@ -214,7 +214,8 @@ bool view::BlinnPhongRendererDeferred::Render(Call& call) {
     //glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
 
     glEnable(GL_TEXTURE_2D);
-    glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 
     // Preserve the current framebuffer content (e.g. back of the bounding box)
     glEnable(GL_BLEND);
