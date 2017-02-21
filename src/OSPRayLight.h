@@ -97,6 +97,10 @@ private:
     */
     void readParams();
 
+    bool InterfaceIsDirty();
+    void InterfaceResetDirty();
+
+
 };
 }
 }

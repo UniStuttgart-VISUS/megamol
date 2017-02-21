@@ -14,6 +14,8 @@
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/Log.h"
 
+
+
 using namespace megamol::ospray;
 
 
@@ -121,11 +123,13 @@ OSPRayLight::~OSPRayLight(void) {
 }
 
 bool OSPRayLight::create() {
+    this->lightType.Param<core::param::EnumParam>()->setDirty();
+    this->lightContainer.isValid = true;
     return true;
 }
 
 void OSPRayLight::release() {
-    lightContainer
+    lightContainer.isValid = false;
 }
 
 
@@ -133,28 +137,22 @@ bool OSPRayLight::getLightCallback(megamol::core::Call& call) {
     CallOSPRayLight *lc_in = dynamic_cast<CallOSPRayLight*>(&call);
     CallOSPRayLight *lc_out = this->getLightSlot.CallAs<CallOSPRayLight>();
 
-    auto addFunction = lc_in->GetDelegate();
-    if (addFunction == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("Error no add function specified");
-        return false;
+    if (lc_in != NULL) {
+        if (this->InterfaceIsDirty()) {
+            this->readParams();
+            lc_in->addLight(lightContainer);
+            *(lc_in->ModuleIsDirty) = true;
+        }
     }
 
-    this->readParams();
-    addFunction(std::make_shared<OSPRayLightContainer>(lightContainer), lc_in->GetID());
-
     if (lc_out != NULL) {
-        lc_out->SetDelegate(addFunction);
-        lc_out->SetID(lc_in->GetID() + 1);
-        if (!(*lc_out)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("Error in getLight callback");
-            return false;
-        }
-
+        lc_out->setLightMap(lc_in->lightMap);
+        lc_out->setDirtyObj(lc_in->ModuleIsDirty);
+        lc_out->fillLightMap();
     }
 
     return true;
 }
-
 
 void OSPRayLight::readParams() {
     lightContainer.lightType = (lightenum)this->lightType.Param<core::param::EnumParam>()->Value();
@@ -188,4 +186,63 @@ void OSPRayLight::readParams() {
     lightContainer.hdri_evnfile = this->hdri_evnfile.Param<core::param::FilePathParam>()->Value();
 }
 
+bool OSPRayLight::InterfaceIsDirty() {
+    if (
+        this->lightIntensity.IsDirty() ||
+        this->lightType.IsDirty() ||
+        this->lightColor.IsDirty() ||
 
+        this->dl_angularDiameter.IsDirty() ||
+        this->dl_direction.IsDirty() ||
+        this->dl_eye_direction.IsDirty() ||
+
+        this->pl_position.IsDirty() ||
+        this->pl_radius.IsDirty() ||
+
+        this->sl_position.IsDirty() ||
+        this->sl_direction.IsDirty() ||
+        this->sl_openingAngle.IsDirty() ||
+        this->sl_penumbraAngle.IsDirty() ||
+        this->sl_radius.IsDirty() ||
+
+        this->ql_position.IsDirty() ||
+        this->ql_edgeOne.IsDirty() ||
+        this->ql_edgeTwo.IsDirty() ||
+
+        this->hdri_up.IsDirty() ||
+        this->hdri_direction.IsDirty() ||
+        this->hdri_evnfile.IsDirty()
+        ) {
+        this->InterfaceResetDirty();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void OSPRayLight::InterfaceResetDirty() {
+    this->lightIntensity.ResetDirty();
+    this->lightType.ResetDirty();
+    this->lightColor.ResetDirty();
+
+    this->dl_angularDiameter.ResetDirty();
+    this->dl_direction.ResetDirty();
+    this->dl_eye_direction.ResetDirty();
+
+    this->pl_position.ResetDirty();
+    this->pl_radius.ResetDirty();
+
+    this->sl_position.ResetDirty();
+    this->sl_direction.ResetDirty();
+    this->sl_openingAngle.ResetDirty();
+    this->sl_penumbraAngle.ResetDirty();
+    this->sl_radius.ResetDirty();
+
+    this->ql_position.ResetDirty();
+    this->ql_edgeOne.ResetDirty();
+    this->ql_edgeTwo.ResetDirty();
+
+    this->hdri_up.ResetDirty();
+    this->hdri_direction.ResetDirty();
+    this->hdri_evnfile.ResetDirty();
+}

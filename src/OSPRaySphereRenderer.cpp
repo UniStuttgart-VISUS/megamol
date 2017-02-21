@@ -46,6 +46,7 @@ VISLIB_FORCEINLINE unsigned char byteFromVoidArray(const megamol::core::moldyn::
 typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
+
 /*
 ospray::OSPRaySphereRenderer::OSPRaySphereRenderer
 */
@@ -85,6 +86,8 @@ particleList("General::ParticleList", "Switches between particle lists")
     pln = NULL;
     vertexData = NULL;
     colorData = NULL;
+    ModuleIsDirty = false;
+
 
     //tmp variable
     number = 0;
@@ -259,6 +262,14 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
 
     setupOSPRayCamera(camera, cr);
     ospCommit(camera);
+
+    // Light setup
+    CallOSPRayLight *gl = this->getLightSlot.CallAs<CallOSPRayLight>();
+    if (gl != NULL) {
+        gl->setLightMap(&lightMap);
+        gl->setDirtyObj(&ModuleIsDirty);
+        gl->fillLightMap();
+    }
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
@@ -453,20 +464,14 @@ bool ospray::OSPRaySphereRenderer::Render(core::Call& call) {
         ospCommit(world);
 
 
-
         RendererSettings(renderer);
 
-        // Light callback
-        LightDelegate delegate_addLight = std::bind(&ospray::OSPRaySphereRenderer::addLight, this, std::placeholders::_1, std::placeholders::_2);
-        CallOSPRayLight *gl = this->getLightSlot.CallAs<CallOSPRayLight>();
+
+        // Enable Lights
         if (gl != NULL) {
-            gl->SetID(0);
-            gl->SetDelegate(delegate_addLight);
-            if (!(*gl)(0)) {
-                vislib::sys::Log::DefaultLog.WriteError("Error in getLight callback");
-            }
-            lightArray = ospNewData(this->lightsToAdd.size(), OSP_OBJECT, lightsToAdd.data(), 0);
-            ospSetData(renderer, "lights", lightArray);
+            this->fillLightArray();
+            lightsToRender = ospNewData(this->lightArray.size(), OSP_OBJECT, lightArray.data(), 0);
+            ospSetData(renderer, "lights", lightsToRender);
         }
 
         ospCommit(renderer);
@@ -528,7 +533,8 @@ bool ospray::OSPRaySphereRenderer::InterfaceIsDirty() {
         this->mat_Ns.IsDirty() ||
         this->mat_d.IsDirty() ||
         this->mat_Tf.IsDirty() ||
-        this->particleList.IsDirty())
+        this->particleList.IsDirty() ||
+        this->ModuleIsDirty)
     {
         this->AbstractResetDirty();
         this->mat_Kd.ResetDirty();
@@ -537,6 +543,7 @@ bool ospray::OSPRaySphereRenderer::InterfaceIsDirty() {
         this->mat_d.ResetDirty();
         this->mat_Tf.ResetDirty();
         this->particleList.ResetDirty();
+        this->ModuleIsDirty = false;
         return true;
     } else {
         return false;
@@ -616,28 +623,6 @@ bool ospray::OSPRaySphereRenderer::GetCapabilities(core::Call& call) {
 * moldyn::AbstractSimpleSphereRenderer::GetExtents
 */
 bool ospray::OSPRaySphereRenderer::GetExtents(core::Call& call) {
-    //core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    //if (cr == NULL) return false;
-
-    //core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-    //c2->SetFrameID(static_cast<unsigned int>(cr->Time()), true); // isTimeForced flag set to true
-    //if ((c2 != NULL) && ((*c2)(1))) {
-    //    cr->SetTimeFramesCount(c2->FrameCount());
-    //    cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
-
-    //    float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    //    if (scaling > 0.0000001) {
-    //        scaling = 10.0f / scaling;
-    //    } else {
-    //        scaling = 1.0f;
-    //    }
-    //    cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
-
-    //} else {
-    //    cr->SetTimeFramesCount(1);
-    //    cr->AccessBoundingBoxes().Clear();
-    //}
-
 	core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
 	if (cr == NULL) return false;
 	core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
@@ -652,5 +637,4 @@ bool ospray::OSPRaySphereRenderer::GetExtents(core::Call& call) {
 
     return true;
 }
-
 

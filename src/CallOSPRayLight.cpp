@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "CallOSPRayLight.h"
+#include "vislib/sys/Log.h"
 
 using namespace megamol::ospray;
 
@@ -35,8 +36,9 @@ OSPRayLightContainer::OSPRayLightContainer() :
     // hdri light parameters
     hdri_up(NULL),
     hdri_direction(NULL),
-    hdri_evnfile("") {
-}
+    hdri_evnfile(""),
+    // tracks the existence of the light module
+    isValid(false) { }
 
 OSPRayLightContainer::~OSPRayLightContainer() {
     this->release();
@@ -63,15 +65,20 @@ void OSPRayLightContainer::release() {
 }
 
 
-
 // #############################
 // ###### CallOSPRayLight ######
 // #############################
 /*
 * megamol::ospray::CallOSPRayLight::CallOSPRayLight
 */
-CallOSPRayLight::CallOSPRayLight(void) : addFunction(NULL) {
-    // intentionally empty
+CallOSPRayLight::CallOSPRayLight() { 
+// intentionally empty
+}
+
+
+
+void CallOSPRayLight::setLightMap(std::map<CallOSPRayLight*, OSPRayLightContainer> *lm) {
+    this->lightMap = lm;
 }
 
 /*
@@ -88,30 +95,18 @@ CallOSPRayLight& CallOSPRayLight::operator=(const CallOSPRayLight& rhs) {
     return *this;
 }
 
-/*
-* CallOSPRayLight::SetDelegate
-*/
-void CallOSPRayLight::SetDelegate(LightDelegate deleg) {
-    this->addFunction = deleg;
+void CallOSPRayLight::addLight(OSPRayLightContainer &lc) {
+    if (lc.isValid) {
+        this->lightMap->insert_or_assign(this, lc);
+    } 
 }
 
-/*
-* CallOSPRayLight::GetDelegate
-*/
-LightDelegate CallOSPRayLight::GetDelegate() {
-    return this->addFunction;
+void CallOSPRayLight::fillLightMap() {
+    if (!(*this)(0)) {
+        vislib::sys::Log::DefaultLog.WriteError("Error in fillLightMap");
+    }
 }
 
-/*
-* CallOSPRayLight::SetID
-*/
-void CallOSPRayLight::SetID(unsigned int id) {
-    this->ID = id;
-}
-
-/*
-* CallOSPRayLight::GetID
-*/
-unsigned int CallOSPRayLight::GetID() {
-    return this->ID;
+void CallOSPRayLight::setDirtyObj(bool *md) {
+    this->ModuleIsDirty = md;
 }

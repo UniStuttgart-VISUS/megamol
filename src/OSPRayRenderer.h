@@ -16,7 +16,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/CallerSlot.h"
-#include "OSPRayLight.h"
+#include "CallOSPRayLight.h"
+#include <map>
 
 
 
@@ -118,7 +119,7 @@ namespace ospray {
         void writePPM(const char *fileName, const osp::vec2i &size, const uint32_t *pixel);
 
         // TODO: Documentation
-        void addLight(std::shared_ptr<OSPRayLightContainer> lc, unsigned int id);
+
         bool AbstractIsDirty();
         void AbstractResetDirty();
         void RendererSettings(OSPRenderer &renderer);
@@ -151,8 +152,8 @@ namespace ospray {
         };
 
         // light
-        std::vector<OSPLight> lightsToAdd;
-        OSPData lightArray;
+        std::vector<OSPLight> lightArray;
+        OSPData lightsToRender;
         /** The call for ligtht */
         core::CallerSlot getLightSlot;
 
@@ -165,6 +166,14 @@ namespace ospray {
         // renderer
         OSPRenderer renderer;
 
+        // Light map
+        std::map<CallOSPRayLight*, OSPRayLightContainer> lightMap;
+
+        // Module dirtyness
+        bool ModuleIsDirty;
+
+
+        void fillLightArray();
 
     };
 

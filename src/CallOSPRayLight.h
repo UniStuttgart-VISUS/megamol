@@ -9,8 +9,8 @@
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/Call.h"
-#include <functional>
 #include <vector>
+#include <map>
 #include "vislib/String.h"
 
 namespace megamol {
@@ -56,6 +56,7 @@ public:
     std::vector<float> hdri_up;
     std::vector<float> hdri_direction;
     vislib::TString hdri_evnfile;
+    bool isValid;
 
 
 
@@ -65,7 +66,6 @@ public:
 
 };
 
-typedef std::function<void(std::shared_ptr<ospray::OSPRayLightContainer>, unsigned int)> LightDelegate;
 
 class CallOSPRayLight: public core::Call {
 public:
@@ -106,16 +106,24 @@ public:
     */
     static const char * FunctionName(unsigned int idx) {
         switch (idx) {
-        case 0: return "GetLight";
+        case 0: return "GetCall";
         default: return NULL;
         }
     }
 
     /** Ctor. */
-    CallOSPRayLight(void);
+    CallOSPRayLight();
 
     /** Dtor. */
     virtual ~CallOSPRayLight(void);
+
+    void setLightMap(std::map<CallOSPRayLight*, OSPRayLightContainer> *lm);
+
+    void addLight(OSPRayLightContainer &lc);
+
+    void fillLightMap();
+
+    void setDirtyObj(bool *md);
 
     /**
     * Assignment operator
@@ -126,39 +134,8 @@ public:
     */
     CallOSPRayLight& operator=(const CallOSPRayLight& rhs);
 
-    /**
-    * Sets an add function. The add function is used by the module
-    * and sets the lights inside the renderer module.
-    *
-    * @param std::function<void(std::shared_ptr<OSPRayLightContainer>)> deleg
-    *
-    * @return 
-    */
-    void SetDelegate(LightDelegate deleg);
-
-    /**
-    * Returns the before setted delegate.
-    *
-    * @return std::function<void(std::shared_ptr<OSPRayLightContainer>)> addFunction
-    */
-    LightDelegate CallOSPRayLight::GetDelegate();
-
-    /**
-    * Sets the call id
-    *
-    * @param unsigned int id
-    */
-    void SetID(unsigned int id);
-
-    /**
-    * Returns the call id
-    *
-    * @return unsigned int id
-    */
-    unsigned int GetID();
-
-    unsigned int ID;
-    LightDelegate addFunction;
+    std::map<CallOSPRayLight*, OSPRayLightContainer> *lightMap;
+    bool *ModuleIsDirty;
 
 };
 typedef core::factories::CallAutoDescription<CallOSPRayLight> CallOSPRayLightDescription;

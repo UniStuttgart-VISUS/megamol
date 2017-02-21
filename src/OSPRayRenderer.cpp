@@ -18,8 +18,8 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "CallOSPRayLight.h"
-#include "OSPRayLight.h"
+
+
 
 #include <stdio.h>
 
@@ -46,13 +46,12 @@ ospray::OSPRayRenderer::OSPRayRenderer(void) :
 {
 
     // ospray lights
-    lightArray = NULL;
+    lightsToRender = NULL;
     this->getLightSlot.SetCompatibleCall<ospray::CallOSPRayLightDescription>();
     this->MakeSlotAvailable(&this->getLightSlot);
     // ospray device and framebuffer
     device = NULL;
     framebufferIsDirty = true;
-
 
 
     core::param::EnumParam *rdt = new core::param::EnumParam(SCIVIS);
@@ -394,77 +393,74 @@ void ospray::OSPRayRenderer::AbstractResetDirty() {
 }
 
 
-
-void ospray::OSPRayRenderer::addLight(std::shared_ptr<OSPRayLightContainer> lc, unsigned int id) {
+void ospray::OSPRayRenderer::fillLightArray() {
 
     // create custom ospray light
     OSPLight light;
 
-    switch (lc->lightType) {
-    case NONE:
-        light = NULL;
-        break;
-    case DISTANTLIGHT:
-        light = ospNewLight(this->renderer, "distant");
-        if (lc->dl_eye_direction == true) {
-            // take the light direction from the View3D
-            GLfloat lightdir[4];
-            glGetLightfv(GL_LIGHT0, GL_POSITION, lightdir);
-            ospSetVec3f(light, "direction", { lightdir[0], lightdir[1], lightdir[2] });
-            //ospSet3fv(light, "direction", cr->GetCameraParameters()->EyeDirection().PeekComponents());
-        } else {
-            ospSet3fv(light, "direction", lc->dl_direction.data());
-        }
-        ospSet1f(light, "angularDiameter", lc->dl_angularDiameter);
-        break;
-    case POINTLIGHT:
-        light = ospNewLight(renderer, "point");
-        ospSet3fv(light, "position", lc->pl_position.data());
-        ospSet1f(light, "radius", lc->pl_radius);
-        break;
-    case SPOTLIGHT:
-        light = ospNewLight(renderer, "spot");
-        ospSet3fv(light, "position", lc->sl_position.data());
-        ospSet3fv(light, "direction", lc->sl_direction.data());
-        ospSet1f(light, "openingAngle", lc->sl_openingAngle);
-        ospSet1f(light, "penumbraAngle", lc->sl_penumbraAngle);
-        ospSet1f(light, "radius", lc->sl_radius);
-        break;
-    case QUADLIGHT:
-        light = ospNewLight(renderer, "quad");
-        ospSet3fv(light, "position", lc->ql_position.data());
-        ospSet3fv(light, "edge1", lc->ql_edgeOne.data());
-        ospSet3fv(light, "edge2", lc->ql_edgeTwo.data());
-        break;
-    case HDRILIGHT:
-        light = ospNewLight(renderer, "hdri");
-        ospSet3fv(light, "up", lc->hdri_up.data());
-        ospSet3fv(light, "dir", lc->hdri_direction.data());
-        if (lc->hdri_evnfile != vislib::TString("")) {
-            OSPTexture2D hdri_tex = this->TextureFromFile(lc->hdri_evnfile);
-            ospSetObject(renderer, "backplate", hdri_tex);
-        }
-        break;
-    case AMBIENTLIGHT:
-        light = ospNewLight(renderer, "ambient");
-        break;
-    }
+    this->lightArray.clear();
 
-    if (light == NULL) {
-        ospSetData(renderer, "lights", NULL);
-    } else {
-        ospSet1f(light, "intensity", lc->lightIntensity);
-        ospSet3fv(light, "color", lc->lightColor.data());
-        ospCommit(light);
+    for (auto const &entry : this->lightMap) {
+        auto const &lc = entry.second;
 
-        if (lightsToAdd.size() < (id + 1)) {
-            this->lightsToAdd.push_back(light);
-        } else {
-            this->lightsToAdd[id] = light;
+        switch (lc.lightType) {
+        case ospray::lightenum::NONE:
+            light = NULL;
+            break;
+        case ospray::lightenum::DISTANTLIGHT:
+            light = ospNewLight(this->renderer, "distant");
+            if (lc.dl_eye_direction == true) {
+                // take the light direction from the View3D
+                GLfloat lightdir[4];
+                glGetLightfv(GL_LIGHT0, GL_POSITION, lightdir);
+                ospSetVec3f(light, "direction", { lightdir[0], lightdir[1], lightdir[2] });
+                //ospSet3fv(light, "direction", cr->GetCameraParameters()->EyeDirection().PeekComponents());
+            } else {
+                ospSet3fv(light, "direction", lc.dl_direction.data());
+            }
+            ospSet1f(light, "angularDiameter", lc.dl_angularDiameter);
+            break;
+        case ospray::lightenum::POINTLIGHT:
+            light = ospNewLight(this->renderer, "point");
+            ospSet3fv(light, "position", lc.pl_position.data());
+            ospSet1f(light, "radius", lc.pl_radius);
+            break;
+        case ospray::lightenum::SPOTLIGHT:
+            light = ospNewLight(this->renderer, "spot");
+            ospSet3fv(light, "position", lc.sl_position.data());
+            ospSet3fv(light, "direction", lc.sl_direction.data());
+            ospSet1f(light, "openingAngle", lc.sl_openingAngle);
+            ospSet1f(light, "penumbraAngle", lc.sl_penumbraAngle);
+            ospSet1f(light, "radius", lc.sl_radius);
+            break;
+        case ospray::lightenum::QUADLIGHT:
+            light = ospNewLight(this->renderer, "quad");
+            ospSet3fv(light, "position", lc.ql_position.data());
+            ospSet3fv(light, "edge1", lc.ql_edgeOne.data());
+            ospSet3fv(light, "edge2", lc.ql_edgeTwo.data());
+            break;
+        case ospray::lightenum::HDRILIGHT:
+            light = ospNewLight(this->renderer, "hdri");
+            ospSet3fv(light, "up", lc.hdri_up.data());
+            ospSet3fv(light, "dir", lc.hdri_direction.data());
+            if (lc.hdri_evnfile != vislib::TString("")) {
+                OSPTexture2D hdri_tex = this->TextureFromFile(lc.hdri_evnfile);
+                ospSetObject(this->renderer, "backplate", hdri_tex);
+            }
+            break;
+        case ospray::lightenum::AMBIENTLIGHT:
+            light = ospNewLight(this->renderer, "ambient");
+            break;
         }
-
+        if (lc.isValid && light != NULL) {
+            ospSet1f(light, "intensity", lc.lightIntensity);
+            ospSet3fv(light, "color", lc.lightColor.data());
+            ospCommit(light);
+            this->lightArray.push_back(light);
+        }
     }
 }
+
 
 void ospray::OSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
     // general renderer settings
@@ -535,7 +531,7 @@ OSPFrameBuffer ospray::OSPRayRenderer::newFrameBuffer(osp::vec2i& imgSize, const
 
 
 ospray::OSPRayRenderer::~OSPRayRenderer(void) {
-    if (lightArray != NULL) ospRelease(lightArray);
+    if (lightsToRender != NULL) ospRelease(lightsToRender);
 }
 
 // helper function to write the rendered image as PPM file
@@ -557,3 +553,4 @@ void ospray::OSPRayRenderer::writePPM(const char *fileName, const osp::vec2i &si
     fprintf(file, "\n");
     fclose(file);
 }
+

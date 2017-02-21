@@ -51,13 +51,14 @@ namespace ospray {
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
         }
 
-        /** Ctor. */
-        OSPRaySphereRenderer(void);
-
         /** Dtor. */
         virtual ~OSPRaySphereRenderer(void);
 
+        /** Ctor. */
+        OSPRaySphereRenderer(void);
+
     protected:
+
         /**
         * Implementation of 'Create'.
         *
@@ -84,6 +85,8 @@ namespace ospray {
 
 
     private:
+
+
         /**
         * The get capabilities callback. The module should set the members
         * of 'call' to tell the caller its capabilities.
@@ -176,7 +179,6 @@ namespace ospray {
 
 
 
-
         bool renderer_changed;
 
         // material
@@ -201,7 +203,9 @@ namespace ospray {
         // color transfer data
         unsigned int tex_size;
 
+
 	};
+
 } /*end namespace ospray*/
 } /*end namespace megamol*/
 
