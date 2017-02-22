@@ -249,7 +249,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->secStructRows = 5;
     this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);   
 
-	this->strideThresholdCount = 5;
+	this->strideThresholdCount = 7;
 	this->dsspThresholdCount   = 2; // only showing HBondAc0 and HBondDo0
 		
     // init animation timer
@@ -755,7 +755,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 							min = -1.0f;
 							max = 1.0f;
 							break;
-						case(3) : threshold = STRIDE_THRESHOLDE1;
+						case(3) : threshold = STRIDE_THRESHOLDE2;
 							min = -500.0f;
 							max = 500.0f;
 							break;
@@ -763,13 +763,20 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 							min = -500.0f;
 							max = 500.0f;
 							break;
+						case(5) : threshold = STRIDE_THRESHOLDE1;
+							min = -500.0f;
+							max = 500.0f;
+							break;
+						case(6) : threshold = STRIDE_THRESHOLDE1;
+							min = -500.0f;
+							max = 500.0f;
+							break;                            
 						default: break;
 						}
 						this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
 							this->strideStructThreshold[i][j], min, max, threshold);
 					}
 			    }
-				// this->strideStructEnergy[i][j]; ...
             }
 			yPos += this->strideThresholdCount;
         }		
@@ -996,11 +1003,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 					if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
 						for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
                             switch (j) {
-                                case (0) : tmpStr = "Stride Threshold T1alpha"; break;
-                                case (1) : tmpStr = "Stride Threshold T2alpha"; break;
-                                case (2) : tmpStr = "Stride Threshold T3alpha"; break;
-                                case (3) : tmpStr = "Stride Threshold T1beta"; break;
-                                case (4) : tmpStr = "Stride Threshold T2beta"; break;
+                                case (0) : tmpStr = "Stride Threshold T1 a-Helix"; break;
+                                case (1) : tmpStr = "Stride Threshold T3 a-Helix"; break;
+                                case (2) : tmpStr = "Stride Threshold T4 a-Helix"; break;
+                                case (3) : tmpStr = "Stride Threshold T2 Sheet parallel"; break;
+                                case (4) : tmpStr = "Stride Threshold T2 Sheet parallel"; break;
+                                case (5) : tmpStr = "Stride Threshold T1 Sheet anti-parallel"; break;
+                                case (6) : tmpStr = "Stride Threshold T2 Sheet anti-parallel"; break;                                
                                 default:  tmpStr = "Stride UNKNOWN Threshold"; break;
                             }
 							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
@@ -1165,21 +1174,27 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 						    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
 								if (this->strideStructThreshold[mousePosResIdx][j] != NO_ASSIGNMENT) {
 									switch (j) {
-										case (0) : tmpStr = "T1alpha:";
+										case (0) : tmpStr = "T1-Helix:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
 											break;
-										case (1) : tmpStr = "T2alpha:";
+										case (1) : tmpStr = "T3-Helix:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
 											break;
-										case (2) : tmpStr = "T3alpha:";
+										case (2) : tmpStr = "T4-Helix:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
 											break;
-										case (3) : tmpStr = "T1beta:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
-											break;
-										case (4) : tmpStr = "T2beta:";
+										case (3) : tmpStr = "T1-Sheet-parallel:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
 											break;
+										case (4) : tmpStr = "T2-Sheet-parallel:";
+											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
+											break;
+										case (5) : tmpStr = "T1-Sheet-anti-parallel:";
+											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
+											break;
+										case (6) : tmpStr = "T2-Sheet-anti-parallel:";
+											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
+											break;                                            
 										default:  tmpStr = "UNKNOWN value"; break;
 									}
 									this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
@@ -2122,9 +2137,6 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
     this->strideStructThreshold.Clear();
     this->strideStructThreshold.AssertCapacity(this->aminoAcidCount);
 
-    this->strideStructEnergy.Clear();
-    this->strideStructEnergy.AssertCapacity(this->aminoAcidCount);
-
     this->dsspStructEnergy.Clear();
     this->dsspStructEnergy.AssertCapacity(this->aminoAcidCount);
 
@@ -2248,8 +2260,6 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 
         // store stride threshold values
         this->strideStructThreshold.Add(udc->GetStrideThreshold(aa));
-        // store stride energy values
-        this->strideStructEnergy.Add(udc->GetStrideEnergy(aa));
         // store dssp energy values
         this->dsspStructEnergy.Add(udc->GetDsspEnergy(aa));
 

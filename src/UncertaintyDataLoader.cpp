@@ -175,7 +175,6 @@ bool UncertaintyDataLoader::getData(Call& call) {
         udc->SetPdbAssMethodSheet(&this->pdbAssignmentSheet);
 		udc->SetUncertainty(&this->uncertainty);
         udc->SetStrideThreshold(&this->strideStructThreshold);
-        udc->SetStrideEnergy(&this->strideStructEnergy);
         udc->SetDsspEnergy(&this->dsspStructEnergy);
         return true;
     }
@@ -214,7 +213,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
     this->secStructUncertainty.Clear();
 
     this->strideStructThreshold.Clear();
-    this->strideStructEnergy.Clear();
     this->dsspStructEnergy.Clear();
 
     // check if file ending matches ".uid"
@@ -242,7 +240,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
         }
 
         this->strideStructThreshold.AssertCapacity(file.Count());
-        this->strideStructEnergy.AssertCapacity(file.Count());
         this->dsspStructEnergy.AssertCapacity(file.Count());
 
         this->chainID.AssertCapacity(file.Count());
@@ -252,7 +249,11 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 
 
 		// Run through file lines
-		lineCnt = 0;
+		lineCnt             = 0;
+        char LastChainID    = ' ';
+        char currentChainID = ' ';
+        bool skip           = false;
+        
 		while (lineCnt < file.Count() && !line.StartsWith("END")) {
             
 			line = file.Line(lineCnt);
@@ -302,151 +303,165 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                 this->aminoAcidName.Add(line.Substring(10,3)); 
                 
                 // PDB one letter chain id 
-                this->chainID.Add(line[22]);
+                currentChainID = line[22];
                 
-                // The Missing amino-acid flag
-                if (line[26] == 'M')
-                    this->residueFlag.Add(UncertaintyDataCall::addFlags::MISSING);
-                else if (line[26] == 'H')
-                    this->residueFlag.Add(UncertaintyDataCall::addFlags::HETEROGEN);
-                else
-                    this->residueFlag.Add(UncertaintyDataCall::addFlags::NOTHING);
-                                   
-
-                // INITIALISE UNCERTAINTY OF STRUCTURE ASSIGNMENTS 
-
-                // tmp pointers
-                vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSU;
-                vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSSA;
-
-                vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> defaultSSU;
-                vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> defaultSSSA;
-                // initialising default uncertainty and structure
-                for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
-                    defaultSSU[j]  = 0.0f;
-                    defaultSSSA[j] = static_cast<UncertaintyDataCall::secStructure>(j);
-                }
-
-
-                // PDB
-                tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::PDB];
-                tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::PDB];
-                tmpSSU->Add(defaultSSU);
-                tmpSSSA->Add(defaultSSSA);
-                // Translate first letter of PDB secondary structure definition
-                tmpSecStruct = line[44];
-                if (tmpSecStruct == 'H') {
-                    switch (line[82]) {
-                        case '1': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;  // right-handed-alpha
-						case '2': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // right-handed omega
-						case '3': tmpSSU->Last()[UncertaintyDataCall::secStructure::I_PI_HELIX] = 1.0f; break;     // right-handed pi
-						case '4': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // right-handed gamma
-						case '5': tmpSSU->Last()[UncertaintyDataCall::secStructure::G_310_HELIX] = 1.0f; break;    // right-handed 310
-						case '6': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;  // left-handed alpha
-						case '7': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // left-handed omega
-						case '8': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // left-handed gamma
-						case '9': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // 27 ribbon/helix
-						case '0': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // Polyproline 
-						default:  tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;
+                // Ignore HETATM at the end with repeating chain IDs,
+                // add each chain just once!
+                if((LastChainID != currentChainID)) {
+                    for (unsigned int c = 0; c < this->chainID.Count(); c++) {
+                        if (this->chainID[c] == currentChainID) {
+                            skip = true;
+                        }   
                     }
                 }
-                else if (tmpSecStruct == 'S'){
-                    tmpSSU->Last()[UncertaintyDataCall::secStructure::E_EXT_STRAND] = 1.0f;
-                }
-                else {
-                    tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f;
-                }
-                // sorting structure types
-				// NE
-                this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
                 
+                // skip line if chain id repeats after break (cut HETATM at the end)
+                if (!skip) {
+                    
+                    this->chainID.Add(currentChainID);
+                    LastChainID = currentChainID;
+                    
+                    // The Missing amino-acid flag
+                    if (line[26] == 'M')
+                        this->residueFlag.Add(UncertaintyDataCall::addFlags::MISSING);
+                    else if (line[26] == 'H')
+                        this->residueFlag.Add(UncertaintyDataCall::addFlags::HETEROGEN);
+                    else
+                        this->residueFlag.Add(UncertaintyDataCall::addFlags::NOTHING);
+                                       
 
-                //STRIDE
-                tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::STRIDE];
-                tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE];
-                tmpSSU->Add(defaultSSU);
-                tmpSSSA->Add(defaultSSSA);
-                // Translate STRIDE one letter secondary structure
-                switch (line[157]) {
-					case 'H': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;
-					case 'G': tmpSSU->Last()[UncertaintyDataCall::secStructure::G_310_HELIX] = 1.0f; break;
-					case 'I': tmpSSU->Last()[UncertaintyDataCall::secStructure::I_PI_HELIX] = 1.0f; break;
-					case 'E': tmpSSU->Last()[UncertaintyDataCall::secStructure::E_EXT_STRAND] = 1.0f; break;
-					case 'B': tmpSSU->Last()[UncertaintyDataCall::secStructure::B_BRIDGE] = 1.0f; break;
-					case 'b': tmpSSU->Last()[UncertaintyDataCall::secStructure::B_BRIDGE] = 1.0f; break;
-					case 'T': tmpSSU->Last()[UncertaintyDataCall::secStructure::T_H_TURN] = 1.0f; break;
-                    case 't': tmpSSU->Last()[UncertaintyDataCall::secStructure::T_H_TURN] = 1.0f; break;
-					case 'C': tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f; break;
-					default:  tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;
+                    // INITIALISE UNCERTAINTY OF STRUCTURE ASSIGNMENTS 
+
+                    // tmp pointers
+                    vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSU;
+                    vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *tmpSSSA;
+
+                    vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> defaultSSU;
+                    vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> defaultSSSA;
+                    // initialising default uncertainty and structure
+                    for (int j = 0; j < static_cast<int>(UncertaintyDataCall::secStructure::NOE); j++) {
+                        defaultSSU[j]  = 0.0f;
+                        defaultSSSA[j] = static_cast<UncertaintyDataCall::secStructure>(j);
+                    }
+
+
+                    // PDB
+                    tmpSSU  = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::PDB];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::PDB];
+                    tmpSSU->Add(defaultSSU);
+                    tmpSSSA->Add(defaultSSSA);
+                    // Translate first letter of PDB secondary structure definition
+                    tmpSecStruct = line[44];
+                    if (tmpSecStruct == 'H') {
+                        switch (line[82]) {
+                            case '1': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;  // right-handed-alpha
+                            case '2': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // right-handed omega
+                            case '3': tmpSSU->Last()[UncertaintyDataCall::secStructure::I_PI_HELIX] = 1.0f; break;     // right-handed pi
+                            case '4': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // right-handed gamma
+                            case '5': tmpSSU->Last()[UncertaintyDataCall::secStructure::G_310_HELIX] = 1.0f; break;    // right-handed 310
+                            case '6': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;  // left-handed alpha
+                            case '7': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // left-handed omega
+                            case '8': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // left-handed gamma
+                            case '9': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // 27 ribbon/helix
+                            case '0': tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;     // Polyproline 
+                            default:  tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;
+                        }
+                    }
+                    else if (tmpSecStruct == 'S'){
+                        tmpSSU->Last()[UncertaintyDataCall::secStructure::E_EXT_STRAND] = 1.0f;
+                    }
+                    else {
+                        tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f;
+                    }
+                    // sorting structure types
+                    // NE
+                    this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+                    
+
+                    //STRIDE
+                    tmpSSU  = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::STRIDE];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE];
+                    tmpSSU->Add(defaultSSU);
+                    tmpSSSA->Add(defaultSSSA);
+                    // Translate STRIDE one letter secondary structure
+                    switch (line[157]) {
+                        case 'H': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;
+                        case 'G': tmpSSU->Last()[UncertaintyDataCall::secStructure::G_310_HELIX] = 1.0f; break;
+                        case 'I': tmpSSU->Last()[UncertaintyDataCall::secStructure::I_PI_HELIX] = 1.0f; break;
+                        case 'E': tmpSSU->Last()[UncertaintyDataCall::secStructure::E_EXT_STRAND] = 1.0f; break;
+                        case 'B': tmpSSU->Last()[UncertaintyDataCall::secStructure::B_BRIDGE] = 1.0f; break;
+                        case 'b': tmpSSU->Last()[UncertaintyDataCall::secStructure::B_BRIDGE] = 1.0f; break;
+                        case 'T': tmpSSU->Last()[UncertaintyDataCall::secStructure::T_H_TURN] = 1.0f; break;
+                        case 't': tmpSSU->Last()[UncertaintyDataCall::secStructure::T_H_TURN] = 1.0f; break;
+                        case 'C': tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f; break;
+                        default:  tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;
+                    }
+                    // sorting structure types
+                    this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+
+
+                    // DSSP
+                    tmpSSU  = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::DSSP];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP];
+                    tmpSSU->Add(defaultSSU);
+                    tmpSSSA->Add(defaultSSSA);
+                    // Translate DSSP one letter secondary structure summary 
+                    switch (line[305]) {
+                        case 'H': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;
+                        case 'G': tmpSSU->Last()[UncertaintyDataCall::secStructure::G_310_HELIX] = 1.0f; break;
+                        case 'I': tmpSSU->Last()[UncertaintyDataCall::secStructure::I_PI_HELIX] = 1.0f; break;
+                        case 'E': tmpSSU->Last()[UncertaintyDataCall::secStructure::E_EXT_STRAND] = 1.0f; break;
+                        case 'B': tmpSSU->Last()[UncertaintyDataCall::secStructure::B_BRIDGE] = 1.0f; break;
+                        case 'T': tmpSSU->Last()[UncertaintyDataCall::secStructure::T_H_TURN] = 1.0f; break;
+                        case 'S': tmpSSU->Last()[UncertaintyDataCall::secStructure::S_BEND] = 1.0f; break;
+                        case 'C': tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f; break;
+                        default:  tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;
+                    }
+                    // sorting structure types
+                    this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
+
+
+                    // UNCERTAINTY
+                    tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+                    tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+                    tmpSSU->Add(defaultSSU);
+                    tmpSSSA->Add(defaultSSSA);
+
+
+                    // Read threshold and energy values of STRIDE
+                    float Th1  = (float)std::atof(line.Substring(204, 10));
+                    float Th3  = (float)std::atof(line.Substring(215, 10));
+                    float Th4  = (float)std::atof(line.Substring(226, 10));
+                    float Tb1p = (float)std::atof(line.Substring(237, 10));
+                    float Tb2p = (float)std::atof(line.Substring(248, 10));
+                    float Tb1a = (float)std::atof(line.Substring(259, 10));
+                    float Tb2a = (float)std::atof(line.Substring(207, 10));
+
+                    vislib::math::Vector<float, 7> tmpVec7;
+                    tmpVec5[0] = Th1;
+                    tmpVec5[1] = Th3;
+                    tmpVec5[2] = Th4;
+                    tmpVec5[3] = Tb1p;
+                    tmpVec5[4] = Tb2p;
+                    tmpVec5[5] = Tb1a;
+                    tmpVec5[6] = Tb2a;                    
+                    this->strideStructThreshold.Add(tmpVec7);
+
+                    // Read threshold and energy values of DSSP
+                    float HBondAc0 = (float)std::atof(line.Substring(411, 8));
+                    float HBondAc1 = (float)std::atof(line.Substring(422, 8));
+                    float HBondDo0 = (float)std::atof(line.Substring(433, 8));
+                    float HBondDo1 = (float)std::atof(line.Substring(444, 8));
+
+                    vislib::math::Vector<float, 4> tmpVec4;
+                    tmpVec4[0] = HBondAc0;
+                    tmpVec4[1] = HBondDo0; 
+                    tmpVec4[2] = HBondAc1;
+                    tmpVec4[3] = HBondDo1;
+                    this->dsspStructEnergy.Add(tmpVec4);
                 }
-                // sorting structure types
-                this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
-
-
-                // DSSP
-                tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::DSSP];
-                tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::DSSP];
-                tmpSSU->Add(defaultSSU);
-                tmpSSSA->Add(defaultSSSA);
-                // Translate DSSP one letter secondary structure summary 
-                switch (line[305]) {
-                    case 'H': tmpSSU->Last()[UncertaintyDataCall::secStructure::H_ALPHA_HELIX] = 1.0f; break;
-					case 'G': tmpSSU->Last()[UncertaintyDataCall::secStructure::G_310_HELIX] = 1.0f; break;
-					case 'I': tmpSSU->Last()[UncertaintyDataCall::secStructure::I_PI_HELIX] = 1.0f; break;
-					case 'E': tmpSSU->Last()[UncertaintyDataCall::secStructure::E_EXT_STRAND] = 1.0f; break;
-					case 'B': tmpSSU->Last()[UncertaintyDataCall::secStructure::B_BRIDGE] = 1.0f; break;
-					case 'T': tmpSSU->Last()[UncertaintyDataCall::secStructure::T_H_TURN] = 1.0f; break;
-					case 'S': tmpSSU->Last()[UncertaintyDataCall::secStructure::S_BEND] = 1.0f; break;
-					case 'C': tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f; break;
-					default:  tmpSSU->Last()[UncertaintyDataCall::secStructure::NOTDEFINED] = 1.0f; break;
-                }
-                // sorting structure types
-                this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
-
-
-                // UNCERTAINTY
-                tmpSSU = &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
-                tmpSSSA = &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
-                tmpSSU->Add(defaultSSU);
-                tmpSSSA->Add(defaultSSSA);
-
-
-                // Read threshold and energy values of STRIDE
-                float T1a = (float)std::atof(line.Substring(204, 10));
-                float T2a = (float)std::atof(line.Substring(215, 10));
-                float T3a = (float)std::atof(line.Substring(226, 10));
-                float T1b = (float)std::atof(line.Substring(237, 10));
-                float T2b = (float)std::atof(line.Substring(248, 10));
-                float HBEn1 = (float)std::atof(line.Substring(259, 10));
-                float HBEn2 = (float)std::atof(line.Substring(207, 10));
-
-                vislib::math::Vector<float, 5> tmpVec5;
-                tmpVec5[0] = T1a;
-                tmpVec5[1] = T2a;
-                tmpVec5[2] = T3a;
-                tmpVec5[3] = T1b;
-                tmpVec5[4] = T2b;
-                this->strideStructThreshold.Add(tmpVec5);
-
-                vislib::math::Vector<float, 2> tmpVec2;
-                tmpVec2[0] = HBEn1;
-                tmpVec2[1] = HBEn2;
-                this->strideStructEnergy.Add(tmpVec2);
-
-                // Read threshold and energy values of DSSP
-				float HBondAc0 = (float)std::atof(line.Substring(411, 8));
-				float HBondAc1 = (float)std::atof(line.Substring(422, 8));
-				float HBondDo0 = (float)std::atof(line.Substring(433, 8));
-				float HBondDo1 = (float)std::atof(line.Substring(444, 8));
-
-                vislib::math::Vector<float, 4> tmpVec4;
-                tmpVec4[0] = HBondAc0;
-                tmpVec4[1] = HBondDo0; 
-                tmpVec4[2] = HBondAc1;
-                tmpVec4[3] = HBondDo1;
-                this->dsspStructEnergy.Add(tmpVec4);
             }
-			// Next line
+            // Next line
 			lineCnt++;
 		}
 

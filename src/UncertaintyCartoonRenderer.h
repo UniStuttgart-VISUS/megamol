@@ -84,7 +84,7 @@ namespace megamol {
             return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()
                 && vislib::graphics::gl::GLSLTesselationShader::AreExtensionsAvailable()
                 && isExtAvailable("GL_ARB_buffer_storage")
-                && ogl_IsVersionGEQ(4,4);
+                && ogl_IsVersionGEQ(4,4); // should be 4.5?!
         }
 
         /** Ctor. */

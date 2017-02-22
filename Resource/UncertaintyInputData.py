@@ -599,6 +599,7 @@ class UncertaintyInputData:
                         
         
             # Insert missing amino-acids
+            LineOffset = 8
             for MissingChainID in MissingAADict:                                 # go through all chains in MissingAADict
                 
                 BufferIndex    = LineOffset 
@@ -610,18 +611,21 @@ class UncertaintyInputData:
                                   
                 for MissingChainString in MissingAADict[MissingChainID]:         #  go through all missing amino-acids in MissingAADict[MissingChainID]
                     
-                    MissingIndex = int(MissingChainString[8:13])
+                    MissingIndex   = int(MissingChainString[8:13])
                     PDBIndex       = int(OutFileBuffer[BufferIndex][41:45])
                     
-                    while (PDBIndex <= MissingIndex):                             #  go to right amino-acid in OutFileBuffer
-                        BufferIndex += 1
-                        if (BufferIndex < len(OutFileBuffer)):
-                            PDBIndex = int(OutFileBuffer[BufferIndex][41:45])
-                        else : 
-                            break
+                    while ((BufferChainID == MissingChainID) and (PDBIndex <= MissingIndex)):  #  go to right amino-acid in OutFileBuffer
+                        BufferIndex   += 1                     
+                        if (BufferIndex >= len(OutFileBuffer)):
+                            BufferIndex   -= 1
+                            break  
+                                    
+                        PDBIndex       = int(OutFileBuffer[BufferIndex][41:45])
+                        BufferChainID  = OutFileBuffer[BufferIndex][30:31]  
                         
                     OutFileBuffer.insert(BufferIndex, str('DATA   | ##### |  '+MissingChainString[2:5]+' |       '+MissingChainID+' |'+
                                                           ' M |    '+MissingChainString[9:14]+' |')) 
+                                                          
                     
             # Replace ##### with right amino-acid number
             for x in range(LineOffset, len(OutFileBuffer)):
@@ -634,7 +638,7 @@ class UncertaintyInputData:
             #   - Second Index +1 because range() is exclusive last index in range
             #   - Structure  ID    SerNr   Count    H-Class  Sense   Start-AA  Start-#   End-AA    End-#  
             #   - #: 6       3       3       5         2       2        3        5        3        5   
-            CWh = [[0,6], [11,14], [7,10], [71,78], [38,40],          [15,18], [21,26], [27,30], [33,38]]  # For helix
+            CWh = [[0,6], [11,14], [7,10], [71,76], [38,40],          [15,18], [21,26], [27,30], [33,38]]  # For helix
             CWs = [[0,6], [11,14], [7,10], [14,16],          [38,40], [17,20], [22,27], [28,31], [33,38]]  # For sheet   
             
             # Second: Read file for assigning the secondary structure to the right amino-acid indices
@@ -675,18 +679,18 @@ class UncertaintyInputData:
                                         LineOffset = x
                                         break                                 
                                     
-                        if (FileLine[CWh[3][0]:CWh[3][1]].isdigit()):                  # Index range of HELIX = count 
-                            AARange = int(FileLine[CWh[3][0]:CWh[3][1]])
-                        else :
-                            AARange = int(FileLine[CWh[8][0]:(CWh[8][1]-1)]) - int(FileLine[CWh[6][0]:(CWh[6][1]-1)]) 
+                        while (OutFileBuffer[LineOffset-1][41:46] != endIdx):                  # index of ending amino-acid must be there ....   
                             
-                        for x in range(LineOffset, LineOffset+AARange):                       
-                            if (len(OutFileBuffer[2]) - len(OutFileBuffer[x]) > 0):            # skip overlapping structures (if line is already "full": len(OutFileBuffer[2])-len(OutFileBuffer[x]) == 0
-                                OutFileBuffer[x] += ('    '+FileLine[CWh[0][0]:CWh[0][1]]+' |  '+FileLine[CWh[1][0]:CWh[1][1]]+' |   '+FileLine[CWh[2][0]:CWh[2][1]]+' | '+
-                                                     FileLine[CWh[3][0]:CWh[3][1]]+' |      '+FileLine[CWh[4][0]:CWh[4][1]]+' |       |      '+
-                                                     FileLine[CWh[5][0]:CWh[5][1]]+' |   '+FileLine[CWh[6][0]:CWh[6][1]]+' |    '+
-                                                     FileLine[CWh[7][0]:CWh[7][1]]+' | '+FileLine[CWh[8][0]:CWh[8][1]]+' |')
-
+                            while (OutFileBuffer[LineOffset][34] == 'M'): # skip missing  
+                                LineOffset += 1
+                                            
+                            if (len(OutFileBuffer[2]) - len(OutFileBuffer[LineOffset]) > 0):            # skip overlapping structures (if line is already "full": len(OutFileBuffer[2])-len(OutFileBuffer[x]) == 0
+                                OutFileBuffer[LineOffset] += ('    '+FileLine[CWh[0][0]:CWh[0][1]]+' |  '+FileLine[CWh[1][0]:CWh[1][1]]+' |   '+FileLine[CWh[2][0]:CWh[2][1]]+' | '+
+                                                             FileLine[CWh[3][0]:CWh[3][1]]+' |      '+FileLine[CWh[4][0]:CWh[4][1]]+' |       |      '+
+                                                             FileLine[CWh[5][0]:CWh[5][1]]+' |   '+FileLine[CWh[6][0]:CWh[6][1]]+' |    '+
+                                                             FileLine[CWh[7][0]:CWh[7][1]]+' | '+FileLine[CWh[8][0]:CWh[8][1]]+' |')
+                            LineOffset += 1
+                            
                     elif (PDBCode == 'SHEET'):
                         LineOffset = 8 
                         
@@ -714,7 +718,11 @@ class UncertaintyInputData:
                                     LineOffset = x
                                     break  
 
-                        while (OutFileBuffer[LineOffset-1][41:46] != endIdx):                  # index of ending amino-acid must be there ....                                    
+                        while (OutFileBuffer[LineOffset-1][41:46] != endIdx):                  # index of ending amino-acid must be there ....   
+                            
+                            while (OutFileBuffer[LineOffset][34] == 'M'): # skip missing  
+                                LineOffset += 1
+                                                             
                             # IGNORING if same strand belongs to different sheets -> only one SHEET ID is assigned ... 
                             if (len(OutFileBuffer[2]) - len(OutFileBuffer[LineOffset]) > 0):          # ... determined by checking if buffer line is alredy 'filled'                
                                 OutFileBuffer[LineOffset] += ('    '+FileLine[CWs[0][0]:CWs[0][1]]+' |  '+FileLine[CWs[1][0]:CWs[1][1]]+' |   '+
@@ -754,7 +762,7 @@ class UncertaintyInputData:
             # Init list buffer with STRIDE header
             OutFileBuffer[2] += ('-----------------------------------------------------------------------------------------------------------------------------------------------------|') 
             OutFileBuffer[3] += (' STRIDE                                                                                                                                              |') 
-            OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|-Phi-----|-Psi-----|-Area----|---T1a----|---T2a----|---T3a----|---T1b----|---T2b----|--HB-En1--|--HB-En2--|') 
+            OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|-Phi-----|-Psi-----|-Area----|---Th1----|---Th3----|---Th4----|---Tb1p---|---Tb2p---|---Tb1a---|---Tb2a---|') 
             OutFileBuffer[7] += ('-------|------|---------|-----------------|---------|---------|---------|----------|----------|----------|----------|----------|----------|----------|')  
             # Length of columns:     7       6       9        17                 9         9         9         10        10         10         10          10         10         10
             

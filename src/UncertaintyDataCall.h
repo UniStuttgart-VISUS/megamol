@@ -28,18 +28,23 @@
 #include "protein_uncertainty/Protein_Uncertainty.h"
 
 
-// Thresholds values for STRIDE and DSSP
+// Thresholds values for STRIDE and DSSP:
 
 // [DSSP - structure.cpp line 38: kMaxHBondEnergy]
 #define DSSP_HBENERGY        -0.5f // kcal/mol 
+
 // [STRIDE - stride.c line 311ff]
 #define STRIDE_THRESHOLDH1 -230.0f
 #define STRIDE_THRESHOLDH3    0.12f
 #define STRIDE_THRESHOLDH4    0.06f
 #define STRIDE_THRESHOLDE1 -240.0f
 #define STRIDE_THRESHOLDE2 -310.0f
+
 // Value for not defined entries
 #define NO_ASSIGNMENT         0.0f
+
+
+
 
 
 namespace megamol {
@@ -359,9 +364,9 @@ namespace megamol {
         * @param i The index of the amino-acid.
         * @return The threshold values.
         */
-        inline vislib::math::Vector<float, 5> GetStrideThreshold(unsigned int i) {
-            vislib::math::Vector<float, 5> default;
-            for (unsigned int j = 0; j < 5; j++) {
+        inline vislib::math::Vector<float, 7> GetStrideThreshold(unsigned int i) {
+            vislib::math::Vector<float, 7> default;
+            for (unsigned int j = 0; j < 7; j++) {
                 default[j] = 0.0f;
             }
             if (!this->strideStructThreshold)
@@ -370,22 +375,6 @@ namespace megamol {
                 return default;
             else
                 return (this->strideStructThreshold->operator[](i));
-        }
-
-        /**
-        * Get the STRIDE energy values.
-        *
-        * @param i The index of the amino-acid.
-        * @return The energy values.
-        */
-        inline vislib::math::Vector<float, 2> GetStrideEnergy(unsigned int i) {
-            vislib::math::Vector<float, 2> default = {0.0f, 0.0f};
-            if (!this->strideStructEnergy)
-                return default;
-            else if (this->strideStructEnergy->Count() <= i)
-                return default;
-            else
-                return (this->strideStructEnergy->operator[](i));
         }
 
         /**
@@ -511,17 +500,8 @@ namespace megamol {
         *
         * @param rnPtr The pointer.
         */
-        inline void SetStrideThreshold(vislib::Array<vislib::math::Vector<float, 5> > *rnPtr) {
+        inline void SetStrideThreshold(vislib::Array<vislib::math::Vector<float, 7> > *rnPtr) {
             this->strideStructThreshold = rnPtr;
-        }
-
-        /**
-        * Set the pointer to the STRIDE energy values.
-        *
-        * @param rnPtr The pointer.
-        */
-        inline void SetStrideEnergy(vislib::Array<vislib::math::Vector<float, 2> > *rnPtr) {
-            this->strideStructEnergy = rnPtr;
         }
 
         /**
@@ -582,9 +562,7 @@ namespace megamol {
         UncertaintyDataCall::pdbAssMethod *pdbAssignmentSheet; 
 
         /** The pointer to the 5 STRIDE threshold values per amino-acid */
-        vislib::Array<vislib::math::Vector<float, 5> > *strideStructThreshold;
-        /** The pointer to the 2 STRIDE energy values per amino-acid */
-        vislib::Array<vislib::math::Vector<float, 2> > *strideStructEnergy;
+        vislib::Array<vislib::math::Vector<float, 7> > *strideStructThreshold;
         /** The pointer to the 4 DSSP energy values per amino-acid */
         vislib::Array<vislib::math::Vector<float, 4> > *dsspStructEnergy;
                     

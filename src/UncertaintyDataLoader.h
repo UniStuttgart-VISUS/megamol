@@ -186,9 +186,7 @@ namespace megamol {
 			vislib::Array<float> uncertainty;
 
             /** The 5 STRIDE threshold values per amino-acid */
-			vislib::Array<vislib::math::Vector<float, 5> > strideStructThreshold;
-            /** The 2 STRIDE energy values per amino-acid */
-			vislib::Array<vislib::math::Vector<float, 2> > strideStructEnergy;
+			vislib::Array<vislib::math::Vector<float, 7> > strideStructThreshold;
             /** The 4 DSSP energy values per amino-acid */
             vislib::Array<vislib::math::Vector<float, 4> > dsspStructEnergy;
 

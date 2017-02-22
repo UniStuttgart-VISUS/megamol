@@ -422,9 +422,12 @@ bool UncertaintyCartoonRenderer::create(void) {
     glGenBuffers(1, &this->theSingleBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
     glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, this->singleBufferCreationBits);
-    this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, this->singleBufferMappingBits);
+    this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0,               this->bufSize * this->numBuffers, this->singleBufferMappingBits);
+    //    GLAPI void *APIENTRY glMapNamedBufferRange   (GLuint buffer,         GLintptr offset, GLsizeiptr length,                GLbitfield access);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
+
+    
 
     return true;
 }
