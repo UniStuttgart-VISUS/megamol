@@ -1,183 +1,153 @@
 /*
-* OSPRayRenderer.h
-* Copyright (C) 2009-2015 by MegaMol Team
+* OSPRaySphereRenderer.h
+* Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
-#ifndef OSPRAY_RENDERER_H_INCLUDED
-#define OSPRAY_RENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <stdint.h>
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "ospray/ospray.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/param/ParamSlot.h"
+#include "AbstractOSPRayRenderer.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/CallerSlot.h"
-#include "CallOSPRayLight.h"
-#include <map>
-
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 
 
 namespace megamol {
 namespace ospray {
 
-    class OSPRayRenderer : public core::view::Renderer3DModule {
-    protected:
-        // Ctor
-        OSPRayRenderer(void);
+class OSPRayRenderer : public AbstractOSPRayRenderer {
+public:
 
-        // Dtor
-        ~OSPRayRenderer(void);
+    /**
+    * Answer the name of this module.
+    *
+    * @return The name of this module.
+    */
+    static const char *ClassName(void) {
+        return "OSPRayRenderer";
+    }
 
-        /**
-        * initializes OSPRay
-        */
-        void initOSPRay(OSPDevice &dvce);
+    /**
+    * Answer a human readable description of this module.
+    *
+    * @return A human readable description of this module.
+    */
+    static const char *Description(void) {
+        return "Renderer for OSPRay structures.";
+    }
 
-        /**
-        * helper function for rendering the OSPRay texture
-        * @param GLSL shader
-        * @param GL texture object
-        * @param OSPRay texture
-        * @param GL vertex array object
-        * @param image/window width
-        * @param image/window heigth
-        */
-        void renderTexture2D(vislib::graphics::gl::GLSLShader &shader, const uint32_t * fb, int &width, int &height);
+    /**
+    * Answers whether this module is available on the current system.
+    *
+    * @return 'true' if the module is available, 'false' otherwise.
+    */
+    static bool IsAvailable(void) {
+        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+    }
 
-        /**
-        * helper function for setting up the OSPRay screen
-        * @param GL vertex array
-        * @param GL vertex buffer object
-        * @param GL texture object
-        */
-        void setupTextureScreen();
+    /** Dtor. */
+    virtual ~OSPRayRenderer(void);
 
-        /**
-        * Releases the OGL content created by setupTextureScreen
-        */
-        void releaseTextureScreen();
+    /** Ctor. */
+    OSPRayRenderer(void);
 
-        /**
-        * helper function for initializing OSPRay
-        * @param OSPRay renderer object
-        * @param OSPRay camera object
-        * @param OSPRay world object
-        * @param OSPRay geometry object
-        * @param geometry name/type
-        * @param renderer type
-        */
-        void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, OSPGeometry &geometry, const char * geometry_name, const char * renderer_name);
+protected:
 
-        /**
-        * helper function for initializing OSPRay
-        * @param OSPRay renderer object
-        * @param OSPRay camera object
-        * @param OSPRay world object
-        * @param OSPRay volume object
-        * @param volume name/type
-        * @param renderer type
-        */
-        void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, OSPVolume &volume, const char * volume_name, const char * renderer_name);
+    /**
+    * Implementation of 'Create'.
+    *
+    * @return 'true' on success, 'false' otherwise.
+    */
+    virtual bool create(void);
 
-        /**
-        * helper function for initializing OSPRay
-        * @param OSPRay renderer object
-        * @param OSPRay camera object
-        * @param OSPRay world object
-        * @param volume name/type
-        * @param renderer type
-        */
-        void setupOSPRay(OSPRenderer &renderer, OSPCamera &camera, OSPModel &world, const char * volume_name, const char * renderer_name);
+    /**
+    * Implementation of 'Release'.
+    */
+    virtual void release(void);
 
-        /**
-        * helper function for initializing OSPRays Camera
-        * @param OSPRay camera object
-        * @param CallRenderer3D object
-        */
-        void setupOSPRayCamera(OSPCamera& cam, core::view::CallRender3D* cr);
+    /**
+    * The render callback.
+    *
+    * @param call The calling call.
+    *
+    * @return The return value of the function.
+    */
+    virtual bool Render(megamol::core::Call& call);
 
-        /** 
-        * color transfer helper
-        * @param array with gray scales
-        * @param transferfunction table/texture
-        * @param transferfunction table/texture size
-        * @param target array (rgba)
-        */
-        void colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray);
-        
-        /**
-        * Texture from file importer
-        * @param file path
-        * @return 2
-        */
-        OSPTexture2D TextureFromFile(vislib::TString fileName);
-        // helper function to write the rendered image as PPM file
-        void writePPM(const char *fileName, const osp::vec2i &size, const uint32_t *pixel);
-
-        // TODO: Documentation
-
-        bool AbstractIsDirty();
-        void AbstractResetDirty();
-        void RendererSettings(OSPRenderer &renderer);
-        OSPFrameBuffer newFrameBuffer(osp::vec2i& imgSize, const OSPFrameBufferFormat format = OSP_FB_RGBA8, const uint32_t frameBufferChannels = OSP_FB_COLOR);
-
-        // vertex array, vertex buffer object, texture
-        GLuint vaScreen, vbo, tex;
-
-        // API Variables
-        core::param::ParamSlot AOtransparencyEnabled;
-        core::param::ParamSlot AOsamples;
-        core::param::ParamSlot AOdistance;
-        core::param::ParamSlot extraSamles;
+    //virtual bool Resize();
 
 
 
-        core::param::ParamSlot rd_epsilon;
-        core::param::ParamSlot rd_spp;
-        core::param::ParamSlot rd_maxRecursion;
-        core::param::ParamSlot rd_type;
-        core::param::ParamSlot rd_ptBackground;
-        core::param::ParamSlot shadows;
+private:
+
+
+    /**
+    * The get capabilities callback. The module should set the members
+    * of 'call' to tell the caller its capabilities.
+    *
+    * @param call The calling call.
+    *
+    * @return The return value of the function.
+    */
+    virtual bool GetCapabilities(megamol::core::Call& call);
+
+    /**
+    * The get extents callback. The module should set the members of
+    * 'call' to tell the caller the extents of its data (bounding boxes
+    * and times).
+    *
+    * @param call The calling call.
+    *
+    * @return The return value of the function.
+    */
+    virtual bool GetExtents(megamol::core::Call& call);
+
+    /** The call for data */
+    core::CallerSlot getStructureSlot;
+
+
+    /** The texture shader */
+    vislib::graphics::gl::GLSLShader osprayShader;
 
 
 
-        // renderer type
-        enum rdenum {
-            SCIVIS,
-            PATHTRACER
-        };
+    //tmp variable
+    unsigned int number;
 
-        // light
-        std::vector<OSPLight> lightArray;
-        OSPData lightsToRender;
-        /** The call for ligtht */
-        core::CallerSlot getLightSlot;
+    // Interface dirty flag
+    bool InterfaceIsDirty();
 
-        // framebuffer dirtyness
-        bool framebufferIsDirty;
+    // rendering conditions
+    bool data_has_changed;
+    bool cam_has_changed;
 
-        // device
-        OSPDevice device;
-
-        // renderer
-        OSPRenderer renderer;
-
-        // Light map
-        std::map<CallOSPRayLight*, OSPRayLightContainer> lightMap;
-
-        // Module dirtyness
-        bool ModuleIsDirty;
+    vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
+    float time;
 
 
-        void fillLightArray();
 
-    };
+    // OSP objects
+    OSPFrameBuffer framebuffer;
+    OSPCamera camera;
+    OSPModel world;
+    OSPGeometry spheres;
+    OSPPlane pln;
 
-} // end namespace ospray
-} // end namespace megamol
+    osp::vec2i imgSize;
 
-#endif /* OSPRAY_RENDERER_H_INCLUDED */
+    // OSPData 
+    OSPData vertexData, colorData;
+
+    // OSPRay texture
+    const uint32_t * fb;
+
+
+
+
+    bool renderer_has_changed;
+
+};
+
+} /*end namespace ospray*/
+} /*end namespace megamol*/

@@ -1,0 +1,357 @@
+/*
+* OSPRayRenderer.cpp
+* Copyright (C) 2009-2017 by MegaMol Team
+* Alle Rechte vorbehalten.
+*/
+
+#include "stdafx.h"
+#include "OSPRaySphereGeometry.h"
+#include "vislib/forceinline.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "CallOSPRayStructure.h"
+#include "vislib/sys/Log.h"
+
+#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/view/CallClipPlane.h"
+
+using namespace megamol::ospray;
+
+
+VISLIB_FORCEINLINE float floatFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+    //const float* parts = static_cast<const float*>(p.GetVertexData());
+    //return parts[index * stride + offset];
+    return static_cast<const float*>(p.GetVertexData())[index];
+}
+
+VISLIB_FORCEINLINE unsigned char byteFromVoidArray(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index) {
+    return static_cast<const unsigned char*>(p.GetVertexData())[index];
+}
+
+typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+
+
+
+
+
+OSPRaySphereGeometry::OSPRaySphereGeometry(void) :
+
+    getDataSlot("getdata", "Connects to the data source"),
+    getTFSlot("gettransferfunction", "Connects to the transfer function module"),
+    getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
+    deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure"),
+    getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure"),
+
+    // material parameteres
+    materialType("Material::Type", "Switches material types"),
+    // OBJMATERIAL
+    Kd("Material::OBJMaterial::DiffuseColor", "Diffuse color"),
+    Ks("Material::OBJMaterial::SpecularColor", "Specular color"),
+    Ns("Material::OBJMaterial::Shininess", "Phong exponent"),
+    d("Material::OBJMaterial::Opacity", "Opacity"),
+    Tf("Material::OBJMaterial::TransparencyFilterColor", "Transparency filter color"),
+    // LUMINOUS
+    lumColor("Material::Luminous::Color", "Color of the emitted light"),
+    lumIntensity("Material::Luminous::Intensity", "Intensity of the emitted light"),
+    lumTransparency("Material::Luminous::Transparency", "Transparency of the light source geometry"),
+    // VELVET
+    velvetReflectance("Material::Velvet::", "Reflectance"),
+    velvetBackScattering("Material::Velvet::", "BackScattering"),
+    velvetHorizonScatteringColor("Material::Velvet::", "Scattering color"),
+    velvetHorizonScatteringFallOff("Material::Velvet::", "Scattering fall off"),
+    // MATTE
+    matteReflectance("", ""),
+    // METAL
+    metalReflectance("", ""),
+    metalEta("", ""),
+    metalK("", ""),
+    metalRoughness("", ""),
+    // METALLIC
+    metallicShadeColor("", ""),
+    metallicGlitterColor("", ""),
+    metallicGlitterSpread("", ""),
+    metallicEta("", ""),
+    // GLASS
+    glassEtaInside("", ""),
+    glassEtaOutside("", ""),
+    glassAttenuationColorInside("", ""),
+    glassAttenuationColorOutside("", ""),
+    glassAttenuationDistance("", ""),
+    // THINGLASS
+    thinglassTransmission("", ""),
+    thinglassEta("", ""),
+    thinglassThickness("", ""),
+    // PLASTIC
+    plasticPigmentColor("", ""),
+    plasticEta("", ""),
+    plasticRoughness("", ""),
+    plasticThickness("", ""),
+
+    particleList("General::ParticleList", "Switches between particle lists")
+{
+
+    this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    this->MakeSlotAvailable(&this->getDataSlot);
+
+    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->getClipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable(&this->getClipPlaneSlot);
+
+    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0), &OSPRaySphereGeometry::getStructureCallback);
+    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0), &OSPRaySphereGeometry::checkDatahashCallback);
+    this->MakeSlotAvailable(&this->deployStructureSlot);
+
+    this->getStructureSlot.SetCompatibleCall<CallOSPRayStructure>();
+    this->MakeSlotAvailable(&this->getStructureSlot);
+
+    // Material
+    core::param::EnumParam *mt = new core::param::EnumParam(OBJMATERIAL);
+    mt->SetTypePair(OBJMATERIAL, "OBJMaterial");
+    mt->SetTypePair(GLASS, "Glass (only PathTracer)");
+    mt->SetTypePair(MATTE, "Matte (only PathTracer)");
+    mt->SetTypePair(METAL, "Metal (only PathTracer)");
+    mt->SetTypePair(METALLICPAINT, "MetallicPaint (only PathTracer)");
+    mt->SetTypePair(PLASTIC, "Plastic (only PathTracer)");
+    mt->SetTypePair(THINGLASS, "ThinGlass (only PathTracer)");
+    mt->SetTypePair(VELVET, "Velvet (only PathTracer)");
+    mt->SetTypePair(LUMINOUS, "Luminous (only PathTracer)");
+
+
+    this->Kd << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.8f));
+    this->Ks << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+    this->Ns << new core::param::FloatParam(10.0f);
+    this->d << new core::param::FloatParam(1.0f);
+    this->Tf << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+    this->materialType << mt;
+    this->MakeSlotAvailable(&this->Kd);
+    this->MakeSlotAvailable(&this->Ks);
+    this->MakeSlotAvailable(&this->Ns);
+    this->MakeSlotAvailable(&this->d);
+    this->MakeSlotAvailable(&this->Tf);
+    this->MakeSlotAvailable(&this->type);
+
+    this->particleList << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&this->particleList);
+}
+
+bool OSPRaySphereGeometry::readData(core::Call &call) {
+
+    CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
+    core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+
+    if (cd == NULL) return false;
+    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+    // Call for getData
+    if (!(*cd)(0)) return NULL;
+
+    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
+        this->particleList.Param<core::param::IntParam>()->SetValue(0);
+    }
+
+    core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
+
+    // Vertex data type check
+    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+        vertexLength = 3;
+        //vertexType = OSP_FLOAT3;
+        //ospSet1i(spheres, "bytes_per_sphere", vertexLength * sizeof(float));
+        //ospSet1f(spheres, "radius", parts.GetGlobalRadius());
+    } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+        vertexLength = 4;
+        //vertexType = OSP_FLOAT4;
+        //ospSet1i(spheres, "bytes_per_sphere", vertexLength * sizeof(float));
+        //ospSet1i(spheres, "offset_radius", (vertexLength - 1) * sizeof(float));
+    }
+    // reserve space for vertex data object
+    vd.reserve(parts.GetCount() * vertexLength);
+
+    // Color data type check
+    if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+        colorLength = 4;
+        //convertedColorType = OSP_FLOAT4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+
+        floatFromArrayFunc ffaf;
+        ffaf = floatFromVoidArray;
+
+        for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+            if (loop % (vertexLength + colorLength) >= vertexLength) {
+                cd_rgba.push_back(ffaf(parts, loop));
+            } else {
+                vd.push_back(ffaf(parts, loop));
+            }
+        }
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+        // this colorType will be transformed to:
+        //convertedColorType = OSP_FLOAT4;
+        colorLength = 4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+
+        floatFromArrayFunc ffaf;
+        ffaf = floatFromVoidArray;
+        std::vector<float> cd;
+
+        for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+            if (loop % (vertexLength + 1) >= vertexLength) {
+                cd.push_back(ffaf(parts, loop));
+            } else {
+                vd.push_back(ffaf(parts, loop));
+            }
+        }
+
+        // Color transfer call and calculation
+        core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+        if (cgtf != NULL && ((*cgtf)())) {
+            float const* tf_tex = cgtf->GetTextureData();
+            tex_size = cgtf->TextureSize();
+            this->colorTransferGray(cd, tf_tex, tex_size, cd_rgba);
+        } else {
+            this->colorTransferGray(cd, NULL, 0, cd_rgba);
+        }
+
+
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+        colorLength = 3;
+        //convertedColorType = OSP_FLOAT3;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+
+        floatFromArrayFunc ffaf;
+        ffaf = floatFromVoidArray;
+
+        for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+            if (loop % (vertexLength + colorLength) >= vertexLength) {
+                cd_rgba.push_back(ffaf(parts, loop));
+            } else {
+                vd.push_back(ffaf(parts, loop));
+            }
+        }
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+        colorLength = 4;
+        //convertedColorType = OSP_FLOAT4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+
+        float alpha = 1.0f;
+        byteFromArrayFunc bfaf;
+        bfaf = byteFromVoidArray;
+
+        vd.resize(parts.GetCount() * vertexLength);
+        auto data = static_cast<const float*>(parts.GetVertexData());
+
+        for (size_t i = 0; i < parts.GetCount(); i++) {
+            std::copy_n(data + (i * parts.GetVertexDataStride() / sizeof(float)),
+                vertexLength,
+                vd.begin() + (i * vertexLength));
+            for (size_t j = 0; j < colorLength; j++) {
+                cd_rgba.push_back((float)bfaf(parts, i * parts.GetVertexDataStride() + vertexLength * sizeof(float) + j) / 255.0f);
+            }
+        }
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
+        vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
+    }
+}
+
+
+void OSPRaySphereGeometry::colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray) {
+
+    float gray_max = *std::max_element(grayArray.begin(), grayArray.end());
+    float gray_min = *std::min_element(grayArray.begin(), grayArray.end());
+
+    for (auto &gray : grayArray) {
+        float scaled_gray;
+        if ((gray_max - gray_min) <= 1e-4f) {
+            scaled_gray = 0;
+        } else {
+            scaled_gray = (gray - gray_min) / (gray_max - gray_min);
+        }
+        if (transferTable == NULL && tableSize == 0) {
+            for (int i = 0; i < 3; i++) {
+                rgbaArray.push_back((0.3 + scaled_gray) / 1.3);
+            }
+            rgbaArray.push_back(1.0f);
+        } else {
+            float exact_tf = (tableSize - 1) * scaled_gray;
+            int floor = std::floor(exact_tf);
+            float tail = exact_tf - (float)floor;
+            floor *= 4;
+            for (int i = 0; i < 4; i++) {
+                float colorFloor = transferTable[floor + i];
+                float colorCeil = transferTable[floor + i + 4];
+                float finalColor = colorFloor + (colorCeil - colorFloor)*(tail);
+                rgbaArray.push_back(finalColor);
+            }
+        }
+    }
+}
+
+bool OSPRaySphereGeometry::checkDatahashCallback(megamol::core::Call& call) {
+    CallOSPRayStructure *sc_in = dynamic_cast<CallOSPRayStructure*>(&call);
+    CallOSPRayStructure *sc_out = this->getStructureSlot.CallAs<CallOSPRayStructure>();
+    megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+
+    if (sc_in != NULL && cd != NULL) {
+        if (*(sc_in->getDataChangedPointer()) == true) {
+            return true;
+        }
+        bool data_has_changed = (this->datahash != cd->DataHash());
+        sc_in->setDataChangedFlag(data_has_changed);
+        if (sc_in != NULL) {
+            sc_out->checkDatahash(sc_in->getDataChangedPointer());
+        }
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ospray::OSPRaySphereGeometry::InterfaceIsDirty()
+*/
+bool OSPRaySphereGeometry::InterfaceIsDirty() {
+    if (
+        this->mat_Kd.IsDirty() ||
+        this->mat_Ks.IsDirty() ||
+        this->mat_Ns.IsDirty() ||
+        this->mat_d.IsDirty() ||
+        this->mat_Tf.IsDirty() ||
+        this->particleList.IsDirty()) {
+        this->mat_Kd.ResetDirty();
+        this->mat_Ks.ResetDirty();
+        this->mat_Ns.ResetDirty();
+        this->mat_d.ResetDirty();
+        this->mat_Tf.ResetDirty();
+        this->particleList.ResetDirty();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/*
+* ospray::OSPRaySphereGeometry::getClipData
+*/
+void OSPRaySphereGeometry::getClipData(float *clipDat, float *clipCol) {
+    megamol::core::view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<megamol::core::view::CallClipPlane>();
+    if ((ccp != NULL) && (*ccp)()) {
+        clipDat[0] = ccp->GetPlane().Normal().X();
+        clipDat[1] = ccp->GetPlane().Normal().Y();
+        clipDat[2] = ccp->GetPlane().Normal().Z();
+        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
+        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
+        clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
+        clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
+        clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
+        clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
+
+    } else {
+        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
+        clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
+        clipCol[3] = 1.0f;
+    }
+}

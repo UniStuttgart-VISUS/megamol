@@ -250,6 +250,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
     <None Include="cmake\ConfigInstall.cmake.in" />
     <None Include="cmake\ConfigLocal.cmake.in" />
     <None Include="cmake\ConfigVersion.cmake.in" />
@@ -261,10 +262,12 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
   <ItemGroup>
     <ClInclude Include="include\OSPRay\OSPRay.h" />
     <ClInclude Include="include\OSPRay_plugin\OSPRay_plugin.h" />
+    <ClInclude Include="src\AbstractOSPRayRenderer.h" />
     <ClInclude Include="src\CallOSPRayLight.h" />
+    <ClInclude Include="src\CallOSPRayStructure.h" />
     <ClInclude Include="src\OSPRayLight.h" />
     <ClInclude Include="src\OSPRayRenderer.h" />
-    <ClInclude Include="src\OSPRaySphereRenderer.h" />
+    <ClInclude Include="src\OSPRaySphereGeometry.h" />
     <ClInclude Include="src\OSPRayStreamLineRenderer.h" />
     <ClInclude Include="src\OSPRayTriangleMeshRenderer.h" />
     <ClInclude Include="src\OSPRayVolumeRenderer.h" />
@@ -272,13 +275,15 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClInclude Include="src\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\AbstractOSPRayRenderer.cpp" />
     <ClCompile Include="src\CallOSPRayLight.cpp" />
+    <ClCompile Include="src\CallOSPRayStructure.cpp" />
     <ClCompile Include="src\dllmain.cpp" />
     <ClCompile Include="src\OSPRayLight.cpp" />
     <ClCompile Include="src\OSPRayStreamLineRenderer.cpp" />
     <ClCompile Include="src\OSPRay_plugin.cpp" />
     <ClCompile Include="src\OSPRayRenderer.cpp" />
-    <ClCompile Include="src\OSPRaySphereRenderer.cpp" />
+    <ClCompile Include="src\OSPRaySphereGeometry.cpp" />
     <ClCompile Include="src\OSPRayTriangleMeshRenderer.cpp" />
     <ClCompile Include="src\OSPRayVolumeRenderer.cpp" />
     <ClCompile Include="src\stdafx.cpp">

@@ -11,11 +11,15 @@
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
-#include "OSPRaySphereRenderer.h"
-#include "OSPRayVolumeRenderer.h"
-#include "OSPRayTriangleMeshRenderer.h"
-#include "OSPRayStreamLineRenderer.h"
-#include "OSPRayLight.h"
+#include "OSPRayRenderer.h"
+#include "OSPRaySphereGeometry.h"
+#include "CallOSPRayStructure.h"
+#include "OSPRayDistantLight.h"
+#include "OSPRayAmbientLight.h"
+#include "OSPRayPointLight.h"
+#include "OSPRaySpotLight.h"
+#include "OSPRayQuadLight.h"
+#include "OSPRayHDRILight.h"
 #include "CallOSPRayLight.h"
 
 
@@ -47,15 +51,19 @@ namespace {
 
             // register modules here:
 
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereRenderer>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVolumeRenderer>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMeshRenderer>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStreamLineRenderer>();
-               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLight>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayDistantLight>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAmbientLight>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPointLight>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySpotLight>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayQuadLight>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayHDRILight>();
 
             // register calls here:
 
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayLight>();
+               this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayStructure>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

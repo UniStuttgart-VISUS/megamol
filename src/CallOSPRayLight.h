@@ -67,6 +67,11 @@ public:
 };
 
 
+class CallOSPRayLight;
+typedef std::map<CallOSPRayLight*, OSPRayLightContainer> OSPRayLightMap;
+
+
+
 class CallOSPRayLight: public core::Call {
 public:
 
@@ -117,13 +122,12 @@ public:
     /** Dtor. */
     virtual ~CallOSPRayLight(void);
 
-    void setLightMap(std::map<CallOSPRayLight*, OSPRayLightContainer> *lm);
+    void setLightMap(OSPRayLightMap *lm);
 
     void addLight(OSPRayLightContainer &lc);
 
     void fillLightMap();
 
-    void setDirtyObj(bool *md);
 
     /**
     * Assignment operator
@@ -134,8 +138,8 @@ public:
     */
     CallOSPRayLight& operator=(const CallOSPRayLight& rhs);
 
-    std::map<CallOSPRayLight*, OSPRayLightContainer> *lightMap;
-    bool *ModuleIsDirty;
+public:
+    OSPRayLightMap *lightMap;
 
 };
 typedef core::factories::CallAutoDescription<CallOSPRayLight> CallOSPRayLightDescription;

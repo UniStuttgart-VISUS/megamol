@@ -77,7 +77,7 @@ CallOSPRayLight::CallOSPRayLight() {
 
 
 
-void CallOSPRayLight::setLightMap(std::map<CallOSPRayLight*, OSPRayLightContainer> *lm) {
+void CallOSPRayLight::setLightMap(OSPRayLightMap *lm) {
     this->lightMap = lm;
 }
 
@@ -85,7 +85,7 @@ void CallOSPRayLight::setLightMap(std::map<CallOSPRayLight*, OSPRayLightContaine
 * megamol::ospray::CallOSPRayLight::~CallOSPRayLight
 */
 CallOSPRayLight::~CallOSPRayLight(void) {
-    // intentionally empty
+    this->lightMap = NULL;
 }
 
 /*
@@ -97,8 +97,12 @@ CallOSPRayLight& CallOSPRayLight::operator=(const CallOSPRayLight& rhs) {
 
 void CallOSPRayLight::addLight(OSPRayLightContainer &lc) {
     if (lc.isValid) {
-        this->lightMap->insert_or_assign(this, lc);
-    } 
+        if (this->lightMap != NULL) {
+            this->lightMap->insert_or_assign(this, lc);
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("Error: no lightMap set.");
+        }
+    }
 }
 
 void CallOSPRayLight::fillLightMap() {
@@ -107,6 +111,3 @@ void CallOSPRayLight::fillLightMap() {
     }
 }
 
-void CallOSPRayLight::setDirtyObj(bool *md) {
-    this->ModuleIsDirty = md;
-}
