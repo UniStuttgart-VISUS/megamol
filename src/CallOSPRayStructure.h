@@ -1,0 +1,198 @@
+/*
+* CallOSPRayStructure.h
+*
+* Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+* Alle Rechte vorbehalten.
+*/
+
+#pragma once
+#include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/Call.h"
+#include <map>
+#include <vector>
+
+
+namespace megamol {
+namespace ospray {
+
+enum structureTypeEnum {
+    GEOMETRY,
+    VOLUME
+};
+
+enum geometryTypeEnum {
+    SPHERES,
+    TRIANGLES,
+    STREAMLINES,
+    CYLINDERS
+};
+
+enum volumeTypeEnum {
+    STRUCTUREDVOLUME,
+    BLOCKBRICKEDVOLUME,
+    GHOSTBLOCKBRICKEDVOLUME,
+    ISOSURFACE,
+    SLICE
+};
+
+//OSPMaterial material;
+enum materialTypeEnum {
+    OBJMATERIAL,
+    LUMINOUS,
+    GLASS,
+    MATTE,
+    METAL,
+    METALLICPAINT,
+    PLASTIC,
+    THINGLASS,
+    VELVET
+};
+
+
+class OSPRayMaterialContainer {
+public:
+    materialTypeEnum materialType;
+    // OBJMaterial/ScivisMaterial
+    std::vector<float> Kd;
+    std::vector<float> Ks;
+    float Ns;
+    float d;
+    std::vector<float> Tf;
+    // LUMINOUS
+    std::vector<float> lumColor;
+    float lumIntensity;
+    float lumTransparency;
+    // VELVET
+    std::vector<float> velvetReflectance;
+    float velvetBackScattering;
+    std::vector<float> velvetHorizonScatteringColor;
+    float velvetHorizonScatteringFallOff;
+    // MATTE
+    std::vector<float> matteReflectance;
+    // METAL
+    std::vector<float> metalReflectance;
+    std::vector<float> metalEta;
+    std::vector<float> metalK;
+    float metalRoughness;
+    // METALLICPAINT
+    std::vector<float> metallicShadeColor;
+    std::vector<float> metallicGlitterColor;
+    float metallicGlitterSpread;
+    float metallicEta;
+    // GLASS
+    float glassEtaInside;
+    float glassEtaOutside;
+    std::vector<float> glassAttenuationColorInside;
+    std::vector<float> glassAttenuationColorOutside;
+    float glassAttenuationDistance;
+    //THINGLASS
+    std::vector<float> thinglassTransmission;
+    float thinglassEta;
+    float thinglassThickness;
+    // PLASTIC
+    std::vector<float> plasticPigmentColor;
+    float plasticEta;
+    float plasticRoughness;
+    float plasticThickness;
+};
+
+
+class OSPRayStructureContainer {
+public:
+    float time;
+    size_t datahash;
+    structureTypeEnum type;
+    OSPRayMaterialContainer materialContainer;
+    bool isValid;
+    geometryTypeEnum geometryType;
+    volumeTypeEnum volumeType;
+
+};
+
+
+class CallOSPRayStructure;
+typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer> OSPRayStrcutrureMap;
+
+
+class CallOSPRayStructure : public core::Call {
+public:
+
+    /**
+    * Answer the name of the objects of this description.
+    *
+    * @return The name of the objects of this description.
+    */
+    static const char *ClassName(void) {
+        return "CallOSPRayStructure";
+    }
+
+    /**
+    * Gets a human readable description of the module.
+    *
+    * @return A human readable description of the module.
+    */
+    static const char *Description(void) {
+        return "Call for an OSPRay structure";
+    }
+
+    /**
+    * Answer the number of functions used for this call.
+    *
+    * @return The number of functions used for this call.
+    */
+    static unsigned int FunctionCount(void) {
+        return 1;
+    }
+
+    /**
+    * Answer the name of the function used for this call.
+    *
+    * @param idx The index of the function to return it's name.
+    *
+    * @return The name of the requested function.
+    */
+    static const char * FunctionName(unsigned int idx) {
+        switch (idx) {
+        case 0: return "GetDataCall";
+        case 1: return "checkDatahashCall";
+        default: return NULL;
+        }
+    }
+
+    /** Ctor. */
+    CallOSPRayStructure();
+
+    /** Dtor. */
+    virtual ~CallOSPRayStructure(void);
+
+    /**
+    * Assignment operator
+    *
+    * @param rhs The right hand side operand
+    *
+    * @return A reference to this
+    */
+    CallOSPRayStructure& operator=(const CallOSPRayStructure& rhs);
+
+    void setStructureMap(OSPRayStrcutrureMap*sm);
+    void addStructure(OSPRayStructureContainer &sc);
+    void fillStructureMap();
+    void checkDatahash(bool *dataChange);
+
+    OSPRayStrcutrureMap *structureMap;
+
+    void setTime(float time);
+    float getTime();
+
+    void setDataChangedFlag(bool dhc);
+    bool* getDataChangedPointer();
+
+private:
+
+    float time;
+    bool *data_has_changed;
+
+};
+typedef core::factories::CallAutoDescription<CallOSPRayStructure> CallOSPRayStructureDescription;
+} // namespace ospray
+} // namespace megamol
