@@ -436,7 +436,7 @@ void AbstractOSPRayRenderer::RendererSettings(OSPRenderer &renderer) {
 }
 
 
-void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, core::view::CallRender3D* cr) {
+void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& camera, megamol::core::view::CallRender3D* cr) {
 
 
     // calculate image parts for e.g. screenshooter
@@ -523,9 +523,11 @@ void AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::VOLUME:
 
-            break
+            break;
         }
 
+        // data verwurschding
+        /*
         if (parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
             vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
             ospCommit(vertexData);
@@ -603,6 +605,7 @@ void AbstractOSPRayRenderer::fillWorld() {
         ospCommit(material);
         ospSetMaterial(spheres, material);
         ospCommit(spheres);
+        */
     }
 }
 

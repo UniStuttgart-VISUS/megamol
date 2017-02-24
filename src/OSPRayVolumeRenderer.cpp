@@ -131,7 +131,7 @@ bool ospray::OSPRayVolumeRenderer::create() {
 
     this->initOSPRay(device);
     this->setupTextureScreen();
-    this->setupOSPRay(renderer, camera, world, volume, "shared_structured_volume", "scivis");
+    this->setupOSPRay(renderer, camera, world, "scivis");
 
     return true;
 }
@@ -202,14 +202,14 @@ bool ospray::OSPRayVolumeRenderer::Render(core::Call& call) {
             ospRelease(world);
             ospRelease(renderer);
             ospRelease(volume);
-            this->setupOSPRay(renderer, camera, world, volume, "shared_structured_volume", "scivis");
+            this->setupOSPRay(renderer, camera, world, "scivis");
             break;
         case PATHTRACER:
             ospRelease(camera);
             ospRelease(world);
             ospRelease(renderer);
             ospRelease(volume);
-            this->setupOSPRay(renderer, camera, world, volume, "shared_structured_volume", "pathtracer");
+            this->setupOSPRay(renderer, camera, world, "pathtracer");
             break;
         }
         renderer_changed = true;

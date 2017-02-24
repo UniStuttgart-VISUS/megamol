@@ -11,9 +11,12 @@
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
+
 #include "OSPRayRenderer.h"
+
 #include "OSPRaySphereGeometry.h"
 #include "CallOSPRayStructure.h"
+
 #include "OSPRayDistantLight.h"
 #include "OSPRayAmbientLight.h"
 #include "OSPRayPointLight.h"
@@ -22,6 +25,15 @@
 #include "OSPRayHDRILight.h"
 #include "CallOSPRayLight.h"
 
+#include "OSPRayOBJMaterial.h"
+#include "OSPRayLuminousMaterial.h"
+#include "OSPRayVelvetMaterial.h"
+#include "OSPRayMatteMaterial.h"
+#include "OSPRayMetalMaterial.h"
+#include "OSPRayMetallicPaintMaterial.h"
+#include "OSPRayGlassMaterial.h"
+#include "OSPRayThinGlassMaterial.h"
+#include "OSPRayPlasticMaterial.h"
 
 
 
@@ -52,13 +64,26 @@ namespace {
             // register modules here:
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
+
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
+
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayDistantLight>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAmbientLight>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPointLight>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySpotLight>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayQuadLight>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayHDRILight>();
+
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayOBJMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLuminousMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVelvetMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMatteMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMetalMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMetallicPaintMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayGlassMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayThinGlassMaterial>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPlasticMaterial>();
+
 
             // register calls here:
 

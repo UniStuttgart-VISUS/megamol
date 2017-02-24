@@ -9,6 +9,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "CallOSPRayStructure.h"
 
 namespace megamol {
 namespace ospray {
@@ -66,63 +67,10 @@ protected:
     bool readData(core::Call &call);
 
     bool getStructureCallback(core::Call& call);
-    bool checkDatahashCallback(core::Call& call);
     bool InterfaceIsDirty();
     void OSPRaySphereGeometry::getClipData(float *clipDat, float *clipCol);
 
-    // material
-    // OBJMaterial/ScivisMaterial
-    core::param::ParamSlot Kd;
-    core::param::ParamSlot Ks;
-    core::param::ParamSlot Ns;
-    core::param::ParamSlot d;
-    core::param::ParamSlot Tf;
-    core::param::ParamSlot materialType;
-    // LUMINOUS
-    core::param::ParamSlot lumColor;
-    core::param::ParamSlot lumIntensity;
-    core::param::ParamSlot lumTransparency;
-    // VELVET
-    core::param::ParamSlot velvetReflectance;
-    core::param::ParamSlot velvetBackScattering;
-    core::param::ParamSlot velvetHorizonScatteringColor;
-    core::param::ParamSlot velvetHorizonScatteringFallOff;
-    // MATTE
-    core::param::ParamSlot matteReflectance;
-    // METAL
-    core::param::ParamSlot metalReflectance;
-    core::param::ParamSlot metalEta;
-    core::param::ParamSlot metalK;
-    core::param::ParamSlot metalRoughness;
-    // METALLICPAINT
-    core::param::ParamSlot metallicShadeColor;
-    core::param::ParamSlot metallicGlitterColor;
-    core::param::ParamSlot metallicGlitterSpread;
-    core::param::ParamSlot metallicEta;
-    // GLASS
-    core::param::ParamSlot glassEtaInside;
-    core::param::ParamSlot glassEtaOutside;
-    core::param::ParamSlot glassAttenuationColorInside;
-    core::param::ParamSlot glassAttenuationColorOutside;
-    core::param::ParamSlot glassAttenuationDistance;
-    //THINGLASS
-    core::param::ParamSlot thinglassTransmission;
-    core::param::ParamSlot thinglassEta;
-    core::param::ParamSlot thinglassThickness;
-    // PLASTIC
-    core::param::ParamSlot plasticPigmentColor;
-    core::param::ParamSlot plasticEta;
-    core::param::ParamSlot plasticRoughness;
-    core::param::ParamSlot plasticThickness;
-
-
-
-
-
     core::param::ParamSlot particleList;
-
-
-
 
     /** The call for data */
     core::CallerSlot getDataSlot;
@@ -139,6 +87,8 @@ protected:
     /** The call for additional structures */
     core::CallerSlot getStructureSlot;
 
+    /** The call for materials */
+    core::CallerSlot getMaterialSlot;
 
 private:
 
@@ -147,12 +97,14 @@ private:
     std::vector<float> cd_rgba;
     std::vector<float> vd;
 
-    // data conversion
-    size_t vertexLength;
-    size_t colorLength;
+
     // color transfer data
     unsigned int tex_size;
     SIZE_T datahash;
+
+    OSPRayStructureContainer structureContainer;
+
+    OSPRayMaterialContainer* materialContainer;
 
 };
 

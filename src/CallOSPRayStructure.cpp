@@ -12,9 +12,12 @@
 using namespace megamol::ospray;
 
 
+OSPRayStructureContainer::OSPRayStructureContainer() :
+    isValid(false) { }
 
-
-
+OSPRayStructureContainer::~OSPRayStructureContainer() {
+    //
+}
 
 
 
@@ -50,7 +53,7 @@ CallOSPRayStructure& CallOSPRayStructure::operator=(const CallOSPRayStructure& r
 }
 
 void CallOSPRayStructure::setStructureMap(OSPRayStrcutrureMap *sm) {
-    this->setStructureMap = sm;
+    this->structureMap = sm;
 }
 
 void CallOSPRayStructure::addStructure(OSPRayStructureContainer &sc) {
@@ -77,17 +80,3 @@ float CallOSPRayStructure::getTime() {
     return this->time;
 }
 
-void CallOSPRayStructure::checkDatahash(bool *dataChange) {
-    this->data_has_changed = dataChange;
-    if (!(*this)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("Error in checkDatahash");
-    }
-}
-
-void CallOSPRayStructure::setDataChangedFlag(bool dhc) {
-    *(this->data_has_changed) = dhc;
-}
-
-bool* CallOSPRayStructure::getDataChangedPointer() {
-    return this->data_has_changed;
-}

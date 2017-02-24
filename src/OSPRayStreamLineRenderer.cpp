@@ -71,7 +71,7 @@ bool ospray::OSPRayStreamLineRenderer::create() {
 
     this->initOSPRay(device);
     this->setupTextureScreen();
-    this->setupOSPRay(renderer, camera, world, lines, "streamlines", "scivis");
+    this->setupOSPRay(renderer, camera, world, "scivis");
 
     return true;
 }
@@ -152,14 +152,14 @@ bool ospray::OSPRayStreamLineRenderer::Render(core::Call& call) {
             ospRelease(world);
             ospRelease(renderer);
             ospRelease(lines);
-            this->setupOSPRay(renderer, camera, world, lines, "streamlines", "scivis");
+            this->setupOSPRay(renderer, camera, world, "scivis");
             break;
         case PATHTRACER:
             ospRelease(camera);
             ospRelease(world);
             ospRelease(renderer);
             ospRelease(lines);
-            this->setupOSPRay(renderer, camera, world, lines, "streamlines", "pathtracer");
+            this->setupOSPRay(renderer, camera, world, "pathtracer");
             break;
         }
         renderer_changed = true;

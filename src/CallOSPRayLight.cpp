@@ -41,28 +41,9 @@ OSPRayLightContainer::OSPRayLightContainer() :
     isValid(false) { }
 
 OSPRayLightContainer::~OSPRayLightContainer() {
-    this->release();
-};
-
-void OSPRayLightContainer::release() {
-    // General light parameters
-    lightColor.clear();
-    // Distant light parameters
-    dl_direction.clear();
-    // point light paramenters
-    pl_position.clear();
-    // spot light parameters
-    sl_position.clear();
-    sl_direction.clear();
-    // quad light parameters
-    ql_position.clear();
-    ql_edgeOne.clear();
-    ql_edgeTwo.clear();
-    // hdri light parameters
-    hdri_up.clear();
-    hdri_direction.clear();
-    hdri_evnfile.Clear();
+    this->isValid = false;
 }
+
 
 
 // #############################
@@ -85,7 +66,7 @@ void CallOSPRayLight::setLightMap(OSPRayLightMap *lm) {
 * megamol::ospray::CallOSPRayLight::~CallOSPRayLight
 */
 CallOSPRayLight::~CallOSPRayLight(void) {
-    this->lightMap = NULL;
+    //
 }
 
 /*

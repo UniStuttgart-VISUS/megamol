@@ -10,6 +10,7 @@
 #include "mmcore/Call.h"
 #include <map>
 #include <vector>
+#include "CallOSPRayMaterial.h"
 
 
 namespace megamol {
@@ -35,77 +36,22 @@ enum volumeTypeEnum {
     SLICE
 };
 
-//OSPMaterial material;
-enum materialTypeEnum {
-    OBJMATERIAL,
-    LUMINOUS,
-    GLASS,
-    MATTE,
-    METAL,
-    METALLICPAINT,
-    PLASTIC,
-    THINGLASS,
-    VELVET
-};
-
-
-class OSPRayMaterialContainer {
-public:
-    materialTypeEnum materialType;
-    // OBJMaterial/ScivisMaterial
-    std::vector<float> Kd;
-    std::vector<float> Ks;
-    float Ns;
-    float d;
-    std::vector<float> Tf;
-    // LUMINOUS
-    std::vector<float> lumColor;
-    float lumIntensity;
-    float lumTransparency;
-    // VELVET
-    std::vector<float> velvetReflectance;
-    float velvetBackScattering;
-    std::vector<float> velvetHorizonScatteringColor;
-    float velvetHorizonScatteringFallOff;
-    // MATTE
-    std::vector<float> matteReflectance;
-    // METAL
-    std::vector<float> metalReflectance;
-    std::vector<float> metalEta;
-    std::vector<float> metalK;
-    float metalRoughness;
-    // METALLICPAINT
-    std::vector<float> metallicShadeColor;
-    std::vector<float> metallicGlitterColor;
-    float metallicGlitterSpread;
-    float metallicEta;
-    // GLASS
-    float glassEtaInside;
-    float glassEtaOutside;
-    std::vector<float> glassAttenuationColorInside;
-    std::vector<float> glassAttenuationColorOutside;
-    float glassAttenuationDistance;
-    //THINGLASS
-    std::vector<float> thinglassTransmission;
-    float thinglassEta;
-    float thinglassThickness;
-    // PLASTIC
-    std::vector<float> plasticPigmentColor;
-    float plasticEta;
-    float plasticRoughness;
-    float plasticThickness;
-};
-
 
 class OSPRayStructureContainer {
 public:
-    float time;
-    size_t datahash;
     structureTypeEnum type;
-    OSPRayMaterialContainer materialContainer;
-    bool isValid;
+    OSPRayMaterialContainer* materialContainer;
     geometryTypeEnum geometryType;
     volumeTypeEnum volumeType;
+
+    std::shared_ptr<std::vector<float>> vertexData;
+    std::shared_ptr<std::vector<float>> colorData;
+
+    bool dataChanged;
+    bool isValid;
+
+    OSPRayStructureContainer();
+    ~OSPRayStructureContainer();
 
 };
 
@@ -154,7 +100,6 @@ public:
     static const char * FunctionName(unsigned int idx) {
         switch (idx) {
         case 0: return "GetDataCall";
-        case 1: return "checkDatahashCall";
         default: return NULL;
         }
     }
@@ -177,20 +122,16 @@ public:
     void setStructureMap(OSPRayStrcutrureMap*sm);
     void addStructure(OSPRayStructureContainer &sc);
     void fillStructureMap();
-    void checkDatahash(bool *dataChange);
 
     OSPRayStrcutrureMap *structureMap;
 
     void setTime(float time);
     float getTime();
 
-    void setDataChangedFlag(bool dhc);
-    bool* getDataChangedPointer();
 
 private:
 
     float time;
-    bool *data_has_changed;
 
 };
 typedef core::factories::CallAutoDescription<CallOSPRayStructure> CallOSPRayStructureDescription;

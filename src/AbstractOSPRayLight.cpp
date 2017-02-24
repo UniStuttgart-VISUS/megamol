@@ -1,5 +1,5 @@
 /*
-* OSPRayLight.cpp
+* AbstractOSPRayLight.cpp
 * Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */

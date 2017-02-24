@@ -102,7 +102,7 @@ bool ospray::OSPRayTriangleMeshRenderer::create() {
 
     this->initOSPRay(device);
     this->setupTextureScreen();
-    this->setupOSPRay(renderer, camera, world, "triangles", "scivis");
+    this->setupOSPRay(renderer, camera, world, "scivis");
 
     return true;
 }
@@ -158,13 +158,13 @@ bool ospray::OSPRayTriangleMeshRenderer::Render(core::Call& call) {
             ospRelease(camera);
             ospRelease(world);
             ospRelease(renderer);
-            this->setupOSPRay(renderer, camera, world, "triangles", "scivis");
+            this->setupOSPRay(renderer, camera, world, "scivis");
             break;
         case PATHTRACER:
             ospRelease(camera);
             ospRelease(world);
             ospRelease(renderer);
-            this->setupOSPRay(renderer, camera, world, "triangles", "pathtracer");
+            this->setupOSPRay(renderer, camera, world, "pathtracer");
             break;
         }
         renderer_changed = true;

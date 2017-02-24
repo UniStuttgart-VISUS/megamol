@@ -149,7 +149,13 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
     CallOSPRayStructure *os = this->getStructureSlot.CallAs<CallOSPRayStructure>();
     // check if data has changed
-    os->checkDatahash(&data_has_changed);
+    data_has_changed = false;
+    for (auto element : this->structureMap) {
+        auto structure = element.second;
+        if (structure.dataChanged) {
+            data_has_changed = true;
+        }
+    }
 
     // check data and camera hash
     if (camParams == NULL)
@@ -208,7 +214,6 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     CallOSPRayLight *gl = this->getLightSlot.CallAs<CallOSPRayLight>();
     if (gl != NULL) {
         gl->setLightMap(&lightMap);
-        gl->setDirtyObj(&ModuleIsDirty);
         gl->fillLightMap();
     }
 
@@ -268,8 +273,6 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
         this->releaseOSPRayStuff();
 
-        vd.clear();
-        cd_rgba.clear();
 
     } else {
         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
@@ -321,6 +324,7 @@ bool OSPRayRenderer::GetCapabilities(megamol::core::Call& call) {
 * ospray::OSPRayRenderer::GetExtents
 */
 bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
+    /*
     megamol::core::view::CallRender3D *cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
     CallOSPRayStructure *os = this->getStructureSlot.CallAs<CallOSPRayStructure>();
@@ -332,7 +336,7 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
     cr->AccessBoundingBoxes().Clear();
     cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
     cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
-
+    */
     return true;
 }
 

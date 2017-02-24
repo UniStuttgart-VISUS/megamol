@@ -59,11 +59,8 @@ public:
     bool isValid;
 
 
-
     OSPRayLightContainer::OSPRayLightContainer();
     OSPRayLightContainer::~OSPRayLightContainer();
-    void OSPRayLightContainer::release();
-
 };
 
 

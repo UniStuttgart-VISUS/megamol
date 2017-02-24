@@ -13,6 +13,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "CallOSPRayStructure.h"
+#include "CallOSPRayMaterial.h"
 #include "vislib/sys/Log.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -45,51 +46,7 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void) :
     getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
     deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure"),
     getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure"),
-
-    // material parameteres
-    materialType("Material::Type", "Switches material types"),
-    // OBJMATERIAL
-    Kd("Material::OBJMaterial::DiffuseColor", "Diffuse color"),
-    Ks("Material::OBJMaterial::SpecularColor", "Specular color"),
-    Ns("Material::OBJMaterial::Shininess", "Phong exponent"),
-    d("Material::OBJMaterial::Opacity", "Opacity"),
-    Tf("Material::OBJMaterial::TransparencyFilterColor", "Transparency filter color"),
-    // LUMINOUS
-    lumColor("Material::Luminous::Color", "Color of the emitted light"),
-    lumIntensity("Material::Luminous::Intensity", "Intensity of the emitted light"),
-    lumTransparency("Material::Luminous::Transparency", "Transparency of the light source geometry"),
-    // VELVET
-    velvetReflectance("Material::Velvet::", "Reflectance"),
-    velvetBackScattering("Material::Velvet::", "BackScattering"),
-    velvetHorizonScatteringColor("Material::Velvet::", "Scattering color"),
-    velvetHorizonScatteringFallOff("Material::Velvet::", "Scattering fall off"),
-    // MATTE
-    matteReflectance("", ""),
-    // METAL
-    metalReflectance("", ""),
-    metalEta("", ""),
-    metalK("", ""),
-    metalRoughness("", ""),
-    // METALLIC
-    metallicShadeColor("", ""),
-    metallicGlitterColor("", ""),
-    metallicGlitterSpread("", ""),
-    metallicEta("", ""),
-    // GLASS
-    glassEtaInside("", ""),
-    glassEtaOutside("", ""),
-    glassAttenuationColorInside("", ""),
-    glassAttenuationColorOutside("", ""),
-    glassAttenuationDistance("", ""),
-    // THINGLASS
-    thinglassTransmission("", ""),
-    thinglassEta("", ""),
-    thinglassThickness("", ""),
-    // PLASTIC
-    plasticPigmentColor("", ""),
-    plasticEta("", ""),
-    plasticRoughness("", ""),
-    plasticThickness("", ""),
+    getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial"),
 
     particleList("General::ParticleList", "Switches between particle lists")
 {
@@ -104,57 +61,54 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void) :
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
     this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0), &OSPRaySphereGeometry::getStructureCallback);
-    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0), &OSPRaySphereGeometry::checkDatahashCallback);
     this->MakeSlotAvailable(&this->deployStructureSlot);
 
     this->getStructureSlot.SetCompatibleCall<CallOSPRayStructure>();
     this->MakeSlotAvailable(&this->getStructureSlot);
 
-    // Material
-    core::param::EnumParam *mt = new core::param::EnumParam(OBJMATERIAL);
-    mt->SetTypePair(OBJMATERIAL, "OBJMaterial");
-    mt->SetTypePair(GLASS, "Glass (only PathTracer)");
-    mt->SetTypePair(MATTE, "Matte (only PathTracer)");
-    mt->SetTypePair(METAL, "Metal (only PathTracer)");
-    mt->SetTypePair(METALLICPAINT, "MetallicPaint (only PathTracer)");
-    mt->SetTypePair(PLASTIC, "Plastic (only PathTracer)");
-    mt->SetTypePair(THINGLASS, "ThinGlass (only PathTracer)");
-    mt->SetTypePair(VELVET, "Velvet (only PathTracer)");
-    mt->SetTypePair(LUMINOUS, "Luminous (only PathTracer)");
-
-
-    this->Kd << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.8f));
-    this->Ks << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
-    this->Ns << new core::param::FloatParam(10.0f);
-    this->d << new core::param::FloatParam(1.0f);
-    this->Tf << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
-    this->materialType << mt;
-    this->MakeSlotAvailable(&this->Kd);
-    this->MakeSlotAvailable(&this->Ks);
-    this->MakeSlotAvailable(&this->Ns);
-    this->MakeSlotAvailable(&this->d);
-    this->MakeSlotAvailable(&this->Tf);
-    this->MakeSlotAvailable(&this->type);
+    this->getMaterialSlot.SetCompatibleCall<CallOSPRayMaterial>();
+    this->MakeSlotAvailable(&this->getMaterialSlot);
 
     this->particleList << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->particleList);
 }
 
+
 bool OSPRaySphereGeometry::readData(core::Call &call) {
 
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
     core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
+    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
 
+
+
+    if (cm != NULL) {
+        if (cm->getMaterialParameter()->isValid) {
+            this->structureContainer.materialContainer = cm->getMaterialParameter();
+        }
+    }
+
+    this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    // Call for getData
-    if (!(*cd)(0)) return NULL;
+    if (this->datahash != cd->DataHash()) {
+        this->datahash = cd->DataHash();
+        this->structureContainer.dataChanged = true;
+    } else {
+        return true;
+    }
+
+    this->structureContainer.type = structureTypeEnum::GEOMETRY;
+    this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
 
     if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
         this->particleList.Param<core::param::IntParam>()->SetValue(0);
     }
 
     core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
+
+    size_t vertexLength;
+    size_t colorLength;
 
     // Vertex data type check
     if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
@@ -289,43 +243,42 @@ void OSPRaySphereGeometry::colorTransferGray(std::vector<float> &grayArray, floa
     }
 }
 
-bool OSPRaySphereGeometry::checkDatahashCallback(megamol::core::Call& call) {
-    CallOSPRayStructure *sc_in = dynamic_cast<CallOSPRayStructure*>(&call);
-    CallOSPRayStructure *sc_out = this->getStructureSlot.CallAs<CallOSPRayStructure>();
-    megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
-    if (sc_in != NULL && cd != NULL) {
-        if (*(sc_in->getDataChangedPointer()) == true) {
-            return true;
-        }
-        bool data_has_changed = (this->datahash != cd->DataHash());
-        sc_in->setDataChangedFlag(data_has_changed);
-        if (sc_in != NULL) {
-            sc_out->checkDatahash(sc_in->getDataChangedPointer());
-        }
-    } else {
-        return false;
-    }
+OSPRaySphereGeometry::~OSPRaySphereGeometry() {
+    //
+}
+
+bool OSPRaySphereGeometry::create() {
+    //
+}
+
+void OSPRaySphereGeometry::release() {
+
+}
+
+
+/*
+ospray::OSPRaySphereGeometry::getStructureCallback
+*/
+bool OSPRaySphereGeometry::getStructureCallback(core::Call& call) {
+    CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
+
+    this->readData(call);
+    os->addStructure(this->structureContainer);
 
     return true;
 }
+
+
 
 /*
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRaySphereGeometry::InterfaceIsDirty() {
     if (
-        this->mat_Kd.IsDirty() ||
-        this->mat_Ks.IsDirty() ||
-        this->mat_Ns.IsDirty() ||
-        this->mat_d.IsDirty() ||
-        this->mat_Tf.IsDirty() ||
+
         this->particleList.IsDirty()) {
-        this->mat_Kd.ResetDirty();
-        this->mat_Ks.ResetDirty();
-        this->mat_Ns.ResetDirty();
-        this->mat_d.ResetDirty();
-        this->mat_Tf.ResetDirty();
+
         this->particleList.ResetDirty();
         return true;
     } else {

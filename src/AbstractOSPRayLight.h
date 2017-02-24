@@ -6,7 +6,6 @@
 #pragma once
 
 #include "CallOSPRayLight.h"
-#include "ospray/ospray.h"
 #include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
@@ -46,5 +45,5 @@ private:
     core::CalleeSlot deployLightSlot;
 
 };
-}
-}
+} // namespace ospray
+} // namespace megamol
