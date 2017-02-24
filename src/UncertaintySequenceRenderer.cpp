@@ -741,7 +741,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<int>(UncertaintyDataCall::assMethod::STRIDE)][i][0];
 				for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-					if (this->strideStructThreshold[i][j] != NO_ASSIGNMENT) {
+					if (this->strideStructThreshold[i][j] != INFINITY) {
 						switch (j) {
 						case(0) : threshold = STRIDE_THRESHOLDH1;
 							min = -500.0f;
@@ -798,7 +798,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i][0];
                 for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-					if (this->dsspStructEnergy[i][j] != 0.0f) {
+					if (this->dsspStructEnergy[i][j] != INFINITY) {
 						this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
 															this->dsspStructEnergy[i][j], min, max, threshold);
 					}
@@ -1172,16 +1172,16 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
 						    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-								if (this->strideStructThreshold[mousePosResIdx][j] != NO_ASSIGNMENT) {
+								if (this->strideStructThreshold[mousePosResIdx][j] != INFINITY) {
 									switch (j) {
 										case (0) : tmpStr = "T1-Helix:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
 											break;
 										case (1) : tmpStr = "T3-Helix:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
+											tmpStr2.Format("%.3f (> T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
 											break;
 										case (2) : tmpStr = "T4-Helix:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
+											tmpStr2.Format("%.3f (> T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
 											break;
 										case (3) : tmpStr = "T1-Sheet-parallel:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
@@ -1220,7 +1220,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
 						    for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-								if (this->dsspStructEnergy[mousePosResIdx][j] != 0.0f) {
+								if (this->dsspStructEnergy[mousePosResIdx][j] != INFINITY) {
 									switch (j) {
 										case (0) : tmpStr = "Hb-E Acc.: "; break;
 										case (1) : tmpStr = "Hb-E Don.: "; break;
