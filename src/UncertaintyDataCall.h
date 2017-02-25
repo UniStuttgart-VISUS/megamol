@@ -30,15 +30,15 @@
 
 // Thresholds values for STRIDE and DSSP:
 
-// [DSSP - structure.cpp line 38: kMaxHBondEnergy]
-#define DSSP_HBENERGY        -0.5f // kcal/mol 
+// [DSSP - structure.cpp line: 38 (kMaxHBondEnergy)]
+#define DSSP_HBENERGY        -0.50f // kcal/mol 
 
-// [STRIDE - stride.c line 311ff]
-#define STRIDE_THRESHOLDH1 -230.0f
+// [STRIDE - stride.c line: 311ff]
+#define STRIDE_THRESHOLDH1 -230.00f
 #define STRIDE_THRESHOLDH3    0.12f
 #define STRIDE_THRESHOLDH4    0.06f
-#define STRIDE_THRESHOLDE1 -240.0f
-#define STRIDE_THRESHOLDE2 -310.0f
+#define STRIDE_THRESHOLDE1 -240.00f   // anti-parallel
+#define STRIDE_THRESHOLDE2 -310.00f   // parallel
 
 
 
