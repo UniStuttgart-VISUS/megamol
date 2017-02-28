@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "FloatTableColumnScaler.h"
 
+#include <limits>
+
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 
@@ -33,7 +35,7 @@ megamol::stdplugin::datatools::floattable::FloatTableColumnScaler::FloatTableCol
     scalingFactorSlot("scalingFactor", "Factor by which the selected column get scaled"),
     columnSelectorSlot("columns", "Select columns to scale separated by \";\""),
     frameID(-1),
-    datahash(MAXULONG_PTR) {
+    datahash((std::numeric_limits<size_t>::max)()) {
     this->dataInSlot.SetCompatibleCall<CallFloatTableDataDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
