@@ -17,11 +17,11 @@ OSPRaySpotLight::OSPRaySpotLight(void) :
     AbstractOSPRayLight(),
     // Distant light parameters
     // spot light parameters
-    sl_position("Light::SpotLight::Position", ""),
-    sl_direction("Light::SpotLight::Direction", ""),
-    sl_openingAngle("Light::SpotLight::openingAngle", ""),
-    sl_penumbraAngle("Light::SpotLight::penumbraAngle", ""),
-    sl_radius("Light::SpotLight::Radius", "") {
+    sl_position("Position", ""),
+    sl_direction("Direction", ""),
+    sl_openingAngle("openingAngle", ""),
+    sl_penumbraAngle("penumbraAngle", ""),
+    sl_radius("Radius", "") {
 
     // spot light
     this->sl_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
@@ -36,6 +36,8 @@ OSPRaySpotLight::OSPRaySpotLight(void) :
     this->MakeSlotAvailable(&this->sl_radius);
 
 }
+
+OSPRaySpotLight::~OSPRaySpotLight(void) {}
 
 
 void OSPRaySpotLight::readParams() {

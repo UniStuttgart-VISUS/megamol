@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "CallOSPRayLight.h"
-#include "vislib/sys/Log.h"
+#include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
 
@@ -56,8 +56,6 @@ CallOSPRayLight::CallOSPRayLight() {
 // intentionally empty
 }
 
-
-
 void CallOSPRayLight::setLightMap(OSPRayLightMap *lm) {
     this->lightMap = lm;
 }
@@ -76,19 +74,23 @@ CallOSPRayLight& CallOSPRayLight::operator=(const CallOSPRayLight& rhs) {
     return *this;
 }
 
+OSPRayLightMap* CallOSPRayLight::getLightMap() {
+    return this->lightMap;
+}
+
 void CallOSPRayLight::addLight(OSPRayLightContainer &lc) {
     if (lc.isValid) {
         if (this->lightMap != NULL) {
             this->lightMap->insert_or_assign(this, lc);
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Error: no lightMap set.");
+            throw vislib::IllegalParamException("Error: no lightMap set.", __FILE__, __LINE__);
         }
     }
 }
 
 void CallOSPRayLight::fillLightMap() {
     if (!(*this)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("Error in fillLightMap");
+        throw vislib::IllegalParamException("Error in fillLightMap", __FILE__, __LINE__);
     }
 }
 

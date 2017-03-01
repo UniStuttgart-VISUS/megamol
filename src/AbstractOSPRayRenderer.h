@@ -139,17 +139,21 @@ protected:
     // framebuffer dirtyness
     bool framebufferIsDirty;
 
+    // OSP objects
+    OSPFrameBuffer framebuffer;
+    OSPCamera camera;
+    OSPModel world;
     // device
     OSPDevice device;
-
     // renderer
     OSPRenderer renderer;
 
     // Light map
     OSPRayLightMap lightMap;
-
     // Structure map
     OSPRayStrcutrureMap structureMap;
+    // extend map
+    OSPRayExtendMap extendMap;
 
     // Module dirtyness
     bool ModuleIsDirty;

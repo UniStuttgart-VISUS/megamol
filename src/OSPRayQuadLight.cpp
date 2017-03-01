@@ -16,9 +16,9 @@ using namespace megamol::ospray;
 OSPRayQuadLight::OSPRayQuadLight(void) :
     AbstractOSPRayLight(),
     // quad light parameters
-    ql_position("Light::QuadLight::Position", ""),
-    ql_edgeOne("Light::QuadLight::Edge1", ""),
-    ql_edgeTwo("Light::QuadLight::Edge2", "") {
+    ql_position("Position", ""),
+    ql_edgeOne("Edge1", ""),
+    ql_edgeTwo("Edge2", "") {
 
     // quad light
     this->ql_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
@@ -29,6 +29,8 @@ OSPRayQuadLight::OSPRayQuadLight(void) :
     this->MakeSlotAvailable(&this->ql_edgeTwo);
 
 }
+
+OSPRayQuadLight::~OSPRayQuadLight(void) {}
 
 
 void OSPRayQuadLight::readParams() {

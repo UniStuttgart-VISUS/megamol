@@ -121,6 +121,8 @@ public:
 
     void setLightMap(OSPRayLightMap *lm);
 
+    OSPRayLightMap* getLightMap();
+
     void addLight(OSPRayLightContainer &lc);
 
     void fillLightMap();
@@ -133,9 +135,9 @@ public:
     *
     * @return A reference to this
     */
-    CallOSPRayLight& operator=(const CallOSPRayLight& rhs);
+     CallOSPRayLight& operator=(const CallOSPRayLight& rhs);
 
-public:
+private:
     OSPRayLightMap *lightMap;
 
 };

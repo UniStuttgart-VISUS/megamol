@@ -15,10 +15,10 @@ using namespace megamol::ospray;
 OSPRayMetallicPaintMaterial::OSPRayMetallicPaintMaterial(void) :
     AbstractOSPRayMaterial(),
     // METALLIC
-    metallicShadeColor("", ""),
-    metallicGlitterColor("", ""),
-    metallicGlitterSpread("", ""),
-    metallicEta("", "") {
+    metallicShadeColor("ShadeColor", ""),
+    metallicGlitterColor("GlitterColor", ""),
+    metallicGlitterSpread("GlitterSpread", ""),
+    metallicEta("Eta", "") {
 
     this->metallicShadeColor << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.5f, 0.42f, 0.35f));
     this->metallicGlitterColor << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.5f, 0.44f, 0.42f));

@@ -11,14 +11,14 @@ namespace megamol {
 namespace ospray {
 
 class OSPRaySpotLight : public AbstractOSPRayLight {
-
+public:
     /**
     * Answer the name of this module.
     *
     * @return The name of this module.
     */
     static const char *ClassName(void) {
-        return "OSPRayDistantLight";
+        return "OSPRaySpotLight";
     }
 
     /**

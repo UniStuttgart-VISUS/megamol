@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "CallOSPRayStructure.h"
-#include "vislib/sys/Log.h"
+#include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
 
@@ -19,12 +19,13 @@ OSPRayStructureContainer::~OSPRayStructureContainer() {
     //
 }
 
+OSPRayExtendContainer::OSPRayExtendContainer() :
+    isValid(false) {
+}
 
-
-
-
-
-
+OSPRayExtendContainer::~OSPRayExtendContainer() {
+    //
+}
 
 
 // #################################
@@ -56,21 +57,49 @@ void CallOSPRayStructure::setStructureMap(OSPRayStrcutrureMap *sm) {
     this->structureMap = sm;
 }
 
+OSPRayStrcutrureMap* CallOSPRayStructure::getStructureMap() {
+    return this->structureMap;
+}
+
 void CallOSPRayStructure::addStructure(OSPRayStructureContainer &sc) {
     if (sc.isValid) {
         if (this->structureMap != NULL) {
             this->structureMap->insert_or_assign(this, sc);
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Error: no stuctureMap set.");
+            throw vislib::IllegalParamException("Error: no stuctureMap set.", __FILE__, __LINE__);
         }
     }
 }
 
 void CallOSPRayStructure::fillStructureMap() {
     if (!(*this)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("Error in fillStructureMap");
+        throw vislib::IllegalParamException("Error in fillStructureMap", __FILE__, __LINE__);
     }
 }
+
+
+void CallOSPRayStructure::setExtendMap(OSPRayExtendMap *em) {
+    this->extendMap = em;
+}
+
+OSPRayExtendMap* CallOSPRayStructure::getExtendMap() {
+    return this->extendMap;
+}
+
+void CallOSPRayStructure::addExtend(OSPRayExtendContainer &ec) {
+    if (this->extendMap != NULL) {
+        this->extendMap->insert_or_assign(this, ec);
+    } else {
+        throw vislib::IllegalParamException("Error: no bounding box map set.", __FILE__, __LINE__);
+    }
+}
+
+void CallOSPRayStructure::fillExtendMap() {
+    if (!(*this)(1)) {
+        throw vislib::IllegalParamException("Error in fillExtendMap", __FILE__, __LINE__);
+    }
+}
+
 
 void CallOSPRayStructure::setTime(float time) {
     this->time = time;

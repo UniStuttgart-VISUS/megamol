@@ -50,10 +50,6 @@ OSPRayRenderer::OSPRayRenderer(void) :
     renderer = NULL;
     camera = NULL;
     world = NULL;
-    spheres = NULL;
-    pln = NULL;
-    vertexData = NULL;
-    colorData = NULL;
     ModuleIsDirty = false;
 
 
@@ -128,8 +124,6 @@ void OSPRayRenderer::release() {
     if (camera != NULL) ospRelease(camera);
     if (world != NULL) ospRelease(world);
     if (renderer != NULL) ospRelease(renderer);
-    if (spheres != NULL) ospRelease(spheres);
-    if (pln != NULL) ospRelease(pln);
     releaseTextureScreen();
 }
 
@@ -148,6 +142,10 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
 
     CallOSPRayStructure *os = this->getStructureSlot.CallAs<CallOSPRayStructure>();
+    // read data
+    os->setStructureMap(&structureMap);
+    os->setTime(cr->Time());
+    os->fillStructureMap();
     // check if data has changed
     data_has_changed = false;
     for (auto element : this->structureMap) {
@@ -184,6 +182,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         imgSize.x = cr->GetCameraParameters()->TileRect().Width();
         imgSize.y = cr->GetCameraParameters()->TileRect().Height();
         framebuffer = newFrameBuffer(imgSize, OSP_FB_RGBA8, OSP_FB_COLOR | /*OSP_FB_DEPTH |*/ OSP_FB_ACCUM);
+        ospCommit(framebuffer);
     }
 
 
@@ -223,13 +222,10 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         time = cr->Time();
         renderer_has_changed = false;
 
-        
 
         this->fillWorld();
-
-
-
         ospCommit(world);
+
 
 
         RendererSettings(renderer);
@@ -239,9 +235,11 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         if (gl != NULL) {
             this->fillLightArray();
             lightsToRender = ospNewData(this->lightArray.size(), OSP_OBJECT, lightArray.data(), 0);
+            ospCommit(lightsToRender);
             ospSetData(renderer, "lights", lightsToRender);
         }
 
+        ospSetObject(renderer, "model", world);
         ospCommit(renderer);
 
 
@@ -324,19 +322,72 @@ bool OSPRayRenderer::GetCapabilities(megamol::core::Call& call) {
 * ospray::OSPRayRenderer::GetExtents
 */
 bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
-    /*
+
     megamol::core::view::CallRender3D *cr = dynamic_cast<megamol::core::view::CallRender3D*>(&call);
     if (cr == NULL) return false;
     CallOSPRayStructure *os = this->getStructureSlot.CallAs<CallOSPRayStructure>();
     if (os == NULL) return false;
-    os->SetFrameID(static_cast<int>(cr->Time()));
-    if (!(*os)(1)) return false;
+    os->setTime(static_cast<int>(cr->Time()));
+    os->setExtendMap(&(this->extendMap));
+    os->fillExtendMap();
 
-    cr->SetTimeFramesCount(c2->FrameCount());
-    cr->AccessBoundingBoxes().Clear();
-    cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+    megamol::core::BoundingBoxes finalBox;
+    unsigned int frameCnt = 0;
+    for (auto pair : this->extendMap) {
+        auto element = pair.second;
+
+        if (frameCnt == 0) {
+            if (element.boundingBox->IsObjectSpaceBBoxValid()) {
+                finalBox.SetObjectSpaceBBox(element.boundingBox->ObjectSpaceBBox());
+            } else if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
+                finalBox.SetObjectSpaceBBox(element.boundingBox->ObjectSpaceClipBox());
+            } else {
+                finalBox.SetObjectSpaceBBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
+            }
+            if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
+                finalBox.SetObjectSpaceClipBox(element.boundingBox->ObjectSpaceClipBox());
+            } else if (element.boundingBox->IsObjectSpaceBBoxValid()) {
+                finalBox.SetObjectSpaceClipBox(element.boundingBox->ObjectSpaceBBox());
+            } else {
+                finalBox.SetObjectSpaceClipBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
+            }
+
+        } else {
+            if (element.boundingBox->IsObjectSpaceBBoxValid()) {
+                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceBBox());
+                box.Union(element.boundingBox->ObjectSpaceBBox());
+                finalBox.SetObjectSpaceBBox(box);
+            } else if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
+                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceBBox());
+                box.Union(element.boundingBox->ObjectSpaceClipBox());
+                finalBox.SetObjectSpaceBBox(box);
+            }
+            if (element.boundingBox->IsObjectSpaceClipBoxValid()) {
+                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceClipBox());
+                box.Union(element.boundingBox->ObjectSpaceClipBox());
+                finalBox.SetObjectSpaceClipBox(box);
+            } else if (element.boundingBox->IsObjectSpaceBBoxValid()) {
+                vislib::math::Cuboid<float> box(finalBox.ObjectSpaceClipBox());
+                box.Union(element.boundingBox->ObjectSpaceBBox());
+                finalBox.SetObjectSpaceClipBox(box);
+            }
+        }
+        frameCnt = vislib::math::Max(frameCnt, element.timeFramesCount);
+
+    }
+    if (frameCnt == 0) {
+        frameCnt = 1;
+        float scale = 1.0f;
+        finalBox.Clear();
+    } else {
+        float scale = 1.0f / finalBox.ObjectSpaceBBox().LongestEdge();
+        finalBox.MakeScaledWorld(scale);
+    }
+
+    cr->SetTimeFramesCount(frameCnt);
+    cr->AccessBoundingBoxes() = finalBox;
     cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
-    */
+
     return true;
 }
 

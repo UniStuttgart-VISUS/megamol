@@ -26,11 +26,13 @@ protected:
     /** Dtor. */
     virtual ~AbstractOSPRayLight(void);
 
+    AbstractOSPRayLight& operator=(const AbstractOSPRayLight &rhs);
+
     virtual bool create();
     virtual void release();
     bool getLightCallback(core::Call& call);
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    virtual bool InterfaceIsDirty() { return true; };
+    virtual void readParams() {};
     bool AbstractIsDirty();
 
     OSPRayLightContainer lightContainer;

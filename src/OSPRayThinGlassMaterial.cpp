@@ -15,9 +15,9 @@ using namespace megamol::ospray;
 OSPRayThinGlassMaterial::OSPRayThinGlassMaterial(void) :
     AbstractOSPRayMaterial(),
     // THINGLASS
-    thinglassTransmission("", ""),
-    thinglassEta("", ""),
-    thinglassThickness("", "") {
+    thinglassTransmission("Transmission", ""),
+    thinglassEta("Eta", ""),
+    thinglassThickness("Thickness", "") {
 
     this->thinglassTransmission << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->thinglassEta << new core::param::FloatParam(1.5f);

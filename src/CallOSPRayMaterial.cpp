@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "CallOSPRayMaterial.h"
-#include "vislib/sys/Log.h"
+#include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
 
@@ -68,12 +68,8 @@ OSPRayMaterialContainer::~OSPRayMaterialContainer() {
 /*
 * megamol::ospray::CallOSPRayLight::CallOSPRayLight
 */
-CallOSPRayMaterial::CallOSPRayMaterial() {
+CallOSPRayMaterial::CallOSPRayMaterial(void) {
     // intentionally empty
-}
-
-void CallOSPRayMaterial::setMaterialContainer(OSPRayMaterialContainer *mc) {
-    this->materialContainer = mc;
 }
 
 /*
@@ -83,11 +79,21 @@ CallOSPRayMaterial::~CallOSPRayMaterial(void) {
     //
 }
 
+/*
+* megamol::ospray::CallOSPRayLight::operator=
+*/
+CallOSPRayMaterial& CallOSPRayMaterial::operator=(const CallOSPRayMaterial& rhs) {
+    return *this;
+}
 
-OSPRayMaterialContainer* CallOSPRayMaterial::getMaterialParameter() {
+void CallOSPRayMaterial::setMaterialContainer(std::shared_ptr<OSPRayMaterialContainer> mc) {
+    this->materialContainer = mc;
+}
+
+std::shared_ptr<OSPRayMaterialContainer> CallOSPRayMaterial::getMaterialParameter() {
     if (!(*this)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("Error in fillMaterialContainer");
+        throw vislib::IllegalParamException("Error in fillMaterialContainer", __FILE__, __LINE__);
     }
-    return this->materialContainer;
+    return std::move(this->materialContainer);
 }
 

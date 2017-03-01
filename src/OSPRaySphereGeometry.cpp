@@ -1,5 +1,5 @@
 /*
-* OSPRayRenderer.cpp
+* OSPRaySphereGeometry.cpp
 * Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
@@ -12,9 +12,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "CallOSPRayStructure.h"
-#include "CallOSPRayMaterial.h"
 #include "vislib/sys/Log.h"
+#include "mmcore/Call.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallClipPlane.h"
@@ -36,19 +35,13 @@ typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDat
 typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
 
-
-
-
 OSPRaySphereGeometry::OSPRaySphereGeometry(void) :
-
+    AbstractOSPRayStructure(),
     getDataSlot("getdata", "Connects to the data source"),
     getTFSlot("gettransferfunction", "Connects to the transfer function module"),
     getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
-    deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure"),
-    getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure"),
-    getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial"),
 
-    particleList("General::ParticleList", "Switches between particle lists")
+    particleList("ParticleList", "Switches between particle lists")
 {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
@@ -60,52 +53,41 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void) :
     this->getClipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
-    this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0), &OSPRaySphereGeometry::getStructureCallback);
-    this->MakeSlotAvailable(&this->deployStructureSlot);
-
-    this->getStructureSlot.SetCompatibleCall<CallOSPRayStructure>();
-    this->MakeSlotAvailable(&this->getStructureSlot);
-
-    this->getMaterialSlot.SetCompatibleCall<CallOSPRayMaterial>();
-    this->MakeSlotAvailable(&this->getMaterialSlot);
-
     this->particleList << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->particleList);
 }
 
 
-bool OSPRaySphereGeometry::readData(core::Call &call) {
+bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
 
+    // read Data, calculate  shape parameters, fill data vectors
+    
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-    core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
-    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
-
-
-
-    if (cm != NULL) {
-        if (cm->getMaterialParameter()->isValid) {
-            this->structureContainer.materialContainer = cm->getMaterialParameter();
-        }
-    }
+    megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (this->datahash != cd->DataHash()) {
+    if (this->datahash != cd->DataHash() || this->time != os->getTime()) {
         this->datahash = cd->DataHash();
+        this->time = os->getTime();
         this->structureContainer.dataChanged = true;
     } else {
         return true;
     }
 
-    this->structureContainer.type = structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
-
-    if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
+    if (this->particleList.Param<core::param::IntParam>()->Value() >(cd->GetParticleListCount() - 1)) {
         this->particleList.Param<core::param::IntParam>()->SetValue(0);
     }
 
+    if (!(*cd)(1)) return false;
+    if (!(*cd)(0)) return false;
+
     core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
+
+
+    unsigned int partCount = parts.GetCount();
+    float globalRadius = parts.GetGlobalRadius();
 
     size_t vertexLength;
     size_t colorLength;
@@ -126,6 +108,7 @@ bool OSPRaySphereGeometry::readData(core::Call &call) {
     vd.reserve(parts.GetCount() * vertexLength);
 
     // Color data type check
+    colorLength = 0;
     if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
         colorLength = 4;
         //convertedColorType = OSP_FLOAT4;
@@ -208,6 +191,29 @@ bool OSPRaySphereGeometry::readData(core::Call &call) {
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
         vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
     }
+
+    // Write stuff into the structureContainer
+
+    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
+    if (cm != NULL) {
+        auto gmp = cm->getMaterialParameter();
+        if (gmp->isValid) {
+            this->structureContainer.materialContainer = cm->getMaterialParameter();
+        }
+    } else {
+        this->structureContainer.materialContainer = NULL;
+    }
+
+    this->structureContainer.type = structureTypeEnum::GEOMETRY;
+    this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
+    this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
+    this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
+    this->structureContainer.vertexLength = vertexLength;
+    this->structureContainer.colorLength = colorLength;
+    this->structureContainer.partCount = partCount;
+    this->structureContainer.globalRadius = globalRadius;
+
+    return true;
 }
 
 
@@ -225,7 +231,7 @@ void OSPRaySphereGeometry::colorTransferGray(std::vector<float> &grayArray, floa
         }
         if (transferTable == NULL && tableSize == 0) {
             for (int i = 0; i < 3; i++) {
-                rgbaArray.push_back((0.3 + scaled_gray) / 1.3);
+                rgbaArray.push_back((0.3f + scaled_gray) / 1.3f);
             }
             rgbaArray.push_back(1.0f);
         } else {
@@ -249,27 +255,12 @@ OSPRaySphereGeometry::~OSPRaySphereGeometry() {
 }
 
 bool OSPRaySphereGeometry::create() {
-    //
+    return true;
 }
 
 void OSPRaySphereGeometry::release() {
 
 }
-
-
-/*
-ospray::OSPRaySphereGeometry::getStructureCallback
-*/
-bool OSPRaySphereGeometry::getStructureCallback(core::Call& call) {
-    CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
-
-    this->readData(call);
-    os->addStructure(this->structureContainer);
-
-    return true;
-}
-
-
 
 /*
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
@@ -307,4 +298,19 @@ void OSPRaySphereGeometry::getClipData(float *clipDat, float *clipCol) {
         clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
         clipCol[3] = 1.0f;
     }
+}
+
+bool OSPRaySphereGeometry::getExtends(megamol::core::Call &call) {
+    CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
+    megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
+    
+    if (cd == NULL) return false;
+    cd->SetFrameID(os->getTime(), true);
+    if (!(*cd)(1)) return false;
+    
+    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    this->extendContainer.timeFramesCount = cd->FrameCount();
+    this->extendContainer.isValid = true;
+
+    return true;
 }

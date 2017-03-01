@@ -125,25 +125,10 @@ private:
     vislib::SmartPtr<vislib::graphics::CameraParameters> camParams;
     float time;
 
-
-
-    // OSP objects
-    OSPFrameBuffer framebuffer;
-    OSPCamera camera;
-    OSPModel world;
-    OSPGeometry spheres;
-    OSPPlane pln;
-
     osp::vec2i imgSize;
-
-    // OSPData 
-    OSPData vertexData, colorData;
 
     // OSPRay texture
     const uint32_t * fb;
-
-
-
 
     bool renderer_has_changed;
 

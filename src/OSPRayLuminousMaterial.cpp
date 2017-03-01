@@ -15,9 +15,9 @@ using namespace megamol::ospray;
 OSPRayLuminousMaterial::OSPRayLuminousMaterial(void) :
     AbstractOSPRayMaterial(),
     // LUMINOUS
-    lumColor("Material::Luminous::Color", "Color of the emitted light"),
-    lumIntensity("Material::Luminous::Intensity", "Intensity of the emitted light"),
-    lumTransparency("Material::Luminous::Transparency", "Transparency of the light source geometry") {
+    lumColor("Color", "Color of the emitted light"),
+    lumIntensity("Intensity", "Intensity of the emitted light"),
+    lumTransparency("Transparency", "Transparency of the light source geometry") {
 
     this->lumColor << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->lumIntensity << new core::param::FloatParam(1.0f);

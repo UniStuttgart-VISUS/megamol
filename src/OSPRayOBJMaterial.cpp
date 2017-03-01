@@ -16,11 +16,11 @@ OSPRayOBJMaterial::OSPRayOBJMaterial(void) :
     AbstractOSPRayMaterial(),
     // Distant light parameters
     // OBJMATERIAL
-    Kd("Material::OBJMaterial::DiffuseColor", "Diffuse color"),
-    Ks("Material::OBJMaterial::SpecularColor", "Specular color"),
-    Ns("Material::OBJMaterial::Shininess", "Phong exponent"),
-    d("Material::OBJMaterial::Opacity", "Opacity"),
-    Tf("Material::OBJMaterial::TransparencyFilterColor", "Transparency filter color") {
+    Kd("DiffuseColor", "Diffuse color"),
+    Ks("SpecularColor", "Specular color"),
+    Ns("Shininess", "Phong exponent"),
+    d("Opacity", "Opacity"),
+    Tf("TransparencyFilterColor", "Transparency filter color") {
 
     this->Kd << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.8f));
     this->Ks << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));

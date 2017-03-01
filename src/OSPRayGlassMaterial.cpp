@@ -15,11 +15,11 @@ using namespace megamol::ospray;
 OSPRayGlassMaterial::OSPRayGlassMaterial(void) :
     AbstractOSPRayMaterial(),
     // GLASS
-    glassEtaInside("", ""),
-    glassEtaOutside("", ""),
-    glassAttenuationColorInside("", ""),
-    glassAttenuationColorOutside("", ""),
-    glassAttenuationDistance("", "") {
+    glassEtaInside("EtaInside", ""),
+    glassEtaOutside("EtaOutside", ""),
+    glassAttenuationColorInside("AttenuationColorInside", ""),
+    glassAttenuationColorOutside("AttenuationColorOutside", ""),
+    glassAttenuationDistance("AttenuationDistance", "") {
 
     this->glassAttenuationColorInside << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->glassAttenuationColorOutside << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));

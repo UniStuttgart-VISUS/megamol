@@ -11,7 +11,7 @@ namespace megamol {
 namespace ospray {
 
 class OSPRayDistantLight : public AbstractOSPRayLight {
-
+public:
     /**
     * Answer the name of this module.
     *

@@ -265,6 +265,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClInclude Include="src\AbstractOSPRayLight.h" />
     <ClInclude Include="src\AbstractOSPRayMaterial.h" />
     <ClInclude Include="src\AbstractOSPRayRenderer.h" />
+    <ClInclude Include="src\AbstractOSPRayStructure.h" />
     <ClInclude Include="src\CallOSPRayLight.h" />
     <ClInclude Include="src\CallOSPRayMaterial.h" />
     <ClInclude Include="src\CallOSPRayStructure.h" />
@@ -283,17 +284,15 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClInclude Include="src\OSPRayRenderer.h" />
     <ClInclude Include="src\OSPRaySphereGeometry.h" />
     <ClInclude Include="src\OSPRaySpotLight.h" />
-    <ClInclude Include="src\OSPRayStreamLineRenderer.h" />
     <ClInclude Include="src\OSPRayThinGlassMaterial.h" />
-    <ClInclude Include="src\OSPRayTriangleMeshRenderer.h" />
     <ClInclude Include="src\OSPRayVelvetMaterial.h" />
-    <ClInclude Include="src\OSPRayVolumeRenderer.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AbstractOSPRayMaterial.cpp" />
     <ClCompile Include="src\AbstractOSPRayRenderer.cpp" />
+    <ClCompile Include="src\AbstractOSPRayStructure.cpp" />
     <ClCompile Include="src\CallOSPRayLight.cpp" />
     <ClCompile Include="src\CallOSPRayMaterial.cpp" />
     <ClCompile Include="src\CallOSPRayStructure.cpp" />
@@ -309,17 +308,14 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile Include="src\OSPRayMetalMaterial.cpp" />
     <ClCompile Include="src\OSPRayOBJMaterial.cpp" />
     <ClCompile Include="src\OSPRayPlasticMaterial.cpp" />
-    <ClCompile Include="src\OSPRayPonitLight.cpp" />
+    <ClCompile Include="src\OSPRayPointLight.cpp" />
     <ClCompile Include="src\OSPRayQuadLight.cpp" />
     <ClCompile Include="src\OSPRaySpotLight.cpp" />
-    <ClCompile Include="src\OSPRayStreamLineRenderer.cpp" />
     <ClCompile Include="src\OSPRayThinGlassMaterial.cpp" />
     <ClCompile Include="src\OSPRayVelvetMaterial.cpp" />
     <ClCompile Include="src\OSPRay_plugin.cpp" />
     <ClCompile Include="src\OSPRayRenderer.cpp" />
     <ClCompile Include="src\OSPRaySphereGeometry.cpp" />
-    <ClCompile Include="src\OSPRayTriangleMeshRenderer.cpp" />
-    <ClCompile Include="src\OSPRayVolumeRenderer.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

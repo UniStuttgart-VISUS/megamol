@@ -15,10 +15,10 @@ using namespace megamol::ospray;
 OSPRayPlasticMaterial::OSPRayPlasticMaterial(void) :
     AbstractOSPRayMaterial(),
     // PLASTIC
-    plasticPigmentColor("", ""),
-    plasticEta("", ""),
-    plasticRoughness("", ""),
-    plasticThickness("", "") {
+    plasticPigmentColor("PigmentColor", ""),
+    plasticEta("Eta", ""),
+    plasticRoughness("Roughness", ""),
+    plasticThickness("Thickness", "") {
 
     this->plasticPigmentColor << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.8f));
     this->plasticEta << new core::param::FloatParam(1.4f);

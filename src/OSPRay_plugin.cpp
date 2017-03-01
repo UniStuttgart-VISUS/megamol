@@ -34,6 +34,7 @@
 #include "OSPRayGlassMaterial.h"
 #include "OSPRayThinGlassMaterial.h"
 #include "OSPRayPlasticMaterial.h"
+#include "CallOSPRayMaterial.h"
 
 
 
@@ -89,6 +90,7 @@ namespace {
 
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayLight>();
                this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayStructure>();
+               this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayMaterial>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

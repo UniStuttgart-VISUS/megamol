@@ -16,9 +16,9 @@ using namespace megamol::ospray;
 OSPRayHDRILight::OSPRayHDRILight(void) :
     AbstractOSPRayLight(),
     // hdri light parameteres
-    hdri_up("Light::HDRILight::up", ""),
-    hdri_direction("Light::HDRILight::Direction", ""),
-    hdri_evnfile("Light::HDRILight::EvironmentFile", "") {
+    hdri_up("up", ""),
+    hdri_direction("Direction", ""),
+    hdri_evnfile("EvironmentFile", "") {
 
     // HDRI light
     this->hdri_up << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
@@ -29,6 +29,8 @@ OSPRayHDRILight::OSPRayHDRILight(void) :
     this->MakeSlotAvailable(&this->hdri_evnfile);
 
 }
+
+OSPRayHDRILight::~OSPRayHDRILight(void) {}
 
 
 void OSPRayHDRILight::readParams() {

@@ -15,10 +15,10 @@ using namespace megamol::ospray;
 OSPRayVelvetMaterial::OSPRayVelvetMaterial(void) :
     AbstractOSPRayMaterial(),
     // VELVET
-    velvetReflectance("Material::Velvet::", "Reflectance"),
-    velvetBackScattering("Material::Velvet::", "BackScattering"),
-    velvetHorizonScatteringColor("Material::Velvet::", "Scattering color"),
-    velvetHorizonScatteringFallOff("Material::Velvet::", "Scattering fall off") {
+    velvetReflectance("Reflectance", "Reflectance"),
+    velvetBackScattering("BackScattering", "BackScattering"),
+    velvetHorizonScatteringColor("HorizonScatteringColor", "Scattering color"),
+    velvetHorizonScatteringFallOff("HorizonScatteringFallOff", "Scattering fall off") {
 
     this->velvetReflectance << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.4f, 0.0f, 0.0f));
     this->velvetHorizonScatteringColor << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.75f, 0.1f, 0.1f));

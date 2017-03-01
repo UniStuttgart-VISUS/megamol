@@ -7,7 +7,7 @@
 
 #include "CallOSPRayMaterial.h"
 #include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
 
@@ -27,13 +27,13 @@ protected:
     virtual bool create();
     virtual void release();
     bool getMaterialCallback(core::Call& call);
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    virtual bool InterfaceIsDirty() { return true; };
+    virtual void readParams() {};
 
     OSPRayMaterialContainer materialContainer;
 
 private:
-    core::CallerSlot getMaterialSlot;
+    core::CalleeSlot deployMaterialSlot;
 
 };
 

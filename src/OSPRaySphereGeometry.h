@@ -5,16 +5,14 @@
 */
 #pragma once
 
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "CallOSPRayStructure.h"
+#include "AbstractOSPRayStructure.h"
 
 namespace megamol {
 namespace ospray {
 
-class OSPRaySphereGeometry : core::Module {
+class OSPRaySphereGeometry : public AbstractOSPRayStructure {
 
 public:
 
@@ -64,9 +62,10 @@ protected:
     virtual bool create();
     virtual void release();
 
-    bool readData(core::Call &call);
+    virtual bool readData(core::Call &call);
+    virtual bool getExtends(core::Call &call);
 
-    bool getStructureCallback(core::Call& call);
+
     bool InterfaceIsDirty();
     void OSPRaySphereGeometry::getClipData(float *clipDat, float *clipCol);
 
@@ -81,14 +80,7 @@ protected:
     /** The call for Transfer function */
     core::CallerSlot getTFSlot;
 
-    /** The callee for Structure */
-    core::CalleeSlot deployStructureSlot;
 
-    /** The call for additional structures */
-    core::CallerSlot getStructureSlot;
-
-    /** The call for materials */
-    core::CallerSlot getMaterialSlot;
 
 private:
 
@@ -100,11 +92,7 @@ private:
 
     // color transfer data
     unsigned int tex_size;
-    SIZE_T datahash;
 
-    OSPRayStructureContainer structureContainer;
-
-    OSPRayMaterialContainer* materialContainer;
 
 };
 

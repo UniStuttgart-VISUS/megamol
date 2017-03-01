@@ -126,16 +126,25 @@ public:
     }
 
     /** Ctor. */
-    CallOSPRayMaterial();
+    CallOSPRayMaterial(void);
 
     /** Dtor. */
     virtual ~CallOSPRayMaterial(void);
 
-    void setMaterialContainer(OSPRayMaterialContainer *mc);
-    OSPRayMaterialContainer* getMaterialParameter();
+    void setMaterialContainer(std::shared_ptr<OSPRayMaterialContainer> mc);
+    std::shared_ptr<OSPRayMaterialContainer> getMaterialParameter();
+
+    /**
+    * Assignment operator
+    *
+    * @param rhs The right hand side operand
+    *
+    * @return A reference to this
+    */
+    CallOSPRayMaterial& operator=(const CallOSPRayMaterial& rhs);
 
 private:
-    OSPRayMaterialContainer *materialContainer;
+    std::shared_ptr<OSPRayMaterialContainer> materialContainer;
 
 };
 typedef core::factories::CallAutoDescription<CallOSPRayMaterial> CallOSPRayMaterialDescription;

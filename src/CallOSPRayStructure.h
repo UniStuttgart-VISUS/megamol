@@ -8,6 +8,7 @@
 #pragma once
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/Call.h"
+#include "mmcore/BoundingBoxes.h"
 #include <map>
 #include <vector>
 #include "CallOSPRayMaterial.h"
@@ -40,12 +41,16 @@ enum volumeTypeEnum {
 class OSPRayStructureContainer {
 public:
     structureTypeEnum type;
-    OSPRayMaterialContainer* materialContainer;
+    std::shared_ptr<OSPRayMaterialContainer> materialContainer;
     geometryTypeEnum geometryType;
     volumeTypeEnum volumeType;
 
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
+    unsigned int vertexLength;
+    unsigned int colorLength;
+    unsigned int partCount;
+    float globalRadius;
 
     bool dataChanged;
     bool isValid;
@@ -55,12 +60,23 @@ public:
 
 };
 
+class OSPRayExtendContainer {
+public:
+    std::shared_ptr<megamol::core::BoundingBoxes> boundingBox;
+    unsigned int timeFramesCount;
+    bool isValid;
+
+    OSPRayExtendContainer();
+    ~OSPRayExtendContainer();
+};
+
 
 class CallOSPRayStructure;
 typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer> OSPRayStrcutrureMap;
+typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer> OSPRayExtendMap;
 
 
-class CallOSPRayStructure : public core::Call {
+class CallOSPRayStructure : public megamol::core::Call {
 public:
 
     /**
@@ -87,7 +103,7 @@ public:
     * @return The number of functions used for this call.
     */
     static unsigned int FunctionCount(void) {
-        return 1;
+        return 2;
     }
 
     /**
@@ -100,6 +116,7 @@ public:
     static const char * FunctionName(unsigned int idx) {
         switch (idx) {
         case 0: return "GetDataCall";
+        case 1: return "GetExtendsCall";
         default: return NULL;
         }
     }
@@ -120,18 +137,23 @@ public:
     CallOSPRayStructure& operator=(const CallOSPRayStructure& rhs);
 
     void setStructureMap(OSPRayStrcutrureMap*sm);
+    OSPRayStrcutrureMap* getStructureMap();
     void addStructure(OSPRayStructureContainer &sc);
     void fillStructureMap();
 
-    OSPRayStrcutrureMap *structureMap;
+    void setExtendMap(OSPRayExtendMap*em);
+    OSPRayExtendMap* getExtendMap();
+    void addExtend(OSPRayExtendContainer &ec);
+    void fillExtendMap();
 
     void setTime(float time);
     float getTime();
 
 
 private:
-
+    OSPRayStrcutrureMap *structureMap;
     float time;
+    OSPRayExtendMap* extendMap;
 
 };
 typedef core::factories::CallAutoDescription<CallOSPRayStructure> CallOSPRayStructureDescription;

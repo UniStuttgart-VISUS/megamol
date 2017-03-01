@@ -25,8 +25,8 @@ AbstractOSPRayLight::AbstractOSPRayLight(void) :
     getLightSlot("getLightSlot", "Connects to the OSPRayRenderer or another OSPRayLight"),
     deployLightSlot("deployLightSlot", "Connects to the OSPRayRenderer or another OSPRayLight"),
     // General light parameters
-    lightColor("Light::General::LightColor", "Sets the color of the Light"),
-    lightIntensity("Light::General::LightIntensity", "Intensity of the Light")
+    lightColor("Color", "Sets the color of the Light"),
+    lightIntensity("Intensity", "Intensity of the Light")
 {
     this->getLightSlot.SetCompatibleCall<CallOSPRayLightDescription>();
     this->MakeSlotAvailable(&this->getLightSlot);
@@ -60,14 +60,13 @@ bool AbstractOSPRayLight::getLightCallback(megamol::core::Call& call) {
     CallOSPRayLight *lc_out = this->getLightSlot.CallAs<CallOSPRayLight>();
 
     if (lc_in != NULL) {
-        if (InterfaceIsDirty()) {
-            this->readParams();
-            lc_in->addLight(lightContainer);
-        }
+        this->readParams();
+        lc_in->addLight(lightContainer);
     }
 
     if (lc_out != NULL) {
-        lc_out=lc_in;
+        //lc_out=lc_in;
+        lc_out->setLightMap(lc_in->getLightMap());
         lc_out->fillLightMap();
     }
 

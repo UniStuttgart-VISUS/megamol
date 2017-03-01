@@ -11,7 +11,7 @@ namespace megamol {
 namespace ospray {
 
 class OSPRayPlasticMaterial : public AbstractOSPRayMaterial {
-
+public:
     /**
     * Answer the name of this module.
     *

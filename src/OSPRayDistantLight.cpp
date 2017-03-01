@@ -16,9 +16,9 @@ using namespace megamol::ospray;
 OSPRayDistantLight::OSPRayDistantLight(void) :
     AbstractOSPRayLight(),
     // Distant light parameters
-    dl_direction("Light::DistantLight::LightDirection", "Direction of the Light"),
-    dl_angularDiameter("Light::DistantLight::AngularDiameter", "If greater than zero results in soft shadows"),
-    dl_eye_direction("Light::DistantLight::EyeDirection", "Sets the light direction as view direction") {
+    dl_direction("Direction", "Direction of the Light"),
+    dl_angularDiameter("AngularDiameter", "If greater than zero results in soft shadows"),
+    dl_eye_direction("EyeDirection", "Sets the light direction as view direction") {
 
     // distant light
     this->dl_angularDiameter << new core::param::FloatParam(0.0f);
@@ -29,6 +29,8 @@ OSPRayDistantLight::OSPRayDistantLight(void) :
     this->MakeSlotAvailable(&this->dl_eye_direction);
 
 }
+
+OSPRayDistantLight::~OSPRayDistantLight(void) {}
 
 
 void OSPRayDistantLight::readParams() {

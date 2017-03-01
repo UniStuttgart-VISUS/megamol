@@ -15,7 +15,7 @@ using namespace megamol::ospray;
 OSPRayMatteMaterial::OSPRayMatteMaterial(void) :
     AbstractOSPRayMaterial(),
     // MATTE
-    matteReflectance("", "") {
+    matteReflectance("Reflectance", "") {
 
     this->matteReflectance << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->MakeSlotAvailable(&this->matteReflectance);

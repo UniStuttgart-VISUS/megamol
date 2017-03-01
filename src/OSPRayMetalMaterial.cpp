@@ -15,10 +15,10 @@ using namespace megamol::ospray;
 OSPRayMetalMaterial::OSPRayMetalMaterial(void) :
     AbstractOSPRayMaterial(),
     // METAL
-    metalReflectance("", ""),
-    metalEta("", ""),
-    metalK("", ""),
-    metalRoughness("", "") {
+    metalReflectance("Reflectance", ""),
+    metalEta("Eta", ""),
+    metalK("K", ""),
+    metalRoughness("Roughness", "") {
 
     this->metalReflectance << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 1.0f, 1.0f));
     this->metalEta << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.69700277f, 0.879832864f, 0.5301736f));
