@@ -14,7 +14,7 @@
 #include <array>
 #include <iostream>
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "debug.h"
+//#include "debug.h"
 
 //#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
@@ -344,27 +344,27 @@ bool NGParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl:
 }
 
 bool NGParallelCoordinatesRenderer2D::create(void) {
-    std::array< zen::gl::debug_action, 1 > actions =
-    {
-        //zen::gl::make_debug_action_ostream(std::cerr)
-        zen::gl::make_debug_action_Log(vislib::sys::Log::DefaultLog)
-        //, zen::gl::debug_action_throw
-    };
+    //std::array< zen::gl::debug_action, 1 > actions =
+    //{
+    //    //zen::gl::make_debug_action_ostream(std::cerr)
+    //    zen::gl::make_debug_action_Log(vislib::sys::Log::DefaultLog)
+    //    //, zen::gl::debug_action_throw
+    //};
 
-    zen::gl::enable_debug_callback(nullptr, true, std::begin(actions), std::end(actions));
-    zen::gl::enable_all_debug_messages();
+    //zen::gl::enable_debug_callback(nullptr, true, std::begin(actions), std::end(actions));
+    //zen::gl::enable_all_debug_messages();
 
-    zen::gl::ignore_debug_messages(
-    {
-        //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 1282 },
-        //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 131204 },
-        // Buffer object ... will use VIDEO memory as the source for buffer object operations.
-        zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131185 },
-        zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131188 },
-        zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131184 }
-        // Buffer performance warning: Buffer object ... is being copied / moved from VIDEO memory to HOST memory.
-        //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, 131186 },
-    });
+    //zen::gl::ignore_debug_messages(
+    //{
+    //    //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 1282 },
+    //    //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, 131204 },
+    //    // Buffer object ... will use VIDEO memory as the source for buffer object operations.
+    //    zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131185 },
+    //    zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131188 },
+    //    zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, 131184 }
+    //    // Buffer performance warning: Buffer object ... is being copied / moved from VIDEO memory to HOST memory.
+    //    //zen::gl::debug_message_spec{ GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_PERFORMANCE, 131186 },
+    //});
 
     glGenBuffers(1, &dataBuffer);
     glGenBuffers(1, &flagsBuffer);
