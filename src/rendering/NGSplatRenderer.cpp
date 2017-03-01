@@ -140,7 +140,7 @@ bool NGSplatRenderer::makeColorString(MultiParticleDataCall::Particles &parts, s
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
             declaration = "";
-            code = "    theColor = gl_Color;\n";
+            code = "    theColor = vec4(1.0);\n";
             //glColor3ubv(parts.GetGlobalColour());
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -499,7 +499,15 @@ bool NGSplatRenderer::Render(Call& call) {
     
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+
+    //glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+#if 1
+    // maybe for blending against white, remove pre-mult alpha and use this:
+    // @gl.blendFuncSeparate @gl.SRC_ALPHA, @gl.ONE_MINUS_SRC_ALPHA, @gl.ONE, @gl.ONE_MINUS_SRC_ALPHA
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+#else
+    glBlendFunc(GL_ONE, GL_ONE);
+#endif
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glEnable(GL_POINT_SPRITE);

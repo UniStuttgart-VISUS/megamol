@@ -20,6 +20,13 @@
 #include <inttypes.h>
 #include <stdint.h>
 
+#include <chrono>
+#include <sstream>
+#include <iostream>
+#include <iterator>
+
+//#define CHRONOTIMING
+
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
 #define MAP_BUFFER_LOCALLY
@@ -200,7 +207,7 @@ bool NGSphereRenderer::makeColorString(MultiParticleDataCall::Particles &parts, 
     switch (parts.GetColourDataType()) {
         case MultiParticleDataCall::Particles::COLDATA_NONE:
             declaration = "";
-            code = "    theColor = gl_Color;\n";
+            code = "    theColor = vec4(1.0);\n";
             //glColor3ubv(parts.GetGlobalColour());
             break;
         case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -615,6 +622,11 @@ bool NGSphereRenderer::Render(Call& call) {
     modelViewProjMatrixTransp.Transpose();
     // end suck
 
+#ifdef CHRONOTIMING
+    std::vector<std::chrono::steady_clock::time_point> deltas;
+    std::chrono::steady_clock::time_point before, after;
+#endif
+
     //currBuf = 0;
     for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
         MultiParticleDataCall::Particles &parts = c2->AccessParticles(i);
@@ -690,7 +702,15 @@ bool NGSphereRenderer::Render(Call& call) {
                         //currCol = currCol == 0 ? currVert : currCol;
                         const char *whence = currVert < currCol ? currVert : currCol;
                         UINT64 vertsThisTime = vislib::math::Min(parts.GetCount() - vertCounter, numVerts);
+
+#ifdef CHRONOTIMING
+                        before = std::chrono::high_resolution_clock::now();
+#endif
                         this->waitSignal(fences[currBuf]);
+#ifdef CHRONOTIMING
+                        after = std::chrono::high_resolution_clock::now();
+                        deltas.push_back(static_cast<std::chrono::steady_clock::time_point>(after - before));
+#endif
                         //vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "memcopying %u bytes from %016" PRIxPTR " to %016" PRIxPTR "\n", vertsThisTime * vertStride, whence, mem);
                         memcpy(mem, whence, vertsThisTime * vertStride);
                         glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime * vertStride);
@@ -721,6 +741,13 @@ bool NGSphereRenderer::Render(Call& call) {
         //glDisableVertexAttribArrayARB(colIdxAttribLoc);
         glDisable(GL_TEXTURE_1D);
         newShader->Disable();
+#ifdef CHRONOTIMING
+        printf("waitSignal times:\n");
+        for (auto d : deltas) {
+            printf("%u, ", d);
+        }
+        printf("\n");
+#endif
     }
 
     c2->Unlock();

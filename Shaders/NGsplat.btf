@@ -30,23 +30,25 @@ uniform int instanceOffset;
 uniform int attenuateSubpixel;
 
 uniform vec4 inConsts1;
-attribute float colIdx;
+in float colIdx;
 uniform sampler1D colTab;
 
-varying vec4 objPos;
-varying vec4 camPos;
+out vec4 objPos;
+out vec4 camPos;
 //varying vec4 lightPos;
-varying float squarRad;
-varying float rad;
-varying float effectiveDiameter;
+out float squarRad;
+out float rad;
+out float effectiveDiameter;
 
 #ifdef DEFERRED_SHADING
-varying float pointSize;
+out float pointSize;
 #endif
 
 #ifdef RETICLE
-varying vec2 centerFragment;
+out vec2 centerFragment;
 #endif // RETICLE
+
+out vec4 vsColor;
 
 #define CONSTRAD inConsts1.x
 #define MIN_COLV inConsts1.y
@@ -72,7 +74,7 @@ void main(void) {
     //rad = 1.0;
     float cid = MAX_COLV - MIN_COLV;
     if (cid < 0.000001) {
-        gl_FrontColor = theColor;
+        vsColor = theColor;
     } else {
         cid = (theColIdx - MIN_COLV) / cid;
         cid = clamp(cid, 0.0, 1.0);
@@ -80,7 +82,7 @@ void main(void) {
         cid *= (1.0 - 1.0 / COLTAB_SIZE);
         cid += 0.5 / COLTAB_SIZE;
         
-        gl_FrontColor = texture(colTab, cid);
+        vsColor = texture(colTab, cid);
     }
 
     rad *= scaling;
@@ -209,7 +211,7 @@ void main(void) {
     </shader>
 
     <shader name="fragment">
-        <snippet type="version">120</snippet>
+        <snippet type="version">140</snippet>
         <snippet name="common::defines"/>
         <snippet name="common::lighting::simple"/>
         <snippet name="body1" type="string">
@@ -226,29 +228,38 @@ uniform float alphaScaling;
 
 uniform vec4 viewAttr;
 
-FLACH varying vec4 objPos;
-FLACH varying vec4 camPos;
-//FLACH varying vec4 lightPos;
-FLACH varying float squarRad;
-FLACH varying float rad;
-FLACH varying float effectiveDiameter;
+FLACH in vec4 objPos;
+FLACH in vec4 camPos;
+//FLACH in vec4 lightPos;
+FLACH in float squarRad;
+FLACH in float rad;
+FLACH in float effectiveDiameter;
 
 #ifdef RETICLE
-FLACH varying vec2 centerFragment;
+FLACH in vec2 centerFragment;
 #endif // RETICLE
+
+in vec4 vsColor;
+out vec4 outColor;
 
 void main(void) {
 
     //gl_FragColor = vec4((gl_PointCoord.xy - vec2(0.5)) * vec2(2.0), 0.0, 1.0);
     //gl_FragColor = vec4(gl_PointCoord.xy, 0.5, 1.0);
-    //gl_FragColor = gl_Color;
+    //gl_FragColor = vsColor;
     vec2 dist = gl_PointCoord.xy - vec2(0.5);
     float d = sqrt(dot(dist, dist));
     float alpha = 0.5-d;
     alpha *= effectiveDiameter * effectiveDiameter;
     alpha *= alphaScaling;
-    gl_FragColor = vec4(gl_Color.rgb, alpha);
-    //gl_FragColor = vec4(gl_Color.rgb, 1.0);
+    //alpha = 0.5;
+#if 1
+    // blend against white!
+    outColor = vec4(vsColor.rgb, alpha);
+#else
+    outColor = vec4(vsColor.rgb * alpha, alpha);
+#endif
+    //gl_FragColor = vec4(vsColor.rgb, 1.0);
 }
 ]]>
         </snippet>
