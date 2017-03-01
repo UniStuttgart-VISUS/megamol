@@ -105,6 +105,9 @@
     <ClCompile Include="src\utility\HotFixFileName.cpp">
       <Filter>utility\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\utility\KHR.cpp">
+      <Filter>utility\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CoreHandle.h">
@@ -183,6 +186,9 @@
       <Filter>utility\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\utility\HotFixFileName.h">
+      <Filter>utility\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility\KHR.h">
       <Filter>utility\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

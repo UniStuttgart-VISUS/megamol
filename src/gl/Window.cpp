@@ -334,8 +334,8 @@ void gl::Window::glfw_onMouseWheel_func(GLFWwindow* wnd, double x, double y) {
 
 void gl::Window::on_resize(int w, int h) {
     ::glfwMakeContextCurrent(hWnd);
-    ::glViewport(0, 0, w, h);
     if ((w > 0) && (h > 0)) {
+        ::glViewport(0, 0, w, h);
         ::mmcResizeView(hView, w, h);
         for (std::shared_ptr<AbstractUILayer> uil : uiLayers) {
             // we inform even disabled layers, since we would need to know and update as soon as they get enabled.

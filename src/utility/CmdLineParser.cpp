@@ -69,6 +69,8 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
         ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("Switch"), _T("'True' forces vsync enable, 'False' forces vsync disable"))),
     showGUI(0, _T("gui"), _T("Option to de-/activate the gui layer"), ParserOption::FLAG_UNIQUE,
         ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("gui"), _T("'True' activates the gui, 'False' deactivates the gui"))),
+    useKHR(0, _T("KHR"), _T("Option to de-/activate the KHR debugger"), ParserOption::FLAG_UNIQUE,
+    ParserValueDesc::ValueList(ParserOption::BOOL_VALUE, _T("gui"), _T("'True' activates the gui, 'False' deactivates the gui"))),
     quadBuffer(0, _T("quadbuffer"), _T("Enables OpenGL Quad-Buffer support, if the viewer is started")),
     quickstart(_T('q'), _T("quickstart"), _T("(DEPRECATED!) Performs a quickstart for the specified data set"), ParserOption::FLAG_NULL,
         ParserValueDesc::ValueList(ParserOption::STRING_VALUE, _T("file"), _T("Path to the data file to quickstart"))),
@@ -100,6 +102,7 @@ megamol::console::utility::CmdLineParser::CmdLineParser(void)
     this->parser.AddOption(&this->forceViewer);
     this->parser.AddOption(&this->setVSync);
     this->parser.AddOption(&this->showGUI);
+    this->parser.AddOption(&this->useKHR);
     this->parser.AddOption(&this->quadBuffer);
 
     this->parser.AddOption(&this->projectFile);

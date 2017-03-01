@@ -47,6 +47,15 @@ namespace utility {
      */
     vislib::math::Ternary ShowGUI(void *hCore);
 
+    /**
+    * Checks the configuration if the KHR debugger should be enabled or disabled
+    *
+    * @return 0 if KHR state is default
+    *         true if KHR should be active
+    *         false if KHR should be not active
+    */
+    vislib::math::Ternary UseKHRDebug(void *hCore);
+
 } /* end namespace utility */
 } /* end namespace console */
 } /* end namespace megamol */

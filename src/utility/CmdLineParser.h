@@ -343,6 +343,21 @@ namespace utility {
         }
 
         /**
+        * Answer if the KHR debugging should be activated
+        *
+        * @return 'True' if the KHR should be used, false if not
+        */
+        inline bool UseKHRDebug(void) const {
+            ParserArgument *arg = this->useKHR.GetFirstOccurrence();
+            try {
+                return ((arg != NULL) && arg->GetValueBool());
+            }
+            catch (...) {
+            }
+            return false;
+        }
+
+        /**
          * Answer if opengl quad buffers should be requested.
          *
          * @return true if opengl quad buffers should be requested.
@@ -497,6 +512,9 @@ namespace utility {
 
         /** Parser option to de-/activate the gui layer */
         ParserOption showGUI;
+
+        /** Parser option to de-/activate KHR debugging */
+        ParserOption useKHR;
 
         /** Flag to request quad-buffer support */
         ParserOption quadBuffer;

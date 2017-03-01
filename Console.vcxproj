@@ -280,6 +280,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <ClCompile Include="src\utility\ConfigHelper.cpp" />
     <ClCompile Include="src\utility\HotFixes.cpp" />
     <ClCompile Include="src\utility\HotFixFileName.cpp" />
+    <ClCompile Include="src\utility\KHR.cpp" />
     <ClCompile Include="src\utility\ParamFileManager.cpp" />
     <ClCompile Include="src\utility\WindowsUtils.cpp" />
     <ClCompile Include="src\ViewMouseUILayer.cpp" />
@@ -305,6 +306,7 @@ perl "$(ProjectDir)\VersionInfo.pl" "$(ProjectDir)\."
     <ClInclude Include="src\utility\ConfigHelper.h" />
     <ClInclude Include="src\utility\HotFixes.h" />
     <ClInclude Include="src\utility\HotFixFileName.h" />
+    <ClInclude Include="src\utility\KHR.h" />
     <ClInclude Include="src\utility\ParamFileManager.h" />
     <ClInclude Include="src\utility\WindowsUtils.h" />
     <ClInclude Include="src\version.gen.h" />

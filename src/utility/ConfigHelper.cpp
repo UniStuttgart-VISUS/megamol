@@ -165,3 +165,7 @@ vislib::math::Ternary utility::VSync(void *hCore) {
 vislib::math::Ternary utility::ShowGUI(void *hCore) {
     return boolCfgVal(hCore, "consolegui");
 }
+
+vislib::math::Ternary utility::UseKHRDebug(void *hCore) {
+    return boolCfgVal(hCore, "useKHRdebug");
+}

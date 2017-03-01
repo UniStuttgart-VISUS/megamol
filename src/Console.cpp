@@ -375,6 +375,12 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
         }
     }
 
+    if (parser->UseKHRDebug()) {
+        if (!::mmcSetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("useKHRdebug"), parser->UseKHRDebug() ? _T("true") : _T("false"))) {
+            vislib::sys::Log::DefaultLog.WriteWarn("Failed to set KHR debug");
+        }
+    }
+
     // Quickstarts
     // warn on deprecated quickstart arguments
     vislib::SingleLinkedList<vislib::TString> quickstarts;

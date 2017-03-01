@@ -23,6 +23,7 @@
 #endif /* HAS_ANTTWEAKBAR */
 #include "utility/HotFixes.h"
 #include "utility/HotFixFileName.h"
+#include "utility/KHR.h"
 
 const char* const megamol::console::WindowManager::TitlePrefix = "MegaMol\xE2\x84\xA2 - ";
 const int megamol::console::WindowManager::TitlePrefixLength = 13;
@@ -166,6 +167,22 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
         vislib::sys::Log::DefaultLog.WriteError("Unable to create window");
         return false;
     }
+
+    // enable KHR debug
+    bool activateKHR = false;
+    ::mmcValueType khrDataType = MMC_TYPE_VOIDP;
+    const void *khrData = ::mmcGetConfigurationValue(hCore, MMC_CFGID_VARIABLE, _T("useKHRdebug"), &khrDataType);
+    if (khrData != nullptr) {
+        try {
+            if (khrDataType == MMC_TYPE_CSTR) {
+                activateKHR = vislib::CharTraitsA::ParseBool(static_cast<const char*>(khrData));
+            } else if (khrDataType == MMC_TYPE_WSTR) {
+                activateKHR = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(khrData));
+            }
+        }
+        catch (...) {}
+    }
+    if (activateKHR) megamol::console::utility::KHR::startDebug();
 
     bool vsync = false;
     ::mmcValueType vsyncDataType = MMC_TYPE_VOIDP;
