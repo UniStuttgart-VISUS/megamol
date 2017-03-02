@@ -57,6 +57,7 @@ public:
     std::vector<float> hdri_direction;
     vislib::TString hdri_evnfile;
     bool isValid;
+    bool dataChanged;
 
 
     OSPRayLightContainer::OSPRayLightContainer();
@@ -120,8 +121,6 @@ public:
     virtual ~CallOSPRayLight(void);
 
     void setLightMap(OSPRayLightMap *lm);
-
-    OSPRayLightMap* getLightMap();
 
     void addLight(OSPRayLightContainer &lc);
 

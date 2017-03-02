@@ -50,6 +50,9 @@ CallOSPRayStructure::~CallOSPRayStructure(void) {
 * megamol::ospray::CallOSPRayLight::operator=
 */
 CallOSPRayStructure& CallOSPRayStructure::operator=(const CallOSPRayStructure& rhs) {
+    this->structureMap = rhs.structureMap;
+    this->time = rhs.time;
+    this->extendMap = rhs.extendMap;
     return *this;
 }
 
@@ -57,9 +60,6 @@ void CallOSPRayStructure::setStructureMap(OSPRayStrcutrureMap *sm) {
     this->structureMap = sm;
 }
 
-OSPRayStrcutrureMap* CallOSPRayStructure::getStructureMap() {
-    return this->structureMap;
-}
 
 void CallOSPRayStructure::addStructure(OSPRayStructureContainer &sc) {
     if (sc.isValid) {
@@ -80,10 +80,6 @@ void CallOSPRayStructure::fillStructureMap() {
 
 void CallOSPRayStructure::setExtendMap(OSPRayExtendMap *em) {
     this->extendMap = em;
-}
-
-OSPRayExtendMap* CallOSPRayStructure::getExtendMap() {
-    return this->extendMap;
 }
 
 void CallOSPRayStructure::addExtend(OSPRayExtendContainer &ec) {

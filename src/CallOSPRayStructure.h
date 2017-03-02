@@ -137,12 +137,10 @@ public:
     CallOSPRayStructure& operator=(const CallOSPRayStructure& rhs);
 
     void setStructureMap(OSPRayStrcutrureMap*sm);
-    OSPRayStrcutrureMap* getStructureMap();
     void addStructure(OSPRayStructureContainer &sc);
     void fillStructureMap();
 
     void setExtendMap(OSPRayExtendMap*em);
-    OSPRayExtendMap* getExtendMap();
     void addExtend(OSPRayExtendContainer &ec);
     void fillExtendMap();
 

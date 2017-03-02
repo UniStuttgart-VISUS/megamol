@@ -68,7 +68,7 @@ OSPRayMaterialContainer::~OSPRayMaterialContainer() {
 /*
 * megamol::ospray::CallOSPRayLight::CallOSPRayLight
 */
-CallOSPRayMaterial::CallOSPRayMaterial(void) {
+CallOSPRayMaterial::CallOSPRayMaterial(void) : isDirty(false) {
     // intentionally empty
 }
 
@@ -97,3 +97,14 @@ std::shared_ptr<OSPRayMaterialContainer> CallOSPRayMaterial::getMaterialParamete
     return std::move(this->materialContainer);
 }
 
+bool CallOSPRayMaterial::InterfaceIsDirty() {
+    if (this->isDirty) {
+        this->isDirty = false;
+        return true;
+    }
+    return false;
+}
+
+void CallOSPRayMaterial::setDirty() {
+    this->isDirty = true;
+}

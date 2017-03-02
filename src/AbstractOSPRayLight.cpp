@@ -28,6 +28,9 @@ AbstractOSPRayLight::AbstractOSPRayLight(void) :
     lightColor("Color", "Sets the color of the Light"),
     lightIntensity("Intensity", "Intensity of the Light")
 {
+
+    this->lightContainer.isValid = true;
+
     this->getLightSlot.SetCompatibleCall<CallOSPRayLightDescription>();
     this->MakeSlotAvailable(&this->getLightSlot);
 
@@ -42,16 +45,18 @@ AbstractOSPRayLight::AbstractOSPRayLight(void) :
 }
 
 AbstractOSPRayLight::~AbstractOSPRayLight(void) {
-    AbstractOSPRayLight::release();
+    lightContainer.isValid = false;
+    this->release();
+    this->Release();
 }
 
 bool AbstractOSPRayLight::create() {
-    this->lightContainer.isValid = true;
+    
     return true;
 }
 
 void AbstractOSPRayLight::release() {
-    lightContainer.isValid = false;
+
 }
 
 
@@ -59,15 +64,19 @@ bool AbstractOSPRayLight::getLightCallback(megamol::core::Call& call) {
     CallOSPRayLight *lc_in = dynamic_cast<CallOSPRayLight*>(&call);
     CallOSPRayLight *lc_out = this->getLightSlot.CallAs<CallOSPRayLight>();
 
+    this->lightContainer.dataChanged = false;
+    if (this->InterfaceIsDirty()) {
+        this->lightContainer.dataChanged = true;
+    }
     if (lc_in != NULL) {
         this->readParams();
         lc_in->addLight(lightContainer);
     }
 
     if (lc_out != NULL) {
-        //lc_out=lc_in;
-        lc_out->setLightMap(lc_in->getLightMap());
-        lc_out->fillLightMap();
+        *lc_out=*lc_in;
+        //lc_out->fillLightMap();
+        if (!(*lc_out)(0)) return false;
     }
 
     return true;

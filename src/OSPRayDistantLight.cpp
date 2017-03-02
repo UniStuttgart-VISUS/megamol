@@ -48,7 +48,8 @@ bool OSPRayDistantLight::InterfaceIsDirty() {
     if (this->AbstractIsDirty() ||
         this->dl_angularDiameter.IsDirty() ||
         this->dl_direction.IsDirty() ||
-        this->dl_eye_direction.IsDirty()) {
+        this->dl_eye_direction.IsDirty()
+        ) {
         this->dl_angularDiameter.ResetDirty();
         this->dl_direction.ResetDirty();
         this->dl_eye_direction.ResetDirty();

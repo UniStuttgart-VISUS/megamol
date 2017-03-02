@@ -155,10 +155,6 @@ protected:
     // extend map
     OSPRayExtendMap extendMap;
 
-    // Module dirtyness
-    bool ModuleIsDirty;
-
-
     void fillLightArray();
 
 };

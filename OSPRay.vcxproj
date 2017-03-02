@@ -250,7 +250,6 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="cmake\ConfigInstall.cmake.in" />
     <None Include="cmake\ConfigLocal.cmake.in" />
     <None Include="cmake\ConfigVersion.cmake.in" />
@@ -258,10 +257,12 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <None Include="config.bat" />
     <None Include="configure.win.pl" />
     <None Include="ExtLibs.props.input" />
+    <None Include="Shaders\ospray.btf" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\OSPRay\OSPRay.h" />
     <ClInclude Include="include\OSPRay_plugin\OSPRay_plugin.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\AbstractOSPRayLight.h" />
     <ClInclude Include="src\AbstractOSPRayMaterial.h" />
     <ClInclude Include="src\AbstractOSPRayRenderer.h" />
@@ -325,6 +326,9 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="OSPRay_plugin.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

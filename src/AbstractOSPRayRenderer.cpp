@@ -475,6 +475,7 @@ OSPFrameBuffer AbstractOSPRayRenderer::newFrameBuffer(osp::vec2i& imgSize, const
 
 AbstractOSPRayRenderer::~AbstractOSPRayRenderer(void) {
     if (lightsToRender != NULL) ospRelease(lightsToRender);
+    this->Release();
 }
 
 // helper function to write the rendered image as PPM file

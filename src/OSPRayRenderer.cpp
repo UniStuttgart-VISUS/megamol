@@ -50,7 +50,6 @@ OSPRayRenderer::OSPRayRenderer(void) :
     renderer = NULL;
     camera = NULL;
     world = NULL;
-    ModuleIsDirty = false;
 
 
     //tmp variable
@@ -142,6 +141,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
 
     CallOSPRayStructure *os = this->getStructureSlot.CallAs<CallOSPRayStructure>();
+    if (os == NULL) return false;
     // read data
     os->setStructureMap(&structureMap);
     os->setTime(cr->Time());
@@ -154,6 +154,20 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
             data_has_changed = true;
         }
     }
+
+    // Light setup
+    CallOSPRayLight *gl = this->getLightSlot.CallAs<CallOSPRayLight>();
+    if (gl != NULL) {
+        gl->setLightMap(&lightMap);
+        gl->fillLightMap();
+        for (auto element : this->lightMap) {
+            auto light = element.second;
+            if (light.dataChanged) {
+                data_has_changed = true;
+            }
+        }
+    }
+
 
     // check data and camera hash
     if (camParams == NULL)
@@ -208,13 +222,6 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
     setupOSPRayCamera(camera, cr);
     ospCommit(camera);
-
-    // Light setup
-    CallOSPRayLight *gl = this->getLightSlot.CallAs<CallOSPRayLight>();
-    if (gl != NULL) {
-        gl->setLightMap(&lightMap);
-        gl->fillLightMap();
-    }
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
@@ -289,10 +296,9 @@ ospray::OSPRayRenderer::InterfaceIsDirty()
 */
 bool OSPRayRenderer::InterfaceIsDirty() {
     if (
-        this->AbstractIsDirty() ||
-        this->ModuleIsDirty) {
+        this->AbstractIsDirty()
+        ) {
         this->AbstractResetDirty();
-        this->ModuleIsDirty = false;
         return true;
     } else {
         return false;

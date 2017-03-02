@@ -38,7 +38,8 @@ OSPRayLightContainer::OSPRayLightContainer() :
     hdri_direction(NULL),
     hdri_evnfile(""),
     // tracks the existence of the light module
-    isValid(false) { }
+    isValid(false),
+    dataChanged(false) { }
 
 OSPRayLightContainer::~OSPRayLightContainer() {
     this->isValid = false;
@@ -71,11 +72,8 @@ CallOSPRayLight::~CallOSPRayLight(void) {
 * megamol::ospray::CallOSPRayLight::operator=
 */
 CallOSPRayLight& CallOSPRayLight::operator=(const CallOSPRayLight& rhs) {
+    lightMap = rhs.lightMap;
     return *this;
-}
-
-OSPRayLightMap* CallOSPRayLight::getLightMap() {
-    return this->lightMap;
 }
 
 void CallOSPRayLight::addLight(OSPRayLightContainer &lc) {

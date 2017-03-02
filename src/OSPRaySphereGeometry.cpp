@@ -67,8 +67,12 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (this->datahash != cd->DataHash() || this->time != os->getTime()) {
+    if (cd->FrameCount() <= 1) {
+        cd->SetFrameID(0.0f, true); // isTimeForced flag set to true
+    } else {
+        cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+    }
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -95,20 +99,13 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
     // Vertex data type check
     if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
         vertexLength = 3;
-        //vertexType = OSP_FLOAT3;
-        //ospSet1i(spheres, "bytes_per_sphere", vertexLength * sizeof(float));
-        //ospSet1f(spheres, "radius", parts.GetGlobalRadius());
     } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
         vertexLength = 4;
-        //vertexType = OSP_FLOAT4;
-        //ospSet1i(spheres, "bytes_per_sphere", vertexLength * sizeof(float));
-        //ospSet1i(spheres, "offset_radius", (vertexLength - 1) * sizeof(float));
     }
     // reserve space for vertex data object
     vd.reserve(parts.GetCount() * vertexLength);
 
     // Color data type check
-    colorLength = 0;
     if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
         colorLength = 4;
         //convertedColorType = OSP_FLOAT4;
@@ -190,6 +187,17 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         }
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
         vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+        colorLength = 4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+        auto pdata = (float*)parts.GetVertexData();
+        vd.assign(pdata, pdata + parts.GetCount() * vertexLength);
+        auto globalColor = parts.GetGlobalColour();
+        for (size_t i = 0; i < parts.GetCount(); i++) {
+            for (size_t j = 0; j < colorLength; j++) {
+                cd_rgba.push_back((float)globalColor[j]/255.0f);
+            }
+        }
     }
 
     // Write stuff into the structureContainer
@@ -266,10 +274,12 @@ void OSPRaySphereGeometry::release() {
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRaySphereGeometry::InterfaceIsDirty() {
+    CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
+    cm->getMaterialParameter();
     if (
-
-        this->particleList.IsDirty()) {
-
+        cm->InterfaceIsDirty() ||
+        this->particleList.IsDirty()
+        ) {
         this->particleList.ResetDirty();
         return true;
     } else {
@@ -305,7 +315,11 @@ bool OSPRaySphereGeometry::getExtends(megamol::core::Call &call) {
     megamol::core::moldyn::MultiParticleDataCall *cd = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     
     if (cd == NULL) return false;
-    cd->SetFrameID(os->getTime(), true);
+    if (cd->FrameCount() <= 1) {
+        cd->SetFrameID(0.0f, true); // isTimeForced flag set to true
+    } else {
+        cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+    }
     if (!(*cd)(1)) return false;
     
     this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());

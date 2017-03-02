@@ -16,7 +16,9 @@ using namespace megamol::ospray;
 
 AbstractOSPRayMaterial::AbstractOSPRayMaterial(void) :
     core::Module(),
-    deployMaterialSlot("deployMaterialSlot", "Connects to an OSPRay geometry")  {
+    deployMaterialSlot("deployMaterialSlot", "Connects to an OSPRay geometry")
+{
+    this->materialContainer.isValid = true;
 
     this->deployMaterialSlot.SetCallback(CallOSPRayMaterial::ClassName(), CallOSPRayMaterial ::FunctionName(0), &AbstractOSPRayMaterial::getMaterialCallback);
     this->MakeSlotAvailable(&this->deployMaterialSlot);
@@ -25,16 +27,17 @@ AbstractOSPRayMaterial::AbstractOSPRayMaterial(void) :
 }
 
 AbstractOSPRayMaterial::~AbstractOSPRayMaterial(void) {
+    materialContainer.isValid = false;
     this->release();
+    this->Release();
 }
 
 bool AbstractOSPRayMaterial::create() {
-    this->materialContainer.isValid = true;
     return true;
 }
 
 void AbstractOSPRayMaterial ::release() {
-    materialContainer.isValid = false;
+
 }
 
 
@@ -44,6 +47,10 @@ bool AbstractOSPRayMaterial::getMaterialCallback(megamol::core::Call& call) {
     if (mc_in != NULL) {
         this->readParams();
         mc_in->setMaterialContainer(std::make_shared<OSPRayMaterialContainer>(std::move(this->materialContainer)));
+    }
+
+    if (this->InterfaceIsDirty()) {
+        mc_in->setDirty();
     }
 
     return true;

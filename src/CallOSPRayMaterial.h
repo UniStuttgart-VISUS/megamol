@@ -143,8 +143,12 @@ public:
     */
     CallOSPRayMaterial& operator=(const CallOSPRayMaterial& rhs);
 
+    bool InterfaceIsDirty();
+    void setDirty();
+
 private:
     std::shared_ptr<OSPRayMaterialContainer> materialContainer;
+    bool isDirty;
 
 };
 typedef core::factories::CallAutoDescription<CallOSPRayMaterial> CallOSPRayMaterialDescription;

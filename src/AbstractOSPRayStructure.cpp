@@ -31,11 +31,11 @@ AbstractOSPRayStructure::AbstractOSPRayStructure(void) :
 
 }
 
-
-
 AbstractOSPRayStructure::~AbstractOSPRayStructure(void) {
     this->structureContainer.isValid = false;
+    this->Release();
 }
+
 
 /*
 ospray::OSPRaySphereGeometry::getStructureCallback
@@ -50,9 +50,7 @@ bool AbstractOSPRayStructure::getStructureCallback(megamol::core::Call& call) {
     }
 
     if (os_out != NULL) {
-        //os_out = os_in;
-        os_out->setStructureMap(os_in->getStructureMap());
-        os_out->setTime(os_in->getTime());
+        *os_out = *os_in;
         os_out->fillStructureMap();
     }
 
@@ -71,8 +69,7 @@ bool AbstractOSPRayStructure::getExtendsCallback(megamol::core::Call &call) {
     }
 
     if (os_out != NULL) {
-        //os_out = os_in;
-        os_out->setExtendMap(os_in->getExtendMap());
+        *os_out = *os_in;
         os_out->fillExtendMap();
     }
 
