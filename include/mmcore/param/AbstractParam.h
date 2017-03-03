@@ -71,6 +71,24 @@ namespace param {
          */
         void setDirty(void);
 
+        /**
+         * Returns the value of the hash.
+         *
+         * @return The value of the hash.
+         */
+        inline size_t GetHash(void) const {
+            return this->hash;
+        }
+
+        /**
+         * Sets the value of the hash.
+         *
+         * @param hash The value of the hash.
+         */
+        inline void SetHash(const size_t &hash) {
+            this->hash = hash;
+        }
+
     protected:
 
         /**
@@ -90,6 +108,12 @@ namespace param {
 
         /** The holding slot */
         class AbstractParamSlot *slot;
+
+        /**
+         * Hash indicating fundamental changes in parameter definition
+         * (i.e. requires rebuilding the UI).
+         */
+        size_t hash;
 
     };
 

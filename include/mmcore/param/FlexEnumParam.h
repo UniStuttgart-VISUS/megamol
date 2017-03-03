@@ -1,19 +1,20 @@
 /*
- * EnumParam.h
+ * FlexEnumParam.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 20017 by Universitaet Stuttgart (VIS). 
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ENUMPARAM_H_INCLUDED
-#define MEGAMOLCORE_ENUMPARAM_H_INCLUDED
+#ifndef MEGAMOLCORE_FLEXENUMPARAM_H_INCLUDED
+#define MEGAMOLCORE_FLEXENUMPARAM_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
-#include "vislib/Map.h"
+//#include "vislib/Map.h"
+#include <unordered_set>
 #include "vislib/String.h"
 #include "vislib/tchar.h"
 
@@ -24,27 +25,33 @@ namespace param {
 
 
     /**
-     * class for enumeration parameter objects
+     * class for enumeration parameter objects that can change
+     * valid values at runtime. Handle with care since this param
+     * cannot check values for validity as long as project file loading
+     * sets values sooner than the user code defining the valid
+     * contents is executed.
      */
-    class MEGAMOLCORE_API EnumParam : public AbstractParam {
+    class MEGAMOLCORE_API FlexEnumParam : public AbstractParam {
     public:
+
+        typedef std::unordered_set<std::string> Storage_t;
 
         /**
          * Ctor.
          *
          * @param initVal The initial value
          */
-        EnumParam(int initVal);
+        FlexEnumParam(const std::string& initVal);
 
         /**
          * Dtor.
          */
-        virtual ~EnumParam(void);
+        virtual ~FlexEnumParam(void);
 
         /**
          * Clears TypePairs storage.
          */
-        virtual void ClearTypePairs(void);
+        virtual void ClearValues(void);
 
         /**
          * Returns a machine-readable definition of the parameter.
@@ -81,25 +88,7 @@ namespace param {
          *
          * @return 'this'
          */
-        EnumParam* SetTypePair(int value, const char *name);
-
-        /**
-         * Sets a type pair for the enum type. Although the parameter can hold
-         * any integer number as value, gui mechanisms will only be able to
-         * represent values associated with a name.
-         *
-         * Calling the method for a value which already has a name will
-         * overwrite the previously set name.
-         *
-         * You must not call this method after the slot this parameter is
-         * assigned to has been made public.
-         *
-         * @param value The value to set the name for.
-         * @param name The name of the value specified.
-         *
-         * @return 'this'
-         */
-        EnumParam* SetTypePair(int value, const wchar_t *name);
+        FlexEnumParam* AddValue(const std::string& name);
 
         /**
          * Sets the value of the parameter and optionally sets the dirty flag
@@ -109,24 +98,25 @@ namespace param {
          * @param setDirty If 'true' the dirty flag of the owning parameter
          *                 slot is set and the update callback might be called.
          */
-        void SetValue(int v, bool setDirty = true);
+        void SetValue(const std::string& v, bool setDirty = true);
+
 
         /**
          * Gets the value of the parameter
          *
          * @return The value of the parameter
          */
-        inline int Value(void) const {
+        inline const std::string& Value(void) const {
             return this->val;
         }
 
         /**
-         * Returns the TypePairs storage.
+         * Returns the values storage.
          *
-         * @return The TypePairs storage.
+         * @return The values storage.
          */
-        inline vislib::Map<int, vislib::TString> getMap() {
-            return this->typepairs;
+        inline Storage_t getStorage() {
+            return this->values;
         }
 
         /**
@@ -141,8 +131,8 @@ namespace param {
          *
          * @return The value of the parameter
          */
-        inline operator int(void) const {
-            return this->val;
+        inline operator const vislib::TString(void) const {
+            return vislib::TString(this->val.c_str());
         }
 
         /**
@@ -151,19 +141,19 @@ namespace param {
          * @return The number of currently owned typepairs
          */
         inline size_t ContentCount() const {
-            return typepairs.Count();
+            return values.size();
         }
 
     private:
 
         /** The value of the parameter */
-        int val;
+        std::string val;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)
 #endif /* _WIN32 */
         /** The type pairs for values and names */
-        vislib::Map<int, vislib::TString> typepairs;
+        Storage_t values;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */
@@ -175,4 +165,4 @@ namespace param {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_ENUMPARAM_H_INCLUDED */
+#endif /* MEGAMOLCORE_FLEXENUMPARAM_H_INCLUDED */

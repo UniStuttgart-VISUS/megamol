@@ -1125,6 +1125,14 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
     }
 }
 
+MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void * hCore) {
+    megamol::core::CoreInstance *core
+        = megamol::core::ApiHandle::InterpretHandle<
+        megamol::core::CoreInstance>(hCore);
+    if (core == NULL) return 0;
+    return core->GetGlobalParameterHash();
+}
+
 
 /*
  * mmcFreezeOrUpdateView

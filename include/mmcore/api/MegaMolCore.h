@@ -872,6 +872,16 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
     void *hParam, unsigned char *buf, unsigned int *len);
 
 /**
+ * Updates global parameter hash and returns it.
+ * Comparison of parameter info is expensive.
+ *
+ * @param hCore The core handle.
+ *
+ * @return      Updated parameter hash.
+ */
+MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void *hCore);
+
+/**
  * Freezes, updates or unfreezes a view (and all associated modules)
  *
  * @param hView The view to be frozen or updated

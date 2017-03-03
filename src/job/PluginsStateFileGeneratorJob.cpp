@@ -87,6 +87,12 @@ namespace {
         vislib::StringA c(content.c_str());
         WriteSimpleTag(file, indent, tag, c);
     }
+    template<class F, class I, class T>
+    void WriteSimpleTag(F& file, const I& indent, const T& tag, const std::wstring& content) {
+        vislib::StringA u;
+        if (!content.empty()) vislib::UTF8Encoder::Encode(u, content.c_str());
+        WriteSimpleTag(file, indent, tag, u);
+    }
     template<class F, class I, class T1, class T2>
     void WriteEntityName(F& file, const I& indent, const T1& m, const T2& cs) {
         vislib::StringA str = cs->FullName();
@@ -397,12 +403,14 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
     const param::FloatParam    * p4 = dynamic_cast<const param::FloatParam   *>(param);
     const param::IntParam      * p5 = dynamic_cast<const param::IntParam     *>(param);
     const param::FilePathParam * p6 = dynamic_cast<const param::FilePathParam*>(param);
+    const param::FlexEnumParam * p7 = dynamic_cast<const param::FlexEnumParam*>(param);
     if (p1 != nullptr) { WriteParamInfo(file, p1); return; }
     if (p2 != nullptr) { WriteParamInfo(file, p2); return; }
     if (p3 != nullptr) { WriteParamInfo(file, p3); return; }
     if (p4 != nullptr) { WriteParamInfo(file, p4); return; }
     if (p5 != nullptr) { WriteParamInfo(file, p5); return; }
     if (p6 != nullptr) { WriteParamInfo(file, p6); return; }
+    if (p7 != nullptr) { WriteParamInfo(file, p7); return; }
     // fallback string:
     file << "              <Type xsi:type=\"String\">" << std::endl;
     WriteParamCommonTypeInfoe(file, "                ", param);
@@ -447,6 +455,22 @@ void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, cons
         WriteSimpleTag(file, "                  ", "string", valueMapIt.Next().Value());
     }
     file << "                </ValueNames>" << std::endl
+        << "              </Type>" << std::endl;
+}
+
+/*
+* job::PluginsStateFileGeneratorJob::WriteParamInfo
+*/
+void job::PluginsStateFileGeneratorJob::WriteParamInfo(std::ofstream& file, const param::FlexEnumParam* param) const {
+    file << "              <Type xsi:type=\"FlexEnum\">" << std::endl
+        << "                <TypeName>MMFENU</TypeName>" << std::endl
+        << "                <DefaultValue>" << param->Value().c_str() << "</DefaultValue>" << std::endl
+        << "                <Values>" << std::endl;
+    param::FlexEnumParam::Storage_t vals = const_cast<param::FlexEnumParam*>(param)->getStorage();
+    for (auto &v: vals) {
+        WriteSimpleTag(file, "                  ", "string", v);
+    }
+    file << "                </Values>" << std::endl
         << "              </Type>" << std::endl;
 }
 

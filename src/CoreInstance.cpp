@@ -123,7 +123,7 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
-        all_call_descriptions(), all_module_descriptions() {
+        all_call_descriptions(), all_module_descriptions(), parameterHash(1) {
 	// setup log as early as possible.
 	this->log.SetLogFileName(static_cast<const char*>(NULL), false);
 	this->log.SetLevel(vislib::sys::Log::LEVEL_ALL);
@@ -1299,6 +1299,56 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
         "Loading project file \"%s\"",
         vislib::StringA(filename).PeekBuffer());
     this->addProject(reader);
+}
+
+
+/*
+ * megamol::core::CoreInstance::GetGlobalParameterHash
+ */
+size_t megamol::core::CoreInstance::GetGlobalParameterHash(void) {
+
+    ParamHashMap_t current_map;
+    this->getGlobalParameterHash(this->namespaceRoot, current_map);
+    if (!mapCompare(current_map, this->lastParamMap)) {
+        this->lastParamMap = current_map;
+        this->parameterHash++;
+    }
+
+    return this->parameterHash;
+}
+
+/*
+ * megamol::core::CoreInstance::getGlobalParameterHash
+ */
+void megamol::core::CoreInstance::getGlobalParameterHash(megamol::core::ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const {
+    AbstractNamedObject::GraphLocker locker(this->namespaceRoot, false);
+    vislib::sys::AutoLock lock(locker);
+
+    AbstractNamedObjectContainer::child_list_type::const_iterator i, e;
+    e = path->ChildList_End();
+    for (i = path->ChildList_Begin(); i != e; ++i) {
+        AbstractNamedObject::const_ptr_type child = *i;
+        Module::const_ptr_type mod = Module::dynamic_pointer_cast(child);
+        ModuleNamespace::const_ptr_type ns = ModuleNamespace::dynamic_pointer_cast(child);
+
+        if (mod) {
+            AbstractNamedObjectContainer::child_list_type::const_iterator si, se;
+            se = mod->ChildList_End();
+            for (si = mod->ChildList_Begin(); si != se; ++si) {
+                const param::ParamSlot *slot = dynamic_cast<const param::ParamSlot*>((*si).get());
+                if (slot != NULL) {
+                    std::string name(mod->FullName());
+                    //vislib::StringA name(mod->FullName());
+                    name.append("::");
+                    name.append(slot->Name());
+                    map.emplace(std::make_pair(name, slot->Parameter()->GetHash()));
+                }
+            }
+
+        } else if (ns) {
+            this->getGlobalParameterHash(ns, map);
+        }
+    }
 }
 
 
@@ -2584,6 +2634,21 @@ void megamol::core::CoreInstance::loadPlugin(const vislib::TString &filename) {
             vislib::StringA(filename).PeekBuffer());
     }
 
+}
+
+
+/*
+ * megamol::core::CoreInstance::mapCompare
+ */
+bool megamol::core::CoreInstance::mapCompare(ParamHashMap_t & one, ParamHashMap_t & other) {
+    if (one.size() != other.size()) return false;
+
+    for (auto &entry : one) {
+        auto entry2 = other.find(entry.first);
+        if (entry2 == other.end() || entry.second != entry2->second) return false;
+    }
+
+    return true;
 }
 
 

@@ -903,6 +903,9 @@
     <ClCompile Include="src\utility\ServiceManager.cpp">
       <Filter>utility\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\param\FlexEnumParam.cpp">
+      <Filter>param\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mmcore\BoundingBoxes.h">
@@ -1531,6 +1534,9 @@
     </ClInclude>
     <ClInclude Include="src\utility\ServiceManager.h">
       <Filter>utility\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmcore\param\FlexEnumParam.h">
+      <Filter>param\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -129,6 +130,7 @@ namespace job {
         void WriteParamInfo(std::ofstream& file, const param::BoolParam    * param) const;
         void WriteParamInfo(std::ofstream& file, const param::ButtonParam  * param) const;
         void WriteParamInfo(std::ofstream& file, const param::EnumParam    * param) const;
+        void WriteParamInfo(std::ofstream& file, const param::FlexEnumParam* param) const;
         void WriteParamInfo(std::ofstream& file, const param::FloatParam   * param) const;
         void WriteParamInfo(std::ofstream& file, const param::IntParam     * param) const;
         void WriteParamInfo(std::ofstream& file, const param::FilePathParam* param) const;

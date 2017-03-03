@@ -498,6 +498,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClCompile Include="src\param\ButtonParam.cpp" />
     <ClCompile Include="src\param\EnumParam.cpp" />
     <ClCompile Include="src\param\FilePathParam.cpp" />
+    <ClCompile Include="src\param\FlexEnumParam.cpp" />
     <ClCompile Include="src\param\FloatParam.cpp" />
     <ClCompile Include="src\param\IntParam.cpp" />
     <ClCompile Include="src\param\ParamHandle.cpp" />
@@ -716,6 +717,7 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <ClInclude Include="include\mmcore\param\ButtonParam.h" />
     <ClInclude Include="include\mmcore\param\EnumParam.h" />
     <ClInclude Include="include\mmcore\param\FilePathParam.h" />
+    <ClInclude Include="include\mmcore\param\FlexEnumParam.h" />
     <ClInclude Include="include\mmcore\param\FloatParam.h" />
     <ClInclude Include="include\mmcore\param\IntParam.h" />
     <ClInclude Include="include\mmcore\param\ParamHandle.h" />

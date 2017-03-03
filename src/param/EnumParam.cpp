@@ -32,6 +32,19 @@ EnumParam::~EnumParam(void) {
 
 
 /*
+ * EnumParam::ClearTypePairs
+ */
+void megamol::core::param::EnumParam::ClearTypePairs(void) {
+    if (this->isSlotPublic()) {
+        throw vislib::IllegalStateException(
+            "You must not modify an enum parameter which is already public",
+            __FILE__, __LINE__);
+    }
+    this->typepairs.Clear();
+}
+
+
+/*
  * EnumParam::Definition
  */
 void EnumParam::Definition(vislib::RawStorage& outDef) const {

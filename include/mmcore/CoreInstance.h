@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <unordered_map>
+
 #include "mmcore/ApiHandle.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
@@ -75,6 +77,8 @@ namespace plugins {
     class MEGAMOLCORE_API CoreInstance : public ApiHandle,
         public factories::AbstractAssemblyInstance {
     public:
+
+        typedef std::unordered_map<std::string, size_t> ParamHashMap_t;
 
         /**
          * Deallocator for view handles.
@@ -353,6 +357,14 @@ namespace plugins {
                 const {
             this->enumParameters(this->namespaceRoot, func, data);
         }
+
+        /**
+         * Updates global parameter hash and returns it.
+         * Comparison of parameter info is expensive.
+         *
+         * @return Updated parameter hash.
+         */
+        size_t GetGlobalParameterHash(void);
 
         /**
          * Answer the full name of the paramter 'param' if it is bound to a
@@ -790,6 +802,16 @@ namespace plugins {
         void addProject(megamol::core::utility::xml::XmlReader& reader);
 
         /**
+         * Enumerates all parameters to collect parameter hashes.
+         *
+         * @param path The current module namespace
+         * @param map  Stores association between parameter name
+         *             and parameter hash
+         */
+        void getGlobalParameterHash(ModuleNamespace::const_ptr_type path,
+            ParamHashMap_t &map) const;
+
+        /**
          * Instantiates a module
          *
          * @param path The full namespace path
@@ -849,6 +871,17 @@ namespace plugins {
          * @param filename The plugin to load
          */
         void loadPlugin(const vislib::TString& filename);
+
+        /**
+         * Compares two maps storing the association between
+         * parameter names and hashes.
+         *
+         * @param one   First map for comparison
+         * @param other Second map for comparison
+         *
+         * @return      True, if map "one" and "other" are the same
+         */
+        bool mapCompare(ParamHashMap_t &one, ParamHashMap_t &other);
 
         /**
          * Auto-connects a view module graph from 'from' to 'to' upwards
@@ -941,6 +974,12 @@ namespace plugins {
 
         /** The manager of registered services */
         utility::ServiceManager* services;
+
+        /** Map of all parameter hashes (as requested by GetFullParameterHash)*/
+        ParamHashMap_t lastParamMap;
+
+        /** Global hash of all parameters (is increased if any parameter defintion changes) */
+        size_t parameterHash;
 
 #ifdef _WIN32
 #pragma warning (default: 4251)
