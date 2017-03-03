@@ -4,6 +4,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/ColourParser.h"
 
 #include "vislib/sys/Log.h"
@@ -35,16 +36,20 @@ FloatTableToParticles::FloatTableToParticles(void) : Module(),
         inputHash(0), myHash(0), columnIndex() {
 
     /* Register parameters. */
-    this->slotColumnR << new megamol::core::param::StringParam(_T(""));
+    core::param::FlexEnumParam *rColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnR << rColumnEp;
     this->MakeSlotAvailable(&this->slotColumnR);
 
-    this->slotColumnG << new megamol::core::param::StringParam(_T(""));
+    core::param::FlexEnumParam *gColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnG << gColumnEp;
     this->MakeSlotAvailable(&this->slotColumnG);
 
-    this->slotColumnB << new megamol::core::param::StringParam(_T(""));
+    core::param::FlexEnumParam *bColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnB << bColumnEp;
     this->MakeSlotAvailable(&this->slotColumnB);
 
-    this->slotColumnI << new megamol::core::param::StringParam(_T(""));
+    core::param::FlexEnumParam *iColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnI << iColumnEp;
     this->MakeSlotAvailable(&this->slotColumnI);
 
     this->slotGlobalColor << new megamol::core::param::StringParam(_T(""));
@@ -57,7 +62,8 @@ FloatTableToParticles::FloatTableToParticles(void) : Module(),
     this->slotColorMode << ep;
     this->MakeSlotAvailable(&this->slotColorMode);
 
-    this->slotColumnRadius << new megamol::core::param::StringParam(_T(""));
+    core::param::FlexEnumParam *columnRadiusEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnRadius << columnRadiusEp;
     this->MakeSlotAvailable(&this->slotColumnRadius);
 
     this->slotGlobalRadius << new megamol::core::param::FloatParam(0.001f);
@@ -69,13 +75,17 @@ FloatTableToParticles::FloatTableToParticles(void) : Module(),
     this->slotRadiusMode << ep2;
     this->MakeSlotAvailable(&this->slotRadiusMode);
 
-    this->slotColumnX << new megamol::core::param::StringParam(_T("x"));
+    //this->slotColumnX << new megamol::core::param::StringParam(_T("x"));
+    core::param::FlexEnumParam *xColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnX << xColumnEp;
     this->MakeSlotAvailable(&this->slotColumnX);
 
-    this->slotColumnY << new megamol::core::param::StringParam(_T("y"));
+    core::param::FlexEnumParam *yColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnY << yColumnEp;
     this->MakeSlotAvailable(&this->slotColumnY);
 
-    this->slotColumnZ << new megamol::core::param::StringParam(_T("z"));
+    core::param::FlexEnumParam *zColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnZ << zColumnEp;
     this->MakeSlotAvailable(&this->slotColumnZ);
 
     /* Register calls. */
@@ -166,10 +176,30 @@ bool FloatTableToParticles::assertData(floattable::CallFloatTableData *ft) {
     if (this->inputHash == ft->DataHash() && !anythingDirty()) return true;
 
     if (this->inputHash != ft->DataHash()) {
+        vislib::sys::Log::DefaultLog.WriteInfo("FloatTableToParticles: Dataset changed -> Updating EnumParams\n");
         this->columnIndex.clear();
+
+        this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnY.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnZ.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnR.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnG.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnB.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnI.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ClearValues();
+
         for (size_t i = 0; i < ft->GetColumnsCount(); i++) {
-            std::string n = this->cleanUpColumnHeader(ft->GetColumnsInfos()[i].Name());
+            std::string n = std::string(this->cleanUpColumnHeader(ft->GetColumnsInfos()[i].Name()));
             columnIndex[n] = i;
+
+            this->slotColumnX.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnY.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnZ.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnR.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnG.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnB.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnI.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnRadius.Param<core::param::FlexEnumParam>()->AddValue(n);
         }
     }
 
@@ -196,36 +226,38 @@ bool FloatTableToParticles::assertData(floattable::CallFloatTableData *ft) {
     size_t rows = ft->GetRowsCount();
     size_t cols = ft->GetColumnsCount();
 
+    bool retValue = true;
+
     std::vector<size_t> indicesToCollect;
-    if (!pushColumnIndex(indicesToCollect, this->slotColumnX.Param<core::param::StringParam>()->Value())) {
-        return false;
+    if (!pushColumnIndex(indicesToCollect, this->slotColumnX.Param<core::param::FlexEnumParam>()->ValueString())) {
+        retValue = false;
     }
-    if (!pushColumnIndex(indicesToCollect, this->slotColumnY.Param<core::param::StringParam>()->Value())) {
-        return false;
+    if (!pushColumnIndex(indicesToCollect, this->slotColumnY.Param<core::param::FlexEnumParam>()->ValueString())) {
+        retValue = false;
     }
-    if (!pushColumnIndex(indicesToCollect, this->slotColumnZ.Param<core::param::StringParam>()->Value())) {
-        return false;
+    if (!pushColumnIndex(indicesToCollect, this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString())) {
+        retValue = false;
     }
     if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) {
-        if (!pushColumnIndex(indicesToCollect, this->slotColumnRadius.Param<core::param::StringParam>()->Value())) {
-            return false;
+        if (!pushColumnIndex(indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString())) {
+            retValue = false;
         }
     }
     switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
         case 0: // RGB
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnR.Param<core::param::StringParam>()->Value())) {
-                return false;
+            if (!pushColumnIndex(indicesToCollect, this->slotColumnR.Param<core::param::FlexEnumParam>()->ValueString())) {
+                retValue = false;
             }
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnG.Param<core::param::StringParam>()->Value())) {
-                return false;
+            if (!pushColumnIndex(indicesToCollect, this->slotColumnG.Param<core::param::FlexEnumParam>()->ValueString())) {
+                retValue = false;
             }
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnB.Param<core::param::StringParam>()->Value())) {
-                return false;
+            if (!pushColumnIndex(indicesToCollect, this->slotColumnB.Param<core::param::FlexEnumParam>()->ValueString())) {
+                retValue = false;
             }
             break;
         case 1: // I
-            if (!pushColumnIndex(indicesToCollect, this->slotColumnI.Param<core::param::StringParam>()->Value())) {
-                return false;
+            if (!pushColumnIndex(indicesToCollect, this->slotColumnI.Param<core::param::FlexEnumParam>()->ValueString())) {
+                retValue = false;
             }
             iMin = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MinimumValue();
             iMax = ft->GetColumnsInfos()[indicesToCollect[indicesToCollect.size() - 1]].MaximumValue();
@@ -243,7 +275,7 @@ bool FloatTableToParticles::assertData(floattable::CallFloatTableData *ft) {
         }
     }
 
-    for (size_t i = 0; i < 3; i++) {
+    for (size_t i = 0; i < (numIndices < 3 ? numIndices : 3); i++) {
         this->bboxMin[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MinimumValue();
         this->bboxMax[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MaximumValue();
     }
@@ -251,7 +283,7 @@ bool FloatTableToParticles::assertData(floattable::CallFloatTableData *ft) {
     this->myHash++;
     this->resetAllDirty();
     this->inputHash = ft->DataHash();
-    return true;
+    return retValue;
 }
 
 /*
