@@ -1,5 +1,5 @@
 /*
-* OSPRaySphereGeometry.h
+* OSPRayTriangleMesh.h
 * Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
@@ -12,7 +12,7 @@
 namespace megamol {
 namespace ospray {
 
-class OSPRaySphereGeometry : public AbstractOSPRayStructure {
+class OSPRayTriangleMesh : public AbstractOSPRayStructure {
 
 public:
 
@@ -22,7 +22,7 @@ public:
     * @return The name of this module.
     */
     static const char *ClassName(void) {
-        return "OSPRaySphereGeometry";
+        return "OSPRayTriangleMesh";
     }
 
     /**
@@ -31,7 +31,7 @@ public:
     * @return A human readable description of this module.
     */
     static const char *Description(void) {
-        return "Creator for OSPRay sphere geometries.";
+        return "Creator for OSPRay triangle mesh geometries.";
     }
 
     /**
@@ -44,20 +44,12 @@ public:
     }
 
     /** Dtor. */
-    virtual ~OSPRaySphereGeometry(void);
+    virtual ~OSPRayTriangleMesh(void);
 
     /** Ctor. */
-    OSPRaySphereGeometry(void);
+    OSPRayTriangleMesh(void);
 
 protected:
-    /**
-    * color transfer helper
-    * @param array with gray scales
-    * @param transferfunction table/texture
-    * @param transferfunction table/texture size
-    * @param target array (rgba)
-    */
-    void colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray);
 
     virtual bool create();
     virtual void release();
@@ -67,31 +59,11 @@ protected:
 
 
     bool InterfaceIsDirty();
-    void OSPRaySphereGeometry::getClipData(float *clipDat, float *clipCol);
 
-    core::param::ParamSlot particleList;
+    core::param::ParamSlot objectID;
 
     /** The call for data */
     core::CallerSlot getDataSlot;
-
-    /** The call for clipping plane */
-    core::CallerSlot getClipPlaneSlot;
-
-    /** The call for Transfer function */
-    core::CallerSlot getTFSlot;
-
-
-
-private:
-
-
-    //data objects
-    std::vector<float> cd_rgba;
-    std::vector<float> vd;
-
-
-    // color transfer data
-    unsigned int tex_size;
 
 
 };

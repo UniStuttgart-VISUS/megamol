@@ -67,7 +67,7 @@ ospray::OSPRayVolumeRenderer::OSPRayVolumeRenderer(void) :
     this->sliceDist << new core::param::FloatParam(0.0f);
 
     this->clippingBoxActive << new core::param::BoolParam(false);
-    this->clippingBoxLower << new::core::param::Vector3fParam({ -5.0f, -5.0f, -5.0f });
+    this->clippingBoxLower << new core::param::Vector3fParam({ -5.0f, -5.0f, -5.0f });
     this->clippingBoxUpper << new core::param::Vector3fParam({ 0.0f, 5.0f, 5.0f });
 
     this->MakeSlotAvailable(&this->showVolume);

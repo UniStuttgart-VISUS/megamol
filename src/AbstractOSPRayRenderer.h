@@ -155,7 +155,7 @@ protected:
     // extend map
     OSPRayExtendMap extendMap;
 
-    void fillLightArray();
+    void fillLightArray(float * eyeDir);
 
 };
 

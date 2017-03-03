@@ -1,5 +1,5 @@
 /*
-* OSPRaySphereGeometry.h
+* OSPRayStructuredVolume.h
 * Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
@@ -12,7 +12,7 @@
 namespace megamol {
 namespace ospray {
 
-class OSPRaySphereGeometry : public AbstractOSPRayStructure {
+class OSPRayStructuredVolume : public AbstractOSPRayStructure {
 
 public:
 
@@ -22,7 +22,7 @@ public:
     * @return The name of this module.
     */
     static const char *ClassName(void) {
-        return "OSPRaySphereGeometry";
+        return "OSPRayStructuredVolume";
     }
 
     /**
@@ -31,7 +31,7 @@ public:
     * @return A human readable description of this module.
     */
     static const char *Description(void) {
-        return "Creator for OSPRay sphere geometries.";
+        return "Creator for OSPRay structured volumes.";
     }
 
     /**
@@ -44,20 +44,12 @@ public:
     }
 
     /** Dtor. */
-    virtual ~OSPRaySphereGeometry(void);
+    virtual ~OSPRayStructuredVolume(void);
 
     /** Ctor. */
-    OSPRaySphereGeometry(void);
+    OSPRayStructuredVolume(void);
 
 protected:
-    /**
-    * color transfer helper
-    * @param array with gray scales
-    * @param transferfunction table/texture
-    * @param transferfunction table/texture size
-    * @param target array (rgba)
-    */
-    void colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize, std::vector<float> &rgbaArray);
 
     virtual bool create();
     virtual void release();
@@ -65,35 +57,14 @@ protected:
     virtual bool readData(core::Call &call);
     virtual bool getExtends(core::Call &call);
 
-
     bool InterfaceIsDirty();
-    void OSPRaySphereGeometry::getClipData(float *clipDat, float *clipCol);
-
-    core::param::ParamSlot particleList;
 
     /** The call for data */
     core::CallerSlot getDataSlot;
 
-    /** The call for clipping plane */
-    core::CallerSlot getClipPlaneSlot;
-
-    /** The call for Transfer function */
-    core::CallerSlot getTFSlot;
-
-
-
-private:
-
-
-    //data objects
-    std::vector<float> cd_rgba;
-    std::vector<float> vd;
-
-
-    // color transfer data
-    unsigned int tex_size;
-
-
+    megamol::core::param::ParamSlot clippingBoxLower;
+    megamol::core::param::ParamSlot clippingBoxUpper;
+    megamol::core::param::ParamSlot clippingBoxActive;
 };
 
 } // namespace ospray

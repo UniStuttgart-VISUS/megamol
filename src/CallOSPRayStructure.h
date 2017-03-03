@@ -47,11 +47,27 @@ public:
 
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
+    std::shared_ptr<std::vector<float>> normalData;
+    std::shared_ptr<std::vector<float>> texData;
+    std::shared_ptr<std::vector<unsigned int>> indexData;
+    std::shared_ptr<std::vector<float>> voxels;
+    std::shared_ptr<std::vector<float>> gridOrigin;
+    std::shared_ptr<std::vector<float>> gridSpacing;
+    std::shared_ptr<std::vector<int>> dimensions;
+    std::shared_ptr<std::vector<float>> clippingBoxLower;
+    std::shared_ptr<std::vector<float>> clippingBoxUpper;
+
+
+    unsigned int voxelCount = voxelCount;
+    unsigned int maxDim = maxDim;
+    unsigned int triangleCount;
+    unsigned int vertexCount;
     unsigned int vertexLength;
     unsigned int colorLength;
     unsigned int partCount;
     float globalRadius;
 
+    bool clippingBoxActive;
     bool dataChanged;
     bool isValid;
 

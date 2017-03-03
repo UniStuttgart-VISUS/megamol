@@ -15,6 +15,8 @@
 #include "OSPRayRenderer.h"
 
 #include "OSPRaySphereGeometry.h"
+#include "OSPRayTriangleMesh.h"
+#include "OSPRayStructuredVolume.h"
 #include "CallOSPRayStructure.h"
 
 #include "OSPRayDistantLight.h"
@@ -67,6 +69,8 @@ namespace {
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMesh>();
+               this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStructuredVolume>();
 
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayDistantLight>();
                this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAmbientLight>();

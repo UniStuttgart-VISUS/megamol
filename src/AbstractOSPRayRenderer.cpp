@@ -336,7 +336,7 @@ void AbstractOSPRayRenderer::AbstractResetDirty() {
 }
 
 
-void AbstractOSPRayRenderer::fillLightArray() {
+void AbstractOSPRayRenderer::fillLightArray(float * eyeDir) {
 
     // create custom ospray light
     OSPLight light;
@@ -353,11 +353,7 @@ void AbstractOSPRayRenderer::fillLightArray() {
         case ospray::lightenum::DISTANTLIGHT:
             light = ospNewLight(this->renderer, "distant");
             if (lc.dl_eye_direction == true) {
-                // take the light direction from the View3D
-                GLfloat lightdir[4];
-                glGetLightfv(GL_LIGHT0, GL_POSITION, lightdir);
-                ospSetVec3f(light, "direction", { lightdir[0], lightdir[1], lightdir[2] });
-                //ospSet3fv(light, "direction", cr->GetCameraParameters()->EyeDirection().PeekComponents());
+                ospSet3fv(light, "direction", eyeDir);
             } else {
                 ospSet3fv(light, "direction", lc.dl_direction.data());
             }
@@ -579,7 +575,12 @@ void AbstractOSPRayRenderer::fillWorld() {
             ospCommit(material);
         }
 
-
+        OSPData vertexData = NULL;
+        OSPData colorData  = NULL;
+        OSPData normalData = NULL;
+        OSPData texData    = NULL;
+        OSPData indexData  = NULL;
+        OSPData voxels     = NULL;
         switch (element.type) {
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
@@ -587,7 +588,6 @@ void AbstractOSPRayRenderer::fillWorld() {
 
                 geo = ospNewGeometry("spheres");
 
-                OSPData vertexData;
                 if (element.vertexLength > 3) {
                     vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.vertexData->data());
                     ospSet1i(geo, "bytes_per_sphere", 4 * sizeof(float));
@@ -600,22 +600,83 @@ void AbstractOSPRayRenderer::fillWorld() {
                 ospCommit(vertexData);
                 ospSetData(geo, "spheres", vertexData);
 
-                OSPData colorData;
                 if (element.colorLength == 4) {
                     colorData = ospNewData(element.partCount, OSP_FLOAT4, element.colorData->data());
                     ospCommit(colorData);
                     ospSetData(geo, "color", colorData);
                 }
+                // data verwurschding
+                /*
+                // clipPlane setup
+                std::vector<float> clipDat(4);
+                std::vector<float> clipCol(4);
+                this->getClipData(clipDat.data(), clipCol.data());
 
-
+                if (!std::all_of(clipDat.begin(), clipDat.end() - 1, [](float i) { return i == 0; })) {
+                pln = ospNewPlane("clipPlane");
+                ospSet1f(pln, "dist", clipDat[3]);
+                ospSet3fv(pln, "normal", clipDat.data());
+                ospSet4fv(pln, "color", clipCol.data());
+                ospCommit(pln);
+                ospSetObject(spheres, "clipPlane", pln);
+                } else {
+                ospSetObject(spheres, "clipPlane", NULL);
+                }
+                ospCommit(spheres);
+                */
                 break;
             case geometryTypeEnum::TRIANGLES:
+
+
+                geo = ospNewGeometry("triangles");
+
+                // check vertex data type
+                if (element.vertexData->size() != 0) {
+                    vertexData = ospNewData(element.vertexCount , OSP_FLOAT3, element.vertexData->data());
+                    ospCommit(vertexData);
+                    ospSetData(geo, "vertex", vertexData);
+                }
+
+                // check normal pointer
+                if (element.normalData->size() != 0) {
+                        normalData = ospNewData(element.vertexCount, OSP_FLOAT3, element.normalData->data());
+                        ospCommit(normalData);
+                        ospSetData(geo, "vertex.normal", normalData);
+                }
+
+                // check colorpointer and convert to rgba
+                if (element.colorData->size() != 0) {
+                        colorData = ospNewData(element.vertexCount, OSP_FLOAT4, element.colorData->data());
+                        ospCommit(colorData);
+                        ospSetData(geo, "vertex.color", colorData);
+                }
+
+                // check texture array
+                if (element.texData->size() != 0) {
+                        texData = ospNewData(element.triangleCount, OSP_FLOAT2, element.texData->data());
+                        ospCommit(texData);
+                        ospSetData(geo, "vertex.texcoord", texData);
+                }
+
+                // check index pointer
+                if (element.indexData->size() != 0) {
+                        indexData = ospNewData(element.triangleCount, OSP_UINT3, element.indexData->data());
+                        ospCommit(indexData);
+                        ospSetData(geo, "index", indexData);
+                }
+
                 break;
             case geometryTypeEnum::STREAMLINES:
                 break;
             case geometryTypeEnum::CYLINDERS:
                 break;
             }
+
+            if (vertexData != NULL) ospRelease(vertexData);
+            if (colorData != NULL) ospRelease(colorData);
+            if (normalData != NULL) ospRelease(normalData);
+            if (texData != NULL) ospRelease(texData);
+            if (indexData != NULL) ospRelease(indexData);
 
             if (material != NULL) {
                 ospSetMaterial(geo, material);
@@ -628,54 +689,50 @@ void AbstractOSPRayRenderer::fillWorld() {
 
         case structureTypeEnum::VOLUME:
 
+            vol = ospNewVolume("shared_structured_volume");
+
+
+            ospSetString(vol, "voxelType", "float");
+            // scaling properties of the volume
+            ospSet3iv(vol, "dimensions", element.dimensions->data());
+            ospSet3fv(vol, "gridOrigin", element.gridOrigin->data());
+            ospSet3fv(vol, "gridSpacing", element.gridSpacing->data());
+
+            // add data 
+            voxels = ospNewData(element.voxelCount, OSP_FLOAT, element.voxels->data(), OSP_DATA_SHARED_BUFFER);
+            ospCommit(voxels);
+            ospSetData(vol, "voxelData", voxels);
+
+            // ClippingBox
+
+            if (element.clippingBoxActive) {
+                ospSet3fv(vol, "volumeClippingBoxLower", element.clippingBoxLower->data());
+                ospSet3fv(vol, "volumeClippingBoxUpper", element.clippingBoxUpper->data());
+            } else {
+                ospSetVec3f(vol, "volumeClippingBoxLower", { 0.0f, 0.0f, 0.0f });
+                ospSetVec3f(vol, "volumeClippingBoxUpper", { 0.0f, 0.0f, 0.0f });
+            }
+
+            OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
+            std::vector<float> rgb = { 0.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f };
+            std::vector<float> opa = { 0.01f, 0.05f };
+            OSPData tf_rgb = ospNewData(2, OSP_FLOAT3, rgb.data());
+            OSPData tf_opa = ospNewData(2, OSP_FLOAT, opa.data());
+            ospSetData(tf, "colors", tf_rgb);
+            ospSetData(tf, "opacities", tf_opa);
+
+            ospCommit(tf);
+
+            ospSetObject(vol, "transferFunction", tf);
+            ospCommit(vol);
+
+            ospAddVolume(world, vol);
+
             break;
         }
 
-        // data verwurschding
-        /*
-        if (parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-            vertexData = ospNewData(parts.GetCount(), vertexType, vd.data());
-            ospCommit(vertexData);
-            ospSetData(spheres, "spheres", vertexData);
 
-            colorData = ospNewData(parts.GetCount(), convertedColorType, cd_rgba.data());
-            ospCommit(colorData);
-            ospSetData(spheres, "color", colorData);
-
-            //OSPData data = ospNewData(parts.GetCount(), OSP_FLOAT4, parts.GetVertexData());
-            //ospCommit(data);
-            //ospSetData(spheres, "spheres", data);
-            //ospSet1i(spheres, "bytes_per_sphere", 4*sizeof(float));
-            //ospSet1i(spheres, "color_offset", 3*sizeof(float));
-            //ospSet1i(spheres, "color_stride", 1*sizeof(float));
-        } else {
-
-            vertexData = ospNewData(parts.GetCount(), vertexType, parts.GetVertexData());
-            ospCommit(vertexData);
-            ospSetData(spheres, "spheres", vertexData);
-        }
-
-
-
-        // clipPlane setup
-        std::vector<float> clipDat(4);
-        std::vector<float> clipCol(4);
-        this->getClipData(clipDat.data(), clipCol.data());
-
-        if (!std::all_of(clipDat.begin(), clipDat.end() - 1, [](float i) { return i == 0; })) {
-            pln = ospNewPlane("clipPlane");
-            ospSet1f(pln, "dist", clipDat[3]);
-            ospSet3fv(pln, "normal", clipDat.data());
-            ospSet4fv(pln, "color", clipCol.data());
-            ospCommit(pln);
-            ospSetObject(spheres, "clipPlane", pln);
-        } else {
-            ospSetObject(spheres, "clipPlane", NULL);
-        }
-
-
-        ospCommit(spheres);
-        */
     } // for element loop
 }
 

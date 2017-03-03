@@ -233,14 +233,13 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         this->fillWorld();
         ospCommit(world);
 
-
-
         RendererSettings(renderer);
 
 
         // Enable Lights
         if (gl != NULL) {
-            this->fillLightArray();
+            auto eyeDir = cr->GetCameraParameters()->EyeDirection().PeekComponents();
+            this->fillLightArray(eyeDir);
             lightsToRender = ospNewData(this->lightArray.size(), OSP_OBJECT, lightArray.data(), 0);
             ospCommit(lightsToRender);
             ospSetData(renderer, "lights", lightsToRender);

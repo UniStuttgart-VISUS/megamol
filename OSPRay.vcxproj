@@ -285,7 +285,9 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClInclude Include="src\OSPRayRenderer.h" />
     <ClInclude Include="src\OSPRaySphereGeometry.h" />
     <ClInclude Include="src\OSPRaySpotLight.h" />
+    <ClInclude Include="src\OSPRayStructuredVolume.h" />
     <ClInclude Include="src\OSPRayThinGlassMaterial.h" />
+    <ClInclude Include="src\OSPRayTriangleMesh.h" />
     <ClInclude Include="src\OSPRayVelvetMaterial.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\targetver.h" />
@@ -312,7 +314,9 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile Include="src\OSPRayPointLight.cpp" />
     <ClCompile Include="src\OSPRayQuadLight.cpp" />
     <ClCompile Include="src\OSPRaySpotLight.cpp" />
+    <ClCompile Include="src\OSPRayStructuredVolume.cpp" />
     <ClCompile Include="src\OSPRayThinGlassMaterial.cpp" />
+    <ClCompile Include="src\OSPRayTriangleMesh.cpp" />
     <ClCompile Include="src\OSPRayVelvetMaterial.cpp" />
     <ClCompile Include="src\OSPRay_plugin.cpp" />
     <ClCompile Include="src\OSPRayRenderer.cpp" />
