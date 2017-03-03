@@ -13,11 +13,13 @@
 #include <cstdint>
 #include "vislib/sys/KeyCode.h"
 #include <cassert>
+#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::console;
 
-gl::ATParamBar::ATParamBar(void *hCore) : ATBar("paramBar"), hCore(hCore), root() {
+gl::ATParamBar::ATParamBar(void *hCore) : ATBar("paramBar"), hCore(hCore), root(),
+    lastParamHash(0) {
     std::stringstream def;
     def << Name() << " "
         << "label='Parameters' "
@@ -34,11 +36,16 @@ gl::ATParamBar::~ATParamBar() {
 }
 
 void gl::ATParamBar::Update() {
+    auto currentParamHash = mmcGetGlobalParameterHash(hCore);
+    if (lastParamHash == currentParamHash) return;
+    lastParamHash = currentParamHash;
+    vislib::sys::Log::DefaultLog.WriteInfo("ATParamBar: Updating TweakBar\n");
+
     // first update the data representation of the parameter tree
     group enumIn;
     enumIn.name.clear();
     ::mmcEnumParametersA(hCore, (mmcEnumStringAFunction)&mmcCollectParams, &enumIn);
-    if (enumIn.structEqual(&root)) return; // param tree is up to date
+    //if (enumIn.structEqual(&root)) return; // param tree is up to date
 
     // Recreate param tree
     TwRemoveAllVars(Handle()); // TODO: does this remove groups as well? What about variable types?
@@ -180,6 +187,7 @@ void gl::ATParamBar::addParamVariable(std::shared_ptr<Param>& param, std::string
     if (::memcmp(desc.data(), "MMBUTN", 6) == 0) param = std::make_shared<ButtonParam>(oldParam, Handle(), def, desc);
     else if (::memcmp(desc.data(), "MMBOOL", 6) == 0) param = std::make_shared<BoolParam>(oldParam, Handle(), def, desc);
     else if (::memcmp(desc.data(), "MMENUM", 6) == 0) param = std::make_shared<EnumParam>(oldParam, Handle(), def, desc);
+    else if (::memcmp(desc.data(), "MMFENU", 6) == 0) param = std::make_shared<FlexEnumParam>(oldParam, Handle(), def, desc);
     else if (::memcmp(desc.data(), "MMFLOT", 6) == 0) param = std::make_shared<FloatParam>(oldParam, Handle(), def, desc);
     else if (::memcmp(desc.data(), "MMINTR", 6) == 0) param = std::make_shared<IntParam>(oldParam, Handle(), def, desc);
     else if (::memcmp(desc.data(), "MMVC3F", 6) == 0) param = std::make_shared<Vec3fParam>(oldParam, Handle(), def, desc);
@@ -383,6 +391,73 @@ void gl::ATParamBar::EnumParam::parseEnumDesc(std::vector<TwEnumVal>& outValues,
 }
 
 std::vector<std::shared_ptr<vislib::StringA> > gl::ATParamBar::EnumParam::enumStrings;
+
+/****************************************************************************/
+
+gl::ATParamBar::FlexEnumParam::FlexEnumParam(std::shared_ptr<Param> src, TwBar* bar, std::stringstream& def, const std::vector<unsigned char>& desc)
+    : ValueParam(src, bar, makeMyFlexEnumType(src->Handle(), desc), def) {
+    std::vector<TwEnumVal> values;
+    parseFlexEnumDesc(values, desc);
+}
+
+void gl::ATParamBar::FlexEnumParam::Set(const void *value) {
+    auto str = this->enumStrings[*static_cast<const int *>(value)];
+    ::mmcSetParameterValueA(this->Handle(), *str);
+}
+
+void gl::ATParamBar::FlexEnumParam::Get(void *value) {
+    try {
+        const char *dat = ::mmcGetParameterValueA(this->Handle());
+
+        //char **destPtr = (char **)value;
+        //::TwCopyCDStringToLibrary(destPtr, dat);
+
+        for (SIZE_T i = 0; i < this->enumStrings.size(); i++) {
+            if (this->enumStrings[i]->Equals(dat)) {
+                *static_cast<int*>(value) = static_cast<int>(i); //this->values[i].Value;
+                return;
+            }
+        }
+        *static_cast<int*>(value) = 0; // vislib::CharTraitsA::ParseInt(v);
+        ::mmcSetParameterValueA(this->Handle(), *this->enumStrings[0]);
+    } catch (...) {
+    }
+}
+
+TwType gl::ATParamBar::FlexEnumParam::makeMyFlexEnumType(void* hParam, const std::vector<unsigned char>& desc) {
+    vislib::StringA n;
+    UINT64 id = reinterpret_cast<UINT64>(hParam);
+    unsigned char idc[8];
+    ::memcpy(idc, &id, 8);
+    n.Format("%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x", idc[0], idc[1], idc[2], idc[3], idc[4], idc[5], idc[6], idc[7]);
+    std::vector<TwEnumVal> values;
+    parseFlexEnumDesc(values, desc);
+    return ::TwDefineEnum(n, values.data(), static_cast<unsigned int>(values.size()));
+}
+
+void gl::ATParamBar::FlexEnumParam::parseFlexEnumDesc(std::vector<TwEnumVal>& outValues, const std::vector<unsigned char>& desc) {
+    int dp = 6;
+    SIZE_T cnt = *reinterpret_cast<const unsigned int*>(desc.data() + dp);
+    dp += 4;
+    outValues.resize(cnt);
+    for (SIZE_T i = 0; i < cnt; i++) {
+        outValues[i].Value = static_cast<int>(i); //static_cast<int>(*reinterpret_cast<const unsigned int*>(desc.data() + dp));
+
+        vislib::StringA l(reinterpret_cast<const char*>(desc.data() + dp));
+        dp += l.Length() + 1;
+
+        auto p = std::find_if(enumStrings.begin(), enumStrings.end(), [&l](std::shared_ptr<vislib::StringA> const& o) {
+            return (*o) == l;
+        });
+        if (p == enumStrings.end()) {
+            enumStrings.push_back(std::make_shared<vislib::StringA>(l));
+            p = enumStrings.end() - 1;
+        }
+        outValues[i].Label = (*p)->PeekBuffer();
+    }
+}
+
+std::vector<std::shared_ptr<vislib::StringA> > gl::ATParamBar::FlexEnumParam::enumStrings;
 
 /****************************************************************************/
 

@@ -109,6 +109,17 @@ namespace gl {
             std::vector<TwEnumVal> values;
         };
 
+        class FlexEnumParam : public ValueParam {
+        public:
+            FlexEnumParam(std::shared_ptr<Param> src, TwBar* bar, std::stringstream& def, const std::vector<unsigned char>& desc);
+            virtual void Set(const void *value);
+            virtual void Get(void *value);
+        private:
+            static TwType makeMyFlexEnumType(void* hParam, const std::vector<unsigned char>& desc);
+            static void parseFlexEnumDesc(std::vector<TwEnumVal>& outValues, const std::vector<unsigned char>& desc);
+            static std::vector<std::shared_ptr<vislib::StringA> > enumStrings;
+        };
+
         class FloatParam : public ValueParam {
         public:
             FloatParam(std::shared_ptr<Param> src, TwBar* bar, std::stringstream& def, const std::vector<unsigned char>& desc);
@@ -153,6 +164,8 @@ namespace gl {
 
         void *hCore;
         group root;
+
+        size_t lastParamHash;
     };
 
 } /* end namespace gl */
