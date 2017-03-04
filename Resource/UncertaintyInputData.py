@@ -46,9 +46,6 @@
 
 import sys
 import os
-
-print('VERSION: {0}'.format(sys.version))
-			
 import subprocess
 import logging
 import argparse
@@ -70,16 +67,13 @@ except Exception as Error:
         print('>>>      {0}'.format(Error))
         print('>>>      Current python version is NOT supported: {0}'.format(sys.version))
         exit()
-    else: 
-        func_urlretrieve = urllib.urlretrieve
-        func_urlencode   = urllib.urlencode
-        func_urlopen     = urllib.urlopen     
-else:
-    func_urlretrieve = urllib.request.urlretrieve
-    func_urlencode   = urllib.parse.urlencode
-    func_urlopen     = urllib.request.urlopen
+
+func_urlretrieve = urllib.request.urlretrieve
+func_urlencode   = urllib.parse.urlencode
+func_urlopen     = urllib.request.urlopen
     
-    
+print('VERSION: {0}'.format(sys.version))
+
 
 # #############################################################################
 # Class: UncertaintyInputData
@@ -360,7 +354,6 @@ class UncertaintyInputData:
             logging.error('>>>   {0}'.format(Error))
             return False
         
-        # DSSPTempData = str(DSSPServerData.read()) # ! Have to convert from binary to string.
         DSSPTempData = str(DSSPServerData.read(), 'utf-8') # ! Have to convert from binary to string.
         JobId = json.loads(DSSPTempData)['id']
         logging.debug('  Receiving Job ID was successfull \"{0}\"'.format(JobId))
