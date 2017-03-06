@@ -581,6 +581,8 @@ void AbstractOSPRayRenderer::fillWorld() {
         OSPData texData    = NULL;
         OSPData indexData  = NULL;
         OSPData voxels     = NULL;
+        OSPData isovalues  = NULL;
+        OSPData planes     = NULL;
         switch (element.type) {
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
@@ -632,37 +634,37 @@ void AbstractOSPRayRenderer::fillWorld() {
 
                 // check vertex data type
                 if (element.vertexData->size() != 0) {
-                    vertexData = ospNewData(element.vertexCount , OSP_FLOAT3, element.vertexData->data());
+                    vertexData = ospNewData(element.vertexCount, OSP_FLOAT3, element.vertexData->data());
                     ospCommit(vertexData);
                     ospSetData(geo, "vertex", vertexData);
                 }
 
                 // check normal pointer
                 if (element.normalData->size() != 0) {
-                        normalData = ospNewData(element.vertexCount, OSP_FLOAT3, element.normalData->data());
-                        ospCommit(normalData);
-                        ospSetData(geo, "vertex.normal", normalData);
+                    normalData = ospNewData(element.vertexCount, OSP_FLOAT3, element.normalData->data());
+                    ospCommit(normalData);
+                    ospSetData(geo, "vertex.normal", normalData);
                 }
 
                 // check colorpointer and convert to rgba
                 if (element.colorData->size() != 0) {
-                        colorData = ospNewData(element.vertexCount, OSP_FLOAT4, element.colorData->data());
-                        ospCommit(colorData);
-                        ospSetData(geo, "vertex.color", colorData);
+                    colorData = ospNewData(element.vertexCount, OSP_FLOAT4, element.colorData->data());
+                    ospCommit(colorData);
+                    ospSetData(geo, "vertex.color", colorData);
                 }
 
                 // check texture array
                 if (element.texData->size() != 0) {
-                        texData = ospNewData(element.triangleCount, OSP_FLOAT2, element.texData->data());
-                        ospCommit(texData);
-                        ospSetData(geo, "vertex.texcoord", texData);
+                    texData = ospNewData(element.triangleCount, OSP_FLOAT2, element.texData->data());
+                    ospCommit(texData);
+                    ospSetData(geo, "vertex.texcoord", texData);
                 }
 
                 // check index pointer
                 if (element.indexData->size() != 0) {
-                        indexData = ospNewData(element.triangleCount, OSP_UINT3, element.indexData->data());
-                        ospCommit(indexData);
-                        ospSetData(geo, "index", indexData);
+                    indexData = ospNewData(element.triangleCount, OSP_UINT3, element.indexData->data());
+                    ospCommit(indexData);
+                    ospSetData(geo, "index", indexData);
                 }
 
                 break;
@@ -688,7 +690,6 @@ void AbstractOSPRayRenderer::fillWorld() {
             break;
 
         case structureTypeEnum::VOLUME:
-
             vol = ospNewVolume("shared_structured_volume");
 
 
@@ -727,8 +728,46 @@ void AbstractOSPRayRenderer::fillWorld() {
             ospSetObject(vol, "transferFunction", tf);
             ospCommit(vol);
 
-            ospAddVolume(world, vol);
+            switch (element.volRepType) {
+            case volumeRepresentationType::VOLUMEREP:
+                ospAddVolume(world, vol);
+                break;
 
+            case volumeRepresentationType::ISOSURFACE:
+                // isosurface
+                    geo = ospNewGeometry("isosurfaces");
+                    isovalues = ospNewData(1, OSP_FLOAT, element.isoValue->data());
+                    ospCommit(isovalues);
+                    ospSetData(geo, "isovalues", isovalues);
+                    ospSetObject(geo, "volume", vol);
+
+                    if (material != NULL) {
+                        ospSetMaterial(geo, material);
+                    }
+
+                    ospCommit(geo);
+
+                    ospAddGeometry(world, geo); // Show isosurface
+
+                break;
+
+            case volumeRepresentationType::SLICE:
+                    geo = ospNewGeometry("slices");
+                    planes = ospNewData(1, OSP_FLOAT4, element.sliceData->data());
+                    ospCommit(planes);
+                    ospSetData(geo, "planes", planes);
+                    ospSetObject(geo, "volume", vol);
+
+                    if (material != NULL) {
+                        ospSetMaterial(geo, material);
+                    }
+
+                    ospCommit(geo);
+
+                    ospAddGeometry(world, geo);  // Show slice
+
+                break;
+            }
             break;
         }
 

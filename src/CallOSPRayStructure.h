@@ -32,7 +32,11 @@ enum geometryTypeEnum {
 enum volumeTypeEnum {
     STRUCTUREDVOLUME,
     BLOCKBRICKEDVOLUME,
-    GHOSTBLOCKBRICKEDVOLUME,
+    GHOSTBLOCKBRICKEDVOLUME
+};
+
+enum volumeRepresentationType {
+    VOLUMEREP,
     ISOSURFACE,
     SLICE
 };
@@ -44,6 +48,7 @@ public:
     std::shared_ptr<OSPRayMaterialContainer> materialContainer;
     geometryTypeEnum geometryType;
     volumeTypeEnum volumeType;
+    volumeRepresentationType volRepType;
 
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
@@ -56,6 +61,9 @@ public:
     std::shared_ptr<std::vector<int>> dimensions;
     std::shared_ptr<std::vector<float>> clippingBoxLower;
     std::shared_ptr<std::vector<float>> clippingBoxUpper;
+    std::shared_ptr<std::vector<float>> isoValue;
+    std::shared_ptr<std::vector<float>> sliceData;
+
 
 
     unsigned int voxelCount = voxelCount;

@@ -65,6 +65,13 @@ protected:
     megamol::core::param::ParamSlot clippingBoxLower;
     megamol::core::param::ParamSlot clippingBoxUpper;
     megamol::core::param::ParamSlot clippingBoxActive;
+
+    megamol::core::param::ParamSlot repType;
+
+    megamol::core::param::ParamSlot IsoValue;
+
+    megamol::core::param::ParamSlot sliceNormal;
+    megamol::core::param::ParamSlot sliceDist;
 };
 
 } // namespace ospray

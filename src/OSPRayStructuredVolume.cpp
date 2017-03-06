@@ -9,6 +9,8 @@
 #include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 #include "mmcore/Call.h"
 
@@ -19,12 +21,22 @@ using namespace megamol::ospray;
 OSPRayStructuredVolume::OSPRayStructuredVolume(void) :
     AbstractOSPRayStructure(),
 
-    clippingBoxActive("Volume::ClippingBox::Active", "Activates the clipping Box"),
-    clippingBoxLower("Volume::ClippingBox::Left", "Left corner of the clipping Box"),
-    clippingBoxUpper("Volume::ClippingBox::Right", "Right corner of the clipping Box"),
+    clippingBoxActive("ClippingBox::Active", "Activates the clipping Box"),
+    clippingBoxLower("ClippingBox::Left", "Left corner of the clipping Box"),
+    clippingBoxUpper("ClippingBox::Right", "Right corner of the clipping Box"),
+    repType("Representation", "Activates one of the three different volume representations: Volume, Isosurfae, Slice"),
+    sliceNormal("Slice::sliceNormal", "Direction of the slice normal"),
+    sliceDist("Slice::sliceDist", "Distance of the slice in the direction of the normal vector"),
+    IsoValue("Isosurface::Isovalue","Sets the isovalue of the isosurface"),
 
     getDataSlot("getdata", "Connects to the data source")
  {
+    core::param::EnumParam *rt = new core::param::EnumParam(VOLUMEREP);
+    rt->SetTypePair(VOLUMEREP, "Volume");
+    rt->SetTypePair(ISOSURFACE, "Isosurface");
+    rt->SetTypePair(SLICE, "Slice");
+    this->repType << rt;
+    this->MakeSlotAvailable(&this->repType);
 
     this->clippingBoxActive << new core::param::BoolParam(false);
     this->clippingBoxLower << new core::param::Vector3fParam({ -5.0f, -5.0f, -5.0f });
@@ -32,6 +44,14 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void) :
     this->MakeSlotAvailable(&this->clippingBoxActive);
     this->MakeSlotAvailable(&this->clippingBoxLower);
     this->MakeSlotAvailable(&this->clippingBoxUpper);
+
+    this->sliceNormal << new core::param::Vector3fParam({ 1.0f, 0.0f, 0.0f });
+    this->sliceDist << new core::param::FloatParam(0.0f);
+    this->MakeSlotAvailable(&this->sliceNormal);
+    this->MakeSlotAvailable(&this->sliceDist);
+
+    this->IsoValue << new core::param::FloatParam(0.0f);
+    this->MakeSlotAvailable(&this->IsoValue);
 
     this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::VolumeDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -83,6 +103,8 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     // Write stuff into the structureContainer
 
     this->structureContainer.type = structureTypeEnum::VOLUME;
+    this->structureContainer.volumeType = volumeTypeEnum::STRUCTUREDVOLUME;
+    this->structureContainer.volRepType = (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
     this->structureContainer.voxels = std::make_shared<std::vector<float>>(std::move(voxels));
     this->structureContainer.gridOrigin = std::make_shared<std::vector<float>>(std::move(gridOrigin));
     this->structureContainer.gridSpacing = std::make_shared<std::vector<float>>(std::move(gridSpacing));
@@ -95,6 +117,12 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
     this->structureContainer.clippingBoxLower = std::make_shared<std::vector<float>>(std::move(cbl));
     std::vector<float> cbu = { this->clippingBoxUpper.Param<core::param::Vector3fParam>()->Value().GetX(), this->clippingBoxUpper.Param<core::param::Vector3fParam>()->Value().GetY(), this->clippingBoxUpper.Param<core::param::Vector3fParam>()->Value().GetZ() };
     this->structureContainer.clippingBoxUpper = std::make_shared<std::vector<float>>(std::move(cbu));
+
+    std::vector<float> sData = { this->sliceNormal.Param<core::param::Vector3fParam>()->Value().GetX(), this->sliceNormal.Param<core::param::Vector3fParam>()->Value().GetY(), this->sliceNormal.Param<core::param::Vector3fParam>()->Value().GetZ(), this->sliceDist.Param<core::param::FloatParam>()->Value() };
+    this->structureContainer.sliceData = std::make_shared<std::vector<float>>(std::move(sData));
+
+    std::vector<float> iValue = { this->IsoValue.Param<core::param::FloatParam>()->Value() };
+    this->structureContainer.isoValue = std::make_shared<std::vector<float>>(std::move(iValue));
 
 
     // material container
@@ -134,11 +162,19 @@ bool OSPRayStructuredVolume::InterfaceIsDirty() {
         cm->InterfaceIsDirty() ||
         this->clippingBoxActive.IsDirty() ||
         this->clippingBoxLower.IsDirty() ||
-        this->clippingBoxUpper.IsDirty()
+        this->clippingBoxUpper.IsDirty() || 
+        this->sliceDist.IsDirty() || 
+        this->sliceNormal.IsDirty() ||
+        this->IsoValue.IsDirty() ||
+        this->repType.IsDirty()
         ) {
         this->clippingBoxActive.ResetDirty();
         this->clippingBoxLower.ResetDirty();
         this->clippingBoxUpper.ResetDirty();
+        this->sliceDist.ResetDirty();
+        this->sliceNormal.ResetDirty();
+        this->IsoValue.ResetDirty();
+        this->repType.ResetDirty();
         return true;
     } else {
         return false;
