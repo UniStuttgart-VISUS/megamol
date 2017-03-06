@@ -15,6 +15,11 @@
 #include "FlagStorage.h"
 #include "NGParallelCoordinatesRenderer2D.h"
 
+#include "NVGDiagramRenderer.h"
+#include "DiagramSeries.h"
+
+#include "DiagramSeriesCall.h"
+
 /* anonymous namespace hides this type from any other object files */
 namespace {
     /** Implementing the instance class of this plugin */
@@ -41,11 +46,14 @@ namespace {
 
             // register modules here:
 
-			this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
-			this->module_descriptions.RegisterAutoDescription<megamol::infovis::NGParallelCoordinatesRenderer2D>();
+            this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
+            this->module_descriptions.RegisterAutoDescription<megamol::infovis::NGParallelCoordinatesRenderer2D>();
+            this->module_descriptions.RegisterAutoDescription<megamol::infovis::NVGDiagramRenderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
             // register calls here:
-			this->call_descriptions.RegisterAutoDescription<megamol::infovis::FlagCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::infovis::FlagCall>();
+            this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

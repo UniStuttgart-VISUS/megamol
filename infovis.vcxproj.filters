@@ -26,6 +26,24 @@
     <Filter Include="Config and Make Files\cmake">
       <UniqueIdentifier>{95dd01f6-3da2-411e-bccd-28833d2ab805}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3rd">
+      <UniqueIdentifier>{17056286-08b6-4937-8bdc-c677e57f4cbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd\nanovg">
+      <UniqueIdentifier>{aca741c8-b5d7-4c4c-8e06-da5f055ecd46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd\nanovg\Header Files">
+      <UniqueIdentifier>{be26d48c-db93-4681-abd7-80e320d69f7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd\nanovg\Source Files">
+      <UniqueIdentifier>{3c8364a6-6e9c-4859-afae-aa29700fd1be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd\oui-blendish">
+      <UniqueIdentifier>{f2a20288-d2b3-4805-a9a5-7758ace9a856}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd\oui-blendish\Header Files">
+      <UniqueIdentifier>{01c71e35-935c-4fe1-8e14-dbe88e926622}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat">
@@ -91,6 +109,39 @@
     <ClInclude Include="src\debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="3rd\nanovg\fontstash.h">
+      <Filter>3rd\nanovg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\nanovg\nanovg.h">
+      <Filter>3rd\nanovg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\nanovg\nanovg_gl.h">
+      <Filter>3rd\nanovg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\nanovg\nanovg_gl_utils.h">
+      <Filter>3rd\nanovg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\nanovg\stb_image.h">
+      <Filter>3rd\nanovg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\nanovg\stb_truetype.h">
+      <Filter>3rd\nanovg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DiagramSeriesCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DiagramSeries.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\oui-blendish\blendish.h">
+      <Filter>3rd\oui-blendish\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\oui-blendish\oui.h">
+      <Filter>3rd\oui-blendish\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NVGDiagramRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovis.cpp">
@@ -109,6 +160,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\NGParallelCoordinatesRenderer2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd\nanovg\nanovg.c">
+      <Filter>3rd\nanovg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DiagramSeriesCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DiagramSeries.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NVGDiagramRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
