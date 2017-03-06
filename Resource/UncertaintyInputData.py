@@ -33,9 +33,10 @@
 #   PDBId        Specify a PDB ID in the four letter code
 # 
 # optional arguments:
-#   -h, --help   show this help message and exit
-#   -d, --debug  Flag to enable debug output
-# 
+#   -h, --help    show this help message and exit
+#   -d, --debug   Flag to enable debug output
+#   -o, --offline Flag to force use of offline assignment programs
+#
 # -----------------------------------------------------------------------------
 # 
 # #############################################################################
@@ -565,7 +566,7 @@ class UncertaintyInputData:
                             else:
                                 MissingAADict[FileLine[19:20]].append(FileLine[13:27])
                             
-                        elif ('M RES C SSSEQI' in FileLine[13:27]):                            # Next line(s) contain data about missing amino-acid(s)
+                        elif ('RES C SSSEQI' in FileLine[15:27]):                            # Next line(s) contain data about missing amino-acid(s)
                             GetMissing = True  
                                                 
                     elif (FileLine[0:6] == 'HETATM'):                                          # Handle HETATM
@@ -589,6 +590,8 @@ class UncertaintyInputData:
                             AANumber += 1
                             LastATOMIndex = FileLine[22:27]  
                             LastATOMChainID = FileLine[21:22]
+                    elif (FileLine[0:6] == 'ENDMDL'):                                        # Just use first model (multiple models for NMR data ...)
+                        break; 
                         
         
             # Insert missing amino-acids
@@ -744,6 +747,14 @@ class UncertaintyInputData:
         # Parsing STRIDE file -------------------------------------------------
         logging.debug('  Opening STRIDE file')
         logging.info('  Parsing STRIDE file ...')
+        
+        # Init list buffer with STRIDE header
+        OutFileBuffer[2] += ('-----------------------------------------------------------------------------------------------------------------------------------------------------|') 
+        OutFileBuffer[3] += (' STRIDE                                                                                                                                              |') 
+        OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|-Phi-----|-Psi-----|-Area----|---Th1----|---Th3----|---Th4----|---Tb1p---|---Tb2p---|---Tb1a---|---Tb2a---|') 
+        OutFileBuffer[7] += ('-------|------|---------|-----------------|---------|---------|---------|----------|----------|----------|----------|----------|----------|----------|')  
+        # Length of columns:     7       6       9        17                 9         9         9         10        10         10         10          10         10         10
+            
         if os.path.isfile(Param_STRIDEFile):
             try:
                 STRIDEFile = open(Param_STRIDEFile, 'r')
@@ -752,13 +763,6 @@ class UncertaintyInputData:
                 logging.error('>>>   {0}'.format(Error))
                 return False
 
-            # Init list buffer with STRIDE header
-            OutFileBuffer[2] += ('-----------------------------------------------------------------------------------------------------------------------------------------------------|') 
-            OutFileBuffer[3] += (' STRIDE                                                                                                                                              |') 
-            OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|-Phi-----|-Psi-----|-Area----|---Th1----|---Th3----|---Th4----|---Tb1p---|---Tb2p---|---Tb1a---|---Tb2a---|') 
-            OutFileBuffer[7] += ('-------|------|---------|-----------------|---------|---------|---------|----------|----------|----------|----------|----------|----------|----------|')  
-            # Length of columns:     7       6       9        17                 9         9         9         10        10         10         10          10         10         10
-            
             # ColumnWidth of STRIDE file entries
             #  - First Index of substrings -1 
             #  - Code     AA    ChainID   Nr      Structure  Phi      Psi     Area    T1a       T2a      T3a       T1b         T2b      HB-En1     HB-En2
@@ -830,7 +834,15 @@ class UncertaintyInputData:
                             
         # Parsing DSSP file ---------------------------------------------------
         logging.debug('  Opening DSSP file')
-        logging.info('  Parsing DSSP file ...')        
+        logging.info('  Parsing DSSP file ...') 
+         
+        # Init list buffer with DSSP header
+        OutFileBuffer[2] += ('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|') 
+        OutFileBuffer[3] += (' DSSP                                                                                                                                                                       |')
+        OutFileBuffer[4] += ('-Nr----|-AA-|-ChainID-|-Structure-|-BP1--|-BP2--|-ACC--|-TCO-----|-KAPPA--|-ALPHA--|-PHI----|-PSI----|-X-CA---|-Y-CA---|-Z-CA---|-HBondAc0-|-HBondAc1-|-HBondDo0-|-HBondDo1-|')
+        OutFileBuffer[7] += ('-------|----|---------|-----------|------|------|------|---------|--------|--------|--------|--------|--------|--------|--------|----------|----------|----------|----------|')
+        # Length of columns:   7        4       9       11         6       6       6       9        8        8        8        8        8         8        8       8           8          8           8
+             
         if os.path.isfile(Param_DSSPFile):
             try:
                 DSSPFile = open(Param_DSSPFile, 'r')
@@ -839,13 +851,6 @@ class UncertaintyInputData:
                 logging.error('>>>   {0}'.format(Error))
                 return False
 
-            # Init list buffer with DSSP header
-            OutFileBuffer[2] += ('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|') 
-            OutFileBuffer[3] += (' DSSP                                                                                                                                                                       |')
-            OutFileBuffer[4] += ('-Nr----|-AA-|-ChainID-|-Structure-|-BP1--|-BP2--|-ACC--|-TCO-----|-KAPPA--|-ALPHA--|-PHI----|-PSI----|-X-CA---|-Y-CA---|-Z-CA---|-HBondAc0-|-HBondAc1-|-HBondDo0-|-HBondDo1-|')
-            OutFileBuffer[7] += ('-------|----|---------|-----------|------|------|------|---------|--------|--------|--------|--------|--------|--------|--------|----------|----------|----------|----------|')
-            # Length of columns:   7        4       9       11         6       6       6       9        8        8        8        8        8         8        8       8           8          8           8
-            
             # ColumnWidth of DSSP file entries
             # - First Index of substring indices: -1 | Second Index of substring indices: +1
             # - Number  Amino.   ChainID     Struc.   BP1      BP2      AC C      TCO      KAPPA    ALPHA     PHI       PSI       X-CA       Y-CA       Z-CA      HBondAc0   HBondAc1   HBondDo0  HBondDo1

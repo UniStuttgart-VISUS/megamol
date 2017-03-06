@@ -429,7 +429,9 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 
 
                     // Read threshold and energy values of STRIDE
-                    float Th1  = (float)std::atof(line.Substring(204, 10)); // std::atof converts "inf" to "inf"
+                    // std::atof converts "inf" to "inf"
+                    // std::atof converts " " to "0.0"
+                    float Th1  = (float)std::atof(line.Substring(204, 10)); 
                     float Th3  = (float)std::atof(line.Substring(215, 10));
                     float Th4  = (float)std::atof(line.Substring(226, 10));
                     float Tb1p = (float)std::atof(line.Substring(237, 10));
