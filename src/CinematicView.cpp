@@ -1,0 +1,65 @@
+/**
+* CinematicView.cpp
+*/
+
+#include "stdafx.h"
+#include "CinematicView.h"
+#include "CallCinematicCamera.h"
+#include "CameraParamsOverride.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/view/CallRender3D.h"
+
+using namespace megamol;
+using namespace cinematiccamera;
+
+CinematicView::CinematicView(void) : View3D(),
+keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+selectedKeyframeParam("selectedKeyframeParam", "render selected Keyframe if true. render keyframe at animationtime if false"){
+
+
+	this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
+	this->MakeSlotAvailable(&this->keyframeKeeperSlot);
+
+	this->selectedKeyframeParam << new core::param::BoolParam(true);
+	this->MakeSlotAvailable(&this->selectedKeyframeParam);
+}
+
+
+megamol::cinematiccamera::CinematicView::~CinematicView() {}
+
+void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext& context) {
+
+
+
+	auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
+
+	auto kfc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+
+	if (selectedKeyframeParam.Param<core::param::BoolParam>()->Value()){
+
+		if ((*kfc)(CallCinematicCamera::CallForGetSelectedKeyframe)){
+
+			if (kfc->getSelectedKeyframe().getID() != -2){
+
+				if (kfc->getSelectedKeyframe().getID() == -1){
+					kfc->getInterpolatedKeyframe().putCamParameters(this->cam.Parameters());
+				}
+				else{
+					kfc->getSelectedKeyframe().putCamParameters(this->cam.Parameters());
+				}
+			}
+		}
+	}
+	else {
+
+		kfc->setTimeofKeyframeToGet(context.Time);
+		if ((*kfc)(CallCinematicCamera::CallForGetKeyframeAtTime)){
+
+			kfc->getInterpolatedKeyframe().putCamParameters(this->cam.Parameters());
+
+		}
+
+	}
+
+	Base::Render(context);
+}
