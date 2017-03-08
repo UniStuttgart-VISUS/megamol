@@ -49,7 +49,8 @@ public:
         DIAGRAM_TYPE_LINE_STACKED_NORMALIZED = 2,
         DIAGRAM_TYPE_COLUMN = 4,
         DIAGRAM_TYPE_COLUMN_STACKED = 8,
-        DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED = 16
+        DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED = 16,
+        DIAGRAM_TYPE_POINT_SPLATS = 32
     };
 
     enum DiagramStyles {
@@ -178,6 +179,8 @@ private:
     std::vector<bool> selected;
 
     std::vector<vislib::math::Rectangle<float>> bndBtns;
+
+    void drawPointSplats(float w, float h);
 
     //view::CallRender2D callR2D;
 

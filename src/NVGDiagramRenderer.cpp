@@ -113,6 +113,7 @@ NVGDiagramRenderer::NVGDiagramRenderer(void) : Renderer2DModule(),
     dt->SetTypePair(DIAGRAM_TYPE_COLUMN, "Clustered Column");
     dt->SetTypePair(DIAGRAM_TYPE_COLUMN_STACKED, "Stacked Column");
     dt->SetTypePair(DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED, "100% Stacked Column");
+    dt->SetTypePair(DIAGRAM_TYPE_POINT_SPLATS, "Point Splats");
     this->diagramTypeParam.SetParameter(dt);
     this->MakeSlotAvailable(&this->diagramTypeParam);
 
@@ -231,6 +232,10 @@ bool megamol::infovis::NVGDiagramRenderer::assertData(floattable::CallFloatTable
             this->abcissaIdx = i;
     }
 
+    /*if (this->inputHash != ft->DataHash() || isAnythingDirty()) {
+        this->prepareData(false, false, false);
+    }*/
+
     this->myHash++;
     this->inputHash = ft->DataHash();
     this->resetDirtyFlags();
@@ -256,6 +261,73 @@ void megamol::infovis::NVGDiagramRenderer::defineLayout(float w, float h) {
     }
 }
 
+
+void megamol::infovis::NVGDiagramRenderer::drawPointSplats(float w, float h) {
+    this->defineLayout(w, h);
+    float dw = this->screenSpaceDiagramSize.GetWidth();
+    float dh = this->screenSpaceDiagramSize.GetHeight();
+    float mw = this->screenSpaceMidPoint.GetX();
+    float mh = this->screenSpaceMidPoint.GetY();
+
+    float aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
+
+    this->drawLegend(w, h);
+
+    this->drawXAxis(DIAGRAM_XAXIS_FLOAT);
+
+    prepareData(false, false, false);
+
+    this->drawYAxis();
+
+    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+    nvgSave(ctx);
+    //nvgScale(ctx, this->scaleX, this->scaleY);
+    nvgTransform(ctx, this->transform.GetAt(0, 0), this->transform.GetAt(1, 0),
+        this->transform.GetAt(0, 1), this->transform.GetAt(1, 1),
+        this->transform.GetAt(0, 2), this->transform.GetAt(1, 2));
+
+    nvgFillColor(ctx, nvgRGB(255, 0, 0));
+    nvgBeginPath(ctx);
+    nvgCircle(ctx, 0.0f, 0.0f, 20);
+    nvgCircle(ctx, 0.0f, h, 20);
+    nvgCircle(ctx, w, 0.0f, 20);
+    nvgCircle(ctx, w, h, 20);
+    nvgFill(ctx);
+
+    auto lineW = this->lineWidthParam.Param<core::param::FloatParam>()->Value();
+
+    for (int s = 0; s < (int)preparedData->Count(); s++) {
+        if ((*preparedData)[s]->Count() < 2 || !this->selected[s]) {
+            continue;
+        }
+
+        auto color = std::get<4>(this->columnSelectors[s]);
+
+        //nvgStrokeWidth(ctx, this->lineWidthParam.Param<core::param::FloatParam>()->Value());
+        //nvgFillColor(ctx, nvgRGBf(color[0], color[1], color[2]));
+        nvgBeginPath(ctx);
+
+        /*float hinz = (*(*preparedData)[s])[0]->GetX() - 0.5f;
+        float kunz = (((*(*preparedData)[s])[0]->GetY())) - 0.5f;
+        nvgMoveTo(ctx, this->screenSpaceMidPoint.GetX() + hinz*this->screenSpaceDiagramSize.GetWidth(),
+            this->screenSpaceMidPoint.GetY() + kunz*this->screenSpaceDiagramSize.GetHeight());*/
+
+        for (int i = 0; i < (int)(*preparedData)[s]->Count(); i++) {
+            float hinz = (*(*preparedData)[s])[i]->GetX() - 0.5f;
+            float kunz = (((*(*preparedData)[s])[i]->GetY())) - 0.5f;
+
+            auto grad = nvgRadialGradient(ctx, mw + hinz*dw, mh + kunz*dh, 0.0f, lineW, nvgRGBAf(color[0], color[1], color[2], 0.0f), nvgRGBAf(color[0], color[1], color[2], 0.8f));
+            nvgFillPaint(ctx, grad);
+            nvgCircle(ctx, mw + hinz*dw, mh + kunz*dh, lineW);
+
+            /*nvgLineTo(ctx, this->screenSpaceMidPoint.GetX() + hinz*this->screenSpaceDiagramSize.GetWidth(),
+                this->screenSpaceMidPoint.GetY() + kunz*this->screenSpaceDiagramSize.GetHeight());*/
+        }
+
+        nvgFill(ctx);
+    }
+    nvgRestore(ctx);
+}
 
 bool NVGDiagramRenderer::CalcExtents() {
 
@@ -593,7 +665,7 @@ bool NVGDiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 
 void megamol::infovis::NVGDiagramRenderer::seriesInsertionCB(const DiagramSeriesCall::DiagramSeriesTuple &tuple) {
     columnSelectors.push_back(tuple);
-    this->selected.push_back(true);
+    //this->selected.push_back(true);
 }
 
 inline bool megamol::infovis::NVGDiagramRenderer::updateColumnSelectors(void) {
@@ -601,14 +673,17 @@ inline bool megamol::infovis::NVGDiagramRenderer::updateColumnSelectors(void) {
     if (dsc == nullptr) return false;
 
     std::vector<DiagramSeriesCall::DiagramSeriesTuple> oldColumnSelectors = this->columnSelectors;
+    //auto oldSelected = this->selected;
     this->columnSelectors.clear();
+    //this->selected.clear();
 
     dsc->SetSeriesInsertionCB(this->fpsicb);
     if (!(*dsc)(DiagramSeriesCall::CallForGetSeries)) {
         this->columnSelectors = oldColumnSelectors;
-        this->selected.resize(this->columnSelectors.size(), true);
+        //this->selected = oldSelected;
         return false;
     }
+    this->selected.resize(this->columnSelectors.size(), true);
 
     return true;
 }
@@ -833,6 +908,11 @@ bool NVGDiagramRenderer::Render(view::CallRender2D &call) {
     case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
         nvgBeginFrame(static_cast<NVGcontext *>(this->nvgCtxt), call.GetWidth(), call.GetHeight(), 1.0f);
         drawColumnDiagram();
+        nvgEndFrame(static_cast<NVGcontext *>(this->nvgCtxt));
+        break;
+    case DIAGRAM_TYPE_POINT_SPLATS:
+        nvgBeginFrame(static_cast<NVGcontext *>(this->nvgCtxt), call.GetWidth(), call.GetHeight(), 1.0f);
+        drawPointSplats(call.GetWidth(), call.GetHeight());
         nvgEndFrame(static_cast<NVGcontext *>(this->nvgCtxt));
         break;
     }
@@ -1459,9 +1539,10 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
 
         const floattable::CallFloatTableData::ColumnInfo *const ci = &(ft->GetColumnsInfos()[selector]);
 
-        if (!seriesVisible[s] /*|| isCategoricalMappable(dm) != drawCategorical*/) {
-            continue;
-        }
+        //if (!seriesVisible[s] /*|| isCategoricalMappable(dm) != drawCategorical*/) {
+        //if (!this->selected[s] /*|| isCategoricalMappable(dm) != drawCategorical*/) {
+        //    continue;
+        //}
         cntSeries++;
         localXIndexToGlobal[cntSeries - 1].SetCount(ft->GetRowsCount());
         if ((int)preparedData->Count() < cntSeries) {
