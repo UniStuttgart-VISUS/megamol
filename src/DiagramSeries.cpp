@@ -3,6 +3,8 @@
 
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ColourParser.h"
 
 using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
@@ -17,7 +19,10 @@ DiagramSeries::DiagramSeries(void) : core::Module(),
     ftInSlot("ftIn", "Input of FloatTable to select series from"),
     columnSelectorParam("columnSelector", "Param to select specific column from FloatTable"),
     scalingParam("scaling", "Param to set a scaling factor for selected column"),
+    colorParam("color", "Selecto color for series"),
     myHash(0), inputHash((std::numeric_limits<size_t>::max)()) {
+    this->color = {1.0f, 1.0f, 1.0f};
+
     this->seriesInSlot.SetCompatibleCall<DiagramSeriesCallDescription>();
     this->MakeSlotAvailable(&this->seriesInSlot);
 
@@ -35,6 +40,10 @@ DiagramSeries::DiagramSeries(void) : core::Module(),
 
     this->scalingParam << new core::param::FloatParam(1.0f, (std::numeric_limits<float>::min)());
     this->MakeSlotAvailable(&this->scalingParam);
+
+    this->colorParam << new core::param::StringParam(core::utility::ColourParser::ToString(
+        this->color[0], this->color[1], this->color[2]));
+    this->MakeSlotAvailable(&this->colorParam);
 }
 
 
@@ -118,7 +127,11 @@ bool DiagramSeries::assertData(const floattable::CallFloatTableData *const ft) {
     uint32_t colIdx = 0;
     if (!this->getColumnIdx(colIdx, colname, ft)) return false;
 
-    this->series = std::make_tuple(0, colIdx, std::string(T2A(colname)), this->scalingParam.Param<core::param::FloatParam>()->Value());
+    core::utility::ColourParser::FromString(
+        this->colorParam.Param<core::param::StringParam>()->Value(),
+        this->color[0], this->color[1], this->color[2]);
+
+    this->series = std::make_tuple(0, colIdx, std::string(T2A(colname)), this->scalingParam.Param<core::param::FloatParam>()->Value(), this->color);
 
     /*this->series.col = colIdx;
     this->series.name = std::string(T2A(colname));
@@ -137,7 +150,8 @@ bool DiagramSeries::assertData(const floattable::CallFloatTableData *const ft) {
  */
 bool DiagramSeries::isAnythingDirty(void) const {
     return this->columnSelectorParam.IsDirty() ||
-        this->scalingParam.IsDirty();
+        this->scalingParam.IsDirty() ||
+        this->colorParam.IsDirty();
 }
 
 /*
@@ -146,6 +160,7 @@ bool DiagramSeries::isAnythingDirty(void) const {
 void DiagramSeries::resetDirtyFlags(void) {
     this->columnSelectorParam.ResetDirty();
     this->scalingParam.ResetDirty();
+    this->colorParam.ResetDirty();
 }
 
 

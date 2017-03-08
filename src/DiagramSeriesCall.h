@@ -4,6 +4,7 @@
 #include <string>
 #include <functional>
 #include <tuple>
+#include <array>
 
 #include "mmcore/Call.h"
 
@@ -25,7 +26,7 @@ public:
         float scaling;
     } DiagramSeriesTuple;*/
 
-    typedef std::tuple<uint32_t, size_t, std::string, float> DiagramSeriesTuple;
+    typedef std::tuple<uint32_t, size_t, std::string, float, std::array<float, 3>> DiagramSeriesTuple;
 
     typedef std::function<void(const DiagramSeriesCall::DiagramSeriesTuple &tuple)> fpSeriesInsertionCB;
 

@@ -2,6 +2,7 @@
 #define MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED
 
 #include <vector>
+#include <array>
 
 #include "mmcore/Module.h"
 #include "mmcore/Call.h"
@@ -120,8 +121,14 @@ private:
     /** Optional scaling parameter */
     core::param::ParamSlot scalingParam;
 
+    /** Color parameter */
+    core::param::ParamSlot colorParam;
+
     /** Series info storing idx of selected column, etc. */
     DiagramSeriesCall::DiagramSeriesTuple series;
+
+    /** Color of series */
+    std::array<float, 3> color;
 
     /** The hash of the FloatTable */
     size_t inputHash;

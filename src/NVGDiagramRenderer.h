@@ -18,6 +18,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
 
+#include "vislib/math/Matrix.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
@@ -26,6 +27,7 @@
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
 #include "DiagramSeriesCall.h"
+
 
 //#include "protein_calls/DiagramCall.h"
 //#include "protein_calls/IntSelectionCall.h"
@@ -151,6 +153,34 @@ private:
 
     DiagramSeriesCall::fpSeriesInsertionCB fpsicb;
 
+    void *nvgCtxt;
+
+    vislib::math::Point<uint32_t, 2> screenSpaceMidPoint;
+
+    vislib::math::Dimension<uint32_t, 2> screenSpaceCanvasSize;
+
+    vislib::math::Dimension<uint32_t, 2> screenSpaceDiagramSize;
+
+    void defineLayout(float w, float h);
+
+    core::param::ParamSlot screenSpaceCanvasOffsetParam;
+
+    int nvgFontSans;
+
+    float scaleX, scaleY;
+
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> transform;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> transformT;
+
+    float sWidth;
+    float sHeight;
+
+    std::vector<bool> selected;
+
+    std::vector<vislib::math::Rectangle<float>> bndBtns;
+
+    //view::CallRender2D callR2D;
+
     /**********************************************************************
      * 'render'-functions
      **********************************************************************/
@@ -164,9 +194,9 @@ private:
      */
     void drawXAxis(XAxisTypes xType);
 
-    //void drawLegend();
+    void drawLegend(float w, float h);
 
-    void drawLineDiagram();
+    void drawLineDiagram(float w, float h);
     void drawColumnDiagram();
 
     /**

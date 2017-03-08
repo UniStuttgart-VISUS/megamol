@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "NVGDiagramRenderer.h"
 
+#include <array>
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/IntParam.h"
@@ -26,6 +28,14 @@
 #include <math.h>
 #include <float.h>
 
+#include "nanovg.h"
+#define NANOVG_GL3_IMPLEMENTATION
+#include "nanovg_gl.h"
+
+#define BLENDISH_IMPLEMENTATION
+#include "blendish.h"
+
+//#include "oui.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -72,7 +82,8 @@ NVGDiagramRenderer::NVGDiagramRenderer(void) : Renderer2DModule(),
     inputHash((std::numeric_limits<size_t>::max)()), myHash(0),
     getSelectorsSlot("getSelectors", "Slot asking for selected columns"),
     abcissaSelectorSlot("abcissaSelector", "Slot to select column as abcissa"),
-    abcissaIdx(0) {
+    abcissaIdx(0),
+    screenSpaceCanvasOffsetParam("screenSpaceCanvasOffset", "Slot defining screen space canvas margin") {
 
     // segmentation data caller slot
     this->dataCallerSlot.SetCompatibleCall<CallFloatTableDataDescription>();
@@ -85,6 +96,9 @@ NVGDiagramRenderer::NVGDiagramRenderer(void) : Renderer2DModule(),
     core::param::FlexEnumParam *abcissaSelectorEP = new core::param::FlexEnumParam("undef");
     this->abcissaSelectorSlot << abcissaSelectorEP;
     this->MakeSlotAvailable(&this->abcissaSelectorSlot);
+
+    this->screenSpaceCanvasOffsetParam << new core::param::FloatParam(0.9f, (std::numeric_limits<float>::min)(), 1.0f);
+    this->MakeSlotAvailable(&this->screenSpaceCanvasOffsetParam);
 
     /*this->selectionCallerSlot.SetCompatibleCall<protein_calls::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->selectionCallerSlot);
@@ -177,6 +191,16 @@ bool NVGDiagramRenderer::create() {
 
     this->fpsicb = std::bind(&NVGDiagramRenderer::seriesInsertionCB, this, std::placeholders::_1);
 
+    this->nvgCtxt = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    if (this->nvgCtxt == nullptr) {
+        Log::DefaultLog.WriteError("NVGDiagramRenderer: Could not init NanoVG\n");
+        return false;
+    }
+
+    this->nvgFontSans = nvgCreateFont((NVGcontext*)this->nvgCtxt, "sans", "T:\\Programmierung\\megamol2015\\infovis\\3rd\\oui-blendish\\DejaVuSans.ttf");
+    bndSetFont(this->nvgFontSans);
+    bndSetIconImage(nvgCreateImage((NVGcontext*)this->nvgCtxt, "T:\\Programmierung\\megamol2015\\infovis\\3rd\\oui-blendish\\blender_icons16.png", 0));
+
     return true;
 }
 
@@ -213,6 +237,25 @@ bool megamol::infovis::NVGDiagramRenderer::assertData(floattable::CallFloatTable
 
     return true;
 }
+
+
+void megamol::infovis::NVGDiagramRenderer::defineLayout(float w, float h) {
+    this->screenSpaceMidPoint.Set(w / 2, h / 2);
+
+    float screenSpaceCanvasOffset = this->screenSpaceCanvasOffsetParam.Param<core::param::FloatParam>()->Value();
+
+    this->screenSpaceCanvasSize.Set(this->screenSpaceMidPoint.GetX()*screenSpaceCanvasOffset,
+        this->screenSpaceMidPoint.GetY()*screenSpaceCanvasOffset);
+
+    if (this->screenSpaceCanvasSize.GetWidth() < this->screenSpaceCanvasSize.GetHeight()) {
+        uint32_t tmp = this->screenSpaceCanvasSize.GetWidth()*screenSpaceCanvasOffset;
+        this->screenSpaceDiagramSize.Set(tmp, tmp);
+    } else {
+        uint32_t tmp = this->screenSpaceCanvasSize.GetHeight()*screenSpaceCanvasOffset;
+        this->screenSpaceDiagramSize.Set(tmp, tmp);
+    }
+}
+
 
 bool NVGDiagramRenderer::CalcExtents() {
 
@@ -291,8 +334,9 @@ bool NVGDiagramRenderer::CalcExtents() {
 
 bool NVGDiagramRenderer::GetExtents(view::CallRender2D& call) {
     // set the bounding box to 0..1
-    call.SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize,
-        this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize);
+    /*call.SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize,
+        this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize);*/
+    call.SetBoundingBox(0.0f, 0.0f, call.GetWidth(), call.GetHeight());
 
     //this->CalcExtents();
     ////  ( this->yRange.Second() - this->yRange.First())
@@ -349,7 +393,22 @@ bool NVGDiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
  * Callback for mouse events (move, press, and release)
  */
 bool NVGDiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
-    return true;
+    if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
+        auto blubb = vislib::math::Vector<float, 3>(x, y, 1.0f);
+        auto test = this->transform*blubb;
+
+        printf("MouseCoord: %f, %f\n", test.GetX(), test.GetY());
+        int i = 0;
+        for (auto &r : this->bndBtns) {
+            if (r.Contains(vislib::math::Point<float, 2>(test.GetX(), test.GetY()), true)) {
+                this->selected[i] = !this->selected[i];
+                return true;
+            }
+            i++;
+        }
+    }
+
+    return false;
 
     //bool consumeEvent = false;
 
@@ -534,6 +593,7 @@ bool NVGDiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 
 void megamol::infovis::NVGDiagramRenderer::seriesInsertionCB(const DiagramSeriesCall::DiagramSeriesTuple &tuple) {
     columnSelectors.push_back(tuple);
+    this->selected.push_back(true);
 }
 
 inline bool megamol::infovis::NVGDiagramRenderer::updateColumnSelectors(void) {
@@ -546,6 +606,7 @@ inline bool megamol::infovis::NVGDiagramRenderer::updateColumnSelectors(void) {
     dsc->SetSeriesInsertionCB(this->fpsicb);
     if (!(*dsc)(DiagramSeriesCall::CallForGetSeries)) {
         this->columnSelectors = oldColumnSelectors;
+        this->selected.resize(this->columnSelectors.size(), true);
         return false;
     }
 
@@ -610,6 +671,91 @@ bool NVGDiagramRenderer::Render(view::CallRender2D &call) {
 
     if (!assertData(ft)) return false;
 
+    //this->callR2D = call;
+
+    this->defineLayout(call.GetWidth(), call.GetHeight());
+
+    float modelViewMatrix_column[16];
+    float projMatrix_column[16];
+
+ /*   glEnable(GL_POINT_SIZE);
+    glPointSize(20.0f);
+    glBegin(GL_POINTS);
+    glVertex2f(0.f, 0.f);
+    glVertex2f(call.GetWidth(), 0.f);
+    glVertex2f(0.f, call.GetHeight());
+    glVertex2f(call.GetWidth(), call.GetHeight());
+    glEnd();*/
+
+    // this is the apex of suck and must die
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    // end suck
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> t1;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> s;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> t2;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> t3;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> tr;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> sd;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> su;
+
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> mv(modelViewMatrix_column[0], modelViewMatrix_column[4], modelViewMatrix_column[12],
+        modelViewMatrix_column[1], modelViewMatrix_column[5], modelViewMatrix_column[13],
+        modelViewMatrix_column[2], modelViewMatrix_column[6], 1.0f);
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> p(projMatrix_column[0], projMatrix_column[4], projMatrix_column[12],
+        projMatrix_column[1], projMatrix_column[5], projMatrix_column[13],
+        projMatrix_column[2], projMatrix_column[6], 1.0f);
+
+    auto mvp = p*mv;
+
+    this->sWidth = call.GetWidth();
+    this->sHeight = call.GetHeight();
+
+    this->scaleX = modelViewMatrix_column[0];
+    this->scaleY = modelViewMatrix_column[5];
+
+    float xOff = static_cast<float>(this->screenSpaceMidPoint.GetX())/*+ modelViewMatrix_column[12] * this->scaleX*call.GetWidth()*/;
+    float yOff = static_cast<float>(this->screenSpaceMidPoint.GetY())/*+ modelViewMatrix_column[13] * this->scaleY*call.GetHeight()*/;
+
+    /*t1.SetAt(0, 2, -xOff);
+    t1.SetAt(1, 2, -yOff);
+
+    t2.SetAt(0, 2, xOff);
+    t2.SetAt(1, 2, yOff);*/
+
+    t1.SetAt(0, 2, 1.f);
+    t1.SetAt(1, 2, 1.f);
+    t1.SetAt(2, 2, 1.f);
+
+    t2.SetAt(0, 2, 0.0f);
+    t2.SetAt(1, 2, 1.0f);
+    t2.SetAt(2, 2, 1.f);
+
+    tr.SetAt(0, 2, modelViewMatrix_column[12] /* this->scaleX /* call.GetWidth()*/);
+    tr.SetAt(1, 2, modelViewMatrix_column[13] /* this->scaleY /* call.GetHeight()*/);
+
+    s.SetIdentity();
+    s.SetAt(0, 0, 1.0f);
+    s.SetAt(1, 1, -1.0f);
+
+    t3.SetIdentity();
+    t3.SetAt(0, 2, 0.0f);
+    t3.SetAt(1, 2, -1.0f);
+
+    su.SetAt(0, 0, 0.5f*call.GetWidth());
+    su.SetAt(1, 1, 0.5f*call.GetHeight());
+
+    sd.SetAt(0, 0, 1.0f/call.GetWidth());
+    sd.SetAt(1, 1, 1.0f/call.GetHeight());
+
+    //this->transform.SetIdentity();
+    //this->transform = su*t2*p*mv*t1*sd;
+    this->transform = su*t1*s*p*mv;
+    this->transformT = su*t1*p*mv;
+
+    /*this->transform.SetAt(0, 2, this->transform.GetAt(0, 2) + modelViewMatrix_column[12] *call.GetWidth());
+    this->transform.SetAt(1, 2, this->transform.GetAt(1, 2) - modelViewMatrix_column[13] * call.GetHeight());*/
+
     // get pointer to Diagram2DCall
     //diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
     //if (diagram == NULL) return false;
@@ -662,8 +808,8 @@ bool NVGDiagramRenderer::Render(view::CallRender2D &call) {
     ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // : GL_LINE);
     ::glDisable(GL_LINE_SMOOTH);
     ::glEnable(GL_DEPTH_TEST);
-    ::glEnable(GL_LINE_WIDTH);
-    ::glLineWidth(this->lineWidthParam.Param<param::FloatParam>()->Value());
+    //::glEnable(GL_LINE_WIDTH);
+    //::glLineWidth(this->lineWidthParam.Param<param::FloatParam>()->Value());
 
     xAxis = 0.0f;
     yAxis = 0.0f;
@@ -678,12 +824,16 @@ bool NVGDiagramRenderer::Render(view::CallRender2D &call) {
     case DIAGRAM_TYPE_LINE:
     case DIAGRAM_TYPE_LINE_STACKED:
     case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
-        drawLineDiagram();
+        nvgBeginFrame(static_cast<NVGcontext *>(this->nvgCtxt), call.GetWidth(), call.GetHeight(), 1.0f);
+        drawLineDiagram(call.GetWidth(), call.GetHeight());
+        nvgEndFrame(static_cast<NVGcontext *>(this->nvgCtxt));
         break;
     case DIAGRAM_TYPE_COLUMN:
     case DIAGRAM_TYPE_COLUMN_STACKED:
     case DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED:
+        nvgBeginFrame(static_cast<NVGcontext *>(this->nvgCtxt), call.GetWidth(), call.GetHeight(), 1.0f);
         drawColumnDiagram();
+        nvgEndFrame(static_cast<NVGcontext *>(this->nvgCtxt));
         break;
     }
 
@@ -814,10 +964,10 @@ void NVGDiagramRenderer::drawYAxis() {
     }
 
     float arrWidth = 0.025f;
-    float arrHeight = 0.012f;
+    float arrHeight = 0.05f;
     float tickSize = fontSize;
 
-    ::glBegin(GL_LINES);
+    /*::glBegin(GL_LINES);
     ::glColor4fv(this->fgColor.PeekComponents());
     ::glVertex3f(yAxis, 0.0f, decorationDepth);
     ::glVertex3f(yAxis, 1.0f + 2.0f * arrWidth, decorationDepth);
@@ -834,7 +984,60 @@ void NVGDiagramRenderer::drawYAxis() {
         ::glEnd();
         theFont.DrawString(yAxis - tickSize * 0.5f, yTicks[i], fontSize, true, yTickText[i],
             vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);
+    }*/
+
+
+    float dw = this->screenSpaceDiagramSize.GetWidth();
+    float dh = this->screenSpaceDiagramSize.GetHeight();
+    float mw = this->screenSpaceMidPoint.GetX();
+    float mh = this->screenSpaceMidPoint.GetY();
+
+    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+    nvgSave(ctx);
+    nvgTransform(ctx, this->transform.GetAt(0, 0), this->transform.GetAt(1, 0),
+        this->transform.GetAt(0, 1), this->transform.GetAt(1, 1),
+        this->transform.GetAt(0, 2), this->transform.GetAt(1, 2));
+
+    nvgStrokeWidth(ctx, 2.0f);
+    nvgStrokeColor(ctx, nvgRGB(255, 255, 255));
+
+    nvgFontSize(ctx, fontSize*dh);
+    nvgFontFace(ctx, "sans");
+    nvgTextAlign(ctx, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+    nvgFillColor(ctx, nvgRGB(255, 255, 255));
+    //nvgTextLineHeight(ctx, 1.2f);
+
+
+    nvgBeginPath(ctx);
+    nvgMoveTo(ctx, mw - dw / 2, mh - dh / 2);
+    nvgLineTo(ctx, mw - dw / 2, mh + (0.5f + arrHeight)*dh);
+    nvgMoveTo(ctx, mw - (0.5f + arrWidth)*dw, mh + dh/2);
+    nvgLineTo(ctx, mw - dw / 2, mh + (0.5f + arrHeight)*dh);
+    nvgMoveTo(ctx, mw - (0.5f - arrWidth)*dw, mh + dh/2);
+    nvgLineTo(ctx, mw - dw / 2, mh + (0.5f + arrHeight)*dh);
+    nvgStroke(ctx);
+
+    for (int i = 0; i < numYTicks; i++) {
+        nvgBeginPath(ctx);
+        nvgMoveTo(ctx, mw - dw / 2, mh - (0.5f-yTicks[i])*dh);
+        nvgLineTo(ctx, mw - (0.5f + tickSize)*dw, mh - (0.5f-yTicks[i])*dh);
+        nvgStroke(ctx);
+        /*theFont.DrawString(yAxis - tickSize * 0.5f, yTicks[i], fontSize, true, yTickText[i],
+            vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);*/
+        //nvgText(ctx, mw - (0.5f + tickSize)*dw, mh - (0.5f - yTicks[i])*dh, yTickText[numYTicks - 1 - i], nullptr);
     }
+
+    nvgScale(ctx, 1.0f, -1.0f);
+    nvgTranslate(ctx, 0.0f, -this->sHeight);
+    for (int i = 0; i < numYTicks; i++) {
+        /*theFont.DrawString(yAxis - tickSize * 0.5f, yTicks[i], fontSize, true, yTickText[i],
+        vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);*/
+        nvgText(ctx, mw - (0.5f + tickSize)*dw, mh - (0.5f - yTicks[i])*dh, yTickText[numYTicks - 1 - i], nullptr);
+    }
+
+    nvgRestore(ctx);
+
+
     delete[] yTickText;
     delete[] yTicks;
 }
@@ -911,11 +1114,48 @@ void NVGDiagramRenderer::drawXAxis(XAxisTypes xType) {
     } else {
         aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
     }
-    float arrWidth = 0.025f / aspect;
-    float arrHeight = 0.012f;
+    float arrWidth = 0.05f;/* / aspect;*/
+    float arrHeight = 0.025f;
     float tickSize = fontSize;
 
-    ::glPushMatrix();
+
+    float dw = this->screenSpaceDiagramSize.GetWidth();
+    float dh = this->screenSpaceDiagramSize.GetHeight();
+    float mw = this->screenSpaceMidPoint.GetX();
+    float mh = this->screenSpaceMidPoint.GetY();
+
+    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+    nvgSave(ctx);
+    nvgTransform(ctx, this->transform.GetAt(0, 0), this->transform.GetAt(1, 0),
+        this->transform.GetAt(0, 1), this->transform.GetAt(1, 1),
+        this->transform.GetAt(0, 2), this->transform.GetAt(1, 2));
+
+    nvgStrokeWidth(ctx, 2.0f);
+    nvgStrokeColor(ctx, nvgRGB(255, 255, 255));
+
+    nvgFontSize(ctx, fontSize*dh);
+    nvgFontFace(ctx, "sans");
+    nvgTextAlign(ctx, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+    nvgFillColor(ctx, nvgRGB(255, 255, 255));
+
+    nvgBeginPath(ctx);
+    nvgMoveTo(ctx, mw - dw / 2, mh - dh / 2);
+    nvgLineTo(ctx, mw + (0.5f + arrWidth)*dw, mh - dh / 2);
+    nvgMoveTo(ctx, mw + dw / 2, mh - (0.5f - arrHeight)*dh);
+    nvgLineTo(ctx, mw + (0.5f + arrWidth)*dw, mh - dh / 2);
+    nvgMoveTo(ctx, mw + dw / 2, mh - (0.5f + arrHeight)*dh);
+    nvgLineTo(ctx, mw + (0.5f + arrWidth)*dw, mh - dh / 2);
+    nvgStroke(ctx);
+
+    xTickOff = 1.0f / (numXTicks - 1);
+    for (int i = 0; i < numXTicks; i++) {
+        nvgBeginPath(ctx);
+        nvgMoveTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - dh / 2);
+        nvgLineTo(ctx, mw + (xTickOff*i - 0.5f)*dw, mh - (0.5f + tickSize)*dh);
+        nvgStroke(ctx);
+    }
+
+    /*::glPushMatrix();
     ::glScalef(aspect, 1.0f, 1.0f);
     ::glBegin(GL_LINES);
     ::glColor4fv(this->fgColor.PeekComponents());
@@ -933,14 +1173,22 @@ void NVGDiagramRenderer::drawXAxis(XAxisTypes xType) {
         ::glVertex3f(xTickOff * i, xAxis - tickSize * 0.5f, decorationDepth);
         ::glEnd();
     }
-    ::glPopMatrix();
+    ::glPopMatrix();*/
+
+    /*nvgTransform(ctx, this->transformT.GetAt(0, 0), this->transformT.GetAt(1, 0),
+        this->transformT.GetAt(0, 1), this->transformT.GetAt(1, 1),
+        this->transformT.GetAt(0, 2), this->transformT.GetAt(1, 2));*/
+    nvgScale(ctx, 1.0f, -1.0f);
+    nvgTranslate(ctx, 0.0f, -this->sHeight);
 
     switch (xType) {
     case DIAGRAM_XAXIS_CATEGORICAL:
     {
         for (int i = 0; i < numXTicks - 1; i++) {
-            theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true, categories[i].PeekBuffer(),
-                vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+            /*theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true, categories[i].PeekBuffer(),
+                vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);*/
+
+            nvgText(ctx, mw + (xTickOff*i - 0.5f)*dw, mh + (0.5f + tickSize)*dh, categories[i].PeekBuffer(), nullptr);
         }
     }
     break;
@@ -949,84 +1197,136 @@ void NVGDiagramRenderer::drawXAxis(XAxisTypes xType) {
         float needed = theFont.LineWidth(fontSize, xTickText[numXTicks - 1]);
         int step = vislib::math::Max(static_cast<int>(needed / (xTickOff / aspect)), 1);
         for (int i = 0; i < numXTicks - 1; i += step) {
-            theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
-                vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+            /*theFont.DrawString(aspect * (xTickOff * (i + 0.5f)), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
+                vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);*/
+
+            nvgText(ctx, mw + (xTickOff*i - 0.5f)*dw, mh + (0.5f + tickSize)*dh, xTickText[i], nullptr);
         }
     }
     break;
     case DIAGRAM_XAXIS_FLOAT:
     {
         for (int i = 0; i < numXTicks; i++) {
-            theFont.DrawString(aspect * (xTickOff * i), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
-                vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+            /*theFont.DrawString(aspect * (xTickOff * i), xAxis - tickSize * 0.5f, fontSize, true, xTickText[i],
+                vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);*/
+
+            nvgText(ctx, mw + (xTickOff*i - 0.5f)*dw, mh + (0.5f + tickSize)*dh, xTickText[i], nullptr);
         }
     }
     break;
     }
 
+    nvgRestore(ctx);
+
     delete[] xTickText;
 }
 
-//void NVGDiagramRenderer::drawLegend() {
-//    legendWidth = 0.0f;
-//    vislib::StringA s;
-//    s.Format("%.2f", yRange.Second());
-//    legendOffset = theFont.LineWidth(fontSize, s) + fontSize; //3.0f * fontSize;
-//    bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
-//    int cnt = 0;
-//    for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
-//        protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-//        if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
-//            float w = theFont.LineWidth(fontSize, ds->GetName());
-//            if (w > legendWidth) {
-//                legendWidth = w;
-//            }
-//            cnt++;
-//        }
-//    }
-//    legendMargin = legendWidth * 0.1f;
-//    legendHeight = theFont.LineHeight(fontSize) * cnt + 2.0f * legendMargin;
-//    legendWidth = legendWidth + 2.0f * legendMargin + fontSize * 0.8f;
-//    float legendLeft = -legendOffset - legendWidth;
-//    ::glBegin(GL_LINE_STRIP);
-//    ::glColor4fv(this->fgColor.PeekComponents());
-//    ::glVertex3f(-legendOffset, 1.0f, decorationDepth);
-//    ::glVertex3f(legendLeft, 1.0f, decorationDepth);
-//    ::glVertex3f(legendLeft, 1.0f - legendHeight, decorationDepth);
-//    ::glVertex3f(-legendOffset, 1.0f - legendHeight, decorationDepth);
-//    ::glVertex3f(-legendOffset, 1.0f, decorationDepth);
-//    ::glEnd();
-//    cnt = 0;
-//    for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
-//        protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-//        if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
-//            if (selectedSeries == NULL || *selectedSeries == *ds) {
-//                ::glColor4fv(ds->GetColor().PeekComponents());
-//            } else {
-//                ::glColor4fv(unselectedColor.PeekComponents());
-//            }
-//            float y = 1.0f - legendMargin - theFont.LineHeight(fontSize) * cnt;
-//            theFont.DrawString(-legendOffset - legendMargin, y,
-//                fontSize, true, ds->GetName(), vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);
-//            ::glBegin(GL_LINE_STRIP);
-//            ::glVertex3f(legendLeft + legendMargin, y - 0.2f * fontSize, decorationDepth);
-//            ::glVertex3f(legendLeft + legendMargin, y - 0.8f * fontSize, decorationDepth);
-//            ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.8f * fontSize, decorationDepth);
-//            ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.2f * fontSize, decorationDepth);
-//            ::glVertex3f(legendLeft + legendMargin, y - 0.2f * fontSize, decorationDepth);
-//            ::glEnd();
-//            if (seriesVisible[s]) {
-//                ::glBegin(GL_LINES);
-//                ::glVertex3f(legendLeft + legendMargin, y - 0.2f * fontSize, decorationDepth);
-//                ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.8f * fontSize, decorationDepth);
-//                ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.2f * fontSize, decorationDepth);
-//                ::glVertex3f(legendLeft + legendMargin, y - 0.8f * fontSize, decorationDepth);
-//                ::glEnd();
-//            }
-//            cnt++;
-//        }
-//    }
-//}
+void NVGDiagramRenderer::drawLegend(float w, float h) {
+    float dw = this->screenSpaceDiagramSize.GetWidth();
+    float dh = this->screenSpaceDiagramSize.GetHeight();
+    float sw = this->screenSpaceCanvasSize.GetWidth();
+    float sh = this->screenSpaceCanvasSize.GetHeight();
+    float mw = this->screenSpaceMidPoint.GetX();
+    float mh = this->screenSpaceMidPoint.GetY();
+
+    float lw = 200;
+
+    float low = 20;
+    float loh = 20;
+
+    float lh = loh + (loh + BND_WIDGET_HEIGHT)*(this->columnSelectors.size());
+
+    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+    nvgSave(ctx);
+    nvgFontSize(ctx, fontSize*dh);
+    nvgFillColor(ctx, nvgRGB(128, 128, 128));
+    nvgBeginPath(ctx);
+    nvgRoundedRect(ctx, w - lw - low, loh, lw, lh, 3);
+    nvgFill(ctx);
+
+    this->bndBtns.clear();
+
+    int i = 0;
+    for (auto &s : this->columnSelectors) {
+        auto color = std::get<4>(s);
+
+        BNDwidgetState state = BND_ACTIVE;
+        if (!this->selected[i]) {
+            state = BND_DEFAULT;
+        }
+
+        this->bndBtns.push_back(vislib::math::Rectangle<float>(w - lw + BND_WIDGET_HEIGHT + 10,
+            (2 * loh + (loh + BND_WIDGET_HEIGHT)*(i)),
+            w - lw + BND_WIDGET_HEIGHT + 10 + 100,
+            (2 * loh + (loh + BND_WIDGET_HEIGHT)*(i)+BND_WIDGET_HEIGHT)
+        ));
+
+        bndColorButton(ctx, w - lw, 2 * loh + (loh + BND_WIDGET_HEIGHT)*(i), BND_WIDGET_HEIGHT, BND_WIDGET_HEIGHT, BND_CORNER_ALL, nvgRGBf(color[0], color[1], color[2]));
+        bndOptionButton(ctx, w - lw + BND_WIDGET_HEIGHT + 10, 2 * loh + (loh + BND_WIDGET_HEIGHT)*(i), 100, BND_WIDGET_HEIGHT, state, std::get<2>(s).c_str());
+        i++;
+    }
+
+    nvgRestore(ctx);
+
+    //legendWidth = 0.0f;
+    //vislib::StringA s;
+    //s.Format("%.2f", yRange.Second());
+    //legendOffset = theFont.LineWidth(fontSize, s) + fontSize; //3.0f * fontSize;
+    //bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
+    //int cnt = 0;
+    //for (int s = 0; s < this->columnSelectors.size(); s++) {
+    //    protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+    //    if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
+    //        float w = theFont.LineWidth(fontSize, ds->GetName());
+    //        if (w > legendWidth) {
+    //            legendWidth = w;
+    //        }
+    //        cnt++;
+    //    }
+    //}
+    //legendMargin = legendWidth * 0.1f;
+    //legendHeight = theFont.LineHeight(fontSize) * cnt + 2.0f * legendMargin;
+    //legendWidth = legendWidth + 2.0f * legendMargin + fontSize * 0.8f;
+    //float legendLeft = -legendOffset - legendWidth;
+    //::glBegin(GL_LINE_STRIP);
+    //::glColor4fv(this->fgColor.PeekComponents());
+    //::glVertex3f(-legendOffset, 1.0f, decorationDepth);
+    //::glVertex3f(legendLeft, 1.0f, decorationDepth);
+    //::glVertex3f(legendLeft, 1.0f - legendHeight, decorationDepth);
+    //::glVertex3f(-legendOffset, 1.0f - legendHeight, decorationDepth);
+    //::glVertex3f(-legendOffset, 1.0f, decorationDepth);
+    //::glEnd();
+    //cnt = 0;
+    //for (int s = 0; s < (int)diagram->GetSeriesCount(); s++) {
+    //    protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+    //    if (isCategoricalMappable(ds->GetMappable()) == drawCategorical) {
+    //        if (selectedSeries == NULL || *selectedSeries == *ds) {
+    //            ::glColor4fv(ds->GetColor().PeekComponents());
+    //        } else {
+    //            ::glColor4fv(unselectedColor.PeekComponents());
+    //        }
+    //        float y = 1.0f - legendMargin - theFont.LineHeight(fontSize) * cnt;
+    //        theFont.DrawString(-legendOffset - legendMargin, y,
+    //            fontSize, true, ds->GetName(), vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);
+    //        ::glBegin(GL_LINE_STRIP);
+    //        ::glVertex3f(legendLeft + legendMargin, y - 0.2f * fontSize, decorationDepth);
+    //        ::glVertex3f(legendLeft + legendMargin, y - 0.8f * fontSize, decorationDepth);
+    //        ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.8f * fontSize, decorationDepth);
+    //        ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.2f * fontSize, decorationDepth);
+    //        ::glVertex3f(legendLeft + legendMargin, y - 0.2f * fontSize, decorationDepth);
+    //        ::glEnd();
+    //        if (seriesVisible[s]) {
+    //            ::glBegin(GL_LINES);
+    //            ::glVertex3f(legendLeft + legendMargin, y - 0.2f * fontSize, decorationDepth);
+    //            ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.8f * fontSize, decorationDepth);
+    //            ::glVertex3f(legendLeft + legendMargin + 0.6f * fontSize, y - 0.2f * fontSize, decorationDepth);
+    //            ::glVertex3f(legendLeft + legendMargin, y - 0.8f * fontSize, decorationDepth);
+    //            ::glEnd();
+    //        }
+    //        cnt++;
+    //    }
+    //}
+}
 
 void NVGDiagramRenderer::getBarXY(int series, int index, int type, float *x, float *y) {
     /*if (isCategoricalMappable(preparedSeries[series]->GetMappable())) {
@@ -1078,43 +1378,69 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
     const float *const data = ft->GetData();
     //vislib::sys::Log::DefaultLog.WriteInfo("NVGDiagramRenderer: Abcissa is %d\n", this->abcissaIdx);
 
-    for (int s = 0; s < this->columnSelectors.size(); s++) {
-        size_t selector = std::get<1>(this->columnSelectors[s]);
+    //for (int s = 0; s < this->columnSelectors.size(); s++) {
+    //    size_t selector = std::get<1>(this->columnSelectors[s]);
 
-        const floattable::CallFloatTableData::ColumnInfo *const ci = &(ft->GetColumnsInfos()[selector]);
+    //    const floattable::CallFloatTableData::ColumnInfo *const ci = &(ft->GetColumnsInfos()[selector]);
 
-        //protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
-        //const protein_calls::DiagramCall::DiagramMappable *dm = ds->GetMappable();
+    //    //protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
+    //    //const protein_calls::DiagramCall::DiagramMappable *dm = ds->GetMappable();
 
-        if (ft->GetRowsCount() > maxCount) {
-            maxCount = ft->GetRowsCount();
-        }
-        if (!seriesVisible[s] /*|| isCategoricalMappable(dm) != drawCategorical*/) {
-            continue;
-        }
-        for (int i = 0; i < ft->GetRowsCount(); i++) {
-            //if (drawCategorical) {
-            //    bool ret = dm->GetAbscissaValue(i, 0, &tmpString);
-            //    if (ret) {
-            //        int idx = static_cast<int>(categories.IndexOf(tmpString));
-            //        if (idx == vislib::Array<vislib::StringA>::INVALID_POS) {
-            //            categories.Add(tmpString);
-            //            //idx = static_cast<int>(categories.Count() - 1);
-            //            xValues.Add(static_cast<float>(idx));
-            //        }
-            //    }
-            //} else {
-            //    bool ret = dm->GetAbscissaValue(i, 0, &x);
-            //    if (ret) {
-            //        if (!xValues.Contains(x)) {
-            //            xValues.Add(x);
-            //        }
-            //    }
-            //}
+    //    if (ft->GetRowsCount() > maxCount) {
+    //        maxCount = ft->GetRowsCount();
+    //    }
+    //    if (!seriesVisible[s] /*|| isCategoricalMappable(dm) != drawCategorical*/) {
+    //        continue;
+    //    }
+    //    for (int i = 0; i < ft->GetRowsCount(); i++) {
+    //        //if (drawCategorical) {
+    //        //    bool ret = dm->GetAbscissaValue(i, 0, &tmpString);
+    //        //    if (ret) {
+    //        //        int idx = static_cast<int>(categories.IndexOf(tmpString));
+    //        //        if (idx == vislib::Array<vislib::StringA>::INVALID_POS) {
+    //        //            categories.Add(tmpString);
+    //        //            //idx = static_cast<int>(categories.Count() - 1);
+    //        //            xValues.Add(static_cast<float>(idx));
+    //        //        }
+    //        //    }
+    //        //} else {
+    //        //    bool ret = dm->GetAbscissaValue(i, 0, &x);
+    //        //    if (ret) {
+    //        //        if (!xValues.Contains(x)) {
+    //        //            xValues.Add(x);
+    //        //        }
+    //        //    }
+    //        //}
 
-            xValues.Add(data[this->abcissaIdx + i*ft->GetColumnsCount()]);
-        }
+    //        if (!xValues.Contains(data[this->abcissaIdx + i*ft->GetColumnsCount()])) {
+    //            xValues.Add(data[this->abcissaIdx + i*ft->GetColumnsCount()]);
+    //        }
+    //    }
+    //}
+
+    for (int i = 0; i < ft->GetRowsCount(); i++) {
+        //if (drawCategorical) {
+        //    bool ret = dm->GetAbscissaValue(i, 0, &tmpString);
+        //    if (ret) {
+        //        int idx = static_cast<int>(categories.IndexOf(tmpString));
+        //        if (idx == vislib::Array<vislib::StringA>::INVALID_POS) {
+        //            categories.Add(tmpString);
+        //            //idx = static_cast<int>(categories.Count() - 1);
+        //            xValues.Add(static_cast<float>(idx));
+        //        }
+        //    }
+        //} else {
+        //    bool ret = dm->GetAbscissaValue(i, 0, &x);
+        //    if (ret) {
+        //        if (!xValues.Contains(x)) {
+        //            xValues.Add(x);
+        //        }
+        //    }
+        //}
+
+        xValues.Add(data[this->abcissaIdx + i*ft->GetColumnsCount()]);
     }
+
     //xValues.Sort(&floatComp);
     maxYValues.SetCount(xValues.Count());
     for (int i = 0; i < (int)maxYValues.Count(); i++) {
@@ -1362,122 +1688,212 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
 //    bf.Close();
 //}
 
-void NVGDiagramRenderer::drawLineDiagram() {
+void NVGDiagramRenderer::drawLineDiagram(float w, float h) {
+    this->defineLayout(w, h);
+    //float sh = h - 0.1f*h;
+    //float sw = w - 0.1f*w;
 
-    bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
-    if (drawCategorical) {
-        return;
-    }
+    //if (sw < sh) std::swap(sw, sh);
+
+    //float oh = (h / 2.0f) - (sh / 2.0f);
+    //float ow = (w / 2.0f) - (sw / 2.0f);
+
     float aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
-    glDisable(GL_BLEND);
+
+    this->drawLegend(w, h);
+
     this->drawXAxis(DIAGRAM_XAXIS_FLOAT);
+
     int type = this->diagramTypeParam.Param<param::EnumParam>()->Value();
     switch (type) {
     case DIAGRAM_TYPE_LINE:
-        prepareData(false, false, drawCategorical);
+        prepareData(false, false, false);
         break;
     case DIAGRAM_TYPE_LINE_STACKED:
-        prepareData(true, false, drawCategorical);
+        prepareData(true, false, false);
         break;
     case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
-        prepareData(true, true, drawCategorical);
+        prepareData(true, true, false);
         break;
     }
+
     this->drawYAxis();
-    //this->drawLegend();
 
-    // HACK HACK
-    /*bool d = false;
-    if (d) {
-        this->dump();
-    }*/
+    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+    nvgSave(ctx);
+    //nvgScale(ctx, this->scaleX, this->scaleY);
+    nvgTransform(ctx, this->transform.GetAt(0, 0), this->transform.GetAt(1, 0),
+        this->transform.GetAt(0, 1), this->transform.GetAt(1, 1),
+        this->transform.GetAt(0, 2), this->transform.GetAt(1, 2));
 
-    ::glBlendFunc(GL_ONE, GL_ONE);
-    ::glDisable(GL_DEPTH_TEST);
-    GLenum drawMode = 0;
-    if (this->diagramStyleParam.Param<param::EnumParam>()->Value() == DIAGRAM_STYLE_FILLED) {
-        drawMode = GL_TRIANGLE_STRIP;
-        ::glEnable(GL_BLEND);
-    } else {
-        drawMode = GL_LINE_STRIP;
-        ::glDisable(GL_BLEND);
-    }
+    nvgFillColor(ctx, nvgRGB(255, 0, 0));
+    nvgBeginPath(ctx);
+    nvgCircle(ctx, 0.0f, 0.0f, 20);
+    nvgCircle(ctx, 0.0f, h, 20);
+    nvgCircle(ctx, w, 0.0f, 20);
+    nvgCircle(ctx, w, h, 20);
+    nvgFill(ctx);
+
     for (int s = 0; s < (int)preparedData->Count(); s++) {
-        if ((*preparedData)[s]->Count() < 2) {
+        if ((*preparedData)[s]->Count() < 2 || !this->selected[s]) {
             continue;
         }
-        ::glBegin(drawMode);
-        /*if (selectedSeries == NULL || *selectedSeries == *preparedSeries[s]) {
-            ::glColor4fv(preparedSeries[s]->GetColor().PeekComponents());
-        } else*/ {
-            ::glColor4fv(unselectedColor.PeekComponents());
-        }
-        for (int i = 0; i < (int)(*preparedData)[s]->Count(); i++) {
-            if ((*(*preparedData)[s])[i] != NULL) {
-                float hinz = (*(*preparedData)[s])[i]->GetX();
-                float kunz = (*(*preparedData)[s])[i]->GetY();
-                ::glVertex2f((*(*preparedData)[s])[i]->GetX() * aspect, (*(*preparedData)[s])[i]->GetY());
-                if (drawMode == GL_TRIANGLE_STRIP) {
-                    ::glVertex2f((*(*preparedData)[s])[i]->GetX() * aspect, (*(*preparedData)[s])[i]->GetZ());
-                }
-            } else {
-                ::glEnd();
-                ::glBegin(drawMode);
-            }
-        }
-        ::glEnd();
-    }
-    ::glEnable(GL_BLEND);
-    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    ::glEnable(GL_TEXTURE);
-    ::glEnable(GL_TEXTURE_2D);
-    //::glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    ::glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-    /*int showMarkers = this->showMarkersParam.Param<param::EnumParam>()->Value();
-    if (showMarkers != DIAGRAM_MARKERS_SHOW_NONE) {
-        for (int s = 0; s < (int)preparedData->Count(); s++) {
-            if (showMarkers == DIAGRAM_MARKERS_SHOW_ALL || preparedSeries[s] == selectedSeries) {
-                float markerSize = fontSize;
-                for (int i = 0; i < (int)preparedSeries[s]->GetMarkerCount(); i++) {
-                    const protein_calls::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
-                    for (int j = 0; j < (int)this->markerTextures.Count(); j++) {
-                        if (markerTextures[j].First() == m->GetType()) {
-                            int idx = localXIndexToGlobal[s][m->GetIndex()];
-                            if ((*(*preparedData)[s])[idx] == NULL) {
-                                continue;
-                            }
-                            markerTextures[j].Second()->Bind();
-                            float x = (*(*preparedData)[s])[idx]->X();
-                            float y = (*(*preparedData)[s])[idx]->Y();
-                            x *= aspect;
-                            x -= markerSize / 2.0f;
-                            y -= markerSize / 2.0f;
-                            ::glBegin(GL_TRIANGLE_STRIP);
-                            if (selectedSeries == NULL || *selectedSeries == *preparedSeries[s]) {
-                                ::glColor4fv(preparedSeries[s]->GetColor().PeekComponents());
-                            } else {
-                                ::glColor4fv(unselectedColor.PeekComponents());
-                            }
-                            ::glTexCoord2f(0.0f, 1.0f);
-                            ::glVertex3f(x, y, decorationDepth - 0.5f);
-                            ::glTexCoord2f(0.0f, 0.0f);
-                            ::glVertex3f(x, y + markerSize, decorationDepth - 0.5f);
-                            ::glTexCoord2f(1.0f, 1.0f);
-                            ::glVertex3f(x + markerSize, y, decorationDepth - 0.5f);
-                            ::glTexCoord2f(1.0f, 0.0f);
-                            ::glVertex3f(x + markerSize, y + markerSize, decorationDepth - 0.5f);
-                            ::glEnd();
-                            continue;
-                        }
-                    }
-                }
-            }
+        auto color = std::get<4>(this->columnSelectors[s]);
+
+        nvgStrokeWidth(ctx, this->lineWidthParam.Param<core::param::FloatParam>()->Value());
+        nvgStrokeColor(ctx, nvgRGBf(color[0], color[1], color[2]));
+        nvgBeginPath(ctx);
+        
+        float hinz = (*(*preparedData)[s])[0]->GetX() - 0.5f;
+        float kunz = (((*(*preparedData)[s])[0]->GetY())) - 0.5f;
+        nvgMoveTo(ctx, this->screenSpaceMidPoint.GetX()+hinz*this->screenSpaceDiagramSize.GetWidth(),
+            this->screenSpaceMidPoint.GetY()+kunz*this->screenSpaceDiagramSize.GetHeight());
+
+        for (int i = 1; i < (int)(*preparedData)[s]->Count(); i++) {
+            float hinz = (*(*preparedData)[s])[i]->GetX() - 0.5f;
+            float kunz = (((*(*preparedData)[s])[i]->GetY())) - 0.5f;
+            nvgLineTo(ctx, this->screenSpaceMidPoint.GetX() + hinz*this->screenSpaceDiagramSize.GetWidth(),
+                this->screenSpaceMidPoint.GetY() + kunz*this->screenSpaceDiagramSize.GetHeight());
         }
-    }*/
-    ::glDisable(GL_TEXTURE);
-    ::glDisable(GL_TEXTURE_2D);
-    ::glBindTexture(GL_TEXTURE_2D, 0);
+
+        nvgStroke(ctx);
+    }
+    nvgRestore(ctx);
+
+  //  bool drawCategorical = this->drawCategoricalParam.Param<param::EnumParam>()->Value() != 0;
+  //  if (drawCategorical) {
+  //      return;
+  //  }
+  //  float aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
+  //  //glDisable(GL_BLEND);
+  //  this->drawXAxis(DIAGRAM_XAXIS_FLOAT);
+  //  int type = this->diagramTypeParam.Param<param::EnumParam>()->Value();
+  //  switch (type) {
+  //  case DIAGRAM_TYPE_LINE:
+  //      prepareData(false, false, drawCategorical);
+  //      break;
+  //  case DIAGRAM_TYPE_LINE_STACKED:
+  //      prepareData(true, false, drawCategorical);
+  //      break;
+  //  case DIAGRAM_TYPE_LINE_STACKED_NORMALIZED:
+  //      prepareData(true, true, drawCategorical);
+  //      break;
+  //  }
+  //  this->drawYAxis();
+  //  //this->drawLegend();
+
+  //  // HACK HACK
+  //  /*bool d = false;
+  //  if (d) {
+  //      this->dump();
+  //  }*/
+
+  //  NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+  //  int joins[3] = {NVG_MITER, NVG_ROUND, NVG_BEVEL};
+  //  int caps[3] = {NVG_BUTT, NVG_ROUND, NVG_SQUARE};
+  //          nvgSave(ctx);
+
+  //  //::glBlendFunc(GL_ONE, GL_ONE);
+  //  //::glDisable(GL_DEPTH_TEST);
+  //  GLenum drawMode = 0;
+  //  if (this->diagramStyleParam.Param<param::EnumParam>()->Value() == DIAGRAM_STYLE_FILLED) {
+  //      drawMode = GL_TRIANGLE_STRIP;
+  //      //::glEnable(GL_BLEND);
+  //  } else {
+  //      drawMode = GL_LINE_STRIP;
+  //      //::glDisable(GL_BLEND);
+  //  }
+  //  for (int s = 0; s < (int)preparedData->Count(); s++) {
+  //      if ((*preparedData)[s]->Count() < 2) {
+  //          continue;
+  //      }
+  //      //::glBegin(drawMode);
+  //      /*if (selectedSeries == NULL || *selectedSeries == *preparedSeries[s]) {
+  //          ::glColor4fv(preparedSeries[s]->GetColor().PeekComponents());
+  //      } else*/ {
+  //          //::glColor4fv(unselectedColor.PeekComponents());
+  //          nvgStrokeWidth(ctx, 1.0f);
+  //          nvgStrokeColor(ctx, nvgRGB(255, 255, 255));
+  //          nvgLineCap(ctx, caps[1]);
+  //          nvgLineJoin(ctx, joins[1]);
+
+  //          nvgBeginPath(ctx);
+  //      }
+  //      nvgMoveTo(ctx, (*(*preparedData)[s])[0]->GetX()*aspect, (*(*preparedData)[s])[0]->GetY());
+  //      for (int i = 1; i < (int)(*preparedData)[s]->Count(); i++) {
+  //          if ((*(*preparedData)[s])[i] != NULL) {
+  //              float hinz = (*(*preparedData)[s])[i]->GetX();
+  //              float kunz = (*(*preparedData)[s])[i]->GetY();
+  //              nvgLineTo(ctx, hinz*aspect, kunz);
+  //              /*::glVertex2f((*(*preparedData)[s])[i]->GetX() * aspect, (*(*preparedData)[s])[i]->GetY());
+  //              if (drawMode == GL_TRIANGLE_STRIP) {
+  //                  ::glVertex2f((*(*preparedData)[s])[i]->GetX() * aspect, (*(*preparedData)[s])[i]->GetZ());
+  //              }*/
+  //          } else {
+  //              /*::glEnd();
+  //              ::glBegin(drawMode);*/
+
+  //              nvgStroke(ctx);
+  //              nvgBeginPath(ctx);
+  //              nvgMoveTo(ctx, (*(*preparedData)[s])[i+1]->GetX()*aspect, (*(*preparedData)[s])[i+1]->GetY());
+  //          }
+  //      }
+  //      //::glEnd();
+  //      nvgStroke(ctx);
+  //  }
+  //      nvgRestore(ctx);
+  //  /*::glEnable(GL_BLEND);
+  //  ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //  ::glEnable(GL_TEXTURE);
+  //  ::glEnable(GL_TEXTURE_2D);*/
+  //  //::glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  //  //::glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); // <--
+
+  //  /*int showMarkers = this->showMarkersParam.Param<param::EnumParam>()->Value();
+  //  if (showMarkers != DIAGRAM_MARKERS_SHOW_NONE) {
+  //      for (int s = 0; s < (int)preparedData->Count(); s++) {
+  //          if (showMarkers == DIAGRAM_MARKERS_SHOW_ALL || preparedSeries[s] == selectedSeries) {
+  //              float markerSize = fontSize;
+  //              for (int i = 0; i < (int)preparedSeries[s]->GetMarkerCount(); i++) {
+  //                  const protein_calls::DiagramCall::DiagramMarker *m = preparedSeries[s]->GetMarker(i);
+  //                  for (int j = 0; j < (int)this->markerTextures.Count(); j++) {
+  //                      if (markerTextures[j].First() == m->GetType()) {
+  //                          int idx = localXIndexToGlobal[s][m->GetIndex()];
+  //                          if ((*(*preparedData)[s])[idx] == NULL) {
+  //                              continue;
+  //                          }
+  //                          markerTextures[j].Second()->Bind();
+  //                          float x = (*(*preparedData)[s])[idx]->X();
+  //                          float y = (*(*preparedData)[s])[idx]->Y();
+  //                          x *= aspect;
+  //                          x -= markerSize / 2.0f;
+  //                          y -= markerSize / 2.0f;
+  //                          ::glBegin(GL_TRIANGLE_STRIP);
+  //                          if (selectedSeries == NULL || *selectedSeries == *preparedSeries[s]) {
+  //                              ::glColor4fv(preparedSeries[s]->GetColor().PeekComponents());
+  //                          } else {
+  //                              ::glColor4fv(unselectedColor.PeekComponents());
+  //                          }
+  //                          ::glTexCoord2f(0.0f, 1.0f);
+  //                          ::glVertex3f(x, y, decorationDepth - 0.5f);
+  //                          ::glTexCoord2f(0.0f, 0.0f);
+  //                          ::glVertex3f(x, y + markerSize, decorationDepth - 0.5f);
+  //                          ::glTexCoord2f(1.0f, 1.0f);
+  //                          ::glVertex3f(x + markerSize, y, decorationDepth - 0.5f);
+  //                          ::glTexCoord2f(1.0f, 0.0f);
+  //                          ::glVertex3f(x + markerSize, y + markerSize, decorationDepth - 0.5f);
+  //                          ::glEnd();
+  //                          continue;
+  //                      }
+  //                  }
+  //              }
+  //          }
+  //      }
+  //  }*/
+  ///*  ::glDisable(GL_TEXTURE);
+  //  ::glDisable(GL_TEXTURE_2D);
+  //  ::glBindTexture(GL_TEXTURE_2D, 0);*/
 }
 
 void NVGDiagramRenderer::drawColumnDiagram() {
@@ -1515,6 +1931,22 @@ void NVGDiagramRenderer::drawColumnDiagram() {
         barWidth = xTickOff * barWidthRatio;
     }
 
+    float dw = this->screenSpaceDiagramSize.GetWidth();
+    float dh = this->screenSpaceDiagramSize.GetHeight();
+    float mw = this->screenSpaceMidPoint.GetX();
+    float mh = this->screenSpaceMidPoint.GetY();
+
+    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+    nvgSave(ctx);
+
+    nvgStrokeWidth(ctx, 2.0f);
+    nvgStrokeColor(ctx, nvgRGB(255, 255, 255));
+
+    nvgFillColor(ctx, nvgRGB(255, 255, 255));
+
+    nvgBeginPath(ctx);
+
+
     ::glPushMatrix();
     ::glScalef(aspect, 1.0f, 1.0f);
     GLenum drawMode = 0;
@@ -1529,6 +1961,13 @@ void NVGDiagramRenderer::drawColumnDiagram() {
             if ((*(*preparedData)[s])[i] == NULL) {
                 continue;
             }
+
+            float hinz = (*(*preparedData)[s])[i]->GetX() - 0.5f;
+            float kunz = (1.0f - ((*(*preparedData)[s])[i]->GetY())) - 0.5f;
+
+            float bw = barWidth;
+            //float bh = 
+
             getBarXY(s, i, type, &x, &y);
             y1 = (*(*preparedData)[s])[i]->GetZ();
             ::glBegin(drawMode);
@@ -1554,4 +1993,8 @@ void NVGDiagramRenderer::drawColumnDiagram() {
         }
     }
     ::glPopMatrix();
+
+    nvgFill(ctx);
+
+    nvgRestore(ctx);
 }
