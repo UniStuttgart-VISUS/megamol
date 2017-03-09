@@ -57,9 +57,9 @@ namespace megamol {
         * (!) Indices must be in the range from 0 to NOE-1.
         */
         enum secStructure {
-			I_PI_HELIX    = 0,
+            G_310_HELIX   = 0,
             H_ALPHA_HELIX = 1,
-            G_310_HELIX   = 2,
+			I_PI_HELIX    = 2,            
 			T_H_TURN      = 3,
 			S_BEND        = 4,
 			C_COIL        = 5,

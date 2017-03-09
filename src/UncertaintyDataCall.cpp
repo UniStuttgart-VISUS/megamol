@@ -68,9 +68,9 @@ vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(Uncertaint
 
     switch (s) {  
                                                                      //  R                 G               B                A
-	case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(204.0f / 255.0f,   0.0f / 255.0f,  68.0f / 255.0f, 1.0f); break; // HSL: H=340°, S=1.00, L=0.40  | PI                                                           
+	case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(204.0f / 255.0f,   0.0f / 255.0f,  68.0f / 255.0f, 1.0f); break; // HSL: H=340°, S=1.00, L=0.40  | 310
 	case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(127.0f / 255.0f,   0.0f / 255.0f, 153.0f / 255.0f, 1.0f); break; // HSL: H=290°, S=1.00, L=0.30  | alpha
-	case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set( 34.0f / 255.0f,   0.0f / 255.0f, 204.0f / 255.0f, 1.0f); break; // HSL: H=250°, S=1.00, L=0.40  | 310
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set( 34.0f / 255.0f,   0.0f / 255.0f, 204.0f / 255.0f, 1.0f); break; // HSL: H=250°, S=1.00, L=0.40  | PI                                                               
 	case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(  0.0f / 255.0f, 170.0f / 255.0f, 255.0f / 255.0f, 1.0f); break; // HSL: H=200°, S=1.00, L=0.50  | turn
 	case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(  0.0f / 255.0f, 204.0f / 255.0f, 136.0f / 255.0f, 1.0f); break; // HSL: H=160°, S=1.00, L=0.40  | bend
 	case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(  0.0f / 255.0f,  77.0f / 255.0f,   0.0f / 255.0f, 1.0f); break; // HSL: H=120°, S=1.00, L=0.15  | coil
