@@ -100,6 +100,10 @@ public:
     /** ctor */
     NVGDiagramRenderer(void);
 
+    void lockSingle(GLsync & syncObj);
+
+    void waitSingle(GLsync & syncObj);
+
     /** dtor */
     ~NVGDiagramRenderer(void);
 
@@ -182,7 +186,22 @@ private:
 
     void drawPointSplats(float w, float h);
 
-    //view::CallRender2D callR2D;
+    GLuint theSingleBuffer;
+    unsigned int currBuf;
+    GLsizeiptr bufSize;
+    int numBuffers;
+    void *theSingleMappedMem;
+    GLuint singleBufferCreationBits;
+    GLuint singleBufferMappingBits;
+    std::vector<GLsync> fences;
+    std::shared_ptr<vislib::graphics::gl::GLSLShader> newShader;
+
+    std::vector<float> pointData;
+
+    core::param::ParamSlot alphaScalingParam;
+    core::param::ParamSlot attenuateSubpixelParam;
+
+    core::view::CallRender2D *callR2D;
 
     /**********************************************************************
      * 'render'-functions

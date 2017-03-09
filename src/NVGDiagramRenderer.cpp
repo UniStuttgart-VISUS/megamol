@@ -20,6 +20,7 @@
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/math/ShallowPoint.h"
+#include "vislib/math/ShallowMatrix.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 
@@ -34,6 +35,8 @@
 
 #define BLENDISH_IMPLEMENTATION
 #include "blendish.h"
+
+const GLuint SSBObindingPoint = 2;
 
 //#include "oui.h"
 
@@ -83,7 +86,13 @@ NVGDiagramRenderer::NVGDiagramRenderer(void) : Renderer2DModule(),
     getSelectorsSlot("getSelectors", "Slot asking for selected columns"),
     abcissaSelectorSlot("abcissaSelector", "Slot to select column as abcissa"),
     abcissaIdx(0),
-    screenSpaceCanvasOffsetParam("screenSpaceCanvasOffset", "Slot defining screen space canvas margin") {
+    screenSpaceCanvasOffsetParam("screenSpaceCanvasOffset", "Slot defining screen space canvas margin"),
+    currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3),
+    singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
+    singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
+    fences(),
+    alphaScalingParam("alphaScaling", "scaling factor for particle alpha"),
+    attenuateSubpixelParam("attenuateSubpixel", "attenuate alpha of points that should have subpixel size") {
 
     // segmentation data caller slot
     this->dataCallerSlot.SetCompatibleCall<CallFloatTableDataDescription>();
@@ -99,6 +108,14 @@ NVGDiagramRenderer::NVGDiagramRenderer(void) : Renderer2DModule(),
 
     this->screenSpaceCanvasOffsetParam << new core::param::FloatParam(0.9f, (std::numeric_limits<float>::min)(), 1.0f);
     this->MakeSlotAvailable(&this->screenSpaceCanvasOffsetParam);
+
+    this->fences.resize(numBuffers);
+
+    this->alphaScalingParam << new core::param::FloatParam(1.0f);
+    this->MakeSlotAvailable(&this->alphaScalingParam);
+
+    this->attenuateSubpixelParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->attenuateSubpixelParam);
 
     /*this->selectionCallerSlot.SetCompatibleCall<protein_calls::IntSelectionCallDescription>();
     this->MakeSlotAvailable(&this->selectionCallerSlot);
@@ -172,6 +189,24 @@ NVGDiagramRenderer::NVGDiagramRenderer(void) : Renderer2DModule(),
     seriesVisible.SetCapacityIncrement(100);
 }
 
+    void NVGDiagramRenderer::lockSingle(GLsync& syncObj) {
+        if (syncObj) {
+            glDeleteSync(syncObj);
+        }
+        syncObj = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    }
+
+    void NVGDiagramRenderer::waitSingle(GLsync& syncObj) {
+        if (syncObj) {
+            while (1) {
+                GLenum wait = glClientWaitSync(syncObj, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
+                if (wait == GL_ALREADY_SIGNALED || wait == GL_CONDITION_SATISFIED) {
+                    return;
+                }
+            }
+        }
+    }
+
 /*
  * Diagram2DRenderer::~Diagram2DRenderer (DTOR)
  */
@@ -201,6 +236,40 @@ bool NVGDiagramRenderer::create() {
     this->nvgFontSans = nvgCreateFont((NVGcontext*)this->nvgCtxt, "sans", "T:\\Programmierung\\megamol2015\\infovis\\3rd\\oui-blendish\\DejaVuSans.ttf");
     bndSetFont(this->nvgFontSans);
     bndSetIconImage(nvgCreateImage((NVGcontext*)this->nvgCtxt, "T:\\Programmierung\\megamol2015\\infovis\\3rd\\oui-blendish\\blender_icons16.png", 0));
+
+    glGenBuffers(1, &this->theSingleBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
+    glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, singleBufferCreationBits);
+    this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, singleBufferMappingBits);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glBindVertexArray(0);
+
+    this->newShader = std::make_shared<vislib::graphics::gl::GLSLShader>(vislib::graphics::gl::GLSLShader());
+    /*this->newShader->CreateFromFile("T:\\Programmierung\\megamol2015\\infovis\\Shaders\\nvgdr_splat_v.glsl",
+        "T:\\Programmierung\\megamol2015\\infovis\\Shaders\\nvgdr_splat_f.glsl");*/
+    try {
+        if (!this->newShader->CreateFromFile("T:\\Programmierung\\megamol2015\\infovis\\Shaders\\nvgdr_splat_v.glsl",
+            "T:\\Programmierung\\megamol2015\\infovis\\Shaders\\nvgdr_splat_f.glsl")) {
+            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                "Unable to compile sphere shader: Unknown error\n");
+            return false;
+        }
+
+    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile sphere shader (@%s): %s\n",
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+            ce.FailedAction()), ce.GetMsgA());
+        return nullptr;
+    } catch (vislib::Exception e) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile sphere shader: %s\n", e.GetMsgA());
+        return nullptr;
+    } catch (...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Unable to compile sphere shader: Unknown exception\n");
+        return nullptr;
+    }
 
     return true;
 }
@@ -269,64 +338,99 @@ void megamol::infovis::NVGDiagramRenderer::drawPointSplats(float w, float h) {
     float mw = this->screenSpaceMidPoint.GetX();
     float mh = this->screenSpaceMidPoint.GetY();
 
-    float aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
-
-    this->drawLegend(w, h);
-
     this->drawXAxis(DIAGRAM_XAXIS_FLOAT);
-
-    prepareData(false, false, false);
-
     this->drawYAxis();
 
-    NVGcontext *ctx = static_cast<NVGcontext *>(this->nvgCtxt);
-    nvgSave(ctx);
-    //nvgScale(ctx, this->scaleX, this->scaleY);
-    nvgTransform(ctx, this->transform.GetAt(0, 0), this->transform.GetAt(1, 0),
-        this->transform.GetAt(0, 1), this->transform.GetAt(1, 1),
-        this->transform.GetAt(0, 2), this->transform.GetAt(1, 2));
+    // TODO Set this!!!
+    view::CallRender2D *cr = this->callR2D;
+    float scaling = 1.0f;
 
-    nvgFillColor(ctx, nvgRGB(255, 0, 0));
-    nvgBeginPath(ctx);
-    nvgCircle(ctx, 0.0f, 0.0f, 20);
-    nvgCircle(ctx, 0.0f, h, 20);
-    nvgCircle(ctx, w, 0.0f, 20);
-    nvgCircle(ctx, w, h, 20);
-    nvgFill(ctx);
 
-    auto lineW = this->lineWidthParam.Param<core::param::FloatParam>()->Value();
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glEnable(GL_POINT_SPRITE);
 
-    for (int s = 0; s < (int)preparedData->Count(); s++) {
-        if ((*preparedData)[s]->Count() < 2 || !this->selected[s]) {
-            continue;
-        }
+    float viewportStuff[4];
+    ::glGetFloatv(GL_VIEWPORT, viewportStuff);
+    glPointSize(vislib::math::Max(viewportStuff[2], viewportStuff[3]));
+    if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    viewportStuff[2] = 2.0f / viewportStuff[2];
+    viewportStuff[3] = 2.0f / viewportStuff[3];
 
-        auto color = std::get<4>(this->columnSelectors[s]);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, theSingleBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer);
 
-        //nvgStrokeWidth(ctx, this->lineWidthParam.Param<core::param::FloatParam>()->Value());
-        //nvgFillColor(ctx, nvgRGBf(color[0], color[1], color[2]));
-        nvgBeginPath(ctx);
+    // this is the apex of suck and must die
+    GLfloat modelViewMatrix_column[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> scaleMat;
+    scaleMat.SetAt(0, 0, scaling);
+    scaleMat.SetAt(1, 1, scaling);
+    scaleMat.SetAt(2, 2, scaling);
+    //modelViewMatrix = modelViewMatrix * scaleMat;
+    GLfloat projMatrix_column[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> projMatrix(&projMatrix_column[0]);
+    // Compute modelviewprojection matrix
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrixInv = modelViewMatrix;
+    modelViewMatrixInv.Invert();
+    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix = projMatrix * modelViewMatrix;
+    // end suck
 
-        /*float hinz = (*(*preparedData)[s])[0]->GetX() - 0.5f;
-        float kunz = (((*(*preparedData)[s])[0]->GetY())) - 0.5f;
-        nvgMoveTo(ctx, this->screenSpaceMidPoint.GetX() + hinz*this->screenSpaceDiagramSize.GetWidth(),
-            this->screenSpaceMidPoint.GetY() + kunz*this->screenSpaceDiagramSize.GetHeight());*/
+    newShader->Enable();
+    //colIdxAttribLoc = glGetAttribLocation(*this->newShader, "colIdx");
+    glUniform4fv(newShader->ParameterLocation("viewAttr"), 1, viewportStuff);
+    //glUniform3fv(newShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
+    //glUniform3fv(newShader->ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
+    //glUniform3fv(newShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    //glUniform4fv(newShader->ParameterLocation("clipDat"), 1, clipDat);
+    //glUniform4fv(newShader->ParameterLocation("clipCol"), 1, clipCol);
+    glUniform1f(newShader->ParameterLocation("scaling"), scaling);
+    glUniform1f(newShader->ParameterLocation("alphaScaling"), this->alphaScalingParam.Param<param::FloatParam>()->Value());
+    glUniform1i(newShader->ParameterLocation("attenuateSubpixel"), this->attenuateSubpixelParam.Param<param::BoolParam>()->Value() ? 1 : 0);
+    //glUniform1f(newShader->ParameterLocation("zNear"), cr->GetCameraParameters()->NearClip());
+    glUniformMatrix4fv(newShader->ParameterLocation("modelViewProjection"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+    glUniformMatrix4fv(newShader->ParameterLocation("modelViewInverse"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+    glUniform4f(this->newShader->ParameterLocation("inConsts1"), this->lineWidthParam.Param<core::param::FloatParam>()->Value(),
+        0, 0, 0);
 
-        for (int i = 0; i < (int)(*preparedData)[s]->Count(); i++) {
-            float hinz = (*(*preparedData)[s])[i]->GetX() - 0.5f;
-            float kunz = (((*(*preparedData)[s])[i]->GetY())) - 0.5f;
+    // drawarrays
+    size_t vertCounter = 0;
+    size_t numVerts = this->bufSize / (2.0f * sizeof(float));
+    const char *currVert = reinterpret_cast<const char *>(this->pointData.data());
+    while (vertCounter < (this->pointData.size() / 2)) {
+        void *mem = static_cast<char*>(theSingleMappedMem) + this->bufSize * this->currBuf;
+        size_t vertsThisTime = vislib::math::Min((this->pointData.size() / 2) - vertCounter, numVerts);
+        this->waitSingle(fences[currBuf]);
+        memcpy(mem, currVert, vertsThisTime*2 * sizeof(float));
+        glFlushMappedNamedBufferRangeEXT(theSingleBuffer, bufSize * currBuf, vertsThisTime*2 * sizeof(float));
+        //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+        //glUniform1i(this->newShader->ParameterLocation("instanceOffset"), numVerts * currBuf);
+        glUniform1i(this->newShader->ParameterLocation("instanceOffset"), 0);
 
-            auto grad = nvgRadialGradient(ctx, mw + hinz*dw, mh + kunz*dh, 0.0f, lineW, nvgRGBAf(color[0], color[1], color[2], 0.0f), nvgRGBAf(color[0], color[1], color[2], 0.8f));
-            nvgFillPaint(ctx, grad);
-            nvgCircle(ctx, mw + hinz*dw, mh + kunz*dh, lineW);
+        //this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, this->bufSize * this->currBuf, this->bufSize);
+        glDrawArrays(GL_POINTS, 0, vertsThisTime);
+        //glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
+        this->lockSingle(fences[currBuf]);
 
-            /*nvgLineTo(ctx, this->screenSpaceMidPoint.GetX() + hinz*this->screenSpaceDiagramSize.GetWidth(),
-                this->screenSpaceMidPoint.GetY() + kunz*this->screenSpaceDiagramSize.GetHeight());*/
-        }
-
-        nvgFill(ctx);
+        this->currBuf = (this->currBuf + 1) % this->numBuffers;
+        vertCounter += vertsThisTime;
+        currVert += vertsThisTime * 2 * sizeof(float);
     }
-    nvgRestore(ctx);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glDisable(GL_TEXTURE_1D);
+    newShader->Disable();
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 bool NVGDiagramRenderer::CalcExtents() {
@@ -746,7 +850,7 @@ bool NVGDiagramRenderer::Render(view::CallRender2D &call) {
 
     if (!assertData(ft)) return false;
 
-    //this->callR2D = call;
+    this->callR2D = &call;
 
     this->defineLayout(call.GetWidth(), call.GetHeight());
 
@@ -1531,6 +1635,8 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
 
 #if 1
     int cntSeries = 0;
+    this->pointData.clear();
+    this->pointData.reserve(this->columnSelectors.size()*ft->GetRowsCount() * 2);
     for (int s = 0; s < this->columnSelectors.size(); s++) {
         //protein_calls::DiagramCall::DiagramSeries *ds = diagram->GetSeries(s);
         //const protein_calls::DiagramCall::DiagramMappable *dm = ds->GetMappable();
@@ -1600,6 +1706,11 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
             y = data[colIdx + localX*ft->GetColumnsCount()];
             z = 0.0f;
             (*(*preparedData)[cntSeries - 1])[localX] = new vislib::math::Point<float, 3>(x, y, z);
+
+            /*this->pointData.push_back(this->screenSpaceMidPoint.GetX() + x*this->screenSpaceDiagramSize.GetWidth());
+            this->pointData.push_back(this->screenSpaceMidPoint.GetY() + y*this->screenSpaceDiagramSize.GetHeight());*/
+            this->pointData.push_back(x);
+            this->pointData.push_back(y);
         }
     }
 #else // old, wrong implementation
