@@ -11,7 +11,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 //
 // TODO:
-//
+// 	- Define all uncertainty values > (1.0-dUnc) as sure and set uncertainty to 1.0 ? -  as Paramter! 
 // 
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,6 +36,7 @@
 #include "vislib/math/mathfunctions.h"
 
 #include <iostream> // DEBUG
+#include <iomanip>  // DEBUG
 
 #define DATA_FLOAT_EPS 0.00001f
 
@@ -143,21 +144,24 @@ bool UncertaintyDataLoader::getData(Call& call) {
         }
         
         // DEBUG - sorted structure assignments, secondary structure length and uncertainty
+		/*
+		unsigned int w = 5;
 		unsigned int k = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
-        //for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
+        // for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
+			
             for (int i = 0; i < this->pdbIndex.Count(); i++) {
-                std::cout << "M: " << k << " - A: " << i << " - L: " << this->secStructLength[k][i] << " - Unc: " << this->uncertainty[i] << " - S: ";
+				std::cout << std::setprecision(3) << "M: " << std::setw(w) << k << " - A: " << std::setw(w) << i << " - L: " << std::setw(w) << this->secStructLength[k][i] << " - Unc: " << std::setw(w) << this->uncertainty[i] << " - S: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
-                    std::cout << this->sortedSecStructAssignment[k][i][n] << "|";
+					std::cout << std::setprecision(3) << std::setw(w) << this->sortedSecStructAssignment[k][i][n] << "|";
                 }
                 std::cout << " - U: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
-                    std::cout << this->secStructUncertainty[k][i][n] << "|";
+					std::cout << std::setprecision(3) << std::setw(w) << this->secStructUncertainty[k][i][n] << "|";
                 }
                 std::cout << std::endl;
             }
-        //}
-        
+        // }
+        */
     }
     
     // pass secondary strucutre data to call, if available
@@ -293,33 +297,36 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                 // indices of line matches column indices given in input file
 			    line = line.Substring(8); 
 
-                // PDB index of amino-acids 
-                tmpString = line.Substring(32,6); // first parameter of substring is start (beginning with 0), second parameter is range
-                // remove spaces
-                tmpString.Remove(" ");
-                this->pdbIndex.Add(tmpString.PeekBuffer()); 
-                
-                // PDB three letter code of amino-acids
-                this->aminoAcidName.Add(line.Substring(10,3)); 
-                
-                // PDB one letter chain id 
-                currentChainID = line[22];
-                
+				// PDB one letter chain id 
+				currentChainID = line[22];
+
                 // Ignore HETATM at the end with repeating chain IDs,
                 // add each chain just once!
-                if((LastChainID != currentChainID)) {
+                if (LastChainID != currentChainID) {
+					skip = false;
+					LastChainID = currentChainID;
                     for (unsigned int c = 0; c < this->chainID.Count(); c++) {
                         if (this->chainID[c] == currentChainID) {
                             skip = true;
+							break;
                         }   
                     }
                 }
-                
+
                 // skip line if chain id repeats after break (cut HETATM at the end)
                 if (!skip) {
                     
+					// PDB index of amino-acids 
+					tmpString = line.Substring(32, 6); // first parameter of substring is start (beginning with 0), second parameter is range
+					// remove spaces
+					tmpString.Remove(" ");
+					this->pdbIndex.Add(tmpString.PeekBuffer());
+
+					// PDB three letter code of amino-acids
+					this->aminoAcidName.Add(line.Substring(10, 3));
+
+					// adding chain id
                     this->chainID.Add(currentChainID);
-                    LastChainID = currentChainID;
                     
                     // The Missing amino-acid flag
                     if (line[26] == 'M')
@@ -374,7 +381,6 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                         tmpSSU->Last()[UncertaintyDataCall::secStructure::C_COIL] = 1.0f;
                     }
                     // sorting structure types
-                    // NE
                     this->QuickSortUncertainties(&(tmpSSU->Last()), &(tmpSSSA->Last()), 0, (static_cast<int>(UncertaintyDataCall::secStructure::NOE) - 1));
                     
 
@@ -440,13 +446,13 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                     float Tb2a = (float)std::atof(line.Substring(207, 10));
 
                     vislib::math::Vector<float, 7> tmpVec7;
-                    tmpVec5[0] = Th1;
-                    tmpVec5[1] = Th3;
-                    tmpVec5[2] = Th4;
-                    tmpVec5[3] = Tb1p;
-                    tmpVec5[4] = Tb2p;
-                    tmpVec5[5] = Tb1a;
-                    tmpVec5[6] = Tb2a;                    
+					tmpVec7[0] = (Th1 > 1.0E38f) ? (1.0E38f) : (Th1);
+					tmpVec7[1] = (Th3 > 1.0E38f) ? (1.0E38f) : (Th3);
+					tmpVec7[2] = (Th4 > 1.0E38f) ? (1.0E38f) : (Th4);
+					tmpVec7[3] = (Tb1p > 1.0E38f) ? (1.0E38f) : (Tb1p);
+					tmpVec7[4] = (Tb2p > 1.0E38f) ? (1.0E38f) : (Tb2p);
+					tmpVec7[5] = (Tb1a > 1.0E38f) ? (1.0E38f) : (Tb1a);
+					tmpVec7[6] = (Tb2a > 1.0E38f) ? (1.0E38f) : (Tb2a);
                     this->strideStructThreshold.Add(tmpVec7);
 
                     // Read threshold and energy values of DSSP
@@ -644,7 +650,15 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
         STRIDE_THRESHOLDE1 -240.0f
         STRIDE_THRESHOLDE2 -310.0f
         NO_ASSIGNMENT         0.0f
-        * 
+        
+		T1    -640,434  -230,000  180,434  410,434
+		T3      -0,094     0,120    0,334    0,214
+		T4      -0,047     0,060    0,167    0,107
+		T1[a] -688,279  -240,000  188,279  448,279
+		T2[a] -688,279  -240,000  188,279  448,279
+		T1[p] -863,194  -310,000  243,194  553,194
+		T2[p] -863,194  -310,000  243,194  553,194
+
 		for (int mCnt = 0; mCnt < methodCnt; mCnt++) { // mCnt - The method loop.
 
 			for (int s = 0; s < structCnt; s++) { // sCnt - The structure type loop.  
@@ -672,21 +686,22 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 			ssa[sCntO] = static_cast<UncertaintyDataCall::secStructure>(sCntO);
 		}
 
-		float propMax = 0.0f;
         float propSum = 0.0f;
+
 		for (unsigned int sCntO = 0; sCntO < consStrTypes; sCntO++) {   // sCntO - The outer structure type loop.
             
 			for (unsigned int mCntO = 0; mCntO < methodCnt; mCntO++) {  // mCntO - The outer method loop.
                 
-				for (unsigned int mCntI = 0; mCntI < methodCnt; mCntI++) {          // mCntI - The inner method loop.
-                    
-                    float distSum = 0.0f;
-                    float dist    = 0.0f;                     
+				for (unsigned int mCntI = 0; mCntI < methodCnt; mCntI++) {  // mCntI - The inner method loop.
+
+                    float dist    = 0.0f;
+					UncertaintyDataCall::assMethod mCurO = static_cast<UncertaintyDataCall::assMethod>(mCntO);
+					UncertaintyDataCall::assMethod mCurI = static_cast<UncertaintyDataCall::assMethod>(mCntI);
+
 					for (unsigned int sCntI = 0; sCntI < consStrTypes; sCntI++) {   // sCntI - The inner structure type loop.          
 
                         // Compare each method just with different methods, not with itself
                         if (mCntO != mCntI) {
-
                             // Get distance of structure types
                             if ((mCurO == strideMethod) && (mCurI == dsspMethod)) {
                                 dist = M_SD[sCntO][sCntI];
@@ -695,98 +710,91 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                                 dist = M_SD[sCntI][sCntO];
                             }
                             else if (mCurO == pdbMethod) {
-                                if (mCurI == dsspMethod) {
-                                    if ((sCntI == (unsigned int)G_310_HELIX) || (sCntI == (unsigned int)H_ALPHA_HELIX) || (sCntI == (unsigned int)I_PI_HELIX)) {
-                                    
-                                    else if (sCntI == (unsigned int)E_EXT_STRAND) {
-                                        
-                                    }
-                                    else {
-                                        
-                                    }
-                                }
-                                else if (mCurI == strideMethod) {
-                                    if ((sCntI == (unsigned int)G_310_HELIX) || (sCntI == (unsigned int)H_ALPHA_HELIX) || (sCntI == (unsigned int)I_PI_HELIX)) {
-                                    
-                                    else if (sCntI == (unsigned int)E_EXT_STRAND) {
-                                        
-                                    }
-                                    else {
-                                        
-                                    } 
-                                }                  
+								if ((sCntO == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+									(sCntO == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+									(sCntO == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+
+									if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+										if (mCurI == dsspMethod) { (dist = 0.0f); }
+										if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
+									}
+									else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+										if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
+										if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
+									}
+									else { // (pdbAssignmentHelix == PDB_PROMOTIF)
+										if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+										if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+									}
+								}
+								else if (sCntO == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+									if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+										if (mCurI == dsspMethod) { (dist = 0.0f); }
+										if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
+									}
+									else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+										if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
+										if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
+									}
+									else { // (pdbAssignmentSheet == PDB_PROMOTIF)
+										if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+										if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+									}
+								}
+								else { // COIL
+									if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+									if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+								}
                             }                             
                             else if (mCurI == pdbMethod) {
-                                if (mCurO == dsspMethod) {
-                                    if ((sCntO == (unsigned int)G_310_HELIX) || (sCntO == (unsigned int)H_ALPHA_HELIX) || (sCntO == (unsigned int)I_PI_HELIX)) {
-                                    
-                                    else if (sCntO == (unsigned int)E_EXT_STRAND) {
-                                        
-                                    }
-                                    else {
-                                        
-                                    }
-                                }
-                                else if (mCurO == strideMethod) {
-                                    if ((sCntO == (unsigned int)G_310_HELIX) || (sCntO == (unsigned int)H_ALPHA_HELIX) || (sCntO == (unsigned int)I_PI_HELIX)) {
-                                    
-                                    else if (sCntO == (unsigned int)E_EXT_STRAND) {
-                                        
-                                    }
-                                    else {
-                                        
-                                    } 
-                                }    
+								if ((sCntI == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+									(sCntI == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+									(sCntI == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+									if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+										if (mCurO == dsspMethod) { (dist = 0.0f); }
+										if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
+									}
+									else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+										if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
+										if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
+									}
+									else { // (pdbAssignmentHelix == PDB_PROMOTIF)
+										if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+										if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+									}
+								}
+								else if (sCntI == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+									if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+										if (mCurO == dsspMethod) { (dist = 0.0f); }
+										if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
+									}
+									else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+										if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
+										if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
+									}
+									else { // (pdbAssignmentSheet == PDB_PROMOTIF)
+										if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+										if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+									}
+								}
+								else { // COIL
+									if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+									if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+								}  
                             }
- /*
-                                pdbAssignmentHelix
-                                pdbAssignmentSheet
-                                
-                                PDB_PROMOTIF = 0,
-                                PDB_AUTHOR   = 1,
-                                PDB_DSSP     = 2,
-                                PDB_UNKNOWN  = 3
-                                
-                                G_310_HELIX   = 0,
-                                H_ALPHA_HELIX = 1,
-                                I_PI_HELIX    = 2,            
-                                T_H_TURN      = 3,
-                                S_BEND        = 4,
-                                C_COIL        = 5,
-                                B_BRIDGE      = 6,
-                                E_EXT_STRAND  = 7,
-                                NOTDEFINED    = 8,  
-                                                              
-                                M_DP[8][8]
-                                M_SP[8][8]
-                                M_SA[8][8]
-                                M_DA[8][8]
-*/
 
                             // Consider only valid structure types for each method
                             if (dist > -1.0f) {
-                                ssu[sCntO] += (this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI])
-                                              / ((distMax - dist)*(distMax - dist)) 
-                                distSum += (distMax - dist);
+								ssu[sCntO] += (this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI])
+									          * ((0.00001f + (distMax - dist))*(0.00001f + (distMax - dist)));
                             }
                             
                         } // mCntO != mCntI
 					} //  sCnt
-                    // ssu[sCntO] /= distSum; // Weighted sum
-                    
 				} // mCntI
-                // ssu[sCntO] /= (float)(methodCnt - 1);
-                
 			} // mCntO
-            // ssu[sCntO] /= (float)methodCnt;
-            
-            propSum += ssu[sCntO];
-            if (ssu[sCntO] > propMax) {
-                propMax = ssu[sCntO];
-            }
-            
+            propSum += ssu[sCntO]; 
 		} // sCntO
-
 
         // Normalizing structure propabilities to [0.0,1.0]
 		for (unsigned int s = 0; s < consStrTypes; s++) {
@@ -795,9 +803,6 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
         
 		// Sorting structure types by their propability
 		this->QuickSortUncertainties(&(ssu), &(ssa), 0, (structCnt - 1));
-
-		// TODO: Define all uncertainty values > (1.0-dUnc) as sure and set uncertainty to 1.0 ? -  as Paramter!
-
 
 		// Calculate reduced uncertainty ======================================
 
@@ -808,7 +813,6 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 		vislib::math::Vector<float, consStrTypes> Pmax;
 		for (unsigned int s = 0; s < consStrTypes; s++) {
 			Pmax[s] = 0.0;
-
 		}
 		Pmax[0] = 1.0f;
 

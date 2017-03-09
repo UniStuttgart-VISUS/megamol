@@ -154,7 +154,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->MakeSlotAvailable(&this->toggleStrideThreshParam);
 	
     // param slot for DSSP threshold toggling
-    this->toggleDsspThreshParam.SetParameter(new param::BoolParam(true));
+    this->toggleDsspThreshParam.SetParameter(new param::BoolParam(true)); 
     this->MakeSlotAvailable(&this->toggleDsspThreshParam);
 	
     ////////////////////////////////////////////////
@@ -741,35 +741,35 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<int>(UncertaintyDataCall::assMethod::STRIDE)][i][0];
 				for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-					if (this->strideStructThreshold[i][j] != INFINITY) {
+					if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f)) {
 						switch (j) {
 						case(0) : threshold = STRIDE_THRESHOLDH1;
-							min = -500.0f;
-							max = 500.0f;
+							min = -640.434f;
+							max = 180.434f;
 							break;
 						case(1) : threshold = STRIDE_THRESHOLDH3;
-							min = -1.0f;
-							max = 1.0f;
+							min = -0.094f;
+							max = 0.334f;
 							break;
 						case(2) : threshold = STRIDE_THRESHOLDH4;
-							min = -1.0f;
-							max = 1.0f;
+							min = -0.047f;
+							max = 0.167f;
 							break;
 						case(3) : threshold = STRIDE_THRESHOLDE2;
-							min = -500.0f;
-							max = 500.0f;
+							min = -688.279f;
+							max = 188.279f;
 							break;
 						case(4) : threshold = STRIDE_THRESHOLDE2;
-							min = -500.0f;
-							max = 500.0f;
+							min = -688.279f;
+							max = 188.279f;
 							break;
 						case(5) : threshold = STRIDE_THRESHOLDE1;
-							min = -500.0f;
-							max = 500.0f;
+							min = -863.194f;
+							max = 243.194f;
 							break;
 						case(6) : threshold = STRIDE_THRESHOLDE1;
-							min = -500.0f;
-							max = 500.0f;
+							min = -863.194f;
+							max = 243.194f;
 							break;                            
 						default: break;
 						}
@@ -798,7 +798,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i][0];
                 for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-					if (this->dsspStructEnergy[i][j] != INFINITY) {
+					if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f))  {
 						this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
 															this->dsspStructEnergy[i][j], min, max, threshold);
 					}
@@ -991,7 +991,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 fontSize = 0.5f;
                 yPos = 1.0f;
                 rowPos = 0.0f;
-                for (unsigned int i = 0; i < 1; i++) { // replace 'i < 1' with 'i < this->resRows' to show row legend for every row not just the first one
+				for (unsigned int i = 0; i < this->resRows; i++) { // replace 'i < 1' with 'i < this->resRows' to show row legend for every row not just the first one
 
                     if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                         tmpStr = "STRIDE";
@@ -1172,7 +1172,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
 						    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-								if (this->strideStructThreshold[mousePosResIdx][j] != INFINITY) {
+								if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f))  {
 									switch (j) {
 										case (0) : tmpStr = "T1-Helix:";
 											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
@@ -1220,7 +1220,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
 						    for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-								if (this->dsspStructEnergy[mousePosResIdx][j] != INFINITY) {
+								if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f)) {
 									switch (j) {
 										case (0) : tmpStr = "Hb-E Acc.: "; break;
 										case (1) : tmpStr = "Hb-E Don.: "; break;
