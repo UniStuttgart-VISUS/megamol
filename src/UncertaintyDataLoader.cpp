@@ -786,7 +786,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
                             // Consider only valid structure types for each method
                             if (dist > -1.0f) {
 								ssu[sCntO] += (this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI])
-									          * ((0.00001f + (distMax - dist))*(0.00001f + (distMax - dist)));
+									/ ((0.00001f + (distMax - dist)) *(0.00001f + (distMax - dist)));
                             }
                             
                         } // mCntO != mCntI
