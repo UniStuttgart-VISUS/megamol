@@ -180,6 +180,7 @@ bool CinematicRenderer::RenderOverview(Call& call){
 
 	auto oc = this->slaveRendererSlot.CallAs<CallRender3D>();
 	if (oc == nullptr) return false;
+	*oc = *cr3d;
 	oc->SetTime(cr3d->Time());
 
 	// Call original renderer.

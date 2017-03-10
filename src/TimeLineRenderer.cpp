@@ -255,7 +255,7 @@ void TimeLineRenderer::DrawKeyframeSymbol(Keyframe k, float lineLength, float li
 bool TimeLineRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFlags flags){
 	
 	// on leftclick, check if a keyframe is hit and set the selected keyframe
-	if (flags == view::MOUSEFLAG_BUTTON_LEFT_CHANGED){
+	if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN){
 
 		float lineMiddle = resolutionParam.Param<param::FloatParam>()->Value() / 2;
 
@@ -292,6 +292,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFl
 					}
 				}
 			}
+			return hit;
 		}
 	}
 	// if true is returned, manipulator cannot move camera

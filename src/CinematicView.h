@@ -21,6 +21,15 @@ namespace megamol {
 
 		public:
 
+			enum SkyboxSides {
+				SKYBOX_FRONT = 0,
+				SKYBOX_BACK = 1,
+				SKYBOX_LEFT = 2,
+				SKYBOX_RIGHT = 4, 
+				SKYBOX_UP = 8,
+				SKYBOX_DOWN = 16
+			};
+
 			typedef core::view::View3D Base;
 
 			/**
@@ -76,6 +85,7 @@ namespace megamol {
 			core::CallerSlot keyframeKeeperSlot;
 
 			core::param::ParamSlot selectedKeyframeParam;
+			core::param::ParamSlot selectedSkyboxSideParam;
 		};
 
 	} /* end namespace cinematiccamera */

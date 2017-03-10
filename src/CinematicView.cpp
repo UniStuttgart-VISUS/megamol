@@ -7,14 +7,17 @@
 #include "CallCinematicCamera.h"
 #include "CameraParamsOverride.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/view/CallRender3D.h"
 
 using namespace megamol;
+using namespace megamol::core;
 using namespace cinematiccamera;
 
 CinematicView::CinematicView(void) : View3D(),
 keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-selectedKeyframeParam("selectedKeyframeParam", "render selected Keyframe if true. render keyframe at animationtime if false"){
+selectedKeyframeParam("cinematicCam::selectedKeyframeParam", "render selected Keyframe if true. render keyframe at animationtime if false"),
+selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"){
 
 
 	this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -22,6 +25,16 @@ selectedKeyframeParam("selectedKeyframeParam", "render selected Keyframe if true
 
 	this->selectedKeyframeParam << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->selectedKeyframeParam);
+
+	param::EnumParam *sbs = new param::EnumParam(SKYBOX_FRONT);
+	sbs->SetTypePair(SKYBOX_FRONT,	"Front");
+	sbs->SetTypePair(SKYBOX_BACK,	"Back");
+	sbs->SetTypePair(SKYBOX_LEFT,	"Left");
+	sbs->SetTypePair(SKYBOX_RIGHT,	"Right");
+	sbs->SetTypePair(SKYBOX_UP,		"Up");
+	sbs->SetTypePair(SKYBOX_DOWN,	"Down");
+	this->selectedSkyboxSideParam << sbs;
+	this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
 }
 
 
