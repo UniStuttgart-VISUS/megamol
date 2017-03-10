@@ -64,6 +64,11 @@ public:
         DIAGRAM_XAXIS_CATEGORICAL = 3
     };
 
+    enum YAxisTypes {
+        DIAGRAM_YAXIS_FLOAT = 0,
+        DIAGRAM_YAXIS_CLUSTERED = 1
+    };
+
     enum MarkerVisibility {
         DIAGRAM_MARKERS_SHOW_NONE = 0,
         DIAGRAM_MARKERS_SHOW_SELECTED = 1,
@@ -202,6 +207,10 @@ private:
     core::param::ParamSlot attenuateSubpixelParam;
 
     core::view::CallRender2D *callR2D;
+
+    void clusterYRange(void);
+
+    void showToolTip(const float x, const float y, const std::string &symbol, const std::string &module, const std::string &file, const size_t &line, const size_t &memaddr, const size_t &memsize) const;
 
     /**********************************************************************
      * 'render'-functions

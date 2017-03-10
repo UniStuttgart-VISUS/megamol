@@ -341,6 +341,9 @@ void megamol::infovis::NVGDiagramRenderer::drawPointSplats(float w, float h) {
     this->drawXAxis(DIAGRAM_XAXIS_FLOAT);
     this->drawYAxis();
 
+    this->showToolTip(500, 500,
+        std::string("symbol"), std::string("module"), std::string("file"), size_t(1), size_t(2), size_t(3));
+
     // TODO Set this!!!
     view::CallRender2D *cr = this->callR2D;
     float scaling = 1.0f;
@@ -431,6 +434,57 @@ void megamol::infovis::NVGDiagramRenderer::drawPointSplats(float w, float h) {
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+}
+
+void megamol::infovis::NVGDiagramRenderer::clusterYRange(void) {
+    std::unordered_map<size_t, size_t> histogram;
+    std::vector<float> means;
+    std::vector<size_t> counters;
+    std::vector<size_t> localmins;
+    std::vector<size_t> localmaxes;
+
+    float tolerance;
+
+    for (auto &bin : histogram) {
+        bool found = false;
+        for (size_t clusterIdx = 0; clusterIdx < means.size(); clusterIdx++) {
+            if (std::abs(means[clusterIdx] - bin.first) < tolerance) {
+                size_t count = bin.second;
+                size_t oldcount = counters[clusterIdx];
+                means[clusterIdx] = means[clusterIdx] + ((bin.first - means[clusterIdx])*count) / (oldcount + count);
+                if (bin.first < localmins[clusterIdx]) {
+                    localmins[clusterIdx] = bin.first;
+                }
+                if (bin.first > localmaxes[clusterIdx]) {
+                    localmaxes[clusterIdx] = bin.first;
+                }
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            means.push_back(bin.first);
+            counters.push_back(bin.second);
+            localmins.push_back(bin.first);
+            localmaxes.push_back(bin.second);
+        }
+    }
+}
+
+void megamol::infovis::NVGDiagramRenderer::showToolTip(const float x, const float y,
+    const std::string & symbol, const std::string & module, const std::string & file,
+    const size_t & line, const size_t & memaddr, const size_t & memsize) const {
+    auto ctx = static_cast<NVGcontext *>(this->nvgCtxt);
+    float ttOH = 10;
+    float ttOW = 10;
+    float ttW = 100;
+    float ttH = ttOH + 6 * (ttOH+BND_WIDGET_HEIGHT);
+
+    nvgFontSize(ctx, 15.0f);
+
+    bndTooltipBackground(ctx, x, y, ttW, ttH);
+    auto text = std::string("Symbol: ") + symbol;
+    bndTextField(ctx, ttOW, ttOH, 90, BND_WIDGET_HEIGHT, BND_CORNER_ALL, BND_DEFAULT, -1, text.c_str(), 0, text.size() - 1);
 }
 
 bool NVGDiagramRenderer::CalcExtents() {
@@ -1709,8 +1763,7 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
 
             /*this->pointData.push_back(this->screenSpaceMidPoint.GetX() + x*this->screenSpaceDiagramSize.GetWidth());
             this->pointData.push_back(this->screenSpaceMidPoint.GetY() + y*this->screenSpaceDiagramSize.GetHeight());*/
-            this->pointData.push_back(x);
-            this->pointData.push_back(y);
+            
         }
     }
 #else // old, wrong implementation
@@ -1834,6 +1887,10 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
                 (*(*preparedData)[s])[i]->SetZ(z);
                 (*(*preparedData)[s])[i]->SetY(y);
                 (*(*preparedData)[s])[i]->SetX(x);
+                x -= 0.5f;
+                y -= 0.5f;
+                this->pointData.push_back(this->screenSpaceMidPoint.GetX() + x*this->screenSpaceDiagramSize.GetWidth());
+                this->pointData.push_back(this->screenSpaceMidPoint.GetY() + y*this->screenSpaceDiagramSize.GetHeight());
             }
         }
     }
