@@ -92,7 +92,8 @@ NVGDiagramRenderer::NVGDiagramRenderer(void) : Renderer2DModule(),
     singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT),
     fences(),
     alphaScalingParam("alphaScaling", "scaling factor for particle alpha"),
-    attenuateSubpixelParam("attenuateSubpixel", "attenuate alpha of points that should have subpixel size") {
+    attenuateSubpixelParam("attenuateSubpixel", "attenuate alpha of points that should have subpixel size"),
+    mouseRightPressed(false), mouseX(0), mouseY(0) {
 
     // segmentation data caller slot
     this->dataCallerSlot.SetCompatibleCall<CallFloatTableDataDescription>();
@@ -477,14 +478,34 @@ void megamol::infovis::NVGDiagramRenderer::showToolTip(const float x, const floa
     auto ctx = static_cast<NVGcontext *>(this->nvgCtxt);
     float ttOH = 10;
     float ttOW = 10;
-    float ttW = 100;
+    float ttW = 200;
     float ttH = ttOH + 6 * (ttOH+BND_WIDGET_HEIGHT);
 
-    nvgFontSize(ctx, 15.0f);
+    float heightOffset = ttOH + BND_WIDGET_HEIGHT;
+
+    nvgFontSize(ctx, 10.0f);
+    nvgFillColor(ctx, nvgRGB(255, 255, 255));
 
     bndTooltipBackground(ctx, x, y, ttW, ttH);
     auto text = std::string("Symbol: ") + symbol;
-    bndTextField(ctx, ttOW, ttOH, 90, BND_WIDGET_HEIGHT, BND_CORNER_ALL, BND_DEFAULT, -1, text.c_str(), 0, text.size() - 1);
+    bndTextField(ctx, x + ttOW, y + ttOH, ttW - 2 * ttOW, BND_WIDGET_HEIGHT, BND_CORNER_ALL, BND_DEFAULT, -1, text.c_str(), 0, text.size() - 1);
+    text = std::string("Module: ") + module;
+    bndTextField(ctx, x + ttOW, y + ttOH + 1 * heightOffset, ttW - 2 * ttOW, BND_WIDGET_HEIGHT, BND_CORNER_ALL, BND_DEFAULT, -1, text.c_str(), 0, text.size() - 1);
+    text = std::string("Mem: ") + std::to_string(memaddr) + std::string(" ") + std::to_string(memsize);
+    bndTextField(ctx, x + ttOW, y + ttOH + 2 * heightOffset, ttW - 2 * ttOW, BND_WIDGET_HEIGHT, BND_CORNER_ALL, BND_DEFAULT, -1, text.c_str(), 0, text.size() - 1);
+}
+
+void megamol::infovis::NVGDiagramRenderer::searchAndDispPointAttr(const float x, const float y) const {
+    // transform mouse coord x/y into OpenGL coordinate system
+    auto test = vislib::math::Vector<float, 3>(x, y, 1.0f);
+    auto ssp = this->transform*test;
+    // look up coresponding point
+    float rad = this->lineWidthParam.Param<core::param::FloatParam>()->Value();
+    auto it = std::find_if(this->pointDataPoints.begin(), this->pointDataPoints.end(),
+        [&rad, &test](const vislib::math::Point<float, 2> &a) {return a.Distance(vislib::math::Point<float, 2>(test.X(), test.Y())) < rad;});
+    // show tool tip
+    this->showToolTip(ssp.GetX(), ssp.GetY(),
+        std::string("symbol"), std::string("module"), std::string("file"), size_t(1), size_t(it->X()), size_t(it->Y()));
 }
 
 bool NVGDiagramRenderer::CalcExtents() {
@@ -623,6 +644,9 @@ bool NVGDiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
  * Callback for mouse events (move, press, and release)
  */
 bool NVGDiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
+    this->mouseX = x;
+    this->mouseY = y;
+
     if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) {
         auto blubb = vislib::math::Vector<float, 3>(x, y, 1.0f);
         auto test = this->transform*blubb;
@@ -635,6 +659,16 @@ bool NVGDiagramRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                 return true;
             }
             i++;
+        }
+    } else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)
+        && this->diagramTypeParam.Param<core::param::EnumParam>()->Value() == DiagramTypes::DIAGRAM_TYPE_POINT_SPLATS) {
+        if (flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) {
+            // show tool tip for point
+            this->mouseRightPressed = true;
+            return true;
+        } else {
+            this->mouseRightPressed = false;
+            return true;
         }
     }
 
@@ -1073,6 +1107,10 @@ bool NVGDiagramRenderer::Render(view::CallRender2D &call) {
         drawPointSplats(call.GetWidth(), call.GetHeight());
         nvgEndFrame(static_cast<NVGcontext *>(this->nvgCtxt));
         break;
+    }
+
+    if (this->mouseRightPressed) {
+        searchAndDispPointAttr(this->mouseX, this->mouseY);
     }
 
     float aspect = this->aspectRatioParam.Param<param::FloatParam>()->Value();
@@ -1891,6 +1929,8 @@ void NVGDiagramRenderer::prepareData(bool stack, bool normalize, bool drawCatego
                 y -= 0.5f;
                 this->pointData.push_back(this->screenSpaceMidPoint.GetX() + x*this->screenSpaceDiagramSize.GetWidth());
                 this->pointData.push_back(this->screenSpaceMidPoint.GetY() + y*this->screenSpaceDiagramSize.GetHeight());
+                this->pointDataPoints.push_back(vislib::math::Point<float, 2>(this->screenSpaceMidPoint.GetX() + x*this->screenSpaceDiagramSize.GetWidth(),
+                    this->screenSpaceMidPoint.GetY() + y*this->screenSpaceDiagramSize.GetHeight()));
             }
         }
     }

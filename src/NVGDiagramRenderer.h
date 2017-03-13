@@ -202,6 +202,7 @@ private:
     std::shared_ptr<vislib::graphics::gl::GLSLShader> newShader;
 
     std::vector<float> pointData;
+    std::vector<vislib::math::Point<float, 2>> pointDataPoints;
 
     core::param::ParamSlot alphaScalingParam;
     core::param::ParamSlot attenuateSubpixelParam;
@@ -210,7 +211,15 @@ private:
 
     void clusterYRange(void);
 
-    void showToolTip(const float x, const float y, const std::string &symbol, const std::string &module, const std::string &file, const size_t &line, const size_t &memaddr, const size_t &memsize) const;
+    void showToolTip(const float x, const float y, const std::string &symbol,
+        const std::string &module, const std::string &file, const size_t &line,
+        const size_t &memaddr, const size_t &memsize) const;
+
+    void searchAndDispPointAttr(const float x, const float y) const;
+
+    float mouseX, mouseY;
+
+    bool mouseRightPressed;
 
     /**********************************************************************
      * 'render'-functions
