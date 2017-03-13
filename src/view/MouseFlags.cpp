@@ -134,7 +134,7 @@ void MEGAMOLCORE_API megamol::core::view::MouseFlagsSetFlag(MouseFlags& flags, M
                 flags |= MOUSEFLAG_BUTTON_LEFT_CHANGED;
                 break;
             case MOUSEFLAG_BUTTON_RIGHT_DOWN:
-                flags |= MOUSEFLAG_BUTTON_LEFT_CHANGED;
+                flags |= MOUSEFLAG_BUTTON_RIGHT_CHANGED;
                 break;
             case MOUSEFLAG_BUTTON_MIDDLE_DOWN:
                 flags |= MOUSEFLAG_BUTTON_MIDDLE_CHANGED;
