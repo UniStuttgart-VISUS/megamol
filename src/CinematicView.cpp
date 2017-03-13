@@ -26,7 +26,8 @@ selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"){
 	this->selectedKeyframeParam << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->selectedKeyframeParam);
 
-	param::EnumParam *sbs = new param::EnumParam(SKYBOX_FRONT);
+	param::EnumParam *sbs = new param::EnumParam(SKYBOX_NONE);
+	sbs->SetTypePair(SKYBOX_NONE,   "None");
 	sbs->SetTypePair(SKYBOX_FRONT,	"Front");
 	sbs->SetTypePair(SKYBOX_BACK,	"Back");
 	sbs->SetTypePair(SKYBOX_LEFT,	"Left");
@@ -62,17 +63,52 @@ void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext&
 				}
 			}
 		}
+		Base::Render(context);
 	}
 	else {
 
 		kfc->setTimeofKeyframeToGet(context.Time);
 		if ((*kfc)(CallCinematicCamera::CallForGetKeyframeAtTime)){
-
 			kfc->getInterpolatedKeyframe().putCamParameters(this->cam.Parameters());
 
 		}
 
+		vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
+		vislib::math::Point<float, 3> camPos = cp->Position();
+		vislib::math::Vector<float, 3> camRight = cp->Right();
+		vislib::math::Vector<float, 3> camUp = cp->Up();
+		vislib::math::Vector<float, 3> camFront = cp->Front();
+		float tmpDist = cp->FocalDistance();
+		// adjust cam to selected skybox side
+		SkyboxSides side = static_cast<SkyboxSides>(this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
+		if (side != SKYBOX_NONE) {
+			// set aperture angle to 90 deg
+			cp->SetApertureAngle(90.0f);
+			if (side == SKYBOX_BACK) {
+				cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
+			}
+			else if (side == SKYBOX_RIGHT) {
+				cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
+			}
+			else if (side == SKYBOX_LEFT) {
+				cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
+			}
+			else if (side == SKYBOX_UP) {
+				cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
+			}
+			else if (side == SKYBOX_DOWN) {
+				cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
+			}
+
+		}
+
+		Base::Render(context);
+
+		// reset cam (in case some skybox side was rendered)
+		//if (side != SKYBOX_NONE) {
+		//	cp->SetView(camPos, camPos + camFront * tmpDist, camUp);
+		//}
+
 	}
 
-	Base::Render(context);
 }
