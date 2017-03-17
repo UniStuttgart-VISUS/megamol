@@ -14,10 +14,11 @@
 using namespace megamol::console::utility;
 
 int KHR::startDebug() {
-#if !defined(_WIN32) && !defined(HAS_LIBUNWIND)
+#if (!defined(_WIN32) && !defined(HAS_LIBUNWIND))
     vislib::sys::Log::DefaultLog.WriteError("Libunwind is required to use KHR debug.");
     vislib::sys::Log::DefaultLog.WriteError("You need to set the compilerflag USE_LIBUNWIND=true.");
     return 1;
+}
 #else
     GLint numExt;
     glGetIntegerv(GL_NUM_EXTENSIONS, &numExt);
@@ -38,7 +39,6 @@ int KHR::startDebug() {
         }
     }
     return 0;
-#endif
 }
 
 
@@ -251,4 +251,4 @@ std::string KHR::getStack() {
 }
 #endif
 #endif
-
+#endif
