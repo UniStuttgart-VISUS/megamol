@@ -7,6 +7,7 @@
     <OSPRayPath>%ospray%</OSPRayPath>
     <TrisoupPath>%mmstd_trisoup%</TrisoupPath>
     <ProteinCallsPath>%protein_calls%</ProteinCallsPath>
+    <TBBPath>%tbb%</TBBPath>
 	</PropertyGroup>
 	<PropertyGroup>
 		<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -29,6 +30,9 @@
     </BuildMacro>
     <BuildMacro Include="ProteinCallsPath">
       <Value>$(ProteinCallsPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="TBBPath">
+      <Value>$(TBBPath)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

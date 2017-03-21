@@ -171,6 +171,12 @@
     <ClInclude Include="src\OSPRayStructuredVolume.h">
       <Filter>Header Files\Structures</Filter>
     </ClInclude>
+    <ClInclude Include="src\OSPRayStreamLines.h">
+      <Filter>Header Files\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VecField3f.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stdafx.cpp">
@@ -259,6 +265,12 @@
     </ClCompile>
     <ClCompile Include="src\OSPRayStructuredVolume.cpp">
       <Filter>Source Files\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OSPRayStreamLines.cpp">
+      <Filter>Source Files\Structures</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VecField3f.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
