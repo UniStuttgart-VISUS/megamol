@@ -623,7 +623,7 @@
 
             // UNCERTAINTY visualisation
             if (uncVisMode == UNC_VIS_SIN_U) { // SINUS U
-                float uDisp   = distorLev * 2.0 * M_PI * u; 
+                float uDisp   = uncFac * distorLev * 2.0 * M_PI * u; 
                 float fac     = uncFac * ampLevel / 10.0;                
                 disp          = sin(uDisp - M_PI/2.0);
                 disp         *= fac;                
@@ -638,7 +638,7 @@
                 n             = normalize(n + uNdisp * tangent);                
             }
             else if (uncVisMode == UNC_VIS_SIN_V) { // SINUS V    
-                float vDisp   = distorLev * 2.0 * M_PI * v;
+                float vDisp   = uncFac * distorLev * 2.0 * M_PI * v;
                 float fac     = uncFac * ampLevel / 10.0;                
                 disp          = sin(vDisp - M_PI/2.0);
                 disp         *= fac;      
@@ -655,12 +655,12 @@
                 n             = normalize(n + vNdisp * normalize(cross(n, tangent)));                
             }    
             else if (uncVisMode == UNC_VIS_SIN_UV) {  // SINUS U,V
-                float uDisp   = distorLev * 2.0 * M_PI * u; 
-                float vDisp   = distorLev * 2.0 * M_PI * v;
+                float uDisp   = uncFac * distorLev * 2.0 * M_PI * u; 
+                float vDisp   = uncFac * distorLev * 2.0 * M_PI * v;
                 float fac     = uncFac * ampLevel / 10.0;    
                 float dispU   = sin(uDisp - M_PI/2.0);
                 float dispV   = sin(vDisp - M_PI/2.0);
-                disp          = (dispU + dispV)/2.0;
+                disp          = (dispU + dispV);
                 disp         *= fac; 
 
                 float uM      = fac * cos(uDisp);                       // derivation = gradient of fac*sin(uDisp)
@@ -675,13 +675,13 @@
                 vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
                 vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction      
                 
-				if (((1.0 - EPS) > u) && (u > EPS)) {
+				if (((1.0 - EPS) > u) && (u > EPS)) {                   // for smooth transition between amino-acids
                     mypos.xyz    += (disp + fac) * n;
                 }
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
             }
             else if (uncVisMode == UNC_VIS_TRI_U) {  // TRIANGLE U
-                float uMod    = u*distorLev;
+                float uMod    = uncFac * u*distorLev;
                 float uFunc   = 0.5 - (uMod - floor(uMod));
                 float uTri    = (0.5 - abs(uFunc));
                 float fac     = uncFac * ampLevel;
@@ -700,14 +700,14 @@
 
 			}
 			else if (uncVisMode == UNC_VIS_TRI_UV) {  // TRIANGLE U,V
-                float uMod    = u*distorLev;
-                float vMod    = v*distorLev;
+                float uMod    = uncFac * u*distorLev;
+                float vMod    = uncFac * v*distorLev;
                 float uFunc   = 0.5 - (uMod - floor(uMod));
                 float vFunc   = 0.5 - (vMod - floor(vMod));
                 float uTri    = (0.5 - abs(uFunc));
                 float vTri    = (0.5 - abs(vFunc));
                 float fac     = uncFac * ampLevel;
-                fac /= 2.0;
+                // fac /= 2.0;
 
                 float uM      = fac;
                 if (uFunc < 0.0) {

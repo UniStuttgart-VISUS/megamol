@@ -12,7 +12,7 @@
 //
 // TODO:
 // 	- Define all uncertainty values > (1.0-dUnc) as sure and set uncertainty to 1.0 ? -  as Paramter! 
-// 
+//  - Anpassung der reihenfolge der Strukturtypen in dataCall und den Matrizen !
 //
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -580,60 +580,60 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 	// Distanz-Matrix
     const float M_SD[8][8] = { // STRIDE - DSSP
                   /*      G,      H,      I,      T,      S,      C,      B,      E */
-            /* G */{   0.0f,  10.0f,  20.0f,  50.0f,  60.0f,  70.0f,  80.0f, 100.0f},               
-            /* H */{  10.0f,   0.0f,  10.0f,  40.0f,  50.0f,  60.0f,  70.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   0.0f,  30.0f,  40.0f,  50.0f,  60.0f,  80.0f},
-            /* T */{  50.0f,  40.0f,  30.0f,   0.0f,  10.0f,  20.0f,  30.0f,  50.0f},
+            /* G */{   1.0f,  10.0f,  20.0f,  50.0f,  60.0f,  70.0f,  80.0f, 100.0f},               
+            /* H */{  10.0f,   1.0f,  10.0f,  40.0f,  50.0f,  60.0f,  70.0f,  90.0f},
+            /* I */{  20.0f,  10.0f,   1.0f,  30.0f,  40.0f,  50.0f,  60.0f,  80.0f},
+            /* T */{  50.0f,  40.0f,  30.0f,   1.0f,  10.0f,  20.0f,  30.0f,  50.0f},
             /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  20.0f,  10.0f,   0.0f,  10.0f,  30.0f},
-            /* B */{  80.0f,  70.0f,  60.0f,  30.0f,  20.0f,  10.0f,   0.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  50.0f,  40.0f,  30.0f,  20.0f,   0.0f}};
+            /* C */{  70.0f,  60.0f,  50.0f,  20.0f,  10.0f,   1.0f,  10.0f,  30.0f},
+            /* B */{  80.0f,  70.0f,  60.0f,  30.0f,  20.0f,  10.0f,   1.0f,  20.0f},
+            /* E */{ 100.0f,  90.0f,  80.0f,  50.0f,  40.0f,  30.0f,  20.0f,   1.0f}};
 
     const float M_DA[8][8] = { // DSSP - AUTHOR
 	           	  /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   0.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   0.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   0.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
+            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
+            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
+            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
             /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
             /* S */{  60.0f,  50.0f,  40.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  40.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   0.0f,  -1.0f,  30.0f},
+            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
             /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   0.0f}};
+            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};
         
     const float M_SA[8][8] = { // STRIDE - AUTHOR
 		          /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   0.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   0.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   0.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
+            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
+            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
+            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
             /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
             /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   0.0f,  -1.0f,  30.0f},
+            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
             /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   0.0f}};
+            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};
 
 
     const float M_SP[8][8] = { // STRIDE - PROMOTIF
 		          /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   0.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   0.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   0.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
+            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
+            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
+            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
             /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
             /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   0.0f,  -1.0f,  30.0f},
+            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
             /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   0.0f}};
+            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};
             
 
     const float M_DP[8][8] = { // DSSP - PROMOTIF
 	           	  /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   0.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   0.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   0.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
+            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
+            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
+            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
             /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
             /* S */{  60.0f,  50.0f,  40.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  40.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   0.0f,  -1.0f,  30.0f},
+            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
             /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   0.0f}};         
+            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};         
 
     const float distMax = 100.0f;    
     
@@ -643,13 +643,16 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 
 		// Calculate structure uncertainty per method =========================
 		/*
+        
+        - Skip missing
+        * 
         DSSP_HBENERGY        -0.5f
         STRIDE_THRESHOLDH1 -230.0f
         STRIDE_THRESHOLDH3    0.12f
         STRIDE_THRESHOLDH4    0.06f
         STRIDE_THRESHOLDE1 -240.0f
         STRIDE_THRESHOLDE2 -310.0f
-        NO_ASSIGNMENT         0.0f
+
         
 		T1    -640,434  -230,000  180,434  410,434
 		T3      -0,094     0,120    0,334    0,214
@@ -686,162 +689,168 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 			ssa[sCntO] = static_cast<UncertaintyDataCall::secStructure>(sCntO);
 		}
 
+        float unc  = 0.0f;
         float propSum = 0.0f;
 
-		for (unsigned int sCntO = 0; sCntO < consStrTypes; sCntO++) {   // sCntO - The outer structure type loop.
+        // Skip MISSING
+        if (this->residueFlag[a] != UncertaintyDataLoader::addFlags::MISSING) {
             
-			for (unsigned int mCntO = 0; mCntO < methodCnt; mCntO++) {  // mCntO - The outer method loop.
-                
-				for (unsigned int mCntI = 0; mCntI < methodCnt; mCntI++) {  // mCntI - The inner method loop.
+            for (unsigned int sCntO = 0; sCntO < consStrTypes; sCntO++) {   // sCntO - The outer structure type loop.
 
-                    float dist    = 0.0f;
-					UncertaintyDataCall::assMethod mCurO = static_cast<UncertaintyDataCall::assMethod>(mCntO);
-					UncertaintyDataCall::assMethod mCurI = static_cast<UncertaintyDataCall::assMethod>(mCntI);
+                for (unsigned int mCntO = 0; mCntO < methodCnt; mCntO++) {  // mCntO - The outer method loop.
+                    
+                    UncertaintyDataCall::assMethod mCurO = static_cast<UncertaintyDataCall::assMethod>(mCntO);
+                    
+                    for (unsigned int mCntI = 0; mCntI < methodCnt; mCntI++) {  // mCntI - The inner method loop.
 
-					for (unsigned int sCntI = 0; sCntI < consStrTypes; sCntI++) {   // sCntI - The inner structure type loop.          
+                        float dist    = 0.0f;
+                        UncertaintyDataCall::assMethod mCurI = static_cast<UncertaintyDataCall::assMethod>(mCntI);
 
-                        // Compare each method just with different methods, not with itself
-                        if (mCntO != mCntI) {
-                            // Get distance of structure types
-                            if ((mCurO == strideMethod) && (mCurI == dsspMethod)) {
-                                dist = M_SD[sCntO][sCntI];
-                            }
-                            else if ((mCurO == dsspMethod) && (mCurI == strideMethod)) {
-                                dist = M_SD[sCntI][sCntO];
-                            }
-                            else if (mCurO == pdbMethod) {
-								if ((sCntO == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
-									(sCntO == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
-									(sCntO == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+                        for (unsigned int sCntI = 0; sCntI < consStrTypes; sCntI++) {   // sCntI - The inner structure type loop.          
 
-									if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-										if (mCurI == dsspMethod) { (dist = 0.0f); }
-										if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
-									}
-									else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
-										if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
-										if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
-									}
-									else { // (pdbAssignmentHelix == PDB_PROMOTIF)
-										if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
-										if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
-									}
-								}
-								else if (sCntO == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
-									if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-										if (mCurI == dsspMethod) { (dist = 0.0f); }
-										if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
-									}
-									else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
-										if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
-										if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
-									}
-									else { // (pdbAssignmentSheet == PDB_PROMOTIF)
-										if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
-										if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
-									}
-								}
-								else { // COIL
-									if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
-									if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
-								}
-                            }                             
-                            else if (mCurI == pdbMethod) {
-								if ((sCntI == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
-									(sCntI == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
-									(sCntI == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
-									if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-										if (mCurO == dsspMethod) { (dist = 0.0f); }
-										if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
-									}
-									else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
-										if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
-										if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
-									}
-									else { // (pdbAssignmentHelix == PDB_PROMOTIF)
-										if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
-										if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
-									}
-								}
-								else if (sCntI == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
-									if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-										if (mCurO == dsspMethod) { (dist = 0.0f); }
-										if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
-									}
-									else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
-										if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
-										if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
-									}
-									else { // (pdbAssignmentSheet == PDB_PROMOTIF)
-										if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
-										if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
-									}
-								}
-								else { // COIL
-									if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
-									if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
-								}  
-                            }
+                            // Compare each method just with different methods, not with itself
+                            if (mCntO != mCntI) {
+                                // Get distance of structure types
+                                if ((mCurO == strideMethod) && (mCurI == dsspMethod)) {
+                                    dist = M_SD[sCntO][sCntI];
+                                }
+                                else if ((mCurO == dsspMethod) && (mCurI == strideMethod)) {
+                                    dist = M_SD[sCntI][sCntO];
+                                }
+                                else if (mCurO == pdbMethod) {
+                                    if ((sCntO == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+                                        (sCntO == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+                                        (sCntO == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
 
-                            // Consider only valid structure types for each method
-                            if (dist > -1.0f) {
-								ssu[sCntO] += (this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI])
-									/ ((0.00001f + (distMax - dist)) *(0.00001f + (distMax - dist)));
-                            }
-                            
-                        } // mCntO != mCntI
-					} //  sCnt
-				} // mCntI
-			} // mCntO
-            propSum += ssu[sCntO]; 
-		} // sCntO
+                                        if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+                                            if (mCurI == dsspMethod) { (dist = 0.0f); }
+                                            if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
+                                        }
+                                        else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+                                            if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
+                                            if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
+                                        }
+                                        else { // (pdbAssignmentHelix == PDB_PROMOTIF)
+                                            if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+                                            if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+                                        }
+                                    }
+                                    else if (sCntO == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+                                        if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+                                            if (mCurI == dsspMethod) { (dist = 0.0f); }
+                                            if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
+                                        }
+                                        else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+                                            if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
+                                            if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
+                                        }
+                                        else { // (pdbAssignmentSheet == PDB_PROMOTIF)
+                                            if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+                                            if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+                                        }
+                                    }
+                                    else { // COIL
+                                        if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+                                        if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+                                    }
+                                }                             
+                                else if (mCurI == pdbMethod) {
+                                    if ((sCntI == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+                                        (sCntI == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+                                        (sCntI == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+                                        if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+                                            if (mCurO == dsspMethod) { (dist = 0.0f); }
+                                            if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
+                                        }
+                                        else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+                                            if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
+                                            if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
+                                        }
+                                        else { // (pdbAssignmentHelix == PDB_PROMOTIF)
+                                            if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+                                            if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+                                        }
+                                    }
+                                    else if (sCntI == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+                                        if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+                                            if (mCurO == dsspMethod) { (dist = 0.0f); }
+                                            if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
+                                        }
+                                        else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR){
+                                            if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
+                                            if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
+                                        }
+                                        else { // (pdbAssignmentSheet == PDB_PROMOTIF)
+                                            if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+                                            if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+                                        }
+                                    }
+                                    else { // COIL
+                                        if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+                                        if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+                                    }  
+                                }
 
-        // Normalizing structure propabilities to [0.0,1.0]
-		for (unsigned int s = 0; s < consStrTypes; s++) {
-			ssu[s] /= propSum;
+                                // Consider only valid structure types for each method
+                                if (dist > -1.0f) {
+                                    ssu[sCntO] += (this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI])
+                                                   / ((1 + distMax - dist)*(1 + distMax - dist));
+                                }
+                                
+                            } // mCntO != mCntI
+                        } //  sCnt
+                    } // mCntI
+                } // mCntO
+                propSum += ssu[sCntO]; 
+            } // sCntO
+
+            // Normalizing structure propabilities to [0.0,1.0]
+            for (unsigned int s = 0; s < consStrTypes; s++) {
+                ssu[s] /= propSum; // (propSum > 0.0f)?(propSum):(1.0f);
+            }
+            
+            // Sorting structure types by their propability
+            this->QuickSortUncertainties(&(ssu), &(ssa), 0, (structCnt - 1));
+
+            // Calculate reduced uncertainty ======================================
+
+            unc = 0.0f;
+            float mean = 1.0f / ((float)consStrTypes); 
+
+            // Propability vector with maximum standard deviation
+            vislib::math::Vector<float, consStrTypes> Pmax;
+            for (unsigned int s = 0; s < consStrTypes; s++) {
+                Pmax[s] = 0.0;
+            }
+            Pmax[0] = 1.0f;
+
+            // Caluclating maximum standard deviation
+            float variance  = 0.0f;
+            for (unsigned int v = 0; v < consStrTypes; v++) {
+                variance += ((Pmax[v] - mean)*(Pmax[v] - mean));
+            }
+            variance *= mean;
+            float stdDevMax = (float)std::sqrt((double)(variance));
+
+            // Calculating actual standard deviation
+            variance = 0.0f;
+            for (unsigned int v = 0; v < consStrTypes; v++) {
+                variance += ((ssu[v] - mean)*(ssu[v] - mean));
+            }
+            variance *= mean;
+            float stdDev   = (float)std::sqrt((double)(variance));
+
+            // Normalizing standard deviation and calulating uncertainty
+            unc = (1.0f - (stdDev / stdDevMax));
+            // Just for rounding
+            if (unc < 0.0f) {
+                unc = 0.0f;
+            }
+            if (unc > 1.0f) {
+                unc = 1.0f;
+            }
         }
         
-		// Sorting structure types by their propability
-		this->QuickSortUncertainties(&(ssu), &(ssa), 0, (structCnt - 1));
-
-		// Calculate reduced uncertainty ======================================
-
-		float unc  = 0.0f;
-		float mean = 1.0f / ((float)consStrTypes); 
-
-		// Propability vector with maximum standard deviation
-		vislib::math::Vector<float, consStrTypes> Pmax;
-		for (unsigned int s = 0; s < consStrTypes; s++) {
-			Pmax[s] = 0.0;
-		}
-		Pmax[0] = 1.0f;
-
-		// Caluclating maximum standard deviation
-		float variance  = 0.0f;
-		for (unsigned int v = 0; v < consStrTypes; v++) {
-			variance += ((Pmax[v] - mean)*(Pmax[v] - mean));
-		}
-		variance *= mean;
-		float stdDevMax = (float)std::sqrt((double)(variance));
-
-		// Calculating actual standard deviation
-		variance = 0.0f;
-		for (unsigned int v = 0; v < consStrTypes; v++) {
-			variance += ((ssu[v] - mean)*(ssu[v] - mean));
-		}
-		variance *= mean;
-		float stdDev   = (float)std::sqrt((double)(variance));
-
-		// Normalizing standard deviation and calulating uncertainty
-		unc = (1.0f - (stdDev / stdDevMax));
-		// Just for rounding
-		if (unc < 0.0f) {
-			unc = 0.0f;
-		}
-		if (unc > 1.0f) {
-			unc = 1.0f;
-		}
-
         // Assign values to arrays
         this->secStructUncertainty[uncMethod].Add(ssu);
         this->sortedSecStructAssignment[uncMethod].Add(ssa);
