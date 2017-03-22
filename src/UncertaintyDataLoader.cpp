@@ -23,6 +23,7 @@
 
 #include <math.h>
 #include <string>
+#include <algorithm>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/IntParam.h"
@@ -39,6 +40,9 @@
 #include <iomanip>  // DEBUG
 
 #define DATA_FLOAT_EPS 0.00001f
+
+#define minimum(a, b) (((a) < (b)) ? (a) : (b))
+#define maximum(a, b) (((a) > (b)) ? (a) : (b))
 
 using namespace megamol::core;
 using namespace megamol::protein_uncertainty;
@@ -147,17 +151,23 @@ bool UncertaintyDataLoader::getData(Call& call) {
 		/*
 		unsigned int w = 5;
 		unsigned int k = static_cast<unsigned int>(UncertaintyDataCall::assMethod::UNCERTAINTY);
+		
+		k = static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE);
         // for (unsigned int k = 0; k < static_cast<unsigned int>(UncertaintyDataCall::assMethod::NOM); k++) {
 			
             for (int i = 0; i < this->pdbIndex.Count(); i++) {
-				std::cout << std::setprecision(3) << "M: " << std::setw(w) << k << " - A: " << std::setw(w) << i << " - L: " << std::setw(w) << this->secStructLength[k][i] << " - Unc: " << std::setw(w) << this->uncertainty[i] << " - S: ";
+				std::cout << std::setprecision(3) << "M: " << std::setw(w) << k << " - A: " << std::setw(w) << i << " - L: " << std::setw(w) << this->secStructLength[k][i];
+				// std::cout << " - Unc: " << std::setw(w) << this->uncertainty[i];
+				std::cout << " - S: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
 					std::cout << std::setprecision(3) << std::setw(w) << this->sortedSecStructAssignment[k][i][n] << "|";
                 }
-                std::cout << " - U: ";
+				
+				std::cout << " - U: ";
                 for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
 					std::cout << std::setprecision(3) << std::setw(w) << this->secStructUncertainty[k][i][n] << "|";
                 }
+				
                 std::cout << std::endl;
             }
         // }
@@ -579,110 +589,443 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 
 	// Distanz-Matrix
     const float M_SD[8][8] = { // STRIDE - DSSP
-                  /*      G,      H,      I,      T,      S,      C,      B,      E */
-            /* G */{   1.0f,  10.0f,  20.0f,  50.0f,  60.0f,  70.0f,  80.0f, 100.0f},               
-            /* H */{  10.0f,   1.0f,  10.0f,  40.0f,  50.0f,  60.0f,  70.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   1.0f,  30.0f,  40.0f,  50.0f,  60.0f,  80.0f},
-            /* T */{  50.0f,  40.0f,  30.0f,   1.0f,  10.0f,  20.0f,  30.0f,  50.0f},
+                  /*      G,      T,      H,      I,      S,      C,      B,      E */
+            /* G */{   5.0f,  35.0f,  55.0f,  85.0f,   5.0f,  105.0f, 135.0f, 145.0f},               
+            /* T */{  35.0f,  15.0f,  35.0f,  65.0f,   5.0f,  85.0f,  115.0f, 125.0f},
+            /* H */{  55.0f,  35.0f,  10.0f,  40.0f,   5.0f,  60.0f,  90.0f, 100.0f},
+            /* I */{  85.0f,  65.0f,  40.0f,   5.0f,   5.0f,  25.0f,  55.0f,  65.0f},
             /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  20.0f,  10.0f,   1.0f,  10.0f,  30.0f},
-            /* B */{  80.0f,  70.0f,  60.0f,  30.0f,  20.0f,  10.0f,   1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  50.0f,  40.0f,  30.0f,  20.0f,   1.0f}};
+            /* C */{ 105.0f,  85.0f,  60.0f,  25.0f,  15.0f,   0.0f,  30.0f,  40.0f},
+            /* B */{ 135.0f, 115.0f,  90.0f,  55.0f,  35.0f,  30.0f,  10.0f,  20.0f},
+            /* E */{ 145.0f, 125.0f, 100.0f,  65.0f,  45.0f,  40.0f,  20.0f,   0.0f}};
 
     const float M_DA[8][8] = { // DSSP - AUTHOR
-	           	  /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
-            /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
-            /* S */{  60.0f,  50.0f,  40.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  40.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
-            /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};
+                  /*      G,      T,      H,      I,      S,      C,      B,      E */
+            /* G */{   0.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},               
+            /* T */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* H */{ 150.0f,  -1.0f,   0.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* I */{ 150.0f,  -1.0f, 150.0f,   0.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* S */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* C */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f,   0.0f,  -1.0f, 150.0f},
+            /* B */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* E */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f,   0.0f}};
         
     const float M_SA[8][8] = { // STRIDE - AUTHOR
-		          /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
-            /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
-            /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
-            /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};
+                  /*      G,      T,      H,      I,      S,      C,      B,      E */
+            /* G */{   0.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},               
+            /* T */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* H */{ 150.0f,  -1.0f,   0.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* I */{ 150.0f,  -1.0f, 150.0f,   0.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* S */{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
+            /* C */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f,   0.0f,  -1.0f, 150.0f},
+            /* B */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f, 150.0f},
+            /* E */{ 150.0f,  -1.0f, 150.0f, 150.0f,  -1.0f, 150.0f,  -1.0f,   0.0f}};
 
 
     const float M_SP[8][8] = { // STRIDE - PROMOTIF
-		          /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
-            /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
-            /*(S)*/{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
-            /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};
+                  /*      G,      T,      H,      I,      S,      C,      B,      E */
+            /* G */{   5.0f,  -1.0f,  40.0f,  70.0f,  -1.0f,  90.0f,  -1.0f, 130.0f},               
+            /* T */{  20.0f,  -1.0f,  20.0f,  50.0f,  -1.0f,  70.0f,  -1.0f, 110.0f},
+            /* H */{  40.0f,  -1.0f,  10.0f,  40.0f,  -1.0f,  60.0f,  -1.0f, 100.0f},
+            /* I */{  70.0f,  -1.0f,  40.0f,   5.0f,  -1.0f,  25.0f,  -1.0f,  65.0f},
+            /* S */{  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f,  -1.0f},
+            /* C */{  90.0f,  -1.0f,  60.0f,  25.0f,  -1.0f,   0.0f,  -1.0f,  40.0f},
+            /* B */{ 120.0f,  -1.0f,  90.0f,  55.0f,  -1.0f,  30.0f,  -1.0f,  20.0f},
+            /* E */{ 130.0f,  -1.0f, 100.0f,  65.0f,  -1.0f,  40.0f,  -1.0f,   0.0f}};
             
 
     const float M_DP[8][8] = { // DSSP - PROMOTIF
-	           	  /*      G,      H,      I,    (T),    (S),      C,    (B),      E */
-            /* G */{   1.0f,  10.0f,  20.0f,  -1.0f,  -1.0f,  70.0f,  -1.0f, 100.0f},               
-            /* H */{  10.0f,   1.0f,  10.0f,  -1.0f,  -1.0f,  60.0f,  -1.0f,  90.0f},
-            /* I */{  20.0f,  10.0f,   1.0f,  -1.0f,  -1.0f,  50.0f,  -1.0f,  80.0f},
-            /* T */{  50.0f,  40.0f,  30.0f,  -1.0f,  -1.0f,  20.0f,  -1.0f,  50.0f},
-            /* S */{  60.0f,  50.0f,  40.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  40.0f},
-            /* C */{  70.0f,  60.0f,  50.0f,  -1.0f,  -1.0f,   1.0f,  -1.0f,  30.0f},
-            /* B */{  80.0f,  70.0f,  60.0f,  -1.0f,  -1.0f,  10.0f,  -1.0f,  20.0f},
-            /* E */{ 100.0f,  90.0f,  80.0f,  -1.0f,  -1.0f,  30.0f,  -1.0f,   1.0f}};         
+                  /*      G,      T,      H,      I,      S,      C,      B,      E */
+            /* G */{   5.0f,  -1.0f,  50.0f,  80.0f,  -1.0f, 100.0f,  -1.0f, 135.0f},               
+            /* T */{  35.0f,  -1.0f,  30.0f,  60.0f,  -1.0f,  80.0f,  -1.0f, 115.0f},
+            /* H */{  50.0f,  -1.0f,   5.0f,  35.0f,  -1.0f,  55.0f,  -1.0f,  90.0f},
+            /* I */{  80.0f,  -1.0f,  35.0f,   5.0f,  -1.0f,  25.0f,  -1.0f,  60.0f},
+            /* S */{   5.0f,  -1.0f,   5.0f,   5.0f,  -1.0f,  15.0f,  -1.0f,  50.0f},
+            /* C */{ 100.0f,  -1.0f,  55.0f,  25.0f,  -1.0f,   0.0f,  -1.0f,  35.0f},
+            /* B */{ 125.0f,  -1.0f,  80.0f,  50.0f,  -1.0f,  25.0f,  -1.0f,  15.0f},
+            /* E */{ 135.0f,  -1.0f,  90.0f,  60.0f,  -1.0f,  35.0f,  -1.0f,   0.0f}};        
 
-    const float distMax = 100.0f;    
+    const float distMax = 150.0f;    
     
+
+
+	// Calculate structure uncertainty for STRIDE =========================
+	/*
+		STRIDE_THRESHOLDH1 - 230.00f
+		STRIDE_THRESHOLDH3     0.12f
+		STRIDE_THRESHOLDH4     0.06f
+		STRIDE_THRESHOLDE1 - 240.00f
+		STRIDE_THRESHOLDE2 - 310.00f
+
+		T1    -410.435 -230.000  -49.565  180.435
+		T3      -0.094    0.120    0.214    0.094
+		T4      -0.047    0.060    0.107    0.047
+		T1[p] -553.195 -310.000 - 66.805  243.195
+		T2[p] -553.195 -310.000 - 66.805  243.195
+		T1[a] -428.279 -240.000 - 51.721  188.279
+		T2[a] -428.279 -240.000 - 51.721  188.279
+	*/
+
+	float DeltaTh1 = 180.435f;
+	float DeltaTh3 = 0.094f;
+	float DeltaTh4 = 0.047f;
+	float DeltaTbp = 243.195f;
+	float DeltaTba = 188.279f;
+
+	float Th1 = STRIDE_THRESHOLDH1;
+	float Th3 = STRIDE_THRESHOLDH3;
+	float Th4 = STRIDE_THRESHOLDH4;
+	float Tbp = STRIDE_THRESHOLDE2;
+	float Tba = STRIDE_THRESHOLDE1;
 
 	// Looping over all amino-acids
 	for (unsigned int a = 0; a < this->pdbIndex.Count(); a++) {
 
-		// Calculate structure uncertainty per method =========================
-		/*
-        
-        - Skip missing
-        * 
-        DSSP_HBENERGY        -0.5f
-        STRIDE_THRESHOLDH1 -230.0f
-        STRIDE_THRESHOLDH3    0.12f
-        STRIDE_THRESHOLDH4    0.06f
-        STRIDE_THRESHOLDE1 -240.0f
-        STRIDE_THRESHOLDE2 -310.0f
+		// Skip MISSING
+		if (this->residueFlag[a] != UncertaintyDataCall::addFlags::MISSING) {
 
-        
-		T1    -640,434  -230,000  180,434  410,434
-		T3      -0,094     0,120    0,334    0,214
-		T4      -0,047     0,060    0,167    0,107
-		T1[a] -688,279  -240,000  188,279  448,279
-		T2[a] -688,279  -240,000  188,279  448,279
-		T1[p] -863,194  -310,000  243,194  553,194
-		T2[p] -863,194  -310,000  243,194  553,194
+			float tah1 = this->strideStructThreshold[a][0];
+			float tah3 = this->strideStructThreshold[a][1];
+			float tah4 = this->strideStructThreshold[a][2];
 
-		for (int mCnt = 0; mCnt < methodCnt; mCnt++) { // mCnt - The method loop.
+			// Check HELIX
+			unsigned int helixStr = (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX;
+			if (a + 1 < this->pdbIndex.Count()) {
 
-			for (int s = 0; s < structCnt; s++) { // sCnt - The structure type loop.  
-				UncertaintyDataCall::secStructure curStruct = static_cast<UncertaintyDataCall::secStructure>(s);
-				// Init tmp structure type and structure uncertainty vectors
-				ssu[s] = 0.0f;
-				ssa[s] = curStruct;
+				float taah1 = this->strideStructThreshold[a + 1][0];
+				if ((tah1 <= (Th1 + DeltaTh1)) && (taah1 <= (Th1 + DeltaTh1))) {
+
+					// a
+					float propHelixA  = 0.0f;
+					if (tah1 < (Th1 - DeltaTh1)) {
+						propHelixA = 1.0f;
+					}
+					else if (tah1 < Th1) { // tah1 >= Th1 - DeltaTh1
+
+						propHelixA = 1.0f - 0.5f * (1.0f - std::abs(tah1 - Th1) / DeltaTh1);
+					}
+					else { // Th1 <= tah1 <= (Th1 + DeltaTh1)
+
+						propHelixA = 0.5f * (1.0f - std::abs(tah1 - Th1) / DeltaTh1);
+					}
+
+					// a+1
+					float propHelixAA = 0.0f;
+					if (taah1 < (Th1 - DeltaTh1)) {
+						propHelixAA = 1.0f;
+					}
+					else if (taah1 < Th1) { // taah1 >= Th1 - DeltaTh1
+
+						propHelixAA = 1.0f - 0.5f * (1.0f - std::abs(taah1 - Th1) / DeltaTh1);
+					}
+					else { // Th1 <= taah1 <= (Th1 + DeltaTh1)
+
+						propHelixAA = 0.5f * (1.0f - std::abs(taah1 - Th1) / DeltaTh1);
+					}
+
+					// set propHelixA to minimum of both values
+					propHelixA = minimum(propHelixAA, propHelixA);
+
+					// assign probability to amino-acids a ... a+4
+					for (unsigned int aCnt = a; aCnt < a+4; aCnt++) {
+
+						if (aCnt >= this->pdbIndex.Count()) {
+							break;
+						}
+
+						// take maximum probability for helix
+						this->secStructUncertainty[strideMethod][aCnt][helixStr] = maximum(propHelixA, this->secStructUncertainty[strideMethod][aCnt][helixStr]);
+
+						// search for other structure with probability > 0
+						int strN = -1;
+						for (unsigned int sCnt = 0; sCnt < structCnt; sCnt++) {
+							if ((sCnt != helixStr) && (this->secStructUncertainty[strideMethod][aCnt][sCnt] > 0.0f)) {
+								strN = sCnt;
+								break;
+							}
+						}
+						if (strN == -1) { // no structure with probability > 0 ... take COIL
+							this->secStructUncertainty[strideMethod][aCnt][(unsigned int)UncertaintyDataCall::secStructure::C_COIL] = 1.0f - this->secStructUncertainty[strideMethod][aCnt][helixStr];
+						}
+						else {
+							this->secStructUncertainty[strideMethod][aCnt][strN] = 1.0f - this->secStructUncertainty[strideMethod][aCnt][helixStr];
+						}
+
+						this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][aCnt]), &(this->sortedSecStructAssignment[strideMethod][aCnt]), 0, (structCnt - 1));
 
 
+						// DEBUG
+						/*
+						std::cout << "HELIX: " << a << " - " << aCnt << " | ";
+						for (unsigned int n = 0; n < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); n++) {
+							std::cout << std::setprecision(3) << std::setw(8) << this->secStructUncertainty[strideMethod][aCnt][n] << " | ";
+						}
+						std::cout << std::endl;
+						*/
+					}
+
+					// Check borders with Th3 and Th4
+					// a-1
+					if (a >= 1) {
+
+						float tah3 = this->strideStructThreshold[a - 1][1];
+						float propHelixB = 0.0f;
+
+						if ((Th3 + DeltaTh3) <= tah3) {
+							propHelixB = 1.0f;
+						}
+						else if (Th3 < tah3) {
+							propHelixB = 1.0f - 0.5f * (1.0f - std::abs(tah3 - Th3) / DeltaTh3);
+						}
+						else if ((Th3 - DeltaTh3) < tah3) {
+							propHelixB = 0.5f * (1.0f - std::abs(tah3 - Th3) / DeltaTh3);
+						}
+						else {
+							propHelixB = 0.0f;
+						}
+
+						propHelixB *= propHelixA;
+						this->secStructUncertainty[strideMethod][a - 1][helixStr] = maximum(propHelixB, this->secStructUncertainty[strideMethod][a - 1][helixStr]);
+
+						// search for other structure with probability > 0
+						int strN = -1;
+						for (unsigned int sCnt = 0; sCnt < structCnt; sCnt++) {
+							if ((sCnt != helixStr) && (this->secStructUncertainty[strideMethod][a - 1][sCnt] > 0.0f)) {
+								strN = sCnt;
+								break;
+							}
+						}
+						if (strN == -1) { // no structure with probability > 0 ... take COIL
+							this->secStructUncertainty[strideMethod][a - 1][(unsigned int)UncertaintyDataCall::secStructure::C_COIL] = 1.0f - this->secStructUncertainty[strideMethod][a - 1][helixStr];
+						}
+						else {
+							this->secStructUncertainty[strideMethod][a - 1][strN] = 1.0f - this->secStructUncertainty[strideMethod][a - 1][helixStr];
+						}
+
+						this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a-1]), &(this->sortedSecStructAssignment[strideMethod][a-1]), 0, (structCnt - 1));
+					}
+
+					//a+4
+					if ((a + 4) <  this->pdbIndex.Count()) {
+						float tah4 = this->strideStructThreshold[a + 4][2];
+
+						float propHelixB = 0.0f;
+
+						if ((Th4 + DeltaTh4) <= tah4) {
+							propHelixB = 1.0f;
+						}
+						else if (Th4 < tah4) {
+							propHelixB = 1.0f - 0.5f * (1.0f - std::abs(tah4 - Th4) / DeltaTh4);
+						}
+						else if ((Th4 - DeltaTh4) < tah4) {
+							propHelixB = 0.5f * (1.0f - std::abs(tah4 - Th4) / DeltaTh4);
+						}
+						else {
+							propHelixB = 0.0f;
+						}
+
+						propHelixB *= propHelixA;
+						this->secStructUncertainty[strideMethod][a + 4][helixStr] = maximum(propHelixB, this->secStructUncertainty[strideMethod][a + 4][helixStr]);
+
+						// search for other structure with probability > 0
+						int strN = -1;
+						for (unsigned int sCnt = 0; sCnt < structCnt; sCnt++) {
+							if ((sCnt != helixStr) && (this->secStructUncertainty[strideMethod][a + 4][sCnt] > 0.0f)) {
+								strN = sCnt;
+								break;
+							}
+						}
+						if (strN == -1) { // no structure with probability > 0 ... take COIL
+							this->secStructUncertainty[strideMethod][a + 4][(unsigned int)UncertaintyDataCall::secStructure::C_COIL] = 1.0f - this->secStructUncertainty[strideMethod][a + 4][helixStr];
+						}
+						else {
+							this->secStructUncertainty[strideMethod][a + 4][strN] = 1.0f - this->secStructUncertainty[strideMethod][a + 4][helixStr];
+						}
+
+						this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a + 4]), &(this->sortedSecStructAssignment[strideMethod][a + 4]), 0, (structCnt - 1));
+					}					
+				}
+			}
+			/////
+
+			// Check SHEET
+
+			float tab1p = this->strideStructThreshold[a][3];
+			float tab2p = this->strideStructThreshold[a][4];
+			float tab1a = this->strideStructThreshold[a][5];
+			float tab2a = this->strideStructThreshold[a][6];
+
+			unsigned int bridgeStr = (unsigned int)UncertaintyDataCall::secStructure::B_BRIDGE;
+			unsigned int sheetStr = (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND;
+
+			// paralllel
+			if ((tab1p <= (Tbp + DeltaTbp)) && (tab2p <= (Tbp + DeltaTbp))) {
+
+				float sheetProp1 = 0.0;
+				if (tab1p < (Tbp - DeltaTbp)) {
+					sheetProp1 = 1.0f;
+				}
+				else if (tab1p < Tbp) {
+					sheetProp1 = 1.0f - 0.5f * (1.0f - std::abs(tab1p - Tbp) / DeltaTbp);
+				}
+				else { // tab1p < Tbp + DeltaTbp
+					sheetProp1 = 0.5f * (1.0f - std::abs(tab1p - Tbp) / DeltaTbp);
+				}
+
+				float sheetProp2 = 0.0;
+				if (tab2p < (Tbp - DeltaTbp)) {
+					sheetProp2 = 1.0f;
+				}
+				else if (tab2p < Tbp) {
+					sheetProp2 = 1.0f - 0.5f * (1.0f - std::abs(tab2p - Tbp) / DeltaTbp);
+				}
+				else { // tab2p < Tbp + DeltaTbp
+					sheetProp2 = 0.5f * (1.0f - std::abs(tab2p - Tbp) / DeltaTbp);
+				}
+
+
+				float tmpProp = maximum(this->secStructUncertainty[strideMethod][a][bridgeStr], this->secStructUncertainty[strideMethod][a][sheetStr]);
+
+				this->secStructUncertainty[strideMethod][a][bridgeStr] = maximum(tmpProp, minimum(sheetProp1, sheetProp2));
+				this->secStructUncertainty[strideMethod][a][sheetStr] = 0.0f;
+
+				// search for other structure with probability > 0
+				int strN = -1;
+				for (unsigned int sCnt = 0; sCnt < structCnt; sCnt++) {
+					if ((sCnt != bridgeStr) && (this->secStructUncertainty[strideMethod][a][sCnt] > 0.0f)) {
+						strN = sCnt;
+						break;
+					}
+				}
+				if (strN == -1) { // no structure with probability > 0 ... take COIL
+					this->secStructUncertainty[strideMethod][a][(unsigned int)UncertaintyDataCall::secStructure::C_COIL] = 1.0f - this->secStructUncertainty[strideMethod][a][bridgeStr];
+				}
+				else {
+					this->secStructUncertainty[strideMethod][a][strN] = 1.0f - this->secStructUncertainty[strideMethod][a][bridgeStr];
+				}
+
+			
+				// Check neighbours
+				bool flip = false;
+
+				if ((a > 0) && (this->secStructUncertainty[strideMethod][a - 1][sheetStr] > 0.0f)) {
+					flip = true;
+				}
+				else if ((a + 1 < this->pdbIndex.Count()) && (this->secStructUncertainty[strideMethod][a + 1][sheetStr] > 0.0f)) {
+					flip = true;
+				}
+
+				if ((a > 0) && (this->secStructUncertainty[strideMethod][a - 1][bridgeStr] > 0.0f)) {
+					flip = true;
+					this->secStructUncertainty[strideMethod][a - 1][sheetStr] = this->secStructUncertainty[strideMethod][a - 1][bridgeStr];
+					this->secStructUncertainty[strideMethod][a - 1][bridgeStr] = 0.0f;
+					this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a - 1]), &(this->sortedSecStructAssignment[strideMethod][a - 1]), 0, (structCnt - 1));
+				}
+
+				if ((a + 1 < this->pdbIndex.Count()) && (this->secStructUncertainty[strideMethod][a + 1][bridgeStr] > 0.0f)) {
+					flip = true;
+					this->secStructUncertainty[strideMethod][a + 1][sheetStr] = this->secStructUncertainty[strideMethod][a + 1][bridgeStr];
+					this->secStructUncertainty[strideMethod][a + 1][bridgeStr] = 0.0f;
+					this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a + 1]), &(this->sortedSecStructAssignment[strideMethod][a + 1]), 0, (structCnt - 1));
+				}
+
+				if (flip) {
+					this->secStructUncertainty[strideMethod][a][sheetStr] = this->secStructUncertainty[strideMethod][a][bridgeStr];
+					this->secStructUncertainty[strideMethod][a][bridgeStr] = 0.0f;
+				}
+
+				this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a]), &(this->sortedSecStructAssignment[strideMethod][a]), 0, (structCnt - 1));
 			}
 
-			// Assign values to arrays
-			this->secStructUncertainty[uncMethod].Add(ssu);
-			this->sortedSecStructAssignment[uncMethod].Add(ssa);
-			this->uncertainty.Add(unc);
-		}
-		*/
+
+			// antiparallel
+			if ((tab1a <= (Tba + DeltaTba)) && (tab2a <= (Tba + DeltaTba))) {
+
+				float sheetProp1 = 0.0;
+				if (tab1a < (Tba - DeltaTba)) {
+					sheetProp1 = 1.0f;
+				}
+				else if (tab1a < Tba) {
+					sheetProp1 = 1.0f - 0.5f * (1.0f - std::abs(tab1a - Tba) / DeltaTba);
+				}
+				else { // tab1a < Tba + DeltaTba
+					sheetProp1 = 0.5f * (1.0f - std::abs(tab1a - Tba) / DeltaTba);
+				}
+
+				float sheetProp2 = 0.0;
+				if (tab2a < (Tba - DeltaTba)) {
+					sheetProp2 = 1.0f;
+				}
+				else if (tab2a < Tba) {
+					sheetProp2 = 1.0f - 0.5f * (1.0f - std::abs(tab2a - Tba) / DeltaTba);
+				}
+				else { // tab2a < Tba + DeltaTba
+					sheetProp2 = 0.5f * (1.0f - std::abs(tab2a - Tba) / DeltaTba);
+				}
+
+				float tmpProp = maximum(this->secStructUncertainty[strideMethod][a][bridgeStr], this->secStructUncertainty[strideMethod][a][sheetStr]);
+
+				this->secStructUncertainty[strideMethod][a][bridgeStr] = maximum(tmpProp, minimum(sheetProp1, sheetProp2));
+				this->secStructUncertainty[strideMethod][a][sheetStr] = 0.0f;
+
+				// search for other structure with probability > 0
+				int strN = -1;
+				for (unsigned int sCnt = 0; sCnt < structCnt; sCnt++) {
+					if ((sCnt != bridgeStr) && (this->secStructUncertainty[strideMethod][a][sCnt] > 0.0f)) {
+						strN = sCnt;
+						break;
+					}
+				}
+				if (strN == -1) { // no structure with probability > 0 ... take COIL
+					this->secStructUncertainty[strideMethod][a][(unsigned int)UncertaintyDataCall::secStructure::C_COIL] = 1.0f - this->secStructUncertainty[strideMethod][a][bridgeStr];
+				}
+				else {
+					this->secStructUncertainty[strideMethod][a][strN] = 1.0f - this->secStructUncertainty[strideMethod][a][bridgeStr];
+				}
+
+				// Check neighbours
+				bool flip = false;
+
+				if ((a > 0) && (this->secStructUncertainty[strideMethod][a - 1][sheetStr] > 0.0f)) {
+					flip = true;
+				}
+				else if ((a + 1 < this->pdbIndex.Count()) && (this->secStructUncertainty[strideMethod][a + 1][sheetStr] > 0.0f)) {
+					flip = true;
+				}
+
+				if ((a > 0) && (this->secStructUncertainty[strideMethod][a - 1][bridgeStr] > 0.0f)) {
+					flip = true;
+					this->secStructUncertainty[strideMethod][a - 1][sheetStr] = this->secStructUncertainty[strideMethod][a - 1][bridgeStr];
+					this->secStructUncertainty[strideMethod][a - 1][bridgeStr] = 0.0f;
+					this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a - 1]), &(this->sortedSecStructAssignment[strideMethod][a - 1]), 0, (structCnt - 1));
+				}
+
+				if ((a + 1 < this->pdbIndex.Count()) && (this->secStructUncertainty[strideMethod][a + 1][bridgeStr] > 0.0f)) {
+					flip = true;
+					this->secStructUncertainty[strideMethod][a + 1][sheetStr] = this->secStructUncertainty[strideMethod][a + 1][bridgeStr];
+					this->secStructUncertainty[strideMethod][a + 1][bridgeStr] = 0.0f;
+					this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a + 1]), &(this->sortedSecStructAssignment[strideMethod][a + 1]), 0, (structCnt - 1));
+				}
+
+				if (flip) {
+					this->secStructUncertainty[strideMethod][a][sheetStr] = this->secStructUncertainty[strideMethod][a][bridgeStr];
+					this->secStructUncertainty[strideMethod][a][bridgeStr] = 0.0f;
+				}
+
+				this->QuickSortUncertainties(&(this->secStructUncertainty[strideMethod][a]), &(this->sortedSecStructAssignment[strideMethod][a]), 0, (structCnt - 1));
+			}
+
+			/////
+
+		} // missing
+	} // a
 
 
-		// Calculate structure uncertainty per amino-acid =====================
 
+
+	// Calculate structure uncertainty per amino-acid =====================
+
+	for (unsigned int a = 0; a < this->pdbIndex.Count(); a++) {
 		// Init structure type propability
 		for (unsigned int sCntO = 0; sCntO < structCnt; sCntO++) {
 			ssu[sCntO] = 0.0f;
@@ -693,7 +1036,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
         float propSum = 0.0f;
 
         // Skip MISSING
-        if (this->residueFlag[a] != UncertaintyDataLoader::addFlags::MISSING) {
+        if (this->residueFlag[a] != UncertaintyDataCall::addFlags::MISSING) {
             
             for (unsigned int sCntO = 0; sCntO < consStrTypes; sCntO++) {   // sCntO - The outer structure type loop.
 

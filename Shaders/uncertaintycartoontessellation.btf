@@ -623,31 +623,35 @@
 
             // UNCERTAINTY visualisation
             if (uncVisMode == UNC_VIS_SIN_U) { // SINUS U
-                float uDisp   = uncFac * distorLev * 2.0 * M_PI * u; 
-                float fac     = uncFac * ampLevel / 10.0;                
+                float uDisp   = distorLev * 2.0 * M_PI * u * float(ceil(uncFac * 10.0));
+                float fac     = uncFac * ampLevel/10.0;                
                 disp          = sin(uDisp - M_PI/2.0);
                 disp         *= fac;                
                 
-                float uM      = fac * cos(uDisp);                       // derivation = gradient of fac*sin(uDisp)
-                vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
-                vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fac*sin(uDisp) in UV-space
-                vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
-                uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
-                
+                float uM      = fac * cos(uDisp);                          // gradient = derivation of fac*sin(uDisp)
+                if (uM >= EPS) {
+                    vec2  uNormal = normalize(vec2(1.0, -1.0/uM));          // new normal from gradient in UV-space
+                    float alpha   = acos(dot(vec2(0.0, 1.0), uNormal));     // angle between n (in UV) and uNormal
+                    float beta    = M_PI/2.0 - alpha;                       // angle between uNormal and x-axis
+                    uNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
+                }
+
                 mypos.xyz    += (disp + fac) * n;           
                 n             = normalize(n + uNdisp * tangent);                
             }
             else if (uncVisMode == UNC_VIS_SIN_V) { // SINUS V    
-                float vDisp   = uncFac * distorLev * 2.0 * M_PI * v;
+                float vDisp   = distorLev * 2.0 * M_PI * v * float(ceil(uncFac * 10.0));
                 float fac     = uncFac * ampLevel / 10.0;                
                 disp          = sin(vDisp - M_PI/2.0);
                 disp         *= fac;      
                 
-                float vM      = fac * cos(vDisp);                       // derivation = gradient of fac*sin(vDisp)
-                vec2  vNormal = vec2(0.0, 1.0);                         // normal in UV-space
-                vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fac*sin(vDisp) in UV-space
-                vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
-                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction  
+                float vM          = fac * cos(vDisp);                       // gradient = derivation of fac*sin(uDisp)            
+                if (vM >= EPS) {
+                    vec2  vNormal = normalize(vec2(1.0, -1.0/vM));          // new normal from gradient in UV-space
+                    float alpha   = acos(dot(vec2(0.0, 1.0), vNormal));     // angle between n (in UV) and uNormal
+                    float beta    = M_PI/2.0 - alpha;                       // angle between uNormal and x-axis
+                    vNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
+                }
                 
 				if (((1.0 - EPS) > u) && (u > EPS)) {
                     mypos.xyz    += (disp + fac) * n;
@@ -655,25 +659,29 @@
                 n             = normalize(n + vNdisp * normalize(cross(n, tangent)));                
             }    
             else if (uncVisMode == UNC_VIS_SIN_UV) {  // SINUS U,V
-                float uDisp   = uncFac * distorLev * 2.0 * M_PI * u; 
-                float vDisp   = uncFac * distorLev * 2.0 * M_PI * v;
+                float uDisp   = distorLev * 2.0 * M_PI * u * float(ceil(uncFac * 10.0));
+                float vDisp   = distorLev * 2.0 * M_PI * v * float(ceil(uncFac * 10.0));
                 float fac     = uncFac * ampLevel / 10.0;    
                 float dispU   = sin(uDisp - M_PI/2.0);
                 float dispV   = sin(vDisp - M_PI/2.0);
                 disp          = (dispU + dispV);
                 disp         *= fac; 
 
-                float uM      = fac * cos(uDisp);                       // derivation = gradient of fac*sin(uDisp)
-                vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
-                vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fac*sin(uDisp) in UV-space
-                vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
-                uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
+                float uM      = fac * cos(uDisp);                          // gradient = derivation of fac*sin(uDisp)
+                if (uM >= EPS) {
+                    vec2  uNormal = normalize(vec2(1.0, -1.0/uM));          // new normal from gradient in UV-space
+                    float alpha   = acos(dot(vec2(0.0, 1.0), uNormal));     // angle between n (in UV) and uNormal
+                    float beta    = M_PI/2.0 - alpha;                       // angle between uNormal and x-axis
+                    uNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
+                }
                 
-                float vM      = fac * cos(vDisp);                       // derivation = gradient of fac*sin(vDisp)
-                vec2  vNormal = vec2(0.0, 1.0);                          // normal in UV-space
-                vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fac*sin(vDisp) in UV-space
-                vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
-                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction      
+                float vM          = fac * cos(vDisp);                       // gradient = derivation of fac*sin(uDisp)            
+                if (vM >= EPS) {
+                    vec2  vNormal = normalize(vec2(1.0, -1.0/vM));          // new normal from gradient in UV-space
+                    float alpha   = acos(dot(vec2(0.0, 1.0), vNormal));     // angle between n (in UV) and uNormal
+                    float beta    = M_PI/2.0 - alpha;                       // angle between uNormal and x-axis
+                    vNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
+                }
                 
 				if (((1.0 - EPS) > u) && (u > EPS)) {                   // for smooth transition between amino-acids
                     mypos.xyz    += (disp + fac) * n;
@@ -681,27 +689,30 @@
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
             }
             else if (uncVisMode == UNC_VIS_TRI_U) {  // TRIANGLE U
-                float uMod    = uncFac * u*distorLev;
+                float uMod    = u*distorLev * float(ceil(uncFac * 10.0));
                 float uFunc   = 0.5 - (uMod - floor(uMod));
                 float uTri    = (0.5 - abs(uFunc));
                 float fac     = uncFac * ampLevel;
 
-                float uM      = fac;
+                float uM      = fac;                                        // gradient = derivation of fac*sin(uDisp)
                 if (uFunc < 0.0) {
                     uM       *= -1.0;
                 }
-                vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
-                vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fac*sin(uDisp) in UV-space
-                vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
-                uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
-
+                             
+                if (uM >= EPS) {
+                    vec2  uNormal = normalize(vec2(1.0, -1.0/uM));          // new normal from gradient in UV-space
+                    float alpha   = acos(dot(vec2(0.0, 1.0), uNormal));     // angle between n (in UV) and uNormal
+                    float beta    = M_PI/2.0 - alpha;                       // angle between uNormal and x-axis
+                    uNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
+                }
+                
 			    mypos.xyz    += (n * uTri * fac); 
 			    n             = normalize(n + uNdisp * tangent);    
 
 			}
 			else if (uncVisMode == UNC_VIS_TRI_UV) {  // TRIANGLE U,V
-                float uMod    = uncFac * u*distorLev;
-                float vMod    = uncFac * v*distorLev;
+                float uMod    = u*distorLev * float(ceil(uncFac * 10.0));
+                float vMod    = v*distorLev * float(ceil(uncFac * 10.0));
                 float uFunc   = 0.5 - (uMod - floor(uMod));
                 float vFunc   = 0.5 - (vMod - floor(vMod));
                 float uTri    = (0.5 - abs(uFunc));
@@ -713,19 +724,23 @@
                 if (uFunc < 0.0) {
                     uM       *= -1.0;
                 }
-                vec2  uNormal = vec2(0.0, 1.0);                         // normal in UV-space
-                vec2  uGrad   = normalize(vec2(1.0, uM));               // tangent of fac*sin(uDisp) in UV-space
-                vec2  uOffset = (-dot(uGrad, uNormal))*uGrad;           // offset vector for normal in UV-space
-                uNdisp        = dot(vec2(1.0, 0.0), uOffset);           // offset projected on tangent = x-axis in U direction
+                if (uM >= EPS) {
+                    vec2  uNormal = normalize(vec2(1.0, -1.0/uM));          // new normal from gradient in UV-space
+                    float alpha   = acos(dot(vec2(0.0, 1.0), uNormal));     // angle between n (in UV) and uNormal
+                    float beta    = M_PI/2.0 - alpha;                       // angle between uNormal and x-axis
+                    uNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
+                }
                 
                 float vM      = fac;
                 if (vFunc < 0.0) {
                     vM       *= -1.0;
                 }
-                vec2  vNormal = vec2(0.0, 1.0);                         // normal in UV-space
-                vec2  vGrad   = normalize(vec2(1.0, vM));               // tangent of fac*sin(vDisp) in UV-space
-                vec2  vOffset = (-dot(vGrad, vNormal))*vGrad;           // offset vector for normal in UV-space
-                vNdisp        = dot(vec2(1.0, 0.0), vOffset);           // offset projected on cross(n,tangent) = x-axis in V direction      
+                if (vM >= EPS) {
+                    vec2  vNormal = normalize(vec2(1.0, -1.0/vM));          // new normal from gradient in UV-space
+                    float alpha   = acos(dot(vec2(0.0, 1.0), vNormal));     // angle between n (in UV) and uNormal
+                    float beta    = M_PI/2.0 - alpha;                       // angle between uNormal and x-axis
+                    vNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
+                }
                 
                 float factor = EPS;
 				if (((1.0 - factor) > u) && (u > factor)) {

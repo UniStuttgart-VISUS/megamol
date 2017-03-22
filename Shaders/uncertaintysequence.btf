@@ -331,9 +331,9 @@ vec4 hsl2rgb(in vec4 hsla) {
 		tmp1 = (2.0 * hsla.z) - tmp2;
 
         // if hue is in range [0,1] replace (hsla.x/360.0) with (hsla.x) in lines below
-		outCol.x = hue2rgb(tmp1, tmp2, (hsla.x/360.0) + (1.0 / 3.0));
+		outCol.x = hue2rgb(tmp1, tmp2, ((hsla.x/360.0) + (1.0 / 3.0)));
 		outCol.y = hue2rgb(tmp1, tmp2, (hsla.x/360.0));
-		outCol.z = hue2rgb(tmp1, tmp2, (hsla.x/360.0) - (1.0 / 3.0));
+		outCol.z = hue2rgb(tmp1, tmp2, ((hsla.x/360.0) - (1.0 / 3.0)));
 	}
 
     return outCol;   
@@ -356,15 +356,15 @@ float hue2rgb(in float v1, in float v2, in float vH) {
 	if ((6.0 * tmpH) < 1.0) {
 		return (v1 + ((v2 - v1) * 6.0 * tmpH));
 	}
-	if ((2.0 * tmpH) < 1.0) {
+	else if ((2.0 * tmpH) < 1.0) {
 		return (v2);
 	}
-
-	if ((3.0 * tmpH) < 2.0) {
+	else if ((3.0 * tmpH) < 2.0) {
 		return (v1 + ((v2 - v1) * ((2.0 / 3.0) - tmpH) * 6.0));
 	}
-
-	return (v1);
+    else {
+	    return (v1);
+    }
 }
 
 -->

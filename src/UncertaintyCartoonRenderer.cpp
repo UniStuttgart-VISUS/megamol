@@ -422,8 +422,8 @@ bool UncertaintyCartoonRenderer::create(void) {
     glGenBuffers(1, &this->theSingleBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
     glBufferStorage(GL_SHADER_STORAGE_BUFFER, this->bufSize * this->numBuffers, nullptr, this->singleBufferCreationBits);
-    this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0,               this->bufSize * this->numBuffers, this->singleBufferMappingBits);
-    //    GLAPI void *APIENTRY glMapNamedBufferRange   (GLuint buffer,         GLintptr offset, GLsizeiptr length,                GLbitfield access);
+    this->theSingleMappedMem = glMapNamedBufferRangeEXT(this->theSingleBuffer, 0, this->bufSize * this->numBuffers, this->singleBufferMappingBits);
+    //    GLAPI void *APIENTRY glMapNamedBufferRange(GLuint buffer, GLintptr offset, GLsizeiptr length, GLbitfield access);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -823,6 +823,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+	glEnable(GL_CULL_FACE);
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
@@ -1147,6 +1148,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			}
         }
 
+		glDisable(GL_CULL_FACE);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glDisableClientState(GL_COLOR_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);

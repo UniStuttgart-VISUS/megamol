@@ -744,32 +744,32 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 					if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f)) {
 						switch (j) {
 						case(0) : threshold = STRIDE_THRESHOLDH1;
-							min = -640.434f;
-							max = 180.434f;
+							min = -410.435f;
+							max =  -49.565f;
 							break;
 						case(1) : threshold = STRIDE_THRESHOLDH3;
-							min = -0.094f;
-							max = 0.334f;
+							min = 0.026f;
+							max = 0.214f;
 							break;
 						case(2) : threshold = STRIDE_THRESHOLDH4;
-							min = -0.047f;
-							max = 0.167f;
+							min = 0.013f;
+							max = 0.107f;
 							break;
 						case(3) : threshold = STRIDE_THRESHOLDE2;
-							min = -688.279f;
-							max = 188.279f;
+							min = -428.279f;
+							max =  -51.721f;
 							break;
 						case(4) : threshold = STRIDE_THRESHOLDE2;
-							min = -688.279f;
-							max = 188.279f;
+							min = -428.279f;
+							max =  -51.721f;
 							break;
 						case(5) : threshold = STRIDE_THRESHOLDE1;
-							min = -863.194f;
-							max = 243.194f;
+							min = -553.195f;
+							max =  -66.805f;
 							break;
 						case(6) : threshold = STRIDE_THRESHOLDE1;
-							min = -863.194f;
-							max = 243.194f;
+							min = -553.195f;
+							max =  -66.805f;
 							break;                            
 						default: break;
 						}
@@ -1003,14 +1003,14 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 					if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
 						for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
                             switch (j) {
-                                case (0) : tmpStr = "Stride Threshold T1 a-Helix"; break;
-                                case (1) : tmpStr = "Stride Threshold T3 a-Helix"; break;
-                                case (2) : tmpStr = "Stride Threshold T4 a-Helix"; break;
-                                case (3) : tmpStr = "Stride Threshold T2 Sheet parallel"; break;
-                                case (4) : tmpStr = "Stride Threshold T2 Sheet parallel"; break;
-                                case (5) : tmpStr = "Stride Threshold T1 Sheet anti-parallel"; break;
-                                case (6) : tmpStr = "Stride Threshold T2 Sheet anti-parallel"; break;                                
-                                default:  tmpStr = "Stride UNKNOWN Threshold"; break;
+                                case (0) : tmpStr = "STRIDE Threshold a-Helix T1"; break;
+                                case (1) : tmpStr = "STRIDE Threshold a-Helix T3"; break;
+                                case (2) : tmpStr = "STRIDE Threshold a-Helix T4"; break;
+                                case (3) : tmpStr = "STRIDE Threshold Sheet parallel T1p"; break;
+                                case (4) : tmpStr = "STRIDE Threshold Sheet parallel T2p"; break;
+                                case (5) : tmpStr = "STRIDE Threshold Sheet antiparallel T1a"; break;
+                                case (6) : tmpStr = "STRIDE Threshold Sheet antiparallel T2a"; break;                                
+                                default:  tmpStr = "STRIDE UNKNOWN Threshold"; break;
                             }
 							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
 							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f, 
@@ -1028,9 +1028,9 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
 						for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
                             switch (j) {
-                                case (0) : tmpStr = "Dssp H-Bond Energy as Acceptor"; break;
-                                case (1) : tmpStr = "Dssp H-Bond Energy as Donor"; break;
-                                default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
+                                case (0) : tmpStr = "DSSP H-Bond Energy as Acceptor"; break;
+                                case (1) : tmpStr = "DSSP H-Bond Energy as Donor"; break;
+                                default:  tmpStr = "DSSP UNKNOWN Threshold"; break;
                             }
 							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
 							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f, 
@@ -1059,13 +1059,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                                                            
                     if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "Uncertain Structure";
+                        tmpStr = "Structure Probabilities";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
-                    tmpStr = "Amino Acid";
+                    tmpStr = "Amino-Acid";
                     wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
                     theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
                                        fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
@@ -1162,8 +1162,11 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 if (theFont.Initialise()) {
                     if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "Stride:";
-                            tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]];
+                            tmpStr = "STRIDE:";
+							tmpStr2.Format("%s: %.3f %%",
+									this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]],
+									this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx]
+															  [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]] * 100.0f);
                             this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
                         start += perCentRow;
@@ -1174,26 +1177,26 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 						    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
 								if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f))  {
 									switch (j) {
-										case (0) : tmpStr = "T1-Helix:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
+										case (0) : tmpStr = "Helix T1:";
+											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
 											break;
-										case (1) : tmpStr = "T3-Helix:";
-											tmpStr2.Format("%.3f (> T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
+										case (1) : tmpStr = "Helix T3:";
+											tmpStr2.Format("%.3f (> %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
 											break;
-										case (2) : tmpStr = "T4-Helix:";
-											tmpStr2.Format("%.3f (> T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
+										case (2) : tmpStr = "Helix T4:";
+											tmpStr2.Format("%.3f (> %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
 											break;
-										case (3) : tmpStr = "T1-Sheet-parallel:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
+										case (3) : tmpStr = "Sheet T1p:";
+											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
 											break;
-										case (4) : tmpStr = "T2-Sheet-parallel:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
+										case (4) : tmpStr = "Sheet T2p:";
+											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
 											break;
-										case (5) : tmpStr = "T1-Sheet-anti-parallel:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
+										case (5) : tmpStr = "Sheet T1a:";
+											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
 											break;
-										case (6) : tmpStr = "T2-Sheet-anti-parallel:";
-											tmpStr2.Format("%.3f (< T=%.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
+										case (6) : tmpStr = "Sheet T2a:";
+											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
 											break;                                            
 										default:  tmpStr = "UNKNOWN value"; break;
 									}
@@ -1210,7 +1213,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }					
                     if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "Dssp:";
+                            tmpStr = "DSSP:";
                             tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP][mousePosResIdx][0]];
                             this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
@@ -1240,7 +1243,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                     if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "Pdb:";
+                            tmpStr = "PDB:";
                             tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB][mousePosResIdx][0]];
                             this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
                         }
@@ -1264,7 +1267,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }             
                     if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
                         if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "Structure:";
+                            tmpStr = "Structure Probabilities:";
                             tmpStr2 = "";
 							for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
                                 if (this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx]
@@ -1316,10 +1319,10 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataCall::secStructure str, UncertaintyDataCall::addFlags f, 
                                                                 float x, float y, float value, float min, float max, float thresh) {
 
-    float yDMax = 0.49f;
+    float yDMax = 0.475f;
 
     // ignore as missing flagged amino-acids and NOTDEFINED secondary structure types
-    if ((f != UncertaintyDataCall::addFlags::MISSING) && (str != UncertaintyDataCall::secStructure::NOTDEFINED)) {
+    if ((f != UncertaintyDataCall::addFlags::MISSING) && (str != UncertaintyDataCall::secStructure::NOTDEFINED) ) { //  && (value <= max) && (value >= min)) {
         // draw middle line
 		GLfloat tmpLw;
 		glGetFloatv(GL_LINE_WIDTH, &tmpLw);
@@ -1331,9 +1334,9 @@ void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataC
         glEnd();
         glLineWidth(tmpLw);
         //draw value quad
-        float clampVal = (value > max)       ? (max)                               : (value);
-        clampVal       = (clampVal < min)    ? (min)                               : (clampVal);
-        float yVar     = (clampVal < thresh) ? (-std::abs((clampVal / min)*yDMax)) : (std::abs((clampVal/max)*yDMax));
+		float clampVal = (value > max) ? (max) : (value);
+		clampVal = (clampVal < min) ? (min) : (clampVal);
+		float yVar = (clampVal < thresh) ? (-1.0f * std::abs(thresh - clampVal) / std::abs(thresh - min) * yDMax) : (std::abs(thresh - clampVal) / std::abs(thresh - max) *yDMax);
 		float col      = 0.75f; // (0.1f + (0.9f - (yDMax - std::abs(yVar)*0.9f)));
 		glColor3f(col, col, col);
         glBegin(GL_QUADS);
@@ -1914,17 +1917,17 @@ void UncertaintySequenceRenderer::RenderToolTip(float start, float end, vislib::
         glColor3fv(bgColor);
         glBegin(GL_QUADS);
         for (unsigned int i = 0; i < this->chainVertices.Count() / 2; i++) {
-            glVertex2f(this->mousePos.X() + 1.05f, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)));
-            glVertex2f(this->mousePos.X() + 1.05f, -this->rowHeight*(this->mousePos.Y() - (1.0f - end)));
-            glVertex2f(this->mousePos.X() + 1.05f + wordlength, -this->rowHeight*(this->mousePos.Y() - (1.0f - end)));
-            glVertex2f(this->mousePos.X() + 1.05f + wordlength, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)));
+            glVertex2f(this->mousePos.X() + 1.00f, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)));
+            glVertex2f(this->mousePos.X() + 1.00f, -this->rowHeight*(this->mousePos.Y() - (1.0f - end)));
+            glVertex2f(this->mousePos.X() + 1.00f + wordlength, -this->rowHeight*(this->mousePos.Y() - (1.0f - end)));
+            glVertex2f(this->mousePos.X() + 1.00f + wordlength, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)));
         }
         glEnd();
 
         glColor3fv(fgColor);
-        theFont.DrawString(this->mousePos.X() + 1.05f, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)) - 0.5f, wordlength, 0.5f,
+        theFont.DrawString(this->mousePos.X() + 1.00f, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)) - 0.5f, wordlength, 0.5f,
                            fontSize, true, str1, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-        theFont.DrawString(this->mousePos.X() + 1.05f, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)) - 1.0f, wordlength, 0.5f,
+        theFont.DrawString(this->mousePos.X() + 1.00f, -this->rowHeight*(this->mousePos.Y() - (1.0f - start)) - 1.0f, wordlength, 0.5f,
                            fontSize, true, str2, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
     }
 }

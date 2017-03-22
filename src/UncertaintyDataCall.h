@@ -37,6 +37,9 @@
 #define STRIDE_THRESHOLDE2 -310.00f   // parallel
 
 
+#define DSSP_HBENERGY      -0.5f
+
+
 
 
 namespace megamol {

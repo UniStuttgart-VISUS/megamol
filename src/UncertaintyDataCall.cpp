@@ -68,9 +68,9 @@ vislib::math::Vector<float, 4> UncertaintyDataCall::GetSecStructColor(Uncertaint
     switch (s) {  
                                                                      //  R                 G               B                A
 	case (UncertaintyDataCall::secStructure::G_310_HELIX) :   color.Set(204.0f / 255.0f,   0.0f / 255.0f,  68.0f / 255.0f, 1.0f); break; // HSL: H=340°, S=1.00, L=0.40  | 310
-	case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set(127.0f / 255.0f,   0.0f / 255.0f, 153.0f / 255.0f, 1.0f); break; // HSL: H=290°, S=1.00, L=0.30  | alpha
-    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set( 34.0f / 255.0f,   0.0f / 255.0f, 204.0f / 255.0f, 1.0f); break; // HSL: H=250°, S=1.00, L=0.40  | PI                                                               
-	case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(  0.0f / 255.0f, 170.0f / 255.0f, 255.0f / 255.0f, 1.0f); break; // HSL: H=200°, S=1.00, L=0.50  | turn
+	case (UncertaintyDataCall::secStructure::T_H_TURN) :      color.Set(127.0f / 255.0f,   0.0f / 255.0f, 153.0f / 255.0f, 1.0f); break; // HSL: H=290°, S=1.00, L=0.30  | alpha
+    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : color.Set( 34.0f / 255.0f,   0.0f / 255.0f, 204.0f / 255.0f, 1.0f); break; // HSL: H=250°, S=1.00, L=0.40  | PI                                                               
+	case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    color.Set(  0.0f / 255.0f, 170.0f / 255.0f, 255.0f / 255.0f, 1.0f); break; // HSL: H=200°, S=1.00, L=0.50  | turn
 	case (UncertaintyDataCall::secStructure::S_BEND) :        color.Set(  0.0f / 255.0f, 204.0f / 255.0f, 136.0f / 255.0f, 1.0f); break; // HSL: H=160°, S=1.00, L=0.40  | bend
 	case (UncertaintyDataCall::secStructure::C_COIL) :        color.Set(  0.0f / 255.0f,  77.0f / 255.0f,   0.0f / 255.0f, 1.0f); break; // HSL: H=120°, S=1.00, L=0.15  | coil
 	case (UncertaintyDataCall::secStructure::B_BRIDGE) :      color.Set(128.0f / 255.0f, 255.0f / 255.0f,   0.0f / 255.0f, 1.0f); break; // HSL: H= 90°, S=1.00, L=0.50  | bridge
@@ -92,14 +92,14 @@ vislib::StringA UncertaintyDataCall::GetSecStructDesc(UncertaintyDataCall::secSt
     vislib::StringA tmpStr = "No description";
 
     switch (s) {
-    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : tmpStr = "H - Alpha Helix"; break;
-    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   tmpStr = "G - 3-10 Helix"; break;
-    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    tmpStr = "I - Pi Helix"; break;
-    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  tmpStr = "E - Strand"; break;
-    case (UncertaintyDataCall::secStructure::T_H_TURN) :      tmpStr = "T - Turn"; break;
-    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      tmpStr = "B - Bridge"; break;
-    case (UncertaintyDataCall::secStructure::S_BEND) :        tmpStr = "S - Bend"; break;
-    case (UncertaintyDataCall::secStructure::C_COIL) :        tmpStr = "C - Random Coil"; break;
+    case (UncertaintyDataCall::secStructure::H_ALPHA_HELIX) : tmpStr = "H Alpha-Helix"; break;
+    case (UncertaintyDataCall::secStructure::G_310_HELIX) :   tmpStr = "G 310-Helix"; break;
+    case (UncertaintyDataCall::secStructure::I_PI_HELIX) :    tmpStr = "I Pi-Helix"; break;
+    case (UncertaintyDataCall::secStructure::E_EXT_STRAND) :  tmpStr = "E Strand"; break;
+    case (UncertaintyDataCall::secStructure::T_H_TURN) :      tmpStr = "T Turn"; break;
+    case (UncertaintyDataCall::secStructure::B_BRIDGE) :      tmpStr = "B Bridge"; break;
+    case (UncertaintyDataCall::secStructure::S_BEND) :        tmpStr = "S Bend"; break;
+    case (UncertaintyDataCall::secStructure::C_COIL) :        tmpStr = "C Random Coil"; break;
     case (UncertaintyDataCall::secStructure::NOTDEFINED) :    tmpStr = "Not defined"; break;
     default: break;
     }
