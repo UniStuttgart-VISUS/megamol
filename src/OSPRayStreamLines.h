@@ -82,7 +82,6 @@ private:
     core::param::ParamSlot minColSlot;
     core::param::ParamSlot maxColSlot;
 
-    core::param::ParamSlot streamlineEpsilon;
     core::param::ParamSlot samplingDirection;
     core::param::ParamSlot streamlineRadius;
 
@@ -93,12 +92,9 @@ private:
     void genSeedPoints(megamol::protein_calls::VTIDataCall *cd, float zClip, float isoval);
 
     float sampleFieldAtPosTrilin(float* pos, float* field);
-    Vec3f sampleFieldAtPosTrilin_vec3f(float* pos);
-
     void initStreamLines(directionEnum dir);
-    void integrateRK4(float startX, float startY, float startZ);
+    void integrateRK4(float startX, float startY, float startZ, unsigned int line);
     bool isValidGridPos(float* pos);
-    Vec3f OSPRayStreamLines::GetAt(unsigned int posX, unsigned int posY, unsigned int posZ);
 
     int nSegments;
 

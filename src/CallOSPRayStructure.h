@@ -64,8 +64,6 @@ public:
     std::shared_ptr<std::vector<float>> isoValue;
     std::shared_ptr<std::vector<float>> sliceData;
 
-
-
     unsigned int voxelCount = voxelCount;
     unsigned int maxDim = maxDim;
     unsigned int triangleCount;

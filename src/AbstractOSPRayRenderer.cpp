@@ -669,16 +669,36 @@ void AbstractOSPRayRenderer::fillWorld() {
 
                 break;
             case geometryTypeEnum::STREAMLINES:
+
+                geo = ospNewGeometry("streamlines");
+
+                osp::vec3fa* data;
+                data = new osp::vec3fa[element.vertexData->size()/3];
+
+                // fill aligned array with vertex data
+                for (unsigned int i = 0; i < element.vertexData->size()/3; i++) {
+                    data[i].x = element.vertexData->data()[3 * i + 0];
+                    data[i].y = element.vertexData->data()[3 * i + 1];
+                    data[i].z = element.vertexData->data()[3 * i + 2];
+                    data[i].a = 64;
+                    data[i].w = 0;
+                    data[i].u = 16;
+                }
+
+                vertexData = ospNewData(element.vertexData->size()/3, OSP_FLOAT3A, data);
+                ospCommit(vertexData);
+                ospSetData(geo, "vertex", vertexData);
+
+                indexData = ospNewData(element.indexData->size(), OSP_UINT, element.indexData->data());
+                ospCommit(indexData);
+                ospSetData(geo, "index", indexData);
+
+                ospSet1f(geo, "radius", element.globalRadius);
+
                 break;
             case geometryTypeEnum::CYLINDERS:
                 break;
             }
-
-            if (vertexData != NULL) ospRelease(vertexData);
-            if (colorData != NULL) ospRelease(colorData);
-            if (normalData != NULL) ospRelease(normalData);
-            if (texData != NULL) ospRelease(texData);
-            if (indexData != NULL) ospRelease(indexData);
 
             if (material != NULL) {
                 ospSetMaterial(geo, material);
@@ -686,6 +706,13 @@ void AbstractOSPRayRenderer::fillWorld() {
             ospCommit(geo);
 
             ospAddGeometry(world, geo);
+
+
+            if (vertexData != NULL) ospRelease(vertexData);
+            if (colorData != NULL) ospRelease(colorData);
+            if (normalData != NULL) ospRelease(normalData);
+            if (texData != NULL) ospRelease(texData);
+            if (indexData != NULL) ospRelease(indexData);
 
             break;
 
