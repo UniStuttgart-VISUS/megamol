@@ -275,6 +275,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::STRIDE,      "STRIDE");
 	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::DSSP,        "DSSP");
 	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::UNCERTAINTY, "Uncertainty");
+	tmpEnum->SetTypePair(UncertaintyDataCall::assMethod::PROSIGN, "PROSIGN");
 	this->methodDataParam << tmpEnum;
 	this->MakeSlotAvailable(&this->methodDataParam);    
 

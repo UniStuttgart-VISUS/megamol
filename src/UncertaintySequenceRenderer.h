@@ -358,6 +358,8 @@ namespace megamol {
         megamol::core::param::ParamSlot toggleDsspParam;
         // parameter to show/hide pdb secondary structure 
         megamol::core::param::ParamSlot togglePdbParam;
+		// parameter to show/hide prosign secondary structure
+		megamol::core::param::ParamSlot toggleProsignParam;
                 
         // parameter to show/hide thresholds of stride 
         megamol::core::param::ParamSlot toggleStrideThreshParam;

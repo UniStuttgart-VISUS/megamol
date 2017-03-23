@@ -78,8 +78,9 @@ namespace megamol {
             PDB         = 0,
             STRIDE      = 1,
             DSSP        = 2,
-            UNCERTAINTY = 3,
-            NOM         = 4   // Number of Methods -> must always be the last index!
+			PROSIGN     = 3,
+			UNCERTAINTY = 4,
+            NOM         = 5   // Number of Methods -> must always be the last index!
         };
         
         /**

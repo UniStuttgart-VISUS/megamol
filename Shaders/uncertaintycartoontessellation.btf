@@ -487,25 +487,25 @@
             bool changeStart = false; 
             bool changeEnd   = false;
 
-            if (uncVal[0] > EPS) {
+            /*if (uncVal[0] > EPS) {
                 changeStart = true; 
                 changeEnd   = true;
-            }
+            }*/
             if (mytype != C_COIL) {
                 // check if geometry type changes at the beginning from tube to helix or strand
                 int edgeType     = alph1.sortedStruct[0];
-                if (alph1.unc[edgeType] < (1.0 - EPS)) {
+                /*if (alph1.unc[edgeType] < (1.0 - EPS)) {
                     changeStart = true;
                 }
-                else if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED))) {
+                else*/ if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED))) {
                     changeStart = true;
                 }
                 // check if geometry type changes at the end      
                 edgeType       = alph3.sortedStruct[0];        
-                if (alph3.unc[edgeType] < (1.0 - EPS)) {
+                /*if (alph3.unc[edgeType] < (1.0 - EPS)) {
                     changeEnd = true;
                 }
-                else if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED))) {
+                else*/ if (((edgeType == C_COIL) || (edgeType == S_BEND) || (edgeType == T_H_TURN) || (edgeType == NOTDEFINED))) {
                     changeEnd = true;
                 }
             }

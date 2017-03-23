@@ -74,29 +74,29 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
             toggleDsspParam(                    "03 Dssp", "Show/hide DSSP secondary structure row."),
 			toggleDsspThreshParam(              "04 Dssp Threshold", "Show/hide DSSP threshold(s)."),
             togglePdbParam(                     "05 PDB", "Show/hide PDB secondary structure row."),
-            
+            toggleProsignParam(                 "06 Prosign", "Show/hide PDB secondary structure row."),
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
             ////////////////////////////////////////////////     
                    
-			toggleUncertaintyParam(             "06 Uncertainty", "Show/hide uncertainty row."),
-            toggleUncertainStructParam(         "07 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
-            certainBlockChartColorParam(        "08 Certain: Block chart color", "Choose color of block chart for certain structure."),
-            certainStructColorParam(            "09 Certain: Structure color", "Choose color of structure for certain structure."),
-            uncertainBlockChartColorParam(      "10 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
-            uncertainBlockChartOrientationParam("11 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
-            uncertainStructColorParam(          "12 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
-            uncertainStructGeometryParam(       "13 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
-            geometryTessParam(                  "14 Geometry tesselation", "The geometry tesselation level."),
-            uncertainColorInterpolParam(        "15 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
-            uncertainGardientIntervalParam(     "16 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
-            toggleUncSeparatorParam(            "17 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
-            toggleLegendParam(                  "18 Legend Drawing", "Show/hide row legend/key on the left."),
-            toggleTooltipParam(                 "19 ToolTip", "Show/hide tooltip information."),
-            resCountPerRowParam(                "20 Residues Per Row", "The number of residues per row."),
-            clearResSelectionParam(             "21 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
-            colorTableFileParam(                "22 Color Table Filename", "The filename of the color table."),
-			reloadShaderParam(                  "23 Reload shaders", "Reload the shaders."),
+			toggleUncertaintyParam(             "07 Uncertainty", "Show/hide uncertainty row."),
+            toggleUncertainStructParam(         "08 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
+            certainBlockChartColorParam(        "09 Certain: Block chart color", "Choose color of block chart for certain structure."),
+            certainStructColorParam(            "10 Certain: Structure color", "Choose color of structure for certain structure."),
+            uncertainBlockChartColorParam(      "11 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
+            uncertainBlockChartOrientationParam("12 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
+            uncertainStructColorParam(          "13 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
+            uncertainStructGeometryParam(       "14 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
+            geometryTessParam(                  "15 Geometry tesselation", "The geometry tesselation level."),
+            uncertainColorInterpolParam(        "16 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
+            uncertainGardientIntervalParam(     "17 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
+            toggleUncSeparatorParam(            "18 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
+            toggleLegendParam(                  "19 Legend Drawing", "Show/hide row legend/key on the left."),
+            toggleTooltipParam(                 "20 ToolTip", "Show/hide tooltip information."),
+            resCountPerRowParam(                "21 Residues Per Row", "The number of residues per row."),
+            clearResSelectionParam(             "22 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
+            colorTableFileParam(                "23 Color Table Filename", "The filename of the color table."),
+			reloadShaderParam(                  "24 Reload shaders", "Reload the shaders."),
             dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), currentGeometryTess(25),
             markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), secStructRows(0), pdbID(""), pdbLegend("")
 #ifndef USE_SIMPLE_FONT
@@ -148,6 +148,10 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     // param slot for PDB toggling
     this->togglePdbParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->togglePdbParam);
+
+	// param slot for Prosign toggling
+	this->toggleProsignParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->toggleProsignParam);
 
 	// param slot for STRIDE threshold toggling
     this->toggleStrideThreshParam.SetParameter(new param::BoolParam(true));
@@ -489,7 +493,10 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
     }   
 	    if(this->toggleDsspThreshParam.IsDirty()) {
         this->dataPrepared = false;
-    }   
+    }
+	if (this->toggleProsignParam.IsDirty()) {
+			this->dataPrepared = false;
+	}
 	
     ////////////////////////////////////////////////
     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -523,6 +530,8 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->secStructRows += this->strideThresholdCount;
 		if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value())
             this->secStructRows += this->dsspThresholdCount;
+		if (this->toggleProsignParam.Param<param::BoolParam>()->Value())
+			this->secStructRows++;
                         
         ////////////////////////////////////////////////
         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -559,6 +568,7 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->togglePdbParam.ResetDirty();
             this->toggleStrideThreshParam.ResetDirty();
 			this->toggleDsspThreshParam.ResetDirty();	
+			this->toggleProsignParam.ResetDirty();
 			
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -815,6 +825,16 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             }
             yPos += 1.0f;
         }
+
+		// PROSIGN
+		if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+			for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+				tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PROSIGN);
+				this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+					this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
+			}
+			yPos += 1.0f;
+		}
         
         ////////////////////////////////////////////////
         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -1045,6 +1065,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         yPos += 1.0f;
                     }
+					if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+						tmpStr = "PROSIGN";
+						wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+						theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+							fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+						yPos += 1.0f;
+					}
                     
                     ////////////////////////////////////////////////
                     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -1250,6 +1277,15 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         start += perCentRow;
                         end += perCentRow;
                     }
+					if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+						if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+							tmpStr = "Prosign:";
+							tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN][mousePosResIdx][0]];
+							this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+						}
+						start += perCentRow;
+						end += perCentRow;
+					}
                     
                     ////////////////////////////////////////////////
                     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
