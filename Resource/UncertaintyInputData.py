@@ -52,6 +52,8 @@ import logging
 import argparse
 import json
 import time
+import io
+import csv
 from datetime import date
             
 try: # Import urllib for Python3.x
@@ -92,6 +94,8 @@ class UncertaintyInputData:
     #     Param_Debug      = Debug flag. When TRUE you get additional debug output.
     #     Param_Offline    = Offline flag. When TRUE use only offline assignment 
     #                        programs.
+    #     Param_Csv        = CSV flag. When TRUE an additional simple csv result 
+    #                        file is written.
     #     Param_ScriptPath = Need path to script location if current execution 
     #                        path is different.
     # Return value:
@@ -99,11 +103,12 @@ class UncertaintyInputData:
     # 
     # #########################################################################
     
-    def __init__(self, Param_PDBId = 'undefined', Param_Debug = False, Param_Offline = False, Param_ScriptPath='.'):
+    def __init__(self, Param_PDBId = 'undefined', Param_Debug = False, Param_Offline = False, Param_Csv = False, Param_ScriptPath='.'):
            
         self.Param_PDBId      = Param_PDBId
         self.Param_Debug      = Param_Debug
         self.Param_Offline    = Param_Offline
+        self.Param_Csv        = Param_Csv
         self.Param_ScriptPath = Param_ScriptPath      
             
         # Checking if Param_PDBId is a valid PDB ID
@@ -157,7 +162,10 @@ class UncertaintyInputData:
         STRIDEOutFile     = os.path.join(CacheLocation, (PDBId + '.stride'))        # STRIDE output file path
         DSSPProgName      = 'dssp'                                                  # DSSP program name        
         DSSPOutFile       = os.path.join(CacheLocation, (PDBId + '.dssp'))          # DSSP output file path
+        ProsignProgName   = 'Prosign'
+        ProsignOutFile    = os.path.join(CacheLocation, (PDBId + '.prosign'))      
         OUTFile           = os.path.join(CacheLocation, (PDBId + '.uid'))           # Result Outfile: uid = uncertainty input data 
+        CSVOutFile        = os.path.join(CacheLocation, (PDBId + '.csv'))          # Resulting csv output file
         PDBUrl            = 'http://files.rcsb.org/download/' + PDBFileName        # PDB file download url
         # PDBUrl            = 'https://files.rcsb.org/download/' + PDBFileName        # PDB file download url using httpS
      
@@ -175,9 +183,11 @@ class UncertaintyInputData:
         if sys.platform.startswith('win'):  
             STRIDEProg    = os.path.join(ProgLocation, (STRIDEProgName + '.exe'))   # STRIDE program path and added executable ending for windows
             DSSPProg      = os.path.join(ProgLocation, (DSSPProgName + '.exe'))     # DSSP program path and added executable ending for windows
+            ProsignProg   = os.path.join(ProgLocation, (ProsignProgName + ".exe"))
         elif sys.platform.startswith('linux'):
             STRIDEProg    = os.path.join(ProgLocation, (STRIDEProgName))            # STRIDE program path
             DSSPProg      = os.path.join(ProgLocation, (DSSPProgName))              # DSSP program path
+            ProsignProg   = os.path.join(ProgLocation, (ProsignProgName))
         else:
             try:
                 raise OSError('  \"{0}\" is no supported OS'.format(sys.platform))
@@ -256,9 +266,29 @@ class UncertaintyInputData:
         else:
             logging.info('  Found file \"{0}\"'.format(DSSPOutFile))
 
+        # Check if Prosign output file already exists
+        logging.debug('  Check if output file of \"{0}\" for \"{1}\" exists'.format(ProsignProgName, PDBFileName))
+        if(not os.path.isfile(ProsignOutFile)):
+            logging.debug('  Found no output file')
+            online = False
+            offline = False
+            # Prosign always offline
+            ProgName = os.path.split(ProsignProg)[1]
+            logging.info('  Calling program \"{0}\"'.format(ProgName))
+            try:
+                subprocess.call([ProsignProg, PDBFile])
+            except Exception as Error:
+                tb = sys.exc_info()[1]
+                logging.error('  Calling program \"{0}\" failed with error: '.format(ProsignProg))
+                logging.error('>>>   {0}'.format(Error))
+                offline = False
+            else:
+                logging.info('  Successfully created file \"{0}\"'.format(ProsignOutFile))
+                offline = True
+
              
         # Generate output file
-        return self.ParseDataAndCreateOutputFile(PDBFile, STRIDEOutFile, DSSPOutFile, OUTFile)
+        return self.ParseDataAndCreateOutputFile(PDBFile, STRIDEOutFile, DSSPOutFile, ProsignOutFile, OUTFile, CSVOutFile)
             
 
         
@@ -470,6 +500,7 @@ class UncertaintyInputData:
     #   Param_PDBFile    = PDB ID file name including file path
     #   Param_STRIDEFile = STRIDE file name including file path
     #   Param_DSSPFile   = DSSP file name including file path
+    #   Param_ProsignFile= Prosign file name including file path
     #   Param_OutFile    = Output file name  
     # 
     # Return value:
@@ -477,7 +508,7 @@ class UncertaintyInputData:
     # 
     # #########################################################################
         
-    def ParseDataAndCreateOutputFile(self, Param_PDBFile, Param_STRIDEFile, Param_DSSPFile, Param_OutFile):
+    def ParseDataAndCreateOutputFile(self, Param_PDBFile, Param_STRIDEFile, Param_DSSPFile, Param_ProsignFile, Param_OutFile, Param_CSVOutFile):
         
         # Init list buffer of output file lines
         OutFileBuffer =    [('PDB-ID | '+(Param_OutFile[-8:-4]).upper())]   # line 0
@@ -572,7 +603,7 @@ class UncertaintyInputData:
                     elif (FileLine[0:6] == 'HETATM'):                                          # Handle HETATM
                         if((LastHETATMIndex != FileLine[22:27]) or (LastHETATMChainID != FileLine[21:22])): 
                             if AANumber >= (len(OutFileBuffer)):
-                                OutFileBuffer.append('DATA   |')                            
+                                OutFileBuffer.append('DATA   |')                    
                                                                                                
                             OutFileBuffer[AANumber] += (' ##### |  '+FileLine[17:20].rjust(3)+' |       '+FileLine[21:22]+' |'+
                                                         ' H |    '+FileLine[22:27]+' |')                            
@@ -583,7 +614,7 @@ class UncertaintyInputData:
                     elif (FileLine[0:4] == 'ATOM'):                                            # Handle ATOM
                         if((LastATOMIndex != FileLine[22:27]) or (LastATOMChainID != FileLine[21:22])): 
                             if AANumber >= (len(OutFileBuffer)):
-                                OutFileBuffer.append('DATA   |')                            
+                                OutFileBuffer.append('DATA   |')                                                 
                                                                                                
                             OutFileBuffer[AANumber] += (' ##### |  '+FileLine[17:20].rjust(3)+' |       '+FileLine[21:22]+' |'+
                                                         '   |    '+FileLine[22:27]+' |')                            
@@ -905,7 +936,7 @@ class UncertaintyInputData:
                                                   
                         if (len(FileLine) > CW[18][1]):
                             OutFileBuffer[LineOffset] += (' '+FileLine[CW[15][0]:CW[15][1]]+' | '+FileLine[CW[16][0]:CW[16][1]]+' | '
-                                                         +FileLine[CW[17][0]:CW[17][1]]+' | '+FileLine[CW[18][0]:CW[18][1]]+' | ')
+                                                         +FileLine[CW[17][0]:CW[17][1]]+' | '+FileLine[CW[18][0]:CW[18][1]]+' |')
                         else: 
                             OutFileBuffer[LineOffset] += ('          |          |          |          |')
                         
@@ -928,7 +959,58 @@ class UncertaintyInputData:
             if LengthDiff > 0:
                 OutFileBuffer[x] += ('       |    |         |           |      |      |      |         |        |        |        |        |        |        |        |          |          |          |          |')
 
-        
+
+        # Prosign File stuff-----------------------------------------------------
+        logging.debug('  Opening Prosign file')
+        logging.info('  Parsing Prosign file')
+
+        OutFileBuffer[2] += ('------------------------------------------|')
+        OutFileBuffer[3] += (' Prosign                                  |')
+        OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|')
+        OutFileBuffer[7] += ('-------|------|---------|-----------------|')
+        #Length of columns:      7       6      9           17
+
+        if os.path.isfile(Param_ProsignFile):
+            try:
+                ProsignFile = open(Param_ProsignFile, 'r')
+            except Exception as Error:
+                logging.error('  Opening Prosign file failed with error: ')
+                logging.error('>>>   {0}'.format(Error))
+                return False
+
+            reader = csv.reader(ProsignFile)
+            for row in reader:
+                ChainID = row[2]
+                #search for matching chain ID
+                if(OutFileBuffer[LineOffset][30:31] != ChainID) :
+                    LineOffset = 8
+                    for x in range(LineOffset, len(OutFileBuffer)):
+                        if(OutFileBuffer[x][30:31] == ChainID):
+                            LineOffset = x
+                            break
+
+                prosignIndex = row[0]
+                while (prosignIndex != OutFileBuffer[LineOffset][(45-len(prosignIndex)):45]):
+                    LineOffset += 1
+
+                OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               |'
+
+                LineOffset += 1
+                if(LineOffset > len(OutFileBuffer) - 1):
+                    LineOffset = 8
+            
+            ProsignFile.close()
+            logging.debug('  Completed to parse file \"{0}\"'.format(Param_ProsignFile))
+        else:
+            logging.warn('   Didn\'t find file \"{0}\"'.format(Param_ProsignFile))
+
+        #Fill empty lines
+        LineOffset = 8
+        for x in range(LineOffset, len(OutFileBuffer)):
+            LengthDiff = len(OutFileBuffer[2]) - len(OutFileBuffer[x])
+            if(LengthDiff > 0):
+                OutFileBuffer[x] += ('       |      |         |                 |')
+
         # Adding column numbers to buffer lines 5 and 6 - Index is starting with 0!
         logging.debug('  Writing column numbers to buffer lines 5 and 6')
         for x in range(0, (len(OutFileBuffer[2])-8)):                                          # Length of buffer line 2 is reference and starting
@@ -962,6 +1044,76 @@ class UncertaintyInputData:
         # Close output file
         OutFile.close()
         logging.info('  Successfully created file \"{0}\"'.format(Param_OutFile))
+
+        # Write csv file if necessary
+        if(self.Param_Csv):
+            CsvFileBuffer =    [('')]   # line 0
+            pdbid = (Param_OutFile[-8:-4]).upper()
+            CsvFileBuffer.append('PDBId,AminoAcidId,PDB,STRIDE,DSSP,PROSIGN\n')
+            a = 0
+            for x in range(0, len(OutFileBuffer)):
+                if(OutFileBuffer[x].startswith('DATA')):
+                    if(OutFileBuffer[x][34] == ' '):                                         # Is this a mainchain amino acid?
+                        pdbval = ''
+                        strideval = ''
+                        dsspval = ''
+                        prosignval = ''
+                        # check for the pdb entries
+                        if(OutFileBuffer[x][52] == ' '):
+                            pdbval = 'C'
+                        elif(OutFileBuffer[x][52] == 'S'):
+                            pdbval = 'E'
+                        elif(OutFileBuffer[x][52] == 'H'):
+                            if(OutFileBuffer[x][90] == '1'):
+                                pdbval = 'H'
+                            elif(OutFileBuffer[x][90] == '3'):
+                                pdbval = 'I'
+                            elif(OutFileBuffer[x][90] == '5'):
+                                pdbval = 'G'
+                            elif(OutFileBuffer[x][90] == '6'):
+                                pdbval = 'H'
+                            else:
+                                pdbval = 'U'
+                        else:
+                            pdbval = 'U'
+
+                        # check for stride entries
+                        if(OutFileBuffer[x][165] == ' '):
+                            strideval = 'U'
+                        else:
+                            strideval = str(OutFileBuffer[x][165]).upper()
+
+                        # check for dssp entries
+                        if(OutFileBuffer[x][313] == ' '):
+                            dsspval = 'U'
+                        else:
+                            dsspval = str(OutFileBuffer[x][313]).upper()
+
+                        if(OutFileBuffer[x][488] == ' '):
+                            prosignval = 'U'
+                        else:
+                            prosignval = str(OutFileBuffer[x][488]).upper()
+
+                        text =pdbid + ',' + str(a) + ',' + pdbval + ',' + strideval + ',' + dsspval + ',' + prosignval + '\n'
+                        CsvFileBuffer.append(text)
+                        a += 1
+                # Write output file
+                logging.debug('  Creating csv file \"{0}\"'.format(Param_CSVOutFile))
+                try:
+                    CsvOutFile = open(Param_CSVOutFile, 'w')
+                except Exception as Error:
+                    logging.error('  Creating csv file failed with error:')
+                    logging.error('>>>   {0}'.format(Error))
+                    return False
+
+                for line in CsvFileBuffer:
+                    CsvOutFile.write(line)
+
+                CsvOutFile.close()
+                
+            logging.info('  Successfully created file \"{0}\"'.format(Param_CSVOutFile))
+
+
         return True
         
 
@@ -1001,11 +1153,13 @@ if __name__ == "__main__":
     
     # optional argument for forced use of offline assignment programs:
     parser.add_argument('-o', '--offline', action='store_true', help='Flag to force use of offline assignment programs')
+
+    # optional argument enabling csv output:
+    parser.add_argument('-c', '--csv', action='store_true', help='Flag to enable a simple csv output of the assignment results')
     
     args = parser.parse_args()
-
     
-    myUID = UncertaintyInputData(args.PDBId, args.debug, args.offline, sys.argv[0])
+    myUID = UncertaintyInputData(args.PDBId, args.debug, args.offline, args.csv, sys.argv[0])
     myUID.GenerateDataFile()
     del myUID
     
