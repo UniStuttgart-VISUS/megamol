@@ -78,10 +78,6 @@ private:
     core::param::ParamSlot streamlineStepSlot;
     core::param::ParamSlot seedClipZSlot;
     core::param::ParamSlot seedIsoSlot;
-    core::param::ParamSlot streamtubesThicknessSlot;
-    core::param::ParamSlot minColSlot;
-    core::param::ParamSlot maxColSlot;
-
     core::param::ParamSlot samplingDirection;
     core::param::ParamSlot streamlineRadius;
 
@@ -98,7 +94,6 @@ private:
 
     int nSegments;
 
-    //float* field;
     VecField3f field;
     Vec3f gridOrg;
     Vec3f gridSpacing;
@@ -115,11 +110,14 @@ private:
 
 
 template<class T, typename... Args>
-void Parallel(const Args&... args) {
+void TBBParallel(const Args&... args) {
     T t(args...);
     int n = t.size();
     parallel_for(blocked_range<int>(1, n), t);
 }
+
+
+
 
 
 

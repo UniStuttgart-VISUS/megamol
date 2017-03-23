@@ -583,6 +583,7 @@ void AbstractOSPRayRenderer::fillWorld() {
         OSPData voxels     = NULL;
         OSPData isovalues  = NULL;
         OSPData planes     = NULL;
+        OSPPlane pln       = NULL;
         switch (element.type) {
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
@@ -607,25 +608,19 @@ void AbstractOSPRayRenderer::fillWorld() {
                     ospCommit(colorData);
                     ospSetData(geo, "color", colorData);
                 }
-                // data verwurschding
-                /*
-                // clipPlane setup
-                std::vector<float> clipDat(4);
-                std::vector<float> clipCol(4);
-                this->getClipData(clipDat.data(), clipCol.data());
 
-                if (!std::all_of(clipDat.begin(), clipDat.end() - 1, [](float i) { return i == 0; })) {
+                // clipPlane setup
+
+                if (!std::all_of(element.clipPlaneData->begin(), element.clipPlaneData->end() - 1, [](float i) { return i == 0; })) {
                 pln = ospNewPlane("clipPlane");
-                ospSet1f(pln, "dist", clipDat[3]);
-                ospSet3fv(pln, "normal", clipDat.data());
-                ospSet4fv(pln, "color", clipCol.data());
+                ospSet1f(pln, "dist", element.clipPlaneData->data()[3]);
+                ospSet3fv(pln, "normal", element.clipPlaneData->data());
+                ospSet4fv(pln, "color", element.clipPlaneColor->data());
                 ospCommit(pln);
-                ospSetObject(spheres, "clipPlane", pln);
+                ospSetObject(geo, "clipPlane", pln);
                 } else {
-                ospSetObject(spheres, "clipPlane", NULL);
+                ospSetObject(geo, "clipPlane", NULL);
                 }
-                ospCommit(spheres);
-                */
                 break;
             case geometryTypeEnum::TRIANGLES:
 

@@ -63,6 +63,9 @@ public:
     std::shared_ptr<std::vector<float>> clippingBoxUpper;
     std::shared_ptr<std::vector<float>> isoValue;
     std::shared_ptr<std::vector<float>> sliceData;
+    std::shared_ptr<std::vector<float>> clipPlaneData;
+    std::shared_ptr<std::vector<float>> clipPlaneColor;
+
 
     unsigned int voxelCount = voxelCount;
     unsigned int maxDim = maxDim;

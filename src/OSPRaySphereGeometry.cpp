@@ -196,8 +196,14 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
             }
         }
 
-        // Write stuff into the structureContainer
 
+        // clipPlane setup
+        std::vector<float> clipDat(4);
+        std::vector<float> clipCol(4);
+        this->getClipData(clipDat.data(), clipCol.data());
+
+
+        // Write stuff into the structureContainer
         this->structureContainer.type = structureTypeEnum::GEOMETRY;
         this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
         this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
@@ -206,6 +212,8 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         this->structureContainer.colorLength = colorLength;
         this->structureContainer.partCount = partCount;
         this->structureContainer.globalRadius = globalRadius;
+        this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
+        this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
     }
 
     // material container

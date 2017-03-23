@@ -27,9 +27,6 @@ OSPRayStreamLines::OSPRayStreamLines(void) :
     streamlineStepSlot("step", "Set stepsize for the streamline integration"),
     seedClipZSlot("seedClipZ", "Starting z value for the clipping plane"),
     seedIsoSlot("seedIso", "Iso value for the seed point"),
-    streamtubesThicknessSlot("tubesScl", "The scale factor for the streamtubes thickness"),
-    minColSlot("minCol", "Minimum color value"),
-    maxColSlot("maxCol", "Maximum color value"),
     samplingDirection("samplingDirection", "direction of streamline sampling"),
     streamlineRadius("radius", "Radius of the streamlines"),
 
@@ -180,9 +177,6 @@ bool OSPRayStreamLines::InterfaceIsDirty() {
         this->streamlineStepSlot.IsDirty() ||
         this->seedClipZSlot.IsDirty() ||
         this->seedIsoSlot.IsDirty() ||
-        this->streamtubesThicknessSlot.IsDirty() ||
-        this->minColSlot.IsDirty() ||
-        this->maxColSlot.IsDirty() ||
         this->samplingDirection.IsDirty() ||
         this->streamlineRadius.IsDirty()
         ) {
@@ -191,9 +185,6 @@ bool OSPRayStreamLines::InterfaceIsDirty() {
         this->streamlineStepSlot.ResetDirty();
         this->seedClipZSlot.ResetDirty();
         this->seedIsoSlot.ResetDirty();
-        this->streamtubesThicknessSlot.ResetDirty();
-        this->minColSlot.ResetDirty();
-        this->maxColSlot.ResetDirty();
         this->samplingDirection.ResetDirty();
         this->streamlineRadius.ResetDirty();
 
@@ -333,9 +324,9 @@ void OSPRayStreamLines::integrateRK4(float startX, float startY, float startZ, u
             endLoop = this->nSegments/2;
         }
 
-        for (unsigned int segment = 0; segment < this->nSegments; segment++) {
+        for (unsigned int segment = 0; segment < endLoop; segment++) {
 
-            unsigned int id = (this->nSegments * line + segment);
+            unsigned int id = (this->nSegments * line + (endLoop - 1 - segment));
             unsigned int index = id + line;
 
             v0.Set(0.0f, 0.0f, 0.0f);
