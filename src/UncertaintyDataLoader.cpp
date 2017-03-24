@@ -1136,117 +1136,104 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
 									dist = M_SD[sCntI][sCntO];
 								}
 								else if ((mCurO == prosignMethod) && (mCurI == dsspMethod)) {
-									dist = M_PrD[mCurO][mCurI];
+									dist = M_PrD[sCntO][sCntI];
 								}
 								else if ((mCurO == dsspMethod) && (mCurI == prosignMethod)) {
-									dist = M_PrD[mCurI][mCurO];
+									dist = M_PrD[sCntI][sCntO];
 								}
 								else if ((mCurO == prosignMethod) && (mCurI == strideMethod)) {
-									dist = M_PrS[mCurO][mCurI];
+									dist = M_PrS[sCntO][sCntI];
 								}
 								else if ((mCurO == strideMethod) && (mCurI == prosignMethod)) {
-									dist = M_PrS[mCurI][mCurO];
+									dist = M_PrS[sCntI][sCntO];
 								}
 								else if (mCurO == pdbMethod) {
-									// Compare each method just with different methods, not with itself
-									if (mCntO != mCntI) {
-										// Get distance of structure types
-										if ((mCurO == strideMethod) && (mCurI == dsspMethod)) {
-											dist = M_SD[sCntO][sCntI];
-										}
-										else if ((mCurO == dsspMethod) && (mCurI == strideMethod)) {
-											dist = M_SD[sCntI][sCntO];
-										}
-										else if (mCurO == pdbMethod) {
-											if ((sCntO == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
-												(sCntO == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
-												(sCntO == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+									if ((sCntO == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+										(sCntO == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+										(sCntO == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
 
-												if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-													if (mCurI == dsspMethod) { (dist = 0.0f); }
-													if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
-													if (mCurI == prosignMethod) { (dist = M_PrD[sCntI][sCntO]); }
-												}
-												else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
-													if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
-													if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
-													if (mCurI == prosignMethod) { (dist = M_PrA[sCntI][sCntO]); }
-												}
-												else { // (pdbAssignmentHelix == PDB_PROMOTIF)
-													if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
-													if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
-													if (mCurI == prosignMethod) { (dist = M_PrP[sCntI][sCntO]); }
-												}
-											}
-											else if (sCntO == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
-												if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-													if (mCurI == dsspMethod) { (dist = 0.0f); }
-													if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
-													if (mCurI == prosignMethod) { (dist = M_PrD[sCntI][sCntO]); }
-												}
-												else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
-													if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
-													if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
-													if (mCurI == prosignMethod) { (dist = M_PrA[sCntI][sCntO]); }
-												}
-												else { // (pdbAssignmentSheet == PDB_PROMOTIF)
-													if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
-													if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
-													if (mCurI == prosignMethod) { (dist = M_PrP[sCntI][sCntO]); }
-												}
-											}
-											else { // COIL
-												if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
-												if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
-												if (mCurI == prosignMethod) { (dist = M_PrP[sCntI][sCntO]); }
-											}
+										if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+											if (mCurI == dsspMethod) { (dist = 0.0f); }
+											if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
+											if (mCurI == prosignMethod) { (dist = M_PrD[sCntI][sCntO]); }
 										}
-										else if (mCurI == pdbMethod) {
-											if ((sCntI == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
-												(sCntI == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
-												(sCntI == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
-												if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-													if (mCurO == dsspMethod) { (dist = 0.0f); }
-													if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
-													if (mCurO == prosignMethod) { (dist = M_PrD[sCntO][sCntI]); }
-												}
-												else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
-													if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
-													if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
-													if (mCurO == prosignMethod) { (dist = M_PrA[sCntO][sCntI]); }
-												}
-												else { // (pdbAssignmentHelix == PDB_PROMOTIF)
-													if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
-													if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
-													if (mCurO == prosignMethod) { (dist = M_PrP[sCntO][sCntI]); }
-												}
-											}
-											else if (sCntI == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
-												if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
-													if (mCurO == dsspMethod) { (dist = 0.0f); }
-													if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
-													if (mCurO == prosignMethod) { (dist = M_PrD[sCntO][sCntI]); }
-												}
-												else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
-													if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
-													if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
-													if (mCurO == prosignMethod) { (dist = M_PrA[sCntO][sCntI]); }
-												}
-												else { // (pdbAssignmentSheet == PDB_PROMOTIF)
-													if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
-													if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
-													if (mCurO == prosignMethod) { (dist = M_PrP[sCntO][sCntI]); }
-												}
-											}
-											else { // COIL
-												if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
-												if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
-												if (mCurO == prosignMethod) { (dist = M_PrP[sCntO][sCntI]); }
-											}
+										else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
+											if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
+											if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
+											if (mCurI == prosignMethod) { (dist = M_PrA[sCntI][sCntO]); }
+										}
+										else { // (pdbAssignmentHelix == PDB_PROMOTIF)
+											if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+											if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+											if (mCurI == prosignMethod) { (dist = M_PrP[sCntI][sCntO]); }
 										}
 									}
-								} // mcurO == pdbMethod
-
+									else if (sCntO == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+										if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+											if (mCurI == dsspMethod) { (dist = 0.0f); }
+											if (mCurI == strideMethod) { (dist = M_SD[sCntI][sCntO]); }
+											if (mCurI == prosignMethod) { (dist = M_PrD[sCntI][sCntO]); }
+										}
+										else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
+											if (mCurI == dsspMethod) { (dist = M_DA[sCntI][sCntO]); }
+											if (mCurI == strideMethod) { (dist = M_SA[sCntI][sCntO]); }
+											if (mCurI == prosignMethod) { (dist = M_PrA[sCntI][sCntO]); }
+										}
+										else { // (pdbAssignmentSheet == PDB_PROMOTIF)
+											if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+											if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+											if (mCurI == prosignMethod) { (dist = M_PrP[sCntI][sCntO]); }
+										}
+									}
+									else { // COIL
+										if (mCurI == dsspMethod) { (dist = M_DP[sCntI][sCntO]); }
+										if (mCurI == strideMethod) { (dist = M_SP[sCntI][sCntO]); }
+										if (mCurI == prosignMethod) { (dist = M_PrP[sCntI][sCntO]); }
+									}
+								}
+								else if (mCurI == pdbMethod) {
+									if ((sCntI == (unsigned int)UncertaintyDataCall::secStructure::G_310_HELIX) ||
+										(sCntI == (unsigned int)UncertaintyDataCall::secStructure::H_ALPHA_HELIX) ||
+										(sCntI == (unsigned int)UncertaintyDataCall::secStructure::I_PI_HELIX)) {
+										if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+											if (mCurO == dsspMethod) { (dist = 0.0f); }
+											if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
+											if (mCurO == prosignMethod) { (dist = M_PrD[sCntO][sCntI]); }
+										}
+										else if (pdbAssignmentHelix == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
+											if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
+											if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
+											if (mCurO == prosignMethod) { (dist = M_PrA[sCntO][sCntI]); }
+										}
+										else { // (pdbAssignmentHelix == PDB_PROMOTIF)
+											if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+											if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+											if (mCurO == prosignMethod) { (dist = M_PrP[sCntO][sCntI]); }
+										}
+									}
+									else if (sCntI == (unsigned int)UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+										if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_DSSP) {
+											if (mCurO == dsspMethod) { (dist = 0.0f); }
+											if (mCurO == strideMethod) { (dist = M_SD[sCntO][sCntI]); }
+											if (mCurO == prosignMethod) { (dist = M_PrD[sCntO][sCntI]); }
+										}
+										else if (pdbAssignmentSheet == UncertaintyDataCall::pdbAssMethod::PDB_AUTHOR) {
+											if (mCurO == dsspMethod) { (dist = M_DA[sCntO][sCntI]); }
+											if (mCurO == strideMethod) { (dist = M_SA[sCntO][sCntI]); }
+											if (mCurO == prosignMethod) { (dist = M_PrA[sCntO][sCntI]); }
+										}
+										else { // (pdbAssignmentSheet == PDB_PROMOTIF)
+											if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+											if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+											if (mCurO == prosignMethod) { (dist = M_PrP[sCntO][sCntI]); }
+										}
+									}
+									else { // COIL
+										if (mCurO == dsspMethod) { (dist = M_DP[sCntO][sCntI]); }
+										if (mCurO == strideMethod) { (dist = M_SP[sCntO][sCntI]); }
+										if (mCurO == prosignMethod) { (dist = M_PrP[sCntO][sCntI]); }
+									}
+								}
 								// Consider only valid structure types for each method
 								if (dist > -1.0f) {
 									ssu[sCntO] += (this->secStructUncertainty[mCntO][a][sCntO] * this->secStructUncertainty[mCntI][a][sCntI])

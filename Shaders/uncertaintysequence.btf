@@ -161,22 +161,22 @@ void main()
                     tmpCol.x = startCol.x;              
                 } 
                 else if (startCol.x > endCol.x) {
-                    tmpCol.x = endCol.x + aStart*(startCol.x - endCol.x);
-                    /*OLD: if ((startCol.x - endCol.x) < (360.0 - startCol.x + endCol.x)) {
+                    //tmpCol.x = endCol.x + aStart*(startCol.x - endCol.x);
+                    if ((startCol.x - endCol.x) < (360.0 - startCol.x + endCol.x)) {
                         tmpCol.x = endCol.x + aStart*(startCol.x - endCol.x);
                     }
                     else {
                         tmpCol.x = endCol.x - aStart*(360.0 - startCol.x + endCol.x);
-                    }*/
+                    }
                 }
                 else if (startCol.x < endCol.x){
-                    tmpCol.x = startCol.x + aEnd*(endCol.x - startCol.x);
-                    /*OLD: if ((endCol.x - startCol.x) < (360.0 - endCol.x + startCol.x)) {
+                    //tmpCol.x = startCol.x + aEnd*(endCol.x - startCol.x);
+                    if ((endCol.x - startCol.x) < (360.0 - endCol.x + startCol.x)) {
                         tmpCol.x = startCol.x + aEnd*(endCol.x - startCol.x);
                     }
                     else {
                         tmpCol.x = startCol.x - aEnd*(360.0 - endCol.x + startCol.x);
-                    }*/
+                    }
                 }
                 else { // startCol.x == endCol.x
                     tmpCol.x = startCol.x;
@@ -211,23 +211,7 @@ vec4 hpcb(in vec4 c1, in vec4 c2) {
 		cnew = c1 + c2;
 	}
 	else {
-        if (abs(HSL1.y - HSL2.y) < EPS) { // (HSL1.y == HSL2.y) - if c1 and c2 have same saturation decide for brighter one 
-            if (HSL1.z >= HSL2.z) { // c1 is brighter or equal bright as c2
-                tmpHue = (HSL1.x + 180.0);
-                if (tmpHue >= 360.0) { 
-                    tmpHue -= 360.0;
-                }
-                cnew = c1 + hsl2rgb(vec4(tmpHue, HSL2.y, HSL2.z, 1.0));
-            }
-            else {// c2 is brighter
-                tmpHue = (HSL2.x + 180.0);
-                if (tmpHue >= 360.0) {
-                    tmpHue -= 360.0;
-                }
-                cnew = c2 + hsl2rgb(vec4(tmpHue, HSL1.y, HSL1.z, 1.0));
-            }
-        }
-        else if (HSL1.y > HSL2.y) { // c1 is dominant
+  if (HSL1.y >= HSL2.y) { // c1 is dominant
 			tmpHue = (HSL1.x + 180.0);
 			if (tmpHue >= 360.0) {
 				tmpHue -= 360.0;
