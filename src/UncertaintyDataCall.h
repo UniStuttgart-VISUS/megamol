@@ -57,9 +57,9 @@ namespace megamol {
         */
         enum secStructure {
             G_310_HELIX   = 0,
-            H_ALPHA_HELIX = 1,
+            T_H_TURN      = 1,
 			I_PI_HELIX    = 2,            
-			T_H_TURN      = 3,
+			H_ALPHA_HELIX = 3,
 			S_BEND        = 4,
 			C_COIL        = 5,
             B_BRIDGE      = 6,
