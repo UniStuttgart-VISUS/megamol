@@ -191,8 +191,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
     this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
     this->currentScaling           = 1.0f;
     this->currentBackboneWidth     = 0.2f;
-    this->currentMaterial          = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
-    this->currentUncertainMaterial = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.6f, 10.0f);
+    this->currentMaterial          = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.3f, 10.0f);
+    this->currentUncertainMaterial = vislib::math::Vector<float, 4>(0.4f, 0.8f, 0.3f, 10.0f);
     this->currentColoringMode      = coloringModes::COLOR_MODE_STRUCT;
     this->currentUncVis            = uncVisualisations::UNC_VIS_SIN_UV;
     this->currentLightPos          = vislib::math::Vector<float, 4>(0.0f, 0.0f, 1.0f, 0.0f);

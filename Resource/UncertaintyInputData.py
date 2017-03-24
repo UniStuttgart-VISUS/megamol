@@ -172,10 +172,10 @@ class UncertaintyInputData:
         
         # Choosing 64bit or 32bit version of program files
         if(sys.maxsize > 2**32): # 64 bit
-            STRIDEProgName += '64'
+        #    STRIDEProgName += '64'
             DSSPProgName += '64'
         else: # 32 bit
-            STRIDEProgName += '32'
+            #  STRIDEProgName += '32'
             DSSPProgName += '32'
         
         # Choosing os dependend program files

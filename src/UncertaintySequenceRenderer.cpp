@@ -242,7 +242,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->MakeSlotAvailable(&this->uncertainColorInterpolParam);
 
     // param slot for number of residues per row
-    this->currentUncertainGardientInterval = 0.2f;
+    this->currentUncertainGardientInterval = 0.1f;
     this->uncertainGardientIntervalParam.SetParameter( new param::FloatParam(this->currentUncertainGardientInterval, 0.0f, 1.0f));
     this->MakeSlotAvailable( &this->uncertainGardientIntervalParam);
     
