@@ -75,12 +75,15 @@ for ($i = 0; $i -lt $sides.Length; ++$i) {
 
 $hpcSweep = [System.IO.Path]::ChangeExtension($baseName, "*$ext")
 $hpcCmd = @"
-`$workDir = '\\vesta1\Entwicklung\sfbdome'
-`$head = 'vesta1'
-`$megaMol = 'bin\x64\Release\MegaMolCon.exe'
-`$job = New-HpcJob -Scheduler `$head -Name '$baseName'
-Add-HpcTask -Scheduler `$head -Job `$job -Type ParametricSweep -Start 0 -End $($sides.Length - 1) -WorkDir `$workDir -Command '`$megaMol -p $hpcSweep' -i $($view.name) $($paramInst.value)
-Submit-HpcJob -Scheduler `$head -Id `$job
+param([string] `$WorkingDirectory = '\\vesta1\Entwicklung\sfbdome',
+      [string] `$HeadNode = 'vesta1',
+      [string] `$MegaMol = 'bin\x64\Release\MegaMolCon.exe')
+if (Test-Path env:CCP_SCHEDULER) { 
+    `$HeadNode = (gc env:CCP_SCHEDULER) 
+}
+`$job = New-HpcJob -Scheduler `$HeadNode -Name '$baseName' -JobEnv 'HPC_ATTACHTOCONSOLE=True' -Exclusive `$true -NumNodes '*-*'
+Add-HpcTask -Scheduler `$HeadNode -Job `$job -Type ParametricSweep -Start 0 -End $($sides.Length - 1) -NumNodes '1-$($sides.Length)' -WorkDir `$WorkingDirectory -Command `"`$MegaMol -p $hpcSweep -i $($view.name) $($paramInst.value)`"
+Submit-HpcJob -Scheduler `$HeadNode -Job `$job
 "@
 
-Write-Output $hpcCmd
+$hpcCmd | Out-File -FilePath $([System.IO.Path]::ChangeExtension($Project, "ps1"))
