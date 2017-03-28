@@ -67,7 +67,7 @@ for ($i = 0; $i -lt $sides.Length; ++$i) {
     
     $paramSide.value = $sides[$i]
     $paramFile.value = [System.IO.Path]::ChangeExtension($baseName, "$sideName.png")
-    if ($PSCmdlet.ShouldProcess($filePath, 'Save')) {
+    if ($PSCmdlet.ShouldProcess($fileName, 'Save')) {
         New-Item $fileName -Force -ItemType File
         $xml.Save((Resolve-Path $fileName))
     }
@@ -86,4 +86,7 @@ Add-HpcTask -Scheduler `$HeadNode -Job `$job -Type ParametricSweep -Start 0 -End
 Submit-HpcJob -Scheduler `$HeadNode -Job `$job
 "@
 
-$hpcCmd | Out-File -FilePath $([System.IO.Path]::ChangeExtension($Project, "ps1"))
+$fileName = [System.IO.Path]::ChangeExtension($Project, "ps1")
+if ($PSCmdlet.ShouldProcess($fileName, 'Save')) {
+    $hpcCmd | Out-File -FilePath $fileName
+}
