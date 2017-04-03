@@ -1,270 +1,179 @@
-/*
- * NVGDiagramRenderer.h
- *
- * Author: Guido Reina, ...
- * Copyright (C) 2012-2017 by Universitaet Stuttgart (VISUS).
- * All rights reserved.
- */
-
 #ifndef MEGAMOL_INFOVIS_NVGDIAGRAMRENDERER_H_INCLUDED
 #define MEGAMOL_INFOVIS_NVGDIAGRAMRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <functional>
-
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/MouseFlags.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "vislib/math/Matrix.h"
 #include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/PtrArray.h"
 
 #include "mmstd_datatools/floattable/CallFloatTableData.h"
 
 #include "DiagramSeriesCall.h"
 
-
-//#include "protein_calls/DiagramCall.h"
-//#include "protein_calls/IntSelectionCall.h"
+#pragma push_macro("min")
+#pragma push_macro("max")
+#undef min
+#undef max
+#include "nanoflann.hpp"
+#pragma pop_macro("min")
+#pragma pop_macro("max")
 
 namespace megamol {
 namespace infovis {
-class DiagramSeriesCall;
 
 class NVGDiagramRenderer : public core::view::Renderer2DModule {
 public:
-
-    //typedef void (*fpSeriesInsertionCB)(const DiagramSeriesCall::DiagramSeriesTuple &tuple);
-
-    //typedef std::function<void(const DiagramSeriesCall::DiagramSeriesTuple &tuple)> fpSeriesInsertionCB;
-
-    enum DiagramTypes {
-        DIAGRAM_TYPE_LINE = 0,
-        DIAGRAM_TYPE_LINE_STACKED = 1,
-        DIAGRAM_TYPE_LINE_STACKED_NORMALIZED = 2,
-        DIAGRAM_TYPE_COLUMN = 4,
-        DIAGRAM_TYPE_COLUMN_STACKED = 8,
-        DIAGRAM_TYPE_COLUMN_STACKED_NORMALIZED = 16,
-        DIAGRAM_TYPE_POINT_SPLATS = 32
-    };
-
-    enum DiagramStyles {
-        DIAGRAM_STYLE_WIRE = 0,
-        DIAGRAM_STYLE_FILLED = 1
-    };
-
-    enum XAxisTypes {
-        DIAGRAM_XAXIS_FLOAT = 0,
-        DIAGRAM_XAXIS_INTEGRAL = 1,
-        DIAGRAM_XAXIS_CATEGORICAL = 3
-    };
-
-    enum YAxisTypes {
-        DIAGRAM_YAXIS_FLOAT = 0,
-        DIAGRAM_YAXIS_CLUSTERED = 1
-    };
-
-    enum MarkerVisibility {
-        DIAGRAM_MARKERS_SHOW_NONE = 0,
-        DIAGRAM_MARKERS_SHOW_SELECTED = 1,
-        DIAGRAM_MARKERS_SHOW_ALL = 2
-    };
-
     /**
-     * Answer the name of this module.
-     *
-     * @return The name of this module.
-     */
+    * Answer the name of this module.
+    *
+    * @return The name of this module.
+    */
     static const char *ClassName(void) {
         return "NVGDiagramRenderer";
     }
 
     /**
-     * Answer a human readable description of this module.
-     *
-     * @return A human readable description of this module.
-     */
+    * Answer a human readable description of this module.
+    *
+    * @return A human readable description of this module.
+    */
     static const char *Description(void) {
-        return "Offers diagram renderings based on NanoVG.";
+        return "Offers diagram renderings based on NanoVG Part 2.";
     }
 
     /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
+    * Answers whether this module is available on the current system.
+    *
+    * @return 'true' if the module is available, 'false' otherwise.
+    */
     static bool IsAvailable(void) {
         return true;
     }
 
-    /** ctor */
-    NVGDiagramRenderer(void);
+    NVGDiagramRenderer();
 
-    void lockSingle(GLsync & syncObj);
-
-    void waitSingle(GLsync & syncObj);
-
-    /** dtor */
-    ~NVGDiagramRenderer(void);
-
+    virtual ~NVGDiagramRenderer();
 protected:
-
     /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
+    * Implementation of 'Create'.
+    *
+    * @return 'true' on success, 'false' otherwise.
+    */
     virtual bool create(void);
 
     /**
-     * Implementation of 'Release'.
-     */
+    * Implementation of 'Release'.
+    */
     virtual void release(void);
 
     /**
-     * Callback for mouse events (move, press, and release)
-     *
-     * @param x The x coordinate of the mouse in world space
-     * @param y The y coordinate of the mouse in world space
-     * @param flags The mouse flags
-     */
-    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
-
+    * Callback for mouse events (move, press, and release)
+    *
+    * @param x The x coordinate of the mouse in world space
+    * @param y The y coordinate of the mouse in world space
+    * @param flags The mouse flags
+    */
+    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 private:
+    enum diagramType {
+        DIAGRAM_TYPE_LINE_PLOT,
+        DIAGRAM_TYPE_SCATTER_PLOT
+    };
 
-    std::vector<megamol::infovis::DiagramSeriesCall::DiagramSeriesTuple> columnSelectors;
+    typedef struct _selectorIdxs {
+        size_t abcissaIdx;
+        size_t colorIdx;
+        size_t descIdx;
+    } selectorIdxs_t;
 
-    void seriesInsertionCB(const megamol::infovis::DiagramSeriesCall::DiagramSeriesTuple &tuple);
+    typedef struct _shaderInfo {
+        vislib::graphics::gl::GLSLShader shader;
+        GLuint ssboBindingPoint;
+        GLuint bufferId;
+        int numBuffers;
+        GLsizeiptr bufSize;
+        void *memMapPtr;
+        GLuint bufferCreationBits;
+        GLuint bufferMappingBits;
+        std::vector<GLsync> fences;
+        unsigned int currBuf;
+    } shaderInfo_t;
 
-    core::CallerSlot getSelectorsSlot;
+    typedef struct _nvgRenderInfo {
+        float fontSize;
+    } nvgRenderInfo_t;
 
-    bool updateColumnSelectors(void);
+    typedef std::tuple<float, float, float, float> point_t;
 
-    megamol::stdplugin::datatools::floattable::CallFloatTableData *floatTable;
+    typedef std::tuple<int, int> viewport_t;
 
-    bool isAnythingDirty();
+    typedef std::tuple<float, float> range_t;
 
-    void resetDirtyFlags();
+    typedef std::tuple<float, float, size_t> call_t;
 
-    size_t myHash;
+    typedef std::vector<float> abcissa_t;
 
-    size_t inputHash;
+    typedef std::vector<std::vector<float>> series_t;
 
-    bool assertData(megamol::stdplugin::datatools::floattable::CallFloatTableData * ft);
+    //// https://github.com/jlblancoc/nanoflann/blob/master/examples/KDTreeVectorOfVectorsAdaptor.h
+    //template <int DIM = -1, class Distance = nanoflann::metric_L2>
+    //struct KDTreeAdaptor {
+    //    typedef KDTreeAdaptor<DIM, Distance> self_t;
+    //    typedef typename Distance::template traits<float, self_t>::distance_t metric_t;
+    //    typedef nanoflann::KDTreeSingleIndexAdaptor<metric_t, self_t, DIM, size_t> index_t;
 
-    core::param::ParamSlot abcissaSelectorSlot;
+    //    series_t &series;
 
-    size_t abcissaIdx;
+    //    size_t relevant;
 
-    DiagramSeriesCall::fpSeriesInsertionCB fpsicb;
+    //    index_t *index;
 
-    void *nvgCtxt;
+    //    KDTreeAdaptor(series_t &series, size_t idx, int leaf_max_size = 10) : series(series), relevant(idx) {
+    //        index = new index_t(DIM, *this, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size));
+    //        index->buildIndex();
+    //    }
 
-    vislib::math::Point<uint32_t, 2> screenSpaceMidPoint;
+    //    ~KDTreeAdaptor(void) {
+    //        delete index;
+    //    }
 
-    vislib::math::Dimension<uint32_t, 2> screenSpaceCanvasSize;
+    //    const self_t &derived() const {
+    //        return *this;
+    //    }
 
-    vislib::math::Dimension<uint32_t, 2> screenSpaceDiagramSize;
+    //    self_t &derived() {
+    //        return *this;
+    //    }
 
-    void defineLayout(float w, float h);
+    //    inline size_t kdtree_get_point_count(void) const {
+    //        return series[relevant].size() / 4;
+    //    }
 
-    core::param::ParamSlot screenSpaceCanvasOffsetParam;
+    //    inline float kdtree_distance(const float *p1, const size_t idx_p2, size_t size) const {
+    //        float s = 0;
+    //        for (size_t i = 0; i<size; i++) {
+    //            const float d = p1[i] - series[relevant][idx_p2 * 4 + i];
+    //            s += d*d;
+    //        }
+    //        return s;
+    //    }
 
-    int nvgFontSans;
+    //    inline float kdtree_get_pt(const size_t idx, int dim) const {
+    //        return series[relevant][idx * 4 + dim];
+    //    }
 
-    float scaleX, scaleY;
+    //    template <class BBOX>
+    //    bool kdtree_get_bbox(BBOX & /*bb*/) const {
+    //        return false;
+    //    }
+    //};
 
-    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> transform;
-    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> transformT;
-
-    float sWidth;
-    float sHeight;
-
-    std::vector<bool> selected;
-
-    std::vector<vislib::math::Rectangle<float>> bndBtns;
-
-    void drawPointSplats(float w, float h);
-
-    GLuint theSingleBuffer;
-    unsigned int currBuf;
-    GLsizeiptr bufSize;
-    int numBuffers;
-    void *theSingleMappedMem;
-    GLuint singleBufferCreationBits;
-    GLuint singleBufferMappingBits;
-    std::vector<GLsync> fences;
-    std::shared_ptr<vislib::graphics::gl::GLSLShader> newShader;
-
-    std::vector<float> pointData;
-    std::vector<vislib::math::Point<float, 2>> pointDataPoints;
-
-    core::param::ParamSlot alphaScalingParam;
-    core::param::ParamSlot attenuateSubpixelParam;
-
-    core::view::CallRender2D *callR2D;
-
-    void clusterYRange(void);
-
-    void showToolTip(const float x, const float y, const std::string &symbol,
-        const std::string &module, const std::string &file, const size_t &line,
-        const size_t &memaddr, const size_t &memsize) const;
-
-    void searchAndDispPointAttr(const float x, const float y) const;
-
-    float mouseX, mouseY;
-
-    bool mouseRightPressed;
-
-    /**********************************************************************
-     * 'render'-functions
-     **********************************************************************/
-
-    bool CalcExtents();
-
-    void drawYAxis();
-
-    /**
-     * sets the xTickOff!
-     */
-    void drawXAxis(XAxisTypes xType);
-
-    void drawLegend(float w, float h);
-
-    void drawLineDiagram(float w, float h);
-    void drawColumnDiagram();
-
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool GetExtents(megamol::core::view::CallRender2D& call);
-
-    /*VISLIB_FORCEINLINE bool isCategoricalMappable(const protein_calls::DiagramCall::DiagramMappable *dm) const {
-        return (dm->IsCategoricalAbscissa(0));
-    }*/
-
-    bool LoadIcon(vislib::StringA filename, int ID);
-
-    void getBarXY(int series, int index, int type, float *x, float *y);
-
-    bool onCrosshairToggleButton(megamol::core::param::ParamSlot& p);
-
-    bool onShowAllButton(megamol::core::param::ParamSlot& p);
-
-    bool onHideAllButton(megamol::core::param::ParamSlot& p);
-
-    void prepareData(bool stack, bool normalize, bool drawCategorical);
+    //typedef KDTreeAdaptor<2> kdTree_t;
 
     /**
     * The Open GL Render callback.
@@ -272,126 +181,129 @@ private:
     * @param call The calling call.
     * @return The return value of the function.
     */
-    virtual bool Render(megamol::core::view::CallRender2D& call);
+    virtual bool Render(core::view::CallRender2D& call);
 
-    /**********************************************************************
-     * variables
-     **********************************************************************/
+    /**
+    * The get extents callback. The module should set the members of
+    * 'call' to tell the caller the extents of its data (bounding boxes
+    * and times).
+    *
+    * @param call The calling call.
+    *
+    * @return The return value of the function.
+    */
+    virtual bool GetExtents(core::view::CallRender2D& call);
 
-     /** caller slot */
-    core::CallerSlot dataCallerSlot;
+    void seriesInsertionCB(const DiagramSeriesCall::DiagramSeriesTuple &tuple);
 
-    /** caller slot */
-    core::CallerSlot selectionCallerSlot;
+    bool assertData(void);
 
-    /** caller slot */
-    core::CallerSlot hiddenCallerSlot;
+    bool isAnythingDirty(void) const;
 
-    ///** clear diagram parameter */
-    //megamol::core::param::ParamSlot clearDiagramParam;
+    void resetDirtyFlag(void);
 
-    /** the mouse position */
-    vislib::math::Vector<float, 3> mousePos;
+    bool updateColumnSelectors(void);
 
-    vislib::graphics::gl::OutlineFont theFont;
+    void drawLinePlot(void); //< NanoVG-based
 
-    vislib::Pair<float, float> xRange;
-    vislib::Pair<float, float> yRange;
+    void drawScatterPlot(void); //< Shader-based
 
-    megamol::core::param::ParamSlot diagramTypeParam;
+    void drawXAxis(void);
 
-    megamol::core::param::ParamSlot diagramStyleParam;
+    void drawYAxis(void);
 
-    megamol::core::param::ParamSlot numXTicksParam;
+    /*void drawCallStack(void);
 
-    megamol::core::param::ParamSlot numYTicksParam;
+    void drawPyjama(void);
 
-    megamol::core::param::ParamSlot drawYLogParam;
+    void drawToolTip(const float x, const float y, const std::string &text) const;
 
-    megamol::core::param::ParamSlot foregroundColorParam;
+    size_t searchAndDispPointAttr(const float x, const float y);*/
 
-    megamol::core::param::ParamSlot drawCategoricalParam;
+    void lockSingle(GLsync &syncObj);
 
-    megamol::core::param::ParamSlot aspectRatioParam;
+    void waitSingle(GLsync &syncObj);
 
-    megamol::core::param::ParamSlot autoAspectParam;
+    core::CallerSlot floatTableInSlot;
 
-    megamol::core::param::ParamSlot lineWidthParam;
+    core::CallerSlot getColumnSelectorsSlot;
 
-    vislib::math::Vector<float, 4> fgColor;
+    core::CallerSlot getTransFuncSlot;
 
-    const vislib::math::Vector<float, 4> unselectedColor;
+    //core::CallerSlot getCallTraceSlot;
 
-    const float decorationDepth;
+    //core::CallerSlot getPointInfoSlot;
 
-    // warning: Z encodes the previous y-coordinate, Y the actual value (draw + click ranges between values!)
-    vislib::PtrArray<vislib::PtrArray<vislib::math::Point<float, 3> > > *preparedData;
+    core::param::ParamSlot abcissaSelectParam;
 
-    vislib::Array<const megamol::stdplugin::datatools::floattable::CallFloatTableData::ColumnInfo *> preparedSeries;
+    core::param::ParamSlot colorSelectParam;
 
-    vislib::Array<vislib::StringA> categories;
+    core::param::ParamSlot descSelectParam;
 
-    vislib::Array<float> xValues;
+    core::param::ParamSlot diagramTypeParam;
 
-    vislib::Array<vislib::Array<int> > localXIndexToGlobal;
+    core::param::ParamSlot lineWidthParam;
 
-    vislib::Array<vislib::Pair<int, vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > > markerTextures;
+    core::param::ParamSlot numXTicksParam;
 
-    float xAxis;
+    core::param::ParamSlot numYTicksParam;
 
-    float yAxis;
+    core::param::ParamSlot aspectParam;
 
-    float xTickOff;
+    core::param::ParamSlot alphaScalingParam;
 
-    float barWidth;
+    core::param::ParamSlot attenuateSubpixelParam;
 
-    float fontSize;
+    core::param::ParamSlot pointSizeParam;
 
-    float legendOffset;
+    core::param::ParamSlot yScalingParam;
 
-    float legendWidth;
+    core::param::ParamSlot textThresholdParam;
 
-    float legendHeight;
+    core::param::ParamSlot pyjamaModeParam;
 
-    float legendMargin;
+    DiagramSeriesCall::fpSeriesInsertionCB fpSeriesInsertionCB;
 
-    const float barWidthRatio;
+    std::vector<DiagramSeriesCall::DiagramSeriesTuple> columnSelectors;
 
-    //megamol::protein_calls::DiagramCall::DiagramSeries *selectedSeries;
+    std::vector<bool> selectedSeries;
 
-    //vislib::Array<int> selectedSeriesIndices;
+    selectorIdxs_t columnIdxs;
 
-    //megamol::protein_calls::DiagramCall *diagram;
+    abcissa_t abcissa;
 
-    //megamol::protein_calls::IntSelectionCall *selectionCall;
+    series_t series;
 
-    //megamol::protein_calls::IntSelectionCall *hiddenCall;
+    viewport_t viewport;
 
-    //const megamol::protein_calls::DiagramCall::DiagramMarker *hoveredMarker;
+    range_t yRange;
 
-    int hoveredSeries;
+    nvgRenderInfo_t nvgRenderInfo;
 
-    megamol::core::param::ParamSlot showCrosshairToggleParam;
+    shaderInfo_t shaderInfo;
 
-    megamol::core::param::ParamSlot showCrosshairParam;
+    std::vector<std::vector<call_t>> callStack;
 
-    megamol::core::param::ParamSlot showGuidesParam;
+    const stdplugin::datatools::floattable::CallFloatTableData::ColumnInfo *columnInfos;
 
-    megamol::core::param::ParamSlot showMarkersParam;
+    vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> nvgTrans;
 
-    megamol::core::param::ParamSlot showAllParam;
+    vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> oglTrans;
 
-    megamol::core::param::ParamSlot hideAllParam;
+    void *nvgCtx;
 
-    vislib::math::Point<float, 2> hoverPoint;
+    //kdTree_t *tree;
 
-    vislib::Array<bool> seriesVisible;
+    bool mouseRightPressed;
 
-    // EVIL EVIL HACK HACK
-    //void dump();
-};
+    float mouseX;
+
+    float mouseY;
+
+    size_t dataHash;
+}; /* end class NVGDiagramRenderer */
 
 } /* end namespace infovis */
-} /* end namespace megamol */
+} /* end namespace meagmol */
 
-#endif // MEGAMOL_INFOVIS_NVGDIAGRAMRENDERER_H_INCLUDED
+#endif // end ifndef MEGAMOL_INFOVIS_NVGDIAGRAMRENDERER_H_INCLUDED

@@ -113,7 +113,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(ProjectDir)3rd\nanoflann\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;INFOVIS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -141,7 +141,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(ProjectDir)3rd\nanoflann\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;INFOVIS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -167,7 +167,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(ProjectDir)3rd\nanoflann\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;INFOVIS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -197,7 +197,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)include\;$(ProjectDir)3rd\nanovg\;$(ProjectDir)3rd\oui-blendish\;$(ProjectDir)3rd\nanoflann\;$(MegaMolCorePath)include\;$(DatatoolsPath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;INFOVIS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -237,6 +237,7 @@
     <None Include="Shaders\pc_item_stroke.btf" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3rd\nanoflann\nanoflann.hpp" />
     <ClInclude Include="3rd\nanovg\fontstash.h" />
     <ClInclude Include="3rd\nanovg\nanovg.h" />
     <ClInclude Include="3rd\nanovg\nanovg_gl.h" />

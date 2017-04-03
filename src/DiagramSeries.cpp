@@ -51,7 +51,7 @@ DiagramSeries::DiagramSeries(void) : core::Module(),
  * DiagramSeries::~DiagramSeries
  */
 DiagramSeries::~DiagramSeries(void) {
-
+    this->Release();
 }
 
 

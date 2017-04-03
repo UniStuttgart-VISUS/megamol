@@ -44,6 +44,9 @@
     <Filter Include="3rd\oui-blendish\Header Files">
       <UniqueIdentifier>{01c71e35-935c-4fe1-8e14-dbe88e926622}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3rd\nanoflann">
+      <UniqueIdentifier>{cc928034-23c5-45ab-973b-0a4cfdae81d8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="config.bat">
@@ -141,6 +144,9 @@
     </ClInclude>
     <ClInclude Include="src\NVGDiagramRenderer.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd\nanoflann\nanoflann.hpp">
+      <Filter>3rd\nanoflann</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
