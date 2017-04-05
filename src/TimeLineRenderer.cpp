@@ -162,7 +162,7 @@ bool megamol::cinematiccamera::TimeLineRenderer::Render(view::CallRender2D& call
 	(*kfc)(CallCinematicCamera::CallForGetSelectedKeyframe);
 	// draw the keyframe symbols (not if first keyframe is dummy keyframe)
 	if ((*keyframes)[0].getID() != -2){
-		for (int i = 0; i < keyframes->Count(); i++){
+		for (unsigned int i = 0; i < keyframes->Count(); i++){
 			DrawKeyframeSymbol((*keyframes)[i], cr->GetViewport().GetSize().GetWidth() - 10.0f, cr->GetViewport().GetSize().GetHeight() / 2.0f, kfc->getSelectedKeyframeIndex() == (float)i);
 		}
 	}
@@ -271,7 +271,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFl
 
 			//check all keyframes if they are hit
 			bool hit = false;
-			for (int i = 0; i < keyframes->Count(); i++){
+			for (unsigned int i = 0; i < keyframes->Count(); i++){
 				float posX = lineLength * (*keyframes)[i].getTime();
 				if (x < posX + 8.0f && x > posX - 8.0f){
 					hit = true;

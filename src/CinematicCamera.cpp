@@ -16,7 +16,6 @@
 #include "TimeLineRenderer.h"
 #include "CallCinematicCamera.h"
 #include "KeyframeKeeper.h"
-#include "Screenshotview.h"
 #include "PreviewView.h"
 #include "CinematicView.h"
 
@@ -49,7 +48,6 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::CinematicRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::TimeLineRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::KeyframeKeeper>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::Screenshotview>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::PreviewView>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::CinematicView>();
             //

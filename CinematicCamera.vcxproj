@@ -241,7 +241,6 @@
     <ClInclude Include="src\pngconf.h" />
     <ClInclude Include="src\pnglibconf.h" />
     <ClInclude Include="src\PreviewView.h" />
-    <ClInclude Include="src\Screenshotview.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\targetver.h" />
     <ClInclude Include="src\TimeLineRenderer.h" />
@@ -256,7 +255,6 @@
     <ClCompile Include="src\Keyframe.cpp" />
     <ClCompile Include="src\KeyframeKeeper.cpp" />
     <ClCompile Include="src\PreviewView.cpp" />
-    <ClCompile Include="src\Screenshotview.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

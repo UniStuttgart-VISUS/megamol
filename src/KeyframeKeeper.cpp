@@ -269,7 +269,7 @@ bool KeyframeKeeper::cbGetKeyframeAtTime(core::Call& c){
 	int i = 0;
 	// search keyframes until time is keyframe with a greater time is found
 	while (keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() < time){
-		if (i + 1 < keyframes.Count()){
+		if (static_cast<SIZE_T>(i + 1) < keyframes.Count()){
 			i++;
 		}
 		else{
@@ -279,7 +279,7 @@ bool KeyframeKeeper::cbGetKeyframeAtTime(core::Call& c){
 		}
 	}
 	// time matches the time of an exact keyframe
-	ASSERT(keyframes.Count() > i);
+	ASSERT(keyframes.Count() > static_cast<SIZE_T>(i));
 	if (keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() == time){
 		inCall->setInterpolatedKeyframe(keyframes[i]);
 		return true;
@@ -304,7 +304,7 @@ bool KeyframeKeeper::cbSave(core::param::ParamSlot& slot){
 	myfile.open(fileNameParam.Param<param::FilePathParam>()->Value());
 	vislib::StringSerialiserA ser;
 	myfile << "totalTime=" << totalTime.Param<param::FloatParam>()->Value() << std::endl;
-	for (int i = 0; i < keyframes.Count(); i++){
+	for (unsigned int i = 0; i < keyframes.Count(); i++){
 		keyframes[i].getCamParameters()->Serialise(ser);
 		myfile << "time=" << keyframes[i].getTime() << std::endl;
 		myfile << "ID=" << keyframes[i].getID() << std::endl;
@@ -435,7 +435,7 @@ void KeyframeKeeper::updateParameters(){
 	}
 	if (totalTime.IsDirty()){
 		// scaling the normalized time of the keyframes to fit the new total Time
-		for (int i = 0; i < keyframes.Count(); i++){
+		for (unsigned int i = 0; i < keyframes.Count(); i++){
 			keyframes[i].setTime(keyframes[i].getTime()*prevTotalTime / totalTime.Param<param::FloatParam>()->Value());
 		}
 		totalTime.ResetDirty();
@@ -463,7 +463,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 			vislib::math::Vector<float, 3> p0(keyframes[(0 > ((int)floor(idx) - 1)) ? (0) : ((int)floor(idx) - 1)].getCamPosition());
 			vislib::math::Vector<float, 3> p1(keyframes[(int)floor(idx)].getCamPosition());
 			vislib::math::Vector<float, 3> p2(keyframes[(int)ceil(idx)].getCamPosition());
-			vislib::math::Vector<float, 3> p3(keyframes[(keyframes.Count() - 1 < ((int)ceil(idx) + 1)) ? (keyframes.Count() - 1) : ((int)ceil(idx) + 1)].getCamPosition());
+			vislib::math::Vector<float, 3> p3(keyframes[(static_cast<int>(keyframes.Count()) - 1 < ((int)ceil(idx) + 1)) ? (static_cast<int>(keyframes.Count()) - 1) : ((int)ceil(idx) + 1)].getCamPosition());
 
 			p0 = (((p1 * 2) +
 				(p2 - p0) * t +
@@ -476,7 +476,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 			p0 = keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamLookAt();
 			p1 = keyframes[(int)floor(idx)].getCamLookAt();
 			p2 = keyframes[(int)ceil(idx)].getCamLookAt();
-			p3 = keyframes[(keyframes.Count() < (int)ceil(idx) + 1) ? (keyframes.Count()) : ((int)ceil(idx))].getCamLookAt();
+			p3 = keyframes[(static_cast<int>(keyframes.Count()) < (int)ceil(idx) + 1) ? (static_cast<int>(keyframes.Count())) : ((int)ceil(idx))].getCamLookAt();
 
 			p0 = (((p1 * 2) +
 				(p2 - p0) * t +
@@ -489,7 +489,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 			p0 = keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamUp();
 			p1 = keyframes[(int)floor(idx)].getCamUp();
 			p2 = keyframes[(int)ceil(idx)].getCamUp();
-			p3 = keyframes[(keyframes.Count() < (int)ceil(idx) + 1) ? (keyframes.Count()) : ((int)ceil(idx))].getCamUp();
+			p3 = keyframes[(static_cast<int>(keyframes.Count()) < (int)ceil(idx) + 1) ? (static_cast<int>(keyframes.Count())) : ((int)ceil(idx))].getCamUp();
 
 			p0 = (((p1 * 2) +
 				(p2 - p0) * t +
@@ -502,7 +502,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 			float a0 = keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamApertureAngle();
 			float a1 = keyframes[(int)floor(idx)].getCamApertureAngle();
 			float a2 = keyframes[(int)ceil(idx)].getCamApertureAngle();
-			float a3 = keyframes[(keyframes.Count() < (int)ceil(idx) + 1) ? (keyframes.Count()) : ((int)ceil(idx))].getCamApertureAngle();
+			float a3 = keyframes[(static_cast<int>(keyframes.Count()) < (int)ceil(idx) + 1) ? (static_cast<int>(keyframes.Count())) : ((int)ceil(idx))].getCamApertureAngle();
 
 			a0 = (((a1 * 2) +
 				(a2 - a0) * t +
@@ -534,7 +534,7 @@ void KeyframeKeeper::sortKeyframes(){
 	bool swapped;
 	do {
 		swapped = false;
-		for (int i = 0; i < keyframes.Count() - 1; i++){
+		for (unsigned int i = 0; i < keyframes.Count() - 1; i++){
 			if (keyframes[i].getTime() > keyframes[i + 1].getTime()){
 				Keyframe temp = keyframes[i];
 				keyframes[i] = keyframes[i + 1];
@@ -546,7 +546,7 @@ void KeyframeKeeper::sortKeyframes(){
 
 	if (ceilf(selectedKeyframeIndex) == selectedKeyframeIndex) {
 		if (selectedKeyframeIndex != -1){
-			for (int i = 0; i < keyframes.Count(); i++){
+			for (unsigned int i = 0; i < keyframes.Count(); i++){
 				if (keyframes[i].getID() == selectedKeyframeID){
 					selectedKeyframeIndex = static_cast<float>(i);
 				}

@@ -70,7 +70,7 @@ frameCnt(0), bboxs(), scale(0.5f), steps("steps", "amount of interpolation steps
 	this->addKeyframeParam.SetParameter(new param::ButtonParam('k'));
 	this->MakeSlotAvailable(&this->addKeyframeParam);
 
-	this->steps.SetParameter(new param::IntParam(5));
+	this->steps.SetParameter(new param::IntParam(20));
 	this->MakeSlotAvailable(&this->steps);
 
 	this->manipulateKeyframe.SetParameter(new param::BoolParam(false));
@@ -209,7 +209,7 @@ bool CinematicRenderer::RenderOverview(Call& call){
 		::glBegin(GL_LINE_STRIP);
 		
 		if (steps.Param<param::IntParam>()->Value() == 1 || keyframes->Count() < 3){
-			for (int i = 0; i < keyframes->Count(); i++){
+			for (unsigned int i = 0; i < keyframes->Count(); i++){
 				glVertex3f((*keyframes)[i].getCamPosition().GetX(), (*keyframes)[i].getCamPosition().GetY(), (*keyframes)[i].getCamPosition().GetZ());
 			}
 		}
