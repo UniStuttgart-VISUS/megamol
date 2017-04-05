@@ -102,9 +102,6 @@ void megamol::cinematiccamera::TimeLineRenderer::release(void) {
 }
 
 
-// sequenceRenderer protein-plugin anschauen!!!!
-
-
 /*
 * cinematiccamera::TimeLineRenderer::Render
 */
