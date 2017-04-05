@@ -243,14 +243,14 @@ bool CinematicRenderer::RenderOverview(Call& call){
 			glLineWidth(1.5);
 			glColor3f(1.0, 1.0, 0.0);
 			glBegin(GL_LINES);
-			glVertex3f(selectedPos.GetX() + 0.05, selectedPos.GetY() - 0.05, selectedPos.GetZ() + 0.05);
-			glVertex3f(selectedPos.GetX() - 0.05, selectedPos.GetY() + 0.05, selectedPos.GetZ() - 0.05);
+			glVertex3f(selectedPos.GetX() + 0.05f, selectedPos.GetY() - 0.05f, selectedPos.GetZ() + 0.05f);
+			glVertex3f(selectedPos.GetX() - 0.05f, selectedPos.GetY() + 0.05f, selectedPos.GetZ() - 0.05f);
 
-			glVertex3f(selectedPos.GetX() + 0.05, selectedPos.GetY() + 0.05, selectedPos.GetZ() - 0.05);
-			glVertex3f(selectedPos.GetX() - 0.05, selectedPos.GetY() - 0.05, selectedPos.GetZ() + 0.05);
+			glVertex3f(selectedPos.GetX() + 0.05f, selectedPos.GetY() + 0.05f, selectedPos.GetZ() - 0.05f);
+			glVertex3f(selectedPos.GetX() - 0.05f, selectedPos.GetY() - 0.05f, selectedPos.GetZ() + 0.05f);
 
-			glVertex3f(selectedPos.GetX() - 0.05, selectedPos.GetY() + 0.05, selectedPos.GetZ() + 0.05);
-			glVertex3f(selectedPos.GetX() + 0.05, selectedPos.GetY() - 0.05, selectedPos.GetZ() - 0.05);
+			glVertex3f(selectedPos.GetX() - 0.05f, selectedPos.GetY() + 0.05f, selectedPos.GetZ() + 0.05f);
+			glVertex3f(selectedPos.GetX() + 0.05f, selectedPos.GetY() - 0.05f, selectedPos.GetZ() - 0.05f);
 
 			glEnd();
 
@@ -266,14 +266,14 @@ bool CinematicRenderer::RenderOverview(Call& call){
 				glLineWidth(1.5);
 				glColor3f(1.0, 1.0, 0.0);
 				glBegin(GL_LINES);
-				glVertex3f(selectedPos.GetX() + 0.1, selectedPos.GetY() - 0.1, selectedPos.GetZ() + 0.1);
-				glVertex3f(selectedPos.GetX() - 0.1, selectedPos.GetY() + 0.1, selectedPos.GetZ() - 0.1);
+				glVertex3f(selectedPos.GetX() + 0.1f, selectedPos.GetY() - 0.1f, selectedPos.GetZ() + 0.1f);
+				glVertex3f(selectedPos.GetX() - 0.1f, selectedPos.GetY() + 0.1f, selectedPos.GetZ() - 0.1f);
 
-				glVertex3f(selectedPos.GetX() + 0.1, selectedPos.GetY() + 0.1, selectedPos.GetZ() - 0.1);
-				glVertex3f(selectedPos.GetX() - 0.1, selectedPos.GetY() - 0.1, selectedPos.GetZ() + 0.1);
+				glVertex3f(selectedPos.GetX() + 0.1f, selectedPos.GetY() + 0.1f, selectedPos.GetZ() - 0.1f);
+				glVertex3f(selectedPos.GetX() - 0.1f, selectedPos.GetY() - 0.1f, selectedPos.GetZ() + 0.1f);
 
-				glVertex3f(selectedPos.GetX() - 0.1, selectedPos.GetY() + 0.1, selectedPos.GetZ() + 0.1);
-				glVertex3f(selectedPos.GetX() + 0.1, selectedPos.GetY() - 0.1, selectedPos.GetZ() - 0.1);
+				glVertex3f(selectedPos.GetX() - 0.1f, selectedPos.GetY() + 0.1f, selectedPos.GetZ() + 0.1f);
+				glVertex3f(selectedPos.GetX() + 0.1f, selectedPos.GetY() - 0.1f, selectedPos.GetZ() - 0.1f);
 
 				glEnd();
 			}
@@ -295,13 +295,13 @@ bool CinematicRenderer::RenderOverview(Call& call){
 				glBegin(GL_LINES);
 
 				glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
-				glVertex3f(pos.GetX() + 0.5, pos.GetY(), pos.GetZ());
+				glVertex3f(pos.GetX() + 0.5f, pos.GetY(), pos.GetZ());
 
 				glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
-				glVertex3f(pos.GetX(), pos.GetY() + 0.5, pos.GetZ());
+				glVertex3f(pos.GetX(), pos.GetY() + 0.5f, pos.GetZ());
 
 				glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
-				glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ() + 0.5);
+				glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ() + 0.5f);
 
 				
 

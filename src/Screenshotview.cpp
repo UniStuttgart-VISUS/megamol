@@ -42,7 +42,7 @@ void megamol::cinematiccamera::Screenshotview::Render(const mmcRenderViewContext
 
 	auto kfc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
 
-	kfc->setTimeofKeyframeToGet(context.Time);
+	kfc->setTimeofKeyframeToGet(static_cast<float>(context.Time));
 	if ((*kfc)(CallCinematicCamera::CallForGetKeyframeAtTime)){
 //		vislib::SmartPtr<vislib::graphics::CameraParameters> hackCamParams(
 //			new CameraParamsOverride(camParams));

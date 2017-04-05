@@ -199,7 +199,7 @@ bool KeyframeKeeper::cbDelKeyframe(core::Call& c){
 	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
 	if (inCall == NULL) return false;
 
-	this->keyframes.RemoveAt(inCall->getSelectedKeyframeIndex());
+	this->keyframes.RemoveAt(static_cast<SIZE_T>(inCall->getSelectedKeyframeIndex()));
 	// decrease selectedKeyframeIndex by 1 or set to 0 if it would become negative
 	this->selectedKeyframeIndex = (0 < inCall->getSelectedKeyframeIndex() - 1 ? inCall->getSelectedKeyframeIndex() - 1 : 0);
 	return true;
@@ -249,6 +249,7 @@ bool KeyframeKeeper::cbGetTotalTime(core::Call& c){
 		return false;
 	}
 	inCall->setTotalTime(totalTime.Param<param::FloatParam>()->Value());
+	return true;
 }
 
 /** Callback for getting the keyframe at a time bookmarked in the call*/
@@ -281,6 +282,7 @@ bool KeyframeKeeper::cbGetKeyframeAtTime(core::Call& c){
 	ASSERT(keyframes.Count() > i);
 	if (keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() == time){
 		inCall->setInterpolatedKeyframe(keyframes[i]);
+		return true;
 	}
 	else{
 		// index of wanted keyframe is
@@ -334,10 +336,10 @@ bool KeyframeKeeper::cbLoad(core::param::ParamSlot& slot){
 		while (std::getline(myfile, line)){
 			if (line.substr(0, 5) == "time="){
 				keyframes.Add(Keyframe());
-				keyframes[currentKeyframe].setTime(std::stof(line.erase(0, 5)));
+				keyframes[currentKeyframe].setTime(static_cast<float>(std::stof(line.erase(0, 5))));
 			}
 			else if (line.substr(0, 3) == "ID="){
-				keyframes[currentKeyframe].setID(std::stof(line.erase(0, 3)));
+				keyframes[currentKeyframe].setID(static_cast<int>(std::stof(line.erase(0, 3))));
 				maxID = maxID > keyframes[currentKeyframe].getID() ? maxID : keyframes[currentKeyframe].getID();
 			}
 			else if (line.empty()) {
@@ -379,7 +381,7 @@ bool KeyframeKeeper::cbAddKeyframeAtSelectedPosition(core::param::ParamSlot& slo
 		k.setID(IDCounter);
 		IDCounter++;
 		keyframes.Add(k);
-		selectedKeyframe.Param<param::FloatParam>()->SetValue(keyframes.Count() - 1);
+		selectedKeyframe.Param<param::FloatParam>()->SetValue(keyframes.Count() - 1.0f);
 		ASSERT(keyframes.Count() >= 1);
 		boundingBox.GrowToPoint(keyframes[keyframes.Count() - 1].getCamPosition());
 		sortKeyframes();
@@ -505,7 +507,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 			a0 = (((a1 * 2) +
 				(a2 - a0) * t +
 				(a0 * 2 - a1 * 5 + a2 * 4 - a3) * t * t +
-				(-a0 + a1 * 3 - a2 * 3 + a3) * t * t * t) * 0.5);
+				(-a0 + a1 * 3 - a2 * 3 + a3) * t * t * t) * 0.5f);
 			
 			k.setCameraApertureAngele(a0);
 
@@ -546,7 +548,7 @@ void KeyframeKeeper::sortKeyframes(){
 		if (selectedKeyframeIndex != -1){
 			for (int i = 0; i < keyframes.Count(); i++){
 				if (keyframes[i].getID() == selectedKeyframeID){
-					selectedKeyframeIndex = i;
+					selectedKeyframeIndex = static_cast<float>(i);
 				}
 			}
 		}

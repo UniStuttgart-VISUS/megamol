@@ -89,7 +89,7 @@ bool megamol::cinematiccamera::TimeLineRenderer::GetExtents(view::CallRender2D& 
 
 	call.SetBoundingBox(cr->GetViewport());
 	lineLength = cr->GetViewport().GetSize().GetWidth() - 10.0f;
-	lineYPos = cr->GetViewport().GetSize().GetHeight() / 2;
+	lineYPos = cr->GetViewport().GetSize().GetHeight() / 2.0f;
 	return true;
 }
 
@@ -144,13 +144,13 @@ bool megamol::cinematiccamera::TimeLineRenderer::Render(view::CallRender2D& call
 
 
 	glBegin(GL_LINE_STRIP);
-	glVertex2f(5.0f, cr->GetViewport().GetSize().GetHeight() / 2 - 5.0f);
-	glVertex2f(5.0f, cr->GetViewport().GetSize().GetHeight() / 2);
-	glVertex2f(cr->GetViewport().GetSize().GetWidth() - 5.0f, cr->GetViewport().GetSize().GetHeight() / 2);
-	glVertex2f(cr->GetViewport().GetSize().GetWidth() - 5.0f, cr->GetViewport().GetSize().GetHeight() / 2 - 5.0f);
+	glVertex2f(5.0f, cr->GetViewport().GetSize().GetHeight() / 2.0f - 5.0f);
+	glVertex2f(5.0f, cr->GetViewport().GetSize().GetHeight() / 2.0f);
+	glVertex2f(cr->GetViewport().GetSize().GetWidth() - 5.0f, cr->GetViewport().GetSize().GetHeight() / 2.0f);
+	glVertex2f(cr->GetViewport().GetSize().GetWidth() - 5.0f, cr->GetViewport().GetSize().GetHeight() / 2.0f - 5.0f);
 	glEnd();
 
-	theFont.DrawString(5.0f, cr->GetViewport().GetSize().GetHeight() / 2 - 10.0f, theFont.LineWidth(16, "t = 0"), 1.0f, 16, true, "t = 0", vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+	theFont.DrawString(5.0f, cr->GetViewport().GetSize().GetHeight() / 2.0f - 10.0f, theFont.LineWidth(16, "t = 0"), 1.0f, 16.0f, true, "t = 0", vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
 	
 	// get maximum time of keyframes
 	if (!(*kfc)(CallCinematicCamera::CallForGetTotalTime))return false;
@@ -166,7 +166,7 @@ bool megamol::cinematiccamera::TimeLineRenderer::Render(view::CallRender2D& call
 	// draw the keyframe symbols (not if first keyframe is dummy keyframe)
 	if ((*keyframes)[0].getID() != -2){
 		for (int i = 0; i < keyframes->Count(); i++){
-			DrawKeyframeSymbol((*keyframes)[i], cr->GetViewport().GetSize().GetWidth() - 10.0f, cr->GetViewport().GetSize().GetHeight() / 2, kfc->getSelectedKeyframeIndex() == (float)i);
+			DrawKeyframeSymbol((*keyframes)[i], cr->GetViewport().GetSize().GetWidth() - 10.0f, cr->GetViewport().GetSize().GetHeight() / 2.0f, kfc->getSelectedKeyframeIndex() == (float)i);
 		}
 	}
 	// draw selected interoplated keyframe if appropriate
@@ -178,7 +178,7 @@ bool megamol::cinematiccamera::TimeLineRenderer::Render(view::CallRender2D& call
 		}
 
 		float posX = lineLength * kfc->getInterpolatedKeyframe().getTime() + 5.0f;
-		float posY = cr->GetViewport().GetSize().GetHeight() / 2;
+		float posY = cr->GetViewport().GetSize().GetHeight() / 2.0f;
 		glColor3f(1.0, 1.0, 0.0);
 		glBegin(GL_LINE_STRIP);
 		glVertex2f(posX, 5.0f + lineYPos);
@@ -278,7 +278,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFl
 				float posX = lineLength * (*keyframes)[i].getTime();
 				if (x < posX + 8.0f && x > posX - 8.0f){
 					hit = true;
-					kfc->setSelectedKeyframeIndex(i);
+					kfc->setSelectedKeyframeIndex(static_cast<float>(i));
 					if (!(*kfc)(CallCinematicCamera::CallForSelectKeyframe)) return false;					
 				}
 				// requested an interpolated keyframe
