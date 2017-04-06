@@ -238,7 +238,7 @@ view::special::ScreenShooter::ScreenShooter() : job::AbstractJob(), Module(),
     this->backgroundSlot << bkgnd;
     this->MakeSlotAvailable(&this->backgroundSlot);
 
-    this->triggerButtonSlot << new param::ButtonParam();
+    this->triggerButtonSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_MOD_ALT | 's');
     this->triggerButtonSlot.SetUpdateCallback(&ScreenShooter::triggerButtonClicked);
     this->MakeSlotAvailable(&this->triggerButtonSlot);
 
