@@ -67,6 +67,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
 		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForNewKeyframeAtPosition), &KeyframeKeeper::cbNewKeyframe);
 
+	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
+		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForLoadKeyframe), &KeyframeKeeper::cbLoad);
+
 	this->MakeSlotAvailable(&this->cinematicRendererSlot);
 
 	this->saveKeyframesParam.SetParameter(new param::ButtonParam());
@@ -316,6 +319,12 @@ bool KeyframeKeeper::cbSave(core::param::ParamSlot& slot){
 	}
 	myfile.close();
 
+	return true;
+}
+
+/** */
+bool KeyframeKeeper::cbLoad(core::Call& c) {
+	this->loadKeyframesParam.ForceSetDirty();
 	return true;
 }
 

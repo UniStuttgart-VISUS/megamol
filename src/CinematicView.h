@@ -87,6 +87,9 @@ namespace megamol {
 
 			core::param::ParamSlot selectedKeyframeParam;
 			core::param::ParamSlot selectedSkyboxSideParam;
+			core::param::ParamSlot autoLoadKeyframes;
+
+			bool firstframe;
 		};
 
 	} /* end namespace cinematiccamera */

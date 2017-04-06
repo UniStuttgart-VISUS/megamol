@@ -15,9 +15,11 @@ using namespace megamol::core;
 using namespace cinematiccamera;
 
 CinematicView::CinematicView(void) : View3D(),
-keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-selectedKeyframeParam("cinematicCam::selectedKeyframeParam", "render selected Keyframe if true. render keyframe at animationtime if false"),
-selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"){
+		keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+		selectedKeyframeParam("cinematicCam::selectedKeyframeParam", "render selected Keyframe if true. render keyframe at animationtime if false"),
+		selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"),
+		autoLoadKeyframes("keyframeAutoLoad","shall the keyframes be loaded automatically from the file provided in the keyframe-keeper?"),
+		firstframe(true) {
 
 
 	this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -25,6 +27,9 @@ selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"){
 
 	this->selectedKeyframeParam << new core::param::BoolParam(true);
 	this->MakeSlotAvailable(&this->selectedKeyframeParam);
+
+	this->autoLoadKeyframes.SetParameter(new core::param::BoolParam(false));
+	this->MakeSlotAvailable(&this->autoLoadKeyframes);
 
 	param::EnumParam *sbs = new param::EnumParam(SKYBOX_NONE);
 	sbs->SetTypePair(SKYBOX_NONE,   "None");
@@ -42,12 +47,16 @@ selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"){
 megamol::cinematiccamera::CinematicView::~CinematicView() {}
 
 void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext& context) {
-
-
-
 	auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
 
 	auto kfc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+
+	if (firstframe) {
+		if (autoLoadKeyframes.Param<param::BoolParam>()->Value()) {
+			(*kfc)(CallCinematicCamera::CallForLoadKeyframe);
+		}
+		firstframe = false;
+	}
 
 	if (selectedKeyframeParam.Param<core::param::BoolParam>()->Value()){
 

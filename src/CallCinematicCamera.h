@@ -40,6 +40,8 @@ namespace megamol {
 			static const unsigned int CallForGetKeyframeAtTime = 5;
 			/**function name for adding a keyframe at a certain position*/
 			static const unsigned int CallForNewKeyframeAtPosition = 6;
+			/**function name for load of a keyframe*/
+			static const unsigned int CallForLoadKeyframe = 7;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -65,7 +67,7 @@ namespace megamol {
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return 7;
+				return 8;
 			}
 
 			/**
@@ -84,6 +86,7 @@ namespace megamol {
 					case CallForGetTotalTime: return "CallForGetTotalTime";
 					case CallForGetKeyframeAtTime : return "CallForGetKeyframeAtTime";
 					case CallForNewKeyframeAtPosition: return "CallForNewKeyframeAtPosition";
+					case CallForLoadKeyframe: return "CallForLoadKeyframe";
 					default: return "";
 				}
 				

@@ -126,7 +126,7 @@
       <AdditionalDependencies>MegaMolCore.lib;glu32.lib;protein_calls.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(expatPath)lib\$(PlatformName)\$(Configuration)\;$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;$(ProteinCallsPath)lib\$(PlatformName)\$(Configuration)\;$(ProteinPath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <ProfileGuidedDatabase>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
@@ -154,7 +154,7 @@
       <AdditionalDependencies>MegaMolCore.lib;glu32.lib;protein_calls.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(expatPath)lib\$(PlatformName)\$(Configuration)\;$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;$(ProteinCallsPath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
       <ProgramDatabaseFile>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <ProfileGuidedDatabase>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\$(TargetName).pgd</ProfileGuidedDatabase>
@@ -179,7 +179,7 @@
       <AdditionalDependencies>MegaMolCore.lib;glu32.lib;protein_calls.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(expatPath)lib\$(PlatformName)\$(Configuration)\;$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;$(ProteinCallsPath)lib\$(PlatformName)\$(Configuration)\;$(ProteinPath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
@@ -209,7 +209,7 @@
       <AdditionalDependencies>MegaMolCore.lib;glu32.lib;protein_calls.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(expatPath)lib\$(PlatformName)\$(Configuration)\;$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;$(ProteinCallsPath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
@@ -220,7 +220,6 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="cmake\ConfigInstall.cmake.in" />
     <None Include="cmake\ConfigLocal.cmake.in" />
     <None Include="cmake\ConfigVersion.cmake.in" />

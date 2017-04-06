@@ -101,6 +101,7 @@ namespace megamol {
 
 			/**Callback for loading Keyframes */
 			bool cbLoad(core::param::ParamSlot& slot);
+			bool cbLoad(core::Call& c);
 
 			bool cbAddKeyframeAtSelectedPosition(core::param::ParamSlot& slot);
 

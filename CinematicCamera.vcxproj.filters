@@ -49,7 +49,6 @@
     <None Include="cmake\ConfigLocal.cmake.in">
       <Filter>Config and Make Files\cmake</Filter>
     </None>
-    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\CinematicCamera\CinematicCamera.h">

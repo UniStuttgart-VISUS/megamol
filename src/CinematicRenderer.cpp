@@ -302,7 +302,7 @@ bool CinematicRenderer::RenderOverview(Call& call){
 
 				glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
 				glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ() + 0.5f);
-
+				glEnd();
 				
 
 			}
