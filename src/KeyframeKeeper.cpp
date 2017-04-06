@@ -451,7 +451,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 		}
 		else {
 
-			Keyframe k = Keyframe::Keyframe(-1);
+			Keyframe k = Keyframe(-1);
 
 			float t = idx - floorf(idx);
 

@@ -15,7 +15,7 @@
 #include "mmcore/CoreInstance.h"
 #include <string>
 #include <iostream>
-#include "vislib\math\Vector.h"
+#include "vislib/math/Vector.h"
 
 using namespace megamol;
 using namespace megamol::core;
