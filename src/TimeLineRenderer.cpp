@@ -235,8 +235,8 @@ bool megamol::cinematiccamera::TimeLineRenderer::LoadTexture(vislib::StringA fil
 void TimeLineRenderer::DrawKeyframeSymbol(Keyframe k, float lineLength, float lineYPos, bool selected){
 	float posX = lineLength * k.getTime() + 5.0f;
 	if (selected) glColor3f(1.0, 1.0, 0.0); else glColor3f(1.0, 0.0, 0.0);
-	glBegin(GL_LINE_STRIP);
-	glVertex2f(posX, 2.0f + lineYPos);
+	glBegin(GL_TRIANGLES);
+	/*glVertex2f(posX, 2.0f + lineYPos);
 	glVertex2f(posX, lineYPos);
 	glVertex2f(posX + 2.0f, lineYPos);
 	glVertex2f(posX + 2.0f, 3.0f + lineYPos);
@@ -244,7 +244,11 @@ void TimeLineRenderer::DrawKeyframeSymbol(Keyframe k, float lineLength, float li
 	glVertex2f(posX - 4.0f, 5.0f + lineYPos);
 	glVertex2f(posX - 2.0f, 3.0f + lineYPos);
 	glVertex2f(posX - 2.0f, lineYPos);
+	glVertex2f(posX, lineYPos);*/
+
 	glVertex2f(posX, lineYPos);
+	glVertex2f(posX - 10.0f, lineYPos + 20.0f);
+	glVertex2f(posX + 10.0f, lineYPos + 20.0f);
 	glEnd();
 }
 

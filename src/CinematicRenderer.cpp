@@ -409,7 +409,6 @@ void CinematicRenderer::UpdateParameters(CallRender3D *cr3d){
 // triggered only when "TAB" is pressed
 bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flags) {
 	// show manipulator whenever a keyframe is selected. (implement in renderer)
-
 	// if not needed anymore
 	if (this->manipulateKeyframe.Param<param::BoolParam>()->Value()) {
 		// do manipulator stuff

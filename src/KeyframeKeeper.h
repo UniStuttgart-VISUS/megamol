@@ -85,7 +85,7 @@ namespace megamol {
 			bool cbNewKeyframe(core::Call& c);
 
 			/** Callback for deleting selected Keyframe */
-			bool cbDelKeyframe(core::Call& c);
+			bool cbDelKeyframe(core::param::ParamSlot& slot);
 
 			/**Callback for interpolating Keyframe */
 			bool cbInterpolateKeyframe(core::Call& c);
@@ -119,6 +119,7 @@ namespace megamol {
 			core::param::ParamSlot totalTime;
 			core::param::ParamSlot selectedKeyframe;
 			core::param::ParamSlot addKeyframeAtSelectedPosition;
+			core::param::ParamSlot deleteKeyframe;
 
 			/**param for currentkeyframe Time */
 			megamol::core::param::ParamSlot currentKeyframeTime;

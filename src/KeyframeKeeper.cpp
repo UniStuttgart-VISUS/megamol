@@ -38,6 +38,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 	totalTime("totalTime", "The total timespan of the movie in seconds"),
 	selectedKeyframe("selectedKeyframe", "the index of the selected Keyframe"),
 	addKeyframeAtSelectedPosition("addKeyframeAtSelectedPosition", "adds a Keyframe at the currently selected position inbetween two keyframes"),
+	deleteKeyframe("deleteKeyframe", "deletes the currently selected keyframe"),
 	currentKeyframeTime("currentKeyframeTime", "timestamp of the currently selected keyframe"),
 	currentPos("currentPos", "Position of the selected keyframe"),
 	currentLookAt("currentLookAt", "LookAt of the selected keyframe"),
@@ -90,6 +91,10 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 	this->addKeyframeAtSelectedPosition.SetParameter(new param::ButtonParam());
 	this->addKeyframeAtSelectedPosition.SetUpdateCallback(this, &KeyframeKeeper::cbAddKeyframeAtSelectedPosition);
 	this->MakeSlotAvailable(&this->addKeyframeAtSelectedPosition);
+
+	this->deleteKeyframe.SetParameter(new param::ButtonParam());
+	this->deleteKeyframe.SetUpdateCallback(this, &KeyframeKeeper::cbDelKeyframe);
+	this->MakeSlotAvailable(&this->deleteKeyframe);
 
 	keyframes.Add(Keyframe(vislib::graphics::Camera(), 0.0f, -2));
 
@@ -195,13 +200,12 @@ bool KeyframeKeeper::cbSelectKeyframe(core::Call& c){
 }
 
 /** Callback for deleting selected Keyframe */
-bool KeyframeKeeper::cbDelKeyframe(core::Call& c){
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	if (inCall == NULL) return false;
-
-	this->keyframes.RemoveAt(static_cast<SIZE_T>(inCall->getSelectedKeyframeIndex()));
+bool KeyframeKeeper::cbDelKeyframe(core::param::ParamSlot& slot){
+	if (ceilf(selectedKeyframeIndex) == selectedKeyframeIndex) {
+		this->keyframes.RemoveAt(static_cast<SIZE_T>(selectedKeyframeIndex));
+	}
 	// decrease selectedKeyframeIndex by 1 or set to 0 if it would become negative
-	this->selectedKeyframeIndex = (0 < inCall->getSelectedKeyframeIndex() - 1 ? inCall->getSelectedKeyframeIndex() - 1 : 0);
+	this->selectedKeyframeIndex = (0 < selectedKeyframeIndex - 1 ? selectedKeyframeIndex - 1 : 0);
 	return true;
 }
 
