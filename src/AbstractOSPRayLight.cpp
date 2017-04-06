@@ -46,7 +46,6 @@ AbstractOSPRayLight::AbstractOSPRayLight(void) :
 
 AbstractOSPRayLight::~AbstractOSPRayLight(void) {
     lightContainer.isValid = false;
-    this->release();
     this->Release();
 }
 

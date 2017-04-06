@@ -11,7 +11,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/Log.h"
 #include "mmcore/Call.h"
-#include "tbb/tbb.h"
 #include <iostream>
 #include <sstream>
 
@@ -153,7 +152,7 @@ bool OSPRayStreamLines::readData(megamol::core::Call &call) {
 
 
 OSPRayStreamLines::~OSPRayStreamLines() {
-    //
+    this->Release();
 }
 
 bool OSPRayStreamLines::create() {

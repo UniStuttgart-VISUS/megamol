@@ -141,7 +141,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call &call) {
 
 
 OSPRayStructuredVolume::~OSPRayStructuredVolume() {
-    //
+    this->Release();
 }
 
 bool OSPRayStructuredVolume::create() {

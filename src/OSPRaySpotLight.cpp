@@ -37,7 +37,9 @@ OSPRaySpotLight::OSPRaySpotLight(void) :
 
 }
 
-OSPRaySpotLight::~OSPRaySpotLight(void) {}
+OSPRaySpotLight::~OSPRaySpotLight(void) {
+    this->Release();
+}
 
 
 void OSPRaySpotLight::readParams() {

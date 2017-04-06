@@ -28,7 +28,7 @@ OSPRayThinGlassMaterial::OSPRayThinGlassMaterial(void) :
 }
 
 OSPRayThinGlassMaterial::~OSPRayThinGlassMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayThinGlassMaterial::readParams() {

@@ -28,7 +28,6 @@ AbstractOSPRayMaterial::AbstractOSPRayMaterial(void) :
 
 AbstractOSPRayMaterial::~AbstractOSPRayMaterial(void) {
     materialContainer.isValid = false;
-    this->release();
     this->Release();
 }
 

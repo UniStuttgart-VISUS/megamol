@@ -35,7 +35,7 @@ OSPRayOBJMaterial::OSPRayOBJMaterial(void) :
 }
 
 OSPRayOBJMaterial::~OSPRayOBJMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayOBJMaterial::readParams() {

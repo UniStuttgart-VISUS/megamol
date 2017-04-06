@@ -32,7 +32,7 @@ OSPRayMetallicPaintMaterial::OSPRayMetallicPaintMaterial(void) :
 }
 
 OSPRayMetallicPaintMaterial::~OSPRayMetallicPaintMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayMetallicPaintMaterial::readParams() {

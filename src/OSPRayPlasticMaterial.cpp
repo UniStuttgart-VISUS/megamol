@@ -32,7 +32,7 @@ OSPRayPlasticMaterial::OSPRayPlasticMaterial(void) :
 }
 
 OSPRayPlasticMaterial::~OSPRayPlasticMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayPlasticMaterial::readParams() {

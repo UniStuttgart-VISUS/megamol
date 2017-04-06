@@ -30,7 +30,9 @@ OSPRayDistantLight::OSPRayDistantLight(void) :
 
 }
 
-OSPRayDistantLight::~OSPRayDistantLight(void) {}
+OSPRayDistantLight::~OSPRayDistantLight(void) {
+    this->Release();
+}
 
 
 void OSPRayDistantLight::readParams() {

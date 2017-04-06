@@ -31,7 +31,7 @@ OSPRayVelvetMaterial::OSPRayVelvetMaterial(void) :
 }
 
 OSPRayVelvetMaterial::~OSPRayVelvetMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayVelvetMaterial::readParams() {

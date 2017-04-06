@@ -25,6 +25,8 @@ protected:
     /** Ctor. */
     AbstractOSPRayStructure(void);
 
+    virtual bool create() { return true; }
+    virtual void release() { this->Release(); }
     virtual bool readData(megamol::core::Call &call) { return true; }
     virtual bool getExtends(megamol::core::Call &call) { return true; }
     bool getExtendsCallback(megamol::core::Call &call);

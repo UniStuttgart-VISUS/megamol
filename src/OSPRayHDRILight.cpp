@@ -30,7 +30,9 @@ OSPRayHDRILight::OSPRayHDRILight(void) :
 
 }
 
-OSPRayHDRILight::~OSPRayHDRILight(void) {}
+OSPRayHDRILight::~OSPRayHDRILight(void) {
+    this->Release();
+}
 
 
 void OSPRayHDRILight::readParams() {

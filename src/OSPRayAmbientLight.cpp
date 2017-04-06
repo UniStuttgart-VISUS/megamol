@@ -14,7 +14,9 @@ using namespace megamol::ospray;
 
 OSPRayAmbientLight::OSPRayAmbientLight(void) : AbstractOSPRayLight() { }
 
-OSPRayAmbientLight::~OSPRayAmbientLight(void) { }
+OSPRayAmbientLight::~OSPRayAmbientLight(void) { 
+    this->Release();
+}
 
 void OSPRayAmbientLight::readParams() {
     lightContainer.lightType = lightenum::AMBIENTLIGHT;

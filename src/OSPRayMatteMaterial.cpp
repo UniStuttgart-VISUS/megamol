@@ -22,7 +22,7 @@ OSPRayMatteMaterial::OSPRayMatteMaterial(void) :
 }
 
 OSPRayMatteMaterial::~OSPRayMatteMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayMatteMaterial::readParams() {

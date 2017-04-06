@@ -192,7 +192,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call &call) {
 
 
 OSPRayTriangleMesh::~OSPRayTriangleMesh() {
-    //AbstractOSPRayStructure::~AbstractOSPRayStructure();
+    this->Release();
 }
 
 bool OSPRayTriangleMesh::create() {

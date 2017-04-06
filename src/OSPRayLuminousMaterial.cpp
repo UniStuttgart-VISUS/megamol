@@ -29,7 +29,7 @@ OSPRayLuminousMaterial::OSPRayLuminousMaterial(void) :
 }
 
 OSPRayLuminousMaterial::~OSPRayLuminousMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayLuminousMaterial::readParams() {

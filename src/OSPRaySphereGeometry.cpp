@@ -127,12 +127,21 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
             ffaf = floatFromVoidArray;
             std::vector<float> cd;
 
-            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
-                if (loop % (vertexLength + 1) >= vertexLength) {
-                    cd.push_back(ffaf(parts, loop));
-                } else {
-                    vd.push_back(ffaf(parts, loop));
+            
+            
+            if (parts.GetVertexDataStride() > 3*sizeof(float) && parts.GetVertexDataStride() == parts.GetColourDataStride()) {
+                for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+                    if (loop % (vertexLength + 1) >= vertexLength) {
+                        cd.push_back(ffaf(parts, loop));
+                    } else {
+                        vd.push_back(ffaf(parts, loop));
+                    }
                 }
+            } else {
+                auto vptr = (float*)parts.GetVertexData();
+                auto cptr = (float*)parts.GetColourData();
+                vd.assign(vptr, vptr + parts.GetCount() * 3);
+                cd.assign(cptr, cptr + parts.GetCount());
             }
 
             // Color transfer call and calculation
@@ -149,18 +158,26 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
         } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
             colorLength = 3;
             //convertedColorType = OSP_FLOAT3;
-            cd_rgba.reserve(parts.GetCount() * colorLength);
+            cd_rgba.reserve(parts.GetCount() * (colorLength + 1));
+
 
             floatFromArrayFunc ffaf;
             ffaf = floatFromVoidArray;
-
+            unsigned int iter = 0;
             for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
                 if (loop % (vertexLength + colorLength) >= vertexLength) {
-                    cd_rgba.push_back(ffaf(parts, loop));
+                    cd_rgba.push_back(std::abs(ffaf(parts, loop)) / 255.0f);
+                    iter++;
+                    if (iter == 3) {
+                        cd_rgba.push_back(1.0f);
+                        iter = 0;
+                    }
                 } else {
                     vd.push_back(ffaf(parts, loop));
                 }
             }
+            colorLength = 4;
+
         } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
             colorLength = 4;
             //convertedColorType = OSP_FLOAT4;
@@ -267,7 +284,7 @@ void OSPRaySphereGeometry::colorTransferGray(std::vector<float> &grayArray, floa
 
 
 OSPRaySphereGeometry::~OSPRaySphereGeometry() {
-    //
+    this->Release();
 }
 
 bool OSPRaySphereGeometry::create() {
@@ -324,8 +341,8 @@ bool OSPRaySphereGeometry::getExtends(megamol::core::Call &call) {
     
     if (cd == NULL) return false;
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (!(*cd)(1)) return false;
-    
+    // if (!(*cd)(1)) return false; // floattable returns flase at first attempt and breaks everything
+    (*cd)(1);
     this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;

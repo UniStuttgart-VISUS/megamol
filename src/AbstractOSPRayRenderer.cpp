@@ -607,7 +607,7 @@ void AbstractOSPRayRenderer::fillWorld() {
                     colorData = ospNewData(element.partCount, OSP_FLOAT4, element.colorData->data());
                     ospCommit(colorData);
                     ospSetData(geo, "color", colorData);
-                }
+                } 
 
                 // clipPlane setup
 

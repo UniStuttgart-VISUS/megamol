@@ -26,7 +26,9 @@ OSPRayPointLight::OSPRayPointLight(void) :
 
 }
 
-OSPRayPointLight::~OSPRayPointLight(void) {}
+OSPRayPointLight::~OSPRayPointLight(void) {
+    this->Release();
+}
 
 
 void OSPRayPointLight::readParams() {

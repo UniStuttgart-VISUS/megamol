@@ -109,18 +109,5 @@ private:
 };
 
 
-template<class T, typename... Args>
-void TBBParallel(const Args&... args) {
-    T t(args...);
-    int n = t.size();
-    parallel_for(blocked_range<int>(1, n), t);
-}
-
-
-
-
-
-
-
 } // namespace ospray
 } // namespace megamol

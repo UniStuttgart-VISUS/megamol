@@ -34,7 +34,7 @@ OSPRayGlassMaterial::OSPRayGlassMaterial(void) :
 }
 
 OSPRayGlassMaterial::~OSPRayGlassMaterial(void) {
-    // empty
+    this->Release();
 }
 
 void OSPRayGlassMaterial::readParams() {

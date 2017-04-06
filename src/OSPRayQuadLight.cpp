@@ -30,7 +30,9 @@ OSPRayQuadLight::OSPRayQuadLight(void) :
 
 }
 
-OSPRayQuadLight::~OSPRayQuadLight(void) {}
+OSPRayQuadLight::~OSPRayQuadLight(void) {
+    this->Release();
+}
 
 
 void OSPRayQuadLight::readParams() {
