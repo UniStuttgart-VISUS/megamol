@@ -70,6 +70,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
 		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForLoadKeyframe), &KeyframeKeeper::cbLoad);
 
+	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
+		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetTotalTime), &KeyframeKeeper::cbSetTotalTime);
+
 	this->MakeSlotAvailable(&this->cinematicRendererSlot);
 
 	this->saveKeyframesParam.SetParameter(new param::ButtonParam());
@@ -81,7 +84,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 	this->loadKeyframesParam.SetUpdateCallback(this, &KeyframeKeeper::cbLoad);
 	this->MakeSlotAvailable(&this->loadKeyframesParam);
 
-	this->fileNameParam.SetParameter(new param::FilePathParam("enter filename here"));
+	this->fileNameParam.SetParameter(new param::FilePathParam("keyframes.txt"));
 	this->MakeSlotAvailable(&this->fileNameParam);
 
 	this->totalTime.SetParameter(new param::FloatParam(1));
@@ -199,6 +202,15 @@ bool KeyframeKeeper::cbSelectKeyframe(core::Call& c){
 	currentUp.ResetDirty();
 	selectedKeyframe.ResetDirty();
 
+	return true;
+}
+
+/**
+ *	KeyframeKeeper::cbSetTotalTime
+ */
+bool KeyframeKeeper::cbSetTotalTime(core::Call& c) {
+	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
+	this->totalTime.Param<param::FloatParam>()->SetValue(inCall->getTotalTime());
 	return true;
 }
 

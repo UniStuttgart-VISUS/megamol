@@ -19,6 +19,7 @@ CinematicView::CinematicView(void) : View3D(),
 		selectedKeyframeParam("cinematicCam::selectedKeyframeParam", "render selected Keyframe if true. render keyframe at animationtime if false"),
 		selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"),
 		autoLoadKeyframes("keyframeAutoLoad","shall the keyframes be loaded automatically from the file provided in the keyframe-keeper?"),
+		autoSetTotalTime("totalTimeAutoSet", "shall the total animation time be determined automatically?"),
 		firstframe(true) {
 
 
@@ -30,6 +31,9 @@ CinematicView::CinematicView(void) : View3D(),
 
 	this->autoLoadKeyframes.SetParameter(new core::param::BoolParam(false));
 	this->MakeSlotAvailable(&this->autoLoadKeyframes);
+
+	this->autoSetTotalTime.SetParameter(new core::param::BoolParam(true));
+	this->MakeSlotAvailable(&this->autoSetTotalTime);
 
 	param::EnumParam *sbs = new param::EnumParam(SKYBOX_NONE);
 	sbs->SetTypePair(SKYBOX_NONE,   "None");
@@ -48,12 +52,22 @@ megamol::cinematiccamera::CinematicView::~CinematicView() {}
 
 void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext& context) {
 	auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
+	(*cr3d)(1); // get extents
 
 	auto kfc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+	if (!kfc) {
+		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "KeyframeKeeper slot not connected!");
+	}
+
+	
 
 	if (firstframe) {
 		if (autoLoadKeyframes.Param<param::BoolParam>()->Value()) {
 			(*kfc)(CallCinematicCamera::CallForLoadKeyframe);
+		}
+		if (autoSetTotalTime.Param<param::BoolParam>()->Value()) {
+			kfc->setTotalTime(static_cast<float>(cr3d->TimeFramesCount()));
+			(*kfc)(CallCinematicCamera::CallForSetTotalTime);
 		}
 		firstframe = false;
 	}

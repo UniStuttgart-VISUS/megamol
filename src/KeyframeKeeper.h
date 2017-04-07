@@ -93,6 +93,9 @@ namespace megamol {
 			/**Callback for getting total Time */
 			bool cbGetTotalTime(core::Call& c);
 
+			/**Callback for setting total Time*/
+			bool cbSetTotalTime(core::Call& c);
+
 			/**Callback for getting Keyframe at a certain time */
 			bool cbGetKeyframeAtTime(core::Call& c);
 
