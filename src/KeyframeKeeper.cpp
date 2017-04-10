@@ -320,7 +320,7 @@ bool KeyframeKeeper::cbSave(core::param::ParamSlot& slot){
 	sortKeyframes();
 
 	std::ofstream myfile;
-	myfile.open(fileNameParam.Param<param::FilePathParam>()->Value());
+	myfile.open(fileNameParam.Param<param::FilePathParam>()->Value(), std::ios::binary);
 	vislib::StringSerialiserA ser;
 	myfile << "totalTime=" << totalTime.Param<param::FloatParam>()->Value() << "\n";
 	for (unsigned int i = 0; i < keyframes.Count(); i++){
