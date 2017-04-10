@@ -322,12 +322,12 @@ bool KeyframeKeeper::cbSave(core::param::ParamSlot& slot){
 	std::ofstream myfile;
 	myfile.open(fileNameParam.Param<param::FilePathParam>()->Value());
 	vislib::StringSerialiserA ser;
-	myfile << "totalTime=" << totalTime.Param<param::FloatParam>()->Value() << std::endl;
+	myfile << "totalTime=" << totalTime.Param<param::FloatParam>()->Value() << "\n";
 	for (unsigned int i = 0; i < keyframes.Count(); i++){
 		keyframes[i].getCamParameters()->Serialise(ser);
-		myfile << "time=" << keyframes[i].getTime() << std::endl;
-		myfile << "ID=" << keyframes[i].getID() << std::endl;
-		myfile << ser.GetString().PeekBuffer() << std::endl;
+		myfile << "time=" << keyframes[i].getTime() << "\n";
+		myfile << "ID=" << keyframes[i].getID() << "\n";
+		myfile << ser.GetString().PeekBuffer() << "\n";
 	}
 	myfile.close();
 
