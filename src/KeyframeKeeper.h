@@ -124,6 +124,7 @@ namespace megamol {
 			core::param::ParamSlot selectedKeyframe;
 			core::param::ParamSlot addKeyframeAtSelectedPosition;
 			core::param::ParamSlot deleteKeyframe;
+			core::param::ParamSlot keyframeDistance;
 
 			/**param for currentkeyframe Time */
 			megamol::core::param::ParamSlot currentKeyframeTime;

@@ -43,6 +43,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 	currentPos("currentPos", "Position of the selected keyframe"),
 	currentLookAt("currentLookAt", "LookAt of the selected keyframe"),
 	currentUp("currentUp", "LookAt of the selected keyframe"),
+	keyframeDistance("keyframeDistance", "distance between two keyframes in fractions of the total time"),
 	keyframes(), selectedKeyframeIndex(0) {
 
 	// setting up callbacks for the Cinematic renderer
@@ -74,6 +75,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetTotalTime), &KeyframeKeeper::cbSetTotalTime);
 
 	this->MakeSlotAvailable(&this->cinematicRendererSlot);
+
+	this->keyframeDistance.SetParameter(new param::FloatParam(0.1f, 0.001f, 1.0f));
+	this->MakeSlotAvailable(&this->keyframeDistance);
 
 	this->saveKeyframesParam.SetParameter(new param::ButtonParam());
 	this->saveKeyframesParam.SetUpdateCallback(this, &KeyframeKeeper::cbSave);
@@ -251,7 +255,7 @@ bool KeyframeKeeper::cbNewKeyframe(core::Call& c){
 		IDCounter++;
 	}
 	else{
-		keyframes.Add(Keyframe(inCall->getCameraForNewKeyframe(), keyframes[keyframes.Count() - 1].getTime() + 0.1f, IDCounter));
+		keyframes.Add(Keyframe(inCall->getCameraForNewKeyframe(), keyframes[keyframes.Count() - 1].getTime() + this->keyframeDistance.Param<param::FloatParam>()->Value(), IDCounter));
 		IDCounter++;
 	}
 	ASSERT(keyframes.Count() >= 1);
