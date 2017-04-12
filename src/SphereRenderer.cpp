@@ -50,6 +50,7 @@ mdao::SphereRenderer::SphereRenderer(void):
 	getTFSlot("gettransferfunction", "Connects to the transfer function module"),
 	enableLightingSlot("enable_lighting", "Lighting"),
 	enableAOSlot("enable_ao", "Enable AO"),
+    enableGeometryShader("use GS proxies", "enables rendering using triangle strips from the geometry shader"),
 	aoVolSizeSlot("ao_volsize", "Longest volume edge"),
 	aoConeApexSlot("ao_apex", "Cone Apex Angle"),
 	aoOffsetSlot("ao_offset", "AO Offset from Surface"),
@@ -74,6 +75,9 @@ mdao::SphereRenderer::SphereRenderer(void):
 
 	this->enableAOSlot << (new core::param::BoolParam(true));
 	this->MakeSlotAvailable(&this->enableAOSlot);
+
+    this->enableGeometryShader << (new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->enableGeometryShader);
 	
 	this->aoVolSizeSlot << (new core::param::IntParam(128, 1, 1024));
 	this->MakeSlotAvailable(&this->aoVolSizeSlot);
@@ -244,6 +248,10 @@ bool mdao::SphereRenderer::rebuildShader()
 		!megamol::mdao::InitializeShader(&factory, sphereShader, "mdao2::vertex", "mdao2::fragment"))
 		return false;
 	
+    if (!vislib::graphics::gl::GLSLGeometryShader::IsValidHandle(sphereGeoShader) &&
+        !megamol::mdao::InitializeShader(&factory, sphereGeoShader, "mdao2::geovert", "mdao2::fragment", "mdao2::geogeo"))
+        return false;
+
 	
 	// Load the vertex shader
 	if (!factory.MakeShaderSource("mdao2::deferred::vertex", vert))
@@ -291,6 +299,7 @@ void mdao::SphereRenderer::release(void)
 {
 	instance()->ShaderSourceFactory();
 	sphereShader.Release();
+    sphereGeoShader.Release();
 	lightingShader.Release();
 	
 	glDeleteTextures(3, reinterpret_cast<GLuint*>(&gBuffer));
@@ -525,24 +534,27 @@ void mdao::SphereRenderer::renderParticlesGeometry(megamol::core::view::Abstract
 	mvRight.Normalise();
 	mvUp.Normalise();
 
-	
-	sphereShader.Enable();
-	glUniformMatrix4fv(sphereShader.ParameterLocation("inMvp"), 1, GL_FALSE, mvp.PeekComponents());
-	glUniformMatrix4fv(sphereShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, mvpInverse.PeekComponents());
-	glUniformMatrix4fv(sphereShader.ParameterLocation("inMvpTrans"), 1, GL_TRUE, mvp.PeekComponents());
-	glUniformMatrix4fv(sphereShader.ParameterLocation("inMv"), 1, GL_FALSE, mv.PeekComponents());
+    bool useGeo = this->enableGeometryShader.Param<core::param::BoolParam>()->Value();
+
+    vislib::graphics::gl::GLSLShader& theShader = useGeo ? sphereGeoShader : sphereShader;
+
+	theShader.Enable();
+	glUniformMatrix4fv(theShader.ParameterLocation("inMvp"), 1, GL_FALSE, mvp.PeekComponents());
+	glUniformMatrix4fv(theShader.ParameterLocation("inMvpInverse"), 1, GL_FALSE, mvpInverse.PeekComponents());
+	glUniformMatrix4fv(theShader.ParameterLocation("inMvpTrans"), 1, GL_TRUE, mvp.PeekComponents());
+	glUniformMatrix4fv(theShader.ParameterLocation("inMv"), 1, GL_FALSE, mv.PeekComponents());
 
 	
-	sphereShader.SetParameterArray4("inViewAttr", 1, viewportStuff);
-	sphereShader.SetParameterArray3("inCamFront", 1, mvFront.PeekComponents());
-	sphereShader.SetParameterArray3("inCamRight", 1, mvRight.PeekComponents());
-	sphereShader.SetParameterArray3("inCamUp", 1, mvUp.PeekComponents());
-	sphereShader.SetParameterArray4("inCamPos", 1, mvInverse.GetColumn(3).PeekComponents());
+    theShader.SetParameterArray4("inViewAttr", 1, viewportStuff);
+    theShader.SetParameterArray3("inCamFront", 1, mvFront.PeekComponents());
+    theShader.SetParameterArray3("inCamRight", 1, mvRight.PeekComponents());
+    theShader.SetParameterArray3("inCamUp", 1, mvUp.PeekComponents());
+    theShader.SetParameterArray4("inCamPos", 1, mvInverse.GetColumn(3).PeekComponents());
 	
-	sphereShader.SetParameterArray4("inClipDat", 1, clipDat.PeekComponents());
-	sphereShader.SetParameterArray4("inClipCol", 1, clipCol.PeekComponents());
+    theShader.SetParameterArray4("inClipDat", 1, clipDat.PeekComponents());
+    theShader.SetParameterArray4("inClipCol", 1, clipCol.PeekComponents());
 	
-	sphereShader.SetParameter("inUseHighPrecision", highPrecision);
+    theShader.SetParameter("inUseHighPrecision", highPrecision);
 	
 	
 	for (unsigned int i=0; i<gpuData.size(); ++i) {
@@ -554,7 +566,7 @@ void mdao::SphereRenderer::renderParticlesGeometry(megamol::core::view::Abstract
 		if (parts.GetVertexDataType() != megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
 			globalRadius = parts.GetGlobalRadius();
 		
-		sphereShader.SetParameter("inGlobalRadius", globalRadius);
+        theShader.SetParameter("inGlobalRadius", globalRadius);
 
 		bool useGlobalColor = false;
 		if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
@@ -566,26 +578,26 @@ void mdao::SphereRenderer::renderParticlesGeometry(megamol::core::view::Abstract
 				static_cast<float>(globalColor[2])/255.0f,
 				1.0f
 			};
-			sphereShader.SetParameterArray4("inGlobalColor", 1, globalColorFlt);
+            theShader.SetParameterArray4("inGlobalColor", 1, globalColorFlt);
 		} 
-		sphereShader.SetParameter("inUseGlobalColor", useGlobalColor);
+        theShader.SetParameter("inUseGlobalColor", useGlobalColor);
 		
 		bool useTransferFunction = false;
 		if (parts.GetColourDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
 			useTransferFunction = true;
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_1D, getTransferFunctionHandle());
-			sphereShader.SetParameter("inTransferFunction", static_cast<int>(0));
+            theShader.SetParameter("inTransferFunction", static_cast<int>(0));
 			float tfRange[2] = {parts.GetMinColourIndexValue(), parts.GetMaxColourIndexValue()};
-			sphereShader.SetParameterArray2("inIndexRange", 1, tfRange);
+            theShader.SetParameterArray2("inIndexRange", 1, tfRange);
 		}
-		sphereShader.SetParameter("inUseTransferFunction", useTransferFunction);
+        theShader.SetParameter("inUseTransferFunction", useTransferFunction);
 		
 		glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(dataCall->AccessParticles(i).GetCount()));
 	}
 
 	glBindVertexArray(0);
-	sphereShader.Disable();
+    theShader.Disable();
 }
 
 

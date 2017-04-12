@@ -235,6 +235,9 @@ if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
     <None Include="config.bat" />
     <None Include="configure.win.pl" />
     <None Include="ExtLibs.props.input" />
+    <None Include="Shaders\mdao2.btf" />
+    <None Include="Shaders\mdao2_mipmap.btf" />
+    <None Include="Shaders\mdao2_volumegen.btf" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mdao2\mdao2.h" />

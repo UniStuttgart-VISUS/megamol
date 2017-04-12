@@ -12,6 +12,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib/graphics/gl/GLSLGeometryShader.h"
 
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/view/AbstractCallRender3D.h"
@@ -57,7 +58,8 @@ namespace mdao {
 		};
 		
 		// The sphere shader
-		vislib::graphics::gl::GLSLShader sphereShader, lightingShader;
+        vislib::graphics::gl::GLSLShader sphereShader, lightingShader;
+        vislib::graphics::gl::GLSLGeometryShader sphereGeoShader;
 		
 		// GPU buffers for particle lists
 		std::vector<gpuParticleDataType> gpuData;
@@ -87,6 +89,7 @@ namespace mdao {
 		megamol::core::param::ParamSlot enableLightingSlot;
 		// Enable Ambient Occlusion
 		megamol::core::param::ParamSlot enableAOSlot;
+        megamol::core::param::ParamSlot enableGeometryShader;
 		// AO texture size 
 		megamol::core::param::ParamSlot aoVolSizeSlot;
 		// Cone Apex Angle 

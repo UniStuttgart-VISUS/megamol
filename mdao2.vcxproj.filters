@@ -49,6 +49,15 @@
     <None Include="cmake\ConfigLocal.cmake.in">
       <Filter>Config and Make Files\cmake</Filter>
     </None>
+    <None Include="Shaders\mdao2.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\mdao2_mipmap.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\mdao2_volumegen.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\mdao2\mdao2.h">
