@@ -31,7 +31,7 @@ function Get-Param($module, $name, $value) {
 
 
 # Possible values for 'skyboxSide'.
-$sides = @('Top', 'Front', 'Left', 'Back', 'Right', 'Bottom')
+$sides = @('Up', 'Front', 'Left', 'Back', 'Right', 'Down')
 
 # Read the original project file.
 [xml] $xml = gc $Project
@@ -75,14 +75,15 @@ for ($i = 0; $i -lt $sides.Length; ++$i) {
 
 $hpcSweep = [System.IO.Path]::ChangeExtension($baseName, "*$ext")
 $hpcCmd = @"
-param([string] `$WorkingDirectory = '\\vesta1\Entwicklung\sfbdome',
+param([string] `$WorkingDirectory = '\\vesta1\Entwicklung\mueller\dome\MegaMol',
+      [string] `$ProjectDir = '\\vesta1\Entwicklung\mueller\dome\$([System.IO.Path]::GetDirectoryName($Project))',
       [string] `$HeadNode = 'vesta1',
-      [string] `$MegaMol = 'bin\x64\Release\MegaMolCon.exe')
+      [string] `$MegaMol = 'bin\MegaMolCon.exe')
 if (Test-Path env:CCP_SCHEDULER) { 
     `$HeadNode = (gc env:CCP_SCHEDULER) 
 }
 `$job = New-HpcJob -Scheduler `$HeadNode -Name '$baseName' -JobEnv 'HPC_ATTACHTOCONSOLE=True' -Exclusive `$true -NumNodes '*-*'
-Add-HpcTask -Scheduler `$HeadNode -Job `$job -Type ParametricSweep -Start 0 -End $($sides.Length - 1) -NumNodes '1-$($sides.Length)' -WorkDir `$WorkingDirectory -Command `"`$MegaMol -p $hpcSweep -i $($view.name) $($paramInst.value)`"
+Add-HpcTask -Scheduler `$HeadNode -Job `$job -Type ParametricSweep -Start 0 -End $($sides.Length - 1) -NumNodes '1-$($sides.Length)' -WorkDir `$([System.IO.Path]::Combine(`$ProjectDir, `$WorkingDirectory)) -Command `"`$MegaMol -p $hpcSweep -i $($view.name) $($paramInst.value)`"
 Submit-HpcJob -Scheduler `$HeadNode -Job `$job
 "@
 
