@@ -531,60 +531,115 @@ bool MoleculeCartoonRenderer::create(void) {
 
 
     using namespace vislib::sys;
-    //////////////////////////////////////////////////////
-    // load the shader files for sphere raycasting //
-    //////////////////////////////////////////////////////
-    // Load sphere shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereVertex", vertSrc ) )
-    {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::sphereFragment", fragSrc ) )
-    {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName() );
-        return false;
-    }
-    try
-    {
-        if ( !this->sphereShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
-        {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch ( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	//////////////////////////////////////////////////////
+	// load the shader files for sphere raycasting //
+	//////////////////////////////////////////////////////
+	// Load sphere shader
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragment", fragSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
+		return false;
+	}
+	try
+	{
+		if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+		{
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+		}
+	}
+	catch (vislib::Exception e)
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
 
 
-    //////////////////////////////////////////////////////
-    // load the shader files for cylinder raycasting //
-    //////////////////////////////////////////////////////
-    // Load cylinder shader
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::cylinderVertex", vertSrc ) )
-    {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName() );
-        return false;
-    }
-    if ( !this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource ( "protein::std::cylinderFragment", fragSrc ) )
-    {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for cylinder shader", this->ClassName() );
-        return false;
-    }
-    try
-    {
-        if ( !this->cylinderShader.Create ( vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count() ) )
-        {
-            throw vislib::Exception ( "Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch ( vislib::Exception e )
-    {
-        Log::DefaultLog.WriteMsg ( Log::LEVEL_ERROR, "%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA() );
-        return false;
-    }
+	//////////////////////////////////////////////////////
+	// load the shader files for cylinder raycasting //
+	//////////////////////////////////////////////////////
+	// Load cylinder shader
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragment", fragSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for cylinder shader", this->ClassName());
+		return false;
+	}
+	try
+	{
+		if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+		{
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+		}
+	}
+	catch (vislib::Exception e)
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
+
+	//////////////////////////////////////////////////////
+	// load the shader files for offscreen sphere raycasting //
+	//////////////////////////////////////////////////////
+	// Load sphere shader
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereVertex", vertSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for offscreen sphere shader", this->ClassName());
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::sphereFragmentOR", fragSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for offscreen sphere shader", this->ClassName());
+		return false;
+	}
+	try
+	{
+		if (!this->sphereShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+		{
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+		}
+	}
+	catch (vislib::Exception e)
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create offscreen sphere shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
+
+
+	//////////////////////////////////////////////////////
+	// load the shader files for offscreen cylinder raycasting //
+	//////////////////////////////////////////////////////
+	// Load cylinder shader
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderVertex", vertSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%: Unable to load vertex shader source for offscreen cylinder shader", this->ClassName());
+		return false;
+	}
+	if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein::std::cylinderFragmentOR", fragSrc))
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for offscreen cylinder shader", this->ClassName());
+		return false;
+	}
+	try
+	{
+		if (!this->cylinderShaderOR.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+		{
+			throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+		}
+	}
+	catch (vislib::Exception e)
+	{
+		Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create offscreen cylinder shader: %s\n", this->ClassName(), e.GetMsgA());
+		return false;
+	}
 
     // get the attribute locations
     attribLocInParams = glGetAttribLocationARB ( this->cylinderShader, "inParams" );
@@ -3319,34 +3374,65 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
-    // enable sphere shader
-    this->sphereShader.Enable();
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
-    // set shader variables
-    glUniform4fvARB(sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    // enable sphere shader
+	if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		this->sphereShader.Enable();
+		// set shader variables
+		glUniform4fvARB(sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+	} else {
+		this->sphereShaderOR.Enable();
+		// set shader variables
+		glUniform4fvARB(sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(sphereShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(sphereShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(sphereShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		glUniform2fARB(sphereShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+	}
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, vertSpheres.PeekElements());
     glColorPointer( 3, GL_FLOAT, 0, colorSpheres.PeekElements());
     glDrawArrays( GL_POINTS, 0, totalAtomCnt);
     // disable sphere shader
-    this->sphereShader.Disable();
+	if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		this->sphereShader.Disable();
+	}
+	else {
+		this->sphereShaderOR.Disable();
+	}
 
     // enable cylinder shader
-    this->cylinderShader.Enable();
-    // set shader variables
-    glUniform4fvARB( cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB( cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB( cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB( cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
-    // get the attribute locations
-    attribLocInParams = glGetAttribLocationARB( cylinderShader, "inParams");
-    attribLocQuatC = glGetAttribLocationARB( cylinderShader, "quatC");
-    attribLocColor1 = glGetAttribLocationARB( cylinderShader, "color1");
-    attribLocColor2 = glGetAttribLocationARB( cylinderShader, "color2");
+	if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		this->cylinderShader.Enable();
+		// set shader variables
+		glUniform4fvARB(cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		// get the attribute locations
+		attribLocInParams = glGetAttribLocationARB( cylinderShader, "inParams");
+		attribLocQuatC = glGetAttribLocationARB( cylinderShader, "quatC");
+		attribLocColor1 = glGetAttribLocationARB( cylinderShader, "color1");
+		attribLocColor2 = glGetAttribLocationARB( cylinderShader, "color2");
+	} else {
+		this->cylinderShaderOR.Enable();
+		// set shader variables
+		glUniform4fvARB(cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
+		glUniform3fvARB(cylinderShaderOR.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
+		glUniform3fvARB(cylinderShaderOR.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
+		glUniform3fvARB(cylinderShaderOR.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+		glUniform2fARB(cylinderShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+		// get the attribute locations
+		attribLocInParams = glGetAttribLocationARB(cylinderShaderOR, "inParams");
+		attribLocQuatC = glGetAttribLocationARB(cylinderShaderOR, "quatC");
+		attribLocColor1 = glGetAttribLocationARB(cylinderShaderOR, "color1");
+		attribLocColor2 = glGetAttribLocationARB(cylinderShaderOR, "color2");
+	}
+
     // enable vertex attribute arrays for the attribute locations
     glDisableClientState( GL_COLOR_ARRAY);
     glEnableVertexAttribArrayARB( attribLocInParams);
@@ -3367,6 +3453,10 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     glDisableVertexAttribArrayARB( attribLocColor2);
     glDisableClientState(GL_VERTEX_ARRAY);
     // disable cylinder shader
-    this->cylinderShader.Disable();
+	if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
+		this->cylinderShader.Disable();
+	} else {
+		this->cylinderShaderOR.Disable();
+	}
 
 }

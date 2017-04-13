@@ -41,39 +41,29 @@ using namespace megamol::protein_calls;
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
-SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
-        : Renderer3DModuleDS(), molDataCallerSlot("getData",
-                "Connects the molecule rendering with molecule data storage"), bsDataCallerSlot(
-                "getBindingSites",
-                "Connects the molecule rendering with binding site data storage"), colorTableFileParam(
-                "color::colorTableFilename",
-                "The filename of the color table."), coloringModeParam0(
-                "color::coloringMode0", "The first coloring mode."), coloringModeParam1(
-                "color::coloringMode1", "The second coloring mode."), cmWeightParam(
-                "color::colorWeighting",
-                "The weighting of the two coloring modes."), renderModeParam(
-                "renderMode", "The rendering mode."), stickRadiusParam(
-                "stickRadius", "The radius for stick rendering"), probeRadiusParam(
-                "probeRadius", "The probe radius for SAS rendering"), minGradColorParam(
-                "color::minGradColor",
-                "The color for the minimum value for gradient coloring"), midGradColorParam(
-                "color::midGradColor",
-                "The color for the middle value for gradient coloring"), maxGradColorParam(
-                "color::maxGradColor",
-                "The color for the maximum value for gradient coloring"), molIdxListParam(
-                "molIdxList",
-                "The list of molecule indices for RS computation:"), specialColorParam(
-                "color::specialColor", "The color for the specified molecules"), interpolParam(
-                "posInterpolation",
-                "Enable positional interpolation between frames"), offscreenRenderingParam(
-                "offscreenRendering", "Toggle offscreenRendering"), toggleGeomShaderParam(
-                "geomShader",
-                "Toggle the use of geometry shaders for glyph ray casting"), toggleZClippingParam(
-                "toggleZClip", "..."), 
-                clipPlaneTimeOffsetParam("clipPlane::timeOffset", "..."),
-                clipPlaneDurationParam("clipPlane::Duration", "..."),
-				useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own"),
-                currentZClipPos(-20) {
+SimpleMoleculeRenderer::SimpleMoleculeRenderer(void) : Renderer3DModuleDS(), 
+		molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage"), 
+		bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage"), 
+		colorTableFileParam( "color::colorTableFilename", "The filename of the color table."), 
+		coloringModeParam0( "color::coloringMode0", "The first coloring mode."), 
+		coloringModeParam1( "color::coloringMode1", "The second coloring mode."), 
+		cmWeightParam( "color::colorWeighting", "The weighting of the two coloring modes."), 
+		renderModeParam( "renderMode", "The rendering mode."), 
+		stickRadiusParam( "stickRadius", "The radius for stick rendering"), 
+		probeRadiusParam( "probeRadius", "The probe radius for SAS rendering"), 
+		minGradColorParam( "color::minGradColor", "The color for the minimum value for gradient coloring"), 
+		midGradColorParam( "color::midGradColor", "The color for the middle value for gradient coloring"), 
+		maxGradColorParam( "color::maxGradColor", "The color for the maximum value for gradient coloring"), 
+		molIdxListParam( "molIdxList", "The list of molecule indices for RS computation:"), 
+		specialColorParam( "color::specialColor", "The color for the specified molecules"), 
+		interpolParam( "posInterpolation", "Enable positional interpolation between frames"),
+		offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering"), 
+		toggleGeomShaderParam( "geomShader", "Toggle the use of geometry shaders for glyph ray casting"), 
+		toggleZClippingParam( "toggleZClip", "..."), 
+		clipPlaneTimeOffsetParam("clipPlane::timeOffset", "..."),
+        clipPlaneDurationParam("clipPlane::Duration", "..."),
+		useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own"),
+        currentZClipPos(-20) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
@@ -188,7 +178,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
 
     this->clipPlaneDurationParam.SetParameter(new param::FloatParam(40.0f));
     this->MakeSlotAvailable(&this->clipPlaneDurationParam);
-
+    
 	this->lastDataHash = 0;
 }
 

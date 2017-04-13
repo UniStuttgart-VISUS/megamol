@@ -325,8 +325,10 @@ namespace protein {
         vislib::graphics::gl::GLSLGeometryShader arrowORShader;
         vislib::graphics::gl::GLSLGeometryShader helixORShader;
 
-        vislib::graphics::gl::GLSLShader sphereShader;
-        vislib::graphics::gl::GLSLShader cylinderShader;
+		vislib::graphics::gl::GLSLShader sphereShader;
+		vislib::graphics::gl::GLSLShader cylinderShader;
+		vislib::graphics::gl::GLSLShader sphereShaderOR;
+		vislib::graphics::gl::GLSLShader cylinderShaderOR;
 
         // current render mode
         CartoonRenderMode currentRenderMode;

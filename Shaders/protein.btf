@@ -33,9 +33,13 @@
 #define COLOR1 vec3( 183.0/255.0, 204.0/255.0, 220.0/255.0)
 
 //#define COLOR_SES
-#define COLOR_BLUE vec3( 145.0/255.0, 191.0/255.0, 219.0/255.0)
-#define COLOR_GREEN vec3( 161.0/255.0, 215.0/255.0, 106.0/255.0)
-#define COLOR_YELLOW vec3( 255.0/255.0, 255.0/255.0, 191.0/255.0)
+//#define COLOR_BLUE vec3( 145.0/255.0, 191.0/255.0, 219.0/255.0)
+#define COLOR_BLUE vec3( 0.0/255.0, 173.0/255.0, 238.0/255.0)
+//#define COLOR_GREEN vec3( 161.0/255.0, 215.0/255.0, 106.0/255.0)
+//#define COLOR_GREEN vec3( 236.0/255.0, 28.0/255.0, 36.0/255.0) // actually red...
+#define COLOR_GREEN vec3( 0.0/255.0, 165.0/255.0, 81.0/255.0)
+//#define COLOR_YELLOW vec3( 255.0/255.0, 255.0/255.0, 191.0/255.0)
+#define COLOR_YELLOW vec3( 255.0/255.0, 221.0/255.0, 21.0/255.0)
 #define COLOR_RED vec3( 228.0/255.0, 37.0/255.0, 34.0/255.0)
 
 -->
@@ -637,7 +641,7 @@ void main(void) {
     </shader>
     
     
-        <shader name="sphereFragmentCB">
+    <shader name="sphereFragmentCB">
       <snippet type="version">110</snippet>
       <snippet name="commondefines"/>
       <snippet name="::common::lighting::simple"/>
@@ -851,6 +855,7 @@ void main(void) {
     else {
         // chose color for lighting
         color = gl_Color.rgb;
+		if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -1136,6 +1141,7 @@ void main(void) {
     else {
         // chose color for lighting
         colOut = color.rgb;
+		if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -9425,7 +9431,7 @@ void main(void) {
     //color = vec3( 0.19, 0.52, 0.82);
 
 #ifdef COLOR_SES
-    color = COLOR_GREEN;
+    color = COLOR_YELLOW;
 #endif    
 #ifdef SET_COLOR
     color = COLOR1;
@@ -9638,7 +9644,7 @@ void main(void) {
     //color = vec3( 0.19, 0.52, 0.82);
 
 #ifdef COLOR_SES
-    color = COLOR_GREEN;
+    color = COLOR_YELLOW;
 #endif    
 #ifdef SET_COLOR
     color = COLOR1;
@@ -10303,7 +10309,7 @@ void main(void) {
     //color = vec3( 0.19, 0.52, 0.82);
 
 #ifdef COLOR_SES
-    color = COLOR_GREEN;
+    color = COLOR_YELLOW;
 #endif    
 #ifdef SET_COLOR
     color = COLOR1;
@@ -10665,7 +10671,7 @@ void main(void) {
     //color = vec3( 0.19, 0.52, 0.82);
 
 #ifdef COLOR_SES
-    color = COLOR_YELLOW;
+    color = COLOR_GREEN;
 #endif    
 #ifdef SET_COLOR
     color = COLOR1;
@@ -11212,7 +11218,7 @@ void main(void) {
     //color = vec3( 0.19, 0.52, 0.82);
 
 #ifdef COLOR_SES
-    color = COLOR_YELLOW;
+    color = COLOR_GREEN;
 #endif    
 #ifdef SET_COLOR
     color = COLOR1;
