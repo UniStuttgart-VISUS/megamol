@@ -997,6 +997,7 @@ void main(void) {
     else {
         // chose color for lighting
         color = gl_Color.rgb;
+		if( lambda < 0.0 ) discard;
         sphereintersection = lambda * ray + camPos.xyz;    // intersection point
         // "calc" normal at intersection point
         normal = sphereintersection / rad;
@@ -2391,6 +2392,7 @@ void main(void) {
 #endif // CLIP
 #endif // RENDER_CAPS
 
+	if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
 #ifdef RENDER_CAPS
     vec3 normal = (cylPt1Valid ? vec3(0.0, normalize(intersection.yz)) : (cylPt1Right ? vec3(1.0, 0.0, 0.0) : vec3(-1.0, 0.0, 0.0)));
@@ -2563,6 +2565,7 @@ void main(void) {
 #endif // CLIP
 #endif // RENDER_CAPS
 
+	if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
 #ifdef RENDER_CAPS
     vec3 normal = (cylPt1Valid ? vec3(0.0, normalize(intersection.yz)) : (cylPt1Right ? vec3(1.0, 0.0, 0.0) : vec3(-1.0, 0.0, 0.0)));
@@ -2738,6 +2741,7 @@ void main(void) {
 #endif // CLIP
 #endif // RENDER_CAPS
 
+	if( lambdas.x < 0.0 ) discard;
     vec3 intersection = camPos.xyz + ray * lambdas.x;
 #ifdef RENDER_CAPS
     vec3 normal = (cylPt1Valid ? vec3(0.0, normalize(intersection.yz)) : (cylPt1Right ? vec3(1.0, 0.0, 0.0) : vec3(-1.0, 0.0, 0.0)));
