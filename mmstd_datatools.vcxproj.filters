@@ -205,6 +205,9 @@
     <ClCompile Include="src\floattable\FloatTableColumnScaler.cpp">
       <Filter>floattable\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\floattable\FloatTableObserverPlane.cpp">
+      <Filter>floattable\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src/stdafx.h">
@@ -361,6 +364,9 @@
       <Filter>io\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\floattable\FloatTableColumnScaler.h">
+      <Filter>floattable\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\floattable\FloatTableObserverPlane.h">
       <Filter>floattable\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
