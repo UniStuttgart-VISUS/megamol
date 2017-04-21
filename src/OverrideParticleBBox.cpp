@@ -129,7 +129,7 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
 
     float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
     float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
-    if (doX || doY || doZ) {
+    if (this->overrideBBoxSlot.Param<core::param::BoolParam>()->Value() && (doX || doY || doZ)) {
         size_t step;
 
         for (size_t l = 0, max = inData.GetParticleListCount(); l < max; l++) {
@@ -152,6 +152,8 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                 }
                 void *vertPtr = const_cast<void *>(inData.AccessParticles(l).GetVertexData());
                 size_t stride = inData.AccessParticles(l).GetVertexDataStride();
+                // gief openmp 3.1
+                //#pragma omp parallel for reduction(min: minX, max: maxX)
                 for (size_t p = 0; p < maxP; p += step) {
                     vislib::math::ShallowPoint<float, 3> sp = getPoint(vertPtr, stride, p);
                     if (sp.GetX() < minX) {
