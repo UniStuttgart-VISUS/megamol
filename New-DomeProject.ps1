@@ -3,7 +3,8 @@ param(#[string] $Project = '.\cinematiccam02-2views-lasercross.mmprj',
     [Parameter(Mandatory=$true)] [string] $Project,
     [int] $From,
     [int] $To,
-    [float] $TimeStep)
+    [float] $TimeStep,
+    [string] $AdditionalArguments)
 
 
 # Gets a parameter tag or creates a new one with the specified value.
@@ -84,7 +85,7 @@ if (Test-Path env:CCP_SCHEDULER) {
     `$HeadNode = (gc env:CCP_SCHEDULER) 
 }
 `$job = New-HpcJob -Scheduler `$HeadNode -Name '$baseName' -JobEnv 'HPC_ATTACHTOCONSOLE=True' -Exclusive `$true -NumNodes '1-$($sides.Length)' $hpcGroup
-Add-HpcTask -Scheduler `$HeadNode -Job `$job -Type ParametricSweep -Start 0 -End $($sides.Length - 1) -NumNodes '1-1' -WorkDir `$WorkingDirectory -Stdout $([System.IO.Path]::ChangeExtension($baseName, '.output.txt')) -Stderr  $([System.IO.Path]::ChangeExtension($baseName, '.error.txt')) -Command `"`$MegaMol -p $([System.IO.Path]::Combine("`$ProjectDir", $hpcSweep)) -i $($view.name) $($paramInst.value)`"
+Add-HpcTask -Scheduler `$HeadNode -Job `$job -Type ParametricSweep -Start 0 -End $($sides.Length - 1) -NumNodes '1-1' -WorkDir `$WorkingDirectory -Stdout $([System.IO.Path]::ChangeExtension($baseName, '.output.txt')) -Stderr  $([System.IO.Path]::ChangeExtension($baseName, '.error.txt')) -Command `"`$MegaMol -p $([System.IO.Path]::Combine("`$ProjectDir", $hpcSweep)) -i $($view.name) $($paramInst.value)` $AdditionalArguments"
 Submit-HpcJob -Scheduler `$HeadNode -Job `$job
 "@
 
