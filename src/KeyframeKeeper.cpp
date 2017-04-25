@@ -301,6 +301,13 @@ bool KeyframeKeeper::cbGetKeyframeAtTime(core::Call& c){
 			return true;
 		}
 	}
+
+	// first keyframe has been selected -> early exit
+	if (i == 0) {
+		inCall->setInterpolatedKeyframe(keyframes[i]);
+		return true;
+	}
+
 	// time matches the time of an exact keyframe
 	ASSERT(keyframes.Count() > static_cast<SIZE_T>(i));
 	if (keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() == time){
@@ -492,6 +499,44 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 			vislib::math::Vector<float, 3> p0(keyframes[(0 > ((int)floor(idx) - 1)) ? (0) : ((int)floor(idx) - 1)].getCamPosition());
 			vislib::math::Vector<float, 3> p1(keyframes[(int)floor(idx)].getCamPosition());
 			vislib::math::Vector<float, 3> p2(keyframes[(int)ceil(idx)].getCamPosition());
+			vislib::math::Vector<float, 3> p3(keyframes[(keyframes.Count() - 1 < ((int)ceil(idx) + 1)) ? (keyframes.Count() - 1) : ((int)ceil(idx) + 1)].getCamPosition());
+
+			vislib::math::Vector<float, 3> pk = (((p1 * 2.0f) +
+				(p2 - p0) * t +
+				(p0 * 2 - p1 * 5 + p2 * 4 - p3) * t * t +
+				(-p0 + p1 * 3 - p2 * 3 + p3) * t * t * t) * 0.5);
+			k.setCameraPosition(Point<float, 3>(pk.GetX(), pk.GetY(), pk.GetZ()));
+
+			//interpolate lookAt
+			vislib::math::Vector<float, 3> l0(keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamLookAt());
+			vislib::math::Vector<float, 3> l1(keyframes[(int)floor(idx)].getCamLookAt());
+			vislib::math::Vector<float, 3> l2(keyframes[(int)ceil(idx)].getCamLookAt());
+			vislib::math::Vector<float, 3> l3(keyframes[(keyframes.Count() < (int)ceil(idx) + 1) ? (keyframes.Count()) : ((int)ceil(idx))].getCamLookAt());
+
+			vislib::math::Vector<float, 3> lk = (((l1 * 2) +
+				(l2 - l0) * t +
+				(l0 * 2 - l1 * 5 + l2 * 4 - l3) * t * t +
+				(-l0 + l1 * 3 - l2 * 3 + l3) * t * t * t) * 0.5);
+			k.setCameraLookAt(Point<float, 3>(lk.GetX(), lk.GetY(), lk.GetZ()));
+
+			//interpolate up
+			vislib::math::Vector<float, 3> u0 = p0 + keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamUp();
+			vislib::math::Vector<float, 3> u1 = p1 + keyframes[(int)floor(idx)].getCamUp();
+			vislib::math::Vector<float, 3> u2 = p2 + keyframes[(int)ceil(idx)].getCamUp();
+			vislib::math::Vector<float, 3> u3 = p3 + keyframes[(keyframes.Count() < (int)ceil(idx) + 1) ? (keyframes.Count()) : ((int)ceil(idx))].getCamUp();
+
+			vislib::math::Vector<float, 3> uk = (((u1 * 2) +
+				(u2 - u0) * t +
+				(u0 * 2 - u1 * 5 + u2 * 4 - u3) * t * t +
+				(-u0 + u1 * 3 - u2 * 3 + u3) * t * t * t) * 0.5);
+			k.setCameraUp(uk - pk);
+
+
+			/*
+			//interpolate position
+			vislib::math::Vector<float, 3> p0(keyframes[(0 > ((int)floor(idx) - 1)) ? (0) : ((int)floor(idx) - 1)].getCamPosition());
+			vislib::math::Vector<float, 3> p1(keyframes[(int)floor(idx)].getCamPosition());
+			vislib::math::Vector<float, 3> p2(keyframes[(int)ceil(idx)].getCamPosition());
 			vislib::math::Vector<float, 3> p3(keyframes[(static_cast<int>(keyframes.Count()) - 1 < ((int)ceil(idx) + 1)) ? (static_cast<int>(keyframes.Count()) - 1) : ((int)ceil(idx) + 1)].getCamPosition());
 
 			p0 = (((p1 * 2) +
@@ -526,6 +571,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 				(-p0 + p1 * 3 - p2 * 3 + p3) * t * t * t) * 0.5);
 			p.Set(p0.GetX(), p0.GetY(), p0.GetZ());
 			k.setCameraUp(p);
+			*/
 
 			//interpolate aperture angle
 			float a0 = keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamApertureAngle();

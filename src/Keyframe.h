@@ -98,7 +98,7 @@ namespace megamol {
 				camera.Parameters()->SetLookAt(look);
 			}
 
-			void setCameraUp(vislib::math::Point<float, 3> up){
+			void setCameraUp(vislib::math::Vector<float, 3> up){
 				camera.Parameters()->SetUp(up);
 			}
 
