@@ -16,6 +16,7 @@
 #include "mmcore/utility/xml/XmlParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/StringSerialiser.h"
+#include "vislib/assert.h"
 #include <iostream>
 #include <fstream>
 
@@ -73,6 +74,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
 	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
 		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetTotalTime), &KeyframeKeeper::cbSetTotalTime);
+
+    this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
+        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForKeyFrameUpdate), &KeyframeKeeper::cbUpdate);
 
 	this->MakeSlotAvailable(&this->cinematicRendererSlot);
 
@@ -424,6 +428,27 @@ bool KeyframeKeeper::cbAddKeyframeAtSelectedPosition(core::param::ParamSlot& slo
 	}
 	return true;
 }
+
+
+bool KeyframeKeeper::cbUpdate(core::Call& call) {
+    auto c = dynamic_cast<CallCinematicCamera*>(&call);
+    if (c == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteError("Invalid call in KeyframeKeeper::cbUpdate.");
+        return false;
+    }
+
+    auto idx = c->getSelectedKeyframe().getID();
+    if (idx >= 0) {
+        vislib::sys::Log::DefaultLog.WriteError("No key frame was selected for update.");
+        return false;
+    }
+
+    ASSERT(idx >= 0);
+    ASSERT(idx < this->keyframes.Count());
+    this->keyframes[idx].setCamera(c->getCameraForNewKeyframe());
+    return true;
+}
+
 
 void KeyframeKeeper::updateParameters(){
 	if (selectedKeyframe.IsDirty()){

@@ -108,6 +108,8 @@ namespace megamol {
 
 			bool cbAddKeyframeAtSelectedPosition(core::param::ParamSlot& slot);
 
+            bool cbUpdate(core::Call& call);
+
 
 			void updateParameters();
 

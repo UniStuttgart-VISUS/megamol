@@ -20,6 +20,7 @@ CinematicView::CinematicView(void) : View3D(),
 		selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"),
 		autoLoadKeyframes("keyframeAutoLoad","shall the keyframes be loaded automatically from the file provided in the keyframe-keeper?"),
 		autoSetTotalTime("totalTimeAutoSet", "shall the total animation time be determined automatically?"),
+        paramEdit("edit", "Do not overwrite the camera such that the selected key frame can be edited."),
 		firstframe(true) {
 
 
@@ -45,6 +46,9 @@ CinematicView::CinematicView(void) : View3D(),
 	sbs->SetTypePair(SKYBOX_DOWN,	"Down");
 	this->selectedSkyboxSideParam << sbs;
 	this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
+
+    this->paramEdit << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->paramEdit);
 }
 
 
@@ -72,23 +76,52 @@ void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext&
 		firstframe = false;
 	}
 
-	if (selectedKeyframeParam.Param<core::param::BoolParam>()->Value()){
 
-		if ((*kfc)(CallCinematicCamera::CallForGetSelectedKeyframe)){
+    bool isSelectedKeyFrame = this->selectedKeyframeParam.Param<core::param::BoolParam>()->Value();
+    if (isSelectedKeyFrame) {
+        // Preview the currently selected key frame.
 
-			if (kfc->getSelectedKeyframe().getID() != -2){
+        if ((*kfc)(CallCinematicCamera::CallForGetSelectedKeyframe)) {
+            auto id = kfc->getSelectedKeyframe().getID();
+            bool isEdit = this->paramEdit.Param<core::param::BoolParam>()->Value();
 
-				if (kfc->getSelectedKeyframe().getID() == -1){
-					kfc->getInterpolatedKeyframe().putCamParameters(this->cam.Parameters());
-				}
-				else{
-					kfc->getSelectedKeyframe().putCamParameters(this->cam.Parameters());
-				}
-			}
-		}
-		Base::Render(context);
-	}
-	else {
+            switch (id) {
+                case -2:
+                    // There is no key frame yet.
+                    break;
+
+                case -1:
+                    // An interpolated position was selected.
+                    kfc->getInterpolatedKeyframe().putCamParameters(this->cam.Parameters());
+                    break;
+
+                default:
+                    // A key frame was selected.
+                    if (!isEdit) {
+                        kfc->getSelectedKeyframe().putCamParameters(this->cam.Parameters());
+                    }
+                    break;
+            }
+
+            Base::Render(context);
+
+            if (this->paramEdit.IsDirty()) {
+                if (!isEdit && isSelectedKeyFrame && (id >= 0)) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("Updating key frame %d ...", id);
+                    kfc->setCameraForNewKeyframe(cr3d->GetCameraParameters());
+                    if ((*kfc)(CallCinematicCamera::CallForKeyFrameUpdate)) {
+                        vislib::sys::Log::DefaultLog.WriteInfo("Key frame %d was updated.", id);
+                    }
+                }
+                this->paramEdit.ResetDirty();
+            }
+
+        } else {
+            vislib::sys::Log::DefaultLog.WriteError("CallForGetSelectedKeyframe failed!");
+        }
+
+	} else {
+        // Select the key frame based on the current animation time.
 
 		kfc->setTimeofKeyframeToGet(static_cast<float>(context.Time));
 		if ((*kfc)(CallCinematicCamera::CallForGetKeyframeAtTime)){

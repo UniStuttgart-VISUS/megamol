@@ -314,63 +314,11 @@ bool CinematicRenderer::RenderOverview(Call& call){
 	return true;
 }
 
-bool CinematicRenderer::RenderPreview(Call& call){
-	CallRender3D *cr3d = dynamic_cast<CallRender3D*>(&call);
-	if (cr3d == NULL) return false;
 
-	auto oc = this->slaveRendererSlot.CallAs<CallRender3D>();
-	if (oc == nullptr) return false;
-
-	// Get the camera to be previewed
-	auto kfc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-	if (kfc == nullptr) return false;
-
-
-	vislib::SmartPtr<vislib::graphics::CameraParameters> camParams(
-		new CameraParamsOverride(cr3d->GetCameraParameters()));
-
-	if (!(*kfc)(CallCinematicCamera::CallForGetSelectedKeyframe)) return false;
-
-	// ignore dummy keyframe
-	if (kfc->getSelectedKeyframe().getID() != -2){
-
-		// no exact keyframe is selected
-		if (kfc->getSelectedKeyframe().getID() == -1){
-			kfc->setIndexToInterpolate(kfc->getSelectedKeyframeIndex());
-			if (!(*kfc)(CallCinematicCamera::CallForInterpolatedKeyframe)){
-				vislib::sys::Log::DefaultLog.WriteError("CallForInterpolatedKeyframe failed!");
-				return false;
-			}
-			kfc->getInterpolatedKeyframe().putCamParameters(camParams);
-		}
-		else {
-			kfc->getSelectedKeyframe().putCamParameters(camParams);
-		}
-
-		*oc = *cr3d;
-		(*oc)(1);
-		oc->SetCameraParameters(camParams);
-
-		int octfc = oc->TimeFramesCount();
-		// ToDo:
-		// Code fuer Screenshot-Mode!! Hier muesste statt cr3d->Time die Zeit des selected keyframe eingetragen werden (normalisiert * Zeit-Skalierung)
-		oc->SetTime(vislib::math::Min<float>(cr3d->Time(), static_cast<float>(octfc - 1)));
-
-		vislib::graphics::gl::CameraOpenGL hackCam(camParams);
-		//this->hackCam.SetParameters(camParams);
-
-		::glMatrixMode(GL_PROJECTION);
-		::glPushMatrix();
-		hackCam.glSetProjectionMatrix();
-
-		::glMatrixMode(GL_MODELVIEW);
-		::glPushMatrix();
-		hackCam.glSetViewMatrix();
-		(*oc)(0);
-		::glMatrixMode(GL_MODELVIEW);
-		::glPopMatrix();
-	}
-	return true;
+bool CinematicRenderer::RenderPreview(Call& call) {
+    vislib::sys::Log::DefaultLog.WriteWarn("This code path was totally broken "
+        "and has been removed.");
+    return false;
 }
 
 void CinematicRenderer::UpdateParameters(CallRender3D *cr3d){

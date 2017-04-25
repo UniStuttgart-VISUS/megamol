@@ -89,6 +89,7 @@ namespace megamol {
 			core::param::ParamSlot selectedSkyboxSideParam;
 			core::param::ParamSlot autoLoadKeyframes;
 			core::param::ParamSlot autoSetTotalTime;
+            core::param::ParamSlot paramEdit;
 
 			bool firstframe;
 		};

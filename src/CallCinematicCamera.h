@@ -44,6 +44,8 @@ namespace megamol {
 			static const unsigned int CallForLoadKeyframe = 7;
 			/**function name for setting of total time*/
 			static const unsigned int CallForSetTotalTime = 8;
+            /** Requests the selected key frame being replaced by 'cameraForNewKeyframe' */
+            static const unsigned int CallForKeyFrameUpdate = 9;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -90,6 +92,7 @@ namespace megamol {
 					case CallForNewKeyframeAtPosition: return "CallForNewKeyframeAtPosition";
 					case CallForLoadKeyframe: return "CallForLoadKeyframe";
 					case CallForSetTotalTime: return "CallForSetTotalTime";
+                    case CallForKeyFrameUpdate: return "CallForKeyFrameUpdate";
 					default: return "";
 				}
 				
