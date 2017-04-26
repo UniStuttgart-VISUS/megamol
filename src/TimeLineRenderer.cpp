@@ -261,7 +261,7 @@ bool TimeLineRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFl
 		float lineMiddle = resolutionParam.Param<param::FloatParam>()->Value() / 2;
 
 		// y-Position of mouse within keyframe symbol range?
-		if (y < 14.0f + lineYPos && y > 1.0f + lineYPos){
+		if (y < 20.0f + lineYPos && y > lineYPos){
 			//need to know keyframes
 			CallCinematicCamera *kfc = this->getDataSlot.CallAs<CallCinematicCamera>();
 			if (kfc == NULL) return false;
@@ -277,13 +277,13 @@ bool TimeLineRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFl
 			bool hit = false;
 			for (unsigned int i = 0; i < keyframes->Count(); i++){
 				float posX = lineLength * (*keyframes)[i].getTime();
-				if (x < posX + 8.0f && x > posX - 8.0f){
+				if (x < posX + 10.0f && x > posX - 10.0f){
 					hit = true;
 					kfc->setSelectedKeyframeIndex(static_cast<float>(i));
 					if (!(*kfc)(CallCinematicCamera::CallForSelectKeyframe)) return false;					
 				}
 				// requested an interpolated keyframe
-				if (x < posX - 8.0f && !hit){
+				if (x < posX - 10.0f && !hit){
 					hit = true;
 					float prevPosX = lineLength * (*keyframes)[i-1].getTime();
 

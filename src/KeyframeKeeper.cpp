@@ -80,7 +80,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 
 	this->MakeSlotAvailable(&this->cinematicRendererSlot);
 
-	this->keyframeDistance.SetParameter(new param::FloatParam(0.1f, 0.001f, 1.0f));
+	this->keyframeDistance.SetParameter(new param::FloatParam(0.1f, 0.000001f, 1.0f));
 	this->MakeSlotAvailable(&this->keyframeDistance);
 
 	this->saveKeyframesParam.SetParameter(new param::ButtonParam());
