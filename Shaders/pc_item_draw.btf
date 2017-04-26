@@ -519,7 +519,6 @@ void main(void) {
       <snippet name="::pc::extensions" />
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
-      <snippet name="::pc::instancingOffset" />
       <snippet name="::pc::common" />
       <snippet name="::pc_item_draw::uniforms" />
       <snippet name="::pc_item_draw::tessuniforms" />
@@ -560,7 +559,6 @@ void main(void) {
       <snippet name="::pc::extensions" />
       <snippet name="::pc::buffers" />
       <snippet name="::pc::uniforms" />
-      <snippet name="::pc::instancingOffset" />
       <snippet name="::pc::common" />
       <snippet name="::pc_item_draw::uniforms" />
       <snippet name="::pc_item_draw::tessuniforms" />

@@ -27,22 +27,22 @@ namespace infovis {
 
     /**
      * Class storing a stream of uints which contain flags that say something
-	 * about a synchronized other piece of data (index equality).
-	 * Can be used for storing selection etc.
+     * about a synchronized other piece of data (index equality).
+     * Can be used for storing selection etc.
      */
     class FlagStorage : public core::Module {
     public:
 
-		enum {
-			ENABLED = 1 << 0
-			, FILTERED = 1 << 1
-			, SELECTED = 1 << 2
-			, SOFTSELECTED = 1 << 3
-		};
+        enum {
+            ENABLED = 1 << 0
+            , FILTERED = 1 << 1
+            , SELECTED = 1 << 2
+            , SOFTSELECTED = 1 << 3
+        };
 
-		typedef uint32_t FlagItemType;
+        typedef uint32_t FlagItemType;
 
-		typedef std::vector<FlagItemType> FlagVectorType;
+        typedef std::vector<FlagItemType> FlagVectorType;
 
         /**
          * Answer the name of this module.
@@ -72,10 +72,10 @@ namespace infovis {
         }
 
         /** Ctor. */
-		FlagStorage(void);
+        FlagStorage(void);
 
         /** Dtor. */
-		virtual ~FlagStorage(void);
+        virtual ~FlagStorage(void);
 
     protected:
 
@@ -115,9 +115,9 @@ namespace infovis {
         core::CalleeSlot getFlagsSlot;
 
         /** The data */
-		std::shared_ptr<const FlagVectorType> flags;
+        std::shared_ptr<const FlagVectorType> flags;
 
-		vislib::sys::CriticalSection crit;
+        vislib::sys::CriticalSection crit;
 
     };
 

@@ -18,7 +18,7 @@
 
 //#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
-#define BE_DEBUGGABLE
+//#define BE_DEBUGGABLE
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -602,6 +602,7 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
         minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
         maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
         names[x] = floats->GetColumnsInfos()[x].Name();
+        // TODO this is shit the user needs his real values DAMMIT!
         filters[x].lower = 0.0f; // minimums[x];
         filters[x].upper = 1.0f; // maximums[x];
     }
