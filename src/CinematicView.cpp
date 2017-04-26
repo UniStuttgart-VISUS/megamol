@@ -85,6 +85,20 @@ void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext&
             auto id = kfc->getSelectedKeyframe().getID();
             bool isEdit = this->paramEdit.Param<core::param::BoolParam>()->Value();
 
+            // Note: It is important that we do that before interpolation.
+            if (this->paramEdit.IsDirty()) {
+                if (!isEdit && isSelectedKeyFrame && (id >= 0)) {
+                    vislib::sys::Log::DefaultLog.WriteInfo("Updating key frame %d ...", id);
+                    // Note: It is important to create a deep copy here
+                    kfc->setCameraForNewKeyframe(vislib::SmartPtr<vislib::graphics::CameraParameters>(
+                        new vislib::graphics::CameraParamsStore(*this->cam.Parameters())));
+                    if ((*kfc)(CallCinematicCamera::CallForKeyFrameUpdate)) {
+                        vislib::sys::Log::DefaultLog.WriteInfo("Key frame %d was updated.", id);
+                    }
+                }
+                this->paramEdit.ResetDirty();
+            }
+
             switch (id) {
                 case -2:
                     // There is no key frame yet.
@@ -104,18 +118,6 @@ void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext&
             }
 
             Base::Render(context);
-
-            if (this->paramEdit.IsDirty()) {
-                if (!isEdit && isSelectedKeyFrame && (id >= 0)) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("Updating key frame %d ...", id);
-                    kfc->setCameraForNewKeyframe(vislib::SmartPtr<vislib::graphics::CameraParameters>(
-                        new vislib::graphics::CameraParamsStore(*this->cam.Parameters())));
-                    if ((*kfc)(CallCinematicCamera::CallForKeyFrameUpdate)) {
-                        vislib::sys::Log::DefaultLog.WriteInfo("Key frame %d was updated.", id);
-                    }
-                }
-                this->paramEdit.ResetDirty();
-            }
 
         } else {
             vislib::sys::Log::DefaultLog.WriteError("CallForGetSelectedKeyframe failed!");
