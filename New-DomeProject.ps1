@@ -80,7 +80,7 @@ $hpcCmd = @"
 param([string] `$WorkingDirectory = '\\vesta1\Entwicklung\mueller\dome\MegaMol',
       [string] `$ProjectDir = '\\vesta1\Entwicklung\mueller\dome\$([System.IO.Path]::GetDirectoryName($Project))',
       [string] `$HeadNode = '129.69.205.7',
-      [string] `$MegaMol = 'bin\x64\Release\MegaMolCon.exe')
+      [string] `$MegaMol = 'bin2\x64\Release\MegaMolCon.exe')
 if (Test-Path env:CCP_SCHEDULER) { 
     `$HeadNode = (gc env:CCP_SCHEDULER) 
 }

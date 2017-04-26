@@ -438,7 +438,7 @@ bool KeyframeKeeper::cbUpdate(core::Call& call) {
     }
 
     auto idx = c->getSelectedKeyframe().getID();
-    if (idx >= 0) {
+    if (idx < 0) {
         vislib::sys::Log::DefaultLog.WriteError("No key frame was selected for update.");
         return false;
     }
