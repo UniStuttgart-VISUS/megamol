@@ -108,7 +108,8 @@ void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext&
             if (this->paramEdit.IsDirty()) {
                 if (!isEdit && isSelectedKeyFrame && (id >= 0)) {
                     vislib::sys::Log::DefaultLog.WriteInfo("Updating key frame %d ...", id);
-                    kfc->setCameraForNewKeyframe(this->cam.Parameters());
+                    kfc->setCameraForNewKeyframe(vislib::SmartPtr<vislib::graphics::CameraParameters>(
+                        new vislib::graphics::CameraParamsStore(*this->cam.Parameters())));
                     if ((*kfc)(CallCinematicCamera::CallForKeyFrameUpdate)) {
                         vislib::sys::Log::DefaultLog.WriteInfo("Key frame %d was updated.", id);
                     }
