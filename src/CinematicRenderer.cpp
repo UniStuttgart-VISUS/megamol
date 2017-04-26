@@ -49,6 +49,7 @@ rendererActiveSlot("active", "De-/Activaties outgoing renderer"),
 renderModeParam("renderMode", "The rendering mode"),
 addKeyframeParam("addKeyframe", "add a new Keyframe at the current position"),
 manipulateKeyframe("manipulateKeyframe", "Toggle manipulation of the currently selected Keyframe"),
+showLookat("showLookatPath", "Render the path of the lookat point"),
 frameCnt(0), bboxs(), scale(0.5f), steps("steps", "amount of interpolation steps between keyframes") {
 
 	this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
@@ -59,6 +60,9 @@ frameCnt(0), bboxs(), scale(0.5f), steps("steps", "amount of interpolation steps
 
 	this->rendererActiveSlot.SetParameter(new param::BoolParam(true));
 	this->MakeSlotAvailable(&this->rendererActiveSlot);
+
+	this->showLookat.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->showLookat);
 
 	this->currentMode = OVERVIEW;
 	param::EnumParam *rm = new param::EnumParam(int(this->currentMode));
@@ -227,7 +231,33 @@ bool CinematicRenderer::RenderOverview(Call& call){
 
 
 		::glEnd();
+
+		if (this->showLookat.Param<param::BoolParam>()->Value()) {
+			::glLineWidth(2.5);
+			::glColor3f(0.0, 1.0, 0.0);
+			::glDisable(GL_LIGHTING);
+			::glBegin(GL_LINE_STRIP);
+			if (steps.Param<param::IntParam>()->Value() == 1 || keyframes->Count() < 3) {
+				for (unsigned int i = 0; i < keyframes->Count(); i++) {
+					glVertex3f((*keyframes)[i].getCamLookAt().GetX(), (*keyframes)[i].getCamLookAt().GetY(), (*keyframes)[i].getCamLookAt().GetZ());
+				}
+			}
+			else {
+				for (float s = 0.0f; s <= (float)keyframes->Count() - 1; s = s + (1.0f / (float)steps.Param<param::IntParam>()->Value())) {
+
+					kfc->setIndexToInterpolate(s);
+					if (!(*kfc)(CallCinematicCamera::CallForInterpolatedKeyframe)) {
+						vislib::sys::Log::DefaultLog.WriteError("CallForInterpolatedKeyframe failed!");
+						return false;
+					};
+					glVertex3f(kfc->getInterpolatedKeyframe().getCamLookAt().GetX(), kfc->getInterpolatedKeyframe().getCamLookAt().GetY(), kfc->getInterpolatedKeyframe().getCamLookAt().GetZ());
+				}
+			}
+			::glEnd();
+		}
 	}
+	
+	
 
 	// draw the selection marker
 	if ((*kfc)(CallCinematicCamera::CallForGetSelectedKeyframe)) {

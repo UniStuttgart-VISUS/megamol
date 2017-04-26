@@ -168,6 +168,9 @@ namespace megamol {
 
 			/**Bool Param for toggling manipulation of the currently selected Keyframe */
 			core::param::ParamSlot manipulateKeyframe;
+
+			/**Bool Param enabling the display of the camera lookat path */
+			core::param::ParamSlot showLookat;
 			
 			/** The frame count */
 			unsigned int frameCnt;
