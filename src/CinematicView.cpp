@@ -20,7 +20,7 @@ CinematicView::CinematicView(void) : View3D(),
 		selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"),
 		autoLoadKeyframes("keyframeAutoLoad","shall the keyframes be loaded automatically from the file provided in the keyframe-keeper?"),
 		autoSetTotalTime("totalTimeAutoSet", "shall the total animation time be determined automatically?"),
-        paramEdit("edit", "Do not overwrite the camera such that the selected key frame can be edited."),
+        paramEdit("cinematicCam::edit", "Do not overwrite the camera such that the selected key frame can be edited."),
 		firstframe(true) {
 
 
@@ -108,7 +108,7 @@ void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext&
             if (this->paramEdit.IsDirty()) {
                 if (!isEdit && isSelectedKeyFrame && (id >= 0)) {
                     vislib::sys::Log::DefaultLog.WriteInfo("Updating key frame %d ...", id);
-                    kfc->setCameraForNewKeyframe(cr3d->GetCameraParameters());
+                    kfc->setCameraForNewKeyframe(this->cam.Parameters());
                     if ((*kfc)(CallCinematicCamera::CallForKeyFrameUpdate)) {
                         vislib::sys::Log::DefaultLog.WriteInfo("Key frame %d was updated.", id);
                     }
