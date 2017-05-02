@@ -31,6 +31,7 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/math/Matrix.h"
 #include <GL/glu.h>
 #include <omp.h>
 #include <algorithm>
@@ -57,6 +58,7 @@ QuickSurfRenderer::QuickSurfRenderer(void) : Renderer3DModuleDS (),
     gridspacingParam( "quicksurf::gridspacing", "Grid spacing" ),
     isovalParam( "quicksurf::isoval", "Isovalue" ),
     offscreenRenderingParam( "offscreenRendering", "Toggle offscreenRendering" ),
+	transparencyValueParam("alphaValue", "Alpha value of the whole surface"),
     setCUDAGLDevice(true)
 {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -113,6 +115,9 @@ QuickSurfRenderer::QuickSurfRenderer(void) : Renderer3DModuleDS (),
 
     this->isovalParam.SetParameter( new param::FloatParam( 0.5f, 0.0f));
     this->MakeSlotAvailable( &this->isovalParam);
+
+	this->transparencyValueParam.SetParameter(new param::FloatParam(1.0f, 0.0f, 1.0f));
+	this->MakeSlotAvailable(&this->transparencyValueParam);
     
     // Toggle offscreen rendering
     this->offscreenRenderingParam.SetParameter(new param::BoolParam(false));
@@ -429,15 +434,23 @@ bool QuickSurfRenderer::Render(Call& call) {
     if( !cudaqsurf ) {
         cudaqsurf = new CUDAQuickSurf();
     }
-    
+
+	float alpha = this->transparencyValueParam.Param<param::FloatParam>()->Value();
+
+	if (std::abs(alpha - 1.0f) > vislib::math::FLOAT_EPSILON) {
+		glEnable(GL_BLEND);
+	}
+
     // enable per-pixel light shader
     if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
         // direct rendering
         this->lightShader.Enable();
+		glUniform1fARB(this->lightShader.ParameterLocation("alpha"), alpha);
     } else {
         // offscreen rendering (Render to fragment buffer)
         this->lightShaderOR.Enable();
         glUniform2fARB(this->lightShaderOR.ParameterLocation("zValues"), cameraInfo->NearClip(), cameraInfo->FarClip());
+		glUniform1fARB(this->lightShaderOR.ParameterLocation("alpha"), alpha);
     }
 
     this->calcSurf( mol, posInter, 
@@ -454,6 +467,10 @@ bool QuickSurfRenderer::Render(Call& call) {
     else {
         this->lightShaderOR.Disable();
     }
+
+	if (std::abs(alpha - 1.0f) > vislib::math::FLOAT_EPSILON) {
+		glDisable(GL_BLEND);
+	}
 
     glPopMatrix();
 
@@ -620,6 +637,7 @@ int QuickSurfRenderer::calcSurf(MolecularDataCall *mol, float *posInter,
     int ind = 0;
     int ind4 = 0; 
     xyzr = (float *) malloc( mol->AtomCount() * sizeof(float) * 4);
+	float alphaVal = this->transparencyValueParam.Param<param::FloatParam>()->Value();
     if (useCol) {
         colors = (float *) malloc( mol->AtomCount() * sizeof(float) * 4);
 
@@ -636,7 +654,7 @@ int QuickSurfRenderer::calcSurf(MolecularDataCall *mol, float *posInter,
             colors[ind4    ] = cp[0];
             colors[ind4 + 1] = cp[1];
             colors[ind4 + 2] = cp[2];
-            colors[ind4 + 3] = 1.0f;
+			colors[ind4 + 3] = alphaVal;
 
             ind4 += 4;
             ind += 3;
@@ -671,6 +689,18 @@ int QuickSurfRenderer::calcSurf(MolecularDataCall *mol, float *posInter,
     pretime = wkf_timer_timenow(timer);
 
     CUDAQuickSurf *cqs = (CUDAQuickSurf *) cudaqsurf;
+
+	// Calculate cam pos using last column of inverse modelview matrix
+	float3 camPos;
+	GLfloat m[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, m);
+	vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelMatrix(&m[0]);
+	modelMatrix.Invert();
+	camPos.x = modelMatrix.GetAt(0, 3);
+	camPos.y = modelMatrix.GetAt(1, 3);
+	camPos.z = modelMatrix.GetAt(2, 3);
+
+	cqs->copyCamPosToDevice(camPos);
 
     // compute both density map and floating point color texture map
     int rc = cqs->calc_surf( mol->AtomCount(), &xyzr[0],

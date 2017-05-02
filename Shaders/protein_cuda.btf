@@ -7715,6 +7715,7 @@ gl_Position = ftransform();
 varying vec4 diffuse,ambient;
 varying vec3 normal,lightDir,halfVector;
 
+uniform float alpha = 1.0;
 
 void main()
 {
@@ -7737,7 +7738,7 @@ void main()
         color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
     }
 
-    gl_FragColor = color;
+    gl_FragColor = vec4(color.rgb, alpha);
 }
 -->
         </snippet>
@@ -7749,9 +7750,10 @@ void main()
 uniform vec2 zValues;
 varying vec4 color;
 varying vec3 normal;
+uniform float alpha = 1.0;
 
 void main() {
-	gl_FragData[0] = color;
+	gl_FragData[0] = vec4(color.rgb, alpha);
 	gl_FragData[1].rgb = normalize( normal);
   
     float n = zValues.x;

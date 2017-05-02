@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cuda.h>
+#include <helper_math.h>
 #include <algorithm>
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
@@ -53,13 +54,13 @@
 // multi-threaded direct summation implementation
 //
 
-inline __host__ __device__ float dot(float3 a, float3 b) { 
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-inline __host__ __device__ float length(float3 v){
-    return sqrtf(dot(v, v));
-}
+//inline __host__ __device__ float dot(float3 a, float3 b) { 
+//    return a.x * b.x + a.y * b.y + a.z * b.z;
+//}
+//
+//inline __host__ __device__ float length(float3 v){
+//    return sqrtf(dot(v, v));
+//}
 
 typedef struct {
   float isovalue;
@@ -74,6 +75,27 @@ typedef struct {
   long int natoms;
   float gridspacing;
 } enthrparms;
+
+__device__ __constant__ float3 camPosition;
+
+cudaError_t CUDAQuickSurf::copyCamPosToDevice(float3 camPos) {
+	cudaError_t error = cudaMemcpyToSymbol(camPosition, (void*)&camPos, sizeof(float3));
+	cudaDeviceSynchronize();
+	return error;
+}
+
+/*
+* greater than comparison
+*/
+__device__ bool greater_triangleCustom::operator()(const triangleCustom& lhs, const triangleCustom& rhs) const {
+	// use midpoint
+	float3 trianglePos1 = (lhs.v1 + lhs.v2 + lhs.v3) / 3.0f;
+	float3 trianglePos2 = (rhs.v1 + rhs.v2 + rhs.v3) / 3.0f;
+	float dist1 = length(trianglePos1 - camPosition);
+	float dist2 = length(trianglePos2 - camPosition);
+
+	return (dist1 > dist2);
+}
 
 /* thread prototype */
 static void * cudadensitythread(void *);
@@ -1976,6 +1998,7 @@ typedef struct {
 
   void *safety;
   float *v3f_d;
+  float *v3f_d_copy;
   float *n3f_d;
   float *c3f_d;
   
@@ -2008,6 +2031,18 @@ CUDAQuickSurf::~CUDAQuickSurf() {
   delete gpuh->mc;
 
   free(voidgpu);
+}
+
+cudaError CUDAQuickSurf::SortTrianglesDevice(uint triaCnt, triangleCustom * vertices, 
+	triangleCustom * verticesCopy, triangleCustom * colors, triangleCustom * normals) {
+	thrust::sort_by_key(thrust::device_ptr<triangleCustom>(vertices),
+		thrust::device_ptr<triangleCustom>(vertices + triaCnt),
+		thrust::device_ptr<triangleCustom>(colors), greater_triangleCustom());
+	thrust::sort_by_key(thrust::device_ptr<triangleCustom>(verticesCopy),
+		thrust::device_ptr<triangleCustom>(verticesCopy + triaCnt),
+		thrust::device_ptr<triangleCustom>(normals), greater_triangleCustom());
+	cudaDeviceSynchronize();
+	return cudaGetLastError();
 }
 
 
@@ -2066,8 +2101,11 @@ int CUDAQuickSurf::free_bufs() {
   gpuh->cellStartEnd_d=NULL;
 
   if (gpuh->v3f_d != NULL)
-    cudaFree(gpuh->v3f_d);
-  gpuh->v3f_d=NULL;
+	  cudaFree(gpuh->v3f_d);
+  gpuh->v3f_d = NULL;
+  if (gpuh->v3f_d_copy != NULL)
+	  cudaFree(gpuh->v3f_d_copy);
+  gpuh->v3f_d_copy = NULL;
 
   if (gpuh->n3f_d != NULL)
     cudaFree(gpuh->n3f_d);
@@ -2213,6 +2251,7 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
   // allocate marching cubes output buffers
   int chunkmaxverts = 3 * ncells;
   cudaMalloc((void**)&gpuh->v3f_d, 3 * chunkmaxverts * sizeof(float4));
+  cudaMalloc((void**)&gpuh->v3f_d_copy, 3 * chunkmaxverts * sizeof(float4));
   cudaMalloc((void**)&gpuh->n3f_d, 3 * chunkmaxverts * sizeof(float4));
   cudaMalloc((void**)&gpuh->c3f_d, 3 * chunkmaxverts * sizeof(float4));
 
@@ -2495,7 +2534,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
                              float radscale, float gridspacing, 
                              float isovalue, float gausslim,
                              int &numverts, float *&v, float *&n, float *&c,
-                             int &numfacets, int *&f) {
+                             int &numfacets, int *&f, bool sortTriangles) {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
   float4 *colors = (float4 *) colors_f;
@@ -2960,6 +2999,11 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //    }
 //#else
 #if 1
+	// TODO sort
+	cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
+	cudaDeviceSynchronize();
+	this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
+
     // map VBOs for writing
     //size_t num_bytes;
     float *v3f, *n3f, *c3f;
@@ -3134,7 +3178,7 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
                              float radscale, float3 gridspacing, 
                              float isovalue, float gausslim,
                              int &numverts, float *&v, float *&n, float *&c,
-                             int &numfacets, int *&f) {
+                             int &numfacets, int *&f, bool sortTriangles) {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
   float4 *colors = (float4 *) colors_f;
@@ -3588,6 +3632,12 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //    }
 //#else
 #if 1
+	// TODO sort
+	cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
+	cudaDeviceSynchronize();
+	this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
+	cudaDeviceSynchronize();
+
     // map VBOs for writing
     //size_t num_bytes;
     float *v3f, *n3f, *c3f;

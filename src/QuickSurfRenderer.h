@@ -200,6 +200,7 @@ namespace protein_cuda {
         megamol::core::param::ParamSlot isovalParam;
         /** Toggle offscreen rendering */
         megamol::core::param::ParamSlot offscreenRenderingParam;
+		megamol::core::param::ParamSlot transparencyValueParam;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;

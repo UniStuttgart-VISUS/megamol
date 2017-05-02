@@ -27,6 +27,22 @@
 // Write file for Daniel Kauker (puxel)
 //#define WRITE_FILE
 
+typedef unsigned int uint;
+
+struct triangleCustom {
+	float3 v1;
+	float3 v2;
+	float3 v3;
+};
+
+/*
+* greater than comparison for int2 (compares x values)
+*/
+struct greater_triangleCustom {
+	__device__
+		bool operator()(const triangleCustom& lhs, const triangleCustom& rhs) const;
+};
+
 class CUDAQuickSurf {
   void *voidgpu; ///< pointer to structs containing private per-GPU pointers 
 
@@ -73,14 +89,14 @@ struct Vertex
                 float radscale, float gridspacing,
                 float isovalue, float gausslim,
                 int &numverts, float *&v, float *&n, float *&c,
-                int &numfacets, int *&f);
+                int &numfacets, int *&f, bool sortTriangles = false);
 
   int calc_surf(long int natoms, const float *xyzr, const float *colors,
                 int colorperatom, float *origin, int* numvoxels, float maxrad,
                 float radscale, float3 gridspacing,
                 float isovalue, float gausslim,
                 int &numverts, float *&v, float *&n, float *&c,
-                int &numfacets, int *&f);
+                int &numfacets, int *&f, bool sortTriangles = false);
 
   int calc_map(long int natoms, const float *xyzr, const float *colors,
                int colorperatom, float *origin, int* numvoxels, float maxrad,
@@ -101,9 +117,14 @@ struct Vertex
   bool useGaussKernel;
   float surfaceArea;
 
+  cudaError_t copyCamPosToDevice(float3 camPos);
+
   //void setDensFilterVals(float rad, int minN);
 
   ~CUDAQuickSurf(void);
+private:
+	cudaError SortTrianglesDevice(uint triaCnt, triangleCustom * vertices, 
+		triangleCustom* verticesCopy, triangleCustom* colors, triangleCustom* normals);
 };
 
 #endif // WITH_CUDA
