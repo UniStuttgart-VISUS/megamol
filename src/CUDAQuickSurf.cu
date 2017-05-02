@@ -3000,10 +3000,11 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //#else
 #if 1
 	// TODO sort
-	cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
-	cudaDeviceSynchronize();
-	this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
-
+	if (sortTriangles) {
+		cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
+		cudaDeviceSynchronize();
+		this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
+	}
     // map VBOs for writing
     //size_t num_bytes;
     float *v3f, *n3f, *c3f;
@@ -3633,10 +3634,11 @@ printf("  ... bbe: %.2f %.2f %.2f\n",
 //#else
 #if 1
 	// TODO sort
-	cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
-	cudaDeviceSynchronize();
-	this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
-	cudaDeviceSynchronize();
+	if (sortTriangles) {
+		cudaMemcpy(gpuh->v3f_d_copy, gpuh->v3f_d, chunkvertsz, cudaMemcpyDeviceToDevice);
+		cudaDeviceSynchronize();
+		this->SortTrianglesDevice(chunknumverts / 3, (triangleCustom*)gpuh->v3f_d, (triangleCustom*)gpuh->v3f_d_copy, (triangleCustom*)gpuh->c3f_d, (triangleCustom*)gpuh->n3f_d);
+	}
 
     // map VBOs for writing
     //size_t num_bytes;

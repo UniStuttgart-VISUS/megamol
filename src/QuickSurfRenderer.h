@@ -99,7 +99,7 @@ namespace protein_cuda {
          */
         int calcSurf(megamol::protein_calls::MolecularDataCall *mol, float *posInter,
                          int quality, float radscale, float gridspacing,
-                         float isoval, bool useCol);
+                         float isoval, bool useCol, bool sortTriangles = false);
 
     private:
 

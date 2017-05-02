@@ -436,9 +436,11 @@ bool QuickSurfRenderer::Render(Call& call) {
     }
 
 	float alpha = this->transparencyValueParam.Param<param::FloatParam>()->Value();
+	bool sort = false;
 
 	if (std::abs(alpha - 1.0f) > vislib::math::FLOAT_EPSILON) {
 		glEnable(GL_BLEND);
+		sort = true;
 	}
 
     // enable per-pixel light shader
@@ -458,7 +460,7 @@ bool QuickSurfRenderer::Render(Call& call) {
         this->radscaleParam.Param<param::FloatParam>()->Value(),
         this->gridspacingParam.Param<param::FloatParam>()->Value(),
         this->isovalParam.Param<param::FloatParam>()->Value(),
-        true);
+        true, sort);
     
     // disable per-pixel light shader
     if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
@@ -518,7 +520,7 @@ void QuickSurfRenderer::UpdateParameters( const MolecularDataCall *mol) {
 
 int QuickSurfRenderer::calcSurf(MolecularDataCall *mol, float *posInter,
                          int quality, float radscale, float gridspacing,
-                         float isoval, bool useCol) {
+                         float isoval, bool useCol, bool sortTriangles) {
     wkf_timer_start(timer);
 
     // clean up any existing CPU arrays before going any further...
@@ -707,7 +709,7 @@ int QuickSurfRenderer::calcSurf(MolecularDataCall *mol, float *posInter,
         (useCol) ? &colors[0] : &this->atomColorTable[0],
         useCol, origin, numvoxels, maxrad,
         radscale, gridspacing, isovalue, gausslim,
-        gpunumverts, gv, gn, gc, gpunumfacets, gf);
+        gpunumverts, gv, gn, gc, gpunumfacets, gf, sortTriangles);
 
     if (rc == 0) {
         gpuvertexarray = 1;
