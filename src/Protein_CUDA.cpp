@@ -18,6 +18,7 @@
 #include "MoleculeCudaSESRenderer.h"
 #include "MoleculeCBCudaRenderer.h"
 #include "CrystalStructureVolumeRenderer.h"
+#include "QuickSESRenderer.h"
 #include "QuickSurfRenderer.h"
 #include "QuickSurfRenderer2.h"
 #include "QuickSurfMTRenderer.h"
@@ -89,6 +90,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::StreamlineRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCudaSESRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::MoleculeCBCudaRenderer>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSESRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfRenderer2>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_cuda::QuickSurfMTRenderer>();

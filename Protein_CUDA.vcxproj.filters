@@ -264,6 +264,12 @@
     <ClInclude Include="src\helper_includes\helper_timer.h">
       <Filter>CUDA Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="src\CUDAQuickSES.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\QuickSESRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
@@ -401,6 +407,9 @@
     <ClCompile Include="src\PlaneDataCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\QuickSESRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\VolumeMeshRenderer-sort.cu">
@@ -479,6 +488,9 @@
       <Filter>CUDA Files</Filter>
     </CudaCompile>
     <CudaCompile Include="src\SecStructFlattener.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSES.cu">
       <Filter>CUDA Files</Filter>
     </CudaCompile>
   </ItemGroup>

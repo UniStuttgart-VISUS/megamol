@@ -862,10 +862,14 @@ int QuickSurfRenderer2::calcSurf(MultiParticleDataCall *mol, float *posInter,
 
     // compute both density map and floating point color texture map
     int rc = cqs->calc_surf( static_cast<long>(numParticles), posInter,
-        (useCol) ? &colors[0] : &this->atomColorTable[0],
-        useCol, origin, numvoxels, maxrad,
+        (useCol) ? &colors[0] : &this->atomColorTable[0], useCol, 
+        origin, numvoxels, maxrad,
         radscale, gridSpacing3D, isovalue, gausslim,
         gpunumverts, gv, gn, gc, gpunumfacets, gf);
+
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess)
+        return -1;
 
     this->currentSurfaceArea = cqs->surfaceArea;
 

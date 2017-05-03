@@ -8,15 +8,15 @@
 //     Author: scharnkn
 //
 
-#include <stdafx.h>
+#include "stdafx.h"
 #include "ComparativeSurfacePotentialRenderer.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
 #define POTENTIAL_VOLUME_RENDERER_CUDA_USE_TIMER
 
-#include "VTIDataCall.h"
-#include "MolecularDataCall.h"
+#include "protein_calls/VTIDataCall.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "CUDAQuickSurf.h"
 #include "ComparativeSurfacePotentialRenderer.cuh"
 #include "Color.h"
@@ -47,6 +47,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_cuda;
+using namespace megamol::protein_calls;
 
 // Offsets and stride for vbos holding surface data
 const uint ComparativeSurfacePotentialRenderer::vertexDataOffsPos = 0;
@@ -1534,16 +1535,16 @@ bool ComparativeSurfacePotentialRenderer::GetExtents(core::Call& call) {
     }
 
     // Get pointer to potential map data call
-    protein_cuda::VTIDataCall *cmd0 =
-            this->potentialDataCallerSlot0.CallAs<protein_cuda::VTIDataCall>();
+    VTIDataCall *cmd0 =
+            this->potentialDataCallerSlot0.CallAs<VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
     if (!(*cmd0)(VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    protein_cuda::VTIDataCall *cmd1 =
-            this->potentialDataCallerSlot1.CallAs<protein_cuda::VTIDataCall>();
+    VTIDataCall *cmd1 =
+            this->potentialDataCallerSlot1.CallAs<VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }
@@ -1766,16 +1767,16 @@ bool ComparativeSurfacePotentialRenderer::getVBOExtent(core::Call& call) {
     c->SetBBox(this->bbox);
 
     // Get pointer to potential map data call
-    protein_cuda::VTIDataCall *cmd0 =
-            this->potentialDataCallerSlot0.CallAs<protein_cuda::VTIDataCall>();
+    VTIDataCall *cmd0 =
+            this->potentialDataCallerSlot0.CallAs<VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
     if (!(*cmd0)(VTIDataCall::CallForGetExtent)) {
         return false;
     }
-    protein_cuda::VTIDataCall *cmd1 =
-            this->potentialDataCallerSlot1.CallAs<protein_cuda::VTIDataCall>();
+    VTIDataCall *cmd1 =
+            this->potentialDataCallerSlot1.CallAs<VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }
@@ -3173,7 +3174,7 @@ bool ComparativeSurfacePotentialRenderer::Render(core::Call& call) {
 
     // Get potential map of data set #0
     VTIDataCall *cmd0 =
-            this->potentialDataCallerSlot0.CallAs<protein_cuda::VTIDataCall>();
+            this->potentialDataCallerSlot0.CallAs<VTIDataCall>();
     if (cmd0 == NULL) {
         return false;
     }
@@ -3183,8 +3184,8 @@ bool ComparativeSurfacePotentialRenderer::Render(core::Call& call) {
         return false;
     }
 
-    protein_cuda::VTIDataCall *cmd1 =
-            this->potentialDataCallerSlot1.CallAs<protein_cuda::VTIDataCall>();
+    VTIDataCall *cmd1 =
+            this->potentialDataCallerSlot1.CallAs<VTIDataCall>();
     if (cmd1 == NULL) {
         return false;
     }

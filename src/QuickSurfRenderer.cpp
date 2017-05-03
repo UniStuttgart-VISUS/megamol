@@ -440,6 +440,7 @@ bool QuickSurfRenderer::Render(Call& call) {
 
 	if (std::abs(alpha - 1.0f) > vislib::math::FLOAT_EPSILON) {
 		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		sort = true;
 	}
 

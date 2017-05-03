@@ -20,7 +20,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModuleDS.h"
 #include "mmcore/view/CallRender3D.h"
-#include "VTIDataCall.h"
+#include "protein_calls/VTIDataCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "CUDAMarchingCubes.h"
 #include "CUDAQuickSurf.h"
@@ -139,7 +139,7 @@ protected:
      * @return 'True' on success, 'false' otherwise
      */
     bool applyRMSFittingToPosArray(
-            MolecularDataCall *mol,
+            protein_calls::MolecularDataCall *mol,
             cudaGraphicsResource **cudaTokenVboMapped,
             uint vertexCnt);
 
@@ -159,7 +159,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDensityMap(const MolecularDataCall *mol, CUDAQuickSurf *cqs,
+    bool computeDensityMap(const protein_calls::MolecularDataCall *mol, CUDAQuickSurf *cqs,
                     gridParams &gridDensMap,
                     const vislib::math::Cuboid<float> &bboxParticles
 #if defined(USE_TEXTURE_SLICES)
@@ -180,7 +180,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool computeDistField(const MolecularDataCall *mol,
+    bool computeDistField(const protein_calls::MolecularDataCall *mol,
             cudaGraphicsResource **vboResource,
             uint vertexCnt,
             CudaDevArr<float> &distField_D,
@@ -226,7 +226,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool fitMoleculeRMS(MolecularDataCall *mol0, MolecularDataCall *mol1);
+    bool fitMoleculeRMS(protein_calls::MolecularDataCall *mol0, protein_calls::MolecularDataCall *mol1);
 
     /**
      * Frees all dynamically allocated memory (host and device) and sets all
@@ -285,7 +285,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool initPotentialMap(VTIDataCall *cmd, gridParams &gridPotentialMap,
+    bool initPotentialMap(protein_calls::VTIDataCall *cmd, gridParams &gridPotentialMap,
                     GLuint &potentialTex);
 
     /**

@@ -735,7 +735,7 @@ __global__ void sortAtomsGenCellLists(unsigned int natoms,
   extern __shared__ unsigned int hash_s[]; // blockSize + 1 elements
   unsigned int index = (blockIdx.x * blockDim.x) + threadIdx.x;
   unsigned int hash;
-
+  
   // do nothing if current index exceeds the number of atoms
   if (index < natoms) {
     hash = atomHash_d[index];
@@ -752,6 +752,7 @@ __global__ void sortAtomsGenCellLists(unsigned int natoms,
     // Since atoms are sorted, if this atom has a different cell
     // than its predecessor, it is the first atom in its cell, and 
     // it's index marks the end of the previous cell.
+  
     if (index == 0 || hash != hash_s[threadIdx.x]) {
       cellStartEnd_d[hash].x = index; // set start
       if (index > 0)
@@ -808,16 +809,34 @@ int vmd_cuda_build_density_atom_grid(int natoms,
   //     per-dimension 65535 block grid size limitation
   hashAtoms<<<hGsz, hBsz>>>(natoms, xyzr_d, volsz, invgridspacing,
                             atomIndex_d, atomHash_d);
+  cudaThreadSynchronize();
+  cudaError_t err = cudaGetLastError();
+  if (err != cudaSuccess) {
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
+  }
 
   // Sort atom indices by their grid cell address
   // (wrapping the device pointers with vector iterators)
   thrust::sort_by_key(thrust::device_ptr<unsigned int>(atomHash_d),
                       thrust::device_ptr<unsigned int>(atomHash_d + natoms),
                       thrust::device_ptr<unsigned int>(atomIndex_d));
+  cudaThreadSynchronize();
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
+  }
 
   // Initialize all cells to empty
   int ncells = volsz.x * volsz.y * volsz.z;
   cudaMemset(cellStartEnd_d, GRID_CELL_EMPTY, ncells*sizeof(uint2));
+  cudaThreadSynchronize();
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
+  }
 
   // Reorder atoms into sorted order and find start and end of each cell
   // XXX need to use 2-D indexing for large atom counts or we exceed the
@@ -826,6 +845,12 @@ int vmd_cuda_build_density_atom_grid(int natoms,
   sortAtomsGenCellLists<<<hGsz, hBsz, smemSize>>>(
                        natoms, xyzr_d, color_d, atomIndex_d, sorted_atomIndex_d, 
                        atomHash_d, sorted_xyzr_d, sorted_color_d, cellStartEnd_d);
+  cudaThreadSynchronize();
+  err = cudaGetLastError();
+  if (err != cudaSuccess) {
+      printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+      return -1;
+  }
 
 #if 1
   // XXX when the code is ready for production use, we can disable
@@ -833,7 +858,7 @@ int vmd_cuda_build_density_atom_grid(int natoms,
   //     where errors fall through all of the CUDA API calls until the
   //     end and we do the cleanup only at the end.
   cudaThreadSynchronize();
-  cudaError_t err = cudaGetLastError();
+  err = cudaGetLastError();
   if (err != cudaSuccess) {
     printf("CUDA error: %s, %s line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
     return -1;
@@ -2049,6 +2074,10 @@ cudaError CUDAQuickSurf::SortTrianglesDevice(uint triaCnt, triangleCustom * vert
 int CUDAQuickSurf::free_bufs() {
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
+  cudaError_t err = cudaGetLastError();
+  if (err != cudaSuccess)
+      return -1;
+
   // zero out max buffer capacities
   gpuh->natoms = 0;
   gpuh->colorperatom = 0;
@@ -2115,6 +2144,10 @@ int CUDAQuickSurf::free_bufs() {
     cudaFree(gpuh->c3f_d);
   gpuh->c3f_d=NULL;
 
+  err = cudaGetLastError();
+  if (err != cudaSuccess)
+      return -1;
+
   //GL
   if (gpuh->v3f_vbo) {
       cudaGLUnregisterBufferObject( gpuh->v3f_vbo);
@@ -2134,7 +2167,11 @@ int CUDAQuickSurf::free_bufs() {
       glDeleteBuffers(1, &gpuh->c3f_vbo);
       //cudaGraphicsUnregisterResource( gpuh->c3f_res);
   }
-  
+
+  err = cudaGetLastError();
+  if (err != cudaSuccess)
+      return -1;
+
   return 0;
 }
 
@@ -2220,6 +2257,10 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
 
   qsurf_gpuhandle *gpuh = (qsurf_gpuhandle *) voidgpu;
 
+  cudaError_t err = cudaGetLastError();
+  if (err != cudaSuccess)
+      return -1;
+
   // early exit from allocation call if we've already got existing
   // buffers that are large enough to support the request
   if (check_bufs(natoms, colorperatom, gx, gy, gz) == 0)
@@ -2228,6 +2269,10 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
   // If we have any existing allocations, trash them as they weren't
   // usable for this new request and we need to reallocate them from scratch
   free_bufs();
+
+  err = cudaGetLastError();
+  if (err != cudaSuccess)
+      return -1;
 
   long int ncells = gx * gy * gz;
   long int volmemsz = ncells * sizeof(float);
@@ -2255,10 +2300,14 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
   cudaMalloc((void**)&gpuh->n3f_d, 3 * chunkmaxverts * sizeof(float4));
   cudaMalloc((void**)&gpuh->c3f_d, 3 * chunkmaxverts * sizeof(float4));
 
-    // GL
+  err = cudaGetLastError();
+  if (err != cudaSuccess)
+      return -1;
+
+  // GL
   if( ogl_IsVersionGEQ(2,0) != GL_TRUE ) {
         return -1;
-    }
+  }
     glGenBuffers( 1, &gpuh->v3f_vbo);
     glGenBuffers( 1, &gpuh->n3f_vbo);
     glGenBuffers( 1, &gpuh->c3f_vbo);
@@ -2276,6 +2325,9 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
     cudaGLRegisterBufferObject( gpuh->n3f_vbo);
     cudaGLRegisterBufferObject( gpuh->c3f_vbo);
 
+    err = cudaGetLastError();
+    if (err != cudaSuccess)
+        return -1;
   // Allocate an extra phantom array to act as a safety net to
   // ensure that subsequent allocations performed internally by 
   // the NVIDIA thrust template library or by our 
@@ -2285,7 +2337,7 @@ int CUDAQuickSurf::alloc_bufs(long int natoms, int colorperatom,
              8 * gx * gy * sizeof(float) +                    // thrust
              CUDAMarchingCubes::MemUsageMC(gx, gy, gz));      // mcubes
   
-  cudaError_t err = cudaGetLastError();
+  err = cudaGetLastError();
   if (err != cudaSuccess)
     return -1;
 
@@ -3291,6 +3343,10 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
     chunksz = volsz;
     slabsz = volsz;
 
+    err = cudaGetLastError();
+    if (err != cudaSuccess)
+        return -1;
+
     // reallocate the chunk buffers from scratch since we weren't
     // able to reuse them
     if (get_chunk_bufs(0, natoms, colorperatom,
@@ -3301,6 +3357,10 @@ int CUDAQuickSurf::calc_surf(long int natoms, const float *xyzr_f,
       free(xyzr);
       return -1;
     }
+
+    err = cudaGetLastError();
+    if (err != cudaSuccess)
+        return -1;
   }
   chunkmaxverts = 3 * chunksz.x * chunksz.y * chunksz.z;
 
