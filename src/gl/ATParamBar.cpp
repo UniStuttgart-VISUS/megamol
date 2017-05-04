@@ -419,7 +419,11 @@ void gl::ATParamBar::FlexEnumParam::Get(void *value) {
             }
         }
         *static_cast<int*>(value) = 0; // vislib::CharTraitsA::ParseInt(v);
-        ::mmcSetParameterValueA(this->Handle(), *this->enumStrings[0]);
+        if (this->enumStrings.size() > 0) {
+            ::mmcSetParameterValueA(this->Handle(), *this->enumStrings[0]);
+        } else {
+            ::mmcSetParameterValueA(this->Handle(), "<undef>");
+        }
     } catch (...) {
     }
 }
