@@ -283,6 +283,7 @@ namespace protein {
         vislib::graphics::gl::GLSLShader sphereShader;
         vislib::graphics::gl::GLSLShader sphereShaderOR;
         vislib::graphics::gl::GLSLGeometryShader sphereShaderGeom;
+		vislib::graphics::gl::GLSLGeometryShader sphereShaderGeomOR;
         vislib::graphics::gl::GLSLShader sphereClipPlaneShader;
         /** shader for the cylinders (raycasting view) */
         vislib::graphics::gl::GLSLShader cylinderShader;
