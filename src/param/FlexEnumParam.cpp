@@ -73,6 +73,7 @@ void FlexEnumParam::Definition(vislib::RawStorage& outDef) const {
 bool FlexEnumParam::ParseValue(const vislib::TString& v) {
     try {
         this->SetValue(std::string(T2A(v)));
+        return true;
         //auto iter = this->values.find(std::string(T2A(v)));
         //if (iter == this->values.end()) {
         //    return false;
