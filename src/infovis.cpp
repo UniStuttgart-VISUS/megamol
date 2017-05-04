@@ -48,7 +48,7 @@ namespace {
 
             this->module_descriptions.RegisterAutoDescription<megamol::infovis::FlagStorage>();
             this->module_descriptions.RegisterAutoDescription<megamol::infovis::NGParallelCoordinatesRenderer2D>();
-            this->module_descriptions.RegisterAutoDescription<megamol::infovis::NVGDiagramRenderer>();
+            //this->module_descriptions.RegisterAutoDescription<megamol::infovis::NVGDiagramRenderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeries>();
 
             // register calls here:

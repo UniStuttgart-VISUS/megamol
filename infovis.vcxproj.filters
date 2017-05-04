@@ -142,9 +142,6 @@
     <ClInclude Include="3rd\oui-blendish\oui.h">
       <Filter>3rd\oui-blendish\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NVGDiagramRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="3rd\nanoflann\nanoflann.hpp">
       <Filter>3rd\nanoflann</Filter>
     </ClInclude>
@@ -175,9 +172,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\DiagramSeries.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\NVGDiagramRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
