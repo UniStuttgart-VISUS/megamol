@@ -42,6 +42,7 @@ namespace misc {
         inline VolumetricMetadata_t(void) {
             ::memset(this->Resolution, 0, sizeof(this->Resolution));
             ::memset(this->SliceDists, 0, sizeof(this->SliceDists));
+			::memset(this->Origin, 0, sizeof(this->Origin));
             ::memset(this->IsUniform, 0, sizeof(this->IsUniform));
             ::memset(this->Extents, 0, sizeof(this->Extents));
         };
@@ -66,6 +67,11 @@ namespace misc {
          * data source providing the metadata remains owner of the arrays.
          */
         float *SliceDists[3];
+
+		/**
+		 * The origin of the coordinate system used by this data set
+		 */
+		float Origin[3];
 
         /**
          * Determines whether SliceDists[i] is uniform and has only one
