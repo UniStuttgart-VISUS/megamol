@@ -18,6 +18,7 @@
 #include "mmcore/misc/VolumetricDataCallTypes.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "mmcore/view/CallClipPlane.h"
 #include "protein_calls/MolecularDataCall.h"
 
 #include "CUDAQuickSurfAlternative.h"
@@ -33,11 +34,12 @@
 #include <vislib/graphics/gl/IncludeAllGL.h>
 #include <cuda_gl_interop.h>
 
+extern "C" void copyMVPMatrix(float * mvp, size_t sizeofMatrix);
 extern "C" void setTextureFilterMode(bool bLinearFilter);
 extern "C" void initCudaDevice(void *h_volume, cudaExtent volumeSize);
 extern "C" void freeCudaBuffers();
-extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, unsigned int *d_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0, 1.0, 1.0), cudaExtent volSize = make_cudaExtent(1, 1, 1), const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f));
-extern "C" void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, unsigned int *d_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1), const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f));
+extern "C" void render_kernel(dim3 gridSize, dim3 blockSize, unsigned int *d_output, float *d_depth_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0, 1.0, 1.0), cudaExtent volSize = make_cudaExtent(1, 1, 1), const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f));
+extern "C" void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, unsigned int *d_output, float * d_depth_output, unsigned int imageW, unsigned int imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale, const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1), const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f));
 extern "C" void copyLUT(float4* myLUT, int lutSize = 256);
 extern "C" void transferIsoValues(float4 h_isoVals, int h_numIsos);
 extern "C" void transferNewVolume(void *h_volume, cudaExtent volumeSize);
@@ -47,6 +49,8 @@ extern "C" void transferVolumeDirect(void *h_volume, cudaExtent volumeSize, floa
 #include "vislib/math/Matrix.h"
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
+
+//#define FBO
 
 namespace megamol {
 namespace protein_cuda {
@@ -240,6 +244,9 @@ namespace protein_cuda {
 		/** caller slot */
 		megamol::core::CallerSlot particleDataSlot;
 
+		/** The slot for the clipplane */
+		megamol::core::CallerSlot getClipPlaneSlot;
+
 		/** camera information */
 		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
 		
@@ -263,6 +270,9 @@ namespace protein_cuda {
 		/** The resulting CUDA image*/
 		unsigned int * cudaImage;
 
+		/** The resulting CUDA depth image */
+		float * cudaDepthImage;
+
 		/** The array containing the rendered volume */
 		cudaArray * volumeArray;
 
@@ -274,6 +284,9 @@ namespace protein_cuda {
 
 		/** The texture handle */
 		GLuint texHandle;
+
+		/** The handle for the depth texture */
+		GLuint depthTexHandle;
 
 		/** The shader program for texture drawing */
 		vislib::graphics::gl::GLSLShader textureShader;
@@ -313,6 +326,8 @@ namespace protein_cuda {
 
 		megamol::core::param::ParamSlot convertedIsoValueParam;
 
+		megamol::core::param::ParamSlot showDepthTextureParam;
+
 		std::vector<float> isoVals;
 
 		cudaArray *tmpCudaArray;
@@ -330,6 +345,9 @@ namespace protein_cuda {
 		int lastTimeVal;
 
 		float * map;
+
+		/** The fbo the volume rendering result gets rendered to  */
+		vislib::graphics::gl::FramebufferObject volume_fbo;
 
 		float3 * mcVertices_d;
 		float3 * mcNormals_d;

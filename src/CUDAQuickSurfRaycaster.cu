@@ -48,20 +48,11 @@ texture<float4, 1, cudaReadModeElementType> customTransferTex;
 float minVal, maxVal;
 
 typedef struct {
-	float4 m[3];
-} float3x4;
-
-#ifdef MAT4
-typedef struct {
 	float4 m[4];
-} float4x4;
-#endif
+} mymatrix;
 
-#ifndef MAT4
-__constant__ float3x4 c_invViewMatrix;  // inverse view matrix
-#else
-__constant__ float4x4 c_invViewMatrix;  // inverse view matrix
-#endif
+__constant__ mymatrix c_invViewMatrix;  // inverse view matrix
+__constant__ mymatrix c_mvpMatrix; // modelview-projection-matrix
 
 struct Ray {
 	float3 o;   // origin
@@ -91,18 +82,8 @@ __device__ int intersectBox(Ray r, float3 boxmin, float3 boxmax, float *tnear, f
 	return smallest_tmax > largest_tmin;
 }
 
-// transform vector by matrix (no translation)
-__device__ float3 mul(const float3x4 &M, const float3 &v) {
-	float3 r;
-	r.x = dot(v, make_float3(M.m[0]));
-	r.y = dot(v, make_float3(M.m[1]));
-	r.z = dot(v, make_float3(M.m[2]));
-	return r;
-}
-
-#ifdef MAT4
 // transform vector by matrix with translation
-__device__ float4 mul(const float4x4 &M, const float4 &v) {
+__device__ float4 mul(const mymatrix &M, const float4 &v) {
 	float4 r;
 	r.x = dot(v, M.m[0]);
 	r.y = dot(v, M.m[1]);
@@ -112,22 +93,11 @@ __device__ float4 mul(const float4x4 &M, const float4 &v) {
 }
 
 // transform vector by matrix (no translation)
-__device__ float3 mul(const float4x4 &M, const float3 &v) {
+__device__ float3 mul(const mymatrix &M, const float3 &v) {
 	float3 r;
 	r.x = dot(v, make_float3(M.m[0]));
 	r.y = dot(v, make_float3(M.m[1]));
 	r.z = dot(v, make_float3(M.m[2]));
-	return r;
-}
-#endif
-
-// transform vector by matrix with translation
-__device__ float4 mul(const float3x4 &M, const float4 &v) {
-	float4 r;
-	r.x = dot(v, M.m[0]);
-	r.y = dot(v, M.m[1]);
-	r.z = dot(v, M.m[2]);
-	r.w = 1.0f;
 	return r;
 }
 
@@ -156,7 +126,7 @@ __device__ float4 performLighting(float3 normal, float3 camDirection, float3 lig
 }
 
 __global__ void
-d_render(uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear,
+d_render(uint *d_output, float *d_depth_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear,
 float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
 const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
 const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f))
@@ -174,7 +144,7 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 	uint y = blockIdx.y*blockDim.y + threadIdx.y;
 
 	if ((x >= imageW) || (y >= imageH)) return;
-
+	
 	float u = (x / (float)imageW)*2.0f - 1.0f;
 	float v = (y / (float)imageH)*2.0f - 1.0f;
 
@@ -199,6 +169,7 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 
 	if (!hit) {
 		d_output[y*imageW + x] = rgbaFloatToInt(make_float4(0.0f));
+		d_depth_output[y*imageW + x] = 1.0f;
 		return;
 	} 
 	/*else {
@@ -243,22 +214,17 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 	float isoDiffs[4] = { 0, 0, 0, 0 };
 	float isoDiffsOld[4] = { val - isoVals[0], val - isoVals[1], val - isoVals[2], val - isoVals[3] };
 
-	// TODO why this?
-	//if (isoDiffOld > 0.0) {
-	//	sum = make_float4(val);
-	//	// higher opacity for surfaces orthogonal to view dir
-	//	dest = vec4(volColor, clipPlaneOpacity);
-	//	// perform blending
-	//	dest.rgb *= dest.a;
-	//}
-
 	float3 voxelSize = make_float3(1.0f / (float)volSize.width, 1.0f / (float)volSize.height, 1.0f / (float)volSize.depth);
 
 	float alpha = 1.0f / (float)d_numIsoVals;
+	// TODO change colors
 	float4 colors[4] = { make_float4(1.0f, 0.0f, 0.0f, alpha),
 							make_float4(0.0f, 1.0f, 0.0f, alpha),
 							make_float4(0.0f, 0.0f, 1.0f, alpha),
 							make_float4(1.0f, 0.0f, 0.0f, alpha) };
+
+	bool firstHit = true;
+	float3 firstHitPos;
 
 	for (int i = 0; i<maxSteps; i++) {
 		// read from 3D texture
@@ -274,11 +240,16 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 
 			isoDiffs[isoIndex] = sample - isoVals[isoIndex];
 
-
 			if ((isoDiffs[isoIndex] * isoDiffsOld[isoIndex]) <= 0.0f) {
 
 				// interpolated exact position of the isosurface
 				float3 isoPos = lerp(pos - step, pos, isoDiffsOld[isoIndex] / (isoDiffsOld[isoIndex] - isoDiffs[isoIndex]));
+
+				// if this is the first isosurface hit for this ray, remember the surface point.
+				if (firstHit) {
+					firstHitPos = isoPos;
+					firstHit = false;
+				}
 
 				float3 isoSamplePos;
 				isoSamplePos.x = (isoPos.x - boxMin.x) / diff.x;
@@ -328,8 +299,21 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 
 	sum *= brightness;
 
+	float depth = 0.0f;
+	if (firstHit) {
+		// there was no first hit, so we need the depth of the background
+		depth = 1.0f;
+	} else {
+		// there was a first hit, compute the depth of the hit position
+		float4 hpw = make_float4(firstHitPos, 1.0f);
+		hpw = mul(c_mvpMatrix, hpw);
+		float md = hpw.z / hpw.w;
+		depth = 0.5 * md + 0.5;
+	}
+
 	// write output color
 	d_output[y*imageW + x] = rgbaFloatToInt(sum);
+	d_depth_output[y*imageW + x] = depth;
 }
 
 extern "C"
@@ -402,17 +386,17 @@ void freeCudaBuffers() {
 
 
 extern "C"
-void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, 
+void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output, float *d_depth_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
 	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f)) {
 
-	d_render<<<gridSize, blockSize>>>(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
+	d_render<<<gridSize, blockSize>>>(d_output, d_depth_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
 		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams);
 }
 
 extern "C"
-void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, uint *d_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
+void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, uint *d_output, float * d_depth_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1,1,1),
 	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f)) {
@@ -446,7 +430,7 @@ void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, u
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
-	d_render << <gridSize, blockSize >> >(d_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
+	d_render << <gridSize, blockSize >> >(d_output, d_depth_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
 		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams);
 
 	checkCudaErrors(cudaDeviceSynchronize());
@@ -480,6 +464,12 @@ void transferIsoValues(float4 h_isoVals, int h_numIsos) {
 	checkCudaErrors(cudaMemcpyToSymbol(d_iso3, &(h_isoVals.z), sizeof(float), 0, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpyToSymbol(d_iso4, &(h_isoVals.w), sizeof(float), 0, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpyToSymbol(d_numIsoVals, &h_numIsos, sizeof(int), 0, cudaMemcpyHostToDevice));
+}
+
+extern "C" 
+void copyMVPMatrix(float * mvp, size_t sizeofMatrix) {
+	checkCudaErrors(cudaMemcpyToSymbol(c_mvpMatrix, mvp, sizeofMatrix));
+	checkCudaErrors(cudaDeviceSynchronize());
 }
 
 extern "C"
