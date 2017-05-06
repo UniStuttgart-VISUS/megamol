@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 #include "AbstractOSPRayMaterial.h"
-#include "CallOSPRayMaterial.h"
+#include "OSPRay_plugin/CallOSPRayMaterial.h"
 #include "vislib/sys/Log.h"
 
 

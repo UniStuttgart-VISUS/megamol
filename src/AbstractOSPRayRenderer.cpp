@@ -688,6 +688,12 @@ void AbstractOSPRayRenderer::fillWorld() {
                 ospCommit(indexData);
                 ospSetData(geo, "index", indexData);
 
+                if (element.colorData->size() > 0) {
+                    colorData = ospNewData(element.colorData->size() / 4, OSP_FLOAT4, element.colorData->data());
+                    ospCommit(colorData);
+                    ospSetData(geo, "color", colorData);
+                }
+
                 ospSet1f(geo, "radius", element.globalRadius);
 
                 break;

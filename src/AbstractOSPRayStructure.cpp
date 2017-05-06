@@ -5,7 +5,7 @@
 */
 
 #include "stdafx.h"
-#include "AbstractOSPRayStructure.h"
+#include "OSPRay_plugin/AbstractOSPRayStructure.h"
 
 using namespace megamol::ospray;
 
@@ -45,13 +45,13 @@ bool AbstractOSPRayStructure::getStructureCallback(megamol::core::Call& call) {
     CallOSPRayStructure *os_out = this->getStructureSlot.CallAs<CallOSPRayStructure>();
 
     if (os_in != NULL) {
-        this->readData(call);
+        if (!this->readData(call)) return false;
         os_in->addStructure(this->structureContainer);
     }
 
     if (os_out != NULL) {
         *os_out = *os_in;
-        os_out->fillStructureMap();
+        if (!os_out->fillStructureMap()) return false;
     }
 
     return true;
@@ -70,8 +70,9 @@ bool AbstractOSPRayStructure::getExtendsCallback(megamol::core::Call &call) {
 
     if (os_out != NULL) {
         *os_out = *os_in;
-        os_out->fillExtendMap();
+        if (!os_out->fillExtendMap()) return false;
     }
 
     return true;
 }
+

@@ -11,8 +11,8 @@
 #include "mmcore/BoundingBoxes.h"
 #include <map>
 #include <vector>
-#include "CallOSPRayMaterial.h"
-
+#include "OSPRay_plugin/CallOSPRayMaterial.h"
+#include "OSPRay_plugin/OSPRay_plugin.h"
 
 namespace megamol {
 namespace ospray {
@@ -96,12 +96,12 @@ public:
 };
 
 
-class CallOSPRayStructure;
+class OSPRAY_PLUGIN_API CallOSPRayStructure;
 typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer> OSPRayStrcutrureMap;
 typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer> OSPRayExtendMap;
 
 
-class CallOSPRayStructure : public megamol::core::Call {
+class OSPRAY_PLUGIN_API CallOSPRayStructure : public megamol::core::Call {
 public:
 
     /**
@@ -163,11 +163,11 @@ public:
 
     void setStructureMap(OSPRayStrcutrureMap*sm);
     void addStructure(OSPRayStructureContainer &sc);
-    void fillStructureMap();
+    bool fillStructureMap();
 
     void setExtendMap(OSPRayExtendMap*em);
     void addExtend(OSPRayExtendContainer &ec);
-    void fillExtendMap();
+    bool fillExtendMap();
 
     void setTime(float time);
     float getTime();

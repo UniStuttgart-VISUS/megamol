@@ -67,6 +67,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
+	cd->SetTimeStamp(os->getTime());
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
@@ -81,157 +82,157 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call &call) {
     }
 
     if (!(*cd)(1)) return false;
-    if ((*cd)(0)) {
+    if (!(*cd)(0)) return false;
 
-        core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
-
-
-        unsigned int partCount = parts.GetCount();
-        float globalRadius = parts.GetGlobalRadius();
-
-        size_t vertexLength;
-        size_t colorLength;
-
-        // Vertex data type check
-        if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
-            vertexLength = 3;
-        } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
-            vertexLength = 4;
-        }
-        // reserve space for vertex data object
-        vd.reserve(parts.GetCount() * vertexLength);
-
-        // Color data type check
-        if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
-            colorLength = 4;
-            //convertedColorType = OSP_FLOAT4;
-            cd_rgba.reserve(parts.GetCount() * colorLength);
-
-            floatFromArrayFunc ffaf;
-            ffaf = floatFromVoidArray;
-
-            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
-                if (loop % (vertexLength + colorLength) >= vertexLength) {
-                    cd_rgba.push_back(ffaf(parts, loop));
-                } else {
-                    vd.push_back(ffaf(parts, loop));
-                }
-            }
-        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-            // this colorType will be transformed to:
-            //convertedColorType = OSP_FLOAT4;
-            colorLength = 4;
-            cd_rgba.reserve(parts.GetCount() * colorLength);
-
-            floatFromArrayFunc ffaf;
-            ffaf = floatFromVoidArray;
-            std::vector<float> cd;
-
-            
-            
-            if (parts.GetVertexDataStride() > 3*sizeof(float) && parts.GetVertexDataStride() == parts.GetColourDataStride()) {
-                for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
-                    if (loop % (vertexLength + 1) >= vertexLength) {
-                        cd.push_back(ffaf(parts, loop));
-                    } else {
-                        vd.push_back(ffaf(parts, loop));
-                    }
-                }
-            } else {
-                auto vptr = (float*)parts.GetVertexData();
-                auto cptr = (float*)parts.GetColourData();
-                vd.assign(vptr, vptr + parts.GetCount() * 3);
-                cd.assign(cptr, cptr + parts.GetCount());
-            }
-
-            // Color transfer call and calculation
-            core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
-            if (cgtf != NULL && ((*cgtf)())) {
-                float const* tf_tex = cgtf->GetTextureData();
-                tex_size = cgtf->TextureSize();
-                this->colorTransferGray(cd, tf_tex, tex_size, cd_rgba);
-            } else {
-                this->colorTransferGray(cd, NULL, 0, cd_rgba);
-            }
+    core::moldyn::MultiParticleDataCall::Particles &parts = cd->AccessParticles(this->particleList.Param<core::param::IntParam>()->Value());
 
 
-        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-            colorLength = 3;
-            //convertedColorType = OSP_FLOAT3;
-            cd_rgba.reserve(parts.GetCount() * (colorLength + 1));
+    unsigned int partCount = parts.GetCount();
+    float globalRadius = parts.GetGlobalRadius();
 
+    size_t vertexLength;
+    size_t colorLength;
 
-            floatFromArrayFunc ffaf;
-            ffaf = floatFromVoidArray;
-            unsigned int iter = 0;
-            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
-                if (loop % (vertexLength + colorLength) >= vertexLength) {
-                    cd_rgba.push_back(std::abs(ffaf(parts, loop)) / 255.0f);
-                    iter++;
-                    if (iter == 3) {
-                        cd_rgba.push_back(1.0f);
-                        iter = 0;
-                    }
-                } else {
-                    vd.push_back(ffaf(parts, loop));
-                }
-            }
-            colorLength = 4;
-
-        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-            colorLength = 4;
-            //convertedColorType = OSP_FLOAT4;
-            cd_rgba.reserve(parts.GetCount() * colorLength);
-
-            float alpha = 1.0f;
-            byteFromArrayFunc bfaf;
-            bfaf = byteFromVoidArray;
-
-            vd.resize(parts.GetCount() * vertexLength);
-            auto data = static_cast<const float*>(parts.GetVertexData());
-
-            for (size_t i = 0; i < parts.GetCount(); i++) {
-                std::copy_n(data + (i * parts.GetVertexDataStride() / sizeof(float)),
-                    vertexLength,
-                    vd.begin() + (i * vertexLength));
-                for (size_t j = 0; j < colorLength; j++) {
-                    cd_rgba.push_back((float)bfaf(parts, i * parts.GetVertexDataStride() + vertexLength * sizeof(float) + j) / 255.0f);
-                }
-            }
-        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-            vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
-        } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-            colorLength = 4;
-            cd_rgba.reserve(parts.GetCount() * colorLength);
-            auto pdata = (float*)parts.GetVertexData();
-            vd.assign(pdata, pdata + parts.GetCount() * vertexLength);
-            auto globalColor = parts.GetGlobalColour();
-            for (size_t i = 0; i < parts.GetCount(); i++) {
-                for (size_t j = 0; j < colorLength; j++) {
-                    cd_rgba.push_back((float)globalColor[j] / 255.0f);
-                }
-            }
-        }
-
-
-        // clipPlane setup
-        std::vector<float> clipDat(4);
-        std::vector<float> clipCol(4);
-        this->getClipData(clipDat.data(), clipCol.data());
-
-
-        // Write stuff into the structureContainer
-        this->structureContainer.type = structureTypeEnum::GEOMETRY;
-        this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
-        this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
-        this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
-        this->structureContainer.vertexLength = vertexLength;
-        this->structureContainer.colorLength = colorLength;
-        this->structureContainer.partCount = partCount;
-        this->structureContainer.globalRadius = globalRadius;
-        this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
-        this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
+    // Vertex data type check
+    if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ) {
+        vertexLength = 3;
+    } else if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+        vertexLength = 4;
     }
+    // reserve space for vertex data object
+    vd.reserve(parts.GetCount() * vertexLength);
+
+    // Color data type check
+    if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
+        colorLength = 4;
+        //convertedColorType = OSP_FLOAT4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+
+        floatFromArrayFunc ffaf;
+        ffaf = floatFromVoidArray;
+
+        for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+            if (loop % (vertexLength + colorLength) >= vertexLength) {
+                cd_rgba.push_back(ffaf(parts, loop));
+            } else {
+                vd.push_back(ffaf(parts, loop));
+            }
+        }
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
+        // this colorType will be transformed to:
+        //convertedColorType = OSP_FLOAT4;
+        colorLength = 4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+
+        floatFromArrayFunc ffaf;
+        ffaf = floatFromVoidArray;
+        std::vector<float> cd;
+
+
+
+        if (parts.GetVertexDataStride() > 3 * sizeof(float) && parts.GetVertexDataStride() == parts.GetColourDataStride()) {
+            for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+                if (loop % (vertexLength + 1) >= vertexLength) {
+                    cd.push_back(ffaf(parts, loop));
+                } else {
+                    vd.push_back(ffaf(parts, loop));
+                }
+            }
+        } else {
+            auto vptr = (float*)parts.GetVertexData();
+            auto cptr = (float*)parts.GetColourData();
+            vd.assign(vptr, vptr + parts.GetCount() * 3);
+            cd.assign(cptr, cptr + parts.GetCount());
+        }
+
+        // Color transfer call and calculation
+        core::view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
+        if (cgtf != NULL && ((*cgtf)())) {
+            float const* tf_tex = cgtf->GetTextureData();
+            tex_size = cgtf->TextureSize();
+            this->colorTransferGray(cd, tf_tex, tex_size, cd_rgba);
+        } else {
+            this->colorTransferGray(cd, NULL, 0, cd_rgba);
+        }
+
+
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
+        colorLength = 3;
+        //convertedColorType = OSP_FLOAT3;
+        cd_rgba.reserve(parts.GetCount() * (colorLength + 1));
+
+
+        floatFromArrayFunc ffaf;
+        ffaf = floatFromVoidArray;
+        unsigned int iter = 0;
+        for (size_t loop = 0; loop < (parts.GetCount() * parts.GetVertexDataStride() / sizeof(float)); loop++) {
+            if (loop % (vertexLength + colorLength) >= vertexLength) {
+                cd_rgba.push_back(std::abs(ffaf(parts, loop)) / 255.0f);
+                iter++;
+                if (iter == 3) {
+                    cd_rgba.push_back(1.0f);
+                    iter = 0;
+                }
+            } else {
+                vd.push_back(ffaf(parts, loop));
+            }
+        }
+        colorLength = 4;
+
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
+        colorLength = 4;
+        //convertedColorType = OSP_FLOAT4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+
+        float alpha = 1.0f;
+        byteFromArrayFunc bfaf;
+        bfaf = byteFromVoidArray;
+
+        vd.resize(parts.GetCount() * vertexLength);
+        auto data = static_cast<const float*>(parts.GetVertexData());
+
+        for (size_t i = 0; i < parts.GetCount(); i++) {
+            std::copy_n(data + (i * parts.GetVertexDataStride() / sizeof(float)),
+                vertexLength,
+                vd.begin() + (i * vertexLength));
+            for (size_t j = 0; j < colorLength; j++) {
+                cd_rgba.push_back((float)bfaf(parts, i * parts.GetVertexDataStride() + vertexLength * sizeof(float) + j) / 255.0f);
+            }
+        }
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
+        vislib::sys::Log::DefaultLog.WriteError("File format deprecated. Convert your data.");
+    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
+        colorLength = 4;
+        cd_rgba.reserve(parts.GetCount() * colorLength);
+        auto pdata = (float*)parts.GetVertexData();
+        vd.assign(pdata, pdata + parts.GetCount() * vertexLength);
+        auto globalColor = parts.GetGlobalColour();
+        for (size_t i = 0; i < parts.GetCount(); i++) {
+            for (size_t j = 0; j < colorLength; j++) {
+                cd_rgba.push_back((float)globalColor[j] / 255.0f);
+            }
+        }
+    }
+
+
+    // clipPlane setup
+    std::vector<float> clipDat(4);
+    std::vector<float> clipCol(4);
+    this->getClipData(clipDat.data(), clipCol.data());
+
+
+    // Write stuff into the structureContainer
+    this->structureContainer.type = structureTypeEnum::GEOMETRY;
+    this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
+    this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
+    this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
+    this->structureContainer.vertexLength = vertexLength;
+    this->structureContainer.colorLength = colorLength;
+    this->structureContainer.partCount = partCount;
+    this->structureContainer.globalRadius = globalRadius;
+    this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
+    this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
+
 
     // material container
     CallOSPRayMaterial *cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();

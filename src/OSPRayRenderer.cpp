@@ -145,7 +145,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
     // read data
     os->setStructureMap(&structureMap);
     os->setTime(cr->Time());
-    os->fillStructureMap();
+    if (!os->fillStructureMap()) return false;
     // check if data has changed
     data_has_changed = false;
     for (auto element : this->structureMap) {
@@ -334,7 +334,7 @@ bool OSPRayRenderer::GetExtents(megamol::core::Call& call) {
     if (os == NULL) return false;
     os->setTime(static_cast<int>(cr->Time()));
     os->setExtendMap(&(this->extendMap));
-    os->fillExtendMap();
+    if (!os->fillExtendMap()) return false;
 
     megamol::core::BoundingBoxes finalBox;
     unsigned int frameCnt = 0;

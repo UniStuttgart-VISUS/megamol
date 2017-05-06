@@ -261,15 +261,15 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\OSPRay\OSPRay.h" />
+    <ClInclude Include="include\OSPRay_plugin\AbstractOSPRayStructure.h" />
+    <ClInclude Include="include\OSPRay_plugin\CallOSPRayMaterial.h" />
+    <ClInclude Include="include\OSPRay_plugin\CallOSPRayStructure.h" />
     <ClInclude Include="include\OSPRay_plugin\OSPRay_plugin.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\AbstractOSPRayLight.h" />
     <ClInclude Include="src\AbstractOSPRayMaterial.h" />
     <ClInclude Include="src\AbstractOSPRayRenderer.h" />
-    <ClInclude Include="src\AbstractOSPRayStructure.h" />
     <ClInclude Include="src\CallOSPRayLight.h" />
-    <ClInclude Include="src\CallOSPRayMaterial.h" />
-    <ClInclude Include="src\CallOSPRayStructure.h" />
     <ClInclude Include="src\OSPRayAmbientLight.h" />
     <ClInclude Include="src\OSPRayDistantLight.h" />
     <ClInclude Include="src\OSPRayGlassMaterial.h" />

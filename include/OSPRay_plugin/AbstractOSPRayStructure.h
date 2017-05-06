@@ -9,7 +9,8 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "CallOSPRayStructure.h"
+#include "OSPRay_plugin/OSPRay_plugin.h"
+#include "OSPRay_plugin/CallOSPRayStructure.h"
 
 
 
@@ -17,7 +18,7 @@
 namespace megamol {
 namespace ospray {
 
-class AbstractOSPRayStructure : public megamol::core::Module {
+class OSPRAY_PLUGIN_API AbstractOSPRayStructure : public megamol::core::Module {
 protected:
     /** Dtor. */
     virtual ~AbstractOSPRayStructure(void);

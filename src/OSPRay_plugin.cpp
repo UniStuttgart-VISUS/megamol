@@ -18,7 +18,7 @@
 #include "OSPRayTriangleMesh.h"
 #include "OSPRayStructuredVolume.h"
 #include "OSPRayStreamLines.h"
-#include "CallOSPRayStructure.h"
+#include "OSPRay_plugin/CallOSPRayStructure.h"
 
 #include "OSPRayDistantLight.h"
 #include "OSPRayAmbientLight.h"
@@ -37,7 +37,7 @@
 #include "OSPRayGlassMaterial.h"
 #include "OSPRayThinGlassMaterial.h"
 #include "OSPRayPlasticMaterial.h"
-#include "CallOSPRayMaterial.h"
+#include "OSPRay_plugin/CallOSPRayMaterial.h"
 
 
 

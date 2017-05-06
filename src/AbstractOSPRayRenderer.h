@@ -13,7 +13,7 @@
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/CallerSlot.h"
 #include "CallOSPRayLight.h"
-#include "CallOSPRayStructure.h"
+#include "OSPRay_plugin/CallOSPRayStructure.h"
 #include <map>
 
 

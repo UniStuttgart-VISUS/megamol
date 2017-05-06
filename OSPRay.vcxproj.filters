@@ -114,9 +114,6 @@
     <ClInclude Include="src\OSPRayGlassMaterial.h">
       <Filter>Header Files\Materials</Filter>
     </ClInclude>
-    <ClInclude Include="src\CallOSPRayMaterial.h">
-      <Filter>Header Files\Materials</Filter>
-    </ClInclude>
     <ClInclude Include="src\AbstractOSPRayMaterial.h">
       <Filter>Header Files\Materials</Filter>
     </ClInclude>
@@ -153,12 +150,6 @@
     <ClInclude Include="src\OSPRaySphereGeometry.h">
       <Filter>Header Files\Structures</Filter>
     </ClInclude>
-    <ClInclude Include="src\AbstractOSPRayStructure.h">
-      <Filter>Header Files\Structures</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CallOSPRayStructure.h">
-      <Filter>Header Files\Structures</Filter>
-    </ClInclude>
     <ClInclude Include="src\AbstractOSPRayRenderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
@@ -176,6 +167,15 @@
     </ClInclude>
     <ClInclude Include="src\VecField3f.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OSPRay_plugin\AbstractOSPRayStructure.h">
+      <Filter>Header Files\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OSPRay_plugin\CallOSPRayStructure.h">
+      <Filter>Header Files\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OSPRay_plugin\CallOSPRayMaterial.h">
+      <Filter>Header Files\Materials</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -31,8 +31,5 @@
     <BuildMacro Include="ProteinCallsPath">
       <Value>$(ProteinCallsPath)</Value>
     </BuildMacro>
-    <BuildMacro Include="TBBPath">
-      <Value>$(TBBPath)</Value>
-    </BuildMacro>
   </ItemGroup>
 </Project>

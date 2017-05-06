@@ -6,7 +6,7 @@
 */
 
 #include "stdafx.h"
-#include "CallOSPRayStructure.h"
+#include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "vislib/IllegalParamException.h"
 
 using namespace megamol::ospray;
@@ -71,16 +71,15 @@ void CallOSPRayStructure::addStructure(OSPRayStructureContainer &sc) {
     }
 }
 
-void CallOSPRayStructure::fillStructureMap() {
-    if (!(*this)(0)) {
-        throw vislib::IllegalParamException("Error in fillStructureMap", __FILE__, __LINE__);
-    }
+bool CallOSPRayStructure::fillStructureMap() {
+    return (*this)(0);
 }
 
 
 void CallOSPRayStructure::setExtendMap(OSPRayExtendMap *em) {
     this->extendMap = em;
 }
+
 
 void CallOSPRayStructure::addExtend(OSPRayExtendContainer &ec) {
     if (this->extendMap != NULL) {
@@ -90,16 +89,16 @@ void CallOSPRayStructure::addExtend(OSPRayExtendContainer &ec) {
     }
 }
 
-void CallOSPRayStructure::fillExtendMap() {
-    if (!(*this)(1)) {
-        throw vislib::IllegalParamException("Error in fillExtendMap", __FILE__, __LINE__);
-    }
+
+bool CallOSPRayStructure::fillExtendMap() {
+    return (*this)(1);
 }
 
 
 void CallOSPRayStructure::setTime(float time) {
     this->time = time;
 }
+
 
 float CallOSPRayStructure::getTime() {
     return this->time;

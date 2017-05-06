@@ -85,17 +85,6 @@ $a = PathParameter->new();
     $a->enforceTrailingDirectorySeparator(1);
     push @pps, $a;
 
-$a = PathParameter->new();
-$a->id("tbb");
-$a->description("Path to the tbb directory");
-$a->placeholder("%tbb%");
-$a->markerFile("tbb.h");
-$a->relativeLocation("../../");
-$a->autoDetect(1);
-$a->directorySeparator("\\");
-$a->enforceTrailingDirectorySeparator(1);
-push @pps, $a;
-
 $c = ConfigFilePair->new();
     $c->inFile("ExtLibs.props.input");
     $c->outFile("ExtLibs.props");
