@@ -125,12 +125,18 @@ __device__ float4 performLighting(float3 normal, float3 camDirection, float3 lig
 	return make_float4(result, surfaceColor.w);
 }
 
+__device__ bool pointBehindPlane(float3 point, float4 plane) {
+	float dist = plane.x * point.x + plane.y * point.y + plane.z * point.z + plane.w;
+	return (dist < 0);
+}
+
 __global__ void
 d_render(uint *d_output, float *d_depth_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir, float3 camUp, float3 camRight, float zNear,
-float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
-const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
-const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f))
-{
+		float density, float brightness, float transferOffset, float transferScale, float minVal, float maxVal,
+		const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
+		const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f),
+		const float4 plane = make_float4(0.0f, 0.0f, 0.0f, 0.0), bool enablePlane = false) {
+
 	const int maxSteps = 450;
 	//const float tstep = 0.0009765625f;
 
@@ -236,6 +242,19 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 		samplePos.z = (pos.z - boxMin.z) / diff.z;
 		float sample = (tex3D(tex, samplePos.x, samplePos.y, samplePos.z) - minVal) / (maxVal - minVal);
 
+		if (pointBehindPlane(samplePos, plane)) {
+
+			for (int isoIndex = 0; isoIndex < d_numIsoVals; isoIndex++) {
+				isoDiffs[isoIndex] = sample - isoVals[isoIndex];
+				isoDiffsOld[isoIndex] = isoDiffs[isoIndex];
+			}
+
+			t += tstep;
+			if (t > tfar) break;
+			pos += step;
+			continue;
+		}
+
 		for (int isoIndex = 0; isoIndex < d_numIsoVals; isoIndex++) {
 
 			isoDiffs[isoIndex] = sample - isoVals[isoIndex];
@@ -287,13 +306,10 @@ const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams 
 
 			}
 			isoDiffsOld[isoIndex] = isoDiffs[isoIndex];
-
 		}
 
 		t += tstep;
-
 		if (t > tfar) break;
-
 		pos += step;
 	}
 
@@ -389,17 +405,19 @@ extern "C"
 void render_kernel(dim3 gridSize, dim3 blockSize, uint *d_output, float *d_depth_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1, 1, 1),
-	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f)) {
+	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f),
+	const float4 plane = make_float4(0.0f, 0.0f, 0.0f, 0.0), bool enablePlane = false) {
 
 	d_render<<<gridSize, blockSize>>>(d_output, d_depth_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
-		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams);
+		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams, plane, enablePlane);
 }
 
 extern "C"
 void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, uint *d_output, float * d_depth_output, uint imageW, uint imageH, float fovx, float fovy, float3 camPos, float3 camDir,
 	float3 camUp, float3 camRight, float zNear, float density, float brightness, float transferOffset, float transferScale,
 	const float3 boxMin = make_float3(-1.0f, -1.0f, -1.0f), const float3 boxMax = make_float3(1.0f, 1.0f, 1.0f), cudaExtent volSize = make_cudaExtent(1,1,1),
-	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f)) {
+	const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f),
+	const float4 plane = make_float4(0.0f, 0.0f, 0.0f, 0.0), bool enablePlane = false) {
 	
 	float* horst = new float[volSize.width * volSize.height * volSize.depth];
 	horst[0] = 1.0f;
@@ -431,7 +449,7 @@ void renderArray_kernel(cudaArray* renderArray, dim3 gridSize, dim3 blockSize, u
 	checkCudaErrors(cudaDeviceSynchronize());
 
 	d_render << <gridSize, blockSize >> >(d_output, d_depth_output, imageW, imageH, fovx, fovy, camPos, camDir, camUp, camRight, zNear, density,
-		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams);
+		brightness, transferOffset, transferScale, minVal, maxVal, boxMin, boxMax, volSize, lightDir, lightParams, plane, enablePlane);
 
 	checkCudaErrors(cudaDeviceSynchronize());
 

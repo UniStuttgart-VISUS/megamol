@@ -853,6 +853,7 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	// get the clip plane
 	view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<view::CallClipPlane>();
 	bool clipplaneAvailable = false;
+	float4 plane;
 
 	if ((ccp != nullptr) && (*ccp)(0)) {
 		float a, b, c, d;
@@ -867,10 +868,12 @@ bool QuickSurfRaycaster::Render(Call& call) {
 			b = b / len;
 			c = c / len;
 			d = d / len;
+			clipplaneAvailable = true;
+			plane = make_float4(a, b, c, d);
 		} else {
 			a = b = c = d = 0.0f;
+			clipplaneAvailable = false;
 		}
-		clipplaneAvailable = true;
 	}
 
     GLfloat m[16];
@@ -1014,7 +1017,8 @@ bool QuickSurfRaycaster::Render(Call& call) {
 	auto depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
 	glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
 
-	render_kernel(gridSize, blockSize, cudaImage, cudaDepthImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f));
+	render_kernel(gridSize, blockSize, cudaImage, cudaDepthImage, viewport.GetWidth(), viewport.GetHeight(), fovx, fovy, camPos, camDir, camUp, camRight, zNear, 
+		density, brightness, transferOffset, transferScale, bbMin, bbMax, volumeExtent, light, make_float4(0.3f, 0.5f, 0.4f, 10.0f), plane, clipplaneAvailable);
 	
 	getLastCudaError("kernel failed");
 	checkCudaErrors(cudaDeviceSynchronize());
