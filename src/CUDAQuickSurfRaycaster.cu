@@ -23,6 +23,8 @@
 #include <thrust/extrema.h>
 #include <thrust/device_ptr.h>
 
+#define CYLINDER
+
 typedef unsigned int  uint;
 typedef unsigned char uchar;
 
@@ -137,7 +139,7 @@ d_render(uint *d_output, float *d_depth_output, uint imageW, uint imageH, float 
 		const float3 lightDir = make_float3(1.0f, 1.0f, 1.0f), const float4 lightParams = make_float4(0.3f, 0.5f, 0.4f, 10.0f),
 		const float4 plane = make_float4(0.0f, 0.0f, 0.0f, 0.0), bool enablePlane = false) {
 
-	const int maxSteps = 450;
+	const int maxSteps = 1000;
 	//const float tstep = 0.0009765625f;
 
 	const float isoVals[4] = { d_iso1, d_iso2, d_iso3, d_iso4 };
@@ -240,9 +242,21 @@ d_render(uint *d_output, float *d_depth_output, uint imageW, uint imageH, float 
 		samplePos.x = (pos.x - boxMin.x) / diff.x;
 		samplePos.y = (pos.y - boxMin.y) / diff.y;
 		samplePos.z = (pos.z - boxMin.z) / diff.z;
+
+		float curDist = 0.0f;
+#ifdef CYLINDER
+		curDist = sqrt((0.5f - samplePos.x) * (0.5f - samplePos.x) + (0.5f - samplePos.y) * (0.5f - samplePos.y));
+		if (curDist > 0.5) {
+			float2 middir = make_float2(0.5f, 0.5f) - make_float2(samplePos.x, samplePos.y);
+			middir = normalize(middir);
+			samplePos.x = samplePos.x + (curDist - 0.5f) * middir.x;
+			samplePos.y = samplePos.y + (curDist - 0.5f) * middir.y;
+		}
+#endif CYLINDER
+
 		float sample = (tex3D(tex, samplePos.x, samplePos.y, samplePos.z) - minVal) / (maxVal - minVal);
 
-		if (pointBehindPlane(samplePos, plane)) {
+		if (pointBehindPlane(samplePos, plane) || curDist > 0.5f) {
 
 			for (int isoIndex = 0; isoIndex < d_numIsoVals; isoIndex++) {
 				isoDiffs[isoIndex] = sample - isoVals[isoIndex];
@@ -367,8 +381,8 @@ void initCudaDevice(void *h_volume, cudaExtent volumeSize) {
 	// set texture parameters
 	tex.normalized = true;                      // access with normalized texture coordinates
 	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
-	tex.addressMode[0] = cudaAddressModeClamp; // we want 0s outside for beautiful isosurfaces at the borders
-	tex.addressMode[1] = cudaAddressModeClamp;
+	tex.addressMode[0] = cudaAddressModeMirror; // we want 0s outside for beautiful isosurfaces at the borders
+	tex.addressMode[1] = cudaAddressModeMirror;
 
 	// bind array to 3D texture
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
@@ -523,8 +537,8 @@ void transferNewVolume(void* h_volume, cudaExtent volumeSize) {
 	// set texture parameters
 	tex.normalized = true;                      // access with normalized texture coordinates
 	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
-	tex.addressMode[0] = cudaAddressModeClamp; // we want 0s outside for beautiful isosurfaces at the borders
-	tex.addressMode[1] = cudaAddressModeClamp;
+	tex.addressMode[0] = cudaAddressModeMirror;
+	tex.addressMode[1] = cudaAddressModeMirror;
 
 	// bind array to 3D texture
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
@@ -563,8 +577,8 @@ void transferVolumeDirect(void * h_volume, cudaExtent volumeSize, float myMin, f
 	// set texture parameters
 	tex.normalized = true;                      // access with normalized texture coordinates
 	tex.filterMode = cudaFilterModeLinear;      // linear interpolation
-	tex.addressMode[0] = cudaAddressModeClamp; // we want 0s outside for beautiful isosurfaces at the borders
-	tex.addressMode[1] = cudaAddressModeClamp;
+	tex.addressMode[0] = cudaAddressModeMirror;
+	tex.addressMode[1] = cudaAddressModeMirror;
 
 	// bind array to 3D texture
 	checkCudaErrors(cudaBindTextureToArray(tex, d_volumeArray, channelDesc));
