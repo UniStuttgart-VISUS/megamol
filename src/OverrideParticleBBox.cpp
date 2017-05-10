@@ -13,6 +13,7 @@
 #include "vislib/sys/Log.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
+#include <float.h>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
