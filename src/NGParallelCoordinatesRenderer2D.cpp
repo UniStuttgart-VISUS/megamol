@@ -203,23 +203,23 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
     try {
         if (!program.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to compile %s: Unknown error\n", pref);
+						  "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s (@%s): %s\n", pref,
+					      "Unable to compile %s (@%s): %s\n", pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()), ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s: %s\n", pref, e.GetMsgA());
+					      "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s: Unknown exception\n", pref);
+					      "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
         return false;
     }
     return true;
@@ -236,28 +236,28 @@ bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vis
     try {
         if (!program.Compile(comp.Code(), comp.Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to compile %s: Unknown error\n", pref);
+						  "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         if (!program.Link()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to link %s: Unknown error\n", pref);
+						  "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s (@%s): %s\n", pref,
+					      "Unable to compile %s (@%s): %s\n", pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()), ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s: %s\n", pref, e.GetMsgA());
+					      "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s: Unknown exception\n", pref);
+					      "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
         return false;
     }
     return true;
@@ -289,31 +289,31 @@ bool NGParallelCoordinatesRenderer2D::makeTessellationProgram(std::string prefix
             haveGeom ? geom.Code() : nullptr, haveGeom ? geom.Count() : 0,
             frag.Code(), frag.Count())) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to compile %s: Unknown error\n", pref);
+						  "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
         if (!program.Link()) {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to link %s: Unknown error\n", pref);
+						  "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
 
     }
     catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s (@%s): %s\n", pref,
+					      "Unable to compile %s (@%s): %s\n", pref.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()), ce.GetMsgA());
         return false;
     }
     catch (vislib::Exception e) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s: %s\n", pref, e.GetMsgA());
+					      "Unable to compile %s: %s\n", pref.PeekBuffer(), e.GetMsgA());
         return false;
     }
     catch (...) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile %s: Unknown exception\n", pref);
+					      "Unable to compile %s: Unknown exception\n", pref.PeekBuffer());
         return false;
     }
     return true;

@@ -15,7 +15,7 @@
 #include "FlagStorage.h"
 #include "NGParallelCoordinatesRenderer2D.h"
 
-#include "NVGDiagramRenderer.h"
+//#include "NVGDiagramRenderer.h"
 #include "DiagramSeries.h"
 
 #include "DiagramSeriesCall.h"

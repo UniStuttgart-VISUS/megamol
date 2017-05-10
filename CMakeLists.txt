@@ -29,8 +29,10 @@ if (USE_MEGAMOLCORE_INSTALL_PREFIX)
 endif()
 find_package(vislib REQUIRED HINTS ${MegaMolCore_vislib_DIR})
 
-set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES})
-include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS})
+find_package(mmstd_datatools REQUIRED)
+
+set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES} ${mmstd_datatools_LIBRARIES})
+include_directories(${vislib_INCLUDE_DIRS} ${MegaMolCore_INCLUDE_DIRS} ${mmstd_datatools_INCLUDE_DIRS})
 
 
 # processor word size detection
