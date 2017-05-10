@@ -152,6 +152,7 @@ std::string FloatTableObserverPlane::cleanUpColumnHeader(const vislib::TString& 
     h.TrimSpaces();
     h.ToLowerCase();
     return std::string(vislib::StringA(h).PeekBuffer());
+}
 
 int FloatTableObserverPlane::getColumnIndex(const vislib::TString& colName) {
     std::string c = cleanUpColumnHeader(colName);
