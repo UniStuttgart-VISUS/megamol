@@ -1,11 +1,11 @@
 #
-# MegaMol™ TriSoup Plugin
+# MegaMol™ mmstd_trisoup Plugin
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
 cmake_minimum_required(VERSION 2.8.12)
 
-project(TriSoup)
+project(mmstd_trisoup)
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
 	message(STATUS "You should always specify a build type! Defaulting build type to 'Release'")
