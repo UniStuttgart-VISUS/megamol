@@ -610,7 +610,7 @@ void AbstractOSPRayRenderer::fillWorld() {
                 } 
 
                 // clipPlane setup
-
+                /* TEMPORARILY DISABLED
                 if (!std::all_of(element.clipPlaneData->begin(), element.clipPlaneData->end() - 1, [](float i) { return i == 0; })) {
                 pln = ospNewPlane("clipPlane");
                 ospSet1f(pln, "dist", element.clipPlaneData->data()[3]);
@@ -621,6 +621,7 @@ void AbstractOSPRayRenderer::fillWorld() {
                 } else {
                 ospSetObject(geo, "clipPlane", NULL);
                 }
+                */
                 break;
             case geometryTypeEnum::TRIANGLES:
 

@@ -60,8 +60,8 @@ public:
     bool dataChanged;
 
 
-    OSPRayLightContainer::OSPRayLightContainer();
-    OSPRayLightContainer::~OSPRayLightContainer();
+    OSPRayLightContainer();
+    ~OSPRayLightContainer();
 };
 
 

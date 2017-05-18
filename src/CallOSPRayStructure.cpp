@@ -64,7 +64,8 @@ void CallOSPRayStructure::setStructureMap(OSPRayStrcutrureMap *sm) {
 void CallOSPRayStructure::addStructure(OSPRayStructureContainer &sc) {
     if (sc.isValid) {
         if (this->structureMap != NULL) {
-            this->structureMap->insert_or_assign(this, sc);
+            //this->structureMap->insert_or_assign(this, sc); // C++17
+            this->structureMap->operator[](this) = sc;
         } else {
             throw vislib::IllegalParamException("Error: no stuctureMap set.", __FILE__, __LINE__);
         }
@@ -83,7 +84,8 @@ void CallOSPRayStructure::setExtendMap(OSPRayExtendMap *em) {
 
 void CallOSPRayStructure::addExtend(OSPRayExtendContainer &ec) {
     if (this->extendMap != NULL) {
-        this->extendMap->insert_or_assign(this, ec);
+        //this->extendMap->insert_or_assign(this, ec); // C++17
+        this->extendMap->operator[](this) = ec;
     } else {
         throw vislib::IllegalParamException("Error: no bounding box map set.", __FILE__, __LINE__);
     }

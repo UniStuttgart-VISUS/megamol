@@ -67,7 +67,7 @@ protected:
 
 
     bool InterfaceIsDirty();
-    void OSPRaySphereGeometry::getClipData(float *clipDat, float *clipCol);
+    void getClipData(float *clipDat, float *clipCol);
 
     core::param::ParamSlot particleList;
 

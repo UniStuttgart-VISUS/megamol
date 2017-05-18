@@ -79,7 +79,8 @@ CallOSPRayLight& CallOSPRayLight::operator=(const CallOSPRayLight& rhs) {
 void CallOSPRayLight::addLight(OSPRayLightContainer &lc) {
     if (lc.isValid) {
         if (this->lightMap != NULL) {
-            this->lightMap->insert_or_assign(this, lc);
+            //this->lightMap->insert_or_assign(this, lc); // C++17
+            this->lightMap->operator[](this) = lc;
         } else {
             throw vislib::IllegalParamException("Error: no lightMap set.", __FILE__, __LINE__);
         }
