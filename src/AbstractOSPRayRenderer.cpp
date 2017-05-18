@@ -583,7 +583,7 @@ void AbstractOSPRayRenderer::fillWorld() {
         OSPData voxels     = NULL;
         OSPData isovalues  = NULL;
         OSPData planes     = NULL;
-        OSPPlane pln       = NULL;
+        //OSPPlane pln      = NULL; //TEMPORARILY DISABLED
         switch (element.type) {
         case structureTypeEnum::GEOMETRY:
             switch (element.geometryType) {
