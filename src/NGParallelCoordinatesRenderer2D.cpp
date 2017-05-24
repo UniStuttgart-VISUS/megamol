@@ -734,8 +734,14 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
             this->font.DrawString(x, this->marginY * 0.5f                   , fontsize, true, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #else
-            this->font.DrawString(x, this->marginY * 0.5f, fontsize, true, std::to_string(filters[realCol].lower).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(filters[realCol].upper).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            float bottom = filters[realCol].lower;
+            bottom *= (maximums[realCol] - minimums[realCol]);
+            bottom += minimums[realCol];
+            float top = filters[realCol].upper;
+            top *= (maximums[realCol] - minimums[realCol]);
+            top += minimums[realCol];
+            this->font.DrawString(x, this->marginY * 0.5f, fontsize, true, std::to_string(bottom).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
+            this->font.DrawString(x, this->marginY * 1.5f + this->axisHeight, fontsize, true, std::to_string(top).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
 #endif
             this->font.DrawString(x, this->marginY * 2.5f + this->axisHeight, fontsize*2.0f, true, names[realCol].c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
         }
