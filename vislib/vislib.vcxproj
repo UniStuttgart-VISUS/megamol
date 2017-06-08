@@ -1,0 +1,1333 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C8A383A0-B144-43ED-902B-EE34B9700144}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>vislib</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)lib\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <Lib>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <Lib>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <Lib>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(ProjectDir)3rd\glload\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <Lib>
+      <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="include\vislib\AlreadyExistsException.h" />
+    <ClInclude Include="include\vislib\Array.h" />
+    <ClInclude Include="include\vislib\ArrayAllocator.h" />
+    <ClInclude Include="include\vislib\ArrayElementDftCtor.h" />
+    <ClInclude Include="include\vislib\ArrayElementPtrCtor.h" />
+    <ClInclude Include="include\vislib\assert.h" />
+    <ClInclude Include="include\vislib\AssociativeCollection.h" />
+    <ClInclude Include="include\vislib\CharTraits.h" />
+    <ClInclude Include="include\vislib\Collection.h" />
+    <ClInclude Include="include\vislib\ColumnFormatter.h" />
+    <ClInclude Include="include\vislib\ConstIterator.h" />
+    <ClInclude Include="include\vislib\Delegate.h" />
+    <ClInclude Include="include\vislib\deprecated.h" />
+    <ClInclude Include="include\vislib\Exception.h" />
+    <ClInclude Include="include\vislib\forceinline.h" />
+    <ClInclude Include="include\vislib\FormatException.h" />
+    <ClInclude Include="include\vislib\functioncast.h" />
+    <ClInclude Include="include\vislib\graphics\AbsoluteCursor3D.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractBitmapCodec.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCameraController.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursor.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursor2DEvent.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursor3DEvent.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractCursorEvent.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractFont.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractVISLogo.h" />
+    <ClInclude Include="include\vislib\graphics\AbstractWindow.h" />
+    <ClInclude Include="include\vislib\graphics\BitmapCodecCollection.h" />
+    <ClInclude Include="include\vislib\graphics\BitmapImage.h" />
+    <ClInclude Include="include\vislib\graphics\BitmapPainter.h" />
+    <ClInclude Include="include\vislib\graphics\BmpBitmapCodec.h" />
+    <ClInclude Include="include\vislib\graphics\Camera.h" />
+    <ClInclude Include="include\vislib\graphics\CameraAdjust3D.h" />
+    <ClInclude Include="include\vislib\graphics\CameraLookAtDist.h" />
+    <ClInclude Include="include\vislib\graphics\CameraMove2D.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParameterLimits.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParameterObserver.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParameters.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsEyeOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsProjectionOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsStore.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsTileRectOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraParamsVirtualViewOverride.h" />
+    <ClInclude Include="include\vislib\graphics\CameraRotate2D.h" />
+    <ClInclude Include="include\vislib\graphics\CameraRotate2DEulerLookAt.h" />
+    <ClInclude Include="include\vislib\graphics\CameraRotate2DLookAt.h" />
+    <ClInclude Include="include\vislib\graphics\CameraZoom2DAngle.h" />
+    <ClInclude Include="include\vislib\graphics\CameraZoom2DMove.h" />
+    <ClInclude Include="include\vislib\graphics\ColourHSVf.h" />
+    <ClInclude Include="include\vislib\graphics\ColourParser.h" />
+    <ClInclude Include="include\vislib\graphics\ColourRGBAu8.h" />
+    <ClInclude Include="include\vislib\graphics\Cursor2D.h" />
+    <ClInclude Include="include\vislib\graphics\Cursor2DRectLasso.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\AbstractD3D11WindowImpl.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\AbstractD3DAdapterInformation.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3D11Window.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3D9AdapterInformation.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DCamera.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DException.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DMatrix.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DPoint3D.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\d3dutils.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DVector3D.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\d3dverify.h" />
+    <ClInclude Include="include\vislib\graphics\d3d\D3DVISLogo.h" />
+    <ClInclude Include="include\vislib\graphics\FpsCounter.h" />
+    <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\AbstractOpenGLTexture.h" />
+    <ClInclude Include="include\vislib\graphics\gl\ARBShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\CameraOpenGL.h" />
+    <ClInclude Include="include\vislib\graphics\gl\ExtensionsDependent.h" />
+    <ClInclude Include="include\vislib\graphics\gl\FramebufferObject.h" />
+    <ClInclude Include="include\vislib\graphics\gl\glfunctions.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLComputeShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLGeometryShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GLSLTesselationShader.h" />
+    <ClInclude Include="include\vislib\graphics\gl\GlutMouseInteractionAdapter.h" />
+    <ClInclude Include="include\vislib\graphics\gl\glverify.h" />
+    <ClInclude Include="include\vislib\graphics\gl\IncludeAllGL.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLException.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLTexture2D.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OpenGLVISLogo.h" />
+    <ClInclude Include="include\vislib\graphics\gl\OutlineFont.h" />
+    <ClInclude Include="include\vislib\graphics\gl\ShaderSource.h" />
+    <ClInclude Include="include\vislib\graphics\gl\SimpleFont.h" />
+    <ClInclude Include="include\vislib\graphics\graphicsfunctions.h" />
+    <ClInclude Include="include\vislib\graphics\graphicstypes.h" />
+    <ClInclude Include="include\vislib\graphics\InputModifiers.h" />
+    <ClInclude Include="include\vislib\graphics\MouseInteractionAdapter.h" />
+    <ClInclude Include="include\vislib\graphics\NamedColours.h" />
+    <ClInclude Include="include\vislib\graphics\ObservableCameraParams.h" />
+    <ClInclude Include="include\vislib\graphics\PpmBitmapCodec.h" />
+    <ClInclude Include="include\vislib\graphics\RelativeCursor3D.h" />
+    <ClInclude Include="include\vislib\graphics\ZoomToRectangle.h" />
+    <ClInclude Include="include\vislib\GUID.h" />
+    <ClInclude Include="include\vislib\HashAlgorithm.h" />
+    <ClInclude Include="include\vislib\Heap.h" />
+    <ClInclude Include="include\vislib\IllegalParamException.h" />
+    <ClInclude Include="include\vislib\IllegalStateException.h" />
+    <ClInclude Include="include\vislib\Iterator.h" />
+    <ClInclude Include="include\vislib\Listenable.h" />
+    <ClInclude Include="include\vislib\macro_utils.h" />
+    <ClInclude Include="include\vislib\Map.h" />
+    <ClInclude Include="include\vislib\math\AbstractCuboid.h" />
+    <ClInclude Include="include\vislib\math\AbstractDimension.h" />
+    <ClInclude Include="include\vislib\math\AbstractDimensionImpl.h" />
+    <ClInclude Include="include\vislib\math\AbstractMatrix.h" />
+    <ClInclude Include="include\vislib\math\AbstractMatrixImpl.h" />
+    <ClInclude Include="include\vislib\math\AbstractPlane.h" />
+    <ClInclude Include="include\vislib\math\AbstractPoint.h" />
+    <ClInclude Include="include\vislib\math\AbstractPointImpl.h" />
+    <ClInclude Include="include\vislib\math\AbstractPolynom.h" />
+    <ClInclude Include="include\vislib\math\AbstractPolynomImpl.h" />
+    <ClInclude Include="include\vislib\math\AbstractPyramidalFrustum.h" />
+    <ClInclude Include="include\vislib\math\AbstractQuaternion.h" />
+    <ClInclude Include="include\vislib\math\AbstractRectangle.h" />
+    <ClInclude Include="include\vislib\math\AbstractRectangularPyramidalFrustum.h" />
+    <ClInclude Include="include\vislib\math\AbstractSphere.h" />
+    <ClInclude Include="include\vislib\math\AbstractTriangle.h" />
+    <ClInclude Include="include\vislib\math\AbstractTriangleImpl.h" />
+    <ClInclude Include="include\vislib\math\AbstractVector.h" />
+    <ClInclude Include="include\vislib\math\AbstractVectorImpl.h" />
+    <ClInclude Include="include\vislib\math\AbstractViewFrustum.h" />
+    <ClInclude Include="include\vislib\math\BezierCurve.h" />
+    <ClInclude Include="include\vislib\math\Cuboid.h" />
+    <ClInclude Include="include\vislib\math\Dimension.h" />
+    <ClInclude Include="include\vislib\math\FastMap.h" />
+    <ClInclude Include="include\vislib\math\Float16.h" />
+    <ClInclude Include="include\vislib\math\ForceDirected.h" />
+    <ClInclude Include="include\vislib\math\mathfunctions.h" />
+    <ClInclude Include="include\vislib\math\mathtypes.h" />
+    <ClInclude Include="include\vislib\math\Matrix.h" />
+    <ClInclude Include="include\vislib\math\Matrix4.h" />
+    <ClInclude Include="include\vislib\math\pcautils.h" />
+    <ClInclude Include="include\vislib\math\Plane.h" />
+    <ClInclude Include="include\vislib\math\Point.h" />
+    <ClInclude Include="include\vislib\math\Polynom.h" />
+    <ClInclude Include="include\vislib\math\Quaternion.h" />
+    <ClInclude Include="include\vislib\math\Rectangle.h" />
+    <ClInclude Include="include\vislib\math\RectangularPyramidalFrustum.h" />
+    <ClInclude Include="include\vislib\math\ShallowDimension.h" />
+    <ClInclude Include="include\vislib\math\ShallowMatrix.h" />
+    <ClInclude Include="include\vislib\math\ShallowPlane.h" />
+    <ClInclude Include="include\vislib\math\ShallowPoint.h" />
+    <ClInclude Include="include\vislib\math\ShallowQuaternion.h" />
+    <ClInclude Include="include\vislib\math\ShallowRectangle.h" />
+    <ClInclude Include="include\vislib\math\ShallowShallowTriangle.h" />
+    <ClInclude Include="include\vislib\math\ShallowSphere.h" />
+    <ClInclude Include="include\vislib\math\ShallowTriangle.h" />
+    <ClInclude Include="include\vislib\math\ShallowVector.h" />
+    <ClInclude Include="include\vislib\math\Sphere.h" />
+    <ClInclude Include="include\vislib\math\Ternary.h" />
+    <ClInclude Include="include\vislib\math\Triangle.h" />
+    <ClInclude Include="include\vislib\math\Vector.h" />
+    <ClInclude Include="include\vislib\math\ViewFrustum.h" />
+    <ClInclude Include="include\vislib\MD5HashProvider.h" />
+    <ClInclude Include="include\vislib\memutils.h" />
+    <ClInclude Include="include\vislib\MissingImplementationException.h" />
+    <ClInclude Include="include\vislib\MultiSz.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommChannel.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommClientChannel.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommEndPoint.h" />
+    <ClInclude Include="include\vislib\net\AbstractCommServerChannel.h" />
+    <ClInclude Include="include\vislib\net\AbstractSimpleMessage.h" />
+    <ClInclude Include="include\vislib\net\AbstractSimpleMessageHeader.h" />
+    <ClInclude Include="include\vislib\net\AbstractSyncMsgUser.h" />
+    <ClInclude Include="include\vislib\net\AsyncSocket.h" />
+    <ClInclude Include="include\vislib\net\AsyncSocketContext.h" />
+    <ClInclude Include="include\vislib\net\AsyncSocketSender.h" />
+    <ClInclude Include="include\vislib\net\ClusterDiscoveryListener.h" />
+    <ClInclude Include="include\vislib\net\ClusterDiscoveryService.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractClientNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractClusterNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractControlledNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractControllerNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\AbstractServerNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\clustermessages.h" />
+    <ClInclude Include="include\vislib\net\cluster\DiscoveryListener.h" />
+    <ClInclude Include="include\vislib\net\cluster\DiscoveryService.h" />
+    <ClInclude Include="include\vislib\net\cluster\GlutClientNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\GlutClusterNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\GlutServerNode.h" />
+    <ClInclude Include="include\vislib\net\cluster\NodeIdentifier.h" />
+    <ClInclude Include="include\vislib\net\CommServer.h" />
+    <ClInclude Include="include\vislib\net\CommServerListener.h" />
+    <ClInclude Include="include\vislib\net\DNS.h" />
+    <ClInclude Include="include\vislib\net\IPAddress.h" />
+    <ClInclude Include="include\vislib\net\IPAddress6.h" />
+    <ClInclude Include="include\vislib\net\IPAgnosticAddress.h" />
+    <ClInclude Include="include\vislib\net\IPCommEndPoint.h" />
+    <ClInclude Include="include\vislib\net\IPEndPoint.h" />
+    <ClInclude Include="include\vislib\net\IPHostEntry.h" />
+    <ClInclude Include="include\vislib\net\NetworkInformation.h" />
+    <ClInclude Include="include\vislib\net\PeerDisconnectedException.h" />
+    <ClInclude Include="include\vislib\net\ShallowSimpleMessage.h" />
+    <ClInclude Include="include\vislib\net\ShallowSimpleMessageHeader.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessage.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageDispatcher.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageDispatchListener.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageHeader.h" />
+    <ClInclude Include="include\vislib\net\SimpleMessageHeaderData.h" />
+    <ClInclude Include="include\vislib\net\Socket.h" />
+    <ClInclude Include="include\vislib\net\SocketAddress.h" />
+    <ClInclude Include="include\vislib\net\SocketException.h" />
+    <ClInclude Include="include\vislib\net\TcpCommChannel.h" />
+    <ClInclude Include="include\vislib\net\TcpServer.h" />
+    <ClInclude Include="include\vislib\net\UdpCommChannel.h" />
+    <ClInclude Include="include\vislib\net\UnexpectedMessageException.h" />
+    <ClInclude Include="include\vislib\NoSuchElementException.h" />
+    <ClInclude Include="include\vislib\NullAllocator.h" />
+    <ClInclude Include="include\vislib\NullLockable.h" />
+    <ClInclude Include="include\vislib\OrderedCollection.h" />
+    <ClInclude Include="include\vislib\OutOfRangeException.h" />
+    <ClInclude Include="include\vislib\Pair.h" />
+    <ClInclude Include="include\vislib\PtrArray.h" />
+    <ClInclude Include="include\vislib\RawStorage.h" />
+    <ClInclude Include="include\vislib\RawStoragePool.h" />
+    <ClInclude Include="include\vislib\RawStorageSerialiser.h" />
+    <ClInclude Include="include\vislib\RawStorageWriter.h" />
+    <ClInclude Include="include\vislib\ReferenceCounted.h" />
+    <ClInclude Include="include\vislib\Serialisable.h" />
+    <ClInclude Include="include\vislib\Serialiser.h" />
+    <ClInclude Include="include\vislib\SHA1HashProvider.h" />
+    <ClInclude Include="include\vislib\SingleAllocator.h" />
+    <ClInclude Include="include\vislib\SingleLinkedList.h" />
+    <ClInclude Include="include\vislib\SmartPtr.h" />
+    <ClInclude Include="include\vislib\SmartRef.h" />
+    <ClInclude Include="include\vislib\Stack.h" />
+    <ClInclude Include="include\vislib\String.h" />
+    <ClInclude Include="include\vislib\StringConverter.h" />
+    <ClInclude Include="include\vislib\StringSerialiser.h" />
+    <ClInclude Include="include\vislib\StringTokeniser.h" />
+    <ClInclude Include="include\vislib\sys\AbstractAsyncContext.h" />
+    <ClInclude Include="include\vislib\sys\AbstractReaderWriterLock.h" />
+    <ClInclude Include="include\vislib\sys\ASCIIFileBuffer.h" />
+    <ClInclude Include="include\vislib\sys\AutoHandle.h" />
+    <ClInclude Include="include\vislib\sys\AutoLock.h" />
+    <ClInclude Include="include\vislib\sys\BufferedFile.h" />
+    <ClInclude Include="include\vislib\sys\CmdLineParser.h" />
+    <ClInclude Include="include\vislib\sys\CmdLineProvider.h" />
+    <ClInclude Include="include\vislib\sys\COMException.h" />
+    <ClInclude Include="include\vislib\sys\Console.h" />
+    <ClInclude Include="include\vislib\sys\ConsoleProgressBar.h" />
+    <ClInclude Include="include\vislib\sys\CriticalSection.h" />
+    <ClInclude Include="include\vislib\sys\DateTime.h" />
+    <ClInclude Include="include\vislib\sys\DateTimeSpan.h" />
+    <ClInclude Include="include\vislib\sys\DirectoryEntry.h" />
+    <ClInclude Include="include\vislib\sys\DirectoryIterator.h" />
+    <ClInclude Include="include\vislib\sys\DynamicLinkLibrary.h" />
+    <ClInclude Include="include\vislib\sys\Environment.h" />
+    <ClInclude Include="include\vislib\sys\error.h" />
+    <ClInclude Include="include\vislib\sys\Event.h" />
+    <ClInclude Include="include\vislib\sys\FastFile.h" />
+    <ClInclude Include="include\vislib\sys\FatReaderWriterLock.h" />
+    <ClInclude Include="include\vislib\sys\File.h" />
+    <ClInclude Include="include\vislib\sys\FileNameSequence.h" />
+    <ClInclude Include="include\vislib\sys\ImpersonationContext.h" />
+    <ClInclude Include="include\vislib\sys\Interlocked.h" />
+    <ClInclude Include="include\vislib\sys\IOException.h" />
+    <ClInclude Include="include\vislib\sys\IPCSemaphore.h" />
+    <ClInclude Include="include\vislib\sys\KeyCode.h" />
+    <ClInclude Include="include\vislib\sys\LamportClock.h" />
+    <ClInclude Include="include\vislib\sys\LinuxDaemon.h" />
+    <ClInclude Include="include\vislib\sys\Lockable.h" />
+    <ClInclude Include="include\vislib\sys\Log.h" />
+    <ClInclude Include="include\vislib\sys\MemmappedFile.h" />
+    <ClInclude Include="include\vislib\sys\MemoryFile.h" />
+    <ClInclude Include="include\vislib\sys\Mutex.h" />
+    <ClInclude Include="include\vislib\sys\NamedPipe.h" />
+    <ClInclude Include="include\vislib\sys\PAMException.h" />
+    <ClInclude Include="include\vislib\sys\Path.h" />
+    <ClInclude Include="include\vislib\sys\PerformanceCounter.h" />
+    <ClInclude Include="include\vislib\sys\PoolAllocator.h" />
+    <ClInclude Include="include\vislib\sys\Process.h" />
+    <ClInclude Include="include\vislib\sys\RegistryKey.h" />
+    <ClInclude Include="include\vislib\sys\RegistrySerialiser.h" />
+    <ClInclude Include="include\vislib\sys\Runnable.h" />
+    <ClInclude Include="include\vislib\sys\RunnableThread.h" />
+    <ClInclude Include="include\vislib\sys\ScopedLock.h" />
+    <ClInclude Include="include\vislib\sys\Semaphore.h" />
+    <ClInclude Include="include\vislib\sys\SharedMemory.h" />
+    <ClInclude Include="include\vislib\sys\SlimReaderWriterLock.h" />
+    <ClInclude Include="include\vislib\sys\SynchronisedArray.h" />
+    <ClInclude Include="include\vislib\sys\SyncObject.h" />
+    <ClInclude Include="include\vislib\sys\sysfunctions.h" />
+    <ClInclude Include="include\vislib\sys\SystemException.h" />
+    <ClInclude Include="include\vislib\sys\SystemInformation.h" />
+    <ClInclude Include="include\vislib\sys\SystemMessage.h" />
+    <ClInclude Include="include\vislib\sys\TextFileReader.h" />
+    <ClInclude Include="include\vislib\sys\Thread.h" />
+    <ClInclude Include="include\vislib\sys\ThreadPool.h" />
+    <ClInclude Include="include\vislib\sys\ThreadPoolListener.h" />
+    <ClInclude Include="include\vislib\sys\TrayIcon.h" />
+    <ClInclude Include="include\vislib\sys\VolatileIPCStringTable.h" />
+    <ClInclude Include="include\vislib\sys\WindowsService.h" />
+    <ClInclude Include="include\vislib\tchar.h" />
+    <ClInclude Include="include\vislib\Trace.h" />
+    <ClInclude Include="include\vislib\types.h" />
+    <ClInclude Include="include\vislib\unreferenced.h" />
+    <ClInclude Include="include\vislib\UnsupportedOperationException.h" />
+    <ClInclude Include="include\vislib\UTF8Encoder.h" />
+    <ClInclude Include="include\vislib\utils.h" />
+    <ClInclude Include="include\vislib\VersionNumber.h" />
+    <ClInclude Include="include\vislib\vislibversion.h" />
+    <ClInclude Include="include\vislib\xmlUtils.h" />
+    <ClInclude Include="src\net\cluster\messagereceiver.h" />
+    <ClInclude Include="src\sys\DynamicFunctionPointer.h" />
+    <ClInclude Include="src\vislibversion.template.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AlreadyExistsException.cpp" />
+    <ClCompile Include="src\Array.cpp" />
+    <ClCompile Include="src\ArrayAllocator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\ArrayElementDftCtor.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\ArrayElementPtrCtor.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\AssociativeCollection.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\CharTraits.cpp" />
+    <ClCompile Include="src\Collection.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\ColumnFormatter.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\ConstIterator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\Delegate.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\Exception.cpp" />
+    <ClCompile Include="src\forceinline.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\FormatException.cpp" />
+    <ClCompile Include="src\functioncast.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\AbsoluteCursor3D.cpp" />
+    <ClCompile Include="src\graphics\AbstractBitmapCodec.cpp" />
+    <ClCompile Include="src\graphics\AbstractCameraController.cpp" />
+    <ClCompile Include="src\graphics\AbstractCursor.cpp" />
+    <ClCompile Include="src\graphics\AbstractCursor2DEvent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\AbstractCursor3DEvent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\AbstractCursorEvent.cpp" />
+    <ClCompile Include="src\graphics\AbstractFont.cpp" />
+    <ClCompile Include="src\graphics\AbstractVISLogo.cpp" />
+    <ClCompile Include="src\graphics\AbstractWindow.cpp" />
+    <ClCompile Include="src\graphics\BitmapCodecCollection.cpp" />
+    <ClCompile Include="src\graphics\BitmapImage.cpp" />
+    <ClCompile Include="src\graphics\BitmapPainter.cpp" />
+    <ClCompile Include="src\graphics\BmpBitmapCodec.cpp" />
+    <ClCompile Include="src\graphics\Camera.cpp" />
+    <ClCompile Include="src\graphics\CameraAdjust3D.cpp" />
+    <ClCompile Include="src\graphics\CameraLookAtDist.cpp" />
+    <ClCompile Include="src\graphics\CameraMove2D.cpp" />
+    <ClCompile Include="src\graphics\CameraParameterLimits.cpp" />
+    <ClCompile Include="src\graphics\CameraParameterObserver.cpp" />
+    <ClCompile Include="src\graphics\CameraParameters.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsEyeOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsProjectionOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsStore.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsTileRectOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraParamsVirtualViewOverride.cpp" />
+    <ClCompile Include="src\graphics\CameraRotate2D.cpp" />
+    <ClCompile Include="src\graphics\CameraRotate2DEulerLookAt.cpp" />
+    <ClCompile Include="src\graphics\CameraRotate2DLookAt.cpp" />
+    <ClCompile Include="src\graphics\CameraZoom2DAngle.cpp" />
+    <ClCompile Include="src\graphics\CameraZoom2DMove.cpp" />
+    <ClCompile Include="src\graphics\ColourHSVf.cpp" />
+    <ClCompile Include="src\graphics\ColourParser.cpp" />
+    <ClCompile Include="src\graphics\ColourRGBAu8.cpp" />
+    <ClCompile Include="src\graphics\Cursor2D.cpp" />
+    <ClCompile Include="src\graphics\Cursor2DRectLasso.cpp" />
+    <ClCompile Include="src\graphics\d3d\AbstractD3D11WindowImpl.cpp" />
+    <ClCompile Include="src\graphics\d3d\AbstractD3DAdapterInformation.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3D11Window.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3D9AdapterInformation.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DCamera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DException.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3DMatrix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DPoint3D.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\d3dutils.cpp" />
+    <ClCompile Include="src\graphics\d3d\D3DVector3D.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\d3dverify.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\d3d\D3DVISLogo.cpp" />
+    <ClCompile Include="src\graphics\FpsCounter.cpp" />
+    <ClCompile Include="src\graphics\gl\AbstractOpenGLShader.cpp" />
+    <ClCompile Include="src\graphics\gl\AbstractOpenGLTexture.cpp" />
+    <ClCompile Include="src\graphics\gl\ARBShader.cpp" />
+    <ClCompile Include="src\graphics\gl\CameraOpenGL.cpp" />
+    <ClCompile Include="src\graphics\gl\ExtensionsDependent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\FramebufferObject.cpp" />
+    <ClCompile Include="src\graphics\gl\glfunctions.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLComputeShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLGeometryShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GLSLTesselationShader.cpp" />
+    <ClCompile Include="src\graphics\gl\GlutMouseInteractionAdapter.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\glverify.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\gl\OpenGLException.cpp" />
+    <ClCompile Include="src\graphics\gl\OpenGLTexture2D.cpp" />
+    <ClCompile Include="src\graphics\gl\OpenGLVISLogo.cpp" />
+    <ClCompile Include="src\graphics\gl\OutlineFont.cpp" />
+    <ClCompile Include="src\graphics\gl\ShaderSource.cpp" />
+    <ClCompile Include="src\graphics\gl\SimpleFont.cpp" />
+    <ClCompile Include="src\graphics\graphicsfunctions.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\graphics\InputModifiers.cpp" />
+    <ClCompile Include="src\graphics\MouseInteractionAdapter.cpp" />
+    <ClCompile Include="src\graphics\NamedColours.cpp" />
+    <ClCompile Include="src\graphics\ObservableCameraParams.cpp" />
+    <ClCompile Include="src\graphics\PpmBitmapCodec.cpp" />
+    <ClCompile Include="src\graphics\RelativeCursor3D.cpp" />
+    <ClCompile Include="src\graphics\ZoomToRectangle.cpp" />
+    <ClCompile Include="src\GUID.cpp" />
+    <ClCompile Include="src\HashAlgorithm.cpp" />
+    <ClCompile Include="src\Heap.cpp" />
+    <ClCompile Include="src\IllegalParamException.cpp" />
+    <ClCompile Include="src\IllegalStateException.cpp" />
+    <ClCompile Include="src\Iterator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\Listenable.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\Map.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractCuboid.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractDimension.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractDimensionImpl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractMatrix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractMatrixImpl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractPlane.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractPoint.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractPointImpl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractPolynom.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractPolynomImpl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractPyramidalFrustum.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractQuaternion.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractRectangle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractSphere.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractTriangle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractTriangleImpl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractVector.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractVectorImpl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\AbstractViewFrustum.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\BezierCurve.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Cuboid.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Dimension.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\FastMap.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Float16.cpp" />
+    <ClCompile Include="src\math\ForceDirected.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\mathfunctions.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\mathtypes.cpp" />
+    <ClCompile Include="src\math\Matrix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Matrix4.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\pcautils.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Plane.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Point.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Polynom.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Quaternion.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Rectangle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\RectangularPyramidalFrustum.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowDimension.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowMatrix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowPlane.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowPoint.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowQuaternion.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowRectangle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowShallowTriangle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowSphere.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowTriangle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ShallowVector.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Sphere.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Ternary.cpp" />
+    <ClCompile Include="src\math\Triangle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\Vector.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\math\ViewFrustum.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\MD5HashProvider.cpp" />
+    <ClCompile Include="src\MissingImplementationException.cpp" />
+    <ClCompile Include="src\MultiSz.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\net\AbstractCommChannel.cpp" />
+    <ClCompile Include="src\net\AbstractCommClientChannel.cpp" />
+    <ClCompile Include="src\net\AbstractCommEndPoint.cpp" />
+    <ClCompile Include="src\net\AbstractCommServerChannel.cpp" />
+    <ClCompile Include="src\net\AbstractSimpleMessage.cpp" />
+    <ClCompile Include="src\net\AbstractSimpleMessageHeader.cpp" />
+    <ClCompile Include="src\net\AbstractSyncMsgUser.cpp" />
+    <ClCompile Include="src\net\AsyncSocket.cpp" />
+    <ClCompile Include="src\net\AsyncSocketContext.cpp" />
+    <ClCompile Include="src\net\AsyncSocketSender.cpp" />
+    <ClCompile Include="src\net\ClusterDiscoveryListener.cpp" />
+    <ClCompile Include="src\net\ClusterDiscoveryService.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractClientNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractClusterNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractControlledNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractControllerNode.cpp" />
+    <ClCompile Include="src\net\cluster\AbstractServerNode.cpp" />
+    <ClCompile Include="src\net\cluster\clustermessages.cpp" />
+    <ClCompile Include="src\net\cluster\DiscoveryListener.cpp" />
+    <ClCompile Include="src\net\cluster\DiscoveryService.cpp" />
+    <ClCompile Include="src\net\cluster\messagereceiver.cpp" />
+    <ClCompile Include="src\net\cluster\NodeIdentifier.cpp" />
+    <ClCompile Include="src\net\CommServer.cpp" />
+    <ClCompile Include="src\net\CommServerListener.cpp" />
+    <ClCompile Include="src\net\DNS.cpp" />
+    <ClCompile Include="src\net\IPAddress.cpp" />
+    <ClCompile Include="src\net\IPAddress6.cpp" />
+    <ClCompile Include="src\net\IPAgnosticAddress.cpp" />
+    <ClCompile Include="src\net\IPCommEndPoint.cpp" />
+    <ClCompile Include="src\net\IPEndPoint.cpp" />
+    <ClCompile Include="src\net\IPHostEntry.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\net\NetworkInformation.cpp" />
+    <ClCompile Include="src\net\PeerDisconnectedException.cpp" />
+    <ClCompile Include="src\net\ShallowSimpleMessage.cpp" />
+    <ClCompile Include="src\net\ShallowSimpleMessageHeader.cpp" />
+    <ClCompile Include="src\net\SimpleMessage.cpp" />
+    <ClCompile Include="src\net\SimpleMessageDispatcher.cpp" />
+    <ClCompile Include="src\net\SimpleMessageDispatchListener.cpp" />
+    <ClCompile Include="src\net\SimpleMessageHeader.cpp" />
+    <ClCompile Include="src\net\SimpleMessageHeaderData.cpp" />
+    <ClCompile Include="src\net\Socket.cpp" />
+    <ClCompile Include="src\net\SocketAddress.cpp" />
+    <ClCompile Include="src\net\SocketException.cpp" />
+    <ClCompile Include="src\net\TcpCommChannel.cpp" />
+    <ClCompile Include="src\net\TcpServer.cpp" />
+    <ClCompile Include="src\net\UdpCommChannel.cpp" />
+    <ClCompile Include="src\net\UnexpectedMessageException.cpp" />
+    <ClCompile Include="src\NoSuchElementException.cpp" />
+    <ClCompile Include="src\NullAllocator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\NullLockable.cpp" />
+    <ClCompile Include="src\OrderedCollection.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\OutOfRangeException.cpp" />
+    <ClCompile Include="src\Pair.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\PtrArray.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\RawStorage.cpp" />
+    <ClCompile Include="src\RawStoragePool.cpp" />
+    <ClCompile Include="src\RawStorageSerialiser.cpp" />
+    <ClCompile Include="src\RawStorageWriter.cpp" />
+    <ClCompile Include="src\ReferenceCounted.cpp" />
+    <ClCompile Include="src\Serialisable.cpp" />
+    <ClCompile Include="src\Serialiser.cpp" />
+    <ClCompile Include="src\SHA1HashProvider.cpp" />
+    <ClCompile Include="src\SingleAllocator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\SingleLinkedList.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\SmartPtr.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\SmartRef.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\Stack.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\String.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\StringConverter.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\StringSerialiser.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\StringTokeniser.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\AbstractAsyncContext.cpp" />
+    <ClCompile Include="src\sys\AbstractReaderWriterLock.cpp" />
+    <ClCompile Include="src\sys\ASCIIFileBuffer.cpp" />
+    <ClCompile Include="src\sys\AutoHandle.cpp" />
+    <ClCompile Include="src\sys\AutoLock.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\BufferedFile.cpp" />
+    <ClCompile Include="src\sys\CmdLineParser.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\CmdLineProvider.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\COMException.cpp" />
+    <ClCompile Include="src\sys\Console.cpp" />
+    <ClCompile Include="src\sys\ConsoleProgressBar.cpp" />
+    <ClCompile Include="src\sys\CriticalSection.cpp" />
+    <ClCompile Include="src\sys\DateTime.cpp" />
+    <ClCompile Include="src\sys\DateTimeSpan.cpp" />
+    <ClCompile Include="src\sys\DirectoryEntry.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\DirectoryIterator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\DynamicFunctionPointer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\DynamicLinkLibrary.cpp" />
+    <ClCompile Include="src\sys\Environment.cpp" />
+    <ClCompile Include="src\sys\error.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\Event.cpp" />
+    <ClCompile Include="src\sys\FatReaderWriterLock.cpp" />
+    <ClCompile Include="src\sys\File.cpp" />
+    <ClCompile Include="src\sys\FileNameSequence.cpp" />
+    <ClCompile Include="src\sys\ImpersonationContext.cpp" />
+    <ClCompile Include="src\sys\Interlocked.cpp" />
+    <ClCompile Include="src\sys\IOException.cpp" />
+    <ClCompile Include="src\sys\IPCSemaphore.cpp" />
+    <ClCompile Include="src\sys\KeyCode.cpp" />
+    <ClCompile Include="src\sys\LamportClock.cpp" />
+    <ClCompile Include="src\sys\LinuxDaemon.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\Lockable.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\Log.cpp" />
+    <ClCompile Include="src\sys\MemmappedFile.cpp" />
+    <ClCompile Include="src\sys\MemoryFile.cpp" />
+    <ClCompile Include="src\sys\Mutex.cpp" />
+    <ClCompile Include="src\sys\NamedPipe.cpp" />
+    <ClCompile Include="src\sys\PAMException.cpp" />
+    <ClCompile Include="src\sys\Path.cpp" />
+    <ClCompile Include="src\sys\PerformanceCounter.cpp" />
+    <ClCompile Include="src\sys\PoolAllocator.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\Process.cpp" />
+    <ClCompile Include="src\sys\RegistryKey.cpp" />
+    <ClCompile Include="src\sys\RegistrySerialiser.cpp" />
+    <ClCompile Include="src\sys\Runnable.cpp" />
+    <ClCompile Include="src\sys\RunnableThread.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\ScopedLock.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\Semaphore.cpp" />
+    <ClCompile Include="src\sys\SharedMemory.cpp" />
+    <ClCompile Include="src\sys\SlimReaderWriterLock.cpp" />
+    <ClCompile Include="src\sys\SynchronisedArray.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\sys\SyncObject.cpp" />
+    <ClCompile Include="src\sys\sysfunctions.cpp" />
+    <ClCompile Include="src\sys\SystemException.cpp" />
+    <ClCompile Include="src\sys\SystemInformation.cpp" />
+    <ClCompile Include="src\sys\SystemMessage.cpp" />
+    <ClCompile Include="src\sys\TextFileReader.cpp" />
+    <ClCompile Include="src\sys\Thread.cpp" />
+    <ClCompile Include="src\sys\ThreadPool.cpp" />
+    <ClCompile Include="src\sys\ThreadPoolListener.cpp" />
+    <ClCompile Include="src\sys\TrayIcon.cpp" />
+    <ClCompile Include="src\sys\VolatileIPCStringTable.cpp" />
+    <ClCompile Include="src\sys\WindowsService.cpp" />
+    <ClCompile Include="src\Trace.cpp" />
+    <ClCompile Include="src\UnsupportedOperationException.cpp" />
+    <ClCompile Include="src\UTF8Encoder.cpp" />
+    <ClCompile Include="src\utils.cpp" />
+    <ClCompile Include="src\VersionNumber.cpp" />
+    <ClCompile Include="src\xmlUtils.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="makevislibversion.pl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl "%(FullPath)" "$(ProjectDir)\." "$(ProjectDir)src\vislibversion.template.h" "$(ProjectDir)include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)include\vislib\vislibversion.h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)src\vislibversion.template.h;$(ProjectDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</TreatOutputAsContent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl "%(FullPath)" "$(ProjectDir)\." "$(ProjectDir)src\vislibversion.template.h" "$(ProjectDir)include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)include\vislib\vislibversion.h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)src\vislibversion.template.h;$(ProjectDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</TreatOutputAsContent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">perl "%(FullPath)" "$(ProjectDir)\." "$(ProjectDir)src\vislibversion.template.h" "$(ProjectDir)include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)include\vislib\vislibversion.h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)src\vislibversion.template.h;$(ProjectDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatOutputAsContent>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">perl "%(FullPath)" "$(ProjectDir)\." "$(ProjectDir)src\vislibversion.template.h" "$(ProjectDir)include\vislib\vislibversion.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Collecting Version Information</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)include\vislib\vislibversion.h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)src\vislibversion.template.h;$(ProjectDir)obj\$(Platform)\$(Configuration)\vislib.log;$(LastBuildState);%(AdditionalInputs)</AdditionalInputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatOutputAsContent>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\vislib\graphics\gl\Verdana.inc" />
+    <None Include="include\vislib\sys\DirectoryIterator.inl" />
+    <None Include="include\vislib\sys\WindowsService.inl" />
+    <None Include="src\graphics\gl\SimpleFontData.inc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,15 @@
+get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+include(${SELF_DIR}/vislib-target.cmake)
+
+set(glload_LIBRARIES "@cfg_glload_LIBRARIES@")
+set(vislib_LIBRARIES vislib ${glload_LIBRARIES})
+set(vislib_INCLUDE_DIRS "@cfg_vislib_INCLUDE_DIRS@")
+
+set(vislib_NEED_TO_COPY ${glload_LIBRARIES})
+
+set(vislib_FOUND 1)
+
+get_property(self_target_location TARGET vislib PROPERTY LOCATION_${CMAKE_BUILD_TYPE})
+message(STATUS "Found vislib: ${self_target_location}")
+

@@ -1,0 +1,6 @@
+VSWIZARD 7.0
+Wizard=VsWizard.VsWizardEngine.10.0
+
+Param="WIZARD_NAME = Visual C++ 2010 Project with VISlib Support"
+Param="ABSOLUTE_PATH = T:\Programmcode\vislib\trunk\VSExtensibility\VISlibVS2010Project"
+Param="FALLBACK_LCID = 1033"

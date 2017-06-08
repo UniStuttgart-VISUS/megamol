@@ -1,0 +1,27 @@
+set(MY_BUILD_TYPE @cfg_CMAKE_BUILD_TYPE@)
+set(CURRENT_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+
+if ("${CURRENT_BUILD_TYPE}" STREQUAL "")
+	set(CURRENT_BUILD_TYPE "Release")
+endif()
+
+# check build type
+if (NOT "${CURRENT_BUILD_TYPE}" STREQUAL "${MY_BUILD_TYPE}")
+	# wrong build type
+	# I do not match
+	set(PACKAGE_VERSION_COMPATIBLE False)
+	set(PACKAGE_VERSION_UNSUITABLE True) 
+	
+	# Note: we do not search for alternatives!
+	#       We did that in an earlier version and it was a bad idea.
+	# Breaking scenario:
+	#       vislib available in debug and release
+	#       mmcore available in release
+	#       mmplg build in debug (will use a different vislib as the core)
+else()
+	# correct build type!
+	# I do match
+	set(PACKAGE_VERSION_COMPATIBLE True)
+	set(PACKAGE_VERSION_UNSUITABLE False) 
+endif()
+

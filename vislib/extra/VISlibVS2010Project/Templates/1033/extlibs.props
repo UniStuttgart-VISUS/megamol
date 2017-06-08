@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup Label="UserMacros">
+		<VISlibDir>[!output VISLIB_DIR]</VISlibDir>
+	</PropertyGroup>
+	<PropertyGroup>
+		<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+	</PropertyGroup>
+	<ItemDefinitionGroup>
+		<ClCompile>
+			<AdditionalIncludeDirectories>&quot;$(VISlibDir)\base\include&quot;[!if VISLIB_CLUSTER]; &quot;$(VISlibDir)\cluster\include&quot;[!endif][!if VISLIB_D3D]; &quot;$(VISlibDir)\d3d\include&quot;[!endif][!if VISLIB_GL]; &quot;$(VISlibDir)\gl\include&quot;[!endif][!if VISLIB_GRAPHICS]; &quot;$(VISlibDir)\graphics\include&quot;[!endif][!if VISLIB_MATH]; &quot;$(VISlibDir)\math\include&quot;[!endif][!if VISLIB_NET]; &quot;$(VISlibDir)\net\include&quot;[!endif][!if VISLIB_SYS]; &quot;$(VISlibDir)\sys\include&quot;[!endif]; %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+		</ClCompile>
+		<Link>
+			<AdditionalDependencies>vislibbase$(BitsD).lib[!if VISLIB_CLUSTER]; vislibcluster$(BitsD).lib[!endif][!if VISLIB_D3D]; vislibd3d$(BitsD).lib[!endif][!if VISLIB_GL]; vislibgl$(BitsD).lib[!endif][!if VISLIB_GRAPHICS]; vislibgraphics$(BitsD).lib[!endif][!if VISLIB_MATH]; vislibmath$(BitsD).lib[!endif][!if VISLIB_NET]; vislibnet$(BitsD).lib[!endif][!if VISLIB_SYS]; vislibsys$(BitsD).lib[!endif]; [!output ADDITIONAL_LIBRARIES] %(AdditionalDependencies)</AdditionalDependencies>
+			<AdditionalLibraryDirectories>$(VISlibDir)\lib; %(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+		</Link>
+	</ItemDefinitionGroup>
+	<ItemGroup>
+		<BuildMacro Include="VISlibDir">
+			<Value>$(VISlibDir)</Value>
+		</BuildMacro>
+	</ItemGroup>
+</Project>
