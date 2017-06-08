@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MegaMol type="project" version="1.0">
+
+    <!-- view definition used for viewing and setting up -->
+    <view name="imdview" viewmod="view">
+        <module class="View3D" name="view" />
+        <module class="SimpleSphereRenderer" name="spheres" />
+        <call class="CallRender3D" from="view::rendering" to="spheres::rendering" />
+
+        <module class="IMDAtomData" name="data" />
+
+        <module class="AddParticleColours" name="colouriser" />
+        <call class="MultiParticleDataCall" from="spheres::getdata" to="colouriser::putdata" />
+        <call class="MultiParticleDataCall" from="colouriser::getdata" to="data::getdata" />
+
+        <module class="LinearTransferFunction" name="tf" />
+        <call class="CallGetTransferFunction" from="colouriser::gettransferfunction" to="tf::gettransferfunction" />
+
+        <module class="ClipPlane" name="clip" />
+        <call class="CallClipPlane" from="spheres::getclipplane" to="clip::getclipplane" />
+    </view>
+
+</MegaMol>

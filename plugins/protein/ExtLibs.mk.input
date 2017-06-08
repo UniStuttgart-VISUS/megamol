@@ -1,0 +1,87 @@
+#
+# ExtLib.mk.input
+# MegaMol
+#
+# Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
+# Alle Rechte vorbehalten.
+#
+
+# Path to ouput directories
+outbin := %outbin%
+# Path to MegaMol Core
+mmcorepath := %mmcorePath%
+# Paths to external libraries
+vislibpath := %vislib%
+
+#ifeq (%withNETCDF%$1$0$, 1)
+#	netcdfpath := %netcdfPath%
+#	IncludeDir += $(netcdfpath)/include
+#	CompilerFlags += -DWITH_NETCDF
+#	LinkerFlags += -lnetcdf
+#	DebugLinkerFlags += -L$(netcdfpath)/lib$(BITS)d 
+#	ReleaseLinkerFlags += -L$(netcdfpath)/lib$(BITS)
+#endif
+
+ifeq (%withCUDA%$1$0$, 1)
+CompilerFlags += -DWITH_CUDA
+CudaInstallPath   := %cudaPath%
+VISlibs := net gl graphics sys math base
+
+# cuda
+NVCC	      := $(CudaInstallPath)/bin/nvcc
+CudaReleaseDir    := $(ReleaseDir)/Cuda
+CudaDebugDir      := $(DebugDir)/Cuda
+
+# note: not the dependencies (i.e. particle_kernel.cu)!
+CU_SOURCES	:= particleSystem.cu filter_cuda.cu CUDAMarchingCubes.cu CUDAQuickSurf.cu CUDACurl.cu CUDAFieldTopology.cu PotentialCalculator.cu sort_triangles.cu  ComparativeSurfacePotentialRenderer_metric.cu VolumeMeshRenderer.cu VolumeMeshRenderer-sort.cu DiffusionSolver.cu DeformableGPUSurfaceMT.cu GPUSurfaceMT.cu CUDAStreamlines.cu
+
+CU_R_OBS	  := $(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
+CU_D_OBS	  := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.o, $(CU_SOURCES)))
+LIBS	      := $(LIBS) cudart cufft
+# cudpp_x86_64
+LinkerFlags       := $(LinkerFlags) -L$(CudaInstallPath)/lib64
+
+# note: cuda include dirs have to be added after vislib include dirs
+IncludeDir := $(IncludeDir) $(CudaInstallPath)/include
+IncludeDir := $(IncludeDir) $(addprefix $(vislibpath)/,$(addsuffix /include,$(VISlibs)))
+IncludeDir := $(IncludeDir) $(mmcorepath)
+
+# cuda
+NVCCFLAGS := -DUNIX -D_GNU_SOURCE -D_LIN$(BITS) $(addprefix -I, $(IncludeDir)) -Xcompiler '-DWITH_CUDA -fPIC $(addprefix -I, $(IncludeDir)) $(CPPFLAGS) $(ReleaseCompilerFlags)' -O3 -arch=sm_20 --ftz=true --prec-sqrt=false --prec-div=false
+#--ptxas-options=-v -m64
+CU_DEPS := $(addprefix $(IntDir)/$(CudaDebugDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))\
+	$(addprefix $(IntDir)/$(CudaReleaseDir)/, $(patsubst %.cu, %.d, $(CU_SOURCES)))
+
+# Rules for dependencies:
+
+$(IntDir)/$(CudaDebugDir)/%.d: $(InputDir)/%.cu Makefile
+	@mkdir -p $(dir $@)
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
+	@echo -n $(dir $@) > $@
+	$(Q)$(NVCC) -M -g -lineinfo $(NVCCFLAGS) $< >> $@
+# -g debug information for host code
+# -G debug information for device code
+
+$(IntDir)/$(CudaReleaseDir)/%.d: $(InputDir)/%.cu Makefile
+	@mkdir -p $(dir $@)
+	@echo -e $(COLORACTION)"DEP "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
+	@echo -n $(dir $@) > $@
+	$(Q)$(NVCC) -M $(NVCCFLAGS) $< >> $@
+    
+
+# Rules for object files:
+
+$(IntDir)/$(CudaDebugDir)/%.o:
+	@mkdir -p $(dir $@)
+	@echo -e $(COLORACTION)"NVCC "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
+	$(Q)$(NVCC) -c -lineinfo -g -G $(NVCCFLAGS) $< -o $@
+
+$(IntDir)/$(CudaReleaseDir)/%.o:
+	@mkdir -p $(dir $@)
+	@echo -e $(COLORACTION)"NVCC "$(COLORINFO)"$@: "
+	@$(CLEARTERMCMD)
+	$(Q)$(NVCC) -c $(NVCCFLAGS) $< -o $@
+endif

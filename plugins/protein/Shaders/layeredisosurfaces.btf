@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="layeredisosurfaces">
+    <include file="common"/>
+
+    <namespace name="isosurfaces">
+        <shader name="vertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2013  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+varying vec3 lightPos;
+varying vec3 fillLightPos;
+
+void main(void) {
+    gl_FrontColor = gl_Color;
+    gl_Position = gl_Vertex;
+
+    // calculate light position
+    lightPos = (gl_ModelViewMatrixInverse * vec4(60.0, 50.0, 100.0, 1.0)).xyz;
+    fillLightPos = (gl_ModelViewMatrixInverse * vec4(-60.0, -20.0, 50.0, 1.0)).xyz;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet type="string">
+                <!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2013  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+// scale factors of the volume
+uniform vec4 scaleVol;
+uniform vec4 scaleVolInv;
+
+uniform float stepSize;
+
+uniform int numIterations;
+uniform float alphaCorrection;
+
+uniform vec2 screenResInv;
+uniform vec3 isoValues;
+uniform float isoOpacity = 0.4;
+uniform vec3 surfaceColor0 = vec3(0.7, 0.5, 0.0);
+uniform vec3 surfaceColor1 = vec3(0.0, 0.7, 0.5);
+//uniform vec3 surfaceColor2 = vec3(0.7, 0.0, 0.5);
+uniform vec3 surfaceColor2 = vec3(0.0, 0.7, 1.0);
+
+uniform vec4 clipPlane0 = vec4(0.0);
+uniform vec4 clipPlane1 = vec4(0.0);
+uniform vec4 clipPlane2 = vec4(0.0);
+uniform vec3 osbboxdim = vec3(1.0);
+
+// textures
+uniform sampler3D volumeSampler;
+uniform sampler1D transferRGBASampler;
+
+uniform sampler2D rayStartSampler;   // ray start pos, a=0: no ray
+uniform sampler2D rayLengthSampler;  // ray direction, ray length
+
+uniform sampler3D vectorSampler;
+uniform sampler3D randNoiseTex;
+
+uniform float licDirScl = 1.0;
+uniform int licLen = 10;
+uniform float licTCScl = 1.0;
+uniform float licContrast = 0.25;
+uniform float licBright = 1.0;
+
+varying vec3 lightPos;
+varying vec3 fillLightPos;
+
+
+// Calculate line integral convolution (LIC)            
+float CalcLIC(int l, vec3 stp_start) {
+   
+    int i;
+    vec3 v;    
+    vec3 stp = stp_start;
+    float vecScl = licDirScl*0.01;
+    float randTCScl = licTCScl*float(textureSize(vectorSampler, 0).x)/float(textureSize(randNoiseTex, 0).x);
+    
+    float colLic = texture3D(randNoiseTex, stp*randTCScl).a;
+    v = texture3D(vectorSampler, stp).xyz;    
+    
+    for(i = 0; i < l; i++) {
+        stp -= v*vecScl; 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(vectorSampler, stp).xyz;
+    }
+    
+    stp = stp_start;
+    
+    for(i = 0; i < l; i++) {
+        stp += v*vecScl; 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(vectorSampler, stp).xyz;
+    }
+    
+    colLic /= float(l+l+1);
+    
+    // Apply contrast stretching and to enhance the final image
+    colLic -= licContrast;
+    colLic /= (1.0 - 2.0*licContrast);
+    colLic += licBright;
+    
+    return colLic;
+}
+
+
+vec3 calcIllum(vec3 illumPos, vec3 normal, vec3 dir, vec3 srcColor) {
+    // main light source
+    vec3 lightDir = normalize(lightPos - illumPos);
+    float ndotl = (dot(normal, lightDir));
+    vec3 r = normalize(2.0 * ndotl * normal - lightDir);
+    float spec = pow(max(dot(r, -dir), 0.0), 10.0) * 0.5;
+    float diff = max(abs(ndotl), 0.0);
+    // fill light
+    lightDir = normalize(fillLightPos - illumPos);
+    ndotl = dot(normal, lightDir);
+    r = normalize(2.0 * ndotl * normal - lightDir);
+    float specFill = pow(max(dot(r, -dir), 0.0), 20.0) * 0.24;
+    float diffuseFill = 0.5*max(abs(ndotl), 0.0);
+
+    vec3 color = (diff + diffuseFill + 0.3)*srcColor.rgb + (spec + specFill) * 0.5;
+
+    return color;
+}
+
+
+void main(void) {
+    vec4 dest = vec4(0.0);
+    vec4 src;
+    float w;
+
+    vec2 texCoord = gl_FragCoord.xy * screenResInv;
+
+    vec4 rayStart  = texture2D(rayStartSampler, texCoord);
+    vec4 rayLength = texture2D(rayLengthSampler, texCoord);
+
+    vec3 center = vec3(0.0);
+
+    // ray starting position
+    vec3 pos = rayStart.xyz * scaleVol.xyz;
+    // ray direction
+    vec3 dir = rayLength.xyz * scaleVol.xyz;
+    // ray distance to traverse
+    float rayDist = rayLength.w;
+    	
+    float scalarData;
+    vec4 data;
+
+    bool outside = false;
+
+    vec3 isoDiff = vec3(0.0);
+    vec3 isoDiffOld = vec3(texture3D(volumeSampler, pos).r) - isoValues;
+    
+	// TEST
+	float stepSize2 = stepSize; // / 3.0;
+	
+    // move one step forward
+    vec3 stepDir = dir * stepSize2;
+    pos += stepDir;
+    rayDist -= stepSize2;
+
+    if (rayDist <= 0.0) {
+        gl_FragColor = dest;
+        return;
+    }
+
+	vec3 cpTest;
+	float lic;
+	vec3 tv;
+		
+    for (int j=0; (!outside && (j<numIterations)); ++j) {
+        for (int i=0; i<numIterations; ++i) {
+            // lookup scalar value
+            scalarData = texture3D( volumeSampler, pos).r;
+            isoDiff = vec3(scalarData) - isoValues;
+            
+			cpTest = vec3( 0.0);
+			
+			// test clip planes
+			if( length( clipPlane0.xyz) > 0.0 ) {
+				vec3 posOS = pos * osbboxdim;
+				float dist = dot( posOS, clipPlane0.xyz);
+				if( dist > clipPlane0.w ) {
+					cpTest.x = 1.0;
+				}
+				dist = dot( posOS, clipPlane1.xyz);
+				if( dist > clipPlane1.w ) {
+					cpTest.y = 1.0;
+				}
+				dist = dot( posOS, clipPlane2.xyz);
+				if( dist > clipPlane2.w ) {
+					cpTest.z = 1.0;
+				}
+			}
+			
+            if (isoDiff.x * isoDiffOld.x  <= 0.0 && cpTest.x < 0.5) {
+				
+                // improve position
+                vec3 isoPos = mix(pos - stepDir, pos, isoDiffOld.x / (isoDiffOld.x - isoDiff.x));
+
+                // compute gradient by central differences
+                vec3 gradient;
+                // TODO: schrittweite skalieren (halbe voxel-laenge)
+                float gradOffset = 0.05; // 0.0038
+                
+                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).r;
+                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).r;
+                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).r;
+                gradient = normalize(gradient);
+				
+				// vector field LIC
+				//lic = CalcLIC(licLen, isoPos);
+				tv = texture3D(vectorSampler, isoPos).xyz;
+				
+                // illumination
+                vec3 posWorld = isoPos * scaleVolInv.xyz;
+                vec3 dirWorld = dir * scaleVolInv.xyz;
+
+                float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
+                src = vec4(surfaceColor0, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
+				//src.rgb *= lic; // TEST
+				
+				/*
+				float scale=0.010;
+				float value=dot( gradient, tv);
+				if( value < 0.000 ) {
+					//src.rgb = vec3( 0.3-0.7*value/scale, 0.3+0.3*value/scale, 0.3+0.3*value/scale);
+					src.rgb = mix( vec3( 0.3), vec3( 0.0, 1.0, 1.0), (-value)/scale);
+				} else {
+					//src.rgb = vec3( 0.3+0.3*value/scale, 0.3-0.3*value/scale, 0.3+0.7*value/scale);
+					src.rgb = mix( vec3( 0.3), vec3( 1.0, 1.0, 0.0), value/scale);
+				}
+				*/
+//				if( dot( gradient, tv) > 0.001 ) {
+//					src.rgb = vec3( 1.0, 0.0, 0.0);
+//				} else if( dot( gradient, tv) < -0.001 ) {
+//					src.rgb = vec3( 0.0, 0.0, 1.0);
+//				} else {
+//					src.rgb = vec3( 0.3, 0.3, 0.3);
+//				}
+                src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
+                
+                // draw interior darker
+                //if (isoDiffOld > 0.0)
+                //    src.xyz *= 0.5;
+                
+                // perform blending
+                src.rgb *= src.a;
+                dest = (1.0 - dest.a) * src + dest;
+                
+                // rotate clip plane normal
+                //vec3 cp = gl_ClipPlane[0].xyz * gl_NormalMatrix;
+                // if (dot(posWorld - scaleVol.xyz, clipPlane0.xyz) + clipPlane0.w < 0.05)
+                //  //dest.xyz *= 0.2;
+                //  dest.xyz += 0.5 * vec3(1.0, 1.0, 0.0);
+                // dest.xyz = clamp(dest.xyz, vec3(0.0), vec3(1.0));
+            } //else {
+				/*
+				if (cpTest.x < 0.5) { 
+					// illumination
+					vec3 posWorld = pos * scaleVolInv.xyz;
+					vec3 dirWorld = dir * scaleVolInv.xyz;
+					src.rgb = vec3( 0.5);
+					float val = clamp( texture3D(vectorSampler, pos).z, -0.1, 0.1);
+					if (val > 0.0) {
+						val = val / 0.1;
+						src.rgb = mix( vec3( 1.0, 1.0, 1.0), vec3( 1.0, 0.0, 0.0), val);
+					} else {
+						val = (-val) / 0.1;
+						src.rgb = mix( vec3( 1.0, 1.0, 1.0), vec3( 0.0, 0.0, 1.0), val);
+					}
+					//src.rgb = calcIllum(posWorld, vec3(0.0, 0.0, 1.0), dirWorld, src.rgb);
+					src.a = 1.0;
+					// perform blending
+					src.rgb *= src.a;
+					dest = (1.0 - dest.a) * src + dest;
+				}
+				*/
+			//}
+            isoDiffOld.x = isoDiff.x;
+
+            if (isoDiff.y * isoDiffOld.y  <= 0.0 && cpTest.y < 0.5) {
+                // improve position
+                vec3 isoPos = mix(pos - stepDir, pos, isoDiffOld.y / (isoDiffOld.y - isoDiff.y));
+
+                // compute gradient by central differences
+                vec3 gradient;
+                // TODO: schrittweite skalieren (halbe voxel-laenge)
+                float gradOffset = 0.05; // 0.0038
+                
+                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).r;
+                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).r;
+                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).r;
+                gradient = normalize(gradient);
+				
+				// vector field LIC
+				lic = CalcLIC(licLen, isoPos);
+				
+                // illumination
+                vec3 posWorld = isoPos * scaleVolInv.xyz;
+                vec3 dirWorld = dir * scaleVolInv.xyz;
+
+                float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
+                src = vec4(surfaceColor1, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
+				//src.rgb *= lic; // TEST
+                src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
+                
+                // draw interior darker
+                //if (isoDiffOld > 0.0)
+                //    src.xyz *= 0.5;
+                
+                // perform blending
+                src.rgb *= src.a;
+                dest = (1.0 - dest.a) * src + dest;
+                
+                // rotate clip plane normal
+                //vec3 cp = gl_ClipPlane[0].xyz * gl_NormalMatrix;
+                // if (dot(posWorld - scaleVol.xyz, clipPlane0.xyz) + clipPlane0.w < 0.05)
+                //  //dest.xyz *= 0.2;
+                //  dest.xyz += 0.5 * vec3(1.0, 1.0, 0.0);
+                // dest.xyz = clamp(dest.xyz, vec3(0.0), vec3(1.0));
+            }
+            isoDiffOld.y = isoDiff.y;
+
+            if (isoDiff.z * isoDiffOld.z  <= 0.0 && cpTest.z < 0.5) {
+                // improve position
+                vec3 isoPos = mix(pos - stepDir, pos, isoDiffOld.z / (isoDiffOld.z - isoDiff.z));
+
+                // compute gradient by central differences
+                vec3 gradient;
+                // TODO: schrittweite skalieren (halbe voxel-laenge)
+                float gradOffset = 0.05; // 0.0038
+                
+                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).r;
+                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).r;
+                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).r;
+                gradient = normalize(gradient);
+				
+				// vector field LIC
+				lic = CalcLIC(licLen, isoPos);
+				
+                // illumination
+                vec3 posWorld = isoPos * scaleVolInv.xyz;
+                vec3 dirWorld = dir * scaleVolInv.xyz;
+
+                float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
+                src = vec4(surfaceColor2, min(1.0, isoOpacity + 1.5*(1.0-tmp)));
+				//src.rgb *= lic; // TEST
+                src.rgb = calcIllum(posWorld, gradient, dirWorld, src.rgb);
+                
+                // draw interior darker
+                //if (isoDiffOld > 0.0)
+                //    src.xyz *= 0.5;
+                //src.a*= lic;
+                // perform blending
+                src.rgb *= src.a;
+                dest = (1.0 - dest.a) * src + dest;
+                
+                // rotate clip plane normal
+                //vec3 cp = gl_ClipPlane[0].xyz * gl_NormalMatrix;
+                // if (dot(posWorld - scaleVol.xyz, clipPlane0.xyz) + clipPlane0.w < 0.05)
+                //  //dest.xyz *= 0.2;
+                //  dest.xyz += 0.5 * vec3(1.0, 1.0, 0.0);
+                // dest.xyz = clamp(dest.xyz, vec3(0.0), vec3(1.0));
+            }
+            isoDiffOld.z = isoDiff.z;
+
+            // move one step forward
+            pos += stepDir;
+            rayDist -= stepSize2;
+
+            outside = (dest.a > 0.98) || (rayDist <= 0);
+            if (outside)
+                break;
+        }
+    }
+
+    gl_FragColor = dest;
+}
+
+-->
+            </snippet>
+        </shader>
+
+    </namespace>
+
+</btf>

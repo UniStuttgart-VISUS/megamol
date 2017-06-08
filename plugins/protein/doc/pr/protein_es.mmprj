@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MegaMol type="project" version="1.0">
+    
+    <view name="pdbtoonview" viewmod="view3d">
+        <module class="ToonRendererDeferred" name="defren"> 
+        </module>
+        <module class="View3d" name="view3d" >
+             <param name="showBBox" value="ON" />
+             <param name="backCol" value="white" />
+        </module>
+        <module class="SimpleMoleculeRenderer" name="ren">
+             <param name="offscreenRendering" value="ON" />
+             <param name="renderMode" value="SAS" />
+        </module>
+        <module class="PDBLoader" name="data" />
+
+        <call class="CallRender3D" from="view3d::rendering" to="defren::rendering" />
+        <call class="CallRenderDeferred3D" from="defren::renderingDS" to="ren::renderingDS" />
+        <call class="MolecularDataCall" from="ren::getdata" to="data::dataout" />
+    </view>
+    
+    <view name="pdbmolview" viewmod="view3d">
+        <module class="View3d" name="view3d" >
+             <param name="showBBox" value="OFF" />
+        </module>
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="molren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="molren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbcartoonview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="MoleculeCartoonRenderer" name="cartoonren" />
+        <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="cartoonren::getdata" to="pdbdata::dataout" />
+    </view>
+
+</MegaMol>

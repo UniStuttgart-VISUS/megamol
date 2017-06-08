@@ -1,0 +1,1136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="scivis">
+    
+    <include file="common" />
+    
+        <namespace name="ppl">
+    
+            <shader name="perpixellightVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+        <!--
+varying vec4 diffuse,ambient;
+varying vec3 normal,lightDir,halfVector;
+
+varying vec4 posWS;
+
+
+
+void main()
+{    
+
+    posWS = gl_Vertex;
+    // transformation of the normal into eye space
+    normal = normalize(gl_NormalMatrix * gl_Normal);
+    
+    // normalize the direction of the light
+    lightDir = normalize(vec3(gl_LightSource[0].position));
+
+    // normalize the halfVector to pass it to the fragment shader
+    halfVector = normalize(gl_LightSource[0].halfVector.xyz);
+    
+    vec4 tmp = gl_ModelViewMatrix * gl_ModelViewMatrixInverse[2];
+    vec3 camIn = normalize(tmp.xyz);
+    //if(dot(normal, lightDir) < 0.0) normal *= -1.0;
+    //if(dot(normal, halfVector) < 0.0) normal *= -1.0;
+    if(dot(normal, camIn) < 0.0) normal *= -1.0;
+                
+    // compute the diffuse, ambient and globalAmbient terms
+    /*
+    diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
+    ambient = gl_FrontMaterial.ambient * gl_LightSource[0].ambient;
+    ambient += gl_LightModel.ambient * gl_FrontMaterial.ambient;
+    */
+    //vec4 col = vec4(0.5, 0.8, 0.2, 1.0);
+    //vec4 col = vec4(0.0, 0.8, 0.8, 1.0);
+    vec4 col = vec4(1.0, 0.75, 0.0, 1.0);
+    /*diffuse = gl_Color * gl_LightSource[0].diffuse;
+    ambient = gl_Color * gl_LightSource[0].ambient;
+    ambient += gl_LightModel.ambient * gl_Color;*/
+    diffuse = col * gl_LightSource[0].diffuse;
+    ambient = col * gl_LightSource[0].ambient;
+    ambient += gl_LightModel.ambient * col;
+    
+    // if(dot(normal, camIn) < 0.0) 
+        // ambient = vec4(1.0, 0.0, 0.0, 1.0);
+    // else 
+        // ambient = vec4(0.0, 1.0, 0.0, 1.0);
+        
+    gl_Position = ftransform();
+    
+    gl_TexCoord[0] = gl_MultiTexCoord0; // 3D tex coords
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="perpixellightFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+        <!--
+varying vec4 diffuse,ambient;
+varying vec3 normal,lightDir,halfVector;
+varying vec4 posWS;
+
+uniform float posXMax;
+uniform float posYMax;
+uniform float posZMax;
+
+uniform float posXMin;
+uniform float posYMin;
+uniform float posZMin;
+
+uniform sampler3D curlMagTex;
+
+void main()
+{
+    if(posWS.x > posXMax) discard;
+    if(posWS.y > posYMax) discard;
+    if(posWS.z > posZMax) discard;
+    
+    if(posWS.x < posXMin) discard;
+    if(posWS.y < posYMin) discard;
+    if(posWS.z < posZMin) discard;
+    
+    /*if(posWS.x > 93.0) discard;
+    if(posWS.y > 93.0) discard;
+    if(posWS.z > 93.0) discard;
+    
+    if(posWS.x < -93.0) discard;
+    if(posWS.y < -93.0) discard;
+    if(posWS.z < -93.0) discard;*/
+
+    // For height ridge zoom
+    /*if(posWS.x > -19.279999) discard;
+    if(posWS.y > -1.84) discard;
+    if(posWS.z > 93.050003) discard;
+    
+    if(posWS.x < -47.180000) discard;
+    if(posWS.y < -35.000000) discard;
+    if(posWS.z < 84.919998) discard;*/
+    
+    vec3 n,halfV;
+    float NdotL,NdotHV;
+    
+    // store the ambient term
+    vec4 color = ambient;
+    
+    // store the normalized interpolated normal
+    n = normalize(normal);
+
+    // compute the dot product between normal and lightDir
+    NdotL = max(dot(n,lightDir),0.0);
+    if (NdotL > 0.0)
+    {
+        color += diffuse * NdotL;
+        halfV = normalize(halfVector);
+        NdotHV = max(dot(n,halfV),4.88e-04);
+        color += gl_FrontMaterial.specular * gl_LightSource[0].specular * pow(NdotHV, gl_FrontMaterial.shininess);
+    }
+
+    gl_FragColor = color;
+    //gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+    //gl_FragColor = vec4(gl_TexCoord[0].stp, 1.0);
+    //gl_FragColor = vec4(vec3(texture3D(curlMagTex, gl_TexCoord[0].stp).a*5.0), 1.0); // Color by curl magnitude
+}
+-->
+            </snippet>
+        </shader>
+        
+        
+    </namespace>
+        
+        
+    <namespace name="slice">
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="main" type="string">
+            <!--
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0; // 3D tex coords
+    gl_TexCoord[1] = gl_MultiTexCoord1; // 2D tex coords
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet type="string">
+            <!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler3D uniGridTex;
+uniform sampler3D curlMagTex;
+uniform sampler3D randNoiseTex;
+uniform sampler3D densityMapTex;
+uniform sampler3D colorTex;
+
+uniform int sliceRM;
+uniform int plane;
+uniform float licDirScl;
+uniform int licLen;
+uniform int licProj2D;
+uniform float licTCScl;
+
+uniform float licContrast;
+uniform float licBrightness;
+
+uniform float dataScl;
+const float infinity = 100000.0;
+
+float CalcLICAutoScl(int l) {
+    
+    float roundOff = 0.05;
+   
+    int i;
+    vec3 v;    
+    vec3 stp = gl_TexCoord[0].stp;
+//    float vecScl = licDirScl;
+    vec4 vecScl;
+    float randTCScl = licTCScl*float(textureSize(uniGridTex, 0).x)/float(textureSize(randNoiseTex, 0).x);
+    float scl;
+    
+    float colLic = texture3D(randNoiseTex, stp*randTCScl).a;
+    v = texture3D(uniGridTex, stp).xyz;
+    if(licProj2D == 1) {
+        if(plane == 0) v.x = 0.0f;
+        if(plane == 1) v.y = 0.0f;
+        if(plane == 2) v.z = 0.0f;
+    }
+    
+    for(i = 0; i < l; i++) {
+
+        vec3 p;
+        p.x = stp.x*textureSize(uniGridTex, 0).x;
+        p.y = stp.y*textureSize(uniGridTex, 0).y;
+        p.z = stp.z*textureSize(uniGridTex, 0).z;
+        v = normalize(v);
+        vec3 lambda;
+        // Check which face of the cell is crossed by the vector
+        if(dot(v, vec3(1.0, 0.0, 0.0)) < 0.0f) { 
+            lambda.x = (floor(p.x)-roundOff-p.x)/v.x; // left
+        }
+        else {
+            lambda.x = (floor(p.x)+1.0+roundOff-p.x)/v.x; // right
+        }
+        if(dot(v, vec3(0.0, 1.0, 0.0)) < 0.0f) { 
+            lambda.y = (floor(p.y)-roundOff-p.y)/v.y; // bottom
+        }
+        else {
+            lambda.y = (floor(p.y)+1.0+roundOff-p.y)/v.y; // top
+        }
+        if(dot(v, vec3(0.0, 0.0, 1.0)) < 0.0f) { 
+            lambda.z = (floor(p.z)-roundOff-p.z)/v.z; // back
+        }
+        else {
+            lambda.z = (floor(p.z)+1.0+roundOff-p.z)/v.z; // front
+        }
+        
+        scl = min(min(lambda.x, lambda.y), lambda.z);        
+        stp -= v*scl/textureSize(uniGridTex, 0); 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(uniGridTex, stp).xyz;
+        v = normalize(v);
+        if(licProj2D == 1) {
+            if(plane == 0) v.x = 0.0f;
+            if(plane == 1) v.y = 0.0f;
+            if(plane == 2) v.z = 0.0f;
+        }
+    }
+    
+    stp = gl_TexCoord[0].stp;
+    
+    for(i = 0; i < l; i++) {
+
+        vec3 p = stp*textureSize(uniGridTex, 0).xyz;
+        v = normalize(v);
+        vec3 lambda;
+        // Check which face of the cell is crossed by the vector
+        if(dot(v, vec3(1.0, 0.0, 0.0)) < 0.0f) { 
+            lambda.x = (floor(p.x)-roundOff-p.x)/v.x; // left
+        }
+        else {
+            lambda.x = (floor(p.x)+1.0+roundOff-p.x)/v.x; // right
+        }
+        if(dot(v, vec3(0.0, 1.0, 0.0)) < 0.0f) { 
+            lambda.y = (floor(p.y)-roundOff-p.y)/v.y; // bottom
+        }
+        else {
+            lambda.y = (floor(p.y)+1.0+roundOff-p.y)/v.y; // top
+        }
+        if(dot(v, vec3(0.0, 0.0, 1.0)) < 0.0f) { 
+            lambda.z = (floor(p.z)-roundOff-p.z)/v.z; // back
+        }
+        else {
+            lambda.z = (floor(p.z)+1.0+roundOff-p.z)/v.z; // front
+        }
+        
+        scl = min(min(lambda.x, lambda.y), lambda.z);
+        
+        
+        stp += v*scl/textureSize(uniGridTex, 0); 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(uniGridTex, stp).xyz;
+        if(licProj2D == 1) {
+            if(plane == 0) v.x = 0.0f;
+            if(plane == 1) v.y = 0.0f;
+            if(plane == 2) v.z = 0.0f;
+        }
+    }
+    
+    colLic /= float(l+l+1);
+    
+    // Apply contrast stretching and to enhance the final image
+    colLic -= licContrast;
+    colLic /= (1.0 - 2.0*licContrast);
+    
+    colLic += licBrightness;
+    
+    return colLic;
+    //return texture3D(randNoiseTex, gl_TexCoord[0].stp*randTCScl).a;
+}
+
+
+float CalcLIC(int l) {
+   
+    int i;
+    vec3 v;    
+    vec3 stp = gl_TexCoord[0].stp;
+    float vecScl = licDirScl;
+    float randTCScl = licTCScl*float(textureSize(uniGridTex, 0).x)/float(textureSize(randNoiseTex, 0).x);
+    
+    float colLic = texture3D(randNoiseTex, stp*randTCScl).a;
+    v = normalize(texture3D(uniGridTex, stp).xyz)*0.01;
+    if(licProj2D == 1) {
+        if(plane == 0) v.x = 0.0f;
+        if(plane == 1) v.y = 0.0f;
+        if(plane == 2) v.z = 0.0f;
+    }
+    
+    
+    for(i = 0; i < l; i++) {
+        stp -= v*vecScl; 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = normalize(texture3D(uniGridTex, stp).xyz)*0.01;
+        if(licProj2D == 1) {
+            if(plane == 0) v.x = 0.0f;
+            if(plane == 1) v.y = 0.0f;
+            if(plane == 2) v.z = 0.0f;
+        }
+    }
+    
+    stp = gl_TexCoord[0].stp;
+    
+    for(i = 0; i < l; i++) {
+        stp += v*vecScl; 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = normalize(texture3D(uniGridTex, stp).xyz)*0.01;
+        if(licProj2D == 1) {
+            if(plane == 0) v.x = 0.0f;
+            if(plane == 1) v.y = 0.0f;
+            if(plane == 2) v.z = 0.0f;
+        }
+    }
+    
+    colLic /= float(l+l+1);
+    
+    // Apply contrast stretching to enhance the final image
+    colLic -= licContrast;
+    colLic /= (1.0 - 2.0*licContrast);
+    
+    colLic += licBrightness;
+    
+    return colLic;
+    //return texture3D(randNoiseTex, gl_TexCoord[0].stp*randTCScl).a;
+}
+
+
+/*
+ * Calculate color gradient
+ */
+vec4 getColorGradient (float val, float thresh, float min, float max) {
+    // blue - white - red
+    vec4 colLow = vec4(0.23f, 0.29f, 0.75f, 1.0f);
+    //vec4 colThresh = vec4(0.7f, 0.7f, 0.7f, 1.0f);
+    vec4 colThresh = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    vec4 colHigh = vec4(0.75f, 0.01f, 0.15f, 1.0f);
+
+    // Calc dipole color
+    vec4 colRes;
+    if (val < thresh) {
+        colRes = (val-min)/(thresh-min)*colThresh + (1.0f - (val-min)/(thresh-min))*colLow;
+    } 
+    else {
+        colRes = ((val-thresh)/(max-thresh))*colHigh + (1.0f - ((val-thresh)/(max-thresh)))*colThresh;
+    }
+    return vec4(colRes.rgb, 1.0f);
+}
+
+
+// Calculate CURL/RotF
+// BUGGY
+/*vec3 RotF() {
+    return vec3(gradZ.y - gradY.z,
+                gradX.z - gradZ.x,
+                gradY.x - gradX.y);
+}*/
+
+
+/*vec3 gradX = texture3D(gradXTex, gl_TexCoord[0].stp).rgb;
+vec3 gradY = texture3D(gradYTex, gl_TexCoord[0].stp).rgb;
+vec3 gradZ = texture3D(gradZTex, gl_TexCoord[0].stp).rgb;
+mat3 jacobian = mat3(gradX, gradY, gradZ);*/
+
+
+/*float CalcJacobianNorm() {
+    // Calculate trace
+    float tr = jacobian[0][0] + jacobian[1][1] + jacobian[2][2];
+    float m = tr/3.0;
+    float q = tr/2.0;
+    mat3 tmpmat = (jacobian - m*mat3(1.0));
+    // Calc square of elements of tmpMat and divide by 6
+    float p = (tmpmat[0][0]*tmpmat[0][0]+
+               tmpmat[0][1]*tmpmat[0][1]+
+               tmpmat[0][2]*tmpmat[0][2]+
+               tmpmat[1][0]*tmpmat[1][0]+
+               tmpmat[1][1]*tmpmat[1][1]+
+               tmpmat[1][2]*tmpmat[1][2]+
+               tmpmat[2][0]*tmpmat[2][0]+
+               tmpmat[2][1]*tmpmat[2][1]+
+               tmpmat[2][2]*tmpmat[2][2])/6.0;
+    float phi = (1.0/3.0)*atan(sqrt(p*p*p-q*q)/q);
+    // Calc eigenvalues
+    float lambda0, lambda1, lambda2;
+    lambda0 = m + 2.0*sqrt(p)*cos(phi);
+    lambda1 = m - sqrt(p)*(cos(phi) + sqrt(3.0)*sin(phi));
+    lambda2 = m - sqrt(p)*(cos(phi) - sqrt(3.0)*sin(phi));
+    
+    // Find highest eigenvalue;
+    if(lambda0 > lambda1) {
+        if(lambda0 > lambda2) {
+            return lambda0;
+        }
+        else {
+            return lambda2;
+        }
+    }
+    else {
+        if(lambda1 > lambda2) {
+            return lambda1;
+        }
+        else {
+            return lambda2;
+        }
+    }
+}*/
+
+
+/*
+ * Main
+ */
+void main (void) {
+    if(sliceRM == 0) { // Vec magnitude
+        float mag = length(texture3D(uniGridTex, gl_TexCoord[0].stp).rgb);
+//        if(mag*dataScl > colThresh)
+//            gl_FragData[0] = vec4(vec3(0.0, mag*dataScl, 0.0), 1.0f);
+//        else
+//            gl_FragData[0] = vec4(vec3(mag*dataScl), 1.0f);
+        gl_FragData[0] = vec4(vec3(mag*dataScl), 1.0f);
+    }
+    else if (sliceRM == 1) { // Vec direction
+        gl_FragData[0] = vec4((normalize(texture3D(uniGridTex, gl_TexCoord[0].stp).rgb)+1.0f)*0.5f, 1.0f);
+        //gl_FragData[0] = vec4((texture3D(uniGridTex, gl_TexCoord[0].stp).rgb*dataScl+1.0f)*0.5f, 1.0f);
+
+        // Reduce saturation
+        //gl_FragData[0] = vec4(
+            //mix( (normalize(texture3D(uniGridTex, gl_TexCoord[0].stp).rgb)+1.0f)*0.5f, vec3( 0.5), dataScl)
+            //, 1.0f) ;
+    }
+    else if (sliceRM == 2) { // LIC (GPU)
+            gl_FragData[0] = vec4(vec3(CalcLIC(licLen)), 1.0f);
+    }
+    else if (sliceRM == 3) { // Curl magnitude
+        float mag = texture3D(curlMagTex, gl_TexCoord[0].stp).a;
+//      if(mag*dataScl < colThresh)
+//            gl_FragData[0] = vec4(vec3(0.0, mag*dataScl, 0.0), 1.0f);
+//        else
+//            gl_FragData[0] = vec4(vec3(mag*dataScl), 1.0f);
+        gl_FragData[0] = vec4(vec3(mag*dataScl), 1.0f);
+        //gl_FragData[0] = vec4(vec3(pow(mag*curlScl, 10.0)), 1.0f);
+    }
+    else if (sliceRM == 4) {  // Density map
+        gl_FragData[0] = vec4(vec3(texture3D(densityMapTex, gl_TexCoord[0].stp).a), 1.0f);
+    }
+
+    // TiDispl avg25, offs 25               : (maxX 0.152978, maxY 0.155159, maxZ 0.160629)
+    // Dipole (CELL) avg25, offs 25         : (maxX 0.034073, maxY 0.033833, maxZ 0.033232)
+    // Dipole (Ba-Center/Ti) avg25, offs 25 : (maxX 0.048048, maxY 0.048744, maxZ 0.047199)
+    // Dipole (O-Center/Ti) avg25, offs 25  : (maxX 0.064014, maxY 0.064880, maxZ 0.065018)
+
+    else if (sliceRM == 5) {  // Delta x
+        gl_FragData[0] = getColorGradient(normalize(texture3D(uniGridTex,
+            gl_TexCoord[0].stp)).r, 0.0, -0.152978, 0.152978);      
+    }
+    else if (sliceRM == 6) {  // Delta y
+        gl_FragData[0] = getColorGradient(normalize(texture3D(uniGridTex,
+            gl_TexCoord[0].stp)).g, 0.0, -0.155159, 0.155159); 
+    }
+    else if (sliceRM == 7) {  // Delta z
+        gl_FragData[0] = getColorGradient(normalize(texture3D(uniGridTex,
+            gl_TexCoord[0].stp)).b, 0.0, -0.160629, 0.160629);
+    }
+    else if (sliceRM == 8) {  // Color texture
+        vec4 color = vec4(texture3D(colorTex, gl_TexCoord[0].stp).rgb, 1.0f);
+        //color.xyz = normalize(color.xyz);
+
+        color.xyz *=dataScl;
+        color.xyz += 1.0;
+        color.xyz *= 0.5;
+        gl_FragData[0] = color;
+    }
+    else { // Invalid render mode
+        gl_FragData[0] = vec4(0.0f, 1.0, 1.0f, 1.0f); // Turquoise
+    }
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+    
+    <!-- RAY CASTING -->
+    <namespace name="raycasting">
+        <shader name="vertex">
+            <snippet type="version">130</snippet>
+            <snippet name="main" type="string">
+            <!--
+varying vec3 posES;
+varying vec4 pos;
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    pos = gl_Position;
+    posES = (gl_ModelViewMatrix*gl_Vertex).xyz;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="::common::lighting::simple" />
+            <snippet type="string">
+            <!--
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler3D densityTex;
+uniform sampler3D uniGridTex;
+uniform sampler3D randNoiseTex;
+uniform sampler3D curlMagTex;
+uniform sampler3D colorTex;
+
+uniform sampler2D srcColorBuff;
+uniform sampler2D srcDepthBuff;
+uniform sampler2D tcBuff;
+uniform sampler2D posESBuff;
+uniform sampler2D posWinSBuff;
+
+uniform float delta;
+uniform float isoVal;
+uniform float alphaScl;
+uniform int maxStep;
+
+uniform float licDirScl;
+uniform int licLen;
+uniform float licTCScl;
+
+uniform vec4 viewportDim; //(width, height, near far)
+
+uniform int vColorMode;
+uniform int rayMarchTex;
+    
+varying vec4 pos;
+varying vec3 posES;
+
+
+uniform float licContrast;
+uniform float licBright;
+
+/*vec3 gradX = texture3D(gradXTex, gl_TexCoord[0].stp).rgb;
+vec3 gradY = texture3D(gradYTex, gl_TexCoord[0].stp).rgb;
+vec3 gradZ = texture3D(gradZTex, gl_TexCoord[0].stp).rgb;
+mat3 jacobianCenter = mat3(gradX, gradY, gradZ);*/
+
+
+float CalcJacobianNorm(mat3 jacobian) {
+    // Calculate trace
+    float tr = jacobian[0][0] + jacobian[1][1] + jacobian[2][2];
+    float m = tr/3.0;
+    float q = tr/2.0;
+    mat3 tmpmat = (jacobian - m*mat3(1.0));
+    // Calc square of elements of tmpMat and divide by 6
+    float p = (tmpmat[0][0]*tmpmat[0][0]+
+               tmpmat[0][1]*tmpmat[0][1]+
+               tmpmat[0][2]*tmpmat[0][2]+
+               tmpmat[1][0]*tmpmat[1][0]+
+               tmpmat[1][1]*tmpmat[1][1]+
+               tmpmat[1][2]*tmpmat[1][2]+
+               tmpmat[2][0]*tmpmat[2][0]+
+               tmpmat[2][1]*tmpmat[2][1]+
+               tmpmat[2][2]*tmpmat[2][2])/6.0;
+    float phi = (1.0/3.0)*atan(sqrt(p*p*p-q*q)/q);
+    // Calc eigenvalues
+    float lambda0, lambda1, lambda2;
+    lambda0 = m + 2.0*sqrt(p)*cos(phi);
+    lambda1 = m - sqrt(p)*(cos(phi) + sqrt(3.0)*sin(phi));
+    lambda2 = m - sqrt(p)*(cos(phi) - sqrt(3.0)*sin(phi));
+    
+    // Find highest eigenvalue;
+    if(lambda0 > lambda1) {
+        if(lambda0 > lambda2) {
+            return lambda0;
+        }
+        else {
+            return lambda2;
+        }
+    }
+    else {
+        if(lambda1 > lambda2) {
+            return lambda1;
+        }
+        else {
+            return lambda2;
+        }
+    }
+}
+
+
+/*float CalcLIC(int l) {
+   
+    int i;
+    vec3 v;    
+    vec3 stp = gl_TexCoord[0].stp;
+//    float vecScl = licDirScl;
+    vec4 vecScl;
+    //float randTCScl = 1.0*float(textureSize(uniGridTex, 0).x)/float(textureSize(randNoiseTex, 0).x);
+    float randTCScl = 1.0;
+    float scl;
+    
+    float colLic = texture3D(randNoiseTex, stp*randTCScl).a;
+    v = texture3D(uniGridTex, stp).xyz;
+    
+    for(i = 0; i < l; i++) {
+
+        vec3 p = stp*textureSize(uniGridTex, 0).xyz;
+        v = normalize(v);
+        vec3 lambda;
+        // Check which face of the cell is crossed by the vector
+        if(dot(v, vec3(1.0, 0.0, 0.0)) < 0.0f) { 
+            lambda.x = (floor(p.x)-0.01-p.x)/v.x; // left
+        }
+        else {
+            lambda.x = (floor(p.x)+1.01-p.x)/v.x; // right
+        }
+        if(dot(v, vec3(0.0, 1.0, 0.0)) < 0.0f) { 
+            lambda.y = (floor(p.y)-0.01-p.y)/v.y; // bottom
+        }
+        else {
+            lambda.y = (floor(p.y)+1.01-p.y)/v.y; // top
+        }
+        if(dot(v, vec3(0.0, 0.0, 1.0)) < 0.0f) { 
+            lambda.z = (floor(p.z)-0.01-p.z)/v.z; // back
+        }
+        else {
+            lambda.z = (floor(p.z)+1.01-p.z)/v.z; // front
+        }
+        
+        scl = min(min(lambda.x, lambda.y), lambda.z);
+        
+        
+        stp -= v*scl/textureSize(uniGridTex, 0); 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(uniGridTex, stp).xyz;
+    }
+    
+    stp = gl_TexCoord[0].stp;
+    
+    for(i = 0; i < l; i++) {
+
+        vec3 p = stp*textureSize(uniGridTex, 0).xyz;
+        v = normalize(v);
+        vec3 lambda;
+        // Check which face of the cell is crossed by the vector
+        if(dot(v, vec3(1.0, 0.0, 0.0)) < 0.0f) { 
+            lambda.x = (floor(p.x)-0.01-p.x)/v.x; // left
+        }
+        else {
+            lambda.x = (floor(p.x)+1.01-p.x)/v.x; // right
+        }
+        if(dot(v, vec3(0.0, 1.0, 0.0)) < 0.0f) { 
+            lambda.y = (floor(p.y)-0.01-p.y)/v.y; // bottom
+        }
+        else {
+            lambda.y = (floor(p.y)+1.01-p.y)/v.y; // top
+        }
+        if(dot(v, vec3(0.0, 0.0, 1.0)) < 0.0f) { 
+            lambda.z = (floor(p.z)-0.01-p.z)/v.z; // back
+        }
+        else {
+            lambda.z = (floor(p.z)+1.01-p.z)/v.z; // front
+        }
+        
+        scl = min(min(lambda.x, lambda.y), lambda.z);
+        
+        
+        stp += v*scl/textureSize(uniGridTex, 0); 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(uniGridTex, stp).xyz;
+    }
+    
+    colLic /= float(l+l+1);
+    
+    // Apply contrast stretching and to enhance the final image
+    colLic -= licContrast;
+    colLic /= (1.0 - 2.0*licContrast);
+    colLic += licScl;
+    
+    return colLic;
+    //return texture3D(randNoiseTex, gl_TexCoord[0].stp*randTCScl).a;
+}*/
+
+
+// Calculate line integral convolution (LIC)            
+float CalcLIC(int l, vec3 stp_start) {
+   
+    int i;
+    vec3 v;    
+    vec3 stp = stp_start;
+    float vecScl = licDirScl*0.01;
+    float randTCScl = licTCScl*float(textureSize(uniGridTex, 0).x)/float(textureSize(randNoiseTex, 0).x);
+    
+    float colLic = texture3D(randNoiseTex, stp*randTCScl).a;
+    v = texture3D(uniGridTex, stp).xyz;    
+    
+    for(i = 0; i < l; i++) {
+        stp -= v*vecScl; 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(uniGridTex, stp).xyz;
+    }
+    
+    stp = stp_start;
+    
+    for(i = 0; i < l; i++) {
+        stp += v*vecScl; 
+        stp = clamp(stp, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, stp*randTCScl).a;
+        v = texture3D(uniGridTex, stp).xyz;
+    }
+    
+    colLic /= float(l+l+1);
+    
+    // Apply contrast stretching and to enhance the final image
+    colLic -= licContrast;
+    colLic /= (1.0 - 2.0*licContrast);
+    colLic += licBright;
+    
+    return colLic;
+}
+
+
+// Calculate line integral convolution (LIC)            
+float CalcLICProj(int l, vec3 stp, vec3 normal) {
+   
+    int i;
+    vec3 v;    
+    //vec3 stp = gl_TexCoord[0].stp;
+    float vecScl = licDirScl;
+    float randTCScl = licTCScl*float(textureSize(uniGridTex, 0).x)/float(textureSize(randNoiseTex, 0).x);
+    
+    float colLic = texture3D(randNoiseTex, stp*randTCScl).a;
+        if(rayMarchTex == 0) { // Density map
+            v = normalize(texture3D(colorTex, stp).xyz);
+        }
+        else if(rayMarchTex == 1) {// Use vector magitude
+            v = normalize(texture3D(uniGridTex, stp).xyz);
+        }
+        else if(rayMarchTex == 2) {// Use curl magitude
+            v = normalize(texture3D(uniGridTex, stp).xyz);        
+        }
+    vec3 gradient = normal;
+    vec3 c = cross(gradient, v);
+    vec3 d = cross(gradient, c)*0.01;
+    float gradOffset = 0.01;   
+    vec3 pos = stp;
+    
+    for(i = 0; i < l; i++) {
+        pos -= d*vecScl; 
+        pos = clamp(pos, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, pos*randTCScl).a;
+        
+        if(rayMarchTex == 0) { // Density map
+            v = normalize(texture3D(colorTex, pos).xyz);
+        }
+        else if(rayMarchTex == 1) {// Use vector magitude
+            v = normalize(texture3D(uniGridTex, pos).xyz);
+        }
+        else if(rayMarchTex == 2) {// Use curl magitude
+            v = normalize(texture3D(uniGridTex, pos).xyz);        
+        }
+        
+            // Compute gradient by central differences
+         /*   if(rayMarchTex == 0) { // Density map
+                gradient.x = texture3D(densityTex, pos + vec3(gradOffset, 0, 0)).a
+                           - texture3D(densityTex, pos + vec3(-gradOffset, 0, 0)).a;
+                gradient.y = texture3D(densityTex, pos + vec3(0, gradOffset, 0)).a
+                           - texture3D(densityTex, pos + vec3(0, -gradOffset, 0)).a;
+                gradient.z = texture3D(densityTex, pos + vec3(0, 0, gradOffset)).a
+                           - texture3D(densityTex, pos + vec3(0, 0, -gradOffset)).a;
+            }
+            else if(rayMarchTex == 1) {// Use vector magitude
+                gradient.x = length(texture3D(uniGridTex, pos + vec3(gradOffset, 0, 0)).rgb)
+                           - length(texture3D(uniGridTex, pos + vec3(-gradOffset, 0, 0)).rgb);
+                gradient.y = length(texture3D(uniGridTex, pos + vec3(0, gradOffset, 0)).rgb)
+                           - length(texture3D(uniGridTex, pos + vec3(0, -gradOffset, 0)).rgb);
+                gradient.z = length(texture3D(uniGridTex, pos + vec3(0, 0, gradOffset)).rgb)
+                           - length(texture3D(uniGridTex,pos  + vec3(0, 0, -gradOffset)).rgb);
+            }
+            else if(rayMarchTex == 2) {// Use curl magitude
+                gradient.x = texture3D(curlMagTex, pos+ vec3(gradOffset, 0, 0)).a
+                           - texture3D(curlMagTex, pos + vec3(-gradOffset, 0, 0)).a;
+                gradient.y = texture3D(curlMagTex, pos + vec3(0, gradOffset, 0)).a
+                           - texture3D(curlMagTex, pos + vec3(0, -gradOffset, 0)).a;
+                gradient.z = texture3D(curlMagTex, pos + vec3(0, 0, gradOffset)).a
+                           - texture3D(curlMagTex, pos + vec3(0, 0, -gradOffset)).a;
+                // Let gradient point in the opposite direction
+                gradient.x *= -1.0f;
+                gradient.y *= -1.0f;
+                gradient.z *= -1.0f;
+            }  
+        gradient = normalize(gradient);
+                                   
+        vec3 c = cross(gradient, v);
+        vec3 d = cross(gradient, c)*0.01;*/
+    }
+    
+    pos = stp;
+    
+    for(i = 0; i < l; i++) {
+        pos += d*vecScl; 
+        pos = clamp(pos, 0.0f, 1.0f);
+        colLic += texture3D(randNoiseTex, pos*randTCScl).a;
+
+        // resample vector
+        if(rayMarchTex == 0) { // Density map
+            v = normalize(texture3D(colorTex, pos).xyz);
+        }
+        else if(rayMarchTex == 1) {// Use vector magitude
+            v = normalize(texture3D(uniGridTex, pos).xyz);
+        }
+        else if(rayMarchTex == 2) {// Use curl magitude
+            v = normalize(texture3D(uniGridTex, pos).xyz);        
+        }
+                    
+            // Compute gradient by central differences
+            /*if(rayMarchTex == 0) { // Density map
+                gradient.x = texture3D(densityTex, pos + vec3(gradOffset, 0, 0)).a
+                           - texture3D(densityTex, pos + vec3(-gradOffset, 0, 0)).a;
+                gradient.y = texture3D(densityTex, pos + vec3(0, gradOffset, 0)).a
+                           - texture3D(densityTex, pos + vec3(0, -gradOffset, 0)).a;
+                gradient.z = texture3D(densityTex, pos + vec3(0, 0, gradOffset)).a
+                           - texture3D(densityTex, pos + vec3(0, 0, -gradOffset)).a;
+            }
+            else if(rayMarchTex == 1) {// Use vector magitude
+                gradient.x = length(texture3D(uniGridTex, pos + vec3(gradOffset, 0, 0)).rgb)
+                           - length(texture3D(uniGridTex, pos + vec3(-gradOffset, 0, 0)).rgb);
+                gradient.y = length(texture3D(uniGridTex, pos + vec3(0, gradOffset, 0)).rgb)
+                           - length(texture3D(uniGridTex, pos + vec3(0, -gradOffset, 0)).rgb);
+                gradient.z = length(texture3D(uniGridTex, pos + vec3(0, 0, gradOffset)).rgb)
+                           - length(texture3D(uniGridTex,pos  + vec3(0, 0, -gradOffset)).rgb);
+            }
+            else if(rayMarchTex == 2) {// Use curl magitude
+                gradient.x = texture3D(curlMagTex, pos+ vec3(gradOffset, 0, 0)).a
+                           - texture3D(curlMagTex, pos + vec3(-gradOffset, 0, 0)).a;
+                gradient.y = texture3D(curlMagTex, pos + vec3(0, gradOffset, 0)).a
+                           - texture3D(curlMagTex, pos + vec3(0, -gradOffset, 0)).a;
+                gradient.z = texture3D(curlMagTex, pos + vec3(0, 0, gradOffset)).a
+                           - texture3D(curlMagTex, pos + vec3(0, 0, -gradOffset)).a;
+                // Let gradient point in the opposite direction
+                gradient.x *= -1.0f;
+                gradient.y *= -1.0f;
+                gradient.z *= -1.0f;
+            } 
+        gradient = normalize(gradient);
+                   
+        vec3 c = cross(gradient, v);
+        vec3 d = cross(gradient, c)*0.01;*/
+    }
+    
+    colLic /= float(l+l+1);
+    
+    // Apply contrast stretching and to enhance the final image
+    colLic -= licContrast;
+    colLic /= (1.0 - 2.0*licContrast);
+    colLic += licBright;
+    
+    return colLic;
+}
+
+
+/*
+ * Calculate color gradient out of two colors
+ */
+vec4 getColorGrad(float val) {
+    // blue - white - red
+    vec4 colLow = vec4(0.23f, 0.29f, 0.75f, 1.0f);
+    vec4 colHigh = vec4(0.75f, 0.01f, 0.15f, 1.0f);
+    // Calc color
+    vec4 colRes;
+    colRes = val*colHigh + (1.0f - val)*colLow;
+    return vec4(colRes.rgb, 1.0f);
+}
+
+
+void main (void) {    
+    
+    vec2 texc = ((pos.xy/pos.w) + 1.0f)/2.0f; // Get normalized device coords
+    
+    vec3 viewES =  normalize(texture2D(posESBuff, texc).rgb - posES); // For local lighting
+
+    vec3 rayEnd = texture2D(tcBuff, texc).rgb;
+    vec3 rayStart = gl_TexCoord[0].stp;
+    vec3 ray = rayEnd - rayStart;
+    
+    //vec3 rayNDCPosEnd = texture2D(posWinSBuff, texc).rgb;
+    //vec3 rayNDCPosEnd = texture2D(posWinSBuff, gl_FragCoord.xy/viewportDim.xy).rgb;
+    
+    
+//    vec3 rayNDCPosEnd = texelFetch2D(posWinSBuff, ivec2(gl_FragCoord.xy), 0).rgb;
+    vec3 rayESPosEnd = texelFetch2D(posESBuff, ivec2(gl_FragCoord.xy), 0).rgb;
+    
+//    vec3 rayNDCPosStart = gl_FragCoord.xyz;
+    vec3 rayESPosStart = posES;
+    
+    vec3 rayESPos = rayESPosEnd - rayESPosStart;
+    
+    float rayLen = length(ray);
+    vec3 ray_norm = normalize(ray);
+    vec3 ray_delta = ray_norm*delta;
+    
+//    float rayNDCLen = length(rayNDCPos);
+    float rayESLen = length(rayESPos);
+//    float ndcPosDelta = delta * (rayNDCLen / rayLen);
+    float esPosDelta = delta * (rayESLen / rayLen);
+//    vec3 rayNDCPos_norm = normalize(rayNDCPos);
+    vec3 rayESPos_norm = normalize(rayESPos);
+//    vec3 rayNDCPosDelta = rayNDCPos_norm*ndcPosDelta;
+    vec3 rayESPosDelta = rayESPos_norm*esPosDelta;
+    
+    float ray_delta_len = length(ray_delta);
+    
+    vec3 vec = rayStart;
+//    vec3 vecNDC = rayNDCPosStart;
+    vec3 vecES = rayESPosStart;
+    
+    vec4 col_acc = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    float alpha_acc = 0.0f;
+    float length_acc = 0.0f;
+    
+    float tex_sample;
+    vec4 color_sample, color_sample_old;
+    float alpha_sample;
+    vec3 gradient;
+
+    float depthValComp = texelFetch2D(srcDepthBuff, ivec2(gl_FragCoord.xy), 0).r;
+    
+    //if(vecNDC.z >= depthValComp) discard; // 'Depth test'
+    
+    float isoDiff = 0;
+    float isoDiffOld = 0;
+    float ssDepth = 0.0;
+    
+    
+//    viewportDim
+        
+    //while(!(length_acc > rayLen || alpha_acc >= 1.0 || vecNDC.z >= depthValComp)) {
+    int MAXSTEP = 1000;
+    int stepCnt = 0;
+    while(!(length_acc > rayLen || alpha_acc >= 1.0 || ssDepth >= depthValComp || stepCnt > MAXSTEP)) {
+
+        // Get sample
+        if (rayMarchTex == 0) { // Use density map  
+            tex_sample = texture3D(densityTex, vec).a;
+        }
+        else if (rayMarchTex == 1) { // Use vector magnitude
+            tex_sample = length(texture3D(uniGridTex, vec).rgb);
+        }
+        else if (rayMarchTex == 2) { // Use curl magitude
+            tex_sample = texture3D(curlMagTex, vec).a;
+        }           
+        
+        isoDiff = tex_sample - isoVal;
+
+        if(isoDiffOld*isoDiff < 0) { // We crossed the iso surface
+            alpha_sample = alphaScl;
+            
+            float gradOffset = 0.01;
+            vec3 vecSclOffs = ray_delta*(abs(isoDiff)/(abs(isoDiff)+abs(isoDiffOld)));
+//            vec3 vecSclOffsNDS = rayNDCPosDelta*(abs(isoDiffOld)/(abs(isoDiff)+abs(isoDiffOld)));
+            vec3 vecSclOffsES = rayESPosDelta*(abs(isoDiffOld)/(abs(isoDiff)+abs(isoDiffOld)));
+            
+            // Compute gradient by central differences
+            if(rayMarchTex == 0) { // Density map
+                gradient.x = texture3D(densityTex, (vec-vecSclOffs) + vec3(gradOffset, 0, 0)).a
+                           - texture3D(densityTex, (vec-vecSclOffs) + vec3(-gradOffset, 0, 0)).a;
+                gradient.y = texture3D(densityTex, (vec-vecSclOffs) + vec3(0, gradOffset, 0)).a
+                           - texture3D(densityTex, (vec-vecSclOffs) + vec3(0, -gradOffset, 0)).a;
+                gradient.z = texture3D(densityTex, (vec-vecSclOffs) + vec3(0, 0, gradOffset)).a
+                           - texture3D(densityTex, (vec-vecSclOffs) + vec3(0, 0, -gradOffset)).a;
+            }
+            else if(rayMarchTex == 1) {// Use vector magitude
+                gradient.x = length(texture3D(uniGridTex, (vec-vecSclOffs) + vec3(gradOffset, 0, 0)).rgb)
+                           - length(texture3D(uniGridTex, (vec-vecSclOffs) + vec3(-gradOffset, 0, 0)).rgb);
+                gradient.y = length(texture3D(uniGridTex, (vec-vecSclOffs) + vec3(0, gradOffset, 0)).rgb)
+                           - length(texture3D(uniGridTex, (vec-vecSclOffs) + vec3(0, -gradOffset, 0)).rgb);
+                gradient.z = length(texture3D(uniGridTex, (vec-vecSclOffs) + vec3(0, 0, gradOffset)).rgb)
+                           - length(texture3D(uniGridTex, (vec-vecSclOffs) + vec3(0, 0, -gradOffset)).rgb);
+            }
+            else if(rayMarchTex == 2) {// Use curl magitude
+                gradient.x = texture3D(curlMagTex, (vec-vecSclOffs) + vec3(gradOffset, 0, 0)).a
+                           - texture3D(curlMagTex, (vec-vecSclOffs) + vec3(-gradOffset, 0, 0)).a;
+                gradient.y = texture3D(curlMagTex, (vec-vecSclOffs) + vec3(0, gradOffset, 0)).a
+                           - texture3D(curlMagTex, (vec-vecSclOffs) + vec3(0, -gradOffset, 0)).a;
+                gradient.z = texture3D(curlMagTex, (vec-vecSclOffs) + vec3(0, 0, gradOffset)).a
+                           - texture3D(curlMagTex, (vec-vecSclOffs) + vec3(0, 0, -gradOffset)).a;
+                // Let gradient point in the opposite direction
+                gradient.x *= -1.0f;
+                gradient.y *= -1.0f;
+                gradient.z *= -1.0f;
+            }            
+            
+            // Setup color
+            vec4 color;
+            if(vColorMode == 0) { // Uniform color
+                color = vec4(0.0, 0.0, 1.0, 1.0);
+            }
+            else if(vColorMode == 1) { // Vector dir
+                if(rayMarchTex == 0) {
+                    color = vec4(texture3D(colorTex, vec-vecSclOffs).rgb, 1.0);
+                    color.xyz = normalize(color.xyz);
+                    color.xyz += 1.0;
+                    color.xyz *= 0.5;
+                }
+                else {
+                    color = vec4(((normalize(texture3D(uniGridTex, vec-vecSclOffs).rgb)+1.0f)*0.5), 1.0f); 
+                }
+            }
+            else if(vColorMode == 2) { // Vector mag
+                if(rayMarchTex == 0) {
+                    //color = vec4(normalize(texture3D(colorTex, vec-vecSclOffs).rgb), 1.0);
+                    color = vec4(texture3D(colorTex, vec-vecSclOffs).rgb, 1.0);
+                }
+                else {
+                    color = getColorGrad(length(texture3D(uniGridTex, vec-vecSclOffs).rgb));
+                }         
+            }
+            else if(vColorMode == 3) { // LIC
+                //color = vec4(vec3(CalcLIC(licLen, vec-vecSclOffs)), 1.0);
+                color = vec4(vec3(CalcLICProj(licLen, vec-vecSclOffs, normalize(gradient))), 1.0);
+            }
+            else { // Invalid coloring mode
+                color = vec4(0.0, 1.0, 1.0, 1.0);
+            }
+            
+            // Gradient is now in uvw-space -> transform it to world space
+            // Note: This works only for texture coordinates, where the z axis is (0, 0, -1) in WS
+            gradient.xyz *= -1.0;
+                       
+            // ... and then eye space
+            vec3 gradES = gl_NormalMatrix*gradient;
+            
+            // Calculate local lighting 
+            vec3 L = normalize(vec3(gl_LightSource[0].position.xyz));
+            vec3 V = normalize(vec3(viewES.xyz));
+            
+            // Don't use lighting
+            //color_sample = color;
+            
+            // Use lighting            
+            color_sample = vec4(LocalLighting(V, normalize(gradES), L, color.rgb), 1.0);
+            //color_sample = color_sample*0.75 + color*0.25;
+            
+            // draw interior darker
+            if(isoDiffOld > 0.0 ) 
+                color_sample.xyz *= 0.7;
+                
+            //vecNDC += vecSclOffsNDS; // for z test
+            vecES += vecSclOffsES; // for z test
+        }
+        else { // We crossed empty space
+            alpha_sample = 0.0f;
+            color_sample = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+//            vecNDC += rayNDCPosDelta; // for z test
+            vecES += rayESPosDelta; // for z test
+        }
+        
+        // Accumulate color and alpha sample
+        col_acc   += ((1.0f - alpha_acc)*color_sample*alpha_sample);
+        alpha_acc += ((1.0f - alpha_acc)*alpha_sample);
+        
+        vec += ray_delta;
+        length_acc += ray_delta_len;
+    
+        isoDiffOld = isoDiff;  
+        
+        float n = viewportDim.z;
+        float f = viewportDim.w;
+        
+        ssDepth = (viewportDim.z*viewportDim.w)/vecES.z + viewportDim.z + viewportDim.w;
+        // Map near ... far to 0 ... 1
+        ssDepth -= n;
+        ssDepth /= (f-n);
+        
+        
+        stepCnt++;
+    }
+
+    gl_FragColor = vec4(col_acc.rgb/alpha_acc, alpha_acc);
+}
+            -->
+            </snippet>
+        </shader>
+            <shader name="vertexDebug">
+                <snippet type="version">130</snippet>
+                <snippet name="main" type="string">
+                <!--
+varying vec3 posES;
+void main(void) {
+    posES = (gl_ModelViewMatrix*gl_Vertex).xyz;
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    
+}
+                -->
+                </snippet>
+            </shader>
+            <shader name="fragmentDebug">
+                <snippet type="version">130</snippet>
+                <snippet type="string">
+                <!--
+varying vec3 posES;
+void main (void) {
+    gl_FragData[0] = vec4(gl_TexCoord[0].stp, 1.0f);
+    gl_FragData[1] = vec4(posES, 1.0f);
+    gl_FragData[2] = vec4(gl_FragCoord.xyz, 1.0);
+}
+                -->
+                </snippet>
+            </shader>
+    </namespace>
+    
+</btf>

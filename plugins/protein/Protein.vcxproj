@@ -1,0 +1,410 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8BC8CBB7-BC8B-4142-9A9C-7CDD6BB92508}</ProjectGuid>
+    <RootNamespace>Protein</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetDebug32.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetDebug64.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetRelease32.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetRelease64.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(TriSoupPath)include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;mmstd_trisoup.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;$(TriSoupPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(TriSoupPath)include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;mmstd_trisoup.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;$(TriSoupPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(TriSoupPath)include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;mmstd_trisoup.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;$(TriSoupPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(TriSoupPath)include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;mmstd_trisoup.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;$(TriSoupPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="include\protein\Protein.h" />
+    <ClInclude Include="src\AbstractVTKLegacyData.h" />
+    <ClInclude Include="src\AggregatedDensity.h" />
+    <ClInclude Include="src\AtomWeights.h" />
+    <ClInclude Include="src\Base64.h" />
+    <ClInclude Include="src\BindingSiteDataSource.h" />
+    <ClInclude Include="src\BSpline.h" />
+    <ClInclude Include="src\CallColor.h" />
+    <ClInclude Include="src\CallProteinVolumeData.h" />
+    <ClInclude Include="src\CartoonRenderer.h" />
+    <ClInclude Include="src\CartoonTessellationRenderer.h" />
+    <ClInclude Include="src\CCP4VolumeData.h" />
+    <ClInclude Include="src\CoarseGrainDataLoader.h" />
+    <ClInclude Include="src\Color.h" />
+    <ClInclude Include="src\ColorModule.h" />
+    <ClInclude Include="src\CrystalStructureDataSource.h" />
+    <ClInclude Include="src\Diagram2DCall.h" />
+    <ClInclude Include="src\Diagram2DRenderer.h" />
+    <ClInclude Include="src\DiagramRenderer.h" />
+    <ClInclude Include="src\DofRendererDeferred.h" />
+    <ClInclude Include="src\ElectrostaticsRenderer.h" />
+    <ClInclude Include="src\ForceDataCall.h" />
+    <ClInclude Include="src\FrodockLoader.h" />
+    <ClInclude Include="src\GlButton.h" />
+    <ClInclude Include="src\GLSLVolumeRenderer.h" />
+    <ClInclude Include="src\GlWidget.h" />
+    <ClInclude Include="src\GlWidgetLibrary.h" />
+    <ClInclude Include="src\gmx_system_xdr.h" />
+    <ClInclude Include="src\GridDataStructure.h" />
+    <ClInclude Include="src\GridNeighbourFinder.h" />
+    <ClInclude Include="src\gridParams.h" />
+    <ClInclude Include="src\GROLoader.h" />
+    <ClInclude Include="src\HapticsMoleculeRenderer.h" />
+    <ClInclude Include="src\Header.h" />
+    <ClInclude Include="src\HostArr.h" />
+    <ClInclude Include="src\HydroBondFilter.h" />
+    <ClInclude Include="src\IntSelection.h" />
+    <ClInclude Include="src\LayeredIsosurfaceRenderer.h" />
+    <ClInclude Include="src\MDDriverConnector.h" />
+    <ClInclude Include="src\MolecularBezierData.h" />
+    <ClInclude Include="src\MolecularNeighborhood.h" />
+    <ClInclude Include="src\MoleculeBallifier.h" />
+    <ClInclude Include="src\MoleculeCartoonRenderer.h" />
+    <ClInclude Include="src\MoleculeSequenceRenderer.h" />
+    <ClInclude Include="src\MoleculeSESRenderer.h" />
+    <ClInclude Include="src\MultiParticleDataFilter.h" />
+    <ClInclude Include="src\MultiPDBLoader.h" />
+    <ClInclude Include="src\ogl_error_check.h" />
+    <ClInclude Include="src\OpenBabelLoader.h" />
+    <ClInclude Include="src\ParticleDataCall.h" />
+    <ClInclude Include="src\PDBInterpolator.h" />
+    <ClInclude Include="src\PDBLoader.h" />
+    <ClInclude Include="src\PDBWriter.h" />
+    <ClInclude Include="src\PhantomDeviceWrapper.h" />
+    <ClInclude Include="src\ProteinExploder.h" />
+    <ClInclude Include="src\ProteinVolumeRenderer.h" />
+    <ClInclude Include="src\Raw3DRelativeMouseInput.h" />
+    <ClInclude Include="src\ReducedSurface.h" />
+    <ClInclude Include="src\ReducedSurfaceSimplified.h" />
+    <ClInclude Include="src\Renderer3DModuleMouse.h" />
+    <ClInclude Include="src\ResidueSelection.h" />
+    <ClInclude Include="src\RMS.h" />
+    <ClInclude Include="src\SecPlaneRenderer.h" />
+    <ClInclude Include="src\SequenceRenderer.h" />
+    <ClInclude Include="src\simple.h" />
+    <ClInclude Include="src\SimpleMoleculeRenderer.h" />
+    <ClInclude Include="src\slicing.h" />
+    <ClInclude Include="src\SolPathDataCall.h" />
+    <ClInclude Include="src\SolPathDataSource.h" />
+    <ClInclude Include="src\SolPathRenderer.h" />
+    <ClInclude Include="src\SolventHydroBondGenerator.h" />
+    <ClInclude Include="src\SolventVolumeRenderer.h" />
+    <ClInclude Include="src\SphereDataCall.h" />
+    <ClInclude Include="src\SphereRenderer.h" />
+    <ClInclude Include="src\SphereRendererMouse.h" />
+    <ClInclude Include="src\SplitMergeRenderer.h" />
+    <ClInclude Include="src\SSAORendererDeferred.h" />
+    <ClInclude Include="src\state.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\Stride.h" />
+    <ClInclude Include="src\tables.h" />
+    <ClInclude Include="src\targetver.h" />
+    <ClInclude Include="src\ToonRendererDeferred.h" />
+    <ClInclude Include="src\TrajectorySmoothFilter.h" />
+    <ClInclude Include="src\UnstructuredGridRenderer.h" />
+    <ClInclude Include="src\VariantMatchRenderer.h" />
+    <ClInclude Include="src\View3DMouse.h" />
+    <ClInclude Include="src\View3DSpaceMouse.h" />
+    <ClInclude Include="src\vislib_vector_typedefs.h" />
+    <ClInclude Include="src\VMDDXLoader.h" />
+    <ClInclude Include="src\VolumeDirectionRenderer.h" />
+    <ClInclude Include="src\VolumeSliceCall.h" />
+    <ClInclude Include="src\VolumeSliceRenderer.h" />
+    <ClInclude Include="src\VTILoader.h" />
+    <ClInclude Include="src\VTIWriter.h" />
+    <ClInclude Include="src\VTKLegacyDataCallUnstructuredGrid.h" />
+    <ClInclude Include="src\VTKLegacyDataLoaderUnstructuredGrid.h" />
+    <ClInclude Include="src\VTKLegacyDataUnstructuredGrid.h" />
+    <ClInclude Include="src\XYZLoader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AbstractVTKLegacyData.cpp" />
+    <ClCompile Include="src\AggregatedDensity.cpp" />
+    <ClCompile Include="src\Base64.cpp" />
+    <ClCompile Include="src\BindingSiteDataSource.cpp" />
+    <ClCompile Include="src\BSpline.cpp" />
+    <ClCompile Include="src\CallProteinVolumeData.cpp" />
+    <ClCompile Include="src\CartoonRenderer.cpp" />
+    <ClCompile Include="src\CartoonTessellationRenderer.cpp" />
+    <ClCompile Include="src\CCP4VolumeData.cpp" />
+    <ClCompile Include="src\CoarseGrainDataLoader.cpp" />
+    <ClCompile Include="src\Color.cpp" />
+    <ClCompile Include="src\ColorModule.cpp" />
+    <ClCompile Include="src\CrystalStructureDataSource.cpp" />
+    <ClCompile Include="src\Diagram2DCall.cpp" />
+    <ClCompile Include="src\Diagram2DRenderer.cpp" />
+    <ClCompile Include="src\DiagramRenderer.cpp" />
+    <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\DofRendererDeferred.cpp" />
+    <ClCompile Include="src\ElectrostaticsRenderer.cpp" />
+    <ClCompile Include="src\ForceDataCall.cpp" />
+    <ClCompile Include="src\FrodockLoader.cpp" />
+    <ClCompile Include="src\GlButton.cpp" />
+    <ClCompile Include="src\GLSLVolumeRenderer.cpp" />
+    <ClCompile Include="src\GlWidgetLibrary.cpp" />
+    <ClCompile Include="src\gmx_system_xdr.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Default</CompileAs>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\GROLoader.cpp" />
+    <ClCompile Include="src\HapticsMoleculeRenderer.cpp" />
+    <ClCompile Include="src\HydroBondFilter.cpp" />
+    <ClCompile Include="src\IntSelection.cpp" />
+    <ClCompile Include="src\LayeredIsosurfaceRenderer.cpp" />
+    <ClCompile Include="src\MDDriverConnector.cpp" />
+    <ClCompile Include="src\MolecularBezierData.cpp" />
+    <ClCompile Include="src\MolecularNeighborhood.cpp" />
+    <ClCompile Include="src\MoleculeBallifier.cpp" />
+    <ClCompile Include="src\MoleculeCartoonRenderer.cpp" />
+    <ClCompile Include="src\MoleculeSequenceRenderer.cpp" />
+    <ClCompile Include="src\MoleculeSESRenderer.cpp" />
+    <ClCompile Include="src\MultiParticleDataFilter.cpp" />
+    <ClCompile Include="src\MultiPDBLoader.cpp" />
+    <ClCompile Include="src\OpenBabelLoader.cpp" />
+    <ClCompile Include="src\ParticleDataCall.cpp" />
+    <ClCompile Include="src\PDBInterpolator.cpp" />
+    <ClCompile Include="src\PDBLoader.cpp" />
+    <ClCompile Include="src\PDBWriter.cpp" />
+    <ClCompile Include="src\PhantomDeviceWrapper.cpp" />
+    <ClCompile Include="src\Protein.cpp" />
+    <ClCompile Include="src\ProteinExploder.cpp" />
+    <ClCompile Include="src\ProteinVolumeRenderer.cpp" />
+    <ClCompile Include="src\Raw3DRelativeMouseInput.cpp" />
+    <ClCompile Include="src\ReducedSurface.cpp" />
+    <ClCompile Include="src\ReducedSurfaceSimplified.cpp" />
+    <ClCompile Include="src\Renderer3DModuleMouse.cpp" />
+    <ClCompile Include="src\ResidueSelection.cpp" />
+    <ClCompile Include="src\RMS.cpp" />
+    <ClCompile Include="src\SecPlaneRenderer.cpp" />
+    <ClCompile Include="src\SequenceRenderer.cpp" />
+    <ClCompile Include="src\SimpleMoleculeRenderer.cpp" />
+    <ClCompile Include="src\slicing.cpp" />
+    <ClCompile Include="src\SolPathDataCall.cpp" />
+    <ClCompile Include="src\SolPathDataSource.cpp" />
+    <ClCompile Include="src\SolPathRenderer.cpp" />
+    <ClCompile Include="src\SolventHydroBondGenerator.cpp" />
+    <ClCompile Include="src\SolventVolumeRenderer.cpp" />
+    <ClCompile Include="src\SphereDataCall.cpp" />
+    <ClCompile Include="src\SphereRenderer.cpp" />
+    <ClCompile Include="src\SphereRendererMouse.cpp" />
+    <ClCompile Include="src\SplitMergeRenderer.cpp" />
+    <ClCompile Include="src\SSAORendererDeferred.cpp" />
+    <ClCompile Include="src\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\Stride.cpp" />
+    <ClCompile Include="src\ToonRendererDeferred.cpp" />
+    <ClCompile Include="src\TrajectorySmoothFilter.cpp" />
+    <ClCompile Include="src\UnstructuredGridRenderer.cpp" />
+    <ClCompile Include="src\VariantMatchRenderer.cpp" />
+    <ClCompile Include="src\View3DMouse.cpp" />
+    <ClCompile Include="src\View3DSpaceMouse.cpp" />
+    <ClCompile Include="src\VMDDXLoader.cpp" />
+    <ClCompile Include="src\VolumeDirectionRenderer.cpp" />
+    <ClCompile Include="src\VolumeSliceCall.cpp" />
+    <ClCompile Include="src\VolumeSliceRenderer.cpp" />
+    <ClCompile Include="src\VTILoader.cpp" />
+    <ClCompile Include="src\VTIWriter.cpp" />
+    <ClCompile Include="src\VTKLegacyDataCallUnstructuredGrid.cpp" />
+    <ClCompile Include="src\VTKLegacyDataLoaderUnstructuredGrid.cpp" />
+    <ClCompile Include="src\VTKLegacyDataUnstructuredGrid.cpp" />
+    <ClCompile Include="src\XYZLoader.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

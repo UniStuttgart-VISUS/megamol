@@ -1,0 +1,51 @@
+#extension GL_EXT_geometry_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform float probeRadius;
+
+varying vec4 diffuse, ambient;
+varying vec3 normal, lightDir, halfVector;
+
+#define probeCenter gl_FrontColorIn[1].xyz
+
+
+void lighting( const vec3 norm)
+{
+	// transformation of the normal into eye space
+	normal = normalize(gl_NormalMatrix * norm);
+	// normalize the direction of the light
+	lightDir = normalize(vec3(gl_LightSource[0].position));
+	// normalize the halfVector to pass it to the fragment shader
+	halfVector = normalize(gl_LightSource[0].halfVector.xyz);
+	// compute the diffuse, ambient and globalAmbient terms
+	diffuse = gl_FrontColor * gl_LightSource[0].diffuse;
+	ambient = gl_FrontColor * gl_LightSource[0].ambient;
+	ambient += gl_LightModel.ambient * gl_FrontColor;
+}
+
+void emitTriangle( const vec3 v1, const vec3 v2, const vec3 v3)
+{
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v1 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v1));
+		EmitVertex();
+		
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v2 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v2));
+		EmitVertex();
+		
+		gl_Position = gl_ModelViewProjectionMatrix * vec4( ( v3 + probeCenter).xyz, 1.0);
+		lighting( normalize( -v3));
+		EmitVertex();
+		
+		EndPrimitive();
+}
+
+void main(void)
+{
+	gl_FrontColor = gl_FrontColorIn[0];
+	
+	emitTriangle( vec3(gl_PositionIn[0].xyz) / gl_PositionIn[0].w - probeCenter,
+	              vec3(gl_PositionIn[1].xyz) / gl_PositionIn[1].w - probeCenter, 
+	              vec3(gl_PositionIn[2].xyz) / gl_PositionIn[2].w - probeCenter);
+
+}
