@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Shader Files">
+      <UniqueIdentifier>{ba40defb-3086-4702-b6f2-3c9ab2b344df}</UniqueIdentifier>
+      <Extensions>btf</Extensions>
+    </Filter>
+    <Filter Include="Config and Make Files">
+      <UniqueIdentifier>{5362f4ef-8251-4de5-874a-3480840b30c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Public Header Files">
+      <UniqueIdentifier>{80045de9-6cd7-4e95-a81b-8e3353b8171f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io">
+      <UniqueIdentifier>{6175d44b-c8d7-4780-b2de-71403b6f5a2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io\Header Files">
+      <UniqueIdentifier>{42700ca0-31c5-4a36-833a-37e36fdc235f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io\Source Files">
+      <UniqueIdentifier>{72551f30-6716-4b3c-89e2-c9a5eae19eb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rendering">
+      <UniqueIdentifier>{87c3e921-df43-4bd1-9e3b-548445d05a4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rendering\Header Files">
+      <UniqueIdentifier>{c04635a3-c9bb-4f10-b76c-e083f983f552}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rendering\Source Files">
+      <UniqueIdentifier>{45134ae1-e1dd-465f-9034-8a5379aff642}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc">
+      <UniqueIdentifier>{ec84fbd1-a2cf-4307-9f96-7e5922c825c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc\Header Files">
+      <UniqueIdentifier>{2bf5109e-a16c-4793-aded-624d2a524acc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="misc\Source Files">
+      <UniqueIdentifier>{9a132a1e-1d19-4061-a4b1-a4fbeea8f198}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src/dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mmstd_moldyn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src/stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\IMDAtomDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\MMSPDDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\MMSPDFrameData.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\MMSPDHeader.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\SIFFDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\SIFFWriter.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VIMDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VisIttDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\NGSphereRenderer.cpp">
+      <Filter>rendering\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\NGSphereBufferArrayRenderer.cpp">
+      <Filter>rendering\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VTFResDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\VTFDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\misc\ParticleWorker.cpp">
+      <Filter>misc\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\NGSplatRenderer.cpp">
+      <Filter>rendering\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\XYZLoader.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\TclMolSelectionLoader.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\misc\BrickStatsCall.cpp">
+      <Filter>misc\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\io\BrickStatsDataSource.cpp">
+      <Filter>io\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\BrickStatsRenderer.cpp">
+      <Filter>rendering\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src/stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src/targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmstd_moldyn\mmstd_moldyn.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\SIFFDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\SIFFWriter.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\VIMDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\VisIttDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\IMDAtomDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMSPDDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMSPDFrameData.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\MMSPDHeader.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\NGSphereRenderer.h">
+      <Filter>rendering\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\NGSphereBufferArrayRenderer.h">
+      <Filter>rendering\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\VTFDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\VTFResDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\misc\ParticleWorker.h">
+      <Filter>misc\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\NGSplatRenderer.h">
+      <Filter>rendering\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\XYZLoader.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\TclMolSelectionLoader.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\mmstd_moldyn\BrickStatsCall.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\io\BrickStatsDataSource.h">
+      <Filter>io\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\BrickStatsRenderer.h">
+      <Filter>rendering\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="config.bat">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="configure.win.pl">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="ExtLibs.props.input">
+      <Filter>Config and Make Files</Filter>
+    </None>
+    <None Include="Shaders\NGsphere.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\NGsphereBufferArray.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\particleWorkerCompute.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\NGsplat.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="Shaders\BrickStatsRenderer.btf">
+      <Filter>Shader Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
