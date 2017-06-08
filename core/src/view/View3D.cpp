@@ -1,0 +1,1440 @@
+/*
+ * View3D.cpp
+ *
+ * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart).
+ * Alle Rechte vorbehalten.
+ */
+
+#include "stdafx.h"
+#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "mmcore/view/View3D.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif /* _WIN32 */
+#include <GL/glu.h>
+#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CameraParamOverride.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/param/Vector3fParam.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/ColourParser.h"
+#include "vislib/graphics/CameraParamsStore.h"
+#include "vislib/Exception.h"
+#include "vislib/sys/Log.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/String.h"
+#include "vislib/StringSerialiser.h"
+#include "vislib/sys/sysfunctions.h"
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+#include "vislib/sys/KeyCode.h"
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+#include "vislib/Trace.h"
+#include "vislib/math/Vector.h"
+//#define ROTATOR_HACK
+#ifdef ROTATOR_HACK
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Quaternion.h"
+#endif
+
+using namespace megamol::core;
+
+
+/*
+ * view::View3D::View3D
+ */
+view::View3D::View3D(void) : view::AbstractView3D(), AbstractCamParamSync(), cam(), camParams(),
+        camOverrides(), cursor2d(), modkeys(), rotator1(),
+        rotator2(), zoomer1(), zoomer2(), mover(), lookAtDist(),
+        rendererSlot("rendering", "Connects the view to a Renderer"),
+        lightDir(0.5f, -1.0f, -1.0f), isCamLight(true), bboxs(),
+        showBBox("showBBox", "Bool parameter to show/hide the bounding box"),
+        showLookAt("showLookAt", "Flag showing the look at point"),
+        cameraSettingsSlot("camsettings", "The stored camera settings"),
+        storeCameraSettingsSlot("storecam", "Triggers the storage of the camera settings"),
+        restoreCameraSettingsSlot("restorecam", "Triggers the restore of the camera settings"),
+        resetViewSlot("resetView", "Triggers the reset of the view"),
+        firstImg(false), frozenValues(NULL),
+        isCamLightSlot("light::isCamLight", "Flag whether the light is relative to the camera or to the world coordinate system"),
+        lightDirSlot("light::direction", "Direction vector of the light"),
+        lightColDifSlot("light::diffuseCol", "Diffuse light colour"),
+        lightColAmbSlot("light::ambientCol", "Ambient light colour"),
+        stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection"),
+        stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection"),
+        overrideCall(NULL),
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+        viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates"),
+        viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees"),
+        viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be roateted"),
+        viewKeyRotLeftSlot("viewKey::RotLeft", "Rotates the view to the left (around the up-axis)"),
+        viewKeyRotRightSlot("viewKey::RotRight", "Rotates the view to the right (around the up-axis)"),
+        viewKeyRotUpSlot("viewKey::RotUp", "Rotates the view to the top (around the right-axis)"),
+        viewKeyRotDownSlot("viewKey::RotDown", "Rotates the view to the bottom (around the right-axis)"),
+        viewKeyRollLeftSlot("viewKey::RollLeft", "Rotates the view counter-clockwise (around the view-axis)"),
+        viewKeyRollRightSlot("viewKey::RollRight", "Rotates the view clockwise (around the view-axis)"),
+        viewKeyZoomInSlot("viewKey::ZoomIn", "Zooms in (moves the camera)"),
+        viewKeyZoomOutSlot("viewKey::ZoomOut", "Zooms out (moves the camera)"),
+        viewKeyMoveLeftSlot("viewKey::MoveLeft", "Moves to the left"),
+        viewKeyMoveRightSlot("viewKey::MoveRight", "Moves to the right"),
+        viewKeyMoveUpSlot("viewKey::MoveUp", "Moves to the top"),
+        viewKeyMoveDownSlot("viewKey::MoveDown", "Moves to the bottom"),
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+        toggleBBoxSlot("toggleBBox", "Button to toggle the bounding box"),
+        toggleSoftCursorSlot("toggleSoftCursor", "Button to toggle the soft cursor"),
+        bboxCol(192, 192, 192, 255),
+        bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
+        enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse"),
+        showViewCubeSlot("viewcube::show", "Shows the view cube helper"),
+        resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
+        mouseX(0.0f), mouseY(0.0f), mouseFlags(0),
+        timeCtrl(),
+        toggleMouseSelection(false) {
+    using vislib::sys::KeyCode;
+
+    this->camParams = this->cam.Parameters();
+    this->camOverrides = new CameraParamOverride(this->camParams);
+
+    vislib::graphics::ImageSpaceType defWidth(
+        static_cast<vislib::graphics::ImageSpaceType>(100));
+    vislib::graphics::ImageSpaceType defHeight(
+        static_cast<vislib::graphics::ImageSpaceType>(100));
+
+    this->camParams->SetVirtualViewSize(defWidth, defHeight);
+    this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f,
+        defWidth, defHeight));
+
+    this->rendererSlot.SetCompatibleCall<CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->rendererSlot);
+
+    // empty bounding box will trigger initialisation
+    this->bboxs.Clear();
+
+    this->showBBox << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->showBBox);
+    this->showLookAt << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->showLookAt);
+
+    this->cameraSettingsSlot << new param::StringParam("");
+    this->MakeSlotAvailable(&this->cameraSettingsSlot);
+
+    this->storeCameraSettingsSlot << new param::ButtonParam(
+        vislib::sys::KeyCode::KEY_MOD_ALT | vislib::sys::KeyCode::KEY_MOD_SHIFT | 'C');
+    this->storeCameraSettingsSlot.SetUpdateCallback(&View3D::onStoreCamera);
+    this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
+
+    this->restoreCameraSettingsSlot << new param::ButtonParam(
+        vislib::sys::KeyCode::KEY_MOD_ALT | 'c');
+    this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D::onRestoreCamera);
+    this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
+
+    this->resetViewSlot << new param::ButtonParam(vislib::sys::KeyCode::KEY_HOME);
+    this->resetViewSlot.SetUpdateCallback(&View3D::onResetView);
+    this->MakeSlotAvailable(&this->resetViewSlot);
+
+    this->isCamLightSlot << new param::BoolParam(this->isCamLight);
+    this->MakeSlotAvailable(&this->isCamLightSlot);
+
+    this->lightDirSlot << new param::Vector3fParam(this->lightDir);
+    this->MakeSlotAvailable(&this->lightDirSlot);
+
+    this->lightColDif[0] = this->lightColDif[1] = this->lightColDif[2] = 1.0f;
+    this->lightColDif[3] = 1.0f;
+
+    this->lightColAmb[0] = this->lightColAmb[1] = this->lightColAmb[2] = 0.2f;
+    this->lightColAmb[3] = 1.0f;
+
+    this->lightColDifSlot << new param::StringParam(
+        utility::ColourParser::ToString(
+        this->lightColDif[0], this->lightColDif[1], this->lightColDif[2]));
+    this->MakeSlotAvailable(&this->lightColDifSlot);
+
+    this->lightColAmbSlot << new param::StringParam(
+        utility::ColourParser::ToString(
+        this->lightColAmb[0], this->lightColAmb[1], this->lightColAmb[2]));
+    this->MakeSlotAvailable(&this->lightColAmbSlot);
+
+    this->ResetView();
+
+    this->stereoEyeDistSlot << new param::FloatParam(this->camParams->StereoDisparity(), 0.0f);
+    this->MakeSlotAvailable(&this->stereoEyeDistSlot);
+
+    this->stereoFocusDistSlot << new param::FloatParam(this->camParams->FocalDistance(false), 0.0f);
+    this->MakeSlotAvailable(&this->stereoFocusDistSlot);
+
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+    this->viewKeyMoveStepSlot << new param::FloatParam(0.1f, 0.001f);
+    this->MakeSlotAvailable(&this->viewKeyMoveStepSlot);
+
+    this->viewKeyAngleStepSlot << new param::FloatParam(15.0f, 0.001f, 360.0f);
+    this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
+
+    param::EnumParam *vrpsev = new param::EnumParam(1);
+    vrpsev->SetTypePair(0, "Position");
+    vrpsev->SetTypePair(1, "Look-At");
+    this->viewKeyRotPointSlot << vrpsev;
+    this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
+
+    this->viewKeyRotLeftSlot << new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotLeftSlot);
+
+    this->viewKeyRotRightSlot << new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotRightSlot);
+
+    this->viewKeyRotUpSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotUpSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotUpSlot);
+
+    this->viewKeyRotDownSlot << new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL);
+    this->viewKeyRotDownSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRotDownSlot);
+
+    this->viewKeyRollLeftSlot << new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyRollLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRollLeftSlot);
+
+    this->viewKeyRollRightSlot << new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyRollRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyRollRightSlot);
+
+    this->viewKeyZoomInSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyZoomInSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyZoomInSlot);
+
+    this->viewKeyZoomOutSlot << new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_SHIFT);
+    this->viewKeyZoomOutSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyZoomOutSlot);
+
+    this->viewKeyMoveLeftSlot << new param::ButtonParam(KeyCode::KEY_LEFT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveLeftSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveLeftSlot);
+
+    this->viewKeyMoveRightSlot << new param::ButtonParam(KeyCode::KEY_RIGHT | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveRightSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveRightSlot);
+
+    this->viewKeyMoveUpSlot << new param::ButtonParam(KeyCode::KEY_UP | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveUpSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveUpSlot);
+
+    this->viewKeyMoveDownSlot << new param::ButtonParam(KeyCode::KEY_DOWN | KeyCode::KEY_MOD_CTRL | KeyCode::KEY_MOD_ALT);
+    this->viewKeyMoveDownSlot.SetUpdateCallback(&View3D::viewKeyPressed);
+    this->MakeSlotAvailable(&this->viewKeyMoveDownSlot);
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+
+    this->toggleSoftCursorSlot << new param::ButtonParam('i' | KeyCode::KEY_MOD_CTRL);
+    this->toggleSoftCursorSlot.SetUpdateCallback(&View3D::onToggleButton);
+    this->MakeSlotAvailable(&this->toggleSoftCursorSlot);
+
+    this->toggleBBoxSlot << new param::ButtonParam('i' | KeyCode::KEY_MOD_ALT);
+    this->toggleBBoxSlot.SetUpdateCallback(&View3D::onToggleButton);
+    this->MakeSlotAvailable(&this->toggleBBoxSlot);
+
+    this->enableMouseSelectionSlot << new param::ButtonParam(KeyCode::KEY_TAB);
+    this->enableMouseSelectionSlot.SetUpdateCallback(&View3D::onToggleButton);
+    this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
+
+    this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
+
+    this->bboxColSlot << new param::StringParam(
+        utility::ColourParser::ToString(
+            static_cast<float>(this->bboxCol.R()) / 255.0f,
+            static_cast<float>(this->bboxCol.G()) / 255.0f,
+            static_cast<float>(this->bboxCol.B()) / 255.0f));
+    this->MakeSlotAvailable(&this->bboxColSlot);
+
+    this->showViewCubeSlot << new param::BoolParam(true);
+    this->MakeSlotAvailable(&this->showViewCubeSlot);
+
+    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
+        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
+    }
+
+    this->MakeSlotAvailable(&this->slotGetCamParams);
+    this->MakeSlotAvailable(&this->slotSetCamParams);
+}
+
+
+/*
+ * view::View3D::~View3D
+ */
+view::View3D::~View3D(void) {
+    this->Release();
+    SAFE_DELETE(this->frozenValues);
+    this->overrideCall = NULL; // DO NOT DELETE
+}
+
+
+/*
+ * view::View3D::GetCameraSyncNumber
+ */
+unsigned int view::View3D::GetCameraSyncNumber(void) const {
+    return this->camParams->SyncNumber();
+}
+
+
+/*
+ * view::View3D::SerialiseCamera
+ */
+void view::View3D::SerialiseCamera(vislib::Serialiser& serialiser) const {
+    this->camParams->Serialise(serialiser);
+}
+
+
+/*
+ * view::View3D::DeserialiseCamera
+ */
+void view::View3D::DeserialiseCamera(vislib::Serialiser& serialiser) {
+    this->camParams->Deserialise(serialiser);
+}
+
+
+/*
+ * view::View3D::Render
+ */
+void view::View3D::Render(const mmcRenderViewContext& context) {
+    float time = static_cast<float>(context.Time);
+    float instTime = static_cast<float>(context.InstanceTime);
+
+    if (this->doHookCode()) {
+        this->doBeforeRenderHook();
+    }
+
+    CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
+    AbstractRenderingView::beginFrame();
+
+    // Conditionally synchronise camera from somewhere else.
+    this->SyncCamParams(this->cam.Parameters());
+
+    // clear viewport
+    if (this->overrideViewport != NULL) {
+        if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0)
+                && (this->overrideViewport[2] > 0) && (this->overrideViewport[3] > 0)) {
+            ::glViewport(
+                this->overrideViewport[0], this->overrideViewport[1],
+                this->overrideViewport[2], this->overrideViewport[3]);
+        }
+    } else {
+        // this is correct in non-override mode,
+        //  because then the tile will be whole viewport
+        ::glViewport(0, 0,
+            static_cast<GLsizei>(this->camParams->TileRect().Width()),
+            static_cast<GLsizei>(this->camParams->TileRect().Height()));
+    }
+
+    if (this->overrideCall != NULL) {
+        if (cr3d != nullptr) {
+            RenderOutput *ro = dynamic_cast<RenderOutput*>(overrideCall);
+            if (ro != nullptr) {
+                *static_cast<RenderOutput*>(cr3d) = *ro;
+            }
+        }
+        this->overrideCall->EnableOutputBuffer();
+    } else if (cr3d != nullptr) {
+        cr3d->SetOutputBuffer(GL_BACK);
+        if (cr3d != nullptr) cr3d->GetViewport(); // access the viewport to enforce evaluation
+    }
+
+    const float *bkgndCol = (this->overrideBkgndCol != NULL)
+        ? this->overrideBkgndCol : this->bkgndColour();
+    ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (cr3d == NULL) {
+        this->renderTitle(
+            this->cam.Parameters()->TileRect().Left(),
+            this->cam.Parameters()->TileRect().Bottom(),
+            this->cam.Parameters()->TileRect().Width(),
+            this->cam.Parameters()->TileRect().Height(),
+            this->cam.Parameters()->VirtualViewSize().Width(),
+            this->cam.Parameters()->VirtualViewSize().Height(),
+            (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC)
+                && (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
+            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE,
+            instTime);
+        this->endFrame(true);
+        return; // empty enought
+    } else {
+        cr3d->SetGpuAffinity(context.GpuAffinity);
+        this->removeTitleRenderer();
+    }
+
+    // mueller: I moved the following code block before clearing the back buffer,
+    // because in case the FBO is enabled here, the depth buffer is not cleared
+    // (but the one of the previous buffer) and the renderer might not create any
+    // fragment in this case - besides that the FBO content is not cleared, 
+    // which could be a problem if the FBO is reused.
+    //if (this->overrideCall != NULL) {
+    //    this->overrideCall->EnableOutputBuffer();
+    //} else {
+    //    cr3d->SetOutputBuffer(GL_BACK);
+    //}
+
+    // camera settings
+    if (this->stereoEyeDistSlot.IsDirty()) {
+        param::FloatParam *fp = this->stereoEyeDistSlot.Param<param::FloatParam>();
+        this->camParams->SetStereoDisparity(fp->Value());
+        fp->SetValue(this->camParams->StereoDisparity());
+        this->stereoEyeDistSlot.ResetDirty();
+    }
+    if (this->stereoFocusDistSlot.IsDirty()) {
+        param::FloatParam *fp = this->stereoFocusDistSlot.Param<param::FloatParam>();
+        this->camParams->SetFocalDistance(fp->Value());
+        fp->SetValue(this->camParams->FocalDistance(false));
+        this->stereoFocusDistSlot.ResetDirty();
+    }
+    if (cr3d != NULL) {
+        (*cr3d)(1); // GetExtents
+        if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs)
+            && !(!cr3d->AccessBoundingBoxes().IsAnyValid()
+                && !this->bboxs.IsObjectSpaceBBoxValid() 
+                && !this->bboxs.IsObjectSpaceClipBoxValid() 
+                && this->bboxs.IsWorldSpaceBBoxValid() 
+                && !this->bboxs.IsWorldSpaceClipBoxValid()))) {
+            this->bboxs = cr3d->AccessBoundingBoxes();
+
+            if (this->firstImg) {
+                this->ResetView();
+                this->firstImg = false;
+                if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+                    this->onRestoreCamera(this->restoreCameraSettingsSlot);
+                }
+            } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value())
+                this->ResetView();
+        }
+
+#ifdef ROTATOR_HACK
+        cr3d->SetTimeFramesCount(360);
+#endif
+
+        this->timeCtrl.SetTimeExtend(cr3d->TimeFramesCount(), cr3d->IsInSituTime());
+        if (time > static_cast<float>(cr3d->TimeFramesCount())) {
+            time = static_cast<float>(cr3d->TimeFramesCount());
+        }
+
+#ifndef ROTATOR_HACK
+        cr3d->SetTime(this->frozenValues ? this->frozenValues->time : time);
+#else
+        cr3d->SetTime(0.0f);
+#endif
+        cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
+        cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+    }
+    this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+    // This is painfully wrong in the vislib camera, and is fixed here as sort of hotfix
+    float fc = this->camParams->FarClip();
+    float nc = this->camParams->NearClip();
+    float fnc = fc * 0.001f;
+    if (fnc > nc) {
+        this->camParams->SetClip(fnc, fc);
+    }
+
+    if (this->bboxColSlot.IsDirty()) {
+        float r, g, b;
+        this->bboxColSlot.ResetDirty();
+        utility::ColourParser::FromString(this->bboxColSlot.Param<param::StringParam>()->Value(), r, g, b);
+        int ir = static_cast<int>(r * 255.0f);
+        if (ir < 0) ir = 0; else if (ir > 255) ir = 255;
+        int ig = static_cast<int>(g * 255.0f);
+        if (ig < 0) ig = 0; else if (ig > 255) ig = 255;
+        int ib = static_cast<int>(b * 255.0f);
+        if (ib < 0) ib = 0; else if (ib > 255) ib = 255;
+        this->bboxCol.Set(static_cast<unsigned char>(ir),
+            static_cast<unsigned char>(ig),
+            static_cast<unsigned char>(ib),
+            255);
+    }
+
+    // set light parameters
+    if (this->isCamLightSlot.IsDirty()) {
+        this->isCamLightSlot.ResetDirty();
+        this->isCamLight = this->isCamLightSlot.Param<param::BoolParam>()->Value();
+    }
+    if (this->lightDirSlot.IsDirty()) {
+        this->lightDirSlot.ResetDirty();
+        this->lightDir = this->lightDirSlot.Param<param::Vector3fParam>()->Value();
+    }
+    if (this->lightColAmbSlot.IsDirty()) {
+        this->lightColAmbSlot.ResetDirty();
+        utility::ColourParser::FromString(
+            this->lightColAmbSlot.Param<param::StringParam>()->Value(),
+            this->lightColAmb[0], lightColAmb[1], lightColAmb[2]);
+    }
+    if (this->lightColDifSlot.IsDirty()) {
+        this->lightColDifSlot.ResetDirty();
+        utility::ColourParser::FromString(
+            this->lightColDifSlot.Param<param::StringParam>()->Value(),
+            this->lightColDif[0], lightColDif[1], lightColDif[2]);
+    }
+    ::glEnable(GL_LIGHTING);    // TODO: check renderer capabilities
+    ::glEnable(GL_LIGHT0);
+    const float lp[4] = {
+        -this->lightDir.X(),
+        -this->lightDir.Y(),
+        -this->lightDir.Z(),
+        0.0f};
+    ::glLightfv(GL_LIGHT0, GL_AMBIENT, this->lightColAmb);
+    ::glLightfv(GL_LIGHT0, GL_DIFFUSE, this->lightColDif);
+    const float zeros[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    const float ones[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    ::glLightfv(GL_LIGHT0, GL_SPECULAR, ones);
+    ::glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zeros);
+
+    // setup matrices
+
+#ifdef ROTATOR_HACK
+    ::vislib::math::Point<float, 3> c_e_p = this->cam.Parameters()->EyePosition();
+    ::vislib::math::Point<float, 3> c_l_p = this->cam.Parameters()->LookAt();
+    ::vislib::math::Vector<float, 3> c_u_v = this->cam.Parameters()->Up();
+
+    ::vislib::math::Vector<float, 3> c_l_v = c_e_p - c_l_p;
+    ::vislib::math::Quaternion<float> c_l_q(time * M_PI / 180.0f, c_u_v);
+    c_l_v = c_l_q * c_l_v;
+    this->cam.Parameters()->SetView(c_l_p + c_l_v, c_l_p, c_u_v);
+    this->cam.Parameters()->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+#endif
+
+    ::glMatrixMode(GL_PROJECTION);
+    ::glLoadIdentity();
+    this->cam.glMultProjectionMatrix();
+
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glLoadIdentity();
+
+    if (this->isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
+
+    this->cam.glMultViewMatrix();
+
+    if (!this->isCamLight) glLightfv(GL_LIGHT0, GL_POSITION, lp);
+
+    // render bounding box backside
+    if (this->showBBox.Param<param::BoolParam>()->Value()) {
+        this->renderBBoxBackside();
+    }
+    if (this->showLookAt.Param<param::BoolParam>()->Value()) {
+        this->renderLookAt();
+    }
+    ::glPushMatrix();
+
+    if (this->overrideCall) {
+        (*static_cast<AbstractCallRender*>(cr3d)) = *this->overrideCall;
+        cr3d->SetInstanceTime(instTime);
+#ifndef ROTATOR_HACK
+        cr3d->SetTime(time);
+#else
+        cr3d->SetTime(0);
+#endif
+    }
+
+    // call for render
+    if (cr3d != NULL) {
+        (*cr3d)(0);
+    }
+
+    // render bounding box front
+    ::glPopMatrix();
+    if (this->showBBox.Param<param::BoolParam>()->Value()) {
+        this->renderBBoxFrontside();
+    }
+
+    if (this->showViewCubeSlot.Param<param::BoolParam>()->Value()) {
+        this->renderViewCube();
+    }
+
+    if (this->showSoftCursor()) {
+        this->renderSoftCursor();
+    }
+
+#ifdef ROTATOR_HACK
+    this->cam.Parameters()->SetView(c_e_p, c_l_p, c_u_v);
+#endif
+
+    AbstractRenderingView::endFrame();
+
+}
+
+
+/*
+ * view::View3D::ResetView
+ */
+void view::View3D::ResetView(void) {
+    using namespace vislib::graphics;
+    VLTRACE(VISLIB_TRCELVL_INFO, "View3D::ResetView\n");
+
+    this->camParams->SetClip(0.1f, 100.0f);
+    this->camParams->SetApertureAngle(30.0f);
+    this->camParams->SetProjection(
+        vislib::graphics::CameraParameters::MONO_PERSPECTIVE);
+    this->camParams->SetStereoParameters(0.3f, /* this is not so clear! */
+        vislib::graphics::CameraParameters::LEFT_EYE,
+        0.0f /* this is autofocus */);
+    this->camParams->Limits()->LimitClippingDistances(0.01f, 0.1f);
+
+    if (!this->bboxs.IsWorldSpaceBBoxValid()) {
+        this->bboxs.SetWorldSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0);
+    }
+    float dist = (0.5f
+        * sqrtf((this->bboxs.WorldSpaceBBox().Width() * this->bboxs.WorldSpaceBBox().Width())
+        + (this->bboxs.WorldSpaceBBox().Depth() * this->bboxs.WorldSpaceBBox().Depth())
+        + (this->bboxs.WorldSpaceBBox().Height() * this->bboxs.WorldSpaceBBox().Height())))
+        / tanf(this->cam.Parameters()->HalfApertureAngle());
+
+    ImageSpaceDimension dim = this->camParams->VirtualViewSize();
+    double halfFovX = (static_cast<double>(dim.Width()) * static_cast<double>(this->cam.Parameters()->HalfApertureAngle())) / static_cast<double>(dim.Height());
+    double distX = static_cast<double>(this->bboxs.WorldSpaceBBox().Width()) / (2.0 * tan(halfFovX));
+    double distY = static_cast<double>(this->bboxs.WorldSpaceBBox().Height()) / (2.0 * tan(static_cast<double>(this->cam.Parameters()->HalfApertureAngle())));
+    dist = static_cast<float>((distX > distY) ? distX : distY);
+    dist = dist + (this->bboxs.WorldSpaceBBox().Depth() / 2.0f);
+    SceneSpacePoint3D bbc = this->bboxs.WorldSpaceBBox().CalcCenter();
+
+    this->camParams->SetView(
+        bbc + SceneSpaceVector3D(0.0f, 0.0f, dist),
+        bbc, SceneSpaceVector3D(0.0f, 1.0f, 0.0f));
+
+    this->zoomer1.SetSpeed(dist);
+    this->lookAtDist.SetSpeed(dist);
+}
+
+
+/*
+ * view::View3D::Resize
+ */
+void view::View3D::Resize(unsigned int width, unsigned int height) {
+    this->camParams->SetVirtualViewSize(
+        static_cast<vislib::graphics::ImageSpaceType>(width), 
+        static_cast<vislib::graphics::ImageSpaceType>(height));
+}
+
+
+/*
+ * view::View3D::SetCursor2DButtonState
+ */
+void view::View3D::SetCursor2DButtonState(unsigned int btn, bool down) {
+    if (!this->toggleMouseSelection) {
+        this->cursor2d.SetButtonState(btn, down);
+    } else {
+        // stuff from protein::View3DMouse
+        switch (btn) {
+        case 0: // left
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                core::view::MOUSEFLAG_BUTTON_LEFT_DOWN, down);
+            break;
+        case 1: // right
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                core::view::MOUSEFLAG_BUTTON_RIGHT_DOWN, down);
+            break;
+        case 2: // middle
+            view::MouseFlagsSetFlag(this->mouseFlags,
+                core::view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
+            break;
+        }
+    }
+}
+
+
+/*
+ * view::View3D::SetCursor2DPosition
+ */
+void view::View3D::SetCursor2DPosition(float x, float y) {
+    if (!this->toggleMouseSelection) {
+        this->cursor2d.SetPosition(x, y, true);
+    } else {
+        // stuff from protein::View3DMouse
+        CallRender3D *cr3d = this->rendererSlot.CallAs<CallRender3D>();
+        if (cr3d) {
+            cr3d->SetMouseInfo(static_cast<int>(x), static_cast<int>(y),
+                this->mouseFlags);
+            if ((*cr3d)(3)) {
+                this->mouseX = (float)static_cast<int>(x);
+                this->mouseY = (float)static_cast<int>(y);
+                view::MouseFlagsResetAllChanged(this->mouseFlags);
+                // mouse event consumed
+                return;
+            }
+            view::MouseFlagsResetAllChanged(this->mouseFlags);
+        }
+    }
+}
+
+
+/*
+ * view::View3D::SetInputModifier
+ */
+void view::View3D::SetInputModifier(mmcInputModifier mod, bool down) {
+    unsigned int modId = 0;
+    switch (mod) {
+        case MMC_INMOD_SHIFT:
+            modId = vislib::graphics::InputModifiers::MODIFIER_SHIFT;
+            break;
+        case MMC_INMOD_CTRL:
+            modId = vislib::graphics::InputModifiers::MODIFIER_CTRL;
+            break;
+        case MMC_INMOD_ALT:
+            modId = vislib::graphics::InputModifiers::MODIFIER_ALT;
+            break;
+        default: return;
+    }
+    this->modkeys.SetModifierState(modId, down);
+}
+
+
+/*
+ * view::View3D::OnRenderView
+ */
+bool view::View3D::OnRenderView(Call& call) {
+    float overBC[3];
+    int overVP[4] = {0, 0, 0, 0};
+    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
+    if (crv == NULL) return false;
+
+    this->overrideViewport = overVP;
+    if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
+        this->cam.SetParameters(this->camOverrides);
+        this->camOverrides.DynamicCast<CameraParamOverride>()
+            ->SetOverrides(*crv);
+        if (crv->IsViewportSet()) {
+            overVP[2] = crv->ViewportWidth();
+            overVP[3] = crv->ViewportHeight();
+            if (!crv->IsTileSet()) {
+                this->camOverrides->SetVirtualViewSize(
+                    static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportWidth()),
+                    static_cast<vislib::graphics::ImageSpaceType>(crv->ViewportHeight()));
+                this->camOverrides->ResetTileRect();
+            }
+        }
+    }
+    if (crv->IsBackgroundSet()) {
+        overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
+        overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
+        overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
+        this->overrideBkgndCol = overBC; // hurk
+    }
+
+    this->overrideCall = dynamic_cast<AbstractCallRender*>(&call);
+
+    float time = crv->Time();
+    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
+    mmcRenderViewContext context;
+    ::ZeroMemory(&context, sizeof(context));
+    context.Time = time;
+    context.InstanceTime = crv->InstanceTime();
+    // TODO: Affinity
+    this->Render(context);
+
+    if (this->overrideCall != NULL) {
+        // mueller: I added the DisableOutputBuffer (resetting the override was here 
+        // before) in order to make sure that the viewport is reset that has been
+        // set by an override call.
+        this->overrideCall->DisableOutputBuffer();
+        this->overrideCall = NULL;
+    }
+
+    if (crv->IsProjectionSet() || crv->IsTileSet() || crv->IsViewportSet()) {
+        this->cam.SetParameters(this->frozenValues ? this->frozenValues->camParams : this->camParams);
+    }
+    this->overrideBkgndCol = NULL;
+    this->overrideViewport = NULL;
+
+    return true;
+}
+
+
+/*
+ * view::View3D::UpdateFreeze
+ */
+void view::View3D::UpdateFreeze(bool freeze) {
+    //printf("%s view\n", freeze ? "Freezing" : "Unfreezing");
+    if (freeze) {
+        if (this->frozenValues == NULL) {
+            this->frozenValues = new FrozenValues();
+            this->camOverrides.DynamicCast<CameraParamOverride>()
+                ->SetParametersBase(this->frozenValues->camParams);
+            this->cam.SetParameters(this->frozenValues->camParams);
+        }
+        *(this->frozenValues->camParams) = *this->camParams;
+        this->frozenValues->time = 0.0f;
+    } else {
+        this->camOverrides.DynamicCast<CameraParamOverride>()
+            ->SetParametersBase(this->camParams);
+        this->cam.SetParameters(this->camParams);
+        SAFE_DELETE(this->frozenValues);
+    }
+}
+
+
+/*
+ * view::View3D::unpackMouseCoordinates
+ */
+void view::View3D::unpackMouseCoordinates(float &x, float &y) {
+    x *= this->camParams->VirtualViewSize().Width();
+    y *= this->camParams->VirtualViewSize().Height();
+    y -= 1.0f;
+}
+
+
+/*
+ * view::View3D::create
+ */
+bool view::View3D::create(void) {
+    
+    this->cursor2d.SetButtonCount(3); /* This could be configurable. */
+    this->modkeys.SetModifierCount(3);
+
+    this->rotator1.SetCameraParams(this->camParams);
+    this->rotator1.SetTestButton(0 /* left mouse button */);
+    this->rotator1.SetAltModifier(
+        vislib::graphics::InputModifiers::MODIFIER_SHIFT);
+    this->rotator1.SetModifierTestCount(2);
+    this->rotator1.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+    this->rotator1.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
+
+    this->rotator2.SetCameraParams(this->camParams);
+    this->rotator2.SetTestButton(0 /* left mouse button */);
+    this->rotator2.SetAltModifier(
+        vislib::graphics::InputModifiers::MODIFIER_SHIFT);
+    this->rotator2.SetModifierTestCount(2);
+    this->rotator2.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+    this->rotator2.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
+
+    this->zoomer1.SetCameraParams(this->camParams);
+    this->zoomer1.SetTestButton(2 /* mid mouse button */);
+    this->zoomer1.SetModifierTestCount(2);
+    this->zoomer1.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, false);
+    this->zoomer1.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+    this->zoomer1.SetZoomBehaviour(vislib::graphics::CameraZoom2DMove::FIX_LOOK_AT);
+
+    this->zoomer2.SetCameraParams(this->camParams);
+    this->zoomer2.SetTestButton(2 /* mid mouse button */);
+    this->zoomer2.SetModifierTestCount(2);
+    this->zoomer2.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, true);
+    this->zoomer2.SetModifierTest(1,
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, false);
+
+    this->mover.SetCameraParams(this->camParams);
+    this->mover.SetTestButton(0 /* left mouse button */);
+    this->mover.SetModifierTestCount(1);
+    this->mover.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_ALT, true);
+
+    this->lookAtDist.SetCameraParams(this->camParams);
+    this->lookAtDist.SetTestButton(2 /* mid mouse button */);
+    this->lookAtDist.SetModifierTestCount(1);
+    this->lookAtDist.SetModifierTest(0,
+        vislib::graphics::InputModifiers::MODIFIER_CTRL, true);
+
+    this->cursor2d.SetCameraParams(this->camParams);
+    this->cursor2d.RegisterCursorEvent(&this->rotator1);
+    this->cursor2d.RegisterCursorEvent(&this->rotator2);
+    this->cursor2d.RegisterCursorEvent(&this->zoomer1);
+    this->cursor2d.RegisterCursorEvent(&this->zoomer2);
+    this->cursor2d.RegisterCursorEvent(&this->mover);
+    this->cursor2d.RegisterCursorEvent(&this->lookAtDist);
+    this->cursor2d.SetInputModifiers(&this->modkeys);
+
+    this->modkeys.RegisterObserver(&this->cursor2d);
+
+    this->firstImg = true;
+
+    return true;
+}
+
+
+/*
+ * view::View3D::release
+ */
+void view::View3D::release(void) {
+    this->removeTitleRenderer();
+    this->cursor2d.UnregisterCursorEvent(&this->rotator1);
+    this->cursor2d.UnregisterCursorEvent(&this->rotator2);
+    this->cursor2d.UnregisterCursorEvent(&this->zoomer1);
+    this->cursor2d.UnregisterCursorEvent(&this->zoomer2);
+    this->cursor2d.UnregisterCursorEvent(&this->mover);
+    SAFE_DELETE(this->frozenValues);
+}
+
+
+/*
+ * view::View3D::renderBBox
+ */
+void view::View3D::renderBBox(void) {
+    const vislib::math::Cuboid<float>& boundingBox
+        = this->bboxs.WorldSpaceBBox();
+    if (!this->bboxs.IsWorldSpaceBBoxValid()) {
+        this->bboxs.SetWorldSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    ::glBegin(GL_QUADS);
+
+    ::glEdgeFlag(true);
+
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+    ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+
+    ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+    ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+
+    ::glEnd();
+
+//#define _SHOW_CLIPBOX
+#ifdef _SHOW_CLIPBOX
+    {
+        ::glColor4ub(255, 0, 0, 128);
+        const vislib::math::Cuboid<float>& boundingBox
+            = this->bboxs.WorldSpaceClipBox();
+        ::glBegin(GL_QUADS);
+
+        ::glEdgeFlag(true);
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Bottom(), boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Left(),  boundingBox.Top(),    boundingBox.Back());
+
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Back());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Top(),    boundingBox.Front());
+        ::glVertex3f(boundingBox.Right(), boundingBox.Bottom(), boundingBox.Front());
+
+        ::glEnd();
+    }
+#endif /* _SHOW_CLIPBOX */
+}
+
+
+/*
+ * view::View3D::renderBBoxBackside
+ */
+void view::View3D::renderBBoxBackside(void) {
+    ::glDisable(GL_LIGHTING);
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ::glEnable(GL_DEPTH_TEST);
+    ::glEnable(GL_CULL_FACE);
+    ::glCullFace(GL_FRONT);
+    ::glEnable(GL_LINE_SMOOTH);
+    ::glLineWidth(1.25f);
+    ::glDisable(GL_TEXTURE_2D);
+    ::glPolygonMode(GL_BACK, GL_LINE);
+
+    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 160);
+    this->renderBBox();
+
+    //::glPolygonMode(GL_BACK, GL_FILL);
+    //::glDisable(GL_DEPTH_TEST);
+
+    //::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 16);
+    //this->renderBBox();
+
+    ::glCullFace(GL_BACK);
+}
+
+
+/*
+ * view::View3D::renderBBoxFrontside
+ */
+void view::View3D::renderBBoxFrontside(void) {
+    ::glDisable(GL_LIGHTING);
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ::glEnable(GL_DEPTH_TEST);
+    ::glDepthFunc(GL_LEQUAL);
+    ::glEnable(GL_CULL_FACE);
+    ::glCullFace(GL_BACK);
+    ::glEnable(GL_LINE_SMOOTH);
+    ::glLineWidth(1.75f);
+    ::glDisable(GL_TEXTURE_2D);
+    ::glPolygonMode(GL_FRONT, GL_LINE);
+
+    ::glColor4ub(this->bboxCol.R(), this->bboxCol.G(), this->bboxCol.B(), 255);
+    this->renderBBox();
+
+    ::glDepthFunc(GL_LESS);
+    ::glPolygonMode(GL_FRONT, GL_FILL);
+}
+
+
+/*
+ * view::View3D::renderLookAt
+ */
+void view::View3D::renderLookAt(void) {
+    const vislib::math::Cuboid<float>& boundingBox
+        = this->bboxs.WorldSpaceBBox();
+    vislib::math::Point<float, 3> minp(
+        vislib::math::Min(boundingBox.Left(), boundingBox.Right()),
+        vislib::math::Min(boundingBox.Bottom(), boundingBox.Top()),
+        vislib::math::Min(boundingBox.Back(), boundingBox.Front()));
+    vislib::math::Point<float, 3> maxp(
+        vislib::math::Max(boundingBox.Left(), boundingBox.Right()),
+        vislib::math::Max(boundingBox.Bottom(), boundingBox.Top()),
+        vislib::math::Max(boundingBox.Back(), boundingBox.Front()));
+    vislib::math::Point<float, 3> lap = this->cam.Parameters()->LookAt();
+    bool xin = true;
+    if (lap.X() < minp.X()) { lap.SetX(minp.X()); xin = false; }
+    else if (lap.X() > maxp.X()) { lap.SetX(maxp.X()); xin = false; }
+    bool yin = true;
+    if (lap.Y() < minp.Y()) { lap.SetY(minp.Y()); yin = false; }
+    else if (lap.Y() > maxp.Y()) { lap.SetY(maxp.Y()); yin = false; }
+    bool zin = true;
+    if (lap.Z() < minp.Z()) { lap.SetZ(minp.Z()); zin = false; }
+    else if (lap.Z() > maxp.Z()) { lap.SetZ(maxp.Z()); zin = false; }
+
+    ::glDisable(GL_LIGHTING);
+    ::glLineWidth(1.4f);
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ::glEnable(GL_DEPTH_TEST);
+
+    ::glBegin(GL_LINES);
+
+    ::glColor3ub(255, 0, 0);
+
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(maxp.X(), lap.Y(), lap.Z());
+    ::glColor3ub(192, 192, 192);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(minp.X(), lap.Y(), lap.Z());
+
+    ::glColor3ub(0, 255, 0);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), maxp.Y(), lap.Z());
+    ::glColor3ub(192, 192, 192);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), minp.Y(), lap.Z());
+
+    ::glColor3ub(0, 0, 255);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), lap.Y(), maxp.Z());
+    ::glColor3ub(192, 192, 192);
+    ::glVertex3f(lap.X(), lap.Y(), lap.Z());
+    ::glVertex3f(lap.X(), lap.Y(), minp.Z());
+
+    ::glEnd();
+
+    ::glEnable(GL_LIGHTING);
+}
+
+
+/*
+ * view::View3D::renderSoftCursor
+ */
+void view::View3D::renderSoftCursor(void) {
+    ::glMatrixMode(GL_PROJECTION);
+    ::glLoadIdentity();
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glLoadIdentity();
+
+    vislib::SmartPtr<vislib::graphics::CameraParameters> params = this->cam.Parameters();
+
+    const float cursorScale = 1.0f;
+
+    ::glTranslatef(-1.0f, -1.0f, 0.0f);
+    ::glScalef(2.0f / params->TileRect().Width(), 2.0f / params->TileRect().Height(), 1.0f);
+    ::glTranslatef(-params->TileRect().Left(), -params->TileRect().Bottom(), 0.0f);
+    ::glScalef(params->VirtualViewSize().Width() / this->camParams->VirtualViewSize().Width(),
+        params->VirtualViewSize().Height() / this->camParams->VirtualViewSize().Height(),
+        1.0f);
+    ::glTranslatef(this->cursor2d.X(), this->cursor2d.Y(), 0.0f);
+    ::glScalef(cursorScale * this->camParams->VirtualViewSize().Width() / params->VirtualViewSize().Width(),
+        - cursorScale * this->camParams->VirtualViewSize().Height() / params->VirtualViewSize().Height(),
+        1.0f);
+
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ::glEnable(GL_LINE_SMOOTH);
+    ::glLineWidth(1.5f);
+    ::glBindTexture(GL_TEXTURE_2D, 0);
+    ::glDisable(GL_TEXTURE_2D);
+    ::glDisable(GL_LIGHTING);
+    ::glDisable(GL_DEPTH_TEST);
+
+    ::glBegin(GL_TRIANGLE_FAN);
+    ::glColor3ub(255, 255, 255); ::glVertex2i(0, 0);
+    ::glColor3ub(245, 245, 245); ::glVertex2i(0, 17);
+    ::glColor3ub(238, 238, 238); ::glVertex2i(4, 13);
+    ::glColor3ub(211, 211, 211); ::glVertex2i(7, 18);
+    ::glVertex2i(9, 18);
+    ::glVertex2i(9, 16);
+    ::glColor3ub(234, 234, 234); ::glVertex2i(7, 12);
+    ::glColor3ub(226, 226, 226); ::glVertex2i(12, 12);
+    ::glEnd();
+    ::glBegin(GL_LINE_LOOP);
+    ::glColor3ub(0, 0, 0);
+    ::glVertex2i(0, 0);
+    ::glVertex2i(0, 17);
+    ::glVertex2i(4, 13);
+    ::glVertex2i(7, 18);
+    ::glVertex2i(9, 18);
+    ::glVertex2i(9, 16);
+    ::glVertex2i(7, 12);
+    ::glVertex2i(12, 12);
+    ::glEnd();
+
+    ::glDisable(GL_LINE_SMOOTH);
+    ::glDisable(GL_BLEND);
+}
+
+
+/*
+ * view::View3D::OnGetCamParams
+ */
+bool view::View3D::OnGetCamParams(CallCamParamSync& c) {
+    c.SetCamParams(this->cam.Parameters());
+    return true;
+}
+
+
+/*
+ * view::View3D::onStoreCamera
+ */
+bool view::View3D::onStoreCamera(param::ParamSlot& p) {
+    vislib::TStringSerialiser strser;
+    strser.ClearData();
+    this->camParams->Serialise(strser);
+    vislib::TString str(strser.GetString());
+    str.EscapeCharacters(_T('\\'), _T("\n\r\t"), _T("nrt"));
+    str.Append(_T("}"));
+    str.Prepend(_T("{"));
+    this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(str);
+
+    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+        "Camera parameters stored in \"%s\"",
+        this->cameraSettingsSlot.FullName().PeekBuffer());
+    return true;
+}
+
+
+/*
+ * view::View3D::onRestoreCamera
+ */
+bool view::View3D::onRestoreCamera(param::ParamSlot& p) {
+    vislib::TString str = this->cameraSettingsSlot.Param<param::StringParam>()->Value();
+    try {
+        if ((str[0] != _T('{')) || (str[str.Length() - 1] != _T('}'))) {
+            throw vislib::Exception("invalid string: surrounding brackets missing", __FILE__, __LINE__);
+        }
+        str = str.Substring(1, str.Length() - 2);
+        if (!str.UnescapeCharacters(_T('\\'), _T("\n\r\t"), _T("nrt"))) {
+            throw vislib::Exception("unrecognised escape sequence", __FILE__, __LINE__);
+        }
+        vislib::TStringSerialiser strser(str);
+        vislib::graphics::CameraParamsStore cps;
+        cps = *this->camParams.operator->();
+        cps.Deserialise(strser);
+        cps.SetVirtualViewSize(this->camParams->VirtualViewSize());
+        cps.SetTileRect(this->camParams->TileRect());
+        *this->camParams.operator->() = cps;
+        // now avoid resetting the camera by the initialisation
+        if (!this->bboxs.IsWorldSpaceBBoxValid()) {
+            this->bboxs.SetWorldSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        }
+
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            "Camera parameters restored from \"%s\"",
+            this->cameraSettingsSlot.FullName().PeekBuffer());
+    } catch(vislib::Exception ex) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Cannot restore camera parameters from \"%s\": %s (%s; %d)",
+            this->cameraSettingsSlot.FullName().PeekBuffer(),
+            ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+    } catch(...) {
+        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            "Cannot restore camera parameters from \"%s\": unexpected exception",
+            this->cameraSettingsSlot.FullName().PeekBuffer());
+    }
+    return true;
+}
+
+
+/*
+ * view::View3D::onResetView
+ */
+bool view::View3D::onResetView(param::ParamSlot& p) {
+    this->ResetView();
+    return true;
+}
+
+
+#ifdef ENABLE_KEYBOARD_VIEW_CONTROL
+
+/*
+ * view::View3D::viewKeyPressed
+ */
+bool view::View3D::viewKeyPressed(param::ParamSlot& p) {
+
+    if ((&p == &this->viewKeyRotLeftSlot)
+            || (&p == &this->viewKeyRotRightSlot)
+            || (&p == &this->viewKeyRotUpSlot)
+            || (&p == &this->viewKeyRotDownSlot)
+            || (&p == &this->viewKeyRollLeftSlot)
+            || (&p == &this->viewKeyRollRightSlot)) {
+        // rotate
+        float angle = vislib::math::AngleDeg2Rad(this->viewKeyAngleStepSlot.Param<param::FloatParam>()->Value());
+        vislib::math::Quaternion<float> q;
+        int ptIdx = this->viewKeyRotPointSlot.Param<param::EnumParam>()->Value();
+        // ptIdx == 0 : Position
+        // ptIdx == 1 : LookAt
+
+        if (&p == &this->viewKeyRotLeftSlot) {
+            q.Set(angle, this->camParams->Up());
+        } else if (&p == &this->viewKeyRotRightSlot) {
+            q.Set(-angle, this->camParams->Up());
+        } else if (&p == &this->viewKeyRotUpSlot) {
+            q.Set(angle, this->camParams->Right());
+        } else if (&p == &this->viewKeyRotDownSlot) {
+            q.Set(-angle, this->camParams->Right());
+        } else if (&p == &this->viewKeyRollLeftSlot) {
+            q.Set(angle, this->camParams->Front());
+        } else if (&p == &this->viewKeyRollRightSlot) {
+            q.Set(-angle, this->camParams->Front());
+        }
+
+        vislib::math::Vector<float, 3> pos(this->camParams->Position().PeekCoordinates());
+        vislib::math::Vector<float, 3> lat(this->camParams->LookAt().PeekCoordinates());
+        vislib::math::Vector<float, 3> up(this->camParams->Up());
+
+        if (ptIdx == 0) {
+            lat -= pos;
+            lat = q * lat;
+            up = q * up;
+            lat += pos;
+
+        } else if (ptIdx == 1) {
+            pos -= lat;
+            pos = q * pos;
+            up = q * up;
+            pos += lat;
+        }
+
+        this->camParams->SetView(
+            vislib::math::Point<float, 3>(pos.PeekComponents()),
+            vislib::math::Point<float, 3>(lat.PeekComponents()),
+            up);
+
+    } else if ((&p == &this->viewKeyZoomInSlot)
+            || (&p == &this->viewKeyZoomOutSlot)
+            || (&p == &this->viewKeyMoveLeftSlot)
+            || (&p == &this->viewKeyMoveRightSlot)
+            || (&p == &this->viewKeyMoveUpSlot)
+            || (&p == &this->viewKeyMoveDownSlot)) {
+        // move
+        float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
+        vislib::math::Vector<float, 3> move;
+
+        if (&p == &this->viewKeyZoomInSlot) {
+            move = this->camParams->Front();
+            move *= step;
+        } else if (&p == &this->viewKeyZoomOutSlot) {
+            move = this->camParams->Front();
+            move *= -step;
+        } else if (&p == &this->viewKeyMoveLeftSlot) {
+            move = this->camParams->Right();
+            move *= -step;
+        } else if (&p == &this->viewKeyMoveRightSlot) {
+            move = this->camParams->Right();
+            move *= step;
+        } else if (&p == &this->viewKeyMoveUpSlot) {
+            move = this->camParams->Up();
+            move *= step;
+        } else if (&p == &this->viewKeyMoveDownSlot) {
+            move = this->camParams->Up();
+            move *= -step;
+        }
+
+        this->camParams->SetView(
+            this->camParams->Position() + move,
+            this->camParams->LookAt() + move,
+            vislib::math::Vector<float, 3>(this->camParams->Up()));
+
+    }
+
+    return true;
+}
+
+#endif /* ENABLE_KEYBOARD_VIEW_CONTROL */
+
+
+/*
+ * view::View3D::onToggleButton
+ */
+bool view::View3D::onToggleButton(param::ParamSlot& p) {
+    param::BoolParam *bp = NULL;
+
+    if (&p == &this->toggleSoftCursorSlot) {
+        this->toggleSoftCurse();
+        return true;
+    } else if (&p == &this->enableMouseSelectionSlot) {
+        this->toggleMouseSelection = !this->toggleMouseSelection;
+        return true;
+    } else if (&p == &this->toggleBBoxSlot) {
+        bp = this->showBBox.Param<param::BoolParam>();
+    }
+
+    if (bp != NULL) {
+        bp->SetValue(!bp->Value());
+    }
+    return true;
+}
+
+
+/*
+ * view::View3D::renderViewCube
+ */
+void view::View3D::renderViewCube(void) {
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    ::glDisable(GL_LIGHTING);
+    ::glDisable(GL_TEXTURE_2D);
+    ::glEnable(GL_LINE_SMOOTH);
+    ::glLineWidth(1.5f);
+    ::glDisable(GL_DEPTH_TEST);
+
+    float pmf[16];
+    float vmf[16];
+    double pm[16];
+    double vm[16];
+    int vp[4], tvp[4];
+    this->cam.ProjectionMatrix(pmf);
+    this->cam.ViewMatrix(vmf);
+    for (unsigned int i = 0; i < 16; i++) {
+        pm[i] = static_cast<double>(pmf[i]);
+        vm[i] = static_cast<double>(vmf[i]);
+    }
+    const float viewportScale = 100.0f;
+    vp[0] = vp[1] = 0;
+    vp[2] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[0] * viewportScale);
+    vp[3] = static_cast<int>(this->cam.Parameters()->VirtualViewSize()[1] * viewportScale);
+    tvp[0] = static_cast<int>(this->cam.Parameters()->TileRect().Left() * viewportScale);
+    tvp[1] = static_cast<int>(this->cam.Parameters()->TileRect().Bottom() * viewportScale);
+    tvp[2] = static_cast<int>(this->cam.Parameters()->TileRect().Width() * viewportScale);
+    tvp[3] = static_cast<int>(this->cam.Parameters()->TileRect().Height() * viewportScale);
+
+    double wx, wy, wz, sx1, sy1, sz1, sx2, sy2, sz2;
+    double size = vislib::math::Min(static_cast<double>(vp[2]), static_cast<double>(vp[3])) * 0.1f;
+    wx = static_cast<double>(vp[2]) - size;
+    wy = static_cast<double>(vp[3]) - size;
+    wz = 0.5;
+    ::gluUnProject(wx, wy, wz, vm, pm, tvp, &sx1, &sy1, &sz1);
+    size *= 0.5;
+    wx = static_cast<double>(vp[2]) - size;
+    wy = static_cast<double>(vp[3]) - size;
+    wz = 0.5;
+    ::gluUnProject(wx, wy, wz, vm, pm, tvp, &sx2, &sy2, &sz2);
+    sx2 -= sx1;
+    sy2 -= sy1;
+    sz2 -= sz1;
+    size = vislib::math::Sqrt(sx2 * sx2 + sy2 * sy2 + sz2 * sz2);
+    size *= 0.5;
+
+    ::glTranslated(sx1, sy1, sz1);
+    ::glScaled(size, size, size);
+
+    ::glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    ::glEnable(GL_CULL_FACE);
+    ::glCullFace(GL_FRONT);
+
+    ::glBegin(GL_QUADS);
+    ::glColor4ub(255, 0, 0, 32);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1, -1,  1); ::glVertex3i( 1, -1, -1); ::glVertex3i( 1,  1, -1);
+    ::glColor4ub(255, 255, 255, 32);
+    ::glVertex3i(-1,  1,  1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1, -1,  1);
+    ::glColor4ub(0, 255, 0, 32);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1,  1, -1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1,  1,  1);
+    ::glColor4ub(255, 255, 255, 32);
+    ::glVertex3i( 1, -1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i(-1, -1, -1); ::glVertex3i( 1, -1, -1);
+    ::glColor4ub(0, 0, 255, 32);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i(-1,  1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i( 1, -1,  1);
+    ::glColor4ub(255, 255, 255, 32);
+    ::glVertex3i( 1,  1, -1); ::glVertex3i( 1, -1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1,  1, -1);
+    ::glEnd();
+
+    ::glCullFace(GL_BACK);
+    ::glBegin(GL_QUADS);
+    ::glColor4ub(255, 0, 0, 127);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1, -1,  1); ::glVertex3i( 1, -1, -1); ::glVertex3i( 1,  1, -1);
+    ::glColor4ub(255, 255, 255, 127);
+    ::glVertex3i(-1,  1,  1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1, -1,  1);
+    ::glColor4ub(0, 255, 0, 127);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i( 1,  1, -1); ::glVertex3i(-1,  1, -1); ::glVertex3i(-1,  1,  1);
+    ::glColor4ub(255, 255, 255, 127);
+    ::glVertex3i( 1, -1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i(-1, -1, -1); ::glVertex3i( 1, -1, -1);
+    ::glColor4ub(0, 0, 255, 127);
+    ::glVertex3i( 1,  1,  1); ::glVertex3i(-1,  1,  1); ::glVertex3i(-1, -1,  1); ::glVertex3i( 1, -1,  1);
+    ::glColor4ub(255, 255, 255, 127);
+    ::glVertex3i( 1,  1, -1); ::glVertex3i( 1, -1, -1); ::glVertex3i(-1, -1, -1); ::glVertex3i(-1,  1, -1);
+    ::glEnd();
+
+    ::glCullFace(GL_BACK);
+    ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    ::glBegin(GL_LINES);
+    ::glColor4ub(192, 192, 192, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(-1, 0, 0);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, -1, 0);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, 0, -1);
+    ::glColor4ub(255, 0, 0, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(1, 0, 0);
+    ::glColor4ub(0, 255, 0, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, 1, 0);
+    ::glColor4ub(0, 0, 255, 192);
+    ::glVertex3i(0, 0, 0); ::glVertex3i(0, 0, 1);
+    ::glEnd();
+}

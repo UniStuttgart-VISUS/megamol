@@ -1,0 +1,16 @@
+get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+include(${SELF_DIR}/MegaMolCore-target.cmake)
+
+set(MegaMolCore_LIBRARIES MegaMolCore)
+set(MegaMolCore_INCLUDE_DIRS "@cfg_MegaMolCore_INCLUDE_DIRS@")
+set(MegaMolCore_SHADERS_DIRS "@cfg_MegaMolCore_SHADERS_DIRS@")
+
+set(MegaMolCore_vislib_DIR "@cfg_MegaMolCore_vislib_DIR@")
+set(MegaMolCore_INSTALL_PREFIX "@cfg_MegaMolCore_INSTALL_PREFIX@")
+
+set(MegaMolCore_FOUND 1)
+
+get_property(self_target_location TARGET MegaMolCore PROPERTY LOCATION_${CMAKE_BUILD_TYPE})
+message(STATUS "Found MegaMolCore: ${self_target_location}")
+
