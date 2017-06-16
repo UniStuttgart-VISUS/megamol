@@ -86,11 +86,11 @@ if(WIN32)
   add_custom_command(TARGET core POST_BUILD        
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  
     "${EXPAT_INCLUDE_DIR}/../bin/expat.dll"	   
-    "${CMAKE_SOURCE_DIR}/bin")
+    "${CMAKE_SOURCE_DIR}/bin/expat.dll")
   add_custom_command(TARGET core POST_BUILD        
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  
     "${EXPAT_INCLUDE_DIR}/../bin/expatd.dll"	   
-    "${CMAKE_SOURCE_DIR}/bin")
+    "${CMAKE_SOURCE_DIR}/bin/expatd.dll")
 endif()
 
 endif(BUILD_CORE)
