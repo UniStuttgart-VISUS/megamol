@@ -99,10 +99,10 @@ void mmCoreMain(int argc, char *argv[]) {
 MEGAMOLCORE_API mmcBinaryVersionInfo* MEGAMOLCORE_CALL mmcGetVersionInfo(void) {
     mmcBinaryVersionInfo* rv = static_cast<mmcBinaryVersionInfo*>(malloc(sizeof(mmcBinaryVersionInfo)));
 
-    rv->VersionNumber[0] = MEGAMOL_CORE_MAJOR_VER;
-    rv->VersionNumber[1] = MEGAMOL_CORE_MINOR_VER;
-    rv->VersionNumber[2] = MEGAMOL_CORE_MAJOR_REV;
-    rv->VersionNumber[3] = MEGAMOL_CORE_MINOR_REV;
+    rv->VersionNumber[0] = (const char*)MEGAMOL_CORE_MAJOR_VER;
+    rv->VersionNumber[1] = (const char*)MEGAMOL_CORE_MINOR_VER;
+    rv->VersionNumber[2] = MEGAMOL_CORE_COMP_REV;
+
 
     rv->SystemType = MMC_OSYSTEM_UNKNOWN;
 #ifdef _WIN32

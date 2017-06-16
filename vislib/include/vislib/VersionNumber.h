@@ -32,6 +32,7 @@ namespace vislib {
         
         /** type for version number value */
         typedef unsigned short VersionInt;
+        typedef const char* VersionRev;
 
         /**
          * Ctor.
@@ -42,7 +43,7 @@ namespace vislib {
          * @param revisionNumber The revision number.
          */
         VersionNumber(VersionInt majorNumber = 0, VersionInt minorNumber = 0, 
-            VersionInt buildNumber = 0, VersionInt revisionNumber = 0);
+            VersionRev revisionNumber = 0);
 
         /** 
          * Copy ctor. 
@@ -94,21 +95,13 @@ namespace vislib {
             return this->minorNumber;
         }
         
-        /**
-         * Answer the build number.
-         *
-         * @return The build number.
-         */
-        inline VersionInt GetBuildNumber(void) const {
-            return this->buildNumber;
-        }
-        
+
         /**
          * Answer the revision number.
          *
          * @return The revision number.
          */
-        inline VersionInt GetRevisionNumber(void) const {
+        inline VersionRev GetRevisionNumber(void) const {
             return this->revisionNumber;
         }
 
@@ -157,10 +150,9 @@ namespace vislib {
          * @param revisionNumber The revision number.
          */
         inline void Set(VersionInt majorNumber, VersionInt minorNumber = 0, 
-                VersionInt buildNumber = 0, VersionInt revisionNumber = 0) {
+                        VersionRev revisionNumber = 0) {
             this->majorNumber = majorNumber;
             this->minorNumber = minorNumber;
-            this->buildNumber = buildNumber;
             this->revisionNumber = revisionNumber;
         }
 
@@ -221,7 +213,6 @@ namespace vislib {
         inline bool operator==(const VersionNumber& rhs) const {
             return (this->majorNumber == rhs.majorNumber) 
                 && (this->minorNumber == rhs.minorNumber)
-                && (this->buildNumber == rhs.buildNumber) 
                 && (this->revisionNumber == rhs.revisionNumber);
         }
 
@@ -249,9 +240,7 @@ namespace vislib {
                 || ((this->majorNumber == rhs.majorNumber)
                 && ((this->minorNumber < rhs.minorNumber) 
                 || ((this->minorNumber == rhs.minorNumber)
-                && ((this->buildNumber < rhs.buildNumber) 
-                || ((this->buildNumber == rhs.buildNumber)
-                && (this->revisionNumber < rhs.revisionNumber)))))));
+                && (this->revisionNumber < rhs.revisionNumber)))));
         }
 
         /**
@@ -295,11 +284,8 @@ namespace vislib {
         /** minor version number */
         VersionInt minorNumber;
 
-        /** build number */
-        VersionInt buildNumber;
-
         /** revision number */
-        VersionInt revisionNumber;
+        VersionRev revisionNumber;
 
     };
     

@@ -256,7 +256,7 @@ void vislib::graphics::AbstractWindow::onResized(const int width,
  * vislib::graphics::AbstractWindow::onWindowClassRegistering
  */
 void vislib::graphics::AbstractWindow::onWindowClassRegistering(
-        WNDCLASSEX& inOutWndClass) throw() {
+        WNDCLASSEXW& inOutWndClass) throw() {
     // Nothing to do.
 }
 #endif /* _WIN32 */

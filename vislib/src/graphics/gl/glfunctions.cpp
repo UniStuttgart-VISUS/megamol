@@ -175,7 +175,7 @@ bool vislib::graphics::gl::EnableVSync(bool enable) {
  * vislib::graphics::gl::GLVersion
  */
 const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
-    static VersionNumber number(0, 0, 0, 0);
+    static VersionNumber number(0, 0, 0);
     if (number.GetMajorVersionNumber() == 0) {
         // fetch version string
         vislib::StringA verStr(reinterpret_cast<const char*>(
@@ -196,7 +196,7 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
             verStr = verStr.Substring(pos + 1);
         } else {
             // error fallback
-            number.Set(1, 0, 0, 0);
+            number.Set(1, 0, 0);
             return number;
         }
 
@@ -213,7 +213,7 @@ const vislib::VersionNumber& vislib::graphics::gl::GLVersion(void) {
             minor = CharTraitsA::ParseInt(verStr);
         }
 
-        number.Set(major, minor, release);
+        number.Set(major, minor, (const char*)release);
 
     }
     return number;

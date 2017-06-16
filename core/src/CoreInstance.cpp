@@ -2035,7 +2035,7 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
                 vislib::sys::WriteLineToFile<char>(outfile,
-                        W2A(param->Parameter()->ValueString().PeekBuffer()));
+                        param->Parameter()->ValueString().PeekBuffer());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
@@ -2049,7 +2049,7 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char *outFilename) {
                 WriteLineToFile(outfile, "\" value=\"");
 #ifdef WIN32
                 vislib::sys::WriteLineToFile<char>(outfile,
-                        W2A(param->Parameter()->ValueString().PeekBuffer()));
+                        param->Parameter()->ValueString().PeekBuffer());
 #else
                 // TODO This does not work in windows
                 // Here we would need W2A(param->Parameter()->ValueString().PeekBuffer()),
@@ -2915,7 +2915,7 @@ void megamol::core::CoreInstance::registerQuickstart(const vislib::TString& fron
         vislib::TString typeName;
         errcode = extKey.GetValue(_T(""), typeName);
         if (errcode != ERROR_SUCCESS) {
-            typeName.Format(_T("MegaMol.%d.%d%s"), MEGAMOL_PRODUCT_MAJOR_VER, MEGAMOL_PRODUCT_MINOR_VER, fnext.PeekBuffer());
+            typeName.Format(_T("MegaMol.%d.%d%s"), MEGAMOL_VERSION_MAJOR, MEGAMOL_VERSION_MINOR, fnext.PeekBuffer());
             errcode = extKey.SetValue(_T(""), typeName);
             if (errcode != ERROR_SUCCESS) throw vislib::sys::SystemException(errcode, __FILE__, __LINE__);
             errcode = extKey.GetValue(_T(""), typeName);

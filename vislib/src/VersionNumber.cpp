@@ -14,10 +14,9 @@
  * vislib::VersionNumber::VersionNumber
  */
 vislib::VersionNumber::VersionNumber(VersionInt majorNumber, 
-        VersionInt minorNumber, VersionInt buildNumber, 
-        VersionInt revisionNumber) 
+        VersionInt minorNumber, VersionRev revisionNumber) 
         : majorNumber(majorNumber), minorNumber(minorNumber), 
-        buildNumber(buildNumber), revisionNumber(revisionNumber) {
+        revisionNumber(revisionNumber) {
 }
 
 
@@ -25,7 +24,7 @@ vislib::VersionNumber::VersionNumber(VersionInt majorNumber,
  * vislib::VersionNumber::VersionNumber
  */
 vislib::VersionNumber::VersionNumber(const VersionNumber& rhs) 
-        : majorNumber(0), minorNumber(0), buildNumber(0), revisionNumber(0) {
+        : majorNumber(0), minorNumber(0), revisionNumber(0) {
     *this = rhs;
 }
 
@@ -34,7 +33,7 @@ vislib::VersionNumber::VersionNumber(const VersionNumber& rhs)
  * vislib::VersionNumber::VersionNumber
  */
 vislib::VersionNumber::VersionNumber(const char *ver) 
-        : majorNumber(0), minorNumber(0), buildNumber(0), revisionNumber(0) {
+        : majorNumber(0), minorNumber(0), revisionNumber(0) {
     this->Parse(ver);
 }
 
@@ -43,7 +42,7 @@ vislib::VersionNumber::VersionNumber(const char *ver)
  * vislib::VersionNumber::VersionNumber
  */
 vislib::VersionNumber::VersionNumber(const wchar_t *ver) 
-        : majorNumber(0), minorNumber(0), buildNumber(0), revisionNumber(0) {
+        : majorNumber(0), minorNumber(0), revisionNumber(0) {
     this->Parse(ver);
 }
 
@@ -65,7 +64,6 @@ unsigned int vislib::VersionNumber::Parse(const char *verStr) {
 
     this->majorNumber = 0;
     this->minorNumber = 0;
-    this->buildNumber = 0;
     this->revisionNumber = 0;
 
     for (int state = 1; state > 0; verStr++) {
@@ -84,8 +82,7 @@ unsigned int vislib::VersionNumber::Parse(const char *verStr) {
                     switch (retval) {
                         case 0: this->majorNumber = value; break;
                         case 1: this->minorNumber = value; break;
-                        case 2: this->buildNumber = value; break;
-                        case 3: this->revisionNumber = value; break;
+                        case 3: this->revisionNumber = (const char*)value; break;
                     }
                     retval++;
                     if (retval > 3) {
@@ -122,7 +119,6 @@ unsigned int vislib::VersionNumber::Parse(const wchar_t *verStr) {
 
     this->majorNumber = 0;
     this->minorNumber = 0;
-    this->buildNumber = 0;
     this->revisionNumber = 0;
 
     for (int state = 1; state > 0; verStr++) {
@@ -141,8 +137,7 @@ unsigned int vislib::VersionNumber::Parse(const wchar_t *verStr) {
                     switch (retval) {
                         case 0: this->majorNumber = value; break;
                         case 1: this->minorNumber = value; break;
-                        case 2: this->buildNumber = value; break;
-                        case 3: this->revisionNumber = value; break;
+                        case 3: this->revisionNumber = (const char*)value; break;
                     }
                     retval++;
                     if (retval > 3) {
@@ -177,7 +172,6 @@ vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
     if (num == 0) {
         num = 1;
         if (this->minorNumber > 0) num = 2;
-        if (this->buildNumber > 0) num = 3;
         if (this->revisionNumber > 0) num = 4;
     }
     if (num == 1) {
@@ -186,14 +180,13 @@ vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
         tmp.Format("%u.%u", static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
-        tmp.Format("%u.%u.%u", static_cast<unsigned int>(this->majorNumber), 
-            static_cast<unsigned int>(this->minorNumber),
-            static_cast<unsigned int>(this->buildNumber));
+        tmp.Format("%u.%u", static_cast<unsigned int>(this->majorNumber),
+            static_cast<unsigned int>(this->minorNumber));
+
     } else if (num >= 4) {
-        tmp.Format("%u.%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
+        tmp.Format("%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
             static_cast<unsigned int>(this->minorNumber), 
-            static_cast<unsigned int>(this->buildNumber), 
-            static_cast<unsigned int>(this->revisionNumber));
+            this->revisionNumber);
     }
     return tmp;
 }
@@ -208,7 +201,6 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
     if (num == 0) {
         num = 1;
         if (this->minorNumber > 0) num = 2;
-        if (this->buildNumber > 0) num = 3;
         if (this->revisionNumber > 0) num = 4;
     }
     if (num == 1) {
@@ -218,14 +210,12 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
             static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
         tmp.Format(L"%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
-            static_cast<unsigned int>(this->minorNumber), 
-            static_cast<unsigned int>(this->buildNumber));
+            static_cast<unsigned int>(this->minorNumber));
     } else if (num >= 4) {
         tmp.Format(L"%u.%u.%u.%u", 
             static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber),
-            static_cast<unsigned int>(this->buildNumber),
-            static_cast<unsigned int>(this->revisionNumber));
+            this->revisionNumber);
     }
     return tmp;
 #else /* _WIN32 */
@@ -241,7 +231,6 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
 vislib::VersionNumber& vislib::VersionNumber::operator=(const VersionNumber& rhs) {
     this->majorNumber = rhs.majorNumber;
     this->minorNumber = rhs.minorNumber;
-    this->buildNumber = rhs.buildNumber;
     this->revisionNumber = rhs.revisionNumber;
     return *this;
 }

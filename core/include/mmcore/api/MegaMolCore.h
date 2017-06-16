@@ -68,7 +68,7 @@ typedef enum _mmcHArchEnum : int {
 #ifndef MMCBINARYVERSIONINFO_DEFINED
 #define MMCBINARYVERSIONINFO_DEFINED 1
 typedef struct _mmcBinaryVersionInfo_t {
-    unsigned short VersionNumber[4];
+    const char *VersionNumber[3];
     mmcOSys SystemType;
     mmcHArch HardwareArchitecture;
     unsigned int Flags;

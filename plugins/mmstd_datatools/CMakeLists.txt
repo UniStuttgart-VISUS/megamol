@@ -3,32 +3,14 @@
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-cmake_minimum_required(VERSION 2.8.12)
+option(BUILD_MMSTD_DATATOOLS_PLUGIN "Option to build mmstd_datatools" ON)
 
+if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 project(mmstd_datatools)
 
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "")
-	message(STATUS "You should always specify a build type! Defaulting build type to 'Release'")
-	set(CMAKE_BUILD_TYPE Release)
-endif()
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 
-# search for 3rd party libs
-set(MegaMolCore_search_hints)
-if (MegaMolCore_DIR)
-	string(TOLOWER "${CMAKE_BUILD_TYPE}" lower_build_type)
-	list(APPEND MegaMolCore_search_hints "${MegaMolCore_DIR}" "${MegaMolCore_DIR}/build.${lower_build_type}" "${MegaMolCore_DIR}/share/cmake/MegaMolCore")
-	message(STATUS "Looking for MegaMolCore with hints: ${MegaMolCore_search_hints}")
-endif()
-find_package(MegaMolCore REQUIRED HINTS ${MegaMolCore_search_hints})
-message(STATUS "MegaMolCore suggests vislib at: ${MegaMolCore_vislib_DIR}")
-message(STATUS "MegaMolCore suggests install prefix: ${MegaMolCore_INSTALL_PREFIX}")
-if (USE_MEGAMOLCORE_INSTALL_PREFIX)
-	set(CMAKE_INSTALL_PREFIX ${MegaMolCore_INSTALL_PREFIX})
-	message(STATUS "Using MegaMolCore install prefix")
-endif()
-find_package(vislib REQUIRED HINTS ${MegaMolCore_vislib_DIR})
 find_package(OpenMP)
 
 set(LIBS ${vislib_LIBRARIES} ${MegaMolCore_LIBRARIES})
@@ -133,3 +115,4 @@ if (${register_build_trees})
 	export(PACKAGE ${CMAKE_PROJECT_NAME})
 endif()
 
+endif(BUILD_MMSTD_DATATOOLS_PLUGIN)

@@ -156,17 +156,16 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
         bool MegaMolCore_compatibility_checked = false;
         bool vislib_compatibility_checked = false;
         vislib::VersionNumber mmcoreVer(MEGAMOL_CORE_VERSION);
-        vislib::VersionNumber vislibVer(VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD);
+        vislib::VersionNumber vislibVer(VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION);
 
         for (unsigned int li = 0; li < comp_info->libs_cnt; li++) {
             LibraryVersionInfo &lvi = comp_info->libs[li];
             if (vislib::StringA("MegaMolCore").Equals(lvi.name)) {
                 MegaMolCore_compatibility_checked = true;
                 vislib::VersionNumber v(
-                    (lvi.version_len > 0) ? lvi.version[0] : 0,
-                    (lvi.version_len > 1) ? lvi.version[1] : 0,
-                    (lvi.version_len > 2) ? lvi.version[2] : 0,
-                    (lvi.version_len > 3) ? lvi.version[3] : 0);
+                    (lvi.version_len > 0) ? static_cast<int>(lvi.version[0]) : 0,
+                    (lvi.version_len > 1) ? static_cast<int>(lvi.version[1]) : 0,
+                    (lvi.version_len > 2) ? (const char*)lvi.version[2] : 0);
                 if (v != mmcoreVer) {
                     coreInst.Log().WriteError("Plugin %s seems incompatible with MegaMolCore: core \"%s\" != plugin \"%s\" ",
                         vislib::StringA(path.c_str()).PeekBuffer(),
@@ -178,10 +177,9 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
             } else if (vislib::StringA("vislib").Equals(lvi.name)) {
                 vislib_compatibility_checked = true;
                 vislib::VersionNumber v(
-                    (lvi.version_len > 0) ? lvi.version[0] : 0,
-                    (lvi.version_len > 1) ? lvi.version[1] : 0,
-                    (lvi.version_len > 2) ? lvi.version[2] : 0,
-                    (lvi.version_len > 3) ? lvi.version[3] : 0);
+                    (lvi.version_len > 0) ? static_cast<int>(lvi.version[0]) : 0,
+                    (lvi.version_len > 1) ? static_cast<int>(lvi.version[1]) : 0,
+                    (lvi.version_len > 2) ? (const char*)lvi.version[2] : 0);
                 if (v != vislibVer) {
                     coreInst.Log().WriteError("Plugin %s seems incompatible with vislib: vislib \"%s\" != plugin \"%s\" ",
                         vislib::StringA(path.c_str()).PeekBuffer(),

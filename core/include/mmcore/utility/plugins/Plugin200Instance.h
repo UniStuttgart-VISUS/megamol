@@ -31,7 +31,7 @@ namespace plugins {
         unsigned short version_len;
 
         /** The version number elements, starting with the most significant element */
-        unsigned short *version;
+        const char* version;
 
         /** Additional flags specifying options */
         unsigned int flags;

@@ -32,16 +32,16 @@ PluginManager::collection_type Plugin100Instance::ContinueLoad(
     const mmplgCompatibilityValues *compVal = static_cast<const mmplgCompatibilityValues*>(mmplgCoreCompatibilityValue());
     // test core version
     if ((compVal->size != sizeof(mmplgCompatibilityValues)) || (compVal->mmcoreRev != MEGAMOL_CORE_COMP_REV)) {
-        SIZE_T rev = compVal->mmcoreRev;
+        const char* rev = compVal->mmcoreRev;
         vislib::StringA msg;
-        msg.Format("core version mismatch (%d from Core; %d from Plugin)", static_cast<int>(MEGAMOL_CORE_COMP_REV), static_cast<int>(rev));
+        msg.Format("core version mismatch (%d from Core; %d from Plugin)", MEGAMOL_CORE_COMP_REV, rev);
         throw vislib::Exception(msg.PeekBuffer(), __FILE__, __LINE__);
     }
     // test vislib version (which is currently broken!)
     if ((compVal->size != sizeof(mmplgCompatibilityValues)) || ((compVal->vislibRev != 0) && (compVal->vislibRev != VISLIB_VERSION_REVISION))) {
-        SIZE_T rev = compVal->vislibRev;
+        const char* rev = compVal->vislibRev;
         vislib::StringA msg;
-        msg.Format("vislib version mismatch (%d from Core; %d from Plugin)", static_cast<int>(VISLIB_VERSION_REVISION), static_cast<int>(rev));
+        msg.Format("vislib version mismatch (%d from Core; %d from Plugin)", VISLIB_VERSION_REVISION, rev);
         throw vislib::Exception(msg.PeekBuffer(), __FILE__, __LINE__);
     }
 
