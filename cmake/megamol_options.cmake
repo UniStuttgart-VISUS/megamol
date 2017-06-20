@@ -1,6 +1,9 @@
 # compiler options
 if(WIN32)
-  add_definitions(-Wall -pedantic -ansi -fPIC)
+  # avoid problematic min/max defines of windows.h
+  add_definitions(-DNOMINMAX)
+  # options
+  add_definitions(-W3 -pedantic -ansi -fPIC)
 elseif(UNIX)
   # processor word size detection
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -16,7 +19,6 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
 else()
 	add_definitions(-std=c++11)
 endif()
-
 
 # Set CXX flags for debug mode
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -ggdb")

@@ -18,7 +18,6 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 # GLOBAL DLL DEFINITIONS
 if(WIN32)
   add_definitions(-DGL_LOAD_DLL)
-  add_definitions(-DMEGAMOLCORE_EXPORTS)
 endif()
 
 # VERSIONS
@@ -32,19 +31,29 @@ include(megamol_options)
 # vislib
 ###############################
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
+
 ###############################
 # core
 ###############################
 add_subdirectory(${MEGAMOL_CORE_DIR})
-
 
 ###############################
 # console
 ###############################
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
+# add directory structure for visual studio
+if(WIN32)
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+  set_target_properties(glload PROPERTIES FOLDER external)
+  set_target_properties(vislib PROPERTIES FOLDER base)
+  set_target_properties(core PROPERTIES FOLDER base)
+  set_target_properties(console PROPERTIES FOLDER base)
+endif()
 
 ###############################
 # Plugins
 ###############################
-#add_subdirectory(plugins)
+add_subdirectory(plugins)
+
+

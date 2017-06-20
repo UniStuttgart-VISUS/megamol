@@ -62,12 +62,12 @@ namespace plugins {
         char *nm = new char[n.length() + 1];
         info.name = nm;
         ::memcpy(nm, n.c_str(), n.length() + 1);
+        char *vn = new char[4];
+        vn[0] = (char)v1;
+        vn[1] = (char)v2;
+        vn[2] = (char)v3;
+        info.version = vn;
         info.version_len = 4;
-        info.version = new unsigned short[4];
-        info.version[0] = static_cast<unsigned short>(v1);
-        info.version[1] = static_cast<unsigned short>(v2);
-        info.version[2] = static_cast<unsigned short>(v3);
-        info.version[3] = static_cast<unsigned short>(v4);
         info.flags = flags;
     }
 
