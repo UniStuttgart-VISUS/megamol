@@ -1,7 +1,8 @@
+find_package(Git REQUIRED)
 
 # https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake
 execute_process(COMMAND
-  "git" describe --match=NeVeRmAtCh --always --abbrev=12 --dirty
+  ${GIT_EXECUTABLE} describe --match=NeVeRmAtCh --always --abbrev=12 --dirty
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   OUTPUT_VARIABLE GIT_HASH
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -26,3 +27,5 @@ add_definitions(-DMEGAMOL_VERSION_MINOR=${MEGAMOL_MINOR})
 add_definitions(-DMEGAMOL_VERSION_PATCH=${MEGAMOL_PATCH})
 add_definitions(-DMEGAMOL_CORE_COMP_REV="${GIT_HASH}")
 
+string(TIMESTAMP YEAR "%Y")
+add_definitions(-DMEGAMOL_VERSION_YEAR=${YEAR})

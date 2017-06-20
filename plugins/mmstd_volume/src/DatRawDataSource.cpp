@@ -79,7 +79,7 @@ bool volume::DatRawDataSource::filenameChanged(core::param::ParamSlot& slot) {
    
     // try to load the header (0 means loading failed)
 #ifdef WIN32
-    if (datRaw_readHeader(W2A(this->datFilenameSlot.Param<core::param::FilePathParam>()->Value()), &this->header, NULL) == 0) {
+    if (datRaw_readHeader(this->datFilenameSlot.Param<core::param::FilePathParam>()->Value(), &this->header, NULL) == 0) {
         return false;
     }
 #else

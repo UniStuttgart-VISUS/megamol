@@ -163,10 +163,12 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
             if (vislib::StringA("MegaMolCore").Equals(lvi.name)) {
                 MegaMolCore_compatibility_checked = true;
                 vislib::VersionNumber v(
-                    (lvi.version_len > 0) ? static_cast<int>(lvi.version[0]) : 0,
-                    (lvi.version_len > 1) ? static_cast<int>(lvi.version[1]) : 0,
+                    (lvi.version_len > 0) ? reinterpret_cast<int>(lvi.version[0]) : 0,
+                    (lvi.version_len > 1) ? reinterpret_cast<int>(lvi.version[1]) : 0,
                     (lvi.version_len > 2) ? (const char*)lvi.version[2] : 0);
-                if (v != mmcoreVer) {
+                if ((v.GetMajorVersionNumber() != mmcoreVer.GetMajorVersionNumber())
+                    && (v.GetMinorVersionNumber() != mmcoreVer.GetMinorVersionNumber())
+                    && (v.GetRevisionNumber() != mmcoreVer.GetRevisionNumber())) {
                     coreInst.Log().WriteError("Plugin %s seems incompatible with MegaMolCore: core \"%s\" != plugin \"%s\" ",
                         vislib::StringA(path.c_str()).PeekBuffer(),
                         mmcoreVer.ToStringA().PeekBuffer(),
@@ -177,10 +179,12 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
             } else if (vislib::StringA("vislib").Equals(lvi.name)) {
                 vislib_compatibility_checked = true;
                 vislib::VersionNumber v(
-                    (lvi.version_len > 0) ? static_cast<int>(lvi.version[0]) : 0,
-                    (lvi.version_len > 1) ? static_cast<int>(lvi.version[1]) : 0,
+                    (lvi.version_len > 0) ? reinterpret_cast<int>(lvi.version[0]) : 0,
+                    (lvi.version_len > 1) ? reinterpret_cast<int>(lvi.version[1]) : 0,
                     (lvi.version_len > 2) ? (const char*)lvi.version[2] : 0);
-                if (v != vislibVer) {
+                if ((v.GetMajorVersionNumber() != vislibVer.GetMajorVersionNumber())
+                    && (v.GetMinorVersionNumber() != vislibVer.GetMinorVersionNumber())
+                    && (v.GetRevisionNumber() != vislibVer.GetRevisionNumber())) {
                     coreInst.Log().WriteError("Plugin %s seems incompatible with vislib: vislib \"%s\" != plugin \"%s\" ",
                         vislib::StringA(path.c_str()).PeekBuffer(),
                         vislibVer.ToStringA().PeekBuffer(),

@@ -53,21 +53,20 @@ namespace plugins {
      * @param v4 The version number component 4
      * @param flags The build flags
      */
-    template<class T1, class T2, class T3, class T4>
+    template<class T1, class T2, class T3>
     inline void SetLibraryVersionInfo(LibraryVersionInfo &info,
             const char* name, 
-            T1 v1, T2 v2, T3 v3, T4 v4, 
+            T1 v1, T2 v2, T3 v3,
             unsigned int flags = MEGAMOLCORE_PLUGIN200UTIL_FLAGS_NONE) {
         std::string n(name);
         char *nm = new char[n.length() + 1];
         info.name = nm;
         ::memcpy(nm, n.c_str(), n.length() + 1);
-        info.version_len = 4;
-        info.version = new unsigned short[4];
-        info.version[0] = static_cast<unsigned short>(v1);
-        info.version[1] = static_cast<unsigned short>(v2);
-        info.version[2] = static_cast<unsigned short>(v3);
-        info.version[3] = static_cast<unsigned short>(v4);
+        info.version.resize(3);
+        info.version[0] = reinterpret_cast<const char*>(v1);
+        info.version[1] = reinterpret_cast<const char*>(v2);
+        info.version[2] = v3;
+        info.version_len = 3;
         info.flags = flags;
     }
 
@@ -85,9 +84,8 @@ namespace plugins {
     if (ci == nullptr) return; \
     for (unsigned int i = 0; i < ci->libs_cnt; i++) { \
         delete[] ci->libs[i].name; \
-        delete[] ci->libs[i].version; \
+        ci->libs[i].version.clear(); \
         ci->libs[i].name = nullptr; \
-        ci->libs[i].version = nullptr; \
         ci->libs[i].version_len = 0; \
     } \
     delete[] ci->libs; \
