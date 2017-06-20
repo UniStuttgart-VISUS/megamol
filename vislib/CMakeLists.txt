@@ -46,8 +46,11 @@ if(BUILD_VISLIB)
     "src/graphics/gl/GlutMouseInteractionAdapter.cpp"
     )
   
-    include_directories("include" "src")
+  include_directories("include" "src")
 
+  source_group("Header Files" FILES "include/*.h src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
+  
   # Target definition
   add_library(vislib STATIC ${header_files} ${source_files})
   target_link_libraries(vislib PRIVATE ${LIBS})
@@ -66,5 +69,5 @@ if(BUILD_VISLIB)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(TARGETS vislib DESTINATION "lib" EXPORT vislib-target)
 
-
+  
 endif(BUILD_VISLIB)

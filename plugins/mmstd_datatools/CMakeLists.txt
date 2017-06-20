@@ -8,7 +8,7 @@ option(BUILD_MMSTD_DATATOOLS_PLUGIN "Option to build mmstd_datatools" ON)
 if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   project(mmstd_datatools)
 
-  set(MMSTD_DATATOOLS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE "" INTERNAL)
+  set(MMSTD_DATATOOLS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories")
 
   find_package(OpenMP)
 
@@ -29,6 +29,9 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
 
   include_directories("include" "src" "3rd/nanoflann")
 
+  source_group("Header Files" FILES "include/*.h src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
+  
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${header_files} ${source_files})
   # Set target naming conventions for different build types

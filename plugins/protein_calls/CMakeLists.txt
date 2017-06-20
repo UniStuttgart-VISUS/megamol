@@ -8,7 +8,7 @@ option(BUILD_PROTEIN_CALLS_PLUGIN "Option to build protein_calls" ON)
 if(BUILD_PROTEIN_CALLS_PLUGIN)
   project(protein_calls)
   
-  set(PROTEIN_CALLS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE "" INTERNAL)
+  set(PROTEIN_CALLS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories")
 
   set(LIBS vislib core glload)
   include_directories(${VISLIB_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS})
@@ -28,6 +28,9 @@ if(BUILD_PROTEIN_CALLS_PLUGIN)
   file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
   include_directories(BEFORE "include" "src")
+
+  source_group("Header Files" FILES "include/*.h src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${header_files} ${source_files})

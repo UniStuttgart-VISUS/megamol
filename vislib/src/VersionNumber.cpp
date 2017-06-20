@@ -172,7 +172,7 @@ vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
     if (num == 0) {
         num = 1;
         if (this->minorNumber > 0) num = 2;
-        if (this->revisionNumber > 0) num = 4;
+        if (this->revisionNumber != "") num = 3;
     }
     if (num == 1) {
         tmp.Format("%u", static_cast<unsigned int>(this->majorNumber));
@@ -180,11 +180,7 @@ vislib::StringA vislib::VersionNumber::ToStringA(unsigned int num) const {
         tmp.Format("%u.%u", static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
-        tmp.Format("%u.%u", static_cast<unsigned int>(this->majorNumber),
-            static_cast<unsigned int>(this->minorNumber));
-
-    } else if (num >= 4) {
-        tmp.Format("%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
+        tmp.Format("%u.%u.%s", static_cast<unsigned int>(this->majorNumber),
             static_cast<unsigned int>(this->minorNumber), 
             this->revisionNumber);
     }
@@ -201,7 +197,7 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
     if (num == 0) {
         num = 1;
         if (this->minorNumber > 0) num = 2;
-        if (this->revisionNumber > 0) num = 4;
+        if (this->revisionNumber > 0) num = 3;
     }
     if (num == 1) {
         tmp.Format(L"%u", static_cast<unsigned int>(this->majorNumber));
@@ -209,10 +205,7 @@ vislib::StringW vislib::VersionNumber::ToStringW(unsigned int num) const {
         tmp.Format(L"%u.%u", static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber));
     } else if (num == 3) {
-        tmp.Format(L"%u.%u.%u", static_cast<unsigned int>(this->majorNumber),
-            static_cast<unsigned int>(this->minorNumber));
-    } else if (num >= 4) {
-        tmp.Format(L"%u.%u.%u.%u", 
+        tmp.Format(L"%u.%u.%s", 
             static_cast<unsigned int>(this->majorNumber), 
             static_cast<unsigned int>(this->minorNumber),
             this->revisionNumber);

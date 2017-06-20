@@ -8,7 +8,7 @@ option(BUILD_MMSTD_TRISOUP_PLUGIN "Option to build mmstd_trisoup" ON)
 if(BUILD_MMSTD_TRISOUP_PLUGIN)
   project(mmstd_trisoup)
 
-  set(MMSTD_TRISOUP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE "" INTERNAL)
+  set(MMSTD_TRISOUP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories")
   
   set(LIBS vislib core glload)
   include_directories(${VISLIB_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS})
@@ -30,6 +30,10 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
 
   include_directories("include" "src")
 
+  source_group("Header Files" FILES "include/*.h src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
+  source_group("Shaders" FILES "Shaders/*")
+  
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${header_files} ${source_files})
   # Set target naming conventions for different build types
