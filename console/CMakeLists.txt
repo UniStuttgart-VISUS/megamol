@@ -7,6 +7,7 @@ option(BUILD_CONSOLE "build console" ON)
 if(BUILD_CONSOLE)
 
   project(console)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   if(UNIX)
     option(USE_LIBUNWIND "use libunwind" ON)
@@ -73,6 +74,9 @@ if(BUILD_CONSOLE)
     install(FILES ${AntTweakBar_LIBRARIES} DESTINATION "lib")
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkAntTweakBar.cmake.in ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake @ONLY)
     install(SCRIPT ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake)
+    if(WIN32)
+      install(FILES ${AntTweakBar_DLL} DESTINATION "bin")
+    endif()
   endif()
 
 
