@@ -9,7 +9,7 @@
 #
 
 # setup of the lib name to search for
-if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set(lib_NAME "AntTweakBar64")
 else()
 	set(lib_NAME "AntTweakBar")
@@ -44,7 +44,7 @@ foreach(SEARCH_ITERATION RANGE 0 ${AntTweakBar_SEARCH_DEPTH})
 	endforeach()
 
 	if(WIN32)
-		find_library(AntTweakBar_DLL
+		find_file(AntTweakBar_DLL
 			NAMES "${lib_NAME}.dll"
 			HINTS "${AntTweakBar_DIR}/lib" ${lib_search_hints}
 			PATHS ${lib_search_paths}
