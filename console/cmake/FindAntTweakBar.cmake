@@ -9,8 +9,11 @@
 #
 
 # setup of the lib name to search for
-set(lib_NAME "AntTweakBar")
-
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(lib_NAME "AntTweakBar64")
+else()
+	set(lib_NAME "AntTweakBar")
+endif()
 
 # setup of system search paths
 set(lib_search_paths /lib /usr/lib /usr/local/lib)
@@ -18,19 +21,10 @@ set(inc_search_paths /usr/include /usr/local/include)
 
 
 # setup of additional search hint paths
+set(AntTweakBar_DIR "AntTweakBar_DIR-NOTFOUND" CACHE PATH "AntTweakBar directory hint")
 set(hint_paths)
-if (AntTweakBar_DIR)
-	get_filename_component(my_dir "${AntTweakBar_DIR}" ABSOLUTE)
-	list(APPEND hint_paths ${my_dir})
-endif()
-# traverse file system up to the (second-)highest level
-get_filename_component(my_dir "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
-while (${my_dir} STRGREATER "/")
-	if (NOT ${my_dir} STREQUAL "/home")
-		list(APPEND hint_paths "${my_dir}")
-	endif()
-	get_filename_component(my_dir "${my_dir}/.." ABSOLUTE)
-endwhile()
+get_filename_component(my_dir "${AntTweakBar_DIR}" ABSOLUTE)
+list(APPEND hint_paths ${my_dir})
 
 
 # now perform the actual search
@@ -49,6 +43,14 @@ foreach(SEARCH_ITERATION RANGE 0 ${AntTweakBar_SEARCH_DEPTH})
 		list(APPEND inc_search_hints "${hint_path}/include")
 	endforeach()
 
+	if(WIN32)
+		find_file(AntTweakBar_DLL
+			NAMES "${lib_NAME}.dll"
+			HINTS "${AntTweakBar_DIR}/lib" ${lib_search_hints}
+			PATHS ${lib_search_paths}
+			)
+	endif()
+
 	find_library(AntTweakBar_LIBRARY
 		NAMES ${lib_NAME}
 		HINTS "${AntTweakBar_DIR}/lib" ${lib_search_hints}
@@ -56,7 +58,7 @@ foreach(SEARCH_ITERATION RANGE 0 ${AntTweakBar_SEARCH_DEPTH})
 		)
 	find_path(AntTweakBar_INCLUDE_DIR
 		NAMES AntTweakBar.h
-		HINTS "${AntTweakBar_LIBRARY}/../include" ${inc_search_hints}
+		HINTS "${AntTweakBar_DIR}/include" ${inc_search_hints}
 		PATHS ${inc_search_paths}
 		)
 
@@ -89,8 +91,17 @@ endforeach()
 
 # finalizing search
 if (AntTweakBar_LIBRARY AND AntTweakBar_INCLUDE_DIR)
-	set(AntTweakBar_LIBRARIES ${AntTweakBar_LIBRARY})
-	set(AntTweakBar_FOUND TRUE)
+	if(WIN32)
+		if(AntTweakBar_DLL)
+			set(AntTweakBar_LIBRARIES ${AntTweakBar_LIBRARY})
+			set(AntTweakBar_FOUND TRUE)
+		else()
+			set(AntTweakBar_FOUND FALSE)
+		endif()
+	else()
+		set(AntTweakBar_LIBRARIES ${AntTweakBar_LIBRARY})
+		set(AntTweakBar_FOUND TRUE)
+	endif()
 else ()
 	set(AntTweakBar_FOUND FALSE)
 endif ()
@@ -105,7 +116,7 @@ else ()
 	if (AntTweakBar_FIND_REQUIRED)
 		#message( "library: ${AntTweakBar_LIBRARIES}" )
 		#message( "include: ${AntTweakBar_INCLUDE_DIR}" )
-		message(FATAL_ERROR "Could not find AntTweakBar library")
+		message(FATAL_ERROR "Could not find AntTweakBar library. Please provide at least the AntTweakBar_DIR.")
 	endif ()
 endif ()
 
