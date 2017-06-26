@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MegaMol type="project" version="1.0">
+
+	<view name="mdao2view" viewmod="View3D1">
+		<module class="ClipPlane" name="clipplane">
+			<param name="colour" value="#80808000" />
+		</module>
+
+		<module class="MDAO2Renderer" name="mdao1" confpos="{X=250,Y=296}" />
+		<module class="MMPLDDataSource" name="data" confpos="{X=815,Y=150}">
+			<param name="filename" value="/home/jstaib/Entwicklung/MegaMol/data/cool_random.mmpld" /> 
+		</module>
+		<module class="View3D" name="View3D1" confpos="{X=17,Y=151}">
+			<param name="showBBox" value="false" />
+		</module>
+		<module class="LinearTransferFunction" name="LinearTransferFunction1" confpos="{X=739,Y=395}">
+			<param name="mincolour" value="#ffffff88" />
+			<param name="maxcolour" value="#ff000088" />
+		</module> 
+		
+		<module class="ScreenShooter" name="srcs1" />
+
+		<call class="MultiParticleDataCall" from="mdao1::getdata" to="data::getdata" />
+
+		<call class="CallRender3D" from="View3D1::rendering" to="mdao1::rendering" />
+		<call class="CallClipPlane" from="mdao1::getclipplane" to="clipplane::getclipplane" />
+		<call class="CallGetTransferFunction" from="mdao1::gettransferfunction" to="LinearTransferFunction1::gettransferfunction" /> 
+		
+	</view>
+</MegaMol>
