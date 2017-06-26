@@ -90,7 +90,7 @@ mmplgGetPluginCompatibilityInfo(
     ci->libs = new LibraryVersionInfo[2];
 
     SetLibraryVersionInfo(ci->libs[0], "MegaMolCore",
-        MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_MAJOR_REV, MEGAMOL_CORE_MINOR_REV, 0
+        MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_COMP_REV, 0
 #if defined(DEBUG) || defined(_DEBUG)
         | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
 #endif
@@ -100,7 +100,7 @@ mmplgGetPluginCompatibilityInfo(
         );
 
     SetLibraryVersionInfo(ci->libs[1], "vislib",
-        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, VISLIB_VERSION_BUILD, 0
+        VISLIB_VERSION_MAJOR, VISLIB_VERSION_MINOR, VISLIB_VERSION_REVISION, 0
 #if defined(DEBUG) || defined(_DEBUG)
         | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
 #endif

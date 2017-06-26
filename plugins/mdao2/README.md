@@ -19,17 +19,6 @@ The general workflow of the algorithm is:
   * Evaluate ambient occlusion by tracing 3 approximate cones, tightly arranged around the normal in the voxelized scene, gathering the densities of the spheres
   * Weight the local lighting with the ambient occlusion term
 
-## Building
-
-Remember to git clone recursive. Otherwise, you need to fetch the submodules as well.
-
-To run this plugin, you need:
-* Linux or Windows
-* An installation of MegaMol (at least version 1.1), see [here](https://svn.vis.uni-stuttgart.de/trac/megamol/wiki/HowToBuild11) how to build one
-* OpenGL, at least version 3.3
-
-The build process is straight forward and described (for another plugin) on the [MegaMol building page](https://svn.vis.uni-stuttgart.de/trac/megamol/wiki/HowToBuild11), secton "Plugins".
-
 ## Parameters
 The module MDAO2Renderer exposes the following parameters. The values in brackets indicate the default values:
 * `enable_lighting` (`false`): Shade the spheres using local Phong lighting. If turned off, a constant color is used
