@@ -16,8 +16,8 @@
 **/
 enum
 {
-	glx_LOAD_FAILED = 0, ///<Failed to load entirely.
-	glx_LOAD_SUCCEEDED, ///<At least partially succeded.
+	glx_LOAD_FAILED = 0,
+	glx_LOAD_SUCCEEDED,
 };
 
 #ifdef __cplusplus
