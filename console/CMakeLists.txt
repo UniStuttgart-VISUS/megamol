@@ -27,11 +27,12 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
   
-  set(LIBS vislib core glload ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES})
+  find_package(glfw3 3.2 REQUIRED)
+
+  set(LIBS vislib core glload glfw ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES})
   include_directories(${VISLIB_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR})
 
-  find_package(glfw3 3.2 REQUIRED)
-  list(APPEND LIBS glfw)
+ 
 
   option(USE_ANTTWEAKBAR "use AntTweakBar" ON)
   if(USE_ANTTWEAKBAR)
@@ -63,7 +64,9 @@ if(BUILD_CONSOLE)
   add_executable(console ${header_files} ${source_files})
   add_dependencies(console vislib glload core)
   # Set target naming conventions for different build types
-  set_target_properties(console PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_target_properties(console 
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    OUTPUT_NAME ${PROJECT_NAME})
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(console PRIVATE ${LIBS})
 
