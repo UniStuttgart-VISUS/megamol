@@ -33,4 +33,5 @@ MegaMol succeeds [​MolCloud](http://www.visus.uni-stuttgart.de/institut/person
     2. Autogenerate the GUID
 4. Remove instawiz.pl and Readme.md
 5. Add the folder to your local git
-6. Implement the content of your plugin
+6. Add libraries/dependencies to `CMakeLists.txt`
+7. Implement the content of your plugin

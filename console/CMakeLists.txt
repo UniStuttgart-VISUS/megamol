@@ -61,6 +61,7 @@ if(BUILD_CONSOLE)
 
   # main target
   add_executable(console ${header_files} ${source_files})
+  add_dependencies(console vislib glload core)
   # Set target naming conventions for different build types
   set_target_properties(console PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
   # Dependent projects only need to link against the core.so itself.

@@ -23,6 +23,7 @@ if(BUILD_VISLIB)
   add_subdirectory(glload)
   include_directories("${CMAKE_CURRENT_SOURCE_DIR}/glload/include")
 
+
   # Build vislib
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -53,6 +54,7 @@ if(BUILD_VISLIB)
   
   # Target definition
   add_library(vislib STATIC ${header_files} ${source_files})
+  add_dependencies(vislib glload)
   target_link_libraries(vislib PRIVATE ${LIBS})
   
 

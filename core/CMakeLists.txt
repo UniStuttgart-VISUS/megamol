@@ -72,6 +72,7 @@ if(BUILD_CORE)
   
   # Target definition
   add_library(core SHARED ${header_files} ${source_files})
+  add_dependencies(core vislib glload)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
