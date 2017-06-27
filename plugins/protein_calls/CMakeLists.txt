@@ -48,6 +48,8 @@ if(BUILD_PROTEIN_CALLS_PLUGIN)
 
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
+    source_group("Header Files" FILES "include/*.h src/*.h")
+    source_group("Source Files" FILES "src/*.cpp")
   endif()
 
 endif(BUILD_PROTEIN_CALLS_PLUGIN)

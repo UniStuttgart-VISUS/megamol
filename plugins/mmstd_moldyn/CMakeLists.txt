@@ -50,6 +50,9 @@ if(BUILD_MMSTD_MOLDYN_PLUGIN)
 
   if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
+    source_group("Header Files" FILES "include/*.h src/*.h")
+    source_group("Source Files" FILES "src/*.cpp")
+    source_group("Shaders" FILES "Shaders/*")
   endif()
   
 endif(BUILD_MMSTD_MOLDYN_PLUGIN)
