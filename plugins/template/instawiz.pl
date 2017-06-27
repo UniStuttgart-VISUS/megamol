@@ -172,5 +172,3 @@ print("  * delete instawiz.pl\n");
 print("  * Commit changes to git\n");
 print("  * Start implementing\n");
 print("\n");
-
-return 0;
