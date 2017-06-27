@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# MegaMol™ Plugin Instantiation Wizard
+# MegaMolï¿½ Plugin Instantiation Wizard
 # Copyright 2010-2015 by MegaMol Team
 # Alle Rechte vorbehalten.
 #
@@ -96,17 +96,6 @@ print "MegaMol(TM) Plugin Instantiation Wizard\n";
 print "Copyright 2010-2015 by MegaMol Team\n";
 print "Alle Rechte vorbehalten.\n\n";
 
-# anti-idiot test
-open SOLUTION, "MegaMolPlugin.sln" or autoEuthanize($ERR_ALREADY_INSTA);
-while(<SOLUTION>) {
-    if (/$SRCGUID/) {
-        $ok = 1;
-        last;
-    }
-}
-close SOLUTION;
-autoEuthanize($ERR_ALREADY_INSTA) unless $ok == 1;
-
 # ask for parameters
 #  - filename
 if ($HAVE_CWD) {
@@ -170,36 +159,8 @@ $temp = slurpFile($fn);
 $temp =~ s/MEGAMOLPLUGIN/\U$filename\E/g;
 writeFile($fn, $temp);
 
-#  - VS solution and project files
-$fn = "$filename.sln";
-renameFile("MegaMolPlugin.sln", $fn);
-$temp = slurpFile($fn);
-$temp =~ s/MegaMolPlugin/$filename/g;
-$temp =~ s/$SRCGUID/$guid/g;
-writeFile($fn, $temp);
-
-$fn = "$filename.vcxproj";
-renameFile("MegaMolPlugin.vcxproj", $fn);
-$temp = slurpFile($fn);
-$temp =~ s/$SRCGUID/$guid/g;
-$temp =~ s/MEGAMOLPLUGIN_EXPORTS/\U$filename\E_EXPORTS/g;
-$temp =~ s/Template/$filename/g;
-$temp =~ s/MegaMolPlugin/$filename/g;
-writeFile($fn, $temp);
-
-$fn = "$filename.vcxproj.filters";
-renameFile("MegaMolPlugin.vcxproj.filters", $fn);
-$temp = slurpFile($fn);
-$temp =~ s/MegaMolPlugin/$filename/g;
-writeFile($fn, $temp);
-
 #  - Cmake files
 $fn = "CMakeLists.txt";
-$temp = slurpFile($fn);
-$temp =~ s/MegaMolPlugin/$filename/g;
-writeFile($fn, $temp);
-
-$fn = "cmake_build.sh";
 $temp = slurpFile($fn);
 $temp =~ s/MegaMolPlugin/$filename/g;
 writeFile($fn, $temp);
@@ -208,8 +169,8 @@ writeFile($fn, $temp);
 print("\n== Instantiation complete ==\n\n");
 print("You should do now:\n");
 print("  * delete instawiz.pl\n");
-print("  * Call svn to reflect the file renames\n");
-print("  * Update ignore settings\n");
+print("  * Commit changes to git\n");
+print("  * Start implementing\n");
 print("\n");
 
 return 0;
