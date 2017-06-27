@@ -251,36 +251,6 @@ static char *datRaw_makeupper(char *s, char delim)
     return *tmp == '\0' ? NULL : tmp;
 }
 
-//static void datRaw_getLine(char **buf, int maxBuf, char *lineBuf, int maxLineBuf)
-//{
-//    char *p = *buf;
-//    int c = 0;
-//
-//    while (c < maxLineBuf - 1 && c < maxBuf && *p && (*p != '\n') && (*p != '\r')) {
-//        lineBuf[c++] = *p;
-//        p++;
-//    }
-//    if (c != maxBuf) {
-//        /* proceed to next line */
-//        if (*p == '\n') {
-//            /* unix */
-//            p++; 
-//        }
-//        else if (*p == '\r') {
-//            /* dos or mac */
-//            p++;
-//            if (*p == '\n') {
-//                /* dos */
-//                p++;
-//            }
-//        }
-//        *buf = p;
-//    }
-//    else {
-//        *buf = NULL;
-//    }
-//    lineBuf[c] = '\0';
-//}
 
 static void datRaw_isolateLine(char **buf, const int maxBuf,
         char **outEndPos, char *outEndChar) {
@@ -1003,7 +973,7 @@ static int datRaw_parseHeaderFile(
                 DatRawOptionalField* pOptionalField = optionalFields[n];
                 int elementSize = datRaw_getFormatSize(pOptionalField->format);
                 const char* formatString = datRaw_getFormatString(pOptionalField->format);
-                // sanity checks
+                /* sanity checks */
                 if (!pOptionalField->name ||
                     elementSize <= 0 ||
                     pOptionalField->numComponents <= 0)
@@ -2188,7 +2158,7 @@ int datRaw_writeHeaderFile(
             int elementSize = datRaw_getFormatSize(pOptionalField->format);
             const char* formatString = datRaw_getFormatString(pOptionalField->format);
             int numElements = 0;
-            // sanity checks
+            /* sanity checks */
             if (!pOptionalField->name ||
                 elementSize <= 0 ||
                 pOptionalField->numComponents <= 0 ||
