@@ -85,9 +85,12 @@ if(BUILD_CORE)
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
-  install(TARGETS core RUNTIME DESTINATION "bin")
-  install(TARGETS core ARCHIVE DESTINATION "lib")
-
+  if(WIN32)
+    install(TARGETS core RUNTIME DESTINATION "bin")
+    install(TARGETS core ARCHIVE DESTINATION "lib")
+  else()
+    install(TARGETS core DESTINATION "lib" EXPORT core-target)
+  endif()
 
 endif(BUILD_CORE)
 

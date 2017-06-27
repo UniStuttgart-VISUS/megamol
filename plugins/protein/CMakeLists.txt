@@ -3,9 +3,9 @@
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(PROTEIN_PLUGIN "Option to build protein" ON)
+option(BUILD_PROTEIN_PLUGIN "Option to build protein" ON)
 
-if(PROTEIN_PLUGIN)
+if(BUILD_PROTEIN_PLUGIN)
   project(protein)
 
   set(PROTEIN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories")
@@ -45,14 +45,16 @@ if(PROTEIN_PLUGIN)
   
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
+  if(WIN32)
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
   install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-
-  if(WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-    source_group("Header Files" FILES "include/*.h src/*.h")
-    source_group("Source Files" FILES "src/*.cpp")
-    source_group("Shaders" FILES "Shaders/*")
+  else()
+    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
-endif(PROTEIN_PLUGIN)
+  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
+  source_group("Header Files" FILES "include/*.h src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
+  source_group("Shaders" FILES "Shaders/*")
+
+endif(BUILD_PROTEIN_PLUGIN)

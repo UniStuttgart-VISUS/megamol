@@ -43,13 +43,15 @@ if(BUILD_PROTEIN_CALLS_PLUGIN)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-  install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-
   if(WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-    source_group("Header Files" FILES "include/*.h src/*.h")
-    source_group("Source Files" FILES "src/*.cpp")
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+  else()
+    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
+
+  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
+  source_group("Header Files" FILES "include/*.h src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
 
 endif(BUILD_PROTEIN_CALLS_PLUGIN)

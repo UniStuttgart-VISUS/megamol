@@ -51,6 +51,9 @@ target_link_libraries(glload PRIVATE ${OPENGL_LIBRARIES})
 if(WIN32)
   target_compile_definitions(glload PRIVATE GL_LOAD_DLL_EXPORT)
   install(TARGETS glload RUNTIME DESTINATION "bin")
+  install(TARGETS glload ARCHIVE DESTINATION "lib")
+else()
+  install(TARGETS glload DESTINATION "lib" EXPORT glload-target)
 endif()
 
-install(TARGETS glload ARCHIVE DESTINATION "lib")
+
