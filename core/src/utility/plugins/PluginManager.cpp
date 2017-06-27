@@ -179,8 +179,8 @@ PluginManager::collection_type PluginManager::ContinueLoad200(
             } else if (vislib::StringA("vislib").Equals(lvi.name)) {
                 vislib_compatibility_checked = true;
                 vislib::VersionNumber v(
-                    (lvi.version_len > 0) ? static_cast<int>(reinterpret_cast<int>(lvi.version[0])) : 0,
-                    (lvi.version_len > 1) ? static_cast<int>(reinterpret_cast<int>(lvi.version[1])) : 0,
+                    (lvi.version_len > 0) ? static_cast<int>(reinterpret_cast<intptr_t>(lvi.version[0])) : 0,
+                    (lvi.version_len > 1) ? static_cast<int>(reinterpret_cast<intptr_t>(lvi.version[1])) : 0,
                     (lvi.version_len > 2) ? (const char*)lvi.version[2] : 0);
                 if ((v.GetMajorVersionNumber() != vislibVer.GetMajorVersionNumber())
                     && (v.GetMinorVersionNumber() != vislibVer.GetMinorVersionNumber())
