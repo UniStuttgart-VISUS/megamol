@@ -6,7 +6,7 @@
 option(BUILD_CONSOLE "build console" ON)
 if(BUILD_CONSOLE)
 
-  project(mmconsole)
+  project(${CONSOLE_NAME})
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   if(UNIX)

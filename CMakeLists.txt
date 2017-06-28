@@ -40,6 +40,7 @@ add_subdirectory(${MEGAMOL_CORE_DIR})
 ###############################
 # console
 ###############################
+set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
 # add directory structure for visual studio
@@ -53,7 +54,7 @@ if(WIN32)
     set_target_properties(core PROPERTIES FOLDER base)
   endif()
   if(BUILD_CONSOLE)
-    set_target_properties(console PROPERTIES FOLDER base)
+    set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
   endif()
 endif()
 
