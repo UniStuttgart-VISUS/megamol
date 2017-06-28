@@ -1,14 +1,13 @@
 #
-# MegaMol™ Console Front End
-# Copyright 2015, by MegaMol TEAM
+# MegaMol™ ATB Linking
+# Copyright 2017, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-cmake_minimum_required(VERSION 2.8.12)
 
 set(TARGET_DIR "@CMAKE_INSTALL_PREFIX@")
 
-set(LINK_FILE "${TARGET_DIR}/lib/megamol/libAntTweakBar.so.1")
-set(TO_FILE "${TARGET_DIR}/lib/megamol/libAntTweakBar.so")
+set(LINK_FILE "${TARGET_DIR}/lib/libAntTweakBar.so.1")
+set(TO_FILE "${TARGET_DIR}/lib/libAntTweakBar.so")
 if(NOT EXISTS "${LINK_FILE}")
 	execute_process(COMMAND ln -s "${TO_FILE}" "${LINK_FILE}")
 	message(STATUS "Install symbolic link: ${LINK_FILE}")
