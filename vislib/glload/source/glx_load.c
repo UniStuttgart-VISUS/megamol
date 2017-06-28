@@ -663,8 +663,6 @@ static void ClearExtensionVars()
 	glXext_SGI_video_sync = 0;
 	glXext_SUN_get_transparent_index = 0;
 
-// We need to undef glXGetProcAddressARB, because _int_glx_exts.h DEFINEs glXGetProcAddressARB to 
-// _funcptr_glXGetProcAddressARB. We would effectively lose the glx.h implementation here.
 #if !defined(__APPLE__) && !defined(__sgi) && !defined(__sun) 
 #undef glXGetProcAddressARB
 	_funcptr_glXGetProcAddressARB = glXGetProcAddressARB;

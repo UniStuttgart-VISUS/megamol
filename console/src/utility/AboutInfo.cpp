@@ -186,7 +186,7 @@ vislib::StringA megamol::console::utility::AboutInfo::coreVersionString(bool wit
     ::mmcBinaryVersionInfo *vi = ::mmcGetVersionInfo();
     if (vi == nullptr) return nullptr;
 
-    ver.Set((unsigned short)vi->VersionNumber[0], (unsigned short)vi->VersionNumber[1], vi->VersionNumber[2]);
+    ver.Set(static_cast<unsigned short>(reinterpret_cast<intptr_t>(vi->VersionNumber[0])), static_cast<unsigned short>(reinterpret_cast<intptr_t>(vi->VersionNumber[1])), vi->VersionNumber[2]);
     switch (vi->HardwareArchitecture) {
         case MMC_HARCH_I86: wordSize = 32; break;
         case MMC_HARCH_X64: wordSize = 64; break;

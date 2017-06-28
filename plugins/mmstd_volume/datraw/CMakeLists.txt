@@ -20,9 +20,6 @@ add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
 # Dependent projects only need to link against the core.so itself.
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
-install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
 
-if(WIN32)
-  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER external)
-endif()
-
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER external)

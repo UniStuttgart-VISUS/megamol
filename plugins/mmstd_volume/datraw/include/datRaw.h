@@ -186,7 +186,7 @@ typedef struct {
     int   *resolution;
     float *sliceDist; /* For tetrahedral grids, resolution entries per 
                          dimension are concatenated. */
-	float *origin; // addition for the scivis contest
+  float *origin; /* addition for the scivis contest */
     /* only for tetrahedral grids */
     int    numVertices;
     int    numTetrahedra;

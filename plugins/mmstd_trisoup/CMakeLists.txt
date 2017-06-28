@@ -36,6 +36,7 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
   
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${header_files} ${source_files})
+  add_dependencies(${PROJECT_NAME} vislib glload core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
@@ -47,14 +48,16 @@ if(BUILD_MMSTD_TRISOUP_PLUGIN)
   
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
-  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-  install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-
   if(WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-    source_group("Header Files" FILES "include/*.h src/*.h")
-    source_group("Source Files" FILES "src/*.cpp")
-    source_group("Shaders" FILES "Shaders/*")
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+  else()
+    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
+
+  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
+  source_group("Header Files" FILES "include/*.h src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
+  source_group("Shaders" FILES "Shaders/*")
 
 endif(BUILD_MMSTD_TRISOUP_PLUGIN)

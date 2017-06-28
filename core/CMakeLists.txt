@@ -60,7 +60,7 @@ if(BUILD_CORE)
     "src/vismol2/Mol20DataSource.cpp"
     "src/vismol2/Mol20Renderer.cpp"
     "src/vismol2/Mol2Data.cpp"
-    )
+    )    
   # shader files for installation
   file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
@@ -72,12 +72,13 @@ if(BUILD_CORE)
   
   # Target definition
   add_library(core SHARED ${header_files} ${source_files})
+  add_dependencies(core vislib glload)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
 
+  target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
     set_target_properties(core PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
 
@@ -85,9 +86,12 @@ if(BUILD_CORE)
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
-  install(TARGETS core RUNTIME DESTINATION "bin")
-  install(TARGETS core ARCHIVE DESTINATION "lib")
-
+  if(WIN32)
+    install(TARGETS core RUNTIME DESTINATION "bin")
+    install(TARGETS core ARCHIVE DESTINATION "lib")
+  else()
+    install(TARGETS core DESTINATION "lib" EXPORT core-target)
+  endif()
 
 endif(BUILD_CORE)
 

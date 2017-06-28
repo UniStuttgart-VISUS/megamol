@@ -9,10 +9,10 @@
 #
 
 # setup of the lib name to search for
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-	set(lib_NAME "AntTweakBar64")
+if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND WIN32)
+  set(lib_NAME "AntTweakBar64")
 else()
-	set(lib_NAME "AntTweakBar")
+  set(lib_NAME "${CMAKE_SHARED_LIBRARY_PREFIX}AntTweakBar${CMAKE_SHARED_LIBRARY_SUFFIX}")
 endif()
 
 # setup of system search paths
