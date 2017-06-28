@@ -26,6 +26,12 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   # shader files for installation
   file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+  
+  if(UNIX)
+    list(REMOVE_ITEM source_files
+      "src/ErosionField.cpp"
+      )
+  endif()
 
   include_directories("include" "src" "3rd/nanoflann")
 

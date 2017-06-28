@@ -6,7 +6,7 @@
 option(BUILD_CONSOLE "build console" ON)
 if(BUILD_CONSOLE)
 
-  project(console)
+  project(mmconsole)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   if(UNIX)
@@ -61,17 +61,17 @@ if(BUILD_CONSOLE)
   source_group("Source Files" FILES "src/*.cpp")
 
   # main target
-  add_executable(console ${header_files} ${source_files})
-  add_dependencies(console vislib glload core)
+  add_executable(${PROJECT_NAME} ${header_files} ${source_files})
+  add_dependencies(${PROJECT_NAME} vislib glload core)
   # Set target naming conventions for different build types
-  set_target_properties(console 
+  set_target_properties(${PROJECT_NAME} 
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
   # Dependent projects only need to link against the core.so itself.
-  target_link_libraries(console PRIVATE ${LIBS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
   # install target
-  install(TARGETS console DESTINATION "bin")
+  install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
   if (AntTweakBar_FOUND)
     install(FILES ${AntTweakBar_LIBRARIES} DESTINATION "lib")
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/linkAntTweakBar.cmake.in ${CMAKE_BINARY_DIR}/linkAntTweakBar.cmake @ONLY)
@@ -85,7 +85,7 @@ if(BUILD_CONSOLE)
   # install target
   set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-  set(cfg_MEGAMOLCON "${CMAKE_INSTALLS_PREFIX}/bin/MegaMolCon")
+  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
     set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")

@@ -60,7 +60,7 @@ if(BUILD_CORE)
     "src/vismol2/Mol20DataSource.cpp"
     "src/vismol2/Mol20Renderer.cpp"
     "src/vismol2/Mol2Data.cpp"
-    )
+    )    
   # shader files for installation
   file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
@@ -77,8 +77,8 @@ if(BUILD_CORE)
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
 
+  target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
     set_target_properties(core PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
   endif()
 
