@@ -27,12 +27,16 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
   
-  find_package(glfw3 3.2 REQUIRED)
+  find_package(glfw3 3.2 MODULE)
+  if(NOT GLFW3_FOUND)
+    find_package(glfw3 3.2 CONFIG REQUIRED)
+    set(GLFW3_LIBRARIES glfw)
+    # include dirs are included in the imported library (add_library(glfw STATIC IMPORTED))
+    set(GLFW3_INCLUDE_DIRS "")
+  endif()
 
-  set(LIBS vislib core glload glfw ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES})
-  include_directories(${VISLIB_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR})
-
- 
+  set(LIBS vislib core glload ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES})
+  include_directories(${VISLIB_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR})
 
   option(USE_ANTTWEAKBAR "use AntTweakBar" ON)
   if(USE_ANTTWEAKBAR)

@@ -3,7 +3,7 @@ if(WIN32)
   # avoid problematic min/max defines of windows.h
   add_definitions(-DNOMINMAX)
   # options
-  add_definitions(-W3 -pedantic -ansi -fPIC)
+  add_definitions(-W3)
 elseif(UNIX)
   # processor word size detection
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -21,9 +21,10 @@ else()
 endif()
 
 # Set CXX flags for debug mode
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -ggdb")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0")
 if(UNIX)
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
 endif()
 
