@@ -16,8 +16,8 @@ else()
 endif()
 
 # setup of system search paths
-set(lib_search_paths /lib /usr/lib /usr/local/lib)
-set(inc_search_paths /usr/include /usr/local/include)
+set(lib_search_paths /lib /usr/lib /usr/local/lib $ENV{ANTTWEAKBAR_ROOT}/lib)
+set(inc_search_paths /usr/include /usr/local/include $ENV{ANTTWEAKBAR_ROOT}/include)
 
 
 # setup of additional search hint paths
@@ -116,7 +116,7 @@ else ()
 	if (AntTweakBar_FIND_REQUIRED)
 		#message( "library: ${AntTweakBar_LIBRARIES}" )
 		#message( "include: ${AntTweakBar_INCLUDE_DIR}" )
-		message(FATAL_ERROR "Could not find AntTweakBar library. Please provide at least the AntTweakBar_DIR.")
+		message(FATAL_ERROR "Could not find AntTweakBar library. Please provide at least the AntTweakBar_DIR or set the environmental variable ANTTWEAKBAR_ROOT. ")
 	endif ()
 endif ()
 
