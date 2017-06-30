@@ -70,7 +70,6 @@
     <None Include="cmake\ConfigLocal.cmake.in">
       <Filter>Config and Make Files\cmake</Filter>
     </None>
-    <None Include="packages.config" />
     <None Include="Shaders\pc.btf">
       <Filter>Shader Files</Filter>
     </None>
