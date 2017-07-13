@@ -469,7 +469,7 @@ bool VoluMetricJob::getLineExtentCallback(core::Call &caller) {
 }
 
 
-VISLIB_FORCEINLINE bool VoluMetricJob::areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2) {
+bool VoluMetricJob::areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2) {
 
     if (SubJobDataList[sjdIdx1]->Result.surfaces[surfIdx1].globalID
             != SubJobDataList[sjdIdx2]->Result.surfaces[surfIdx2].globalID) {
