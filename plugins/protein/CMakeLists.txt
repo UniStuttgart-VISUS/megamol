@@ -16,9 +16,12 @@ if(BUILD_PROTEIN_PLUGIN)
 
   # Build MegaMol Plugin
   # public header files for installation
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
+
   if(UNIX)
     list(REMOVE_ITEM source_files
       "src/dllmain.cpp"
@@ -29,12 +32,8 @@ if(BUILD_PROTEIN_PLUGIN)
 
   include_directories("include" "src")
 
-  source_group("Header Files" FILES "include/*.h src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
-  source_group("Shaders" FILES "Shaders/*")
-
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${header_files} ${source_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib glload core mmstd_trisoup protein_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
@@ -54,8 +53,9 @@ if(BUILD_PROTEIN_PLUGIN)
   endif()
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-  source_group("Header Files" FILES "include/*.h src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
-  source_group("Shaders" FILES "Shaders/*")
+  source_group("Public Header Files" FILES ${public_header_files})
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
+  source_group("Shaders" FILES ${shader_files})
 
 endif(BUILD_PROTEIN_PLUGIN)

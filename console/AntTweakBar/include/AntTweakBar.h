@@ -69,7 +69,7 @@
 #   define TW_API TW_IMPORT_API
 #   if defined(_MSC_VER) && !defined(TW_NO_LIB_PRAGMA)
 #       ifdef _WIN64
-#           pragma comment(lib, "AntTweakBar64")
+#           pragma comment(lib, "AntTweakBar")
 #       else
 #           pragma comment(lib, "AntTweakBar")
 #       endif

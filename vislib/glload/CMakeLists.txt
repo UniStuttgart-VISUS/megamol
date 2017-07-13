@@ -47,6 +47,7 @@ add_library (glload SHARED
  )
 # Add OpenGL library
 target_link_libraries(glload PRIVATE ${OPENGL_LIBRARIES})
+set_target_properties(glload PROPERTIES FOLDER external)
 
 if(WIN32)
   target_compile_definitions(glload PRIVATE GL_LOAD_DLL_EXPORT)

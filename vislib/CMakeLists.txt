@@ -49,14 +49,15 @@ if(BUILD_VISLIB)
   
   include_directories("include" "src")
 
-  source_group("Header Files" FILES "include/*.h src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
-  
   # Target definition
   add_library(vislib STATIC ${header_files} ${source_files})
   add_dependencies(vislib glload)
   target_link_libraries(vislib PRIVATE ${LIBS})
   
+  set_target_properties(vislib PROPERTIES FOLDER base)
+  source_group("Public Header Files" FILES ${header_files})
+  source_group("Header Files" FILES "src/*.h")
+  source_group("Source Files" FILES "src/*.cpp")
 
   # build tests if variable VISLIB_BUILD_TESTS is defined
   option(BUILD_VISLIB_TESTS "Build vislib tests" OFF)

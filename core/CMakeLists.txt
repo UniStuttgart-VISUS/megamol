@@ -18,7 +18,7 @@ if(BUILD_CORE)
 
   find_package(Threads REQUIRED)
   
-  option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" OFF)
+  option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
     add_subdirectory(zlib)
     add_subdirectory(libpng)
@@ -72,10 +72,11 @@ if(BUILD_CORE)
 
   # Build MegaMol Core
   # public header files for installation
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
-  set(header_files ${header_files} "include/mmcore/api/MegaMolCore.std.h")
+  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
   list(REMOVE_ITEM source_files
     "src/moldyn/D3D11SimpleSphereRenderer.cpp"
     "src/special/AbstractStereoDisplay.cpp"
@@ -94,9 +95,10 @@ if(BUILD_CORE)
 
   include_directories(BEFORE "include" "src")
 
-  source_group("Header Files" FILES "include/*.h src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
-  source_group("Shaders" FILES "Shaders/*")
+  source_group("Public Header Files" FILES ${public_header_files} ${header_files} ${shader_files} ${source_files})
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
+  source_group("Shaders" FILES ${shader_files})
   
   # Target definition
   add_library(core SHARED ${header_files} ${source_files})
@@ -105,6 +107,7 @@ if(BUILD_CORE)
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
 
+  set_target_properties(core PROPERTIES FOLDER base)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   if(WIN32)
     set_target_properties(core PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")

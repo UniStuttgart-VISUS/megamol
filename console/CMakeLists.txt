@@ -27,12 +27,18 @@ if(BUILD_CONSOLE)
     set(VERSION_LIBRARY "Version.lib")
   endif()
   
-  find_package(glfw3 3.2 MODULE)
-  if(NOT GLFW3_FOUND)
-    find_package(glfw3 3.2 CONFIG REQUIRED)
+  option(USE_INTERNAL_GLFW "use internal GLFW" ON)
+  if(USE_INTERNAL_GLFW)
+    add_subdirectory(glfw)
     set(GLFW3_LIBRARIES glfw)
-    # include dirs are included in the imported library (add_library(glfw STATIC IMPORTED))
-    set(GLFW3_INCLUDE_DIRS "")
+  else()
+    find_package(glfw3 3.2 MODULE)
+    if(NOT GLFW3_FOUND)
+      find_package(glfw3 3.2 CONFIG REQUIRED)
+      set(GLFW3_LIBRARIES glfw)
+      # include dirs are included in the imported library (add_library(glfw STATIC IMPORTED))
+      set(GLFW3_INCLUDE_DIRS "")
+    endif()
   endif()
 
   set(LIBS vislib core glload ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES})
@@ -66,9 +72,6 @@ if(BUILD_CONSOLE)
 
   include_directories(BEFORE "src")
   
-  source_group("Header Files" FILES "src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
-
   # main target
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib glload core)
@@ -78,6 +81,10 @@ if(BUILD_CONSOLE)
     OUTPUT_NAME ${PROJECT_NAME})
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+
+  set_target_properties(${CONSOLE_NAME} PROPERTIES FOLDER base)
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
 
   # install target
   install(TARGETS ${PROJECT_NAME} DESTINATION "bin")
