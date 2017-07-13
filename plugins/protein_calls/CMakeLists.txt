@@ -16,24 +16,21 @@ if(BUILD_PROTEIN_CALLS_PLUGIN)
 
   # Build MegaMol Plugin
   # public header files for installation
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
+  file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   # source files for compilation
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+
   if(UNIX)
     list(REMOVE_ITEM source_files
       "src/dllmain.cpp"
       )
   endif()
-  # shader files for installation
-  file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
   include_directories(BEFORE "include" "src")
 
-  source_group("Header Files" FILES "include/*.h src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
-
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${header_files} ${source_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib glload core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
@@ -52,7 +49,8 @@ if(BUILD_PROTEIN_CALLS_PLUGIN)
   endif()
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
-  source_group("Header Files" FILES "include/*.h src/*.h")
-  source_group("Source Files" FILES "src/*.cpp")
+  source_group("Public Header Files" FILES ${public_header_files})
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
 
 endif(BUILD_PROTEIN_CALLS_PLUGIN)
