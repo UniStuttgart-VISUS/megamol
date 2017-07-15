@@ -157,7 +157,7 @@ std::string FloatTableObserverPlane::cleanUpColumnHeader(const vislib::TString& 
 int FloatTableObserverPlane::getColumnIndex(const vislib::TString& colName) {
     std::string c = cleanUpColumnHeader(colName);
     if (this->columnIndex.find(c) != columnIndex.end()) {
-        return columnIndex[c];
+        return static_cast<int>(columnIndex[c]);
     } else {
         return -1;
     }
