@@ -1,35 +1,37 @@
 project(expat)
 
-# configuration options
-set(XML_CONTEXT_BYTES 1024)
-set(XML_DTD ON)
-set(XML_NS ON)
-
-if(XML_DTD)
-  set(XML_DTD 1)
-else(XML_DTD)
-  set(XML_DTD 0)
-endif(XML_DTD)
-if(XML_NS)
-  set(XML_NS 1)
-else(XML_NS)
-  set(XML_NS 0)
-endif(XML_NS)
-
 
 if(UNIX)
+  # configuration options
+  set(XML_CONTEXT_BYTES 1024)
+  set(XML_DTD ON)
+  set(XML_NS ON)
+
+  if(XML_DTD)
+    add_definitions(-DXML_DTD=1)
+  else(XML_DTD)
+    add_definitions(-DXML_DTD=0)
+  endif(XML_DTD)
+  if(XML_NS)
+    add_definitions(-DXML_NS=1)
+  else(XML_NS)
+    add_definitions(-DXML_NS=0)
+  endif(XML_NS)
+
+  add_definitions(-DXML_CONTEXT_BYTES=1024)
+  
   include(CheckIncludeFiles)
   include(CheckFunctionExists)
   include(CheckSymbolExists)
   include(TestBigEndian)
   include(CheckTypeSize)
 
-  test_big_endian ( ENDIAN_TEST )
-  if ( ENDIAN_TEST )
-    set ( BYTEORDER 4321 )
-  else ( )
-    set ( BYTEORDER 1234 )
-  endif ( )
+  test_big_endian(ENDIAN_TEST)
+  if(ENDIAN_TEST)
+    add_definitions(-DBYTEORDER=4321)
+  else()
+    add_definitions(-DBYTEORDER=1234)
+  endif()
 
   check_function_exists ( bcopy HAVE_BCOPY )
   if(HAVE_BCOPY)
@@ -91,8 +93,6 @@ if(UNIX)
   if(HAVE_UNISTD_H)
     add_definitions(-DHAVE_UNISTD_H)
   endif()
-
-
 endif()
 
 set(EXPAT_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src" CACHE INTERNAL "")
@@ -110,9 +110,12 @@ set(expat_SRCS
 
 
 add_library(expat STATIC ${expat_SRCS})
+target_compile_definitions(${PROJECT_NAME} PRIVATE XML_UNICODE_WCHAR_T XML_LARGE_SIZE)
+
 if(MSVC)
   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/ignore:4996")
-  target_compile_definitions(${PROJECT_NAME} PRIVATE XML_UNICODE_WCHAR_T XML_LARGE_SIZE XML_STATIC)
-endif(MSVC)
+elseif(UNIX)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fshort-wchar -fno-strict-aliasing)
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER external)
 

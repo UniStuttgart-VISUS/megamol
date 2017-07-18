@@ -1,9 +1,9 @@
+
 # compiler options
 if(WIN32)
-  # avoid problematic min/max defines of windows.h
-  add_definitions(-DNOMINMAX)
-  # options
-  add_definitions(-W3)
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -W3 -DNOMINMAX")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0 -W3 -DNOMINMAX")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -W3 -pedantic -std=c99")
 elseif(UNIX)
   # processor word size detection
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -11,22 +11,27 @@ elseif(UNIX)
   else()
     set(BITS 32)
   endif()
-  add_definitions(-Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS})
-endif()
-if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
-	message(STATUS "Version < 4.7")
-	add_definitions(-std=c++0x)
-else()
-	add_definitions(-std=c++11)
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG -Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS} -ggdb")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0 -Wall -pedantic -fPIC -DUNIX -D_GNU_SOURCE -D_LIN${BITS}")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -fPIC -DUNIX -pedantic -std=c99")
 endif()
 
-# Set CXX flags for debug mode
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -D_DEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -D_NDEBUG -O3 -g0")
-if(UNIX)
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
+
+if(CMAKE_COMPILER_IS_GNUCC)
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
+    message(STATUS "Version < 4.7")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++0x")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++0x")
+  else()
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++11")
+  endif()
+elseif(MSVC)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++11")
 endif()
+
 
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
