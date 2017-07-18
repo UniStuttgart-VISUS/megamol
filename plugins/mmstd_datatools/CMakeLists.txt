@@ -8,12 +8,11 @@ option(BUILD_MMSTD_DATATOOLS_PLUGIN "Option to build mmstd_datatools" ON)
 if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   project(mmstd_datatools)
 
-  set(MMSTD_DATATOOLS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories")
-
   find_package(OpenMP)
 
   set(LIBS vislib core glload)
-  include_directories(${VISLIB_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS})
+  include_directories("include" "src" "3rd/nanoflann")
+
   if (OPENMP_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
@@ -32,8 +31,6 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
       )
   endif()
 
-  include_directories("include" "src" "3rd/nanoflann")
-
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib glload core)
@@ -41,6 +38,7 @@ if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)

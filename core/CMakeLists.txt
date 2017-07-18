@@ -9,12 +9,8 @@ option(BUILD_CORE "Build core" ON)
 if(BUILD_CORE)
   project(core)
 
-
   # search for 3rd party libs
   set(CMAKE_THREAD_PREFER_PTHREAD)
-  set(CORE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE INTERNAL "core include directories")
-  mark_as_advanced(CORE_INCLUDE_DIRS)
-
 
   find_package(Threads REQUIRED)
   
@@ -38,20 +34,19 @@ if(BUILD_CORE)
   find_package(MPI)
 
   if(WIN32)
-    add_subdirectory(expat)
-    set(EXPAT_LIBRARIES expat)
-  else()
-    option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" OFF)
+    option(USE_INTERNAL_EXPAT "Compiles the expat provided by megamol" ON)
     if(USE_INTERNAL_EXPAT)
       add_subdirectory(expat)
       set(EXPAT_LIBRARIES expat)
     else()
       find_package(EXPAT REQUIRED)
     endif()
+  else()
+      find_package(EXPAT REQUIRED)
   endif()
 
   set(LIBS vislib glload ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-  include_directories(${VISLIB_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS} ${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
+  include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
 
   if (OPENMP_FOUND)
     #message(STATUS "comp ${OpenMP_CXX_FLAGS}")
@@ -106,6 +101,8 @@ if(BUILD_CORE)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
 
   set_target_properties(core PROPERTIES FOLDER base)
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)

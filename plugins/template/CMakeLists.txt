@@ -10,7 +10,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(MegaMolPlugin)
 
   set(LIBS vislib core glload)
-  include_directories(${VISLIB_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS})
+  include_directories("include" "src")
 
   # Build MegaMol Plugin
   # public header files for installation
@@ -20,8 +20,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   #file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
-  include_directories(BEFORE "include" "src")
-
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
@@ -30,6 +28,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
 

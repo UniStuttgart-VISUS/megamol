@@ -8,10 +8,8 @@ option(BUILD_MMSTD_MOLDYN_PLUGIN "Option to build mmstd_moldyn" ON)
 if(BUILD_MMSTD_MOLDYN_PLUGIN)
   project(mmstd_moldyn)
 
-  set(MMSTD_MOLDYN_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories")
-
   set(LIBS vislib core glload)
-  include_directories(${VISLIB_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS})
+  include_directories("include" "src")
 
 
   # Build MegaMol Plugin
@@ -30,7 +28,6 @@ if(BUILD_MMSTD_MOLDYN_PLUGIN)
   # shader files for installation
   file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
-  include_directories("include" "src")
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
@@ -39,6 +36,7 @@ if(BUILD_MMSTD_MOLDYN_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)

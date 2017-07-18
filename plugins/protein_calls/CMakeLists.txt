@@ -8,11 +8,8 @@ option(BUILD_PROTEIN_CALLS_PLUGIN "Option to build protein_calls" ON)
 if(BUILD_PROTEIN_CALLS_PLUGIN)
   project(protein_calls)
   
-  set(PROTEIN_CALLS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE INTERNAL "${PROJECT_NAME} include directories")
-
   set(LIBS vislib core glload)
-  include_directories(${VISLIB_INCLUDE_DIRS} ${CORE_INCLUDE_DIRS} ${GLLOAD_INCLUDE_DIRS})
-
+  include_directories("include" "src")
 
   # Build MegaMol Plugin
   # public header files for installation
@@ -27,8 +24,6 @@ if(BUILD_PROTEIN_CALLS_PLUGIN)
       )
   endif()
 
-  include_directories(BEFORE "include" "src")
-
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   add_dependencies(${PROJECT_NAME} vislib glload core)
@@ -36,6 +31,7 @@ if(BUILD_PROTEIN_CALLS_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
   string(TOUPPER ${PROJECT_NAME} EXPORT_NAME)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
