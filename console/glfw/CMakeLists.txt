@@ -1,4 +1,4 @@
-project(GLFW C)
+project(GLFW)
 
 if (NOT CMAKE_VERSION VERSION_LESS "3.0")
     # Until all major package systems have moved to CMake 3,
@@ -19,15 +19,6 @@ set(GLFW_VERSION_FULL "${GLFW_VERSION}.${GLFW_VERSION_PATCH}${GLFW_VERSION_EXTRA
 
 if (UNIX)
     option(GLFW_USE_OSMESA "Use OSMesa for offscreen context creation" OFF)
-endif()
-
-if (WIN32)
-    option(GLFW_USE_HYBRID_HPG "Force use of high-performance GPU on hybrid systems" OFF)
-endif()
-
-if (UNIX AND NOT APPLE)
-    option(GLFW_USE_WAYLAND "Use Wayland for window creation" OFF)
-    option(GLFW_USE_MIR     "Use Mir for window creation" OFF)
 endif()
 
 if (MSVC)
@@ -114,12 +105,7 @@ endif()
 # Use Win32 for window creation
 #--------------------------------------------------------------------
 if (_GLFW_WIN32)
-
-    list(APPEND glfw_PKG_LIBS "-lgdi32")
-
-    if (GLFW_USE_HYBRID_HPG)
-        set(_GLFW_USE_HYBRID_HPG 1)
-    endif()
+  list(APPEND glfw_PKG_LIBS "-lgdi32")
 endif()
 
 #--------------------------------------------------------------------
@@ -291,6 +277,7 @@ if (_GLFW_WIN32)
   target_compile_definitions(glfw PRIVATE  _GLFW_WIN32)
 elseif (_GLFW_X11)
   target_compile_definitions(glfw PRIVATE _GLFW_X11)
+  target_link_libraries(glfw PRIVATE ${glfw_LIBRARIES})
 elseif (_GLFW_OSMESA)
   target_compile_definitions(glfw PRIVATE _GLFW_OSMESA)
 endif()

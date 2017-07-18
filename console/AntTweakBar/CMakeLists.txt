@@ -10,7 +10,7 @@ add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE TW_EXPORTS)
 
 if(UNIX)
-  target_compile_definitions(${PROJECT_NAME} PRIVATE UNIX)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE _UNIX)
 endif()
 
 #target_link_libraries(${PROJECT_NAME} GL)
