@@ -6,8 +6,6 @@
 #cmake_minimum_required(VERSION 2.6)
 project(glload)
 
-set(GLLOAD_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include" CACHE INTERNAL "glload include directories")
- mark_as_advanced(GLLOAD_INCLUDE_DIRS)
 # Define useful variables to handle OS/Compiler differences
 if (MSVC)
     set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} /DMEMORY_DEBUGGING")
@@ -48,6 +46,8 @@ add_library (glload SHARED
 # Add OpenGL library
 target_link_libraries(glload PRIVATE ${OPENGL_LIBRARIES})
 set_target_properties(glload PROPERTIES FOLDER external)
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
 
 if(WIN32)
   target_compile_definitions(glload PRIVATE GL_LOAD_DLL_EXPORT)
