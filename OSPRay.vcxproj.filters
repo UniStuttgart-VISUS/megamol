@@ -177,6 +177,9 @@
     <ClInclude Include="include\OSPRay_plugin\CallOSPRayMaterial.h">
       <Filter>Header Files\Materials</Filter>
     </ClInclude>
+    <ClInclude Include="src\OSPRayNHSphereGeometry.h">
+      <Filter>Header Files\Structures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\stdafx.cpp">
@@ -271,6 +274,9 @@
     </ClCompile>
     <ClCompile Include="src\VecField3f.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OSPRayNHSphereGeometry.cpp">
+      <Filter>Source Files\Structures</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

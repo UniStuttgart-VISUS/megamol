@@ -149,7 +149,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(TBBPath)include;$(ProteinCallsPath)include;$(OSPRayPath);$(OSPRayPath)include;$(TrisoupPath)include;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProteinCallsPath)include;$(OSPRayPath);$(OSPRayPath)include;$(TrisoupPath)include;$(ProjectDir)src\;$(ProjectDir)include\;$(MegaMolCorePath)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;OSPRAY_PLUGIN_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -160,8 +160,8 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>tbb.lib;protein_calls.lib;mmstd_trisoup.lib;ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(TBBPath)lib\intel64\vc14;$(ProteinCallsPath)lib\$(PlatformName)\$(Configuration)\;$(OSPRayPath)lib\;$(TrisoupPath)lib\$(PlatformName)\$(Configuration)\;$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>protein_calls.lib;mmstd_trisoup.lib;ospray.lib;Glu32.lib;opengl32.lib;MegaMolCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProteinCallsPath)lib\$(PlatformName)\$(Configuration)\;$(OSPRayPath)lib\;$(TrisoupPath)lib\$(PlatformName)\$(Configuration)\;$(MegaMolCorePath)lib\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -278,6 +278,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClInclude Include="src\OSPRayMatteMaterial.h" />
     <ClInclude Include="src\OSPRayMetallicPaintMaterial.h" />
     <ClInclude Include="src\OSPRayMetalMaterial.h" />
+    <ClInclude Include="src\OSPRayNHSphereGeometry.h" />
     <ClInclude Include="src\OSPRayOBJMaterial.h" />
     <ClInclude Include="src\OSPRayPlasticMaterial.h" />
     <ClInclude Include="src\OSPRayPointLight.h" />
@@ -311,6 +312,7 @@ if exist "$(OSPRayPath)bin\embree.dll" xcopy "$(OSPRayPath)bin\embree.dll" "$(Ou
     <ClCompile Include="src\OSPRayMatteMaterial.cpp" />
     <ClCompile Include="src\OSPRayMetallicPaintMaterial.cpp" />
     <ClCompile Include="src\OSPRayMetalMaterial.cpp" />
+    <ClCompile Include="src\OSPRayNHSphereGeometry.cpp" />
     <ClCompile Include="src\OSPRayOBJMaterial.cpp" />
     <ClCompile Include="src\OSPRayPlasticMaterial.cpp" />
     <ClCompile Include="src\OSPRayPointLight.cpp" />

@@ -279,7 +279,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
 
     } else {
-        ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
         this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
         ospUnmapFrameBuffer(fb, framebuffer);

@@ -140,7 +140,7 @@ void AbstractOSPRayRenderer::releaseTextureScreen() {
 void AbstractOSPRayRenderer::initOSPRay(OSPDevice &dvce) {
 
     if (dvce == NULL) {
-        dvce = ospCreateDevice("default");
+        dvce = ospNewDevice("default");
         ospDeviceCommit(dvce);
     }
     ospSetCurrentDevice(dvce);
@@ -622,6 +622,23 @@ void AbstractOSPRayRenderer::fillWorld() {
                 ospSetObject(geo, "clipPlane", NULL);
                 }
                 */
+                break;
+
+            case geometryTypeEnum::NHSPHERES:
+                geo = ospNewGeometry("spheres");
+
+                if (element.vertexLength > 3*sizeof(float)) {
+                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.vertexData->data());
+                    ospSet1i(geo, "bytes_per_sphere", element.vertexLength + element.colorLength);
+                    ospSet1f(geo, "offset_radius", 3 * sizeof(float));
+                } else {
+                    vertexData = ospNewData(element.partCount, OSP_FLOAT3, element.vertexData->data());
+                    ospSet1i(geo, "bytes_per_sphere", element.vertexLength + element.colorLength);
+                    ospSet1f(geo, "radius", element.globalRadius);
+                }
+                ospCommit(vertexData);
+                ospSetData(geo, "spheres", vertexData);
+
                 break;
             case geometryTypeEnum::TRIANGLES:
 

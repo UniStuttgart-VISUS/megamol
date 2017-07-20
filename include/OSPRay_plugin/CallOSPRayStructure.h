@@ -24,6 +24,7 @@ enum structureTypeEnum {
 
 enum geometryTypeEnum {
     SPHERES,
+    NHSPHERES,
     TRIANGLES,
     STREAMLINES,
     CYLINDERS
@@ -65,6 +66,7 @@ public:
     std::shared_ptr<std::vector<float>> sliceData;
     std::shared_ptr<std::vector<float>> clipPlaneData;
     std::shared_ptr<std::vector<float>> clipPlaneColor;
+    std::shared_ptr<const void*> raw;
 
 
     unsigned int voxelCount = voxelCount;
