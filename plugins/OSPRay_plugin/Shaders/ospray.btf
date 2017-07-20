@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="ospray">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="common::defines"/>
+        <snippet name="attributes" type="string">
+            <![CDATA[
+
+in vec2 in_position;
+out vec2 texCoords;
+
+]]>
+        </snippet>
+        <snippet name="MainParams" type="string">
+            <![CDATA[
+void main(void) {
+    gl_Position = vec4(2.0f, 2.0f, 2.0f, 1) * (vec4(in_position,0,1) - vec4(0.5f, 0.5f, 0.5f, 0)); 
+    //gl_Position = vec4(in_position, 0, 1);
+    texCoords = in_position;
+}
+]]>
+        </snippet>
+    </shader>
+
+  <shader name="fragment">
+    <snippet type="version">130</snippet>
+    <snippet name="common::defines"/>
+    <snippet name="body1" type="string">
+            <![CDATA[
+ 
+uniform sampler2D tex;
+in vec2 texCoords;
+  
+out vec4 fragColor;
+
+void main() {
+    vec4 color = texture(tex, texCoords);
+    //vec4 color = vec4(texCoords.x, texCoords.y, 0.5f, 1);
+    fragColor = color;
+}
+     ]]>
+    </snippet>
+  </shader>
+</btf>
