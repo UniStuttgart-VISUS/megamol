@@ -39,6 +39,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+  endif()
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
   source_group("Public Header Files" FILES ${public_header_files})
