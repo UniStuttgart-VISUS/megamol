@@ -224,7 +224,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
     this->ditherParam << new core::param::IntParam(this->currentDitherMode, 0, this->structCount);
 	this->MakeSlotAvailable(&this->ditherParam);
 	                                              // init min max
-    this->tessLevelParam << new core::param::IntParam(this->currentTessLevel, 6, 64);
+    this->tessLevelParam << new core::param::IntParam(this->currentTessLevel, 6, 1024);
 	this->MakeSlotAvailable(&this->tessLevelParam);
 
     this->scalingParam << new core::param::FloatParam(this->currentScaling);

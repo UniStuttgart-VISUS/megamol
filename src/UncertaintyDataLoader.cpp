@@ -65,7 +65,7 @@ UncertaintyDataLoader::UncertaintyDataLoader( void ) : megamol::core::Module(),
 	this->filenameSlot << new param::FilePathParam("");
 	this->MakeSlotAvailable(&this->filenameSlot);
         
-    this->currentMethod = AVERAGE;
+    this->currentMethod = EXTENDED;
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentMethod));
     tmpEnum->SetTypePair(AVERAGE,    "AVERAGE");
 	tmpEnum->SetTypePair(EXTENDED,   "EXTENDED");

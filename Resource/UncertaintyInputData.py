@@ -129,7 +129,7 @@ class UncertaintyInputData:
             LogLevel = logging.DEBUG
         else:
             LogLevel = logging.INFO
-        logging.basicConfig(stream=sys.stderr, level=LogLevel)
+        logging.basicConfig(stream=sys.stdout, level=LogLevel)
         
         logging.debug('  Start logging for class \"{0}\"'.format(self.__class__.__name__))
         
@@ -172,10 +172,10 @@ class UncertaintyInputData:
         
         # Choosing 64bit or 32bit version of program files
         if(sys.maxsize > 2**32): # 64 bit
-        #    STRIDEProgName += '64'
+            #STRIDEProgName += '64'
             DSSPProgName += '64'
         else: # 32 bit
-            #  STRIDEProgName += '32'
+            #STRIDEProgName += '32'
             DSSPProgName += '32'
         
         # Choosing os dependend program files
@@ -970,6 +970,9 @@ class UncertaintyInputData:
         OutFileBuffer[7] += ('-------|------|---------|-----------------|')
         #Length of columns:      7       6      9           17
 
+        ''' '''
+        LineOffset   = 8
+        prosignIndex = '0'
         if os.path.isfile(Param_ProsignFile):
             try:
                 ProsignFile = open(Param_ProsignFile, 'r')
@@ -980,30 +983,35 @@ class UncertaintyInputData:
 
             reader = csv.reader(ProsignFile)
             for row in reader:
-                ChainID = row[2]
-                #search for matching chain ID
-                if(OutFileBuffer[LineOffset][30:31] != ChainID) :
-                    LineOffset = 8
-                    for x in range(LineOffset, len(OutFileBuffer)):
-                        if(OutFileBuffer[x][30:31] == ChainID):
-                            LineOffset = x
-                            break
+            
+                # Skip duplicate pdb-indices
+                if (prosignIndex != row[0]):
+                    ChainID = row[2]
+                    #search for matching chain ID
+                    if(OutFileBuffer[LineOffset][30:31] != ChainID) :
+                        LineOffset = 8
+                        for x in range(LineOffset, len(OutFileBuffer)):
+                            if(OutFileBuffer[x][30:31] == ChainID):
+                                LineOffset = x
+                                break
 
-                prosignIndex = row[0]
-                while (prosignIndex != OutFileBuffer[LineOffset][(45-len(prosignIndex)):45]):
+                    prosignIndex = row[0]
+                    #while (prosignIndex != OutFileBuffer[LineOffset][(45-len(prosignIndex)):45]):
+                    while (str(prosignIndex).rjust(7) != OutFileBuffer[LineOffset][38:45]):
+                        LineOffset += 1
+                        
+                    OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               |'
+
                     LineOffset += 1
-
-                OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               |'
-
-                LineOffset += 1
-                if(LineOffset > len(OutFileBuffer) - 1):
-                    LineOffset = 8
+                    if(LineOffset > len(OutFileBuffer) - 1):
+                        LineOffset = 8
             
             ProsignFile.close()
             logging.debug('  Completed to parse file \"{0}\"'.format(Param_ProsignFile))
         else:
             logging.warn('   Didn\'t find file \"{0}\"'.format(Param_ProsignFile))
-
+        ''' '''
+        
         #Fill empty lines
         LineOffset = 8
         for x in range(LineOffset, len(OutFileBuffer)):
@@ -1097,19 +1105,20 @@ class UncertaintyInputData:
                         text =pdbid + ',' + str(a) + ',' + pdbval + ',' + strideval + ',' + dsspval + ',' + prosignval + '\n'
                         CsvFileBuffer.append(text)
                         a += 1
-                # Write output file
-                logging.debug('  Creating csv file \"{0}\"'.format(Param_CSVOutFile))
-                try:
-                    CsvOutFile = open(Param_CSVOutFile, 'w')
-                except Exception as Error:
-                    logging.error('  Creating csv file failed with error:')
-                    logging.error('>>>   {0}'.format(Error))
-                    return False
+                        
+            # Write output file
+            logging.debug('  Creating csv file \"{0}\"'.format(Param_CSVOutFile))
+            try:
+                CsvOutFile = open(Param_CSVOutFile, 'w')
+            except Exception as Error:
+                logging.error('  Creating csv file failed with error:')
+                logging.error('>>>   {0}'.format(Error))
+                return False
 
-                for line in CsvFileBuffer:
-                    CsvOutFile.write(line)
+            for line in CsvFileBuffer:
+                CsvOutFile.write(line)
 
-                CsvOutFile.close()
+            CsvOutFile.close()
                 
             logging.info('  Successfully created file \"{0}\"'.format(Param_CSVOutFile))
 

@@ -78,25 +78,26 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
             ////////////////////////////////////////////////     
-                   
-			toggleUncertaintyParam(             "07 Uncertainty", "Show/hide uncertainty row."),
-            toggleUncertainStructParam(         "08 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
-            certainBlockChartColorParam(        "09 Certain: Block chart color", "Choose color of block chart for certain structure."),
-            certainStructColorParam(            "10 Certain: Structure color", "Choose color of structure for certain structure."),
-            uncertainBlockChartColorParam(      "11 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
-            uncertainBlockChartOrientationParam("12 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
-            uncertainStructColorParam(          "13 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
-            uncertainStructGeometryParam(       "14 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
-            geometryTessParam(                  "15 Geometry tesselation", "The geometry tesselation level."),
-            uncertainColorInterpolParam(        "16 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
-            uncertainGardientIntervalParam(     "17 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
-            toggleUncSeparatorParam(            "18 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
-            toggleLegendParam(                  "19 Legend Drawing", "Show/hide row legend/key on the left."),
-            toggleTooltipParam(                 "20 ToolTip", "Show/hide tooltip information."),
-            resCountPerRowParam(                "21 Residues Per Row", "The number of residues per row."),
-            clearResSelectionParam(             "22 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
-            colorTableFileParam(                "23 Color Table Filename", "The filename of the color table."),
-			reloadShaderParam(                  "24 Reload shaders", "Reload the shaders."),
+
+            toggleUncertainStructParam(         "07 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
+            toggleUncertaintyParam(             "08 Uncertainty", "Show/hide uncertainty row."),
+            unfoldUncertaintyViewParam(         "09 UNFOLD UNCERTAINTY VIEW", "Switch to unfolded uncertainty view."),
+            certainBlockChartColorParam(        "10 Certain: Block chart color", "Choose color of block chart for certain structure."),
+            certainStructColorParam(            "11 Certain: Structure color", "Choose color of structure for certain structure."),
+            uncertainBlockChartColorParam(      "12 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
+            uncertainBlockChartOrientationParam("13 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
+            uncertainStructColorParam(          "14 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
+            uncertainStructGeometryParam(       "15 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
+            geometryTessParam(                  "16 Geometry tesselation", "The geometry tesselation level."),
+            uncertainColorInterpolParam(        "17 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
+            uncertainGardientIntervalParam(     "18 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
+            toggleUncSeparatorParam(            "19 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
+            toggleLegendParam(                  "20 Legend Drawing", "Show/hide row legend/key on the left."),
+            toggleTooltipParam(                 "21 ToolTip", "Show/hide tooltip information."),
+            resCountPerRowParam(                "22 Residues Per Row", "The number of residues per row."),
+            clearResSelectionParam(             "23 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
+            colorTableFileParam(                "24 Color Table Filename", "The filename of the color table."),
+			reloadShaderParam(                  "25 Reload shaders", "Reload the shaders."),
             dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), currentGeometryTess(25),
             markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), secStructRows(0), pdbID(""), pdbLegend("")
 #ifndef USE_SIMPLE_FONT
@@ -164,6 +165,10 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     ////////////////////////////////////////////////
     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
     ////////////////////////////////////////////////    
+
+    // param slot unfolded uncertainty view
+    this->unfoldUncertaintyViewParam.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->unfoldUncertaintyViewParam);
 
     // param slot for toggling separator line
     this->toggleUncSeparatorParam.SetParameter(new param::BoolParam(true));
@@ -251,7 +256,8 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 
     // setting initial row height, as if all secondary structure rows would be shown
     this->secStructRows = 5;
-    this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);   
+    this->methodRows    = 3;
+    this->rowHeight     = 2.0f + static_cast<float>(this->secStructRows);   
 
 	this->strideThresholdCount = 7;
 	this->dsspThresholdCount   = 2; // only showing HBondAc0 and HBondDo0
@@ -506,6 +512,11 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
         this->dataPrepared = false;
     }
     
+    // UNFOLDED UNCERTAINTY VIEW
+    if (this->unfoldUncertaintyViewParam.IsDirty()) {
+        this->dataPrepared = false;
+    }
+    
     // check whether uncertainty data has changed
     if(udc->GetRecalcFlag()) {    
         this->dataPrepared = false;
@@ -516,28 +527,48 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
       
         // reset number of shown secondary structure rows
         this->secStructRows = 0;
-        
+        this->methodRows    = 0;
+
         // calculate new row height
-        if (this->toggleStrideParam.Param<param::BoolParam>()->Value())
+        if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+            this->methodRows++;
             this->secStructRows++;
-        if (this->toggleDsspParam.Param<param::BoolParam>()->Value())
+        }  
+        if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+            this->methodRows++;
             this->secStructRows++;
-        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value())
+        }
+        if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+            this->methodRows++;
             this->secStructRows++;
-        if (this->togglePdbParam.Param<param::BoolParam>()->Value())
+        }
+        if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+            this->methodRows++;
             this->secStructRows++;
-        if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value())
-            this->secStructRows += this->strideThresholdCount;
-		if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value())
-            this->secStructRows += this->dsspThresholdCount;
-		if (this->toggleProsignParam.Param<param::BoolParam>()->Value())
-			this->secStructRows++;
-                        
+        }
+
         ////////////////////////////////////////////////
         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
         ////////////////////////////////////////////////
-                
-        if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value())
+
+        if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+            this->methodRows++;
+            this->secStructRows++;
+        }
+
+        // Ignore Threshold rows in unfold view
+        if (!this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+            if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value())
+                this->secStructRows += this->strideThresholdCount;
+            if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value())
+                this->secStructRows += this->dsspThresholdCount;
+        }
+        else { // add an additional row to increase gap for curly braces (+0.5 above and below)
+            this->methodRows++;
+            this->secStructRows++;
+        }
+
+        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value())
             this->secStructRows++;
                 
         // set new row height
@@ -712,7 +743,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         vislib::StringA tmpStr;
         vislib::StringA tmpStr2;
         vislib::StringA tmpStr3;
-        float yPos;
+
         float xPos;
         float wordlength;
         float rowPos;            
@@ -720,168 +751,406 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         vislib::math::Vector<float, 2> pos;
         float perCentRow;
         float start;
-        float end;
 
-        yPos = 0.0f; // !  
-        
-        //draw geometry tiles for secondary structure    
-        //STRIDE
-        if(this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
-                tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE);
-                this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
-                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);    
-			   // draw as texture - deprecated ...
-			   // glEnable(GL_TEXTURE_2D); // call only once for all assignment method rows
-			   // glEnable(GL_BLEND);
-			   // this->DrawSecStructTextureTiles(((i > 0) ? (this->secStructAssignment[tmpMethod][i - 1]) : (this->secStructAssignment[tmpMethod][i])), this->secStructAssignment[tmpMethod][i],
-			   //	                              ((i < (this->aminoAcidCount - 1)) ? (this->secStructAssignment[tmpMethod][i + 1]) : (this->secStructAssignment[tmpMethod][i])),
-			   //	                              this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
-			   // glDisable(GL_BLEND);
-			   // glDisable(GL_TEXTURE_2D);
-            } 
-            yPos += 1.0f;
-        }
-		// STRIDE thresholds
-        if(this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
-            float min;
-            float max;
-            float threshold;
+        float yPos = 0.0f; // !  
 
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                tmpStruct = this->sortedSecStructAssignment[static_cast<int>(UncertaintyDataCall::assMethod::STRIDE)][i][0];
-				for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-					if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f)) {
-						switch (j) {
-						case(0) : threshold = STRIDE_THRESHOLDH1;
-							min = -410.435f;
-							max =  -49.565f;
-							break;
-						case(1) : threshold = STRIDE_THRESHOLDH3;
-							min = 0.026f;
-							max = 0.214f;
-							break;
-						case(2) : threshold = STRIDE_THRESHOLDH4;
-							min = 0.013f;
-							max = 0.107f;
-							break;
-						case(3) : threshold = STRIDE_THRESHOLDE2;
-							min = -428.279f;
-							max =  -51.721f;
-							break;
-						case(4) : threshold = STRIDE_THRESHOLDE2;
-							min = -428.279f;
-							max =  -51.721f;
-							break;
-						case(5) : threshold = STRIDE_THRESHOLDE1;
-							min = -553.195f;
-							max =  -66.805f;
-							break;
-						case(6) : threshold = STRIDE_THRESHOLDE1;
-							min = -553.195f;
-							max =  -66.805f;
-							break;                            
-						default: break;
-						}
-						this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
-							this->strideStructThreshold[i][j], min, max, threshold);
-					}
-			    }
-            }
-			yPos += this->strideThresholdCount;
-        }		
-        // DSSP
-        if(this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
-                tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP);
-                this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
-                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);                
-            }
-            yPos += 1.0f;
-        }  
-        // DSSP thresholds
-        if(this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
-            float min       = -5.0f;
-            float max       =  5.0f;
-            float threshold = DSSP_HBENERGY;
-            
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i][0];
-                for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-					if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f))  {
-						this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
-															this->dsspStructEnergy[i][j], min, max, threshold);
-					}
-			    }
-            }
-			yPos += this->dsspThresholdCount;
-        }  		
-        // PDB 
-        if(this->togglePdbParam.Param<param::BoolParam>()->Value()) {
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++ ) {
-                tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PDB);
-                this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
-                                                this->residueFlag[i], this->vertices[i*2], (this->vertices[i*2+1]+yPos), bgColor);               
-            }
-            yPos += 1.0f;
-        }
 
-		// PROSIGN
-		if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
-			for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-				tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PROSIGN);
-				this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
-					this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
-			}
-			yPos += 1.0f;
-		}
-        
-        ////////////////////////////////////////////////
-        // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
-        ////////////////////////////////////////////////
-                                   
-            
-        // draw uncertainty 
-        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
-			float col;
-            glBegin(GL_QUADS);
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-				col = 1.0f - this->uncertainty[i];
-				glColor3f(col, col, col);
-                if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
-                    // assuming values are in range 0.0-1.0
-					glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
-                    glVertex2f(this->vertices[2 * i],        -(this->vertices[2 * i + 1] + yPos + 1.0f));
-                    glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f));
-					glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+        // UNFOLDED UNCERTAINTY VIEW
+        if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+
+            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *secUncertainty =
+                &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *sortedUncertainty =
+                &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+
+            vislib::math::Vector<float, 2> posOffset;
+            GLint steps = 50;
+            float uncPre;
+            float uncCur;
+            float uncSuc;
+
+            float upBound;
+            float loBound;
+            float offset = 0.0f;
+            bool uncRowFlag = false;
+
+
+            if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+                uncRowFlag = true;
+            }
+
+            if (uncRowFlag) {
+                upBound = std::ceil(this->methodRows / 2.0f) + 0.5f;
+                loBound = std::floor(this->methodRows / 2.0f) - 0.5f;
+                offset  = 1.0f;
+            }
+            else {
+                upBound = this->methodRows / 2.0f;
+                loBound = this->methodRows / 2.0f;
+            }
+
+            // draw structure uncertainty visualization
+            if (uncRowFlag) {
+                this->RenderUncertainty(yPos + upBound - 1.0f, fgColor, bgColor);
+            }
+
+
+            //draw geometry tiles for secondary structure 
+            float yPosTemp = yPos + 0.5f;
+            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                yPosTemp += 1.0f;
+            }
+            //STRIDE
+            if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                        tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE);
+                        this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                            this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPosTemp), bgColor);
+                    }
+                }
+                yPosTemp += 1.0f;
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                    yPosTemp += 1.0f;
                 }
             }
-            glEnd();
-            yPos += 1.0f;
+            // DSSP
+            if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                        tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP);
+                        this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                            this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPosTemp), bgColor);
+                    }
+                }
+                yPosTemp += 1.0f;
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                    yPosTemp += 1.0f;
+                }
+            }
+            // PDB 
+            if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                        tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PDB);
+                        this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                            this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPosTemp), bgColor);
+                    }
+                }
+                yPosTemp += 1.0f;
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                    yPosTemp += 1.0f;
+                }
+            }
+            // PROSIGN
+            if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    if (secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]] < 1.0f) {
+                        tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PROSIGN);
+                        this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                            this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPosTemp), bgColor);
+                    }
+                }
+                yPosTemp += 1.0f;
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                    yPosTemp += 1.0f;
+                }
+            }
+
+            ////////////////////////////////////////////////
+            // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
+            ////////////////////////////////////////////////
+
+            // Draw outlining
+            GLfloat tmpLw;
+            glGetFloatv(GL_LINE_WIDTH, &tmpLw);
+
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                posOffset.SetX(this->vertices[2 * i]);
+                posOffset.SetY(this->vertices[2 * i + 1] + yPos + upBound);
+                // upper closing brackets
+                GLfloat cpUpClose[4][3] = {
+                    { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + offset, 0.0f },
+                    { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + upBound, 0.0f } };
+                // upper opening brackets 
+                GLfloat cpUpOpen[4][3] = {
+                    { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + offset, 0.0f },
+                    { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + upBound, 0.0f } };
+                // lower closing brackets
+                GLfloat cpDownClose[4][3] = {
+                    { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + 0.0f, 0.0f },
+                    { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() - loBound, 0.0f } };
+                // lower opening brackets 
+                GLfloat cpDownOpen[4][3] = {
+                    { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + 0.0f, 0.0f },
+                    { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() - loBound, 0.0f } };
+
+                uncPre;
+                uncCur;
+                uncSuc;
+
+                uncCur = secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]];
+                if (i > 0) {
+                    uncPre = secUncertainty->operator[](i - 1)[(int)sortedUncertainty->operator[](i - 1)[0]];
+                    if (this->residueFlag[i - 1] == UncertaintyDataCall::addFlags::MISSING) {
+                        uncPre = 1.0f;
+                    }
+                }
+                else {
+                    uncPre = uncCur;
+                }
+                if (i < this->aminoAcidCount - 1) {
+                    uncSuc = secUncertainty->operator[](i + 1)[(int)sortedUncertainty->operator[](i + 1)[0]];
+                    if (this->residueFlag[i + 1] == UncertaintyDataCall::addFlags::MISSING) {
+                        uncSuc = 1.0f;
+                    }
+                }
+                else {
+                    uncSuc = uncCur;
+                }
+                
+                glColor3f(0.0f, 0.0f, 0.0f);
+                glDisable(GL_DEPTH_TEST); 
+                glLineWidth(2.0f);
+
+                if (uncCur >= 1.0f) {
+                    if (uncPre < 1.0f) {
+                        glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpClose[0][0]);
+                        glEnable(GL_MAP1_VERTEX_3);
+                        glMapGrid1f(steps, 0.0f, 1.0f);
+                        glEvalMesh1(GL_LINE, 0, steps);
+                        glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpDownClose[0][0]);
+                        glEvalMesh1(GL_LINE, 0, steps);
+                    }
+                    else {
+                        glBegin(GL_LINES);
+                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() + offset);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + offset);
+                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() + 0.0f);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + 0.0f);
+                        glEnd();
+                    }
+                    if (uncSuc < 1.0f) {
+                        glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpOpen[0][0]);
+                        glEnable(GL_MAP1_VERTEX_3);
+                        glMapGrid1f(steps, 0.0f, 1.0f);
+                        glEvalMesh1(GL_LINE, 0, steps);
+                        glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpDownOpen[0][0]);
+                        glEvalMesh1(GL_LINE, 0, steps);
+                    }
+                    else {
+                        glBegin(GL_LINES);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + offset);
+                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + offset);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + 0.0f);
+                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + 0.0f);
+                        glEnd();
+                    }
+                }
+                else {
+                    if (uncPre < 1.0f) {
+                        glBegin(GL_LINES);
+                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() + upBound);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + upBound);
+                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() - loBound);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() - loBound);
+                        glEnd();
+                    }
+                    if (uncSuc < 1.0f) {
+                        glBegin(GL_LINES);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + upBound);
+                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + upBound);
+                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() - loBound);
+                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() - loBound);
+                        glEnd();
+
+                        // separator of uncertain amino-acids
+                        glColor3f(0.9f, 0.9f, 0.9f);
+                        glEnable(GL_DEPTH_TEST);
+                        glLineWidth(1.0f);
+
+                        glBegin(GL_LINES);
+                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + upBound);
+                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() - loBound);
+                        glEnd();
+                    }
+                }
+            }
+
+            glLineWidth(tmpLw);
+            glEnable(GL_DEPTH_TEST);
+
+
+            yPos += this->methodRows;
+
+            // draw uncertainty 
+            if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                float col;
+                glBegin(GL_QUADS);
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    col = 1.0f - this->uncertainty[i];
+                    glColor3f(col, col, col);
+                    if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
+                        // assuming values are in range 0.0-1.0
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f));
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f));
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+                    }
+                }
+                glEnd();
+                yPos += 1.0f;
+            }
         }
-        
-                    
-        // draw structure uncertainty visualization
-        if(this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
-            
-			this->RenderUncertainty(yPos, fgColor, bgColor);
+        else { // NORMAL VIEW
+            //draw geometry tiles for secondary structure    
+            //STRIDE
+            if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::STRIDE);
+                    this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                        this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
+                }
+                yPos += 1.0f;
+            }
+            // STRIDE thresholds
+            if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
+                float min;
+                float max;
+                float threshold;
 
-			// draw frames for uncertain amino-acid structure
-			if (this->showSeparatorLine) {
-               
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    tmpStruct = this->sortedSecStructAssignment[static_cast<int>(UncertaintyDataCall::assMethod::STRIDE)][i][0];
+                    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
+                        if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f)) {
+                            switch (j) {
+                            case(0): threshold = STRIDE_THRESHOLDH1;
+                                min = -410.435f;
+                                max = -49.565f;
+                                break;
+                            case(1): threshold = STRIDE_THRESHOLDH3;
+                                min = 0.026f;
+                                max = 0.214f;
+                                break;
+                            case(2): threshold = STRIDE_THRESHOLDH4;
+                                min = 0.013f;
+                                max = 0.107f;
+                                break;
+                            case(3): threshold = STRIDE_THRESHOLDE2;
+                                min = -428.279f;
+                                max = -51.721f;
+                                break;
+                            case(4): threshold = STRIDE_THRESHOLDE2;
+                                min = -428.279f;
+                                max = -51.721f;
+                                break;
+                            case(5): threshold = STRIDE_THRESHOLDE1;
+                                min = -553.195f;
+                                max = -66.805f;
+                                break;
+                            case(6): threshold = STRIDE_THRESHOLDE1;
+                                min = -553.195f;
+                                max = -66.805f;
+                                break;
+                            default: break;
+                            }
+                            this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
+                                this->strideStructThreshold[i][j], min, max, threshold);
+                        }
+                    }
+                }
+                yPos += this->strideThresholdCount;
+            }
+            // DSSP
+            if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP);
+                    this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                        this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
+                }
+                yPos += 1.0f;
+            }
+            // DSSP thresholds
+            if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
+                float min = -5.0f;
+                float max = 5.0f;
+                float threshold = DSSP_HBENERGY;
 
-				glColor3fv(fgColor);
-				glEnable(GL_VERTEX_ARRAY);
-				glVertexPointer(2, GL_FLOAT, 0, this->aminoacidSeparatorVertices.PeekElements());
-				glDrawArrays(GL_QUADS, 0, (GLsizei)this->aminoacidSeparatorVertices.Count() / 2);
-				glDisable(GL_VERTEX_ARRAY);
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i][0];
+                    for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+                        if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f)) {
+                            this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
+                                this->dsspStructEnergy[i][j], min, max, threshold);
+                        }
+                    }
+                }
+                yPos += this->dsspThresholdCount;
+            }
+            // PDB 
+            if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PDB);
+                    this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                        this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
+                }
+                yPos += 1.0f;
+            }
+            // PROSIGN
+            if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    tmpMethod = static_cast<unsigned int>(UncertaintyDataCall::assMethod::PROSIGN);
+                    this->DrawSecStructGeometryTiles(this->sortedSecStructAssignment[tmpMethod][i][0], ((i < (this->aminoAcidCount - 1)) ? (this->sortedSecStructAssignment[tmpMethod][i + 1][0]) : (this->sortedSecStructAssignment[tmpMethod][i][0])),
+                        this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos), bgColor);
+                }
+                yPos += 1.0f;
+            }
 
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			}
-            yPos += 1.0f;            
+            ////////////////////////////////////////////////
+            // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
+            ////////////////////////////////////////////////
+
+
+            // draw uncertainty 
+            if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                float col;
+                glBegin(GL_QUADS);
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    col = 1.0f - this->uncertainty[i];
+                    glColor3f(col, col, col);
+                    if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
+                        // assuming values are in range 0.0-1.0
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f));
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f));
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+                    }
+                }
+                glEnd();
+                yPos += 1.0f;
+            }
+
+            // draw structure uncertainty visualization
+            if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+
+                this->RenderUncertainty(yPos, fgColor, bgColor);
+
+                // draw frames for uncertain amino-acid structure
+                if (this->showSeparatorLine) {
+
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+                    glColor3fv(fgColor);
+                    glEnable(GL_VERTEX_ARRAY);
+                    glVertexPointer(2, GL_FLOAT, 0, this->aminoacidSeparatorVertices.PeekElements());
+                    glDrawArrays(GL_QUADS, 0, (GLsizei)this->aminoacidSeparatorVertices.Count() / 2);
+                    glDisable(GL_VERTEX_ARRAY);
+
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                }
+                yPos += 1.0f;
+            }
         }
-
 
         // draw amino-acid tiles
         glColor3fv(fgColor);
@@ -1013,105 +1282,207 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 rowPos = 0.0f;
 				for (unsigned int i = 0; i < this->resRows; i++) { // replace 'i < 1' with 'i < this->resRows' to show row legend for every row not just the first one
 
-                    if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "STRIDE";
-                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
-                                           fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                        yPos += 1.0f;
-                    }
-					if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
-						for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-                            switch (j) {
-                                case (0) : tmpStr = "STRIDE Threshold a-Helix T1"; break;
-                                case (1) : tmpStr = "STRIDE Threshold a-Helix T3"; break;
-                                case (2) : tmpStr = "STRIDE Threshold a-Helix T4"; break;
-                                case (3) : tmpStr = "STRIDE Threshold Sheet parallel T1p"; break;
-                                case (4) : tmpStr = "STRIDE Threshold Sheet parallel T2p"; break;
-                                case (5) : tmpStr = "STRIDE Threshold Sheet antiparallel T1a"; break;
-                                case (6) : tmpStr = "STRIDE Threshold Sheet antiparallel T2a"; break;                                
-                                default:  tmpStr = "STRIDE UNKNOWN Threshold"; break;
+
+                    // UNFOLDED UNCERTAINTY VIEW
+                    if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+
+                        float yPosTemp = yPos + 0.5f;
+                        float upBound  = std::ceil(this->methodRows / 2.0f) + 0.5f;
+                        bool uncRowFlag = false;
+
+
+                        if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+                            uncRowFlag = true;
+                        }
+
+                        if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "Structure Probabilities";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + upBound - 1.0f), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        }
+
+
+                        if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "STRIDE";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPosTemp), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPosTemp += 1.0f;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                                yPosTemp += 1.0f;
                             }
-							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f, 
-											   fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-						}
-                        yPos += (float)this->strideThresholdCount;
-                    }
-                    if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "DSSP";
-                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
-                                           fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                        yPos += 1.0f;
-                    }
-                    if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
-						for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-                            switch (j) {
-                                case (0) : tmpStr = "DSSP H-Bond Energy as Acceptor"; break;
-                                case (1) : tmpStr = "DSSP H-Bond Energy as Donor"; break;
-                                default:  tmpStr = "DSSP UNKNOWN Threshold"; break;
+                        }
+                        if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "DSSP";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPosTemp), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPosTemp += 1.0f;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                                yPosTemp += 1.0f;
                             }
-							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f, 
-											   fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-						}
-                        yPos += (float)this->dsspThresholdCount;
-                    }					
-                    if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = this->pdbLegend;
-                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
-                                           fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                        yPos += 1.0f;
-                    }
-					if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
-						tmpStr = "PROSIGN";
-						wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-						theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
-							fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-						yPos += 1.0f;
-					}
-                    
-                    ////////////////////////////////////////////////
-                    // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
-                    ////////////////////////////////////////////////
-                          
-                    if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "Uncertainty";
+                        }
+                        if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = this->pdbLegend;
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPosTemp), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPosTemp += 1.0f;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                                yPosTemp += 1.0f;
+                            }
+                        }
+                        if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "PROSIGN";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPosTemp), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPosTemp += 1.0f;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                                yPosTemp += 1.0f;
+                            }
+                        }
+
+                        ////////////////////////////////////////////////
+                        // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
+                        ////////////////////////////////////////////////
+
+
+                        yPos += this->methodRows;
+
+                        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "Uncertainty";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPos += 1.0f;
+                        }
+
+                        tmpStr = "Amino-Acid";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
                             fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                        yPos += 1.0f;
-                    }
-                                                           
-                    if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
-                        tmpStr = "Structure Probabilities";
+                        tmpStr = "Chain-ID + PDB-Index";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
-                                           fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                        yPos += 1.0f;
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos) - 0.5f, wordlength, 0.5f,
+                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        tmpStr = "Chain";
+                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos) - 1.0f, wordlength, 0.5f,
+                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        if (!this->bindingSiteNames.IsEmpty()) {
+                            tmpStr = "Binding Sites";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i + 1)*this->rowHeight), wordlength,
+                                (this->rowHeight - (2.0f + static_cast<float>(this->secStructRows))),
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        }
+                        yPos = 1.0f;
+
                     }
-                    tmpStr = "Amino-Acid";
-                    wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
-                    theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f, 
-                                       fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                    tmpStr = "Chain-ID + PDB-Index";
-                    wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
-                    theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos) - 0.5f, wordlength, 0.5f, 
-                                       fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                    tmpStr = "Chain";
-                    wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
-                    theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos) - 1.0f, wordlength, 0.5f, 
-                                       fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-                    if( !this->bindingSiteNames.IsEmpty() ) {
-                        tmpStr = "Binding Sites";
-                        wordlength = theFont.LineWidth( fontSize, tmpStr) + fontSize;
-                        theFont.DrawString(-wordlength, -(static_cast<float>(i + 1)*this->rowHeight), wordlength, 
-                                           (this->rowHeight - (2.0f + static_cast<float>(this->secStructRows))),
-                                           fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                    else { // NORMAL VIEW
+
+                        if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "STRIDE";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPos += 1.0f;
+                        }
+                        if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
+                            for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
+                                switch (j) {
+                                case (0): tmpStr = "STRIDE Threshold a-Helix T1"; break;
+                                case (1): tmpStr = "STRIDE Threshold a-Helix T3"; break;
+                                case (2): tmpStr = "STRIDE Threshold a-Helix T4"; break;
+                                case (3): tmpStr = "STRIDE Threshold Sheet parallel T1p"; break;
+                                case (4): tmpStr = "STRIDE Threshold Sheet parallel T2p"; break;
+                                case (5): tmpStr = "STRIDE Threshold Sheet antiparallel T1a"; break;
+                                case (6): tmpStr = "STRIDE Threshold Sheet antiparallel T2a"; break;
+                                default:  tmpStr = "STRIDE UNKNOWN Threshold"; break;
+                                }
+                                wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                                theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f,
+                                    fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            }
+                            yPos += (float)this->strideThresholdCount;
+                        }
+                        if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "DSSP";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPos += 1.0f;
+                        }
+                        if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
+                            for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+                                switch (j) {
+                                case (0): tmpStr = "DSSP H-Bond Energy as Acceptor"; break;
+                                case (1): tmpStr = "DSSP H-Bond Energy as Donor"; break;
+                                default:  tmpStr = "DSSP UNKNOWN Threshold"; break;
+                                }
+                                wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                                theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f,
+                                    fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            }
+                            yPos += (float)this->dsspThresholdCount;
+                        }
+                        if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = this->pdbLegend;
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPos += 1.0f;
+                        }
+                        if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "PROSIGN";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPos += 1.0f;
+                        }
+
+                        ////////////////////////////////////////////////
+                        // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
+                        ////////////////////////////////////////////////
+
+                        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "Uncertainty";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPos += 1.0f;
+                        }
+
+                        if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+                            tmpStr = "Structure Probabilities";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                            yPos += 1.0f;
+                        }
+                        tmpStr = "Amino-Acid";
+                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        tmpStr = "Chain-ID + PDB-Index";
+                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos) - 0.5f, wordlength, 0.5f,
+                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        tmpStr = "Chain";
+                        wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                        theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos) - 1.0f, wordlength, 0.5f,
+                            fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        if (!this->bindingSiteNames.IsEmpty()) {
+                            tmpStr = "Binding Sites";
+                            wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+                            theFont.DrawString(-wordlength, -(static_cast<float>(i + 1)*this->rowHeight), wordlength,
+                                (this->rowHeight - (2.0f + static_cast<float>(this->secStructRows))),
+                                fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+                        }
+                        yPos = 1.0f;
                     }
-                    yPos = 1.0f;
                 }
             }
         }
@@ -1182,160 +1553,263 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             // draw tooltip  
             if (this->toggleTooltipParam.Param<param::BoolParam>()->Value()) {
                 glColor3fv(fgColor);
-                fontSize = 0.5f;
+                fontSize   = 0.5f;
                 perCentRow = 1.0f / this->rowHeight;
-                start = 0.0;
-                end = perCentRow;
+                start      = 0.0;
                 if (theFont.Initialise()) {
-                    if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
-                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "STRIDE:";
-							tmpStr2.Format("%s: %.3f %%",
-									this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]],
-									this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx]
-															  [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]] * 100.0f);
-                            this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-                        }
-                        start += perCentRow;
-                        end += perCentRow;
-                    }
-                    if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
-                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-						    for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
-								if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f))  {
-									switch (j) {
-										case (0) : tmpStr = "Helix T1:";
-											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
-											break;
-										case (1) : tmpStr = "Helix T3:";
-											tmpStr2.Format("%.3f (> %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
-											break;
-										case (2) : tmpStr = "Helix T4:";
-											tmpStr2.Format("%.3f (> %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
-											break;
-										case (3) : tmpStr = "Sheet T1p:";
-											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
-											break;
-										case (4) : tmpStr = "Sheet T2p:";
-											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
-											break;
-										case (5) : tmpStr = "Sheet T1a:";
-											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
-											break;
-										case (6) : tmpStr = "Sheet T2a:";
-											tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
-											break;                                            
-										default:  tmpStr = "UNKNOWN value"; break;
-									}
-									this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-								}
-								start += perCentRow;
-								end += perCentRow;
-							}
-						}
-						else {
-							start += (perCentRow * this->strideThresholdCount);
-							end += (perCentRow * this->strideThresholdCount);
-						}
-                    }					
-                    if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
-                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "DSSP:";
-                            tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP][mousePosResIdx][0]];
-                            this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-                        }
-                        start += perCentRow;
-                        end += perCentRow;
-                    }
-                    if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
-                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-						    for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-								if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f)) {
-									switch (j) {
-										case (0) : tmpStr = "Hb-E Acc.: "; break;
-										case (1) : tmpStr = "Hb-E Don.: "; break;
-										default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
-									}
-									tmpStr2.Format("%.3f | < T=%.1f[kcal/mol]", this->dsspStructEnergy[mousePosResIdx][j], DSSP_HBENERGY);
-									this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-								}
-								start += perCentRow;
-								end += perCentRow;
-                            }
-						}
-						else {
-							start += (perCentRow * this->dsspThresholdCount);
-							end += (perCentRow * this->dsspThresholdCount);
-						}
-                    }
-                    if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
-                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "PDB:";
-                            tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB][mousePosResIdx][0]];
-                            this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-                        }
-                        start += perCentRow;
-                        end += perCentRow;
-                    }
-					if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
-						if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-							tmpStr = "Prosign:";
-							tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN][mousePosResIdx][0]];
-							this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-						}
-						start += perCentRow;
-						end += perCentRow;
-					}
-                    
-                    ////////////////////////////////////////////////
-                    // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
-                    ////////////////////////////////////////////////
-                    
-                    if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
-                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "Uncertainty:";
-							// tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
-							tmpStr2.Format("%.3f", this->uncertainty[mousePosResIdx]);
-                            this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
-                        }
-                        start += perCentRow;
-                        end += perCentRow;
-                    }             
-                    if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
-                        if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
-                            tmpStr = "Structure Probabilities:";
-                            tmpStr2 = "";
-							for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
-                                if (this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx]
-                                                              [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] > 0.0f) {
-                                    if (i > 0) {
-                                        tmpStr2.Append("|");
-                                   } 
-                                    tmpStr3.Format(" %s: %.2f %% ", this->secStructDescription[(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]],
-                                        this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx] 
-                                                                  [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] * 100.0f);
-                                    tmpStr2.Append(tmpStr3);
+
+                    // UNFOLDED UNCERTAINTY VIEW
+                    if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+                        
+                        bool uncRowFlag = false;
+                        float startUnc  = (std::ceil(this->methodRows / 2.0f) - 0.5f) * perCentRow;
+
+                        if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "Structure Probabilities:";
+                                tmpStr2 = "";
+                                for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
+                                    if (this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx]
+                                        [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] > 0.0f) {
+                                        if (i > 0) {
+                                            tmpStr2.Append("|");
+                                        }
+                                        tmpStr3.Format(" %s: %.2f %% ", this->secStructDescription[(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]],
+                                            this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx]
+                                            [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] * 100.0f);
+                                        tmpStr2.Append(tmpStr3);
+                                    }
                                 }
+                                this->RenderToolTip(startUnc, startUnc + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             }
-                            this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+                            uncRowFlag = true;
                         }
-                        start += perCentRow;
-                        end += perCentRow;                        
-                    }
-                    tmpStr = "Flag:";  
-                    switch (this->residueFlag[mousePosResIdx]) {
-                        case(UncertaintyDataCall::addFlags::MISSING):   
-                            tmpStr2 = "MISSING"; 
-                            this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+                        
+
+                        start += (0.5f * perCentRow);
+
+                        if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "STRIDE:";
+                                tmpStr2.Format("%s: %.3f %%",
+                                    this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]],
+                                    this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx]
+                                    [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]] * 100.0f);
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(start - startUnc))) {
+                                start += perCentRow;
+                            }
+                        }
+                        if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "DSSP:";
+                                tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP][mousePosResIdx][0]];
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(start - startUnc))) {
+                                start += perCentRow;
+                            }
+                        }
+                        if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "PDB:";
+                                tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB][mousePosResIdx][0]];
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(start - startUnc))) {
+                                start += perCentRow;
+                            }
+                        }
+                        if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "Prosign:";
+                                tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN][mousePosResIdx][0]];
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(start - startUnc))) {
+                                start += perCentRow;
+                            }
+                        }
+
+                        ////////////////////////////////////////////////
+                        // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
+                        ////////////////////////////////////////////////
+
+                        start += (0.5f * perCentRow);
+
+                        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "Uncertainty:";
+                                // tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
+                                tmpStr2.Format("%.3f", this->uncertainty[mousePosResIdx]);
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+
+                        tmpStr = "Flag:";
+                        switch (this->residueFlag[mousePosResIdx]) {
+                        case(UncertaintyDataCall::addFlags::MISSING):
+                            tmpStr2 = "MISSING";
+                            this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             break;
-                        case(UncertaintyDataCall::addFlags::HETEROGEN): 
-                            tmpStr2 = "HETEROGEN"; 
-                            this->RenderToolTip(start, end, tmpStr, tmpStr2, bgColor, fgColor);
+                        case(UncertaintyDataCall::addFlags::HETEROGEN):
+                            tmpStr2 = "HETEROGEN";
+                            this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
                             break;
-                        case(UncertaintyDataCall::addFlags::NOTHING): 
+                        case(UncertaintyDataCall::addFlags::NOTHING):
                             break;
                         default: break;
-                    }                  
+                        }
+
+                    }
+                    else { // NORMAL VIEW
+
+                        if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "STRIDE:";
+                                tmpStr2.Format("%s: %.3f %%",
+                                    this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]],
+                                    this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx]
+                                    [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][0]] * 100.0f);
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+                        if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                for (unsigned int j = 0; j < this->strideThresholdCount; j++) {
+                                    if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f)) {
+                                        switch (j) {
+                                        case (0): tmpStr = "Helix T1:";
+                                            tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH1);
+                                            break;
+                                        case (1): tmpStr = "Helix T3:";
+                                            tmpStr2.Format("%.3f (> %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH3);
+                                            break;
+                                        case (2): tmpStr = "Helix T4:";
+                                            tmpStr2.Format("%.3f (> %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDH4);
+                                            break;
+                                        case (3): tmpStr = "Sheet T1p:";
+                                            tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
+                                            break;
+                                        case (4): tmpStr = "Sheet T2p:";
+                                            tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE2);
+                                            break;
+                                        case (5): tmpStr = "Sheet T1a:";
+                                            tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
+                                            break;
+                                        case (6): tmpStr = "Sheet T2a:";
+                                            tmpStr2.Format("%.3f (< %.2f)", this->strideStructThreshold[mousePosResIdx][j], STRIDE_THRESHOLDE1);
+                                            break;
+                                        default:  tmpStr = "UNKNOWN value"; break;
+                                        }
+                                        this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                                    }
+                                    start += perCentRow;
+                                }
+                            }
+                            else {
+                                start += (perCentRow * this->strideThresholdCount);
+                            }
+                        }
+                        if (this->toggleDsspParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "DSSP:";
+                                tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::DSSP][mousePosResIdx][0]];
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+                        if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
+                                    if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f)) {
+                                        switch (j) {
+                                        case (0): tmpStr = "Hb-E Acc.: "; break;
+                                        case (1): tmpStr = "Hb-E Don.: "; break;
+                                        default:  tmpStr = "Dssp UNKNOWN Threshold"; break;
+                                        }
+                                        tmpStr2.Format("%.3f | < T=%.1f[kcal/mol]", this->dsspStructEnergy[mousePosResIdx][j], DSSP_HBENERGY);
+                                        this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                                    }
+                                    start += perCentRow;
+                                }
+                            }
+                            else {
+                                start += (perCentRow * this->dsspThresholdCount);
+                            }
+                        }
+                        if (this->togglePdbParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "PDB:";
+                                tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PDB][mousePosResIdx][0]];
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+                        if (this->toggleProsignParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "Prosign:";
+                                tmpStr2 = this->secStructDescription[(int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::PROSIGN][mousePosResIdx][0]];
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+
+                        ////////////////////////////////////////////////
+                        // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
+                        ////////////////////////////////////////////////
+
+                        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "Uncertainty:";
+                                // tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
+                                tmpStr2.Format("%.3f", this->uncertainty[mousePosResIdx]);
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+                        if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                                tmpStr = "Structure Probabilities:";
+                                tmpStr2 = "";
+                                for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
+                                    if (this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx]
+                                        [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] > 0.0f) {
+                                        if (i > 0) {
+                                            tmpStr2.Append("|");
+                                        }
+                                        tmpStr3.Format(" %s: %.2f %% ", this->secStructDescription[(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]],
+                                            this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx]
+                                            [(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]] * 100.0f);
+                                        tmpStr2.Append(tmpStr3);
+                                    }
+                                }
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+                        tmpStr = "Flag:";
+                        switch (this->residueFlag[mousePosResIdx]) {
+                        case(UncertaintyDataCall::addFlags::MISSING):
+                            tmpStr2 = "MISSING";
+                            this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            break;
+                        case(UncertaintyDataCall::addFlags::HETEROGEN):
+                            tmpStr2 = "HETEROGEN";
+                            this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            break;
+                        case(UncertaintyDataCall::addFlags::NOTHING):
+                            break;
+                        default: break;
+                        }
+                    }
                 } // init font
             } // legend param
         } // mouse pos
@@ -1431,7 +1905,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
             
             // CERTAIN amino-acids
             if (uMax >= (1.0f)) {
-                
+          
                 // draw something for certain amino-acids only if they have not both no color assigned (= background color)
                 if(!((this->currentCertainBlockChartColor == CERTAIN_BC_NONE) && (this->currentCertainStructColor == CERTAIN_STRUCT_NONE))) {
                     
@@ -1480,6 +1954,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                         glEnd();
                     }
                 }
+
             }
             // UNCERTAIN amino-acids
             else { 
@@ -2393,18 +2868,24 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 		if (this->residueFlag[aa] != UncertaintyDataCall::addFlags::MISSING) {
             aaCur = this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][0]];
 
+            float offset = (float)this->secStructRows;
+            // UNFOLDED UNCERTAINTY VIEW
+            if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+                offset = (float)this->secStructRows - 3.0f;
+            }
+
 			if (aaCur < 1.0f) {
 				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + this->secStructRows - 1.0f));
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset - 1.0f));
                 
 				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + this->secStructRows));
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset));
 
 				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + this->secStructRows));
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset));
                 
 				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + this->secStructRows - 1.0f));
+				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset - 1.0f));
 			}
 		}
 	}

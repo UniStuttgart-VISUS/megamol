@@ -58,8 +58,8 @@ namespace megamol {
         enum secStructure {
             G_310_HELIX   = 0,
             T_H_TURN      = 1,
-			I_PI_HELIX    = 2,            
-			H_ALPHA_HELIX = 3,
+            H_ALPHA_HELIX = 2,
+            I_PI_HELIX    = 3,
 			S_BEND        = 4,
 			C_COIL        = 5,
             B_BRIDGE      = 6,
@@ -79,6 +79,7 @@ namespace megamol {
             STRIDE      = 1,
             DSSP        = 2,
 			PROSIGN     = 3,
+            // Add new methods here (before UNCERTAINTY index !!!)
 			UNCERTAINTY = 4,
             NOM         = 5   // Number of Methods -> must always be the last index!
         };

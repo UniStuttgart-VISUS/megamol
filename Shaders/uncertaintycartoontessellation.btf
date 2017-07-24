@@ -232,10 +232,10 @@
     #define EPS           0.0001
     
     // should be equal to 'UncertaintyDataCall::secStructure':
-    #define I_PI_HELIX    0
+    #define G_310_HELIX   0
     #define T_H_TURN      1
-    #define G_310_HELIX   2
-    #define H_ALPHA_HELIX 3
+    #define H_ALPHA_HELIX 2
+    #define I_PI_HELIX    3
     #define S_BEND        4
     #define C_COIL        5
     #define B_BRIDGE      6
@@ -429,6 +429,15 @@
             int mytype   = alph2.sortedStruct[structIndex];
                     
             // assign colors
+            
+            // Uncertainty color blending: uCol is color of max uncertainty - cCol is color of max certainty - alpha is considered too!
+            vec4 cCol = vec4(1.0, 1.0, 1.0, 1.0);   // certain
+            vec4 cuCol = vec4(0.0, 0.0, 1.0, 1.0);  // 1/2 certain and 1/2 uncertain
+            vec4 uCol = vec4(0.0, 0.0, 0.0, 1.0);   // uncertain
+            
+            // switch from two color interpolation to three color interpolation
+            bool threeColInt = true;
+            
             if(interpolateColors) // interpolate colors
             {      
                 vec4 colors[4];
@@ -439,7 +448,21 @@
                         colors[i] = structCol[atoms[id[0] + i - 1].sortedStruct[structIndex]];
                     }     
                     else if (colorMode == COLOR_MODE_UNCERTAIN) {
-                        colors[i] = structCol[atoms[id[0] + i - 1].sortedStruct[structIndex]];
+/*UNCERTAINTY to COLOR coding*/
+                        float tempUnc = atoms[id[0] + i - 1].uncertainty;
+                        
+                        if (!threeColInt) {
+                            colors[i] = cCol*(1.0 - tempUnc) + uCol*tempUnc; 
+                        }
+                        else {
+                            if (tempUnc < 0.5) {
+                                colors[i] = cCol*(1.0 - tempUnc) + cuCol*tempUnc; 
+                            }
+                            else {
+                                colors[i] = cuCol*(1.0 - tempUnc) + uCol*tempUnc; 
+                            }
+                        }
+                    
                     }                    
                     else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
                         colors[i] = atoms[id[0] + i - 1].col; 
@@ -465,13 +488,23 @@
                     color = structCol[mytype];
                 }     
                 else if (colorMode == COLOR_MODE_UNCERTAIN) {
-                    color = structCol[mytype];               
+/*UNCERTAINTY to COLOR coding*/             
+                    if (!threeColInt) {
+                        color = cCol*(1.0 - uncVal[0]) + uCol*uncVal[0]; 
+                    }
+                    else {
+                        if (uncVal[0] < 0.5) {
+                            color = cCol*(1.0 - uncVal[0]) + cuCol*uncVal[0];  
+                        }
+                        else {
+                            color = cuCol*(1.0 - uncVal[0]) + uCol*uncVal[0];  
+                        }
+                    }
                 }                    
                 else if ((colorMode == COLOR_MODE_CHAIN) || (colorMode == COLOR_MODE_AMINOACID)) {
                     color = alph2.col; 
                     
-                    color *= (1.0 - uncVal[0]);                                 // (TEMP:) When monochrome coloring use lightness as additional "uncertainty variable"
-                                   
+                    color *= (1.0 - uncVal[0]);                                 // (TEMP:) When monochrome coloring use lightness as additional "uncertainty variable"            
                 }
                 else { // if (colorMode == COLOR_MODE_RESIDUE_DEBUG) {
                     int colorIndex = id[1];

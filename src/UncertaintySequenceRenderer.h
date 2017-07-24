@@ -390,6 +390,8 @@ namespace megamol {
         megamol::core::param::ParamSlot uncertainGardientIntervalParam;
         megamol::core::param::ParamSlot geometryTessParam;
 
+        megamol::core::param::ParamSlot unfoldUncertaintyViewParam;
+
         // the current uncertainty visualization selection
         certainBlockChartColor         currentCertainBlockChartColor;
         certainStructColor             currentCertainStructColor;
@@ -407,6 +409,8 @@ namespace megamol {
 
         // the number of secondary structure rows which can be shown/hidden
         unsigned int        secStructRows;
+        // the number of method rows which can be shown/hidden
+        unsigned int        methodRows;
         // the number of residue columns
         unsigned int        resCols;
         // the number of residue rows
