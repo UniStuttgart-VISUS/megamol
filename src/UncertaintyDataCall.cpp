@@ -31,7 +31,7 @@ UncertaintyDataCall::UncertaintyDataCall(void) : megamol::core::Call(),
                                                  sortedSecStructAssignment(NULL), secStructUncertainty(NULL), 
                                                  pdbIndex(NULL), chainID(NULL), residueFlag(NULL), aminoAcidName(NULL), pdbID(NULL),
 												 recalcUncertainty(NULL), pdbAssignmentHelix(NULL), pdbAssignmentSheet(NULL),
-                                                 strideStructThreshold(NULL), dsspStructEnergy(NULL) {
+                                                 strideStructThreshold(NULL), dsspStructEnergy(NULL), isTimeAccumulation(false), timestepNumber(0) {
                                                      
 }
 

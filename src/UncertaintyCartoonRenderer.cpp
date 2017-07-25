@@ -950,10 +950,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 						      << " | unc index: " << this->synchronizedIndex[aaIdx]
 							  << std::endl;
 					*/
+//#define VIS_2017
 					uncIndex = this->synchronizedIndex[aaIdx];
 					for (unsigned int k = 0; k < this->structCount; k++) {
                         calpha.sortedStruct[k] = static_cast<int>(this->sortedSecStructAssignment[(int)this->currentMethodData][uncIndex][k]);
                         calpha.unc[k]          =                  this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
+#ifdef VIS_2017	
+						calpha.unc[k]          = mol->AtomBFactors()[acid->CAlphaIndex()];
+#endif
 					}
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
 						for (unsigned int k = 0; k < 3; k++)
@@ -965,6 +969,9 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					}
 					calpha.flag = this->residueFlag[uncIndex];
 					calpha.uncertainty = this->uncertainty[uncIndex];
+#ifdef VIS_2017
+					calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()];
+#endif
 					
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
 					calpha.pos[1] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 1];

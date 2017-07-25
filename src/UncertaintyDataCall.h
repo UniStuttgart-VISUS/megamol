@@ -548,6 +548,12 @@ namespace megamol {
 
         /** Flag indicating that uncertainty was recalculated */
         bool recalcUncertainty;
+
+		/** Flag indicatin whether this is a time accumulation */
+		bool isTimeAccumulation;
+
+		/** Number of timesteps */
+		int timestepNumber;
                 
         /** The PDB ID */
         vislib::StringA *pdbID;
