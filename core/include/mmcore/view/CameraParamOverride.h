@@ -25,7 +25,7 @@ namespace view {
     /**
      * Camera parameter override class overriding the eye.
      */
-    class CameraParamOverride :
+    class MEGAMOLCORE_API CameraParamOverride :
         public vislib::graphics::CameraParamsOverride {
 
     public:
