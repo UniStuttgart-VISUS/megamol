@@ -81,7 +81,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 
             toggleUncertainStructParam(         "07 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
             toggleUncertaintyParam(             "08 Uncertainty", "Show/hide uncertainty row."),
-            unfoldUncertaintyViewParam(         "09 UNFOLD UNCERTAINTY VIEW", "Switch to unfolded uncertainty view."),
+            viewModeParam(                      "09 VIEW MODE", "Switch between different view modes."),
             certainBlockChartColorParam(        "10 Certain: Block chart color", "Choose color of block chart for certain structure."),
             certainStructColorParam(            "11 Certain: Structure color", "Choose color of structure for certain structure."),
             uncertainBlockChartColorParam(      "12 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
@@ -166,10 +166,6 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
     ////////////////////////////////////////////////    
 
-    // param slot unfolded uncertainty view
-    this->unfoldUncertaintyViewParam.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->unfoldUncertaintyViewParam);
-
     // param slot for toggling separator line
     this->toggleUncSeparatorParam.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->toggleUncSeparatorParam);
@@ -194,12 +190,20 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->currentUncertainStructColor           = UNCERTAIN_STRUCT_GRAY;
     this->currentUncertainStructGeometry        = UNCERTAIN_STRUCT_DYN_EQUAL;
     this->currentUncertainColorInterpol         = UNCERTAIN_COLOR_HSL_HP;
+    this->currentViewMode                       = VIEWMODE_UNFOLDED_AMINOACID;
         
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentCertainBlockChartColor));
-    tmpEnum->SetTypePair(CERTAIN_BC_NONE,    "no coloring (background)");
+    tmpEnum->SetTypePair(CERTAIN_BC_NONE, "no coloring (background)");
     tmpEnum->SetTypePair(CERTAIN_BC_COLORED, "colored");
     this->certainBlockChartColorParam << tmpEnum;
-    this->MakeSlotAvailable(&this->certainBlockChartColorParam);       
+    this->MakeSlotAvailable(&this->certainBlockChartColorParam);
+
+    tmpEnum = new param::EnumParam(static_cast<int>(this->currentViewMode));
+    tmpEnum->SetTypePair(VIEWMODE_NORMAL_SEQUENCE, "NORMAL SEQUENCE");
+    tmpEnum->SetTypePair(VIEWMODE_UNFOLDED_SEQUENCE, "UNFOLDED SEQUENCE");
+    tmpEnum->SetTypePair(VIEWMODE_UNFOLDED_AMINOACID, "UNFOLDED AMINO_ACIDS");
+    this->viewModeParam << tmpEnum;
+    this->MakeSlotAvailable(&this->viewModeParam);
 
     tmpEnum = new param::EnumParam(static_cast<int>(this->currentCertainStructColor));
     tmpEnum->SetTypePair(CERTAIN_STRUCT_NONE,    "no coloring (background)");
@@ -256,7 +260,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 
     // setting initial row height, as if all secondary structure rows would be shown
     this->secStructRows = 5;
-    this->methodRows    = 3;
+    this->methodRows    = 4;
     this->rowHeight     = 2.0f + static_cast<float>(this->secStructRows);   
 
 	this->strideThresholdCount = 7;
@@ -512,11 +516,13 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
         this->dataPrepared = false;
     }
     
-    // UNFOLDED UNCERTAINTY VIEW
-    if (this->unfoldUncertaintyViewParam.IsDirty()) {
+    // VIEW MODES
+    if (this->viewModeParam.IsDirty()) {
+        this->viewModeParam.ResetDirty();
+        this->currentViewMode = static_cast<viewModes>(this->viewModeParam.Param<param::EnumParam>()->Value());
         this->dataPrepared = false;
     }
-    
+
     // check whether uncertainty data has changed
     if(udc->GetRecalcFlag()) {    
         this->dataPrepared = false;
@@ -556,21 +562,26 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->secStructRows++;
         }
 
-        // Ignore Threshold rows in unfold view
-        if (!this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+        // Ignore Threshold rows in unfolded views
+        if (this->currentViewMode == VIEWMODE_NORMAL_SEQUENCE) {
             if (this->toggleStrideThreshParam.Param<param::BoolParam>()->Value())
                 this->secStructRows += this->strideThresholdCount;
             if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value())
                 this->secStructRows += this->dsspThresholdCount;
         }
-        else { // add an additional row to increase gap for curly braces (+0.5 above and below)
+        else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) { // add an additional row to increase gap for curly braces (+0.5 above and below)
             this->methodRows++;
             this->secStructRows++;
+        }
+        else if (this->currentViewMode == VIEWMODE_UNFOLDED_AMINOACID) {
+            this->methodRows = UncertaintyDataCall::assMethod::NOM;
+            this->secStructRows = UncertaintyDataCall::assMethod::NOM;
         }
 
         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value())
             this->secStructRows++;
                 
+
         // set new row height
         this->rowHeight = 2.0f + static_cast<float>(this->secStructRows);
               
@@ -681,25 +692,26 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         this->uncertainGardientIntervalParam.ResetDirty();
         this->currentUncertainGardientInterval = static_cast<float>(this->uncertainGardientIntervalParam.Param<param::FloatParam>()->Value());
     }
-        
+
+
     // updating selection
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
     if (this->resSelectionCall != NULL) {
         (*this->resSelectionCall)(ResidueSelectionCall::CallForGetSelection);
 
         // clear selection
-        if( this->clearResSelectionParam.IsDirty() ) {
+        if (this->clearResSelectionParam.IsDirty()) {
             this->resSelectionCall->GetSelectionPointer()->Clear();
             this->clearResSelectionParam.ResetDirty();
         }
 
         vislib::Array<ResidueSelectionCall::Residue> *resSelPtr = this->resSelectionCall->GetSelectionPointer();
-        for(unsigned int i = 0; i < this->aminoAcidCount; i++) {
+        for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
             this->selection[i] = false;
-            if(resSelPtr != NULL) {
+            if (resSelPtr != NULL) {
                 // loop over selections and try to match wit the current amino acid
-                for( unsigned int j = 0; j < resSelPtr->Count(); j++) {
-                    if((*resSelPtr)[j].chainID == this->chainID[i] && (*resSelPtr)[j].resNum == i)
+                for (unsigned int j = 0; j < resSelPtr->Count(); j++) {
+                    if ((*resSelPtr)[j].chainID == this->chainID[i] && (*resSelPtr)[j].resNum == i)
                     {
                         this->selection[i] = true;
                     }
@@ -707,7 +719,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             }
         }
     }
-    else { 
+    else {
         // when no selection call is present clear selection anyway ...
         if (this->clearResSelectionParam.IsDirty()) {
             this->clearResSelectionParam.ResetDirty();
@@ -719,24 +731,24 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 
     // read and update the color table, if necessary
     if (this->colorTableFileParam.IsDirty()) {
-		UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
+        UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
-    
-    glDisable(GL_CULL_FACE); 
+
+    glDisable(GL_CULL_FACE);
     glLineWidth(2.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // get the text color (inverse background color)
     float bgColor[4];
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f};
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for( unsigned int i = 0; i < 4; i++ ) {
+    for (unsigned int i = 0; i < 4; i++) {
         fgColor[i] -= bgColor[i];
     }
 
-    if(this->dataPrepared) {
-        
+    if (this->dataPrepared) {
+
         // temporary variables and constants
         UncertaintyDataCall::secStructure tmpStruct;
         unsigned int tmpMethod;
@@ -746,7 +758,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 
         float xPos;
         float wordlength;
-        float rowPos;            
+        float rowPos;
         float fontSize;
         vislib::math::Vector<float, 2> pos;
         float perCentRow;
@@ -755,8 +767,166 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         float yPos = 0.0f; // !  
 
 
-        // UNFOLDED UNCERTAINTY VIEW
-        if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+        // UNFOLDED UNCERTAINTY AMINO-ACID VIEW
+        if (this->currentViewMode == VIEWMODE_UNFOLDED_AMINOACID) {
+
+            float yPosTemp;
+            unsigned int curCnt;
+            unsigned int preCnt;
+            unsigned int sucCnt;
+
+            vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *secUncertainty =
+                &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+            vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *sortedUncertainty =
+                &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+
+            // Draw this unfolded view amino-acid based (and not line based)
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+
+                curCnt = this->diffStrucCount[i];
+                preCnt = (i > 0) ? (this->diffStrucCount[i - 1]) : (curCnt);
+                sucCnt = (i < this->aminoAcidCount - 1) ? (this->diffStrucCount[i + 1]) : (curCnt);
+
+                yPosTemp = (float)(this->methodRows - curCnt) / 2.0f;
+
+                for (unsigned int d = 0; d < curCnt; d++) {
+
+                    UncertaintyDataCall::secStructure curStr = sortedUncertainty->operator[](i)[d];
+                    UncertaintyDataCall::secStructure folStr = ((i < (this->aminoAcidCount - 1)) ? (sortedUncertainty->operator[](i + 1)[0]) : (sortedUncertainty->operator[](i)[0]));
+                    if (curStr == UncertaintyDataCall::secStructure::E_EXT_STRAND) {
+                        if ((i < (this->aminoAcidCount - 1)) && (secUncertainty->operator[](i + 1)[(int)UncertaintyDataCall::secStructure::E_EXT_STRAND] > 0.0f)) {
+                            folStr = UncertaintyDataCall::secStructure::E_EXT_STRAND;
+                        }
+                    }
+
+                    this->DrawSecStructGeometryTiles(curStr, folStr, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPosTemp), bgColor);
+                    yPosTemp += 1.0f;
+                }
+            }
+
+            // Draw outlining
+            GLfloat tmpLw;
+            glGetFloatv(GL_LINE_WIDTH, &tmpLw);
+            vislib::math::Vector<float, 2> posOffset;
+            GLint steps  = 25;
+
+            float upBound;
+            float loBound;
+            float upBndPre;
+            float loBndPre;
+
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+    
+                posOffset.SetX(this->vertices[2 * i]);
+                posOffset.SetY(this->vertices[2 * i + 1]);
+
+                curCnt = this->diffStrucCount[i];
+                preCnt = (i > 0) ? (this->diffStrucCount[i - 1]) : (curCnt);
+
+                upBound = -1.0f*(float)(this->methodRows - curCnt) / 2.0f;;
+                loBound = upBound - (float)curCnt;
+
+                if (this->residueFlag[i] == UncertaintyDataCall::addFlags::MISSING) {
+                    curCnt = 0;
+                }
+                if ((i > 0)  && (this->residueFlag[i-1] == UncertaintyDataCall::addFlags::MISSING)) {
+                    preCnt = 0;
+                }
+
+                glColor3f(0.0f, 0.0f, 0.0f);
+                glLineWidth(1.0f);
+                glDisable(GL_DEPTH_TEST);
+
+                if (preCnt > curCnt) {
+                        
+                    upBndPre = -1.0f*(float)(this->methodRows - preCnt) / 2.0f;
+                    loBndPre = upBndPre - (float)preCnt;
+
+                    // upper closing brackets
+                    GLfloat cpUpClose[4][3] = {
+                        { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + upBound, 0.0f },
+                        { posOffset.X() + 0.5f, -posOffset.Y() + upBndPre, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + upBndPre, 0.0f } };
+                    // lower closing brackets
+                    GLfloat cpDownClose[4][3] = {
+                        { posOffset.X() + 0.5f, -posOffset.Y() + loBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + loBound, 0.0f },
+                        { posOffset.X() + 0.5f, -posOffset.Y() + loBndPre, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + loBndPre, 0.0f } };
+
+                    glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpClose[0][0]);
+                    glEnable(GL_MAP1_VERTEX_3);
+                    glMapGrid1f(steps, 0.0f, 1.0f);
+                    glEvalMesh1(GL_LINE, 0, steps);
+                    glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpDownClose[0][0]);
+                    glEvalMesh1(GL_LINE, 0, steps);
+                        
+                }
+                if (preCnt < curCnt) {
+                        
+                    upBndPre = -1.0f*(float)(this->methodRows - preCnt) / 2.0f;
+                    loBndPre = upBndPre - (float)preCnt;
+
+                    // upper opening brackets 
+                    GLfloat cpUpOpen[4][3] = {
+                        { posOffset.X() - 0.5f, -posOffset.Y() + upBndPre, 0.0f },{ posOffset.X() + 0.5f, -posOffset.Y() + upBndPre, 0.0f },
+                        { posOffset.X() - 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f } };
+
+                    // lower opening brackets 
+                    GLfloat cpDownOpen[4][3] = {
+                        { posOffset.X() - 0.5f, -posOffset.Y() + loBndPre, 0.0f },{ posOffset.X() + 0.5f, -posOffset.Y() + loBndPre, 0.0f },
+                        { posOffset.X() - 0.5f, -posOffset.Y() + loBound, 0.0f },{ posOffset.X() + 0.5f, -posOffset.Y() + loBound, 0.0f } };
+
+                    glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpOpen[0][0]);
+                    glEnable(GL_MAP1_VERTEX_3);
+                    glMapGrid1f(steps, 0.0f, 1.0f);
+                    glEvalMesh1(GL_LINE, 0, steps);
+                    glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpDownOpen[0][0]);
+                    glEvalMesh1(GL_LINE, 0, steps);
+                }
+                if (preCnt == curCnt) {
+                    glEnable(GL_DEPTH_TEST);
+
+                    glBegin(GL_LINES);
+                    glVertex3f(posOffset.X() - 0.5f, -posOffset.Y() + upBound, 0.0f);
+                    glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f);
+                    glVertex3f(posOffset.X() - 0.5f, -posOffset.Y() + loBound, 0.0f);
+                    glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + loBound, 0.0f);
+                    glEnd();
+
+                    // separator of uncertain amino-acids
+                    if (this->showSeparatorLine) {
+                        glColor3f(0.8f, 0.8f, 0.8f);
+                        glLineWidth(1.0f);
+
+                        glBegin(GL_LINES);
+                        glVertex3f(posOffset.X(), -posOffset.Y() + upBound, 0.5f);
+                        glVertex3f(posOffset.X(), -posOffset.Y() + loBound, 0.5f);
+                        glEnd();
+                    }
+                    glDisable(GL_DEPTH_TEST);
+                }
+            } // aa loop
+
+            // draw uncertainty 
+            yPos += (float)this->methodRows;
+            if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                float col;
+                glBegin(GL_QUADS);
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                    col = 1.0f - this->uncertainty[i];
+                    glColor3f(col, col, col);
+                    if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
+                        // assuming values are in range 0.0-1.0
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+                        glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f));
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f));
+                        glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+                    }
+                }
+                glEnd();
+                yPos += 1.0f;
+            }
+
+        }
+        else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) { // UNFOLDED UNCERTAINTY LINE VIEW
 
             vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *secUncertainty =
                 &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
@@ -764,40 +934,35 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
 
             vislib::math::Vector<float, 2> posOffset;
-            GLint steps = 50;
+
             float uncPre;
             float uncCur;
             float uncSuc;
 
             float upBound;
             float loBound;
-            float offset = 0.0f;
+
+            GLint steps     = 25;
+            float offset    = 0.0f;
+
             bool uncRowFlag = false;
-
-
             if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
                 uncRowFlag = true;
             }
 
             if (uncRowFlag) {
-                upBound = std::ceil(this->methodRows / 2.0f) + 0.5f;
-                loBound = std::floor(this->methodRows / 2.0f) - 0.5f;
+                upBound = std::ceil((float)this->methodRows / 2.0f) + 0.5f;
+                loBound = std::floor((float)this->methodRows / 2.0f) - 0.5f;
                 offset  = 1.0f;
             }
             else {
-                upBound = this->methodRows / 2.0f;
-                loBound = this->methodRows / 2.0f;
+                upBound = (float)this->methodRows / 2.0f;
+                loBound = (float)this->methodRows / 2.0f;
             }
-
-            // draw structure uncertainty visualization
-            if (uncRowFlag) {
-                this->RenderUncertainty(yPos + upBound - 1.0f, fgColor, bgColor);
-            }
-
 
             //draw geometry tiles for secondary structure 
-            float yPosTemp = yPos + 0.5f;
-            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+            float yPosTemp = 0.5f;
+            if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (upBound - 1.0f)))) {
                 yPosTemp += 1.0f;
             }
             //STRIDE
@@ -810,7 +975,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                 }
                 yPosTemp += 1.0f;
-                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (upBound - 1.0f)))) {
                     yPosTemp += 1.0f;
                 }
             }
@@ -824,7 +989,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                 }
                 yPosTemp += 1.0f;
-                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (upBound - 1.0f)))) {
                     yPosTemp += 1.0f;
                 }
             }
@@ -838,7 +1003,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                 }
                 yPosTemp += 1.0f;
-                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (upBound - 1.0f)))) {
                     yPosTemp += 1.0f;
                 }
             }
@@ -852,7 +1017,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                 }
                 yPosTemp += 1.0f;
-                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (yPos + upBound - 1.0f)))) {
+                if (uncRowFlag && (SEQ_FLOAT_EPS > std::abs(yPosTemp - (upBound - 1.0f)))) {
                     yPosTemp += 1.0f;
                 }
             }
@@ -861,35 +1026,26 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
             ////////////////////////////////////////////////
 
+            // draw structure uncertainty visualization
+            if (uncRowFlag) {
+                this->RenderUncertainty(upBound - 1.0f, fgColor, bgColor);
+            }
+
             // Draw outlining
             GLfloat tmpLw;
             glGetFloatv(GL_LINE_WIDTH, &tmpLw);
 
-            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
-                posOffset.SetX(this->vertices[2 * i]);
-                posOffset.SetY(this->vertices[2 * i + 1] + yPos + upBound);
-                // upper closing brackets
-                GLfloat cpUpClose[4][3] = {
-                    { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + offset, 0.0f },
-                    { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + upBound, 0.0f } };
-                // upper opening brackets 
-                GLfloat cpUpOpen[4][3] = {
-                    { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + offset, 0.0f },
-                    { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + upBound, 0.0f } };
-                // lower closing brackets
-                GLfloat cpDownClose[4][3] = {
-                    { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + 0.0f, 0.0f },
-                    { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() - loBound, 0.0f } };
-                // lower opening brackets 
-                GLfloat cpDownOpen[4][3] = {
-                    { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + 0.0f, 0.0f },
-                    { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() - loBound, 0.0f } };
+            float offsetTmp = offset;
 
-                uncPre;
-                uncCur;
-                uncSuc;
+            for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+                
+                posOffset.SetX(this->vertices[2 * i]);
+                posOffset.SetY(this->vertices[2 * i + 1] + upBound);
 
                 uncCur = secUncertainty->operator[](i)[(int)sortedUncertainty->operator[](i)[0]];
+                if (this->residueFlag[i] == UncertaintyDataCall::addFlags::MISSING) {
+                    uncCur = 1.0f;
+                }
                 if (i > 0) {
                     uncPre = secUncertainty->operator[](i - 1)[(int)sortedUncertainty->operator[](i - 1)[0]];
                     if (this->residueFlag[i - 1] == UncertaintyDataCall::addFlags::MISSING) {
@@ -908,13 +1064,23 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 else {
                     uncSuc = uncCur;
                 }
-                
+
                 glColor3f(0.0f, 0.0f, 0.0f);
-                glDisable(GL_DEPTH_TEST); 
-                glLineWidth(2.0f);
+                glLineWidth(1.0f);
+                glDisable(GL_DEPTH_TEST);
 
                 if (uncCur >= 1.0f) {
                     if (uncPre < 1.0f) {
+
+                        // upper closing brackets
+                        GLfloat cpUpClose[4][3] = {
+                            { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + offset, 0.0f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + upBound, 0.0f } };
+                        // lower closing brackets
+                        GLfloat cpDownClose[4][3] = {
+                            { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + 0.0f, 0.0f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() - loBound, 0.0f } };
+
                         glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpClose[0][0]);
                         glEnable(GL_MAP1_VERTEX_3);
                         glMapGrid1f(steps, 0.0f, 1.0f);
@@ -931,6 +1097,17 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         glEnd();
                     }
                     if (uncSuc < 1.0f) {
+
+                        // upper opening brackets 
+                        GLfloat cpUpOpen[4][3] = {
+                            { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + offset, 0.0f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + upBound, 0.0f } };
+
+                        // lower opening brackets 
+                        GLfloat cpDownOpen[4][3] = {
+                            { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + 0.0f, 0.0f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() - loBound, 0.0f } };
+
                         glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpOpen[0][0]);
                         glEnable(GL_MAP1_VERTEX_3);
                         glMapGrid1f(steps, 0.0f, 1.0f);
@@ -957,33 +1134,33 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         glEnd();
                     }
                     if (uncSuc < 1.0f) {
+                        glEnable(GL_DEPTH_TEST);
+
                         glBegin(GL_LINES);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + upBound);
-                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + upBound);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() - loBound);
-                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() - loBound);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, 0.0f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() - loBound, 0.0f);
                         glEnd();
 
                         // separator of uncertain amino-acids
-                        glColor3f(0.9f, 0.9f, 0.9f);
-                        glEnable(GL_DEPTH_TEST);
-                        glLineWidth(1.0f);
+                        if (this->showSeparatorLine) {
+                            glColor3f(0.8f, 0.8f, 0.8f);
+                            glLineWidth(1.0f);
 
-                        glBegin(GL_LINES);
-                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + upBound);
-                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() - loBound);
-                        glEnd();
+                            glBegin(GL_LINES);
+                            glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, 0.5f);
+                            glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() - loBound, 0.5f);
+                            glEnd();
+                                
+                        }
+                        glDisable(GL_DEPTH_TEST);
                     }
                 }
             }
 
-            glLineWidth(tmpLw);
-            glEnable(GL_DEPTH_TEST);
-
-
-            yPos += this->methodRows;
-
             // draw uncertainty 
+            yPos += (float)this->methodRows;
             if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                 float col;
                 glBegin(GL_QUADS);
@@ -1001,6 +1178,9 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 glEnd();
                 yPos += 1.0f;
             }
+
+            glLineWidth(tmpLw);
+            glEnable(GL_DEPTH_TEST);
         }
         else { // NORMAL VIEW
             //draw geometry tiles for secondary structure    
@@ -1282,15 +1462,19 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 rowPos = 0.0f;
 				for (unsigned int i = 0; i < this->resRows; i++) { // replace 'i < 1' with 'i < this->resRows' to show row legend for every row not just the first one
 
+                    // UNFOLDED UNCERTAINTY AMINO-ACID VIEW
+                    if (this->currentViewMode == VIEWMODE_UNFOLDED_AMINOACID) {
 
-                    // UNFOLDED UNCERTAINTY VIEW
-                    if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
+                        // intetionally left empty ...
+
+                    }
+                    // UNFOLDED UNCERTAINTY LINE VIEW
+                    else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) {
 
                         float yPosTemp = yPos + 0.5f;
-                        float upBound  = std::ceil(this->methodRows / 2.0f) + 0.5f;
+                        float upBound  = std::ceil((float)this->methodRows / 2.0f) + 0.5f;
+
                         bool uncRowFlag = false;
-
-
                         if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
                             uncRowFlag = true;
                         }
@@ -1301,7 +1485,6 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                             theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + upBound - 1.0f), wordlength, 1.0f,
                                 fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                         }
-
 
                         if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
                             tmpStr = "STRIDE";
@@ -1349,7 +1532,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         ////////////////////////////////////////////////
 
 
-                        yPos += this->methodRows;
+                        yPos += (float)this->methodRows;
 
                         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
                             tmpStr = "Uncertainty";
@@ -1558,12 +1741,79 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 start      = 0.0;
                 if (theFont.Initialise()) {
 
-                    // UNFOLDED UNCERTAINTY VIEW
-                    if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
-                        
-                        bool uncRowFlag = false;
-                        float startUnc  = (std::ceil(this->methodRows / 2.0f) - 0.5f) * perCentRow;
+                    // UNFOLDED UNCERTAINTY AMINO-ACID VIEW
+                    if (this->currentViewMode == VIEWMODE_UNFOLDED_AMINOACID) {
 
+                        unsigned int curCnt = this->diffStrucCount[mousePosResIdx];
+
+                        start = ((float)(this->methodRows - curCnt) / 2.0f) * perCentRow;
+                        for (unsigned int m = 0; m < curCnt; m++) {
+
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+
+                                UncertaintyDataCall::secStructure assignment = this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][m];
+
+                                tmpStr = "Methods:    ";
+                                unsigned int cnt = 0;
+                                for (int n = 0; n < UncertaintyDataCall::assMethod::NOM - 1; n++) { // without UNCERTAINTY
+                                    if (assignment == this->sortedSecStructAssignment[n][mousePosResIdx][0]) {
+                                        if (cnt > 0) {
+                                            tmpStr.Append(", ");
+                                        }
+                                        switch (static_cast<UncertaintyDataCall::assMethod>(n)) {
+                                        case UncertaintyDataCall::assMethod::PDB:     tmpStr3.Format("%s", "PDB"); break;
+                                        case UncertaintyDataCall::assMethod::DSSP:    tmpStr3.Format("%s", "DSSP"); break;
+                                        case UncertaintyDataCall::assMethod::STRIDE:  tmpStr3.Format("%s", "STRIDE"); break;
+                                        case UncertaintyDataCall::assMethod::PROSIGN: tmpStr3.Format("%s", "PROSIGN"); break;
+                                        default: break;
+                                        }
+                                        tmpStr.Append(tmpStr3);
+                                        cnt++;
+                                    }
+                                }
+
+                                tmpStr2.Format("Structure:  %s - %.2f %% ", this->secStructDescription[(int)assignment],
+                                    this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][assignment] * 100.0f);
+
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+
+                            start += perCentRow;
+                        }
+                        start += ((float)(this->methodRows - curCnt) / 2.0f) * perCentRow;
+
+                        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING && (this->uncertainty[mousePosResIdx] > 0.0f)) {
+                                tmpStr = "Uncertainty:";
+                                // tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
+                                tmpStr2.Format("%.3f", this->uncertainty[mousePosResIdx]);
+                                this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            }
+                            start += perCentRow;
+                        }
+
+                        tmpStr = "Flag:";
+                        switch (this->residueFlag[mousePosResIdx]) {
+                        case(UncertaintyDataCall::addFlags::MISSING):
+                            tmpStr2 = "MISSING";
+                            this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            break;
+                        case(UncertaintyDataCall::addFlags::HETEROGEN):
+                            tmpStr2 = "HETEROGEN";
+                            this->RenderToolTip(start, start + perCentRow, tmpStr, tmpStr2, bgColor, fgColor);
+                            break;
+                        case(UncertaintyDataCall::addFlags::NOTHING):
+                            break;
+                        default: break;
+                        }
+
+                    }
+                    // UNFOLDED UNCERTAINTY LINE VIEW
+                    else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) {
+                       
+                        float startUnc  = (std::ceil((float)this->methodRows / 2.0f) - 0.5f) * perCentRow;
+
+                        bool uncRowFlag = false;
                         if (this->toggleUncertainStructParam.Param<param::BoolParam>()->Value()) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "Structure Probabilities:";
@@ -1585,7 +1835,6 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                             uncRowFlag = true;
                         }
                         
-
                         start += (0.5f * perCentRow);
 
                         if (this->toggleStrideParam.Param<param::BoolParam>()->Value()) {
@@ -1643,7 +1892,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         start += (0.5f * perCentRow);
 
                         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
-                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING && (this->uncertainty[mousePosResIdx] > 0.0f)) {
                                 tmpStr = "Uncertainty:";
                                 // tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
                                 tmpStr2.Format("%.3f", this->uncertainty[mousePosResIdx]);
@@ -1767,7 +2016,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         ////////////////////////////////////////////////
 
                         if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
-                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+                            if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING && (this->uncertainty[mousePosResIdx] > 0.0f)) {
                                 tmpStr = "Uncertainty:";
                                 // tmpStr2.Format("%.0f %%", this->uncertainty[mousePosResIdx] * 100.0f);
                                 tmpStr2.Format("%.3f", this->uncertainty[mousePosResIdx]);
@@ -2660,6 +2909,9 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
     this->selection.Clear();
     this->selection.AssertCapacity(this->aminoAcidCount);
 
+    this->diffStrucCount.Clear();
+    this->diffStrucCount.AssertCapacity(this->aminoAcidCount);
+
     this->vertices.Clear();
     this->vertices.AssertCapacity(this->aminoAcidCount * 2);
 
@@ -2862,32 +3114,61 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 
     }
 	
-	// compute the vertices for the quad for each uncertain amino-acid structure
-	for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
 
-		if (this->residueFlag[aa] != UncertaintyDataCall::addFlags::MISSING) {
-            aaCur = this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][0]];
+    // UNFOLDED UNCERTAINTY AMINO-ACID VIEW
+    if (this->currentViewMode == VIEWMODE_UNFOLDED_AMINOACID) {
 
-            float offset = (float)this->secStructRows;
-            // UNFOLDED UNCERTAINTY VIEW
-            if (this->unfoldUncertaintyViewParam.Param<param::BoolParam>()->Value()) {
-                offset = (float)this->secStructRows - 3.0f;
+        vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *secUncertainty =
+            &this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+        vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *sortedUncertainty =
+            &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
+
+        // Bestimme die unterschiedlichen Strukturtypen mit u > 0 für alle Amino-Säuren
+        for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
+
+            this->diffStrucCount.Add(0);
+            if (this->residueFlag[aa] != UncertaintyDataCall::addFlags::MISSING) {
+                for (unsigned int k = 0; k < UncertaintyDataCall::secStructure::NOE; k++) {
+                    if (secUncertainty->operator[](aa)[(int)sortedUncertainty->operator[](aa)[k]] > 0.0f)
+                        this->diffStrucCount.Last()++;
+                }
             }
 
-			if (aaCur < 1.0f) {
-				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset - 1.0f));
+            // DEBUG
+            // std::cout << this->diffStrucCount.Last() << std::endl;
+        }
                 
-				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset));
+    }
+    // UNFOLDED UNCERTAINTY LINE VIEW
+    else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) {
 
-				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset));
-                
-				this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
-				this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset - 1.0f));
-			}
-		}
+        // not used
+
+    }
+    else {
+        // compute the vertices for the quad for each uncertain amino-acid structure
+        for (unsigned int aa = 0; aa < this->aminoAcidCount; aa++) {
+
+            if (this->residueFlag[aa] != UncertaintyDataCall::addFlags::MISSING) {
+                aaCur = this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][(int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY][aa][0]];
+
+                float offset = (float)this->secStructRows;
+
+                if (aaCur < 1.0f) {
+                    this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
+                    this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset - 1.0f));
+
+                    this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2]);
+                    this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset));
+
+                    this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
+                    this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset));
+
+                    this->aminoacidSeparatorVertices.Add(this->vertices[aa * 2] + 1.0f);
+                    this->aminoacidSeparatorVertices.Add(-(this->vertices[aa * 2 + 1] + offset - 1.0f));
+                }
+            }
+        }
 	}
 	
 

@@ -259,7 +259,18 @@ namespace megamol {
             UNCERTAIN_COLOR_HSL     = 1,  
             UNCERTAIN_COLOR_HSL_HP  = 2             
         };   
-                        
+                   
+        /**
+        * Uncertainty View Modes
+        *                                 
+        */
+        enum viewModes {
+            VIEWMODE_NORMAL_SEQUENCE    = 0,
+            VIEWMODE_UNFOLDED_SEQUENCE  = 1,
+            VIEWMODE_UNFOLDED_AMINOACID = 2
+        };
+
+
         /**
          * Renders the uncertainty visualization.
          *
@@ -390,7 +401,7 @@ namespace megamol {
         megamol::core::param::ParamSlot uncertainGardientIntervalParam;
         megamol::core::param::ParamSlot geometryTessParam;
 
-        megamol::core::param::ParamSlot unfoldUncertaintyViewParam;
+        megamol::core::param::ParamSlot viewModeParam;
 
         // the current uncertainty visualization selection
         certainBlockChartColor         currentCertainBlockChartColor;
@@ -403,6 +414,8 @@ namespace megamol {
         float                          currentUncertainGardientInterval;
         bool                           showSeparatorLine;
         int                            currentGeometryTess;
+
+        viewModes                      currentViewMode;
         
 		// parameter to reload shader
 		megamol::core::param::ParamSlot reloadShaderParam;
@@ -458,6 +471,9 @@ namespace megamol {
 
 		// axes for uncertainty glyph
 		vislib::Array<vislib::math::Vector<float, 2> > glyphAxis;
+
+        // different possible secondary structure assignments per amino-acid
+        vislib::Array<unsigned int> diffStrucCount;
 
         // The values of the secondary structure uncertainty for each amino-acid 
         vislib::Array<vislib::Array<vislib::math::Vector<float, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > > secStructUncertainty;
