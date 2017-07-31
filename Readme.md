@@ -27,6 +27,17 @@ MegaMol succeeds [​MolCloud](http://www.visus.uni-stuttgart.de/institut/person
 
         mmconsole.exe -i testspheres inst
 
+
+## MegaMol Configurator
+MegaMol offers a configurator GUI (C#) that runs with .Net Framework 4.
+It runs also on Linux with Mono 3.2.8 (except for the analysis function and indirect-start functions).  
+Download link: [MegaMolConfigurator](https://svn.vis.uni-stuttgart.de/trac/megamol/raw-attachment/wiki/WikiStart/MegaMolConfigurator.zip)
+
+
+## How to use MegaMol
+A detailed description of the MegaMol user interface see chapters `3-5` and appendix `A` in the 
+[Handbook](https://svn.vis.uni-stuttgart.de/trac/megamol/raw-attachment/wiki/WikiStart/MegaMol_v1_1_Manual.pdf).
+
 ## Using the plugin template
 1. Copy the template folder
 2. Rename the copied folder to the intended plugin name
@@ -38,6 +49,7 @@ MegaMol succeeds [​MolCloud](http://www.visus.uni-stuttgart.de/institut/person
 6. Implement the content of your plugin
 7. Write a `Readme.md` for your plugin (mandatory)
 8. Add the folder to your local git
+
 
 ## Citing MegaMol
 Please use one of the following methods to reference the MegaMol project.
