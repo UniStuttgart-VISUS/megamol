@@ -39,6 +39,7 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include "nvpipe.h"
+#include "socket.h"
 
 using namespace megamol::core;
 
@@ -257,17 +258,21 @@ protected:
 	* NvPipe encoding parameters
 	*/
 
+	cudaGraphicsResource_t graphicsResource;
+	cudaArray_t serverArray;
 	::nvpipe* encoder;
-	size_t serverSendBufferSize;
-	void* serverDeviceBuffer;
-	uint8_t* serverSendBuffer;
-	GLuint serverColorTex;
+	size_t sendBufferSize;
+	void* deviceBuffer;
+	uint8_t* sendBuffer;
+	GLuint colorTex;
+	size_t frame_size;
+	size_t numBytes;
 	GLint FboId;
-	param::ParamSlot IPslot;
-	std::socket socket;
+	param::ParamSlot serverNameSlot;
+	param::ParamSlot portSlot;
+	nvpipe::socket socket;
 
 	void initEncoder();
-	void onSetIP();
 
 	/**
 	* Renders the vertices of the bounding box

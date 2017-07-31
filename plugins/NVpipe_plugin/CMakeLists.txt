@@ -21,6 +21,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set(LIBS vislib core glload ${NVPIPE_LIBRARIES})
   include_directories("include" "src" ${CUDA_SDK_ROOT_DIR}/common/inc ${CUDA_INCLUDE_DIRS} ${NVPIPE_INCLUDE_DIRS})
 
+  if(WIN32)
+    set(LIBS ${LIBS} ws2_32.lib) #winsock2 lib
+  endif()
+
+
   message(INFO "${LIBS}")
 
 
