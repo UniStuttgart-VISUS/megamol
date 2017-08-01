@@ -1,0 +1,4 @@
+language: generic
+
+script: 
+  - ci/build.sh
