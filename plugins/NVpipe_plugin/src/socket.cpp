@@ -10,7 +10,6 @@ socket::socket() {
 }
 
 socket::~socket() {
-
 }
 
 void socket::init(std::string serverName, PCSTR port) {
@@ -67,7 +66,7 @@ void socket::connect() {
 }
 
 void socket::sendInitialBuffer(int left, int top, int right, int bottom, int width, int height) {
-	std::array<int, 6> bounds;
+	std::array<int32_t, 6> bounds;
 	bounds[0] = left;
 	bounds[1] = top;
 	bounds[2] = right;
@@ -76,7 +75,7 @@ void socket::sendInitialBuffer(int left, int top, int right, int bottom, int wid
 	bounds[5] = height;
 	std::transform(bounds.begin(), bounds.end(), bounds.begin(), ::htonl);
 	
-	this->returnCode = ::send(this->connectSocket, (char*)bounds.data(), sizeof(int) * 6, 0);
+	this->returnCode = this->send(bounds.data(), sizeof(int32_t) * 6);
 	if (this->returnCode == SOCKET_ERROR) {
 		::closesocket(this->connectSocket);
 		::WSACleanup();
@@ -86,19 +85,35 @@ void socket::sendInitialBuffer(int left, int top, int right, int bottom, int wid
 
 
 void socket::sendFrame(size_t numBytes, uint8_t* sendBuffer) {
-	this->returnCode = ::send(this->connectSocket, (char*)&numBytes, sizeof(size_t), 0);
+	uint32_t nl_numBytes = ::htonl(numBytes);
+	this->returnCode = this->send(&nl_numBytes, sizeof(nl_numBytes));
 	if (this->returnCode == SOCKET_ERROR) {
 		::closesocket(this->connectSocket);
 		::WSACleanup();
 		throw std::exception("send failed\n");
 	}
 
-	this->returnCode = ::send(this->connectSocket, (char*)sendBuffer, numBytes, 0);
+	this->returnCode = this->send(sendBuffer, numBytes);
 	if (this->returnCode == SOCKET_ERROR) {
 	    ::closesocket(this->connectSocket);
 		::WSACleanup();
 		throw std::exception("send failed\n");
 	}
+}
+
+size_t socket::send(const void* buffer, const size_t numBytes) {
+	int lastSent = 0;
+	size_t totalSent = 0;
+	do {
+		lastSent = ::send(this->connectSocket, static_cast<const char*>(buffer), static_cast<int>(numBytes - totalSent), 0);
+
+		if ((lastSent >= 0) && (lastSent != SOCKET_ERROR)) {
+			totalSent += static_cast<size_t>(lastSent);
+		} else {
+			throw std::exception("send failed\n");
+		}
+	} while ((totalSent < numBytes) && (lastSent > 0));
+	return totalSent;
 }
 
 void socket::closeConnection() {
@@ -113,8 +128,30 @@ void socket::closeConnection() {
 			//cleanup
 			::closesocket(this->connectSocket);
 			::WSACleanup();
+			this->intialized = false;
 		}
 	}
+}
+
+
+size_t socket::receive(void* outData, const size_t cntBytes) {
+	size_t totalReceived = 0;
+	int lastReceived = 0;
+
+	do {
+		lastReceived = ::recv(this->connectSocket, static_cast<char *>(outData) + totalReceived,
+			static_cast<int>(cntBytes - totalReceived), 0);
+
+		if ((lastReceived >= 0) && (lastReceived != SOCKET_ERROR)) {
+			/* Successfully received new package. */
+			totalReceived += static_cast<size_t>(lastReceived);
+		} else {
+			/* Communication failed. */
+			throw std::exception("Receiving failed");
+		}
+	} while ((totalReceived < cntBytes) && (lastReceived > 0));
+
+	return totalReceived;
 }
 
 bool socket::isInitialized() {

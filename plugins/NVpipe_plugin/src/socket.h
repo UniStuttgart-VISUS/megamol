@@ -25,6 +25,8 @@ public:
 	void sendFrame(size_t numBytes, uint8_t* serverSendBuffer);
 	void closeConnection();
 	bool isInitialized();
+	size_t send(const void* buffer, const size_t numBytes);
+	size_t receive(void* outData, const size_t cntBytes);
 
 private:
 

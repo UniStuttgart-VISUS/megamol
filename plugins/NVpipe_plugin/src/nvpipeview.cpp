@@ -49,6 +49,10 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <array>
+#include "vislib/graphics/CameraParamsTileRectOverride.h"
+#include "vislib/graphics/CameraParamsVirtualViewOverride.h"
+
 
 using namespace megamol;
 using namespace megamol::core;
@@ -57,7 +61,9 @@ using namespace megamol::core::view;
 /*
 * nvpipe::NVpipeView::NVpipeView
 */
-nvpipe::NVpipeView::NVpipeView(void) : AbstractView3D(), AbstractCamParamSync(), cam(), camParams(), socket(),
+nvpipe::NVpipeView::NVpipeView(void) : AbstractView3D(), AbstractCamParamSync(), cam(),
+camParams(), socket(),
+offscreenOverride(new vislib::graphics::CameraParamsStore),
 camOverrides(), cursor2d(), modkeys(), rotator1(),
 rotator2(), zoomer1(), zoomer2(), mover(), lookAtDist(),
 rendererSlot("rendering", "Connects the view to a Renderer"),
@@ -282,10 +288,10 @@ portSlot("port", "Communication port"){
 * nvpipe::NVpipeView::initEncoder
 */
 void nvpipe::NVpipeView::initEncoder() {
-	const uint64_t bitrate = this->camParams->TileRect().Width() * this->camParams->TileRect().Height() * 30 * 3 * 0.07; // Kush gauge
+	const uint64_t bitrate = this->camParams->TileRect().Width() * this->camParams->TileRect().Height() * 30 * 4 * 0.07; // Kush gauge
 	encoder = nvpipe_create_encoder(NVPIPE_H264_NV, bitrate);
 
-	size_t deviceBufferSize = this->camParams->TileRect().Width() * this->camParams->TileRect().Height() * 3;
+	size_t deviceBufferSize = this->camParams->TileRect().Width() * this->camParams->TileRect().Height() * 4;
 	if (cudaMalloc(&deviceBuffer, deviceBufferSize) != cudaSuccess) {
 		throw vislib::Exception("Failed to allocate device memory", __FILE__, __LINE__);
 	}
@@ -293,8 +299,8 @@ void nvpipe::NVpipeView::initEncoder() {
 	sendBufferSize = deviceBufferSize; // Reserve enough space for encoded output
 	sendBuffer = new uint8_t[sendBufferSize];
 
-	glGenTextures(1, &colorTex);
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &FboId);
+	cudaGraphicsGLRegisterImage(&graphicsResource, this->fbo.GetColourTextureID(), GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
+
 }
 
 
@@ -337,6 +343,46 @@ void nvpipe::NVpipeView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 * nvpipe::NVpipeView::Render
 */
 void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
+
+
+	/*
+	* init Network stuff and camera
+	*/
+
+	if (!this->socket.isInitialized()) {
+		using namespace vislib::graphics;
+
+		std::string sn = this->serverNameSlot.Param<param::StringParam>()->Value();
+		std::string pt_str = std::to_string(this->portSlot.Param<param::IntParam>()->Value());
+		PCSTR pt = (PCSTR)pt_str.c_str();
+
+		this->socket.init(sn, pt);
+		this->socket.connect();
+		// receive initial buffer
+		std::array<int32_t, 6> bounds;
+		this->socket.receive(bounds.data(), bounds.size() * sizeof(bounds[0]));
+		std::transform(bounds.begin(), bounds.end(), bounds.begin(), ::ntohl);
+
+		std::cout << "Tile rect params. left: " << bounds[0] << " top: " << bounds[1] <<
+			" right: " << bounds[2] << " bottom: " << bounds[3] << " width: "
+			<< bounds[4] << " height: " << bounds[5] <<
+			std::endl;
+
+		//
+
+		this->offscreenTile = ImageSpaceRectangle(bounds[0], bounds[5] - bounds[3], bounds[2], bounds[5] - bounds[1]);
+		this->offscreenSize = ImageSpaceDimension(bounds[4], bounds[5]);
+
+		this->fbo.Create(offscreenTile.Width(), offscreenTile.Height(), GL_RGBA, GL_RGBA);
+
+		/*
+		* Init Encoder
+		*/
+		this->initEncoder();
+	}
+
+
+	
 	float time = static_cast<float>(context.Time);
 	float instTime = static_cast<float>(context.InstanceTime);
 
@@ -571,8 +617,19 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 	}
 
 	// call for render
-	if (cr3d != NULL) {
+	if (cr3d != NULL && this->fbo.IsValid()) {
+		auto oldcam = cr3d->GetCameraParameters();
+		this->offscreenOverride->CopyFrom(oldcam);
+		this->offscreenOverride->SetTileRect(this->offscreenTile);
+		this->offscreenOverride->SetVirtualViewSize(this->offscreenSize);
+		cr3d->SetCameraParameters(this->offscreenOverride);
+		this->fbo.Enable();
+		::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
+		::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		(*cr3d)(0);
+		this->fbo.Disable();
+		this->fbo.DrawColourTexture();
+		cr3d->SetCameraParameters(oldcam);
 	}
 
 	// render bounding box front
@@ -598,70 +655,24 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 	/*
 	* Grab frame and encode
 	*/
-	frame_size = this->camParams->TileRect().Width() * this->camParams->TileRect().Height() * 3;
-	uint8_t* rgb = new uint8_t[frame_size];
-
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, FboId);
-	glReadPixels(0, 0, this->camParams->TileRect().Width(), this->camParams->TileRect().Height(), GL_RGB, GL_UNSIGNED_BYTE, rgb);
-
-	// WRITE PPM FILE
-	/*{
-	std::string path = "blub.ppm";
-
-	std::ofstream outFile;
-	outFile.open(path.c_str(), std::ios::binary);
-
-	outFile << "P6" << "\n"
-		<< this->camParams->TileRect().Width() << " " << this->camParams->TileRect().Height() << "\n"
-		<< "255\n";
-
-	outFile.write((char*)rgb, numBytes_ver);
-
-	}*/
-
-	glBindTexture(GL_TEXTURE_2D, colorTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->camParams->TileRect().Width(), this->camParams->TileRect().Height(), 0, GL_RGB, GL_UNSIGNED_BYTE, rgb);
-
-
-	cudaGraphicsGLRegisterImage(&graphicsResource, colorTex, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
-
 	cudaGraphicsMapResources(1, &graphicsResource);
-
 	cudaGraphicsSubResourceGetMappedArray(&serverArray, graphicsResource, 0, 0);
-	cudaMemcpy2DFromArray(this->deviceBuffer, this->camParams->TileRect().Width() * 3, serverArray, 0, 0, this->camParams->TileRect().Width() * 3, this->camParams->TileRect().Height(), cudaMemcpyDeviceToDevice);
+	cudaMemcpy2DFromArray(this->deviceBuffer, this->offscreenTile.Width() * 4, serverArray, 0, 0,
+		this->offscreenTile.Width() * 4, this->offscreenTile.Height(), cudaMemcpyDeviceToDevice);
 	cudaGraphicsUnmapResources(1, &graphicsResource);
 
+
 	numBytes = this->sendBufferSize;
-	nvp_err_t encodeStatus = nvpipe_encode(this->encoder, this->deviceBuffer, this->camParams->TileRect().Width() * this->camParams->TileRect().Height() * 3, 
-		sendBuffer, &numBytes, this->camParams->TileRect().Width(), this->camParams->TileRect().Height(), NVPIPE_RGB);
+	nvp_err_t encodeStatus = nvpipe_encode(this->encoder, this->deviceBuffer, frame_size, 
+		sendBuffer, &numBytes, this->offscreenTile.Width(), this->offscreenTile.Height(), NVPIPE_RGBA);
 	if (encodeStatus != NVPIPE_SUCCESS) {
 		throw std::exception("Encode failed");
 	}
 
-	/*
-	* Network transfer 
-	*/
-
-	if (!this->socket.isInitialized()) {
-		std::string sn = this->serverNameSlot.Param<param::StringParam>()->Value();
-		std::string pt_str = std::to_string(this->portSlot.Param<param::IntParam>()->Value());
-		PCSTR pt = (PCSTR)pt_str.c_str();
-
-		this->socket.init(sn, pt);
-		this->socket.connect();
-		this->socket.sendInitialBuffer(
-			this->camParams->TileRect().Left(),
-			this->camParams->TileRect().Top(),
-			this->camParams->TileRect().Right(),
-			this->camParams->TileRect().Bottom(),
-			this->camParams->TileRect().Width(),
-			this->camParams->TileRect().Height()
-		);
-	}
+	// Send frame
 	this->socket.sendFrame(numBytes, sendBuffer);
 
-	delete[] rgb;
+
 }
 
 
@@ -952,10 +963,6 @@ bool nvpipe::NVpipeView::create(void) {
 	this->modkeys.RegisterObserver(&this->cursor2d);
 
 	this->firstImg = true;
-
-
-	this->initEncoder();
-
 
 	return true;
 }

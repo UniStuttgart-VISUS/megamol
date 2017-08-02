@@ -257,21 +257,18 @@ protected:
 	/**
 	* NvPipe encoding parameters
 	*/
-
 	cudaGraphicsResource_t graphicsResource;
 	cudaArray_t serverArray;
 	::nvpipe* encoder;
 	size_t sendBufferSize;
 	void* deviceBuffer;
 	uint8_t* sendBuffer;
-	GLuint colorTex;
 	size_t frame_size;
 	size_t numBytes;
-	GLint FboId;
 	param::ParamSlot serverNameSlot;
 	param::ParamSlot portSlot;
 	nvpipe::socket socket;
-
+	// intiation routine
 	void initEncoder();
 
 	/**
@@ -375,6 +372,14 @@ protected:
 
 	/** The camera parameter overrides */
 	vislib::SmartPtr<vislib::graphics::CameraParameters> camOverrides;
+
+	/** The */
+	vislib::SmartPtr<vislib::graphics::CameraParameters> offscreenOverride;
+
+	vislib::graphics::ImageSpaceRectangle offscreenTile;
+	vislib::graphics::ImageSpaceDimension offscreenSize;
+
+	vislib::graphics::gl::FramebufferObject fbo;
 
 	/** the 2d cursor of this view */
 	vislib::graphics::Cursor2D cursor2d;
