@@ -1,4 +1,4 @@
 shallow_clone: true
 
 build_script:
-  - build.ps1
+  - ps: ci\build.ps1
