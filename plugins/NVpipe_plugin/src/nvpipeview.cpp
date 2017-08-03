@@ -425,6 +425,11 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 		if (cr3d != nullptr) cr3d->GetViewport(); // access the viewport to enforce evaluation
 	}
 
+	if (this->fbo.IsValid()) {
+		// Redirect output to CUDA-mapped FBO
+		this->fbo.Enable();
+	}
+
 	const float *bkgndCol = (this->overrideBkgndCol != NULL)
 		? this->overrideBkgndCol : this->bkgndColour();
 	::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
@@ -570,6 +575,14 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 	::glLightfv(GL_LIGHT0, GL_SPECULAR, ones);
 	::glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zeros);
 
+	// Use the HAMMER on camera
+	auto oldcam = this->cam.Parameters();
+	this->offscreenOverride->CopyFrom(oldcam);
+	this->offscreenOverride->SetVirtualViewSize(this->offscreenSize);
+	this->offscreenOverride->SetTileRect(this->offscreenTile);
+	this->cam.SetParameters(this->offscreenOverride);
+
+
 	// setup matrices
 
 #ifdef ROTATOR_HACK
@@ -617,19 +630,8 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 	}
 
 	// call for render
-	if (cr3d != NULL && this->fbo.IsValid()) {
-		auto oldcam = cr3d->GetCameraParameters();
-		this->offscreenOverride->CopyFrom(oldcam);
-		this->offscreenOverride->SetTileRect(this->offscreenTile);
-		this->offscreenOverride->SetVirtualViewSize(this->offscreenSize);
-		cr3d->SetCameraParameters(this->offscreenOverride);
-		this->fbo.Enable();
-		::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
-		::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (cr3d != NULL) {
 		(*cr3d)(0);
-		this->fbo.Disable();
-		this->fbo.DrawColourTexture();
-		cr3d->SetCameraParameters(oldcam);
 	}
 
 	// render bounding box front
@@ -651,6 +653,18 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 #endif
 
 	AbstractRenderingView::endFrame();
+
+	// Undo the HAMMER
+	if (this->fbo.IsValid()) {
+		this->fbo.Disable();
+		::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// Not the HAMMER
+		//this->fbo.BindColourTexture();
+		//glTexEnvi(GL_TEXTURE_2D, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+		this->fbo.DrawColourTexture();
+	}
+	this->cam.SetParameters(oldcam);
+
 
 	/*
 	* Grab frame and encode
