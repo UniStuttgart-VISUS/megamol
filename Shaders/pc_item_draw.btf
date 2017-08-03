@@ -178,22 +178,23 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 uniform uvec2 resolution = uvec2(0);
 //uniform uvec2 stepSize = uvec2(3);
-uniform uvec2 fragmentCountStepSize = uvec2(10);
+uniform uvec2 fragmentCountStepSize = uvec2(16);
 
 void main()
 {
-  if (any(greaterThanEqual(gl_GlobalInvocationID.xy, resolution)))
-  {
-    return;
-  }
-  
+ 
   uint minFrag = 4294967295u;
   uint maxFrag = 0;
 
   uvec2 start = min(gl_GlobalInvocationID.xy * fragmentCountStepSize, resolution);
   uvec2 end = min(start + fragmentCountStepSize, resolution);
   uvec2 texCoord = start;
-  
+
+  if (any(greaterThanEqual(start, resolution)) || any(greaterThan(end, resolution)))
+  {
+    return;
+  }
+
   while (texCoord.y < end.y)
   {
     texCoord.x = start.x;

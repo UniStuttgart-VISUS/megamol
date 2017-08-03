@@ -18,7 +18,19 @@
 
 //#define FUCK_THE_PIPELINE
 //#define USE_TESSELLATION
-//#define BE_DEBUGGABLE
+#define BE_DEBUGGABLE
+
+#ifdef _DEBUG
+#define MAKE_OBJECT_LABEL(TYPE, ID) (glObjectLabel(TYPE, ID, sizeof(#ID) - 1, #ID))
+#define MAKE_OBJECT_LABEL_EXPLICIT(TYPE, ID, LENGTH, LABEL) (glObjectLabel(TYPE, ID, LENGTH, LABEL))
+#define PUSH_DEBUG_GROUP(ID, LABEL) (glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, ID, sizeof(#LABEL), #LABEL))
+#define POP_DEBUG_GROUP (glPopDebugGroup())
+#else
+#define MAKE_OBJECT_LABEL
+#define MAKE_OBJECT_LABEL_EXPLICIT
+#define PUSH_DEBUG_GROUP
+#define POP_DEBUG_GROUP
+#endif
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -206,7 +218,7 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
 						  "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
-
+        MAKE_OBJECT_LABEL_EXPLICIT(GL_PROGRAM, program.ProgramHandle(), pref.Length(), pref.PeekBuffer());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
 					      "Unable to compile %s (@%s): %s\n", pref.PeekBuffer(),
@@ -244,6 +256,7 @@ bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vis
 						  "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
+        MAKE_OBJECT_LABEL_EXPLICIT(GL_PROGRAM, program.ProgramHandle(), pref.Length(), pref.PeekBuffer());
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
@@ -603,6 +616,7 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
         maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
         names[x] = floats->GetColumnsInfos()[x].Name();
         // TODO this is shit the user needs his real values DAMMIT!
+        // hopefully fixed through proper axis labels.
         filters[x].lower = 0.0f; // minimums[x];
         filters[x].upper = 1.0f; // maximums[x];
     }
@@ -632,6 +646,14 @@ void NGParallelCoordinatesRenderer2D::assertData(void) {
     glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(DimensionFilter), this->filters.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, minmaxBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLfloat), fragmentMinMax.data(), GL_DYNAMIC_READ); // TODO: huh.
+
+    MAKE_OBJECT_LABEL(GL_BUFFER, dataBuffer);
+    MAKE_OBJECT_LABEL(GL_BUFFER, flagsBuffer);
+    MAKE_OBJECT_LABEL(GL_BUFFER, minimumsBuffer);
+    MAKE_OBJECT_LABEL(GL_BUFFER, maximumsBuffer);
+    MAKE_OBJECT_LABEL(GL_BUFFER, axisIndirectionBuffer);
+    MAKE_OBJECT_LABEL(GL_BUFFER, filtersBuffer);
+    MAKE_OBJECT_LABEL(GL_BUFFER, minmaxBuffer);
 }
 
 void NGParallelCoordinatesRenderer2D::computeScaling(void) {
@@ -666,6 +688,7 @@ bool NGParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2D& call)
 }
 
 void NGParallelCoordinatesRenderer2D::drawAxes(void) {
+    PUSH_DEBUG_GROUP(1, "drawAxes");
     if (this->columnCount > 0) {
 
         //if ((mouseFlags & ::megamol::core::view::MOUSEFLAG_BUTTON_LEFT_DOWN)
@@ -748,6 +771,7 @@ void NGParallelCoordinatesRenderer2D::drawAxes(void) {
 #endif
 
     }
+    POP_DEBUG_GROUP;
 }
 
 void NGParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], const float selectedColor[4], float tfColorFactor) {
@@ -762,6 +786,8 @@ void NGParallelCoordinatesRenderer2D::drawDiscrete(const float otherColor[4], co
 void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tf == nullptr) return;
+
+    PUSH_DEBUG_GROUP(2, "drawItemsDiscrete");
 
 #ifdef FUCK_THE_PIPELINE
     vislib::graphics::gl::GLSLShader& prog = this->traceItemsDiscreteProgram;
@@ -797,11 +823,12 @@ void NGParallelCoordinatesRenderer2D::drawItemsDiscrete(uint32_t testMask, uint3
 #endif
 #endif
     prog.Disable();
+    POP_DEBUG_GROUP;
 }
 
 
 void NGParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
-
+    PUSH_DEBUG_GROUP(3, "doPicking");
     // TODO, plus shader is broken
 
     this->enableProgramAndBind(pickProgram);
@@ -820,10 +847,11 @@ void NGParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadi
     pickProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     pickProgram.Disable();
+    POP_DEBUG_GROUP;
 }
 
 void NGParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, float y1) {
-
+    PUSH_DEBUG_GROUP(3, "doStroking");
     // TODO, plus shader is broken
 
     this->enableProgramAndBind(strokeProgram);
@@ -841,10 +869,12 @@ void NGParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, f
     strokeProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     strokeProgram.Disable();
+    POP_DEBUG_GROUP;
 }
 
 
 void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
+    PUSH_DEBUG_GROUP(4, "doFragmentCount");
     int invocations[] = {
         static_cast<int>(std::ceil(windowWidth / 16)),
         static_cast<int>(std::ceil(windowHeight / 16))
@@ -855,6 +885,8 @@ void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, counterBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, nullptr, GL_STATIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, counterBuffer);
+
+    MAKE_OBJECT_LABEL(GL_BUFFER, counterBuffer);
 
     glActiveTexture(GL_TEXTURE1);
     densityFBO.BindColourTexture();
@@ -870,27 +902,38 @@ void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
     // uniforms invocationcount etc.
     ::glUniform1ui(minMaxProgram.ParameterLocation("invocationCount"), invocationCount);
     ::glUniform4fv(minMaxProgram.ParameterLocation("clearColor"), 1, backgroundColor);
+    ::glUniform2ui(minMaxProgram.ParameterLocation("resolution"), windowWidth, windowHeight);
 
     minMaxProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     minMaxProgram.Disable();
+
+    // todo read back minmax and check for plausibility!
+    POP_DEBUG_GROUP;
 }
 
 void NGParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
+    auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
+    if (tf == nullptr) return;
+    PUSH_DEBUG_GROUP(6, "drawItemsContinuous");
     doFragmentCount();
     this->enableProgramAndBind(drawItemContinuousProgram);
     //glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
     //glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
     glActiveTexture(GL_TEXTURE1);
     densityFBO.BindColourTexture();
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_1D, tf->OpenGLTexture());
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("transferFunction"), 5);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     drawItemContinuousProgram.Disable();
+    POP_DEBUG_GROUP;
 }
 
 void NGParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
+    PUSH_DEBUG_GROUP(7, "drawItemsHistogram");
     doFragmentCount();
     this->enableProgramAndBind(drawItemsHistogramProgram);
     glActiveTexture(GL_TEXTURE1);
@@ -898,6 +941,7 @@ void NGParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     drawItemContinuousProgram.Disable();
+    POP_DEBUG_GROUP;
 }
 
 void NGParallelCoordinatesRenderer2D::drawParcos(void) {
@@ -928,9 +972,11 @@ void NGParallelCoordinatesRenderer2D::drawParcos(void) {
                 this->densityFBO.GetWidth() != windowWidth || this->densityFBO.GetHeight() != windowHeight) {
                 densityFBO.Release();
                 ok = densityFBO.Create(windowWidth, windowHeight, GL_R32F, GL_RED, GL_FLOAT);
+                MAKE_OBJECT_LABEL(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
             }
             if (ok) {
                 densityFBO.Enable();
+                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 //::glDisable(GL_ALPHA_TEST);
                 glDisable(GL_DEPTH_TEST);
@@ -976,7 +1022,10 @@ bool NGParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::floattable::CallFloatTableData>();
     if (fc == nullptr) return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tc == nullptr) return false;
+    if (tc == nullptr) {
+        vislib::sys::Log::DefaultLog.WriteWarn("%s cannot draw without a transfer function!", NGParallelCoordinatesRenderer2D::ClassName());
+        return false;
+    }
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
