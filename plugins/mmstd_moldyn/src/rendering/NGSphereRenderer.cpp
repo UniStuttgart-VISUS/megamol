@@ -721,7 +721,7 @@ bool NGSphereRenderer::Render(Call& call) {
                         //this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
                         //glBindBuffer(GL_ARRAY_BUFFER, 0);
                         glBindBufferRange(GL_SHADER_STORAGE_BUFFER, SSBObindingPoint, this->theSingleBuffer, bufSize * currBuf, bufSize);
-                        glDrawArrays(GL_POINTS, 0, vertsThisTime);
+                        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertsThisTime));
                         //glDrawArraysInstanced(GL_POINTS, 0, 1, vertsThisTime);
                         this->queueSignal(fences[currBuf]);
 

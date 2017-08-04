@@ -396,7 +396,7 @@ bool NGSphereBufferArrayRenderer::Render(Call& call) {
                         glFlushMappedNamedBufferRangeEXT(theSingleBuffer, numVerts * currBuf, vertsThisTime * vertStride);
                         //glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
                         this->setPointers(parts, this->theSingleBuffer, reinterpret_cast<const void *>(currVert - whence), this->theSingleBuffer, reinterpret_cast<const void *>(currCol - whence));
-                        glDrawArrays(GL_POINTS, numVerts * currBuf, vertsThisTime);
+                        glDrawArrays(GL_POINTS, static_cast<GLint>(numVerts * currBuf), static_cast<GLsizei>(vertsThisTime));
                         this->lockSingle(fences[currBuf]);
 
                         currBuf = (currBuf + 1) % this->numBuffers;
