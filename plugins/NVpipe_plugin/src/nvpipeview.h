@@ -72,6 +72,8 @@ protected:
 	/**
 	* NvPipe encoding parameters
 	*/
+	core::param::ParamSlot paramClipMachine;
+	bool isClipMachine;
 	cudaGraphicsResource_t graphicsResource;
 	cudaArray_t serverArray;
 	::nvpipe* encoder;
