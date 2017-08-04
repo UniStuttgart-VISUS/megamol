@@ -903,6 +903,8 @@ void NGParallelCoordinatesRenderer2D::doFragmentCount(void) {
     ::glUniform1ui(minMaxProgram.ParameterLocation("invocationCount"), invocationCount);
     ::glUniform4fv(minMaxProgram.ParameterLocation("clearColor"), 1, backgroundColor);
     ::glUniform2ui(minMaxProgram.ParameterLocation("resolution"), windowWidth, windowHeight);
+    ::glUniform2ui(minMaxProgram.ParameterLocation("fragmentCountStepSize"), invocations[0], invocations[1]);
+    
 
     minMaxProgram.Dispatch(groupCounts[0], groupCounts[1], groupCounts[2]);
 

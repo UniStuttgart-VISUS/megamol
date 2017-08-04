@@ -31,7 +31,7 @@ uniform uint invocationCount = 0;
     <snippet type="version">430</snippet>
     <snippet type="string">
       <![CDATA[
-layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
         ]]>
     </snippet>
     <snippet name="::fragment_count::buffers" />
@@ -40,7 +40,7 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
     <snippet type="string">
       <![CDATA[
 uniform uvec2 resolution = uvec2(0);
-uniform uvec2 fragmentCountStepSize = uvec2(10);
+uniform uvec2 fragmentCountStepSize = uvec2(16);
 
 void main()
 {
@@ -50,49 +50,33 @@ void main()
   }
 
   uint invocationID = getInvocationID();
-
-  if (invocationID == 0)
-  {
-    for (uint index = 0; index < invocationCount; ++index)
-    {
-      fragmentMinMax[index] = uvec2(4294967295u, 0u);
-    }
-  }
-  
+  fragmentMinMax[invocationID] = uvec2(4294967295u, 0u);
+ 
   memoryBarrierBuffer();
-  
   uvec2 texCoord = gl_GlobalInvocationID.xy;
   
   uint thisMin = 4294967295u;
   uint thisMax = 0;
 
-  while (texCoord.y < resolution.y)
-  {
+  texCoord.y = gl_GlobalInvocationID.y;
+  while (texCoord.y < resolution.y) {
     texCoord.x = gl_GlobalInvocationID.x;
-    
-    while (texCoord.x < resolution.x)
-    {
+    while (texCoord.x < resolution.x) {
       vec4 texel = texelFetch(fragmentCount, ivec2(texCoord), 0) - clearColor;
       uint count = uint(texel.r);
-
-      if (count > 0 && count < thisMin)
-      {
+      if (count >= 0 && count < thisMin) {
         thisMin = count;
       }
-    
-      if (count > thisMax)
-      {
+      if (count > thisMax) {
         thisMax = count;
       }
-        
       texCoord.x += fragmentCountStepSize.x;
     }
-    
     texCoord.y += fragmentCountStepSize.y;
-  }
-  
-  fragmentMinMax[invocationID] = uvec2(thisMin, thisMax);
+  }    
 
+  fragmentMinMax[invocationID] = uvec2(thisMin, thisMax);
+  
 //  barrier();
   memoryBarrierBuffer();
   
@@ -176,14 +160,11 @@ void main()
   
   uvec2 globalMinMax = fragmentMinMax[0].xy;
   
-  if (frags.r >= globalMinMax[0])
-  {
-    float value = (frags.r - globalMinMax[0]) / (globalMinMax[1] - globalMinMax[0]);
+  if (frags.r >= 0) {
+    float value = sqrt((frags.r - globalMinMax[0]) / (globalMinMax[1] - globalMinMax[0]));
     value = clamp(value, 0.0, 1.0);
     fragColor = texture(transferFunction, value);
-  }
-  else
-  {
+  } else {
     fragColor = clearColor;
   }
 }

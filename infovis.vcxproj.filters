@@ -88,6 +88,9 @@
     <None Include="Shaders\pc_item_stroke.btf">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="Shaders\fragment_count.btf">
+      <Filter>Shader Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\infovis\infovis.h">

@@ -233,6 +233,7 @@
     <None Include="config.bat" />
     <None Include="configure.win.pl" />
     <None Include="ExtLibs.props.input" />
+    <None Include="Shaders\fragment_count.btf" />
     <None Include="Shaders\pc.btf" />
     <None Include="Shaders\pc_axes_draw.btf" />
     <None Include="Shaders\pc_item_draw.btf" />
