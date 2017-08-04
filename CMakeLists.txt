@@ -4,7 +4,9 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(megamol)
 
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE PATH "default install path" FORCE)
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE PATH "default install path" FORCE)
+endif()
 
 # configure directories
 set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
