@@ -1,0 +1,309 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<MegaMol type="project" version="1.0">
+
+    <!-- Views for electrostatics rendering -->
+    <view name="xyzeleview" viewmod="view">
+        <module class="View3DSpaceMouse" name="view" />
+        <module class="ElectrostaticsRenderer" name="ren" />
+        <call class="CallRender3D" from="view::rendering" to="ren::rendering" />
+        <module class="XYZLoader" name="data" />
+        <call class="ParticleDataCall" from="ren::getdata" to="data::dataout" />
+    </view>
+
+    <!-- Views for Frodock -->
+    <view name="frodockview" viewmod="view">
+        <module class="View3DSpaceMouse" name="view" />
+        <module class="Mux2Renderer3D" name="switch" />
+        <call class="CallRender3D" from="view::rendering" to="switch::rendering" />
+        <module class="SimpleMoleculeRenderer" name="ligRen" />
+        <module class="SimpleMoleculeRenderer" name="recRen" />
+        <call class="CallRender3D" from="switch::renderer1" to="recRen::rendering" />
+        <call class="CallRender3D" from="switch::renderer2" to="ligRen::rendering" />
+        <module class="FrodockLoader" name="fdata" />
+        <module class="PDBLoader" name="rdata" />
+        <module class="PDBLoader" name="ldata" />
+        <call class="MolecularDataCall" from="fdata::receptordata" to="rdata::dataout" />
+        <call class="MolecularDataCall" from="fdata::liganddata" to="ldata::dataout" />
+        <call class="MolecularDataCall" from="ligRen::getdata" to="fdata::dataout" />
+        <call class="MolecularDataCall" from="recRen::getdata" to="rdata::dataout" />
+    </view>
+
+    <!-- Views for PDB files using new PDB loader -->
+    <view name="pdbquicksurfview" viewmod="view3d">
+        <module class="View3D" name="view3d" />
+        <module class="QuickSurfRenderer" name="::ren" />
+        <call class="CallRender3D" from="view3d::rendering" to="::ren::rendering" />
+        <module class="PDBLoader" name="::data" />
+        <call class="MolecularDataCall" from="::ren::getdata" to="::data::dataout" />
+    </view>
+
+    <view name="pdbquicksurfmtview" viewmod="view3d">
+        <module class="View3D" name="view3d" />
+        <module class="QuickSurfMTRenderer" name="::ren" />
+        <call class="CallRender3D" from="view3d::rendering" to="::ren::rendering" />
+        <module class="PDBLoader" name="::data" />
+        <call class="MolecularDataCall" from="::ren::getdata" to="::data::dataout" />
+    </view>
+
+    <view name="pdbcudavolumeview" viewmod="view3d">
+        <module class="View3D" name="view3d" />
+        <module class="MoleculeVolumeCudaRenderer" name="::ren" />
+        <call class="CallRender3D" from="view3d::rendering" to="::ren::rendering" />
+        <module class="PDBLoader" name="::data" />
+        <call class="MolecularDataCall" from="::ren::getdata" to="::data::dataout" />
+    </view>
+
+    <view name="pdbquicksurfview2" viewmod="view3d">
+        <module class="View3D" name="view3d" />
+        <module class="QuickSurfRenderer2" name="::ren" />
+        <call class="CallRender3D" from="view3d::rendering" to="::ren::rendering" />
+        <module class="IMDAtomData" name="::data" />
+        <call class="MultiParticleDataCall" from="::ren::getdata" to="::data::getdata" />
+    </view>
+    
+    
+    <view name="pdbquicksurfview3" viewmod="view3d">
+        <module class="View3D" name="view3d" />
+        <module class="QuickSurfRenderer2" name="ren" />
+        <module class="PDBLoader" name="pdbdata" />
+        <module class="MoleculeBallifier" name="converter" />
+        
+        <call class="CallRender3D" from="view3d::rendering" to="ren::rendering" />
+        <call class="MultiParticleDataCall" from="ren::getdata" to="converter::outData" />
+        <call class="MolecularDataCall" from="converter::inData" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbfilterview" viewmod="view3d">
+        <module class="View3DSpaceMouse" name="view3d" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <module class="Filter" name="fil" />
+        <call class="CallRender3D" from="view3d::rendering" to="molren::rendering" />
+        <module class="PDBLoader" name="::pdbdata" />
+        <call class="MolecularDataCall" from="fil::getdata" to="::pdbdata::dataout" />
+        <call class="MolecularDataCall" from="molren::getdata" to="fil::dataout" />
+    </view>
+
+    <view name="pdbcbview" viewmod="view3d">
+        <module class="View3DSpaceMouse" name="view3d" />
+        <module class="MoleculeCBCUDARenderer" name="ren" />
+        <call class="CallRender3D" from="view3d::rendering" to="ren::rendering" />
+        <module class="PDBLoader" name="::pdbdata" />
+        <call class="MolecularDataCall" from="ren::getdata" to="::pdbdata::dataout" />
+    </view>
+
+    <view name="pdbsescudaview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="MoleculeCudaSESRenderer" name="protren" />
+        <call class="CallRender3D" from="view3d::rendering" to="protren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="protren::getdata" to="pdbdata::dataout" />
+    </view>
+    
+    <view name="sequenceview" viewmod="view2d">
+        <module class="View2d" name="view2d" />
+        <module class="SequenceRenderer" name="ren" />
+        <call class="CallRender2D" from="view2d::rendering" to="ren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="ren::getdata" to="pdbdata::dataout" />
+        <module class="ResidueSelection" name="ressel" />
+        <module class="BindingSiteDataSource" name="site" />
+        <call class="BindingSiteCall" from="ren::getBindingSites" to="site::dataout" />
+        <call class="ResidueSelectionCall" from="ren::getResSelection" to="ressel::getselection" />
+    </view>
+
+    <view name="pdbmolviewdual" viewmod="view">
+        <module class="View3DSpaceMouse" name="view" />
+        <module class="Mux2Renderer3D" name="switch" />
+        <call class="CallRender3D" from="view::rendering" to="switch::rendering" />
+        <module class="SimpleMoleculeRenderer" name="ligRen" />
+        <!--<module class="MoleculeSESRenderer" name="ligRen" />-->
+        <!--<module class="SimpleMoleculeRenderer" name="recRen" />-->
+        <module class="MoleculeSESRenderer" name="recRen" />
+        <call class="CallRender3D" from="switch::renderer1" to="ligRen::rendering" />
+        <call class="CallRender3D" from="switch::renderer2" to="recRen::rendering" />
+        <module class="PDBLoader" name="rdata" />
+        <module class="PDBLoader" name="ldata" />
+        <call class="MolecularDataCall" from="ligRen::getdata" to="ldata::dataout" />
+        <call class="MolecularDataCall" from="recRen::getdata" to="rdata::dataout" />
+    </view>
+
+    <view name="pdbmolview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="molren::rendering" />
+        <module class="PDBLoader" name="::pdbdata" />
+        <call class="MolecularDataCall" from="molren::getdata" to="::pdbdata::dataout" />
+    </view>
+    
+    <view name="pdbglslvolview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="GLSLVolumeRenderer" name="volren" />
+        <module class="MoleculeCartoonRenderer" name="cartren" />
+        <call class="CallRender3D" from="view3d::rendering" to="volren::rendering" />
+        <module class="PDBLoader" name="::pdbdata" />
+        <call class="MolecularDataCall" from="volren::getdata" to="::pdbdata::dataout" />
+        <call class="MolecularDataCall" from="cartren::getdata" to="::pdbdata::dataout" />
+        <call class="CallRender3D" from="volren::renderProtein" to="cartren::rendering" />
+    </view>
+
+    <view name="pdbmousemolview" viewmod="view3d">
+        <module class="View3dMouse" name="view3d" />
+        <module class="SphereRendererMouse" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="molren::rendering" />
+        <module class="PDBLoader" name="::pdbdata" />
+        <call class="MolecularDataCall" from="molren::getdata" to="::pdbdata::dataout" />
+        <call class="CallMouseInput" from="view3d::mouse" to="molren::mouse" />
+    </view>
+
+    <view name="pdbbindingsiteview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="molren::rendering" />
+        <module class="BindingSiteDataSource" name="::data" />
+        <call class="BindingSiteCall" from="molren::getBindingSites" to="::data::dataout" />
+        <module class="PDBLoader" name="::pdbdata" />
+        <call class="MolecularDataCall" from="molren::getdata" to="::pdbdata::dataout" />
+    </view>
+
+    <view name="pdbsesview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="MoleculeSESRenderer" name="sesren" />
+        <call class="CallRender3D" from="view3d::rendering" to="sesren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="sesren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbcartoonview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="MoleculeCartoonRenderer" name="cartoonren" />
+        <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="cartoonren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbcartmolview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="MoleculeCartoonRenderer" name="cartoonren" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
+        <call class="CallRender3D" from="cartoonren::renderMolecule" to="molren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="cartoonren::getdata" to="pdbdata::dataout" />
+        <call class="MolecularDataCall" from="molren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbvolview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinVolumeRenderer" name="::volren" />
+        <call class="CallRender3D" from="view3d::rendering" to="::volren::rendering" />
+        <module class="PDBLoader" name="::pdbdata" />
+        <call class="MolecularDataCall" from="::volren::getdata" to="::pdbdata::dataout" />
+    </view>
+
+    <view name="pdbmolvolview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinVolumeRenderer" name="::volren" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="::volren::rendering" />
+        <call class="CallRender3D" from="::volren::renderProtein" to="molren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        
+        <!-- either -->
+        <module class="CCP4VolumeData" name="cpp4data" />
+        <call class="CallProteinVolumeData" from="::volren::getData" to="cpp4data::providedata" />
+        
+        <!-- or -->
+        <!--<call class="MolecularDataCall" from="::volren::getdata" to="pdbdata::dataout" />-->
+        
+        <call class="MolecularDataCall" from="molren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbcartvolview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinVolumeRenderer" name="::volren" />
+        <module class="MoleculeCartoonRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="::volren::rendering" />
+        <call class="CallRender3D" from="::volren::renderProtein" to="molren::rendering" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="MolecularDataCall" from="::volren::getdata" to="pdbdata::dataout" />
+        <call class="MolecularDataCall" from="molren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <view name="pdbvolsliceview" viewmod="view2d">
+        <module class="View2D" name="view2d" />
+        <module class="VolumeSliceRenderer" name="sliceren" />
+        <call class="CallRender2D" from="view2d::rendering" to="sliceren::rendering" />
+        <call class="VolumeSliceCall" from="sliceren::getdata" to="::volren::volumeout" />
+    </view>
+
+    <view name="volsegdiagramview" viewmod="view2d">
+        <module class="View2D" name="view2d" />
+        <module class="Diagram2DRenderer" name="segren" />
+        <call class="CallRender2D" from="view2d::rendering" to="segren::rendering" />
+        <call class="Diagram2DCall" from="segren::getdata" to="::volren::segmentationout" />
+    </view>
+
+    <view name="pdbmolviewccp4" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="ProteinVolumeRenderer" name="volren" />
+        <module class="SimpleMoleculeRenderer" name="molren" />
+        <call class="CallRender3D" from="view3d::rendering" to="volren::rendering" />
+        <call class="CallRender3D" from="volren::renderProtein" to="molren::rendering" />
+        <module class="CCP4VolumeData" name="voldata" />
+        <module class="PDBLoader" name="pdbdata" />
+        <call class="CallVolumeData" from="volren::getdata" to="voldata::providedata" />
+        <call class="MolecularDataCall" from="molren::getdata" to="pdbdata::dataout" />
+    </view>
+
+    <!-- Views for coarse grain data files -->
+    <view name="cgsphereview" viewmod="view3d">
+        <module class="View3d" name="view3d" />
+        <module class="SphereRenderer" name="sphereren" />
+        <call class="CallRender3D" from="view3d::rendering" to="sphereren::rendering" />
+        <module class="CoarseGrainDataLoader" name="cgdata" />
+        <call class="SphereDataCall" from="sphereren::getdata" to="cgdata::dataout" />
+    </view>
+    
+    <!-- Split merge stuff -->
+    <view name="diagram" viewmod="view2d">
+        <module class="View2D" name="view2d">
+         <param name="showBBox" value="false" />
+        </module>
+        <module class="DiagramRenderer" name="::diaren" />
+        <call class="CallRender2D" from="view2d::rendering" to="::diaren::rendering" />
+        <call class="DiagramCall" from="::diaren::getData" to="::molren::diagramout" />
+        <call class="IntSelectionCall" from="::diaren::getSelection" to="::selection::getSelection" />
+        <call class="IntSelectionCall" from="::diaren::getHidden" to="::hidden::getSelection" />
+    </view>
+    <view name="splitmerge" viewmod="view2d">
+        <module class="View2D" name="view2d" />
+        <module class="SplitMergeRenderer" name="::smren" />
+        <call class="CallRender2D" from="view2d::rendering" to="::smren::rendering" />
+        <call class="SplitMergeCall" from="::smren::getData" to="::molren::splitmergeout" />
+        <call class="IntSelectionCall" from="::smren::getSelection" to="::selection::getSelection" />
+        <call class="IntSelectionCall" from="::smren::getHidden" to="::hidden::getSelection" />
+    </view>
+    <view name="quicksurfMT" viewmod="view3d">
+        <module class="View3DSpaceMouse" name="view3d" />
+        <module class="Mux3Renderer3D" name="switch" />
+        <module class="VolumeMeshRenderer" name="::molren" />
+        <module class="SimpleMoleculeRenderer" name="::pdbren" />
+        <module class="MoleculeCartoonRenderer" name="::carren" />
+        <module class="IntSelection" name="::selection" />
+        <module class="IntSelection" name="::hidden" />
+        <module class="PDBLoader" name="::pdbdata" />
+        
+        <call class="CallRender3D" from="view3d::rendering" to="switch::rendering" />
+        <call class="CallRender3D" from="switch::renderer1" to="::pdbren::rendering" />
+        <call class="CallRender3D" from="switch::renderer2" to="::carren::rendering" />
+        <call class="CallRender3D" from="switch::renderer3" to="::molren::rendering" />
+  
+        <call class="MolecularDataCall" from="::molren::getdata" to="::pdbdata::dataout" />
+        <call class="MolecularDataCall" from="::pdbren::getdata" to="::pdbdata::dataout" />
+        <call class="MolecularDataCall" from="::carren::getdata" to="::pdbdata::dataout" />
+  
+        <call class="IntSelectionCall" from="::molren::getSelection" to="::selection::getSelection" />
+        <call class="IntSelectionCall" from="::molren::getHidden" to="::hidden::getSelection" />
+    </view>
+
+</MegaMol>

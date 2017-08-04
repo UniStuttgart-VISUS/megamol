@@ -1,0 +1,1006 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="volume">
+    <include file="common"/>
+
+    <namespace name="std">
+        <shader name="updateVolumeVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+uniform float filterRadius;
+uniform vec3 scaleVol;
+uniform vec3 scaleVolInv;
+uniform float sliceDepth;
+uniform vec3 translate;
+uniform float volSize = 128.0;
+
+varying float scale;
+varying vec3 splatCenter;
+varying vec3 color;
+
+void main(void) {
+    color = gl_Color.rgb;
+
+    splatCenter = gl_Vertex.xyz - translate;
+    vec2 devCoord = 2.0 * splatCenter.xy * scaleVol.xy - 1.0;
+    //vec2 devCoord = splatCenter.xy * scaleVol.xy;
+
+    //scale = gl_Vertex.w*30.0;
+    scale = gl_Vertex.w;
+    
+    float d = length( vec3( splatCenter.xy, sliceDepth*scaleVolInv.z) - splatCenter);
+    if( d > filterRadius*scale) {
+        gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+    } else {
+        gl_Position = vec4( devCoord, 0.0, 1.0);
+    }
+    
+    gl_PointSize = 2.0 * filterRadius * max( scaleVol.x, scaleVol.y) * volSize * scale;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="updateVolumeSkipDensityVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// this version of 'updateVolumeVertex' make a lookup into an existing density-volume-texture
+// and skips all vertices where the density is zero ... hopefully this will speedup polymer/solvent rendering
+
+uniform float filterRadius;
+uniform vec3 scaleVol;
+uniform vec3 scaleVolInv;
+uniform float sliceDepth;
+uniform vec3 translate;
+uniform float volSize = 128.0;
+
+varying float scale;
+varying vec3 splatCenter;
+varying vec3 color;
+
+// density volume lookup for a simple neighbour test ...
+uniform sampler3D volumeSampler;
+//uniform vec3 minBBox;
+//uniform vec3 invBBoxExtend;
+
+void main(void) {
+    color = gl_Color.rgb;
+
+    splatCenter = gl_Vertex.xyz - translate;
+    vec2 devCoord = 2.0 * splatCenter.xy * scaleVol.xy - 1.0;
+    //vec2 devCoord = splatCenter.xy * scaleVol.xy;
+
+    //scale = gl_Vertex.w*30.0;
+    scale = gl_Vertex.w;
+
+    float d = length( vec3( splatCenter.xy, sliceDepth*scaleVolInv.z) - splatCenter);
+    if( d > filterRadius*scale) {
+        //gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+        gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
+    } else {
+    //	vec3 volPos = (gl_Vertex.xyz-minBBox) * invBBoxExtend;
+        vec3 volPos = (gl_Vertex.xyz - translate) * scaleVol;
+        if (texture3D(volumeSampler, volPos).w /*< 0.000001*/ == 0)
+            //gl_Position = vec4( 0.0, 0.0, 1000.0, 1.0);
+            gl_Position = vec4( 0.0, 0.0, 1000.0, 0.0);
+        else
+            gl_Position = vec4( devCoord.xy, 0.0, 1.0);
+    }
+
+    gl_PointSize = 2.0 * filterRadius * max( scaleVol.x, scaleVol.y) * volSize * scale;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="updateVolumeFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+uniform float filterRadius;
+uniform float sliceDepth;
+uniform vec3 invVolRes;
+uniform vec3 scaleVolInv;
+
+uniform float densityScale;
+
+varying vec3 splatCenter;
+varying float scale;
+varying vec3 color;
+
+float computeDensity( vec3 pos) {
+    float d = distance( pos, splatCenter.xyz);
+    //float density = ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
+    // gaussian function
+    float density = filterRadius * exp( -(d * d)/(2 * scale * scale));
+    //if( d < scale ) density = 1.0; else density = 0.0; // DEBUG
+    return density;
+}
+
+float computeColorDensity( vec3 pos) {
+    float d = distance( pos, splatCenter.xyz);
+    //float density = ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+    // gaussian function
+    float density = filterRadius * exp( -(d * d)/(2 * scale * scale)) * densityScale;
+    return density;
+}
+
+void main(void) {
+    vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
+
+    float density = computeDensity( pos);
+    //gl_FragColor = vec4( density);
+    
+    // DEBUG ...
+    //gl_FragColor = vec4( color * density * scale, density);
+    gl_FragColor = vec4( color * computeColorDensity( pos) * scale, density);
+    // ... DEBUG
+}
+-->
+            </snippet>
+        </shader>
+
+      <shader name="updateSolventVolumeFragmentDensity">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+          <!--
+// nearly the same as 'updateVolumeFragment' but only for the density (color will be written in a second pass)...
+uniform float filterRadius;
+uniform float sliceDepth;
+uniform vec3 invVolRes;
+uniform vec3 scaleVolInv;
+
+uniform float densityScale;
+
+varying vec3 splatCenter;
+varying float scale;
+varying vec3 color;
+
+float computeDensity( vec3 pos) {
+    float d = distance(pos, splatCenter.xyz);
+    float density = ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
+    //if( d < scale ) density = 1.0; else density = 0.0; // DEBUG
+    return density;
+}
+
+float computeColorDensity( vec3 pos) {
+    float d = distance( pos, splatCenter.xyz);
+    //float density = ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+    // gaussian function
+    float density = filterRadius * exp( -(d * d)/(2 * scale * scale)) * densityScale;
+    return density;
+}
+
+void main(void) {
+    vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
+    //gl_FragColor = vec4(0, 0, 0, computeDensity(pos));
+	gl_FragColor = vec4( color * computeColorDensity( pos) * scale, computeDensity(pos));
+}
+-->
+        </snippet>
+      </shader>
+
+      <shader name="updateSolventVolumeFragmentColor">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+          <!--
+// color shader for use in combination with 'updateSolventVolumeFragmentDensity' in a second pass ...
+uniform float filterRadius;
+uniform float sliceDepth;
+uniform vec3 invVolRes;
+uniform vec3 scaleVolInv;
+
+uniform float densityScale;
+
+varying vec3 splatCenter;
+varying float scale;
+varying vec3 color;
+
+float computeColorDensity( vec3 pos) {
+    float d = distance( pos, splatCenter.xyz);
+    return ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+}
+
+float computeDensity( vec3 pos) {
+    float d = distance(pos, splatCenter.xyz);
+    float density = ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
+    //if( d < scale ) density = 1.0; else density = 0.0; // DEBUG
+    return density;
+}
+
+void main(void) {
+    vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
+    //float density = computeDensity( pos);
+    //gl_FragColor.rgb = color * density * scale;
+    //gl_FragColor.rgb = color * density; // * scale;
+
+    gl_FragColor.rgb = color * computeColorDensity(pos) * scale;
+}
+-->
+        </snippet>
+      </shader>
+
+
+<shader name="updateSolventVolumeFragmentHBondClr">
+  <snippet type="version">120</snippet>
+  <snippet type="string">
+    <!--
+// color shader for use in combination with 'updateSolventVolumeFragmentDensity' in a second pass ...
+uniform float filterRadius;
+uniform float sliceDepth;
+uniform vec3 invVolRes;
+uniform vec3 scaleVolInv;
+
+uniform float densityScale;
+
+varying vec3 splatCenter;
+varying float scale;
+varying vec3 color;
+
+/*float computeColorDensity( vec3 pos) {
+    float d = distance( pos, splatCenter.xyz);
+    return ( 1.0 - smoothstep( 0.2*filterRadius*scale, 1.0*filterRadius*scale, d)) * densityScale;
+}*/
+
+float computeDensity( vec3 pos) {
+    float d = distance(pos, splatCenter.xyz);
+    //return ( 1.0 - smoothstep( 0.0, 1.0*filterRadius*scale, d)) * densityScale;
+    //return ( d < scale ) ? 1.0 : 0.0;
+    return max(0, scale-d) / scale;
+}
+
+void main(void) {
+    vec3 pos = vec3( gl_FragCoord.xy * invVolRes.xy, sliceDepth) * scaleVolInv;
+    float density = computeDensity( pos);
+    //gl_FragColor.rgb = color * density * scale;
+    //gl_FragColor.rgb = color * density; // * scale;
+    gl_FragColor.rgb = color * density * densityScale;
+}
+-->
+  </snippet>
+</shader>
+
+        <shader name="volumeVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+varying vec3 lightPos;
+varying vec3 fillLightPos;
+
+void main(void) {
+    gl_FrontColor = gl_Color;
+    gl_Position = gl_Vertex;
+
+    // calculate light position
+    lightPos = ( gl_ModelViewMatrixInverse * vec4( 60.0, 50.0, 100.0, 1.0)).xyz;
+    fillLightPos = ( gl_ModelViewMatrixInverse * vec4(-60.0, -20.0, 50.0, 1.0)).xyz;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="volumeFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+#define ISO_SURFACE
+
+#if !defined(ISO_SURFACE) && !defined(VOLUME_RENDERING)
+#  define VOLUME_RENDERING
+#endif
+
+
+// scale factors of the volume
+uniform vec4 scaleVol;
+uniform vec4 scaleVolInv;
+
+uniform float stepSize;
+
+uniform int numIterations;
+uniform float alphaCorrection;
+
+uniform vec2 screenResInv;
+uniform float isoValue;
+uniform float isoOpacity = 0.4;
+uniform float clipPlaneOpacity = 0.4;
+
+//uniform vec4 clipPlane0 = vec4( 0.0);
+
+// textures
+uniform sampler3D volumeSampler;
+uniform sampler1D transferRGBASampler;
+
+uniform sampler2D rayStartSampler;   // ray start pos, a=0: no ray
+uniform sampler2D rayLengthSampler;  // ray direction, ray length
+
+varying vec3 lightPos;
+varying vec3 fillLightPos;
+
+
+vec3 calcIllum(vec3 illumPos, vec3 normal, vec3 dir, vec3 srcColor) {
+    // main light source
+    vec3 lightDir = normalize(lightPos - illumPos);
+    float ndotl = (dot(normal, lightDir));
+    vec3 r = normalize(2.0 * ndotl * normal - lightDir);
+    float spec = pow(max(dot(r, -dir), 0.0), 10.0) * 0.5;
+    float diff = max(abs(ndotl), 0.0);
+    // fill light
+    lightDir = normalize(fillLightPos - illumPos);
+    ndotl = dot(normal, lightDir);
+    r = normalize(2.0 * ndotl * normal - lightDir);
+    float specFill = pow(max(dot(r, -dir), 0.0), 20.0) * 0.24;
+    float diffuseFill = 0.5*max(abs(ndotl), 0.0);
+
+    vec3 color = (diff + diffuseFill + 0.3)*srcColor.rgb + ( spec + specFill) * 0.5;
+
+    return color;
+}
+
+
+void main(void) {
+    vec4 dest = vec4(0.0);
+    vec4 src;
+    float w;
+
+    vec2 texCoord = gl_FragCoord.xy * screenResInv;
+
+    vec4 rayStart  = texture2D(rayStartSampler, texCoord);
+    vec4 rayLength = texture2D(rayLengthSampler, texCoord);
+
+    vec3 center = vec3(0.0);
+
+    // DEBUG
+    //gl_FragColor = vec4(rayLength.www, 1.0);
+    //gl_FragColor = vec4(rayLength.www*0.1, 1.0);
+    //gl_FragColor = vec4(rayLength.xyz, 1.0);
+    //gl_FragColor = vec4(rayStart.xyz*scaleVol.xyz, 0.8);
+    //gl_FragColor = vec4(rayStart.aaa, 0.8);
+    //return;
+
+    // ray starting position
+    vec3 pos = rayStart.xyz * scaleVol.xyz;
+    // ray direction
+    vec3 dir = rayLength.xyz * scaleVol.xyz;
+    // ray distance to traverse
+    float rayDist = rayLength.w;
+
+    float scalarData;
+    vec4 data;
+    vec3 volColor; // DEBUG
+
+    bool outside = false;
+
+    // move one step forward
+    vec3 stepDir = dir * stepSize;
+    pos += stepDir;
+    rayDist -= stepSize;
+
+    if (rayDist <= 0.0) {
+        gl_FragColor = dest;
+        return;
+    }
+
+#if defined(ISO_SURFACE)
+    //const float isoValue = 60.0/256.0;
+    float isoDiff = 0;
+    float isoDiffOld = texture3D(volumeSampler, pos).w - isoValue;
+    
+    if( isoDiffOld > 0.0 ) {
+        volColor = clamp( texture3D(volumeSampler, pos).rgb, 0.0, 1.0);
+        // higher opacity for surfaces orthogonal to view dir
+        dest = vec4( volColor, clipPlaneOpacity);
+        // perform blending
+        dest.rgb *= dest.a;
+    }
+#endif
+
+    for (int j=0; (!outside && (j<numIterations)); ++j)
+    {
+        for (int i=0; i<numIterations; ++i)
+        {
+            /*
+            // lookup scalar value
+            scalarData = texture3D(volumeSampler, pos).w;
+            // DEBUG lookup color
+            volColor = texture3D(volumeSampler, pos).rgb;
+            */
+            data = texture3D(volumeSampler, pos);
+            scalarData = data.w;
+            volColor = clamp( data.rgb, 0.0, 1.0);
+
+#if defined(VOLUME_RENDERING)
+            // lookup in transfer function
+            //src = texture1D(transferRGBASampler, log(scalarData*1.0+1.0));
+            //src = texture1D(transferRGBASampler, scalarData/1.2-0.18);
+            src = texture1D(transferRGBASampler, scalarData);
+            src = vec4( vec3( scalarData), 0.05); // DEBUG
+            // DEBUG ...
+            src = vec4( clamp( abs( scalarData), 0.0, 1.0) );
+            if( scalarData > 0.0 ) src *= vec4( 1.0, 0.0, 0.0, 1.0);
+            else if( scalarData < 0.0 ) src *= vec4( 0.0, 1.0, 0.0, 1.0);
+            // ... DEBUG
+
+            //src.rgb = vec3(0.6-2.5*scalarData) * vec3(0.2, 1.0, 0.1);
+
+            // opacity and color correction
+            src.a = 1.0 - pow(1.0 - src.a, alphaCorrection);
+
+            src.rgb *= src.a;
+            // perform blending
+            dest = (1.0-dest.a)*src + dest;
+
+#endif
+#if defined(ISO_SURFACE)
+            isoDiff = scalarData - isoValue;
+            
+            if (isoDiff*isoDiffOld <= 0.0) {
+                // improve position
+                vec3 isoPos = mix(pos - stepDir, pos, isoDiffOld/(isoDiffOld - isoDiff));
+
+                // lookup color
+                volColor = texture3D( volumeSampler, isoPos).rgb;
+                volColor = clamp( volColor, 0.0, 1.0);
+                
+                // compute gradient by central differences
+                vec3 gradient;
+                // TODO: schrittweite skalieren (halbe voxel-laenge)
+                //float gradOffset = 0.05; // 0.0038
+                float gradOffset = 0.075;
+                // 0.015 ==> huebsch.dat
+
+                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).w
+                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).w;
+                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).w
+                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).w;
+                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).w
+                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).w;
+                gradient = normalize(gradient);
+
+                // illumination
+                vec3 posWorld = isoPos * scaleVolInv.xyz;
+                vec3 dirWorld = dir * scaleVolInv.xyz;
+
+                float tmp = sqrt(abs(dot(rayLength.xyz, gradient)));
+                // DEBUG src = vec4(0.45, 0.55, 0.8, min( 1.0, isoOpacity + 1.5*(1.0-tmp))); // higher opacity for surfaces orthogonal to view dir
+                //src = vec4(0.45, 0.55, 0.8, 0.6);
+                src = vec4( volColor, min( 1.0, isoOpacity + 1.5*(1.0-tmp))); // DEBUG
+                src.rgb = calcIllum( posWorld, gradient, dirWorld, src.rgb);
+                //src.rgb = -gradient*0.5 + 0.5;
+                
+                // draw interior darker
+                if( isoDiffOld > 0.0 )
+                    src.xyz *= 0.5;
+                
+                // perform blending
+                src.rgb *= src.a;
+                dest = (1.0-dest.a)*src + dest;
+                
+                // rotate clip plane normal
+                //vec3 cp = gl_ClipPlane[0].xyz * gl_NormalMatrix;
+                // if( dot( posWorld - scaleVol.xyz, clipPlane0.xyz ) + clipPlane0.w < 0.05 )
+                //  //dest.xyz *= 0.2;
+                //  dest.xyz += 0.5 * vec3( 1.0, 1.0, 0.0);
+                // dest.xyz = clamp( dest.xyz, vec3( 0.0), vec3( 1.0));
+            }
+            isoDiffOld = isoDiff;
+#endif // ISO_SURFACE
+
+            // move one step forward
+            pos += stepDir;
+            rayDist -= stepSize;
+
+            outside = (dest.a > 0.98) || (rayDist <= 0);
+            if (outside)
+                break;
+        }
+    }
+
+    gl_FragColor = dest;
+}
+
+-->
+            </snippet>
+        </shader>
+
+        <shader name="volumeDualIsoVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+varying vec3 lightPos;
+varying vec3 fillLightPos;
+
+void main(void) {
+    gl_FrontColor = gl_Color;
+    gl_Position = gl_Vertex;
+
+    // calculate light position
+    lightPos = ( gl_ModelViewMatrixInverse * vec4( 60.0, 50.0, 100.0, 1.0)).xyz;
+    fillLightPos = ( gl_ModelViewMatrixInverse * vec4(-60.0, -20.0, 50.0, 1.0)).xyz;
+}
+-->
+            </snippet>
+        </shader>
+
+        <shader name="volumeDualIsoFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+                <!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+// scale factors of the volume
+uniform vec4 scaleVol;
+uniform vec4 scaleVolInv;
+
+uniform float stepSize;
+
+uniform int numIterations;
+uniform float alphaCorrection;
+
+uniform vec2 screenResInv;
+uniform vec2 isoValues;
+uniform float isoOpacity = 0.4;
+uniform vec3 surfaceColor1 = vec3( 0.92, 0.24, 0.18);
+uniform vec3 surfaceColor2 = vec3( 0.00, 0.36, 0.75);
+
+// textures
+uniform sampler3D volumeSampler;
+uniform sampler1D transferRGBASampler;
+
+uniform sampler2D rayStartSampler;   // ray start pos, a=0: no ray
+uniform sampler2D rayLengthSampler;  // ray direction, ray length
+
+varying vec3 lightPos;
+varying vec3 fillLightPos;
+
+
+vec3 calcIllum(vec3 illumPos, vec3 normal, vec3 dir, vec3 srcColor) {
+    // main light source
+    vec3 lightDir = normalize(lightPos - illumPos);
+    float ndotl = (dot(normal, lightDir));
+    vec3 r = normalize(2.0 * ndotl * normal - lightDir);
+    float spec = pow(max(dot(r, -dir), 0.0), 10.0) * 0.5;
+    float diff = max(abs(ndotl), 0.0);
+    // fill light
+    lightDir = normalize(fillLightPos - illumPos);
+    ndotl = dot(normal, lightDir);
+    r = normalize(2.0 * ndotl * normal - lightDir);
+    float specFill = pow(max(dot(r, -dir), 0.0), 20.0) * 0.24;
+    float diffuseFill = 0.5*max(abs(ndotl), 0.0);
+
+    vec3 color = (diff + diffuseFill + 0.3)*srcColor.rgb + spec+specFill;
+
+    return color;
+}
+
+
+void main(void) {
+    vec4 dest = vec4(0.0);
+    vec4 src;
+
+    vec2 texCoord = gl_FragCoord.xy * screenResInv;
+
+    vec4 rayStart  = texture2D(rayStartSampler, texCoord);
+    vec4 rayLength = texture2D(rayLengthSampler, texCoord);
+
+    vec3 center = vec3(0.0);
+
+    // ray starting position
+    vec3 pos = rayStart.xyz * scaleVol.xyz;
+    // ray direction
+    vec3 dir = rayLength.xyz * scaleVol.xyz;
+    // ray distance to traverse
+    float rayDist = rayLength.w;
+
+    float scalarData;
+    vec4 data;
+
+    bool outside = false;
+
+    vec2 isoDiff = vec2( 0.0);
+    vec2 isoDiffOld = vec2( texture3D( volumeSampler, pos).r) - isoValues;
+
+    // move one step forward
+    vec3 stepDir = dir * stepSize;
+    pos += stepDir;
+    rayDist -= stepSize;
+
+    if( rayDist <= 0.0 ) {
+        gl_FragColor = dest;
+        return;
+    }
+    
+    for (int j=0; (!outside && (j<numIterations)); ++j) {
+        for (int i=0; i<numIterations; ++i) {
+            // lookup scalar value
+            scalarData = texture3D( volumeSampler, pos).r;
+
+            isoDiff = vec2( scalarData) - isoValues;
+            
+            if( isoDiff.x * isoDiffOld.x <= 0.0 ) {
+                // improve position
+                vec3 isoPos = mix( pos - stepDir, pos, isoDiffOld.x / ( isoDiffOld.x - isoDiff.x));
+
+                // compute gradient by central differences
+                vec3 gradient;
+                float gradOffset = 0.05; // 0.0038
+
+                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).r;
+                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).r;
+                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).r;
+                gradient = normalize( gradient);
+
+                // illumination
+                vec3 posWorld = isoPos * scaleVolInv.xyz + vec3(-0.83, 4.41, -0.94);
+                vec3 dirWorld = dir * scaleVolInv.xyz;
+
+                float tmp = sqrt( abs( dot( rayLength.xyz, gradient)));
+                src = vec4( surfaceColor1, min( 1.0, isoOpacity + 1.5*(1.0-tmp)));
+                src.rgb = calcIllum( posWorld, gradient, dirWorld, src.rgb);
+
+                // perform blending
+                src.rgb *= src.a;
+                dest = ( 1.0-dest.a) * src + dest;
+                
+            }
+            isoDiffOld.x = isoDiff.x;
+            
+            if( isoDiff.y * isoDiffOld.y <= 0.0 ) {
+                // improve position
+                vec3 isoPos = mix( pos - stepDir, pos, isoDiffOld.y / ( isoDiffOld.y - isoDiff.y));
+
+                // compute gradient by central differences
+                vec3 gradient;
+                float gradOffset = 0.05; // 0.0038
+
+                gradient.x = texture3D(volumeSampler, isoPos + vec3(gradOffset*scaleVol.x, 0, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(-gradOffset*scaleVol.x, 0, 0)).r;
+                gradient.y = texture3D(volumeSampler, isoPos + vec3(0, gradOffset*scaleVol.y, 0)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, -gradOffset*scaleVol.y, 0)).r;
+                gradient.z = texture3D(volumeSampler, isoPos + vec3(0, 0, gradOffset*scaleVol.z)).r
+                             - texture3D(volumeSampler, isoPos + vec3(0, 0, -gradOffset*scaleVol.z)).r;
+                gradient = normalize( gradient);
+
+                // illumination
+                vec3 posWorld = isoPos * scaleVolInv.xyz + vec3(-0.83, 4.41, -0.94);
+                vec3 dirWorld = dir * scaleVolInv.xyz;
+
+                float tmp = sqrt( abs( dot( rayLength.xyz, gradient)));
+                src = vec4( surfaceColor2, min( 1.0, isoOpacity + 1.5*(1.0-tmp)));
+                src.rgb = calcIllum( posWorld, gradient, dirWorld, src.rgb);
+
+                // perform blending
+                src.rgb *= src.a;
+                dest = ( 1.0-dest.a) * src + dest;
+                
+            }
+            isoDiffOld.y = isoDiff.y;
+            
+            // move one step forward
+            pos += stepDir;
+            rayDist -= stepSize;
+
+            outside = ( dest.a > 0.98) || ( rayDist <= 0);
+            if( outside )
+                break;
+        }
+    }
+
+    gl_FragColor = dest;
+}
+
+-->
+            </snippet>
+        </shader>
+
+        <shader name="rayStartVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+uniform vec3 translate = vec3(0.0);
+varying vec3 objPos;
+
+void main(void) {
+    objPos = gl_Vertex.xyz - translate;
+    //vec4 v = gl_Vertex; // + vec4( translate, 0.0);
+    vec4 v = gl_Vertex - vec4( translate, 0.0);
+    gl_ClipVertex = gl_ModelViewMatrix * v;
+    gl_Position = gl_ModelViewProjectionMatrix * v;
+
+    gl_FrontColor = vec4( objPos, gl_Color.a);
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="rayStartFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+varying vec3 objPos;
+
+void main(void) {
+    gl_FragColor = vec4( objPos, gl_Color.a);
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="rayStartEyeVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+varying vec3 objPos;
+
+void main(void) {
+    // transform vertices from camera space to object space
+    objPos = ( gl_ModelViewMatrixInverse * gl_Vertex).xyz;
+    gl_ClipVertex = gl_Vertex;
+    gl_Position = gl_ProjectionMatrix * gl_Vertex;
+
+    gl_FrontColor = vec4( objPos, gl_Color.a);
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="rayStartEyeFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+varying vec3 objPos;
+
+void main(void) {
+    gl_FragData[0] = vec4( objPos, gl_Color.a);
+    gl_FragData[1] = vec4( 1000.0);
+}
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="rayLengthFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2009  Martin Falk <falk@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~falkmn/
+//      modified 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D sourceTex;
+uniform sampler2D depthTex;
+uniform vec2 screenResInv;
+uniform vec2 zNearFar;
+
+uniform float scale;
+
+varying vec3 objPos;
+
+float reconstructDepth(float z) {
+    //float Zn = zNearFar.x/scale;
+    //float Zf = zNearFar.y/scale;
+    float Zn = zNearFar.x;
+    float Zf = zNearFar.y;
+    
+    return Zn*Zf / (Zf - z*(Zf - Zn));
+}
+
+void main(void) {
+    vec4 rayStart = texelFetch2D( sourceTex, ivec2( gl_FragCoord.xy), 0 );
+
+    vec3 rayDir = objPos - rayStart.xyz;
+    float rayLen = length(rayDir);
+
+    rayDir = normalize(rayDir);
+    
+    float sceneDepthDev = texelFetch2D( depthTex, ivec2( gl_FragCoord.xy), 0 ).x;
+    float sceneDepth = reconstructDepth( sceneDepthDev);
+    // correction factor for depth projection  dot(rayDir, viewDir)
+    float projection = abs(dot(rayDir, normalize(gl_ModelViewMatrixInverse[2].xyz)));
+    // compute distance between rayStart and camera
+    float rayStartLen = length(rayStart.xyz - gl_ModelViewMatrixInverse[3].xyz);
+    // depth difference between volume begin and geometry
+    float x = (sceneDepth)/projection - rayStartLen;
+    
+    rayLen = min(x, rayLen);
+    rayLen *= rayStart.w;
+    
+    gl_FragData[0] = vec4( rayDir, rayLen);
+    gl_FragData[1] = vec4( rayStartLen);
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="textureSliceVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~kroneml/
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+void main(void) {
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    gl_Position = ftransform();
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="textureSliceFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2010  Michael Krone <kroneml@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~kroneml/
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+uniform float isoValue;
+uniform sampler3D volTex;
+
+void main(void) {
+    vec4 texCol = texture3D( volTex, gl_TexCoord[0].xyz);
+    if( texCol.a < isoValue )
+        //gl_FragColor = vec4( vec3( 1.0) - texCol.xyz, 1.0);
+        discard;
+    else
+        gl_FragColor = vec4( texCol.xyz * 0.2 + vec3( 149.0/255.0, 202.0/255.0, 222.0/255.0) * 0.8, 1.0);
+        //gl_FragColor = vec4( texCol.xyz, 1.0);
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="colorWriterVertex">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2011  Michael Krone <kroneml@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~kroneml/
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+void main(void) {
+    gl_Position = ftransform();
+}
+
+-->
+            </snippet>
+        </shader>
+        
+        <shader name="colorWriterFragment">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+// Copyright (c) 2011  Michael Krone <kroneml@vis.uni-stuttgart.de>
+//                     Visualization Research Center (VISUS),
+//                     Universitaet Stuttgart, Germany
+//                     http://www.vis.uni-stuttgart.de/~kroneml/
+// This program may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original form.
+// Commercial use is strictly prohibited.
+
+uniform vec4 color;
+
+void main(void) {
+    gl_FragColor = color;
+}
+
+-->
+            </snippet>
+        </shader>
+    </namespace>
+
+</btf>

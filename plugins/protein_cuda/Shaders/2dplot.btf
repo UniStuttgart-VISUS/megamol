@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="2dplot">
+    
+    <include file="colormaps"/>
+
+    <snippet name="Heatmap" type="string">
+<!--
+vec3 heatMapLUT[96] = vec3[](
+vec3(1.000000, 1.000000, 1.000000), vec3(1.000000, 1.000000, 0.968750), vec3(1.000000, 1.000000, 0.937500), 
+vec3(1.000000, 1.000000, 0.906250), vec3(1.000000, 1.000000, 0.875000), vec3(1.000000, 1.000000, 0.843750), 
+vec3(1.000000, 1.000000, 0.812500), vec3(1.000000, 1.000000, 0.781250), vec3(1.000000, 1.000000, 0.750000), 
+vec3(1.000000, 1.000000, 0.718750), vec3(1.000000, 1.000000, 0.687500), vec3(1.000000, 1.000000, 0.656250), 
+vec3(1.000000, 1.000000, 0.625000), vec3(1.000000, 1.000000, 0.593750), vec3(1.000000, 1.000000, 0.562500), 
+vec3(1.000000, 1.000000, 0.531250), vec3(1.000000, 1.000000, 0.500000), vec3(1.000000, 1.000000, 0.468750), 
+vec3(1.000000, 1.000000, 0.437500), vec3(1.000000, 1.000000, 0.406250), vec3(1.000000, 1.000000, 0.375000), 
+vec3(1.000000, 1.000000, 0.343750), vec3(1.000000, 1.000000, 0.312500), vec3(1.000000, 1.000000, 0.281250), 
+vec3(1.000000, 1.000000, 0.250000), vec3(1.000000, 1.000000, 0.218750), vec3(1.000000, 1.000000, 0.187500), 
+vec3(1.000000, 1.000000, 0.156250), vec3(1.000000, 1.000000, 0.125000), vec3(1.000000, 1.000000, 0.093750), 
+vec3(1.000000, 1.000000, 0.062500), vec3(1.000000, 1.000000, 0.031250),
+vec3(1.000000, 1.000000, 0.000000), vec3(1.000000, 0.968750, 0.000000), vec3(1.000000, 0.937500, 0.000000), 
+vec3(1.000000, 0.906250, 0.000000), vec3(1.000000, 0.875000, 0.000000), vec3(1.000000, 0.843750, 0.000000), 
+vec3(1.000000, 0.812500, 0.000000), vec3(1.000000, 0.781250, 0.000000), vec3(1.000000, 0.750000, 0.000000), 
+vec3(1.000000, 0.718750, 0.000000), vec3(1.000000, 0.687500, 0.000000), vec3(1.000000, 0.656250, 0.000000), 
+vec3(1.000000, 0.625000, 0.000000), vec3(1.000000, 0.593750, 0.000000), vec3(1.000000, 0.562500, 0.000000), 
+vec3(1.000000, 0.531250, 0.000000), vec3(1.000000, 0.500000, 0.000000), vec3(1.000000, 0.468750, 0.000000), 
+vec3(1.000000, 0.437500, 0.000000), vec3(1.000000, 0.406250, 0.000000), vec3(1.000000, 0.375000, 0.000000), 
+vec3(1.000000, 0.343750, 0.000000), vec3(1.000000, 0.312500, 0.000000), vec3(1.000000, 0.281250, 0.000000), 
+vec3(1.000000, 0.250000, 0.000000), vec3(1.000000, 0.218750, 0.000000), vec3(1.000000, 0.187500, 0.000000), 
+vec3(1.000000, 0.156250, 0.000000), vec3(1.000000, 0.125000, 0.000000), vec3(1.000000, 0.093750, 0.000000), 
+vec3(1.000000, 0.062500, 0.000000), vec3(1.000000, 0.031250, 0.000000),
+vec3(1.000000, 0.000000, 0.000000), vec3(0.968750, 0.000000, 0.000000), vec3(0.937500, 0.000000, 0.000000), 
+vec3(0.906250, 0.000000, 0.000000), vec3(0.875000, 0.000000, 0.000000), vec3(0.843750, 0.000000, 0.000000), 
+vec3(0.812500, 0.000000, 0.000000), vec3(0.781250, 0.000000, 0.000000), vec3(0.750000, 0.000000, 0.000000), 
+vec3(0.718750, 0.000000, 0.000000), vec3(0.687500, 0.000000, 0.000000), vec3(0.656250, 0.000000, 0.000000), 
+vec3(0.625000, 0.000000, 0.000000), vec3(0.593750, 0.000000, 0.000000), vec3(0.562500, 0.000000, 0.000000), 
+vec3(0.531250, 0.000000, 0.000000), vec3(0.500000, 0.000000, 0.000000), vec3(0.468750, 0.000000, 0.000000), 
+vec3(0.437500, 0.000000, 0.000000), vec3(0.406250, 0.000000, 0.000000), vec3(0.375000, 0.000000, 0.000000), 
+vec3(0.343750, 0.000000, 0.000000), vec3(0.312500, 0.000000, 0.000000), vec3(0.281250, 0.000000, 0.000000), 
+vec3(0.250000, 0.000000, 0.000000), vec3(0.218750, 0.000000, 0.000000), vec3(0.187500, 0.000000, 0.000000), 
+vec3(0.156250, 0.000000, 0.000000), vec3(0.125000, 0.000000, 0.000000), vec3(0.093750, 0.000000, 0.000000), 
+vec3(0.062500, 0.000000, 0.000000), vec3(0.031250, 0.000000, 0.000000)
+); 
+    
+vec3 HeatmapGetColor(float min, float max, float val) {
+    float step = (max-min)/96.0;
+    return heatMapLUT[int((val-min)/step)];
+}
+-->
+    </snippet>
+    
+    <namespace name="variantMatrix">
+    
+    <shader name="vertex">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+void main() {   
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+-->
+        </snippet>
+    </shader> <!-- end shader variantMatrix::vertex -->
+    
+    <shader name="fragment">
+        <snippet type="version">120</snippet>
+        <snippet name="Heatmap" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet type="string">
+<!--
+
+uniform sampler2D matrixTex;
+uniform float minVal;
+uniform float maxVal;
+
+void main() {   
+    float val = clamp(texture2D(matrixTex, gl_TexCoord[0].st).a, minVal, maxVal);
+    //vec3 colOrangeMsh = vec3(109.81, 0.9746*(val-minVal)/(maxVal-minVal), 0.8968);
+    vec3 colYellowMsh = vec3(102.44, 0.6965*(val-minVal)/(maxVal-minVal), 1.5393);
+    gl_FragColor = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0);
+}
+-->
+        </snippet>
+        </shader> <!-- end shader variantMatrix::fragment -->
+        
+        
+            <shader name="vertexCM">
+        <snippet type="version">120</snippet>
+        <snippet type="string">
+<!--
+attribute float val;
+uniform float minVal;
+uniform float maxVal;
+varying float valFrag;
+void main() {   
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    if (gl_Position.x<0) valFrag = minVal;
+    else  valFrag = maxVal;
+}
+-->
+        </snippet>
+    </shader> <!-- end shader variantMatrix::vertexCM -->
+        
+            <shader name="fragmentCM">
+        <snippet type="version">120</snippet>
+        <snippet name="Heatmap" />
+        <snippet name="colormaps::MSH2RGB" />
+        <snippet type="string">
+<!--
+uniform float minVal;
+uniform float maxVal;
+varying float valFrag;
+
+void main() {   
+    //vec3 colOrangeMsh = vec3(109.81, 0.9746*(valFrag-minVal)/(maxVal-minVal), 0.8968);
+    vec3 colYellowMsh = vec3(102.44, 0.6965*(valFrag-minVal)/(maxVal-minVal), 1.5393);
+    gl_FragColor = vec4(MSH2RGB(colYellowMsh.r, colYellowMsh.g, colYellowMsh.b), 1.0);
+    //gl_FragColor = vec4(valFrag,0.0,0.0, 1.0);
+}
+-->
+        </snippet>
+        </shader> <!-- end shader variantMatrix::fragmentCM -->
+    
+    </namespace> <!-- end namespace variantMatrix -->
+
+</btf>

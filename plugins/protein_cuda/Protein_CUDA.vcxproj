@@ -1,0 +1,433 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8BC8CBB7-BC8B-4142-9A9C-7CDD6BB92508}</ProjectGuid>
+    <RootNamespace>Protein_CUDA</RootNamespace>
+    <ProjectName>Protein_CUDA</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetDebug32.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetDebug64.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetRelease32.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="vislibVSProps\TargetRelease64.props" />
+    <Import Project="ExtLibs.props" />
+    <Import Project="vislibVSProps\vislib.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein_cuda</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein_cuda</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein_cuda</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)lib\$(PlatformName)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(PlatformName)\$(Configuration)\</IntDir>
+    <TargetName>protein_cuda</TargetName>
+    <TargetExt>.mmplg</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+    <CudaCompile>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MegaMolCorePath)include;$(ProteinCallsPath)include;$(ProjectDir)src\helper_includes;$(TriSoupPath)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;GL_LOAD_DLL;_CRT_SECURE_NO_WARNINGS;PROTEIN_CUDA_EXPORTS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glu32.lib;MegaMolCore.lib;protein_calls.lib;opengl32.lib;cufft.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(MegaMolCorePath)lib\$(Platform)\$(Configuration)\;$(ProteinCallsPath)lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutputBin)\$(PlatformName)\$(Configuration)" mkdir "$(OutputBin)\$(PlatformName)\$(Configuration)"
+xcopy "$(TargetPath)" "$(OutputBin)\$(PlatformName)\$(Configuration)" /Y /F /V /G /K
+if exist "$(ProjectDir)\PostBuild.bat" cmd /Q /C "$(ProjectDir)\PostBuild.bat"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="include\protein_cuda\Protein_CUDA.h" />
+    <ClInclude Include="src\AbstractGPUSurface.h" />
+    <ClInclude Include="src\CenterLineGenerator.h" />
+    <ClInclude Include="src\Color.h" />
+    <ClInclude Include="src\ComparativeFieldTopologyRenderer.h" />
+    <ClInclude Include="src\ComparativeMolSurfaceRenderer.h" />
+    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.cuh" />
+    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.h" />
+    <ClInclude Include="src\ComparativeSurfacePotentialRenderer_inline_device_functions.cuh" />
+    <ClInclude Include="src\constantGridParams.cuh" />
+    <ClInclude Include="src\CountingSortKernel.cuh" />
+    <ClInclude Include="src\CritPoints.h" />
+    <ClInclude Include="src\CrystalStructureVolumeRenderer.h" />
+    <ClInclude Include="src\CUDACurl.cuh" />
+    <ClInclude Include="src\CudaDevArr.h" />
+    <ClInclude Include="src\CUDAFieldTopology.cuh" />
+    <ClInclude Include="src\CUDAGrid.cuh" />
+    <ClInclude Include="src\CUDAKernels.h" />
+    <ClInclude Include="src\CUDAMarchingCubes.h" />
+    <ClInclude Include="src\CUDAQuickSES.h" />
+    <ClInclude Include="src\CUDAQuickSurf.h" />
+    <ClInclude Include="src\CUDAQuickSurfAlternative.h" />
+    <ClInclude Include="src\CUDAQuickSurfArray.h" />
+    <ClInclude Include="src\CUDAStreamlines.h" />
+    <ClInclude Include="src\cuda_error_check.h" />
+    <ClInclude Include="src\DataWriter.h" />
+    <ClInclude Include="src\DeformableGPUSurfaceMT.h" />
+    <ClInclude Include="src\DeformableGPUSurfaceMTCall.h" />
+    <ClInclude Include="src\DiffusionSolver.h" />
+    <ClInclude Include="src\Filter.h" />
+    <ClInclude Include="src\GPUSurfaceMT.h" />
+    <ClInclude Include="src\gridParams.h" />
+    <ClInclude Include="src\helper_includes\exception.h" />
+    <ClInclude Include="src\helper_includes\helper_cuda.h" />
+    <ClInclude Include="src\helper_includes\helper_cuda_gl.h" />
+    <ClInclude Include="src\helper_includes\helper_functions.h" />
+    <ClInclude Include="src\helper_includes\helper_image.h" />
+    <ClInclude Include="src\helper_includes\helper_math.h" />
+    <ClInclude Include="src\helper_includes\helper_string.h" />
+    <ClInclude Include="src\helper_includes\helper_timer.h" />
+    <ClInclude Include="src\HostArr.h" />
+    <ClInclude Include="src\LIC.h" />
+    <ClInclude Include="src\MappableCategoryFloat.h" />
+    <ClInclude Include="src\MappableFloatPair.h" />
+    <ClInclude Include="src\MolecularAOShader.h" />
+    <ClInclude Include="src\MolecularSurfaceFeature.h" />
+    <ClInclude Include="src\MoleculeCBCudaRenderer.h" />
+    <ClInclude Include="src\MoleculeCudaSESRenderer.h" />
+    <ClInclude Include="src\MoleculeVolumeCudaRenderer.h" />
+    <ClInclude Include="src\ogl_error_check.h" />
+    <ClInclude Include="src\ParticlesToMeshConverter.h" />
+    <ClInclude Include="src\PlaneDataCall.h" />
+    <ClInclude Include="src\PotentialCalculator.cuh" />
+    <ClInclude Include="src\PotentialCalculator.h" />
+    <ClInclude Include="src\PotentialVolumeRaycaster.h" />
+    <ClInclude Include="src\ProteinVariantMatch.h" />
+    <ClInclude Include="src\QuickSESRenderer.h" />
+    <ClInclude Include="src\QuickSurfMTRenderer.h" />
+    <ClInclude Include="src\QuickSurfRaycaster.h" />
+    <ClInclude Include="src\QuickSurfRenderer.h" />
+    <ClInclude Include="src\QuickSurfRenderer2.h" />
+    <ClInclude Include="src\RMS.h" />
+    <ClInclude Include="src\SecStructFlattener.h" />
+    <ClInclude Include="src\SecStructRenderer2D.h" />
+    <ClInclude Include="src\slicing.h" />
+    <ClInclude Include="src\sort_triangles.cuh" />
+    <ClInclude Include="src\SplitMergeFeature.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\Streamline.h" />
+    <ClInclude Include="src\StreamlineRenderer.h" />
+    <ClInclude Include="src\SurfaceMappingTest.h" />
+    <ClInclude Include="src\SurfacePotentialRendererSlave.h" />
+    <ClInclude Include="src\tables.h" />
+    <ClInclude Include="src\targetver.h" />
+    <ClInclude Include="src\UniGrid3D.h" />
+    <ClInclude Include="src\utilities.h" />
+    <ClInclude Include="src\VBODataCall.h" />
+    <ClInclude Include="src\VecField3f.h" />
+    <ClInclude Include="src\VolumeMeshRenderer.cuh" />
+    <ClInclude Include="src\VolumeMeshRenderer.h" />
+    <ClInclude Include="src\WKFThreads.h" />
+    <ClInclude Include="src\WKFUtils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AbstractGPUSurface.cpp" />
+    <ClCompile Include="src\CenterLineGenerator.cpp" />
+    <ClCompile Include="src\Color.cpp" />
+    <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp" />
+    <ClCompile Include="src\ComparativeMolSurfaceRenderer.cpp" />
+    <ClCompile Include="src\ComparativeSurfacePotentialRenderer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\CritPoints.cpp" />
+    <ClCompile Include="src\CrystalStructureVolumeRenderer.cpp" />
+    <ClCompile Include="src\DataWriter.cpp" />
+    <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\Filter.cpp" />
+    <ClCompile Include="src\LIC.cpp" />
+    <ClCompile Include="src\MappableCategoryFloat.cpp" />
+    <ClCompile Include="src\MappableFloatPair.cpp" />
+    <ClCompile Include="src\MolecularAOShader.cpp" />
+    <ClCompile Include="src\MolecularSurfaceFeature.cpp" />
+    <ClCompile Include="src\MoleculeCBCudaRenderer.cpp" />
+    <ClCompile Include="src\MoleculeCudaSESRenderer.cpp" />
+    <ClCompile Include="src\MoleculeVolumeCudaRenderer.cpp" />
+    <ClCompile Include="src\ParticlesToMeshConverter.cpp" />
+    <ClCompile Include="src\PlaneDataCall.cpp" />
+    <ClCompile Include="src\PotentialCalculator.cpp" />
+    <ClCompile Include="src\PotentialVolumeRaycaster.cpp" />
+    <ClCompile Include="src\Protein_CUDA.cpp" />
+    <ClCompile Include="src\ProteinVariantMatch.cpp" />
+    <ClCompile Include="src\QuickSESRenderer.cpp" />
+    <ClCompile Include="src\QuickSurfMTRenderer.cpp" />
+    <ClCompile Include="src\QuickSurfRaycaster.cpp" />
+    <ClCompile Include="src\QuickSurfRenderer.cpp" />
+    <ClCompile Include="src\QuickSurfRenderer2.cpp" />
+    <ClCompile Include="src\RMS.cpp" />
+    <ClCompile Include="src\SecStructFlattener.cpp" />
+    <ClCompile Include="src\SecStructRenderer2D.cpp" />
+    <ClCompile Include="src\slicing.cpp" />
+    <ClCompile Include="src\SplitMergeFeature.cpp" />
+    <ClCompile Include="src\stdafx.cpp" />
+    <ClCompile Include="src\Streamline.cpp" />
+    <ClCompile Include="src\StreamlineRenderer.cpp" />
+    <ClCompile Include="src\SurfaceMappingTest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="src\SurfacePotentialRendererSlave.cpp" />
+    <ClCompile Include="src\UniGrid3D.cpp" />
+    <ClCompile Include="src\VBODataCall.cpp" />
+    <ClCompile Include="src\VecField3f.cpp" />
+    <ClCompile Include="src\VolumeMeshRenderer.cpp" />
+    <ClCompile Include="src\WKFThreads.cpp" />
+    <ClCompile Include="src\WKFUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_metric.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_generation.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_mapping.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_thrust_stuff.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDACurl.cu" />
+    <CudaCompile Include="src\CUDAFieldTopology.cu" />
+    <CudaCompile Include="src\CUDAMarchingCubes.cu" />
+    <CudaCompile Include="src\CUDAQuickSES.cu" />
+    <CudaCompile Include="src\CUDAQuickSurf.cu" />
+    <CudaCompile Include="src\CUDAQuickSurfAlternative.cu" />
+    <CudaCompile Include="src\CUDAQuickSurfRaycaster.cu" />
+    <CudaCompile Include="src\CUDAQuickSurfArray.cu" />
+    <CudaCompile Include="src\CUDAStreamlines.cu" />
+    <CudaCompile Include="src\cuenergy.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\DeformableGPUSurfaceMT.cu" />
+    <CudaCompile Include="src\DiffusionSolver.cu" />
+    <CudaCompile Include="src\filter_cuda.cu" />
+    <CudaCompile Include="src\GPUSurfaceMT.cu" />
+    <CudaCompile Include="src\gpu_poisson_solver.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\particleSystem.cu" />
+    <CudaCompile Include="src\particles_kernel.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CudaCompile>
+    <CudaCompile Include="src\PotentialCalculator.cu" />
+    <CudaCompile Include="src\SecStructFlattener.cu" />
+    <CudaCompile Include="src\sort_triangles.cu" />
+    <CudaCompile Include="src\VolumeMeshRenderer-sort.cu" />
+    <CudaCompile Include="src\VolumeMeshRenderer.cu" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />
+  </ImportGroup>
+</Project>

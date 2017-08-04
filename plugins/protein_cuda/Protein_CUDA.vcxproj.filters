@@ -1,0 +1,497 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Public Header Files">
+      <UniqueIdentifier>{2ffc180e-f9c6-40f5-8e5d-475e1bc70343}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA Files">
+      <UniqueIdentifier>{7e5aa192-4345-4fad-9a29-2b0c79d05017}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUDA Helpers">
+      <UniqueIdentifier>{fcf9367e-9a5e-4c24-bfea-760ef1f3cb7e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ComparativeFieldTopologyRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ComparativeMolSurfaceRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CrystalStructureVolumeRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cuda_error_check.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CudaDevArr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAKernels.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAMarchingCubes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAQuickSurf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAStreamlines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DataWriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GPUSurfaceMT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MoleculeCBCudaRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MoleculeCudaSESRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MoleculeVolumeCudaRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PotentialCalculator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PotentialVolumeRaycaster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ProteinVariantMatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SurfaceMappingTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SurfacePotentialRendererSlave.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VBODataCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VolumeMeshRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ComparativeSurfacePotentialRenderer.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ComparativeSurfacePotentialRenderer_inline_device_functions.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\constantGridParams.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDACurl.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAFieldTopology.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PotentialCalculator.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VolumeMeshRenderer.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sort_triangles.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAGrid.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WKFThreads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WKFUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ogl_error_check.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HostArr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DeformableGPUSurfaceMT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AbstractGPUSurface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DiffusionSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\protein_cuda\Protein_CUDA.h">
+      <Filter>Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Streamline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StreamlineRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VecField3f.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\slicing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gridParams.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UniGrid3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RMS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CritPoints.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LIC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DeformableGPUSurfaceMTCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\QuickSurfMTRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\QuickSurfRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\QuickSurfRenderer2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MolecularAOShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CenterLineGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MolecularSurfaceFeature.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappableFloatPair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappableCategoryFloat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SplitMergeFeature.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAQuickSurfArray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\QuickSurfRaycaster.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAQuickSurfAlternative.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SecStructFlattener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ParticlesToMeshConverter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SecStructRenderer2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlaneDataCall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CountingSortKernel.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\exception.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_cuda.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_cuda_gl.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_functions.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_image.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_math.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_string.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper_includes\helper_timer.h">
+      <Filter>CUDA Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CUDAQuickSES.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\QuickSESRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\ComparativeFieldTopologyRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComparativeMolSurfaceRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComparativeSurfacePotentialRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CrystalStructureVolumeRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DataWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MoleculeCBCudaRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MoleculeCudaSESRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MoleculeVolumeCudaRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PotentialCalculator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PotentialVolumeRaycaster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ProteinVariantMatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SurfaceMappingTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SurfacePotentialRendererSlave.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VBODataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VolumeMeshRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Protein_CUDA.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WKFThreads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WKFUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AbstractGPUSurface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Streamline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StreamlineRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VecField3f.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\slicing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UniGrid3D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RMS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CritPoints.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LIC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Color.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Filter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\QuickSurfMTRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\QuickSurfRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\QuickSurfRenderer2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MolecularAOShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CenterLineGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MolecularSurfaceFeature.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappableFloatPair.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappableCategoryFloat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SplitMergeFeature.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\QuickSurfRaycaster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SecStructFlattener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ParticlesToMeshConverter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SecStructRenderer2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlaneDataCall.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\QuickSESRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\VolumeMeshRenderer-sort.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_metric.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_generation.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_surface_mapping.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\ComparativeSurfacePotentialRenderer_thrust_stuff.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDACurl.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAFieldTopology.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAMarchingCubes.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSurf.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAStreamlines.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\cuenergy.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\DeformableGPUSurfaceMT.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\DiffusionSolver.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\filter_cuda.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\gpu_poisson_solver.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\GPUSurfaceMT.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\particles_kernel.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\particleSystem.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\PotentialCalculator.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\sort_triangles.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\VolumeMeshRenderer.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSurfArray.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSurfRaycaster.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSurfAlternative.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\SecStructFlattener.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\CUDAQuickSES.cu">
+      <Filter>CUDA Files</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

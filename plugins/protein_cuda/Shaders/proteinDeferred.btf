@@ -1,0 +1,1445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="proteinDeferred">
+    
+    <include file="common" />
+    
+    <!-- Screen space ambient occlusion -->
+    <namespace name="ssao">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet name="main" type="string">
+            <!--
+varying vec3 viewray;
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    viewray = gl_Normal;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet type="string">
+            <!--
+#extension GL_ARB_gpu_shader5 : enable
+
+uniform sampler2D depthBuff; // Note: near ... far =  0 ... 1
+uniform sampler2D normalBuff;
+uniform sampler2D rotSampler;
+uniform vec4 clip; // Near, far, top, right
+uniform vec2 winSize;
+uniform float ssaoRadius;
+
+vec3 randKernel[8] = vec3[](vec3(-1.0, -1.0, -1.0), 
+                      vec3(-1.0, -1.0, 1.0),
+                      vec3(-1.0, 1.0, -1.0),
+                      vec3(-1.0, 1.0, 1.0),
+                      vec3(1.0, -1.0, -1.0),
+                      vec3(1.0, -1.0, 1.0),
+                      vec3(1.0, 1.0, -1.0),
+                      vec3(1.0, 1.0, 1.0));
+
+varying vec3 viewray;
+
+void main(void) {
+
+    float aoFactor;
+    float Accessibility = 0.0;
+    
+    // Get rotation vector, rotation is tiled every 4 screen pixels
+    vec2 rotationTC;
+    ////rotationTC.s = gl_TexCoord[0].s * winSize.x / 4;
+    ////rotationTC.t = gl_TexCoord[0].t * winSize.y / 4;
+    rotationTC.s = gl_FragCoord.x / 4.0;
+    rotationTC.t = gl_FragCoord.y / 4.0;
+    vec3 vRotation = 2 * texture2D(rotSampler, rotationTC).rgb - 1;
+    
+    // Create rotation matrix from rotation vector
+    mat3 rotMat;
+    float h =  1 / (1 + vRotation.z);
+    rotMat[0][0] = h * vRotation.y * vRotation.y + vRotation.z;
+    rotMat[0][1] = - h * vRotation.y * vRotation.x;
+    rotMat[0][2] = -vRotation.x;
+    rotMat[1][0] = -h * vRotation.y * vRotation.x;
+    rotMat[1][1] = h * vRotation.x * vRotation.x + vRotation.z;
+    rotMat[1][2] = -vRotation.y;
+    rotMat[2][0] = vRotation.x;
+    rotMat[2][1] = vRotation.y;
+    rotMat[2][2] = vRotation.z;
+    
+    // Get linear depth value of the current pixel and convert to meters
+    float sceneDepthP = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy), 0).r * clip.y;
+    
+    // Parameters affecting offset points number and distribution
+    const int nSamples = 8;
+    
+    // Radius of the sphere containing the generated samples
+    float offsetScale = ssaoRadius*0.01; 
+    const float offsetScaleStep = 1 + 2.4/nSamples;
+       
+    // Sample area and accumulate accessibility
+    for(float i = 0.0; i < nSamples/8; i++)
+    for(float x = -1.0; x <= 1.0; x += 2.0)
+    for(float y = -1.0; y <= 1.0; y += 2.0)
+    for(float z = -1.0; z <= 1.0; z += 2.0) {
+    
+        // Generate offset vector (this code line is executed only at shader 
+        // compile stage) - here we use cube corners and give it different lengths
+        vec3 vOffset = normalize(vec3(x,y,z))*(offsetScale *=offsetScaleStep);
+        
+        // Rotate offset vector by rotation matrix
+        vec3 vRotatedOffset = rotMat * vOffset;
+        //vec3 vReflectedOffset = reflect(vOffset, vRotation);
+            
+        // Get center pixel 3d coords in screen space
+        ////vec3 vSamplePos = vec3(gl_TexCoord[0].st, sceneDepthP);
+		vec3 vSamplePos = vec3(gl_FragCoord.x / winSize.x, gl_FragCoord.y / winSize.y, sceneDepthP);
+        
+        // Shift coords by offset vector (range convert and width depth vector)
+        vSamplePos += vec3(vRotatedOffset.xy, vRotatedOffset.z * sceneDepthP * 2);
+        //vSamplePos += vec3(vReflectedOffset.xy, vReflectedOffset.z * sceneDepthP * 2);
+        
+        // Read scene depth at sampling point and convert to meters
+        float sceneDepthSample = texture2D(depthBuff, vSamplePos.xy).r * clip.y;
+        
+        // Check if depths of both pixels are close enough and the sampling point
+        // should affect our center pixel
+        float rangeIsValid = clamp((sceneDepthP - sceneDepthSample) / sceneDepthSample, 
+            0.0, 1.0);
+        
+        // Accumulate accessibility, use default value of 0.5 if right computations 
+        // are not possible
+        float val;
+        if(sceneDepthSample > vSamplePos.z)
+            val = 1.0;
+        else 
+            val = 0.0;
+            
+        Accessibility += mix(val, 0.5, rangeIsValid); // Linear interpolation
+    }
+    
+    // Get average value
+    Accessibility =  Accessibility / nSamples;
+    
+    // Amplify and saturate if necessary   
+    aoFactor = clamp(Accessibility*Accessibility + Accessibility, 0.0, 1.0);
+    gl_FragData[0].r = aoFactor;
+    
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+
+    <!-- Toon/silhouette shading -->
+    <namespace name="toon">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet name="main" type="string">
+            <!--
+varying vec3 posES;
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    posES = gl_Normal;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet name="::common::lighting::simple" />
+            <snippet type="string">
+            <!--
+// TODO
+// + Write 'real' depth to depth buffer (note, that the contour is slightly bigger then the actual object)
+// + Parameter for number of colors the phong shading should be mapped to when using toon shading
+// + Paremeter for contour color
+#extension GL_EXT_gpu_shader4 : enable
+
+uniform sampler2D depthBuffer;
+uniform sampler2D colorBuffer;
+uniform sampler2D normalBuffer;
+uniform sampler2D gradientBuffer;
+uniform sampler2D ssaoBuffer;
+
+uniform float threshFine;
+uniform float threshCoarse;
+
+uniform bool ssao;
+uniform int lighting;
+uniform bool withColor;
+
+uniform vec2 clip;
+uniform vec2 winSize;
+
+varying vec3 posES;
+                      
+float GetGradientDilation() {
+    float max = 0.0;
+    float vals[9];
+    vals[0] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).r;
+    vals[1] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).r;
+    vals[2] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).r;
+    vals[3] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).r;
+    vals[4] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy), 0).r;
+    vals[5] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).r;
+    vals[6] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).r;
+    vals[7] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).r;
+    vals[8] = texelFetch2D(gradientBuffer, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).r;
+    for(int i = 0; i < 9; i++) {
+        if(vals[i] > max) {
+            max = vals[i];
+        }
+    }
+    return max;    
+}
+
+void main(void) {
+    
+    vec4 color;
+    if(withColor) {
+        color = texture2D(colorBuffer, gl_TexCoord[0].st);
+    }
+    else {
+        color = vec4(vec3(1.0, 1.0, 1.0), texture2D(colorBuffer, gl_TexCoord[0].st).a);
+    }
+    
+    /// Calculate contour lines ///
+    
+    vec4 colorLinesFine, colorLinesCoarse;
+    // Calculate coarse lines
+    if(clamp(GetGradientDilation(), 0.0, 1.0) > threshCoarse)
+        colorLinesCoarse = vec4(0.0, 0.0, 0.0, 1.0);
+    else
+        colorLinesCoarse = vec4(0.0, 0.0, 0.0, 0.0);
+    // Calcultae fine lines
+    if(clamp(texture2D(gradientBuffer, gl_TexCoord[0].st).r, 0.0, 1.0) > threshFine)
+        colorLinesFine = vec4(0.0, 0.0, 0.0, 1.0);
+    else
+        colorLinesFine = vec4(0.0, 0.0, 0.0, 0.0);
+    // Blend
+    vec3 colorLines = colorLinesFine.rgb*(1.0-colorLinesCoarse.a)
+        + colorLinesCoarse.rgb*colorLinesCoarse.a;
+    float alphaLines = colorLinesFine.a*(1.0-colorLinesCoarse.a)
+        + colorLinesCoarse.a*colorLinesCoarse.a;
+
+    /// Calculate  local lighting if needed ///
+
+    if(lighting == 1) {// Phong shading
+        vec3 L = normalize(vec3(gl_LightSource[0].position));
+        vec3 V = normalize(posES.xyz);
+        vec3 normal = normalize(texture2D(normalBuffer, gl_TexCoord[0].st).xyz);
+        color = vec4(LocalLighting(V, normal, L, color.rgb), color.a);
+    }
+    
+    if(lighting == 2) { // Toon shading
+        vec3 L = normalize(vec3(gl_LightSource[0].position));
+        vec3 V = normalize(posES.xyz);
+        vec3 normal = normalize(texture2D(normalBuffer, gl_TexCoord[0].st).xyz);
+        vec3 intensity = LocalLighting(V, normal, L, color.rgb);
+
+        intensity /= color.rgb;
+
+        //vec3 normal = normalize(texture2D(normalBuffer, gl_TexCoord[0].st).xyz);
+        //vec3 lightDir = normalize(vec3(gl_LightSource[0].position));
+        //intensity = dot(lightDir, normal);
+        if (intensity.x > 0.8)
+            color = vec4(color.rgb, color.a);
+        else if (intensity.x > 0.6)
+            color = vec4(color.rgb*0.8, color.a);
+        else if (intensity.x > 0.4)
+            color = vec4(color.rgb*0.6, color.a);
+        else if (intensity.x > 0.2)
+            color = vec4(color.rgb*0.4, color.a);
+        else
+            color = vec4(color.rgb*0.2, color.a);
+
+        //color = vec4(intensity, color.a);
+    }
+
+    /// Quantify ssao value if needed ///
+    
+    if(ssao) { 
+        float ssaoVal = 0.0;
+        vec4 color_ssao = vec4(1.0, 1.0, 1.0, 1.0);
+        ssaoVal = textureLod(ssaoBuffer, gl_TexCoord[0].st, 2.0).r; 
+        if(ssaoVal > 0.75)
+            color_ssao = vec4(1.0, 1.0, 1.0, color.a);
+        else if(ssaoVal > 0.5)
+            color_ssao = vec4(0.75, 0.75, 0.75, color.a);
+        else if (ssaoVal > 0.25)
+            color_ssao = vec4(0.5, 0.5, 0.5, color.a);
+        else
+            color_ssao = vec4(0.25, 0.25, 0.25, color.a);
+        color.rgb = color.rgb*color_ssao.rgb;
+    }
+    
+    /// Blend it all together ///
+    gl_FragColor = vec4(color.rgb*(1-alphaLines)+ colorLines*alphaLines, 
+        alphaLines+color.a);
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+
+    <!-- Depth of field -->
+    <namespace name="dof">
+        <shader name = "blurVertex">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+<!--
+uniform vec2 screenResInv;
+
+void main(void)
+{
+    // this is half a pixel with and height because
+    // the screen-aligned quad has a width and height of 2
+    vec2 halfPixelSize = 0.5*screenResInv;
+
+    // Clean up inaccuracies
+    vec2 pos = sign(gl_Vertex.xy);
+    gl_Position = vec4(pos, 0.0, 1.0);
+
+    // offset to properly align pixels with texels
+    //gl_Position.xy += vec2(-1.0, -1.0) * halfPixelSize;
+
+    gl_TexCoord[0].xy = 0.5 * pos + 0.5;
+    //gl_TexCoord[0].y = 1.0 - gl_TexCoord[0].y;
+}
+-->
+            </snippet>
+        </shader>
+        <shader name = "reduceVertex">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+<!--
+uniform vec2 screenResInv;
+
+void main(void)
+{
+    // this is half a pixel with and height because
+    // the screen-aligned quad has a width and height of 2
+    vec2 halfPixelSize = 4.0 * screenResInv;
+
+    // Clean up inaccuracies
+    vec2 pos = sign(gl_Vertex.xy);
+    gl_Position = vec4(pos, 0.0, 1.0);
+
+    // offset to properly align pixels with texels
+    //gl_Position.xy += vec2(-1.0, -1.0) * halfPixelSize;
+
+    gl_TexCoord[0].xy = 0.5 * pos + 0.5;
+    //gl_TexCoord[0].y = 1.0 - gl_TexCoord[0].y;
+}
+-->
+            </snippet>
+        </shader>
+        <namespace name="mipmap">
+            <shader name = "blurFragment">
+                <snippet type="version">120</snippet>
+                <snippet type="string">
+<!--
+//
+// Copyright (c) 2008  Institute for Visualization and Interactive
+// Systems, University of Stuttgart, Germany
+//
+// This source code is distributed as part of the output sensitive
+// 3D LIC project. Details about this project can be found on the
+// project web page at http://www.vis.uni-stuttgart.de/texflowvis .
+// This file may be distributed, modified, and used free of charge
+// as long as this copyright notice is included in its original
+// form. Commercial use is strictly prohibited.
+//
+
+uniform sampler2D sourceTex;
+uniform sampler2D depthTex;
+
+uniform vec2 screenResInv;
+uniform float maxCoC;
+uniform float maxCoCInv;
+
+uniform float d_focus;    // focal plane distance
+
+uniform float cocSlope;
+
+uniform vec2 zNearFar; // contains near and far clip values
+
+uniform int renderMode;
+
+
+#if 0
+#   define TABLE poissonTable
+#   define NUM_TAPS      8
+#   define TABLE_WEIGHT       poissonWeight
+#else
+#   define TABLE haltonTable
+#   define NUM_TAPS   16
+#   define TABLE_WEIGHT       haltonWeight
+#endif
+
+vec2 poissonTable[8] = vec2[8]( vec2( 0.0,      0.0),
+                                vec2( 0.527837,-0.085868),
+                                vec2(-0.040088, 0.536087),
+                                vec2(-0.670445,-0.179949),
+                                vec2(-0.419418,-0.616039),
+                                vec2( 0.440453,-0.639399),
+                                vec2(-0.757088, 0.349334),
+                                vec2( 0.574619, 0.685879));
+
+float poissonWeight[8] = float[8]( 1.0, 0.4652, 0.46241622, 0.30582556,
+                         0.25473796, 0.22357876, 0.166203, 0.105227);
+
+
+vec2 haltonTable[200] = vec2[200](
+    vec2( 0.0000000,  0.0000000),
+    vec2(-0.9375000,  0.1851852),
+    vec2( 0.0625000,  0.8518519),
+    vec2(-0.4375000, -0.8518519),
+    vec2( 0.5625000, -0.1851852),
+    vec2(-0.6875000,  0.4814815),
+    vec2( 0.3125000, -0.6296296),
+    vec2(-0.1875000,  0.0370370),
+    vec2(-0.8125000, -0.4074074),
+    vec2( 0.1875000,  0.2592593),
+    vec2(-0.3125000,  0.9259259),
+    vec2(-0.5625000, -0.3086420),
+    vec2( 0.4375000,  0.3580247),
+    vec2(-0.0625000, -0.7530864),
+    vec2( 0.9375000, -0.0864198),
+    vec2( 0.0312500, -0.5308642),
+    vec2(-0.4687500,  0.1358025),
+    vec2( 0.5312500,  0.8024691),
+    vec2( 0.2812500, -0.2345679),
+    vec2(-0.2187500,  0.4320988),
+    vec2(-0.8437500, -0.0123457),
+    vec2( 0.1562500,  0.6543210),
+    vec2(-0.3437500, -0.4567901),
+    vec2( 0.6562500,  0.2098765),
+    vec2( 0.4062500, -0.8271605),
+    vec2(-0.0937500, -0.1604938),
+    vec2( 0.0937500,  0.0617284),
+    vec2(-0.4062500,  0.7283951),
+    vec2( 0.5937500, -0.3827160),
+    vec2(-0.6562500,  0.2839506),
+    vec2(-0.1562500, -0.9506173),
+    vec2( 0.8437500, -0.2839506),
+    vec2(-0.7812500,  0.3827160),
+    vec2( 0.2187500, -0.7283951),
+    vec2(-0.2812500, -0.0617284),
+    vec2( 0.7187500,  0.6049383),
+    vec2(-0.5312500, -0.5061728),
+    vec2( 0.4687500,  0.1604938),
+    vec2(-0.0312500,  0.8271605),
+    vec2( 0.0156250,  0.4567901),
+    vec2(-0.4843750, -0.6543210),
+    vec2( 0.5156250,  0.0123457),
+    vec2( 0.2656250, -0.4320988),
+    vec2(-0.2343750,  0.2345679),
+    vec2( 0.1406250, -0.1358025),
+    vec2(-0.3593750,  0.5308642),
+    vec2( 0.6406250, -0.5802469),
+    vec2(-0.6093750,  0.0864198),
+    vec2( 0.3906250,  0.7530864),
+    vec2(-0.1093750, -0.3580247),
+    vec2( 0.8906250,  0.3086420),
+    vec2( 0.0781250, -0.9917695),
+    vec2(-0.4218750, -0.3251029),
+    vec2( 0.5781250,  0.3415638),
+    vec2( 0.3281250, -0.1028807),
+    vec2(-0.1718750,  0.5637860),
+    vec2( 0.8281250, -0.5473251),
+    vec2(-0.7968750,  0.1193416),
+    vec2( 0.2031250,  0.7860082),
+    vec2(-0.2968750, -0.9176955),
+    vec2( 0.7031250, -0.2510288),
+    vec2(-0.5468750,  0.4156379),
+    vec2( 0.4531250, -0.6954733),
+    vec2(-0.0468750, -0.0288066),
+    vec2( 0.0468750,  0.1934156),
+    vec2(-0.4531250,  0.8600823),
+    vec2(-0.7031250, -0.1769547),
+    vec2( 0.2968750,  0.4897119),
+    vec2(-0.2031250, -0.6213992),
+    vec2( 0.7968750,  0.0452675),
+    vec2( 0.1718750, -0.3991770),
+    vec2(-0.3281250,  0.2674897),
+    vec2( 0.4218750, -0.3004115),
+    vec2(-0.0781250,  0.3662551),
+    vec2(-0.8906250, -0.0781893),
+    vec2( 0.1093750,  0.5884774),
+    vec2(-0.3906250, -0.5226337),
+    vec2( 0.6093750,  0.1440329),
+    vec2( 0.3593750, -0.8930041),
+    vec2(-0.1406250, -0.2263374),
+    vec2( 0.8593750,  0.4403292),
+    vec2( 0.2343750, -0.0041152),
+    vec2(-0.2656250,  0.6625514),
+    vec2( 0.7343750, -0.4485597),
+    vec2(-0.5156250,  0.2181070),
+    vec2(-0.0156250, -0.8189300),
+    vec2( 0.9843750, -0.1522634),
+    vec2( 0.0078125, -0.5967078),
+    vec2(-0.4921875,  0.0699588),
+    vec2( 0.5078125,  0.7366255),
+    vec2(-0.7421875, -0.3744856),
+    vec2( 0.2578125,  0.2921811),
+    vec2(-0.2421875,  0.9588477),
+    vec2(-0.8671875, -0.2757202),
+    vec2( 0.1328125,  0.3909465),
+    vec2(-0.3671875, -0.7201646),
+    vec2( 0.6328125, -0.0534979),
+    vec2(-0.6171875,  0.6131687),
+    vec2( 0.3828125, -0.4979424),
+    vec2(-0.1171875,  0.1687243),
+    vec2( 0.0703125, -0.2016461),
+    vec2(-0.4296875,  0.4650206),
+    vec2( 0.5703125, -0.6460905),
+    vec2(-0.6796875,  0.0205761),
+    vec2( 0.3203125,  0.6872428),
+    vec2(-0.1796875, -0.4238683),
+    vec2( 0.8203125,  0.2427984),
+    vec2( 0.1953125, -0.7942387),
+    vec2(-0.3046875, -0.1275720),
+    vec2( 0.6953125,  0.5390947),
+    vec2(-0.5546875, -0.5720165),
+    vec2( 0.4453125,  0.0946502),
+    vec2(-0.0546875,  0.7613169),
+    vec2( 0.0390625,  0.9835391),
+    vec2( 0.5390625, -0.3168724),
+    vec2(-0.7109375,  0.3497942),
+    vec2( 0.2890625, -0.7613169),
+    vec2(-0.2109375, -0.0946502),
+    vec2( 0.7890625,  0.5720165),
+    vec2(-0.8359375, -0.5390947),
+    vec2( 0.1640625,  0.1275720),
+    vec2(-0.3359375,  0.7942387),
+    vec2(-0.5859375, -0.2427984),
+    vec2( 0.4140625,  0.4238683),
+    vec2(-0.0859375, -0.6872428),
+    vec2( 0.9140625, -0.0205761),
+    vec2( 0.1015625, -0.4650206),
+    vec2(-0.3984375,  0.2016461),
+    vec2( 0.3515625, -0.1687243),
+    vec2(-0.1484375,  0.4979424),
+    vec2(-0.7734375,  0.0534979),
+    vec2( 0.2265625,  0.7201646),
+    vec2(-0.2734375, -0.3909465),
+    vec2( 0.7265625,  0.2757202),
+    vec2(-0.0234375, -0.2921811),
+    vec2( 0.0234375, -0.0699588),
+    vec2(-0.4765625,  0.5967078),
+    vec2( 0.5234375, -0.5144033),
+    vec2(-0.7265625,  0.1522634),
+    vec2( 0.2734375,  0.8189300),
+    vec2(-0.2265625, -0.8847737),
+    vec2( 0.7734375, -0.2181070),
+    vec2(-0.8515625,  0.4485597),
+    vec2( 0.1484375, -0.6625514),
+    vec2(-0.3515625,  0.0041152),
+    vec2( 0.6484375,  0.6707819),
+    vec2(-0.6015625, -0.4403292),
+    vec2( 0.3984375,  0.2263374),
+    vec2(-0.1015625,  0.8930041),
+    vec2(-0.9140625, -0.1440329),
+    vec2( 0.0859375,  0.5226337),
+    vec2(-0.4140625, -0.5884774),
+    vec2( 0.5859375,  0.0781893),
+    vec2(-0.6640625,  0.7448560),
+    vec2( 0.3359375, -0.3662551),
+    vec2(-0.1640625,  0.3004115),
+    vec2( 0.2109375, -0.2674897),
+    vec2(-0.2890625,  0.3991770),
+    vec2(-0.5390625, -0.0452675),
+    vec2( 0.4609375,  0.6213992),
+    vec2(-0.0390625, -0.4897119),
+    vec2( 0.9609375,  0.1769547),
+    vec2( 0.0546875, -0.8600823),
+    vec2(-0.4453125, -0.1934156),
+    vec2( 0.5546875,  0.4732510),
+    vec2(-0.6953125, -0.6378601),
+    vec2( 0.3046875,  0.0288066),
+    vec2(-0.1953125,  0.6954733),
+    vec2( 0.8046875, -0.4156379),
+    vec2(-0.8203125,  0.2510288),
+    vec2( 0.1796875,  0.9176955),
+    vec2(-0.3203125, -0.7860082),
+    vec2( 0.6796875, -0.1193416),
+    vec2(-0.5703125,  0.5473251),
+    vec2( 0.4296875, -0.5637860),
+    vec2(-0.0703125,  0.1028807),
+    vec2(-0.8828125, -0.3415638),
+    vec2( 0.1171875,  0.3251029),
+    vec2(-0.6328125, -0.3305898),
+    vec2( 0.3671875,  0.3360768),
+    vec2(-0.1328125, -0.7750343),
+    vec2( 0.8671875, -0.1083676),
+    vec2(-0.7578125,  0.5582990),
+    vec2( 0.2421875, -0.5528121),
+    vec2(-0.2578125,  0.1138546),
+    vec2( 0.4921875, -0.2565158),
+    vec2(-0.0078125,  0.4101509),
+    vec2(-0.9960938, -0.0342936),
+    vec2( 0.0039062,  0.6323731),
+    vec2(-0.4960938, -0.4787380),
+    vec2( 0.5039062,  0.1879287),
+    vec2( 0.2539062, -0.8491084),
+    vec2(-0.2460938, -0.1824417),
+    vec2( 0.7539062,  0.4842250),
+    vec2( 0.1289062,  0.0397805),
+    vec2(-0.3710938,  0.7064472),
+    vec2( 0.6289062, -0.4046639),
+    vec2(-0.6210938,  0.2620027),
+    vec2(-0.1210938, -0.9725652),
+    vec2( 0.8789062, -0.3058985));
+
+float haltonWeight[200] = float[200](
+     1.0000000,
+     0.0443851,
+     0.1458584,
+     0.0423686,
+     0.4078009,
+     0.1606665,
+     0.2970848,
+     0.8088770,
+     0.0910792,
+     0.6800444,
+     0.0227615,
+     0.3583879,
+     0.4346789,
+     0.2443245,
+     0.0585253,
+     0.4682168,
+     0.5119745,
+     0.0376158,
+     0.6337710,
+     0.5156851,
+     0.1561597,
+     0.3272816,
+     0.4283172,
+     0.3110064,
+     0.0784613,
+     0.8141309,
+     0.8877527,
+     0.1659746,
+     0.2935932,
+     0.2849531,
+     0.0366271,
+     0.1097517,
+     0.1300442,
+     0.2394667,
+     0.7120556,
+     0.0605577,
+     0.2662170,
+     0.5045357,
+     0.1722494,
+     0.5429427,
+     0.1859023,
+     0.4842272,
+     0.4927861,
+     0.6684073,
+     0.8045065,
+     0.3589328,
+     0.1356581,
+     0.3845276,
+     0.1516327,
+     0.6256411,
+     0.0574117,
+     0.0051581,
+     0.4673928,
+     0.3285133,
+     0.6561244,
+     0.4105972,
+     0.0073491,
+     0.1942381,
+     0.1881695,
+     0.0354795,
+     0.2534076,
+     0.3131033,
+     0.1699366,
+     0.9449810,
+     0.8009852,
+     0.0278561,
+     0.2749498,
+     0.4273286,
+     0.3462442,
+     0.2018403,
+     0.5653930,
+     0.5766600,
+     0.4820950,
+     0.6255052,
+     0.1059494,
+     0.4014447,
+     0.3475171,
+     0.3738344,
+     0.0373959,
+     0.7335342,
+     0.0343835,
+     0.7655889,
+     0.2861856,
+     0.1394697,
+     0.4401431,
+     0.1809209,
+     0.0039185,
+     0.4032410,
+     0.5028654,
+     0.1052986,
+     0.1686867,
+     0.6103372,
+     0.0110390,
+     0.0900353,
+     0.5871098,
+     0.1916290,
+     0.3649302,
+     0.1300021,
+     0.3719140,
+     0.7945717,
+     0.7864467,
+     0.3668527,
+     0.1382058,
+     0.3200011,
+     0.2417766,
+     0.5396176,
+     0.1445097,
+     0.1820990,
+     0.6696833,
+     0.1201804,
+     0.2032058,
+     0.5447398,
+     0.2367215,
+     0.0156855,
+     0.3747029,
+     0.2076692,
+     0.1856533,
+     0.7688003,
+     0.0254116,
+     0.0053068,
+     0.7921753,
+     0.1376375,
+     0.3657494,
+     0.4074529,
+     0.3074049,
+     0.0857059,
+     0.5240178,
+     0.5534425,
+     0.6100461,
+     0.4804037,
+     0.2247145,
+     0.2450380,
+     0.5229180,
+     0.2228805,
+     0.7068804,
+     0.9262195,
+     0.2363430,
+     0.2661079,
+     0.2576543,
+     0.1366261,
+     0.0866791,
+     0.1963980,
+     0.0375217,
+     0.3210242,
+     0.6484134,
+     0.0670372,
+     0.2545020,
+     0.5417631,
+     0.1012390,
+     0.0746591,
+     0.4703480,
+     0.2804492,
+     0.4088686,
+     0.0021075,
+     0.5030122,
+     0.6577083,
+     0.6593457,
+     0.5071518,
+     0.4590402,
+     0.2263074,
+     0.5087326,
+     0.0229054,
+     0.1381808,
+     0.5144973,
+     0.2708603,
+     0.0564297,
+     0.6939538,
+     0.2776220,
+     0.0943087,
+     0.1421375,
+     0.0648783,
+     0.1512309,
+     0.3099149,
+     0.2095437,
+     0.2911375,
+     0.8753875,
+     0.0534147,
+     0.6544211,
+     0.2860383,
+     0.5022307,
+     0.2136684,
+     0.1260677,
+     0.0587362,
+     0.3964638,
+     0.7181664,
+     0.4449785,
+     0.5897747,
+     0.0033161,
+     0.3676148,
+     0.3105806,
+     0.4621908,
+     0.1137419,
+     0.6936552,
+     0.1039819,
+     0.8650952,
+     0.2020162,
+     0.2521524,
+     0.3259059,
+     0.0199252,
+     0.0693819);
+/*
+vec2 haltonTable[20] = vec2[20](
+    vec2( 0.0000000,  0.0000000),
+    vec2(-0.9375000,  0.1851852),
+    vec2( 0.0625000,  0.8518519),
+    vec2(-0.4375000, -0.8518519),
+    vec2( 0.5625000, -0.1851852),
+    vec2(-0.6875000,  0.4814815),
+    vec2( 0.3125000, -0.6296296),
+    vec2(-0.1875000,  0.0370370),
+    vec2(-0.8125000, -0.4074074),
+    vec2( 0.1875000,  0.2592593),
+    vec2(-0.3125000,  0.9259259),
+    vec2(-0.5625000, -0.3086420),
+    vec2( 0.4375000,  0.3580247),
+    vec2(-0.0625000, -0.7530864),
+    vec2( 0.9375000, -0.0864198),
+    vec2( 0.0312500, -0.5308642),
+    vec2(-0.4687500,  0.1358025),
+    vec2( 0.5312500,  0.8024691),
+    vec2( 0.2812500, -0.2345679),
+    vec2(-0.2187500,  0.4320988));
+
+float haltonWeight[20] = float[20](
+     1.0000000,
+     0.0443851,
+     0.1458584,
+     0.0423686,
+     0.4078009,
+     0.1606665,
+     0.2970848,
+     0.8088770,
+     0.0910792,
+     0.6800444,
+     0.0227615,
+     0.3583879,
+     0.4346789,
+     0.2443245,
+     0.0585253,
+     0.4682168,
+     0.5119745,
+     0.0376158,
+     0.6337710,
+     0.5156851);
+
+float haltonWeight2[20] = float[20](1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+*/
+
+
+float reconstructDepth(float z)
+{
+    float Zn = zNearFar.x;
+    float Zf = zNearFar.y;
+
+    //  Z = Zn*Zf / (Zf - z*(Zf - Zn))
+    return Zn*Zf / (Zf - z*(Zf - Zn));
+    
+    // Map to near ... far
+    //return z*(Zf - Zn) + Zn;
+    
+}
+
+void main(void)
+{
+    vec4 cOut = vec4(0.0);
+
+    // fetch center tap
+    float depthOrig = texture2D(sourceTex, gl_TexCoord[0].xy).a;
+    // save its depth
+    float depth = reconstructDepth(depthOrig);
+
+    float x = d_focus / depth;
+
+    float discRadius = cocSlope * abs(x - 1.0);
+
+// HACK
+#if 1
+    float maxCoC = 8.0;
+    if (discRadius > maxCoC)
+    {
+       discRadius = maxCoC;
+    }
+#endif
+
+    float mipMapLevel = log2(discRadius * maxCoCInv);
+
+    float mipMapChosen = floor(mipMapLevel);
+    //float mipMapBlendFactor = frac(mipMapLevel);
+    float mipMapBlendFactor = mipMapLevel - mipMapChosen;
+
+
+    vec2 pixelSize = screenResInv;
+
+
+    for(int t=0; t<NUM_TAPS; ++t)
+    {
+        // fetch high-res tap
+        vec2 coord = gl_TexCoord[0].xy + (pixelSize * TABLE[t] * discRadius);
+        vec4 tap = texture2DLod(sourceTex, coord, mipMapLevel);
+        /*
+        vec4 tapHigh = texture2DLod(sourceTex, coord, mipMapChosen);
+        // fetch low-res tap
+        //vec2 coord = gl_TexCoord[0].xy + (pixelSizeLow * TABLE[t] * discRadius);
+        vec4 tapLow = texture2DLod(sourceTex, coord, mipMapChosen + 1.0);
+        // mix low- and hi-res taps based on tap blurriness
+        vec4 tap = mix(tapHigh, tapLow, mipMapBlendFactor);
+        */
+
+        // apply leaking reduction: lower weight for taps that are
+        // closer than the center tap and in focus
+        float tapDepth = reconstructDepth(tap.a);
+
+        //float origTapDepth = texture2DLod(sourceTex, coord, 0).a;
+        //tapDepth = reconstructDepth(origTapDepth);
+#if 1
+        float factor = min(abs(depth - d_focus), 1.0);
+        float tapCoc = // TABLE_WEIGHT[t] * 
+            ((depth < tapDepth)  ?
+            cocSlope * abs(d_focus/tapDepth - 1.0) * factor :
+            cocSlope * abs(d_focus/tapDepth - 1.0));
+
+        // float tapCoc = cocSlope * abs(d_focus/tapDepth - 1.0) * factor;
+#else
+        float tapCoc = cocSlope * abs(d_focus/tapDepth - 1.0);
+#endif
+        // accumulate
+#if 1
+        //tapCoc = 1.0;
+        cOut.rgb += tap.rgb * tapCoc;
+        cOut.a += tapCoc;
+#else
+        cOut.rgb += tap.rgb;
+        cOut.a += 1.0;
+#endif
+    }
+
+
+    // normalize and return result
+    //gl_FragColor = (cOut / cOut.a);
+    gl_FragColor =  vec4(cOut.rgb/cOut.a, 1.0);
+    //gl_FragColor =  vec4(cOut.rgb, 1.0);
+    //    gl_FragColor = vec4(vec3(discRadius * 0.1), 1.0);
+    //    gl_FragColor = gl_FragColor +  vec4(0.0, floor(mipMapLevel)/10.0, 0.0, 0.0);
+
+    //gl_FragColor = vec4(vec3(depth), 1.0);
+    
+    float realDepth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
+    if (renderMode == 1) {
+        if(abs(realDepth - d_focus) < 0.01)
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+    
+    // Write fragment depth to the depth buffer 
+    gl_FragDepth = texture2D(depthTex, gl_TexCoord[0].xy).x;
+}
+-->
+                </snippet>
+            </shader>
+            <shader name = "reduceFragment">
+                <snippet type="version">120</snippet>
+                <snippet type="string">
+<!--
+uniform vec2 screenResInv;
+
+uniform sampler2D sourceTex;
+uniform sampler2D depthTex;
+
+uniform float d_focus;    // focal plane distance
+uniform float d_near;     // near blur plane distance
+uniform float d_far;      // far blur plane distance
+uniform float clamp_far;  // far blur limit [0,1]
+
+uniform vec2 zNearFar; // contains near and far clip values
+
+
+float reconstructDepth(float z)
+{
+    float Zn = zNearFar.x;
+    float Zf = zNearFar.y;
+
+    //  Z = Zn*Zf / (Zf - z*(Zf - Zn))
+    return Zn*Zf / (Zf - z*(Zf - Zn));
+}
+
+
+float computeDepthBlur(float d)
+{
+    float f;
+
+    if (d < d_focus)
+    {
+        // scale depth value betwwen near blur distance
+        // and focal distance to [-1,0]
+        f = (d - d_focus) / (d_focus - d_near);
+
+        f = clamp(f, -clamp_far, 0.0);
+    }
+    else
+    {
+        // scale depth value between focal distance and
+        // far blur distance to [0,1]
+        f = (d - d_focus) / (d_far - d_focus);
+
+        // clamp to max blurriness
+        f = clamp(f, 0.0, clamp_far);
+    }
+
+    return 0.5*f + 0.5;
+}
+
+
+void main(void)
+{
+    vec4 cOut;
+    cOut.rgb = texture2D(sourceTex, gl_TexCoord[0].xy).xyz;
+    cOut.a = texture2D(depthTex, gl_TexCoord[0].xy).x;
+    gl_FragColor = cOut;
+}
+-->
+                </snippet>
+            </shader>
+        </namespace>
+        <namespace name ="shaderx">
+            <shader name ="blurFragment">
+                <snippet type="version">120</snippet>
+                <snippet type="string">
+<!--
+#ifndef NUM_TAPS
+#  define NUM_TAPS     8
+#endif // NUM_TAPS
+
+uniform sampler2D sourceTex;
+uniform sampler2D sourceTexLow;
+uniform sampler2D depthTex;
+
+uniform vec2 screenResInv;
+
+uniform float maxCoC; // max CoC radius and diameter in pixels
+uniform float radiusScale;
+
+uniform float d_focus;    // focal plane distance
+uniform float d_near;     // near blur plane distance
+uniform float d_far;      // far blur plane distance
+uniform float clamp_far;  // far blur limit [0,1]
+
+uniform vec2 zNearFar; // contains near and far clip values
+
+uniform float cocSlope; // if < 0, then the original function of ShaderX is used
+
+uniform int renderMode;
+
+vec2 poissonTable[8] = vec2[8]( vec2( 0.0,      0.0),
+                                vec2( 0.527837,-0.085868),
+                                vec2(-0.040088, 0.536087),
+                                vec2(-0.670445,-0.179949),
+                                vec2(-0.419418,-0.616039),
+                                vec2( 0.440453,-0.639399),
+                                vec2(-0.757088, 0.349334),
+                                vec2( 0.574619, 0.685879));
+
+float reconstructDepth(float z)
+{
+    float Zn = zNearFar.x;
+    float Zf = zNearFar.y;
+
+    return Zn*Zf / (Zf - z*(Zf - Zn)); 
+}
+
+
+float computeDepthBlur(float d)
+{
+    float f;
+
+    if (d < d_focus)
+    {
+        // scale depth value between near blur distance
+        // and focal distance to [-1,0]
+        f = (d - d_focus) / (d_focus - d_near);
+
+       f = clamp(f, -1, 0);
+        //       f = clamp(f, -clamp_far, 0);
+    }
+    else
+    {
+        // scale depth value between focal distance and
+        // far blur distance to [0,1]
+        f = (d - d_focus) / (d_far - d_focus);
+
+        // clamp to max blurriness
+        f = clamp(f, 0, clamp_far);
+    }
+
+    return f * 0.5 + 0.5;
+//    return f; //0.5*f + 0.5;
+}
+
+
+
+
+void main(void)
+{
+#if 0
+   float rScale = 1.6 * radiusScale;
+#else
+   float rScale = 1.0 * radiusScale;
+#endif
+    vec4 cOut;
+    float discRadius, discRadiusLow;
+
+    // pixel size (1/image resolution) of full resolution image
+    vec2 pixelSize = screenResInv;
+
+    //vec2 maxcoc = vec2(maxCoC, 10.0);
+    vec2 maxcoc = vec2(5.0, 10.0);
+
+    cOut = texture2D(sourceTex, gl_TexCoord[0].xy); // fetch center tap
+    float depth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
+
+    float centerDepth = computeDepthBlur(depth);
+
+    if (cocSlope>0)
+    {
+       float x = d_focus / depth;
+       discRadius = cocSlope * abs(x - 1.0);
+       if (discRadius>maxcoc.x)
+       {
+          discRadius = maxcoc.x;
+       }
+    }
+    else
+    {
+       // convert depth into blur radius in pixels
+       discRadius = abs(centerDepth * maxcoc.y - maxcoc.x);
+    }
+
+    // compute disc radius on low-res image
+    discRadiusLow = discRadius * rScale;
+
+    // reuse cOut as an accumulator
+    cOut = vec4(0.0);
+
+    for(int t = 0; t < NUM_TAPS; t++)
+    {
+        // fetch low-res tap
+        vec2 coordLow = gl_TexCoord[0].xy + (pixelSize * poissonTable[t] *
+                          discRadiusLow);
+        vec4 tapLow = texture2D(sourceTexLow, coordLow);
+
+        depth = reconstructDepth(tapLow.a);
+        
+        tapLow.a = computeDepthBlur(depth);
+        //tapLow.a = tapLow.a * 2.0 - 1.0;
+
+        // fetch high-res tap
+        vec2 coordHigh = gl_TexCoord[0].xy + (pixelSize * poissonTable[t] *
+                           discRadius);
+        vec4 tapHigh = texture2D(sourceTex, coordHigh);
+
+        depth = reconstructDepth(texture2D(depthTex, coordHigh).x);
+        
+        tapHigh.a = computeDepthBlur(depth);
+
+        // put tap blurriness into [0, 1] range
+        float tapBlur = abs(tapHigh.a * 2.0 - 1.0);
+
+        // mix low- and hi-res taps based on tap blurriness
+        vec4 tap = mix(tapHigh, tapLow, tapBlur);
+
+        // apply leaking reduction: lower weight for taps that are
+        // closer than the center tap and in focus
+        tap.a = (tap.a >= centerDepth) ? 1.0 : abs(tap.a * 2.0 - 1.0);
+
+#if 1
+        // accumulate
+        cOut.rgb += tap.rgb * tap.a;
+        cOut.a += tap.a;
+#else
+        // accumulate
+        cOut.rgb += tap.rgb;
+        cOut.a += 1.0;
+#endif
+    }
+
+    gl_FragColor = (cOut / cOut.a);    
+    
+    float realDepth = reconstructDepth(texture2D(depthTex, gl_TexCoord[0].xy).x);
+    if (renderMode == 1) {
+        if(abs(realDepth - d_focus) < 0.1)
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+    
+    // Write fragment depth to the depth buffer 
+    gl_FragDepth = texture2D(depthTex, gl_TexCoord[0].xy).x;
+}
+-->
+                </snippet>
+            </shader>
+            <shader name ="reduceFragment">
+                <snippet type="version">120</snippet>
+                    <snippet type="string">
+<!--
+uniform vec2 screenResInv;
+uniform sampler2D sourceTex;
+uniform sampler2D depthTex;
+uniform vec2 zNearFar; // contains near and far clip values
+
+void main(void)
+{
+
+    vec2 texCoordSample = vec2(0.0);
+    vec4 cOut;
+    vec2 pixelSize = screenResInv;
+
+    // it would be more efficient if the texture coordinates
+    // were computed in the vertex shader and passed down
+    texCoordSample.x = gl_TexCoord[0].x - pixelSize.x;
+    texCoordSample.y = gl_TexCoord[0].y + pixelSize.y;
+    cOut.rgb = texture2D(sourceTex, texCoordSample).xyz;
+    cOut.a = texture2D(depthTex, texCoordSample).x;
+
+    texCoordSample.x = gl_TexCoord[0].x + pixelSize.x;
+    texCoordSample.y = gl_TexCoord[0].y + pixelSize.y;
+    cOut.rgb += texture2D(sourceTex, texCoordSample).xyz;
+    cOut.a += texture2D(depthTex, texCoordSample).x;
+
+    texCoordSample.x = gl_TexCoord[0].x + pixelSize.x;
+    texCoordSample.y = gl_TexCoord[0].y - pixelSize.y;
+    cOut.rgb += texture2D(sourceTex, texCoordSample).xyz;
+    cOut.a += texture2D(depthTex, texCoordSample).x;
+
+    texCoordSample.x = gl_TexCoord[0].x - pixelSize.x;
+    texCoordSample.y = gl_TexCoord[0].y - pixelSize.y;
+    cOut.rgb += texture2D(sourceTex, texCoordSample).xyz;
+    cOut.a += texture2D(depthTex, texCoordSample).x;
+
+    gl_FragColor = cOut * 0.25;  
+}
+-->
+                </snippet>
+            </shader>
+        </namespace>
+    </namespace>
+
+    <!-- Sobel operator -->
+    <namespace name="sobel">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet name="main" type="string">
+            <!--
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragment">
+            <snippet type="version">130</snippet>
+            <snippet type="string">
+            <!--
+#extension GL_EXT_gpu_shader4 : enable // Required for 'texelFetch2D' routine
+uniform sampler2D depthBuff;
+void main(void) {
+    float a,b,c,d,e,f,g,h,x;
+    a = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 1), 0).r;
+    b = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, 1), 0).r;
+    c = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 1), 0).r;
+    d = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, 0), 0).r;
+    e = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, 0), 0).r;
+    f = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(-1, -1), 0).r;
+    g = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(0, -1), 0).r;
+    h = texelFetch2D(depthBuff, ivec2(gl_FragCoord.xy)+ivec2(1, -1), 0).r;
+    float sobelX = -a+c-2.0*d+2.0*e-f+h;
+    float sobelY = -a-2.0*b-c+f+2.0*g+h;
+    gl_FragData[0].r = sqrt(sobelX*sobelX+sobelY*sobelY);
+}
+            -->
+            </snippet>
+        </shader>
+    </namespace>
+
+    <!-- Gaussian filter -->
+    <namespace name="gaussian">
+        <shader name="vertex">
+            <snippet type="version">110</snippet>
+            <snippet type="string">
+            <!--
+uniform vec2 screenResInv;
+
+void main(void)
+{
+    // this is half a pixel with and height because
+    // the screen-aligned quad has a width and height of 2
+    vec2 halfPixelSize = 0.5*screenResInv;
+
+    // Clean up inaccuracies
+    vec2 pos = sign(gl_Vertex.xy);
+    gl_Position = vec4(pos, 0.0, 1.0);
+
+    // offset to properly align pixels with texels
+    //gl_Position.xy += vec2(-1.0, -1.0) * halfPixelSize;
+
+    gl_TexCoord[0].xy = 0.5 * pos + 0.5;
+    //gl_TexCoord[0].y = 1.0 - gl_TexCoord[0].y;
+}
+            -->
+            </snippet>
+        </shader>
+        <shader name="fragmentHoriz">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+#define GAUSS_3x3
+#undef GAUSS_3x3
+
+//#define VERTICAL_FILTER
+
+uniform sampler2D sourceTex;
+uniform vec2 screenResInv;
+
+#ifdef GAUSS_3x3
+#   define FILTERSAMPLES 3
+#   define FILTEROFFSET  1
+    float gaussTable[3] = float[3]( 0.25, 0.5, 0.25 );
+#else
+#   define FILTERSAMPLES 5
+#   define FILTEROFFSET  2
+    float gaussTable[5] = float[5]( 2.0/30.0, 7.0/30.0, 12.0/30.0, 7.0/30.0, 2.0/30.0 );
+#endif
+
+
+
+void main(void)
+{
+    vec4 cOut = vec4(0.0);
+    vec4 src = texture2D(sourceTex, gl_TexCoord[0].xy);
+
+    vec2 stepSize = screenResInv;
+#ifdef VERTICAL_FILTER
+    stepSize.x = 0.0;
+#else
+    stepSize.y = 0.0;
+#endif
+
+    for (int i=0; i<FILTERSAMPLES; ++i)
+    {
+        vec2 texPos = gl_TexCoord[0].xy + stepSize * (i-FILTEROFFSET);
+        vec4 sample = texture2D(sourceTex, texPos);
+        cOut.rgb += gaussTable[i] * sample.rgb;
+    }
+    cOut.a = src.a;
+
+    gl_FragColor =  cOut;
+}
+-->
+            </snippet>
+        </shader>
+        <shader name="fragmentVert">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+#define GAUSS_3x3
+#undef GAUSS_3x3
+
+#define VERTICAL_FILTER
+
+uniform sampler2D sourceTex;
+uniform vec2 screenResInv;
+
+#ifdef GAUSS_3x3
+#   define FILTERSAMPLES 3
+#   define FILTEROFFSET  1
+    float gaussTable[3] = float[3]( 0.25, 0.5, 0.25 );
+#else
+#   define FILTERSAMPLES 5
+#   define FILTEROFFSET  2
+    float gaussTable[5] = float[5]( 2.0/30.0, 7.0/30.0, 12.0/30.0, 7.0/30.0, 2.0/30.0 );
+#endif
+
+
+
+void main(void)
+{
+    vec4 cOut = vec4(0.0);
+    vec4 src = texture2D(sourceTex, gl_TexCoord[0].xy);
+
+    vec2 stepSize = screenResInv;
+#ifdef VERTICAL_FILTER
+    stepSize.x = 0.0;
+#else
+    stepSize.y = 0.0;
+#endif
+
+    for (int i=0; i<FILTERSAMPLES; ++i)
+    {
+        vec2 texPos = gl_TexCoord[0].xy + stepSize * (i-FILTEROFFSET);
+        vec4 sample = texture2D(sourceTex, texPos);
+        cOut.rgb += gaussTable[i] * sample.rgb;
+    }
+    cOut.a = src.a;
+
+    gl_FragColor =  cOut;
+}
+-->
+            </snippet>
+        </shader>
+        <shader name="fragmentLee">
+            <snippet type="version">120</snippet>
+            <snippet type="string">
+<!--
+uniform sampler2D sourceTex;
+uniform vec2 screenResInv;
+
+# define FILTERSAMPLES 3
+# define FILTEROFFSET  1
+float gaussTable[9] = float[9]( 0.0625, 0.1250, 0.0625,
+                                0.1250, 0.2500, 0.1250,
+                                0.0625, 0.1250, 0.0625 );
+
+void main(void)
+{
+    vec4 cOut = vec4(0.0);
+    vec4 src = texture2D(sourceTex, gl_TexCoord[0].xy);
+
+    vec2 stepSize = screenResInv;
+
+    for (int j=0; j<FILTERSAMPLES; ++j)
+    {
+        vec2 texPos = gl_TexCoord[0].xy + stepSize * vec2(-FILTEROFFSET, j-FILTEROFFSET);
+        for (int i=0; i<FILTERSAMPLES; ++i)
+        {
+            vec4 sample = texture2D(sourceTex, texPos);
+            cOut.rgb += gaussTable[j* FILTERSAMPLES + i] * sample.rgb;
+            texPos.x += stepSize.x;
+        }
+    }
+    cOut.a = src.a;
+
+    gl_FragColor =  cOut;
+}
+-->
+            </snippet>
+        </shader>
+    </namespace>
+   
+</btf>
