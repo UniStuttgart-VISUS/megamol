@@ -216,6 +216,7 @@ namespace infovis {
 		::megamol::core::param::ParamSlot glDepthTestSlot;
 		::megamol::core::param::ParamSlot glLineSmoothSlot;
 		::megamol::core::param::ParamSlot glLineWidthSlot;
+        ::megamol::core::param::ParamSlot sqrtDensitySlot;
 
 		::megamol::core::param::ParamSlot resetFlagsSlot;
 		::megamol::core::param::ParamSlot resetFiltersSlot;

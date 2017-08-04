@@ -74,6 +74,7 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST"),
     glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH"),
     glLineWidthSlot("glLineWidth", "Value for glLineWidth"),
+    sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)"),
     resetFlagsSlot("resetFlags", "Reset item flags to initial state"),
     resetFiltersSlot("resetFilters", "Reset dimension filters to initial state"),
     //selectedItemsColor(), otherItemsColor(), axesColor(), selectionIndicatorColor(),
@@ -182,6 +183,9 @@ NGParallelCoordinatesRenderer2D::NGParallelCoordinatesRenderer2D(void) : Rendere
     
     glLineWidthSlot << new ::megamol::core::param::FloatParam(1.0f, 0.1f);
     this->MakeSlotAvailable(&glLineWidthSlot);
+
+    sqrtDensitySlot << new ::megamol::core::param::BoolParam(true);
+    this->MakeSlotAvailable(&sqrtDensitySlot);
     
     resetFlagsSlot << new ::megamol::core::param::ButtonParam();
     resetFlagsSlot.SetUpdateCallback(this, &NGParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
@@ -929,6 +933,7 @@ void NGParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("transferFunction"), 5);
     glUniform1i(this->drawItemContinuousProgram.ParameterLocation("fragmentCount"), 1);
     glUniform4fv(this->drawItemContinuousProgram.ParameterLocation("clearColor"), 1, backgroundColor);
+    glUniform1i(this->drawItemContinuousProgram.ParameterLocation("sqrtDensity"), this->sqrtDensitySlot.Param<core::param::BoolParam>()->Value() ? 1 : 0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     drawItemContinuousProgram.Disable();
     POP_DEBUG_GROUP;
