@@ -9,6 +9,8 @@
 
 #include "mmcore/view/View3D.h"
 #include "mmcore/param/ParamSlot.h"
+#include <thread>
+#include <atomic>
 
 
  // NVpipe header
@@ -56,8 +58,6 @@ public:
 	/** Dtor. */
 	virtual ~NVpipeView(void);
 
-
-
 	/**
 	* Renders this AbstractView3D in the currently active OpenGL context.
 	*
@@ -70,6 +70,11 @@ public:
 protected:
 
 	/**
+	* Implementation of 'Release'.
+	*/
+	virtual void release(void);
+
+	/**
 	* NvPipe encoding parameters
 	*/
 	core::param::ParamSlot paramClipMachine;
@@ -77,15 +82,25 @@ protected:
 	cudaGraphicsResource_t graphicsResource;
 	cudaArray_t serverArray;
 	::nvpipe* encoder;
-	size_t sendBufferSize;
 	void* deviceBuffer;
-	uint8_t* sendBuffer;
 	size_t deviceBufferSize;
 	size_t numBytes;
 	param::ParamSlot serverNameSlot;
 	param::ParamSlot portSlot;
 	nvpipe::socket socket;
 
+	// thread stuff
+	std::thread sender;
+	param::ParamSlot queueLength;
+
+	// ringbuffer stuff
+	std::vector<vislib::RawStorage> sendQueue;
+
+	/** The index of the next element to be read. */
+	std::atomic<size_t> curRead;
+
+	/** The index of the next element to be written. */
+	std::atomic<size_t> curWrite;
 
 	// Camera manipulation
 	vislib::SmartPtr<vislib::graphics::CameraParameters> offscreenOverride;
@@ -95,7 +110,18 @@ protected:
 	// encoded FBO
 	vislib::graphics::gl::FramebufferObject fbo;
 
+	/**
+	* Increments the given index, honouring the size of the ring buffer.
+	*
+	* @param idx The current index.
+	*
+	* @return The next index.
+	*/
+	inline size_t advanceIndex(const size_t idx) const {
+		return ((idx + 1) % this->sendQueue.size());
+	}
 
+	void doSend(void);
 };
 
 

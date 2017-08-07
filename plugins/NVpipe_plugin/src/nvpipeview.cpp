@@ -43,6 +43,7 @@ nvpipe::NVpipeView::NVpipeView(void) : View3D(), socket(),
 serverNameSlot("serverName", "Server to push encoded stream to"),
 portSlot("port", "Communication port"),
 paramClipMachine("clipMachine", "Clips everything on the specified machine"),
+queueLength("queueLength", "Defines the size of the sending ringbuffer"),
 offscreenOverride(new vislib::graphics::CameraParamsStore),
 isClipMachine(false){
 
@@ -54,6 +55,9 @@ isClipMachine(false){
 
 	this->paramClipMachine << new core::param::StringParam("");
 	this->MakeSlotAvailable(&this->paramClipMachine);
+
+	this->queueLength << new core::param::IntParam(5);
+	this->MakeSlotAvailable(&this->queueLength);
 }
 
 
@@ -145,8 +149,19 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 				throw vislib::Exception("Failed to allocate device memory", __FILE__, __LINE__);
 			}
 
-			sendBufferSize = deviceBufferSize; // Reserve enough space for encoded output
-			sendBuffer = new uint8_t[sendBufferSize];
+			auto ql = this->queueLength.Param<param::IntParam>()->Value();
+			if (ql < 2) ql = 2;
+
+			Log::DefaultLog.WriteInfo("Ringbuffer has size %i", ql);
+			this->sendQueue.resize(ql);
+			
+			for (auto& sq : this->sendQueue) {
+				sq.AssertSize(deviceBufferSize + sizeof(std::uint32_t));
+			}
+
+			Log::DefaultLog.WriteInfo("Starting sender thread ...");
+			this->sender = std::thread(&NVpipeView::doSend, this);
+
 
 			Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Registering FBO with CUDA .");
 			auto returnValue = cudaGraphicsGLRegisterImage(&graphicsResource, this->fbo.GetColourTextureID(),
@@ -191,26 +206,74 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 		* Grab frame and encode
 		*/
 		{
-			cudaGraphicsMapResources(1, &graphicsResource);
-			cudaGraphicsSubResourceGetMappedArray(&serverArray, graphicsResource, 0, 0);
-			cudaMemcpy2DFromArray(this->deviceBuffer, this->offscreenTile.Width() * 4, serverArray, 0, 0,
-				this->offscreenTile.Width() * 4, this->offscreenTile.Height(), cudaMemcpyDeviceToDevice);
-			cudaGraphicsUnmapResources(1, &graphicsResource);
+			auto cur = this->curWrite.load();
+			auto nxt = this->advanceIndex(cur);
 
 
-			numBytes = this->sendBufferSize;
-			nvp_err_t encodeStatus = nvpipe_encode(this->encoder, this->deviceBuffer, this->deviceBufferSize,
-				sendBuffer, &numBytes, this->offscreenTile.Width(), this->offscreenTile.Height(), NVPIPE_RGBA);
-			if (encodeStatus != NVPIPE_SUCCESS) {
-				Log::DefaultLog.WriteError(Log::LEVEL_ERROR, "NVPipe encode failed with error code %i.", encodeStatus);
-				throw std::exception("Encode failed");
+			if (nxt != this->curRead.load()) {
+				cudaGraphicsMapResources(1, &graphicsResource);
+				cudaGraphicsSubResourceGetMappedArray(&serverArray, graphicsResource, 0, 0);
+				cudaMemcpy2DFromArray(this->deviceBuffer, this->offscreenTile.Width() * 4, serverArray, 0, 0,
+					this->offscreenTile.Width() * 4, this->offscreenTile.Height(), cudaMemcpyDeviceToDevice);
+				cudaGraphicsUnmapResources(1, &graphicsResource);
+
+
+				auto cntEncoded = static_cast<size_t>(this->sendQueue[cur].GetSize()) - sizeof(std::uint32_t);
+				nvp_err_t encodeStatus = nvpipe_encode(this->encoder,
+					this->deviceBuffer, this->deviceBufferSize,
+					this->sendQueue[cur].At(sizeof(std::uint32_t)), &cntEncoded,
+					this->offscreenTile.Width(), this->offscreenTile.Height(), NVPIPE_RGBA);
+				if (encodeStatus != NVPIPE_SUCCESS) {
+					Log::DefaultLog.WriteError(Log::LEVEL_ERROR, "NVPipe encode failed with error code %i.", encodeStatus);
+					throw std::exception("Encode failed");
+				}
+				*this->sendQueue[cur].As<std::uint32_t>() = cntEncoded;
+
+				this->curWrite = nxt;
+
+			} else {
+				Log::DefaultLog.WriteWarn("Send queue was full.");
 			}
 
-			// Send frame
-			this->socket.sendFrame(numBytes, sendBuffer);
 		}
 	} else {
 		View3D::Render(context);
+	}
+}
+
+
+void nvpipe::NVpipeView::release(void) {
+	try {
+		this->socket.closeConnection();
+	}
+	catch (...) {
+		Log::DefaultLog.WriteWarn("Close connection failed.");
+	}
+	if (this->sender.joinable()) {
+		this->sender.join();
+	}
+}
+
+void nvpipe::NVpipeView::doSend(void) {
+	Log::DefaultLog.WriteInfo("NVPipe sender thread is running.");
+
+	try {
+		while (true) {
+
+			auto cur = this->curRead.load();
+
+			if (cur != this->curWrite.load()) {
+				auto len = *this->sendQueue[cur].As<std::uint32_t>() + sizeof(std::uint32_t);
+				// Send frame
+				this->socket.sendFrame(len, this->sendQueue[cur].As<uint8_t>());
+				this->curRead = this->advanceIndex(cur);
+			} else {
+				std::this_thread::yield();
+			}
+		}
+	}
+	catch (...) {
+		Log::DefaultLog.WriteInfo("NVPipe thread is exiting.");
 	}
 
 }
