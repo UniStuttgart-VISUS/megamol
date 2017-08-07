@@ -13,7 +13,6 @@
 #include "vislib/sys/Log.h"
 #include "utility/ConfigHelper.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "GLFW/glfw3.h"
 #include "ViewMouseUILayer.h"
 #include "ButtonParamUILayer.h"
 #include "gl/WindowEscapeHotKeysUILayer.h"
@@ -156,7 +155,11 @@ bool megamol::console::WindowManager::InstantiatePendingView(void *hCore) {
     }
 
     // get an existing window to share context resources
+#ifndef USE_EGL
     GLFWwindow *share = nullptr;
+#else
+    EGLContext *share = nullptr;
+#endif
     if (!windows.empty()) share = windows[0]->WindowHandle();
 
     // prepare window object

@@ -6,6 +6,9 @@
  */
 
 #include "stdafx.h"
+
+#ifndef USE_EGL
+
 #include "gl/glfwInst.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "GLFW/glfw3.h"
@@ -45,3 +48,5 @@ gl::glfwInst::~glfwInst() {
         ::glfwTerminate();
     }
 }
+
+#endif // USE_EGL

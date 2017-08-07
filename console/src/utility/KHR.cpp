@@ -8,7 +8,6 @@
 #include "stdafx.h"
 #include "KHR.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "GLFW/glfw3.h"
 #include "vislib/sys/Log.h"
 
 using namespace megamol::console::utility;

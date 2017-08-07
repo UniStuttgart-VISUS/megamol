@@ -11,6 +11,8 @@
 
 #include <memory>
 
+#ifndef USE_EGL
+
 namespace megamol {
 namespace console {
 namespace gl {
@@ -32,5 +34,7 @@ namespace gl {
 } /* end namespace gl */
 } /* end namespace console */
 } /* end namespace megamol */
+
+#endif // USE_EGL
 
 #endif /* MEGAMOLCON_GL_GLFWINST_H_INCLUDED */
