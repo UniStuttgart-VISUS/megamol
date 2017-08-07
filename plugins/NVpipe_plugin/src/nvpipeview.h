@@ -11,6 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <thread>
 #include <atomic>
+#include <chrono>
 
 
  // NVpipe header
@@ -95,12 +96,14 @@ protected:
 
 	// ringbuffer stuff
 	std::vector<vislib::RawStorage> sendQueue;
-
 	/** The index of the next element to be read. */
 	std::atomic<size_t> curRead;
-
 	/** The index of the next element to be written. */
 	std::atomic<size_t> curWrite;
+
+	// sleeping stuff
+	std::chrono::microseconds sleep;
+	int fullLoop;
 
 	// Camera manipulation
 	vislib::SmartPtr<vislib::graphics::CameraParameters> offscreenOverride;

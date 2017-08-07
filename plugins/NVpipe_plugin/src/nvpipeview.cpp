@@ -45,7 +45,9 @@ portSlot("port", "Communication port"),
 paramClipMachine("clipMachine", "Clips everything on the specified machine"),
 queueLength("queueLength", "Defines the size of the sending ringbuffer"),
 offscreenOverride(new vislib::graphics::CameraParamsStore),
-isClipMachine(false){
+isClipMachine(false),
+sleep(0),
+fullLoop(0){
 
 	this->serverNameSlot << new param::StringParam("");
 	this->MakeSlotAvailable(&this->serverNameSlot);
@@ -72,7 +74,6 @@ nvpipe::NVpipeView::~NVpipeView(void) {
 */
 void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 
-
 	// Determine whether the machine is completely excluded from rendering and 
 	// remember the result for skipping the rendering later on.
 	if (this->paramClipMachine.IsDirty()) {
@@ -92,8 +93,11 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 	}
 
 	if (!this->isClipMachine) {
+
+	// #########################################################################################
+
 		/*
-		* init Network and encoder
+		* init Network, encoder and the HAMMER
 		*/
 		if (!this->socket.isInitialized()) {
 			using namespace vislib::graphics;
@@ -169,7 +173,47 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 			if (returnValue != cudaSuccess) {
 				throw vislib::Exception("Registering FBO with CUDA - failed", __FILE__, __LINE__);
 			}
+		} // end init Network, encoder and the HAMMER
+
+
+		/*
+		* Check if ringbuffer is full and sleep untill it there is free space again
+		*/
+
+		if (this->fullLoop < -1) {
+			this->sleep *= 0.9;
 		}
+
+		auto cur = this->curWrite.load();
+		auto nxt = this->advanceIndex(cur);
+
+		if (nxt == this->curRead.load()) {
+			Log::DefaultLog.WriteWarn("SendQueue full ...");
+			auto zero_mus = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::duration<uint32_t>(0));
+			auto t0 = std::chrono::high_resolution_clock::now();
+			this->fullLoop = 0;
+			while (nxt != this->curRead.load()) {
+				if (this->sleep != zero_mus) {
+					Log::DefaultLog.WriteWarn("Sleeping for %i microseconds ...", this->sleep);
+					std::this_thread::sleep_for(this->sleep);
+					this->fullLoop++;
+				}
+			}
+			if (this->sleep == zero_mus) {
+				auto t1 = std::chrono::high_resolution_clock::now();
+				auto dur = t1 - t0;
+				this->sleep = std::chrono::duration_cast<std::chrono::microseconds>(dur);
+			} else {
+				if (this->fullLoop > 1) {
+					this->sleep *= 1.1;
+				}
+			}
+			this->fullLoop = 0;
+		} else {
+			this->fullLoop--;
+		}// end if queue full
+
+			
 
 		/*
 		* Override camera and render image into FBO
@@ -206,39 +250,34 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 		* Grab frame and encode
 		*/
 		{
-			auto cur = this->curWrite.load();
-			auto nxt = this->advanceIndex(cur);
+			cudaGraphicsMapResources(1, &graphicsResource);
+			cudaGraphicsSubResourceGetMappedArray(&serverArray, graphicsResource, 0, 0);
+			cudaMemcpy2DFromArray(this->deviceBuffer, this->offscreenTile.Width() * 4, serverArray, 0, 0,
+				this->offscreenTile.Width() * 4, this->offscreenTile.Height(), cudaMemcpyDeviceToDevice);
+			cudaGraphicsUnmapResources(1, &graphicsResource);
 
-
-			if (nxt != this->curRead.load()) {
-				cudaGraphicsMapResources(1, &graphicsResource);
-				cudaGraphicsSubResourceGetMappedArray(&serverArray, graphicsResource, 0, 0);
-				cudaMemcpy2DFromArray(this->deviceBuffer, this->offscreenTile.Width() * 4, serverArray, 0, 0,
-					this->offscreenTile.Width() * 4, this->offscreenTile.Height(), cudaMemcpyDeviceToDevice);
-				cudaGraphicsUnmapResources(1, &graphicsResource);
-
-				Log::DefaultLog.WriteInfo("Starting NVPipe encode ...");
-				auto cntEncoded = static_cast<size_t>(this->sendQueue[cur].GetSize()) - sizeof(std::uint32_t);
-				nvp_err_t encodeStatus = nvpipe_encode(this->encoder,
-					this->deviceBuffer, this->deviceBufferSize,
-					this->sendQueue[cur].At(sizeof(std::uint32_t)), &cntEncoded,
-					this->offscreenTile.Width(), this->offscreenTile.Height(), NVPIPE_RGBA);
-				if (encodeStatus != NVPIPE_SUCCESS) {
-					Log::DefaultLog.WriteError("NVPipe encode failed with error code %i.", encodeStatus);
-					throw std::exception("Encode failed");
-				}
-				*this->sendQueue[cur].As<std::uint32_t>() = cntEncoded;
-
-				this->curWrite = nxt;
-
-			} else {
-				Log::DefaultLog.WriteWarn("Send queue was full.");
+			Log::DefaultLog.WriteInfo("Starting NVPipe encode ...");
+			auto cntEncoded = static_cast<size_t>(this->sendQueue[cur].GetSize()) - sizeof(std::uint32_t);
+			nvp_err_t encodeStatus = nvpipe_encode(this->encoder,
+				this->deviceBuffer, this->deviceBufferSize,
+				this->sendQueue[cur].At(sizeof(std::uint32_t)), &cntEncoded,
+				this->offscreenTile.Width(), this->offscreenTile.Height(), NVPIPE_RGBA);
+			if (encodeStatus != NVPIPE_SUCCESS) {
+				Log::DefaultLog.WriteError("NVPipe encode failed with error code %i.", encodeStatus);
+				throw std::exception("Encode failed");
 			}
+			*this->sendQueue[cur].As<std::uint32_t>() = cntEncoded;
+
+			this->curWrite = nxt;
 
 		} // end Grab frame and encode
+
+
+    // ##################################################################################################################
+
 	} else {
 		View3D::Render(context);
-	}
+	} // end if isClipMachine
 }
 
 
