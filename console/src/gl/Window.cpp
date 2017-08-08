@@ -150,11 +150,9 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
     // TODO initialize EGL display, context etc.
     // TODO error checking!!!
     eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    printf("eglGetDisplay\n");
 
     EGLint major, minor;
     eglInitialize(eglDisplay, &major, &minor);
-    printf("eglInitialize\n");
 
     const EGLint configAttribs[] = {
         EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
@@ -169,34 +167,29 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
     EGLint numConfigs;
     EGLConfig config;
     eglChooseConfig(eglDisplay, configAttribs, &config, 1, &numConfigs);
-    printf("eglChooseConfig\n");
 
-    width = placement.w;
-    height = placement.h;
-    if (!placement.size || (width <= 0) || (height <= 0)) {
-        width = 800;
-        height = 600;
+    int w = placement.w;
+    int h = placement.h;
+    if (!placement.size || (w <= 0) || (h <= 0)) {
+        w = 800;
+        h = 600;
     }
 
     const EGLint pbufferAttribs[] = {
-        EGL_WIDTH, width,
-        EGL_HEIGHT, height,
+        EGL_WIDTH, w,
+        EGL_HEIGHT, h,
         EGL_NONE,
     };
 
     eglSurface = eglCreatePbufferSurface(eglDisplay, config, pbufferAttribs);
-    printf("eglCreatePbufferSurface\n");
 
     eglBindAPI(EGL_OPENGL_API);
-    printf("eglBindAPI\n");
     auto context = eglCreateContext(eglDisplay, config, EGL_NO_CONTEXT, NULL);
     hWnd = &context;
-    printf("eglCreateContext\n");
     eglMakeCurrent(eglDisplay, eglSurface, eglSurface, *hWnd);
-    printf("eglDisplay\n");
     
     vislib::graphics::gl::LoadAllGL();
-    printf("LoadAllGL\n");
+    vislib::sys::Log::DefaultLog.WriteInfo("Successfully created EGL context.");
 #endif
 
     fpsSyncTime = std::chrono::system_clock::now();
@@ -213,7 +206,6 @@ void gl::Window::EnableVSync() {
         ::glfwSwapInterval(0);
     }
 #else
-    // TODO 
     eglMakeCurrent( eglDisplay, eglSurface, eglSurface, *hWnd);
     eglSwapInterval( eglDisplay, 0);
 #endif
@@ -280,7 +272,15 @@ void gl::Window::Update() {
         height = frame_height;
     }
 #else
-    // TODO
+    eglMakeCurrent( eglDisplay, eglSurface, eglSurface, *hWnd);
+    int frame_width, frame_height;
+    eglQuerySurface(eglDisplay, eglSurface, EGL_WIDTH, &frame_width);
+    eglQuerySurface(eglDisplay, eglSurface, EGL_HEIGHT, &frame_height);
+    if ((frame_width != width) || (frame_height != height)) {
+        on_resize(frame_width, frame_height);
+        width = frame_width;
+        height = frame_height;
+    }
 #endif
 
     fpsCntr.FrameBegin();
@@ -300,7 +300,7 @@ void gl::Window::Update() {
     eglSwapBuffers( eglDisplay, eglSurface);
     
     // Export rendered image for verification
-    captureFramebufferPPM(0, width, height, "egl-test.ppm");
+    //captureFramebufferPPM(0, width, height, "egl-test.ppm");
 #endif
     fpsCntr.FrameEnd();
 
@@ -438,7 +438,15 @@ void gl::Window::on_resize(int w, int h) {
         }
     }
 #else
-    // TODO
+    eglMakeCurrent( eglDisplay, eglSurface, eglSurface, *hWnd);
+    if ((w > 0) && (h > 0)) {
+        ::glViewport(0, 0, w, h);
+        ::mmcResizeView(hView, w, h);
+        for (std::shared_ptr<AbstractUILayer> uil : uiLayers) {
+            // we inform even disabled layers, since we would need to know and update as soon as they get enabled.
+            uil->onResize(w, h);
+        }
+    }
 #endif
 }
 
