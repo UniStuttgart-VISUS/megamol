@@ -16,7 +16,7 @@
  */
 typedef struct _mmplg_compatibilityvalues_t {
     SIZE_T size; // number of bytes of this struct
-    const char* mmcoreRev; // MegaMol™ core revision
+    const char* mmcoreRev; // MegaMolï¿½ core revision
     const char* vislibRev; // VISlib revision or zero if no vislib is used
 } mmplgCompatibilityValues;
 
