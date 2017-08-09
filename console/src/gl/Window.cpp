@@ -320,8 +320,8 @@ void gl::Window::Update() {
 #else
     eglSwapBuffers( eglDisplay, eglSurface);
     
-    // Export rendered image for verification
-   captureFramebufferPPM(0, width, height, "egl-test.ppm");
+	// Export rendered image for verification
+	//captureFramebufferPPM(0, width, height, "egl-test.ppm");
 #endif
     fpsCntr.FrameEnd();
 

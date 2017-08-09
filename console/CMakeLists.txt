@@ -22,10 +22,8 @@ if(BUILD_CONSOLE)
       endif()
     endif(USE_LIBUNWIND)
     
-    option(USE_EGL "Use EGL instead of GLFW" OFF)
     if(USE_EGL)
         find_package(EGL REQUIRED)
-        add_definitions("-DUSE_EGL")
     endif()
   endif()
 
