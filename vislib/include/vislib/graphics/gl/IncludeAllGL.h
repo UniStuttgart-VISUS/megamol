@@ -19,7 +19,9 @@
 //#include "glload/wgl_all.h"
 //#include "glload/wgl_load.h"
 #else
+#ifndef USE_EGL
 #include "glad/glad_glx.h"
+#endif // USE_EGL
 //#include <X11/Xlib.h>
 //#include <X11/Xutil.h>
 //#include "glload/glx_all.h"
@@ -41,14 +43,13 @@ inline void LoadAllGL() {
 		gladLoadGL();
 #ifdef _WIN32
 		gladLoadWGL(wglGetCurrentDC());
-//        wgl_LoadFunctions(wglGetCurrentDC());
 #else
+#ifndef USE_EGL
 		Display *display = XOpenDisplay(NULL);
 		gladLoadGLX(display, DefaultScreen(display));
-//        glx_LoadFunctions(display, DefaultScreen(display));
         XCloseDisplay(display);
+#endif // !USE_EGL
 #endif
-//        ogl_LoadFunctions();
     }
 }
 
