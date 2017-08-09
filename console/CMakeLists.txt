@@ -49,7 +49,7 @@ if(BUILD_CONSOLE)
     endif()
   endif()
 
-  set(LIBS vislib core glload ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${EGL_LIBRARIES})
+  set(LIBS vislib core ${GLFW3_LIBRARIES} ${VERSION_LIBRARY} ${LIBUNWIND_LIBRARIES} ${EGL_LIBRARIES})
   include_directories(${GLFW3_INCLUDE_DIRS} ${LIBUNWIND_INCLUDE_DIR} ${EGL_INCLUDE_DIR})
 
   if(NOT USE_EGL)
@@ -83,7 +83,7 @@ if(BUILD_CONSOLE)
   
   # main target
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core)
+  add_dependencies(${PROJECT_NAME} vislib core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} 
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

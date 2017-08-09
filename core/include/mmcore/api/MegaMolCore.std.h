@@ -11,12 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#ifdef _WIN32
-#ifndef GL_LOAD_DLL
-#error All MegaMol projects must define GL_LOAD_DLL (Preprocessor option)
-#endif /* GL_LOAD_DLL */
-#endif /* _WIN32 */
-
 /**
  * Struct to be returned by a plugin api holding compatibility informations
  */

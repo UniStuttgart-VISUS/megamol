@@ -8,7 +8,7 @@ option(BUILD_MMSTD_MOLDYN_PLUGIN "Option to build mmstd_moldyn" ON)
 if(BUILD_MMSTD_MOLDYN_PLUGIN)
   project(mmstd_moldyn)
 
-  set(LIBS vislib core glload)
+  set(LIBS vislib core)
   include_directories("include" "src")
 
 
@@ -31,7 +31,7 @@ if(BUILD_MMSTD_MOLDYN_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_dependencies(${PROJECT_NAME} vislib glload core)
+  add_dependencies(${PROJECT_NAME} vislib core)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   # Dependent projects only need to link against the core.so itself.

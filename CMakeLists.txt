@@ -17,7 +17,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 # GLOBAL DLL DEFINITIONS
 if(WIN32)
-  add_definitions(-DGL_LOAD_DLL)
+  #add_definitions(-DGL_LOAD_DLL)
 endif()
 
 # VERSIONS
