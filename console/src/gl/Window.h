@@ -17,7 +17,7 @@
     #include "GLFW/glfw3.h"
     #include "gl/glfwInst.h"
 #else
-    #include "EGL/egl.h"
+    #include <EGL/egl.h>
 #endif
 #include "utility/ConfigHelper.h"
 #include "mmcore/api/MegaMolCore.h"

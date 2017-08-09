@@ -149,10 +149,17 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 #else
     // TODO initialize EGL display, context etc.
     // TODO error checking!!!
+    //printf("0\n");
     eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (eglDisplay == EGL_NO_DISPLAY)
+        vislib::sys::Log::DefaultLog.WriteError("EGL_NO_DISPLAY");
+    //printf("1\n");
 
     EGLint major, minor;
-    eglInitialize(eglDisplay, &major, &minor);
+    EGLBoolean retval = eglInitialize(eglDisplay, &major, &minor);
+    if (retval == EGL_FALSE)
+        vislib::sys::Log::DefaultLog.WriteError("eglInitialize failed.");
+    //printf("2 OGL%i.%i\n", major, minor);
 
     const EGLint configAttribs[] = {
         EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
@@ -166,7 +173,10 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
 
     EGLint numConfigs;
     EGLConfig config;
-    eglChooseConfig(eglDisplay, configAttribs, &config, 1, &numConfigs);
+    retval = eglChooseConfig(eglDisplay, configAttribs, &config, 1, &numConfigs);
+    if (retval == EGL_FALSE)
+        vislib::sys::Log::DefaultLog.WriteError("eglChooseConfig failed.");
+    //printf("3\n");
 
     int w = placement.w;
     int h = placement.h;
@@ -182,11 +192,22 @@ gl::Window::Window(const char* title, const utility::WindowPlacement & placement
     };
 
     eglSurface = eglCreatePbufferSurface(eglDisplay, config, pbufferAttribs);
+    if (eglSurface == EGL_NO_SURFACE)
+        vislib::sys::Log::DefaultLog.WriteError("EGL_NO_SURFACE");
+    //printf("4\n");
 
-    eglBindAPI(EGL_OPENGL_API);
+    retval = eglBindAPI(EGL_OPENGL_API);
+    if (retval == EGL_FALSE)
+        vislib::sys::Log::DefaultLog.WriteError("eglBindAPI failed.");
     auto context = eglCreateContext(eglDisplay, config, EGL_NO_CONTEXT, NULL);
+    if (context == EGL_NO_CONTEXT)
+        vislib::sys::Log::DefaultLog.WriteError("EGL_NO_CONTEXT");
+    //printf("5\n");
     hWnd = &context;
-    eglMakeCurrent(eglDisplay, eglSurface, eglSurface, *hWnd);
+    retval = eglMakeCurrent(eglDisplay, eglSurface, eglSurface, *hWnd);
+    if (retval == EGL_FALSE)
+        vislib::sys::Log::DefaultLog.WriteError("eglMakeCurrent failed.");
+    //printf("6\n");
     
     vislib::graphics::gl::LoadAllGL();
     vislib::sys::Log::DefaultLog.WriteInfo("Successfully created EGL context.");
@@ -300,7 +321,7 @@ void gl::Window::Update() {
     eglSwapBuffers( eglDisplay, eglSurface);
     
     // Export rendered image for verification
-    //captureFramebufferPPM(0, width, height, "egl-test.ppm");
+   captureFramebufferPPM(0, width, height, "egl-test.ppm");
 #endif
     fpsCntr.FrameEnd();
 
