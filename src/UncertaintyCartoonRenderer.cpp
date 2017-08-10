@@ -165,6 +165,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		lightPosParam(          "19 Light position", "The light position."),
 		buttonParam(            "20 Reload shaders", "Reload the shaders."),
 		colorTableFileParam(    "21 Color Table Filename", "The filename of the color table."),
+		bFactorAsUncertaintyParam("22 BFactor Uncertainty", "Use the value stored in the BFactor as uncertainty value. Only useful for preprocessed simulation data."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
@@ -292,6 +293,9 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 	this->colorTableFileParam.SetParameter(new param::FilePathParam(A2T(filename)));
 	this->MakeSlotAvailable(&this->colorTableFileParam);
 	UncertaintyColor::ReadColorTableFromFile(T2A(this->colorTableFileParam.Param<param::FilePathParam>()->Value()), this->colorTable);
+
+	this->bFactorAsUncertaintyParam << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->bFactorAsUncertaintyParam);
 
 	this->fences.resize(this->numBuffers);
 }
@@ -934,7 +938,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 				for (unsigned int aaIdx = firstAAIdx; aaIdx < lastAAIdx; aaIdx++) {
 
 					MolecularDataCall::AminoAcid * acid;
-					 
+
 					// is the current residue really an aminoacid?
 					if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID)
 						acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
@@ -947,17 +951,16 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					// DEBUG
 					/*
 					std::cout << " mol index: " << aaIdx
-						      << " | unc index: " << this->synchronizedIndex[aaIdx]
+							  << " | unc index: " << this->synchronizedIndex[aaIdx]
 							  << std::endl;
 					*/
-//#define VIS_2017
 					uncIndex = this->synchronizedIndex[aaIdx];
 					for (unsigned int k = 0; k < this->structCount; k++) {
-                        calpha.sortedStruct[k] = static_cast<int>(this->sortedSecStructAssignment[(int)this->currentMethodData][uncIndex][k]);
-                        calpha.unc[k]          =                  this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
-#ifdef VIS_2017	
-						calpha.unc[k]          = mol->AtomBFactors()[acid->CAlphaIndex()];
-#endif
+						calpha.sortedStruct[k] = static_cast<int>(this->sortedSecStructAssignment[(int)this->currentMethodData][uncIndex][k]);
+						calpha.unc[k] = this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
+						if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
+							calpha.unc[k] = mol->AtomBFactors()[acid->CAlphaIndex()];
+						}
 					}
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
 						for (unsigned int k = 0; k < 3; k++)
@@ -969,9 +972,10 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					}
 					calpha.flag = this->residueFlag[uncIndex];
 					calpha.uncertainty = this->uncertainty[uncIndex];
-#ifdef VIS_2017
-					calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()];
-#endif
+
+					if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
+						calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()];
+					}
 					
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
 					calpha.pos[1] = mol->AtomPositions()[3 * acid->CAlphaIndex() + 1];

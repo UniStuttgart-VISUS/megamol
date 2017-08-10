@@ -273,6 +273,7 @@ namespace megamol {
 		core::param::ParamSlot outlineParam;
         core::param::ParamSlot outlineScalingParam;
         core::param::ParamSlot outlineColorParam;
+		core::param::ParamSlot bFactorAsUncertaintyParam;
                 
         // local parameter values 
 		int                            currentTessLevel;
