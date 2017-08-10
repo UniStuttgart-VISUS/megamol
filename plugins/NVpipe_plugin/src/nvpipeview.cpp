@@ -46,8 +46,8 @@ paramClipMachine("clipMachine", "Clips everything on the specified machine"),
 queueLength("queueLength", "Defines the size of the sending ringbuffer"),
 offscreenOverride(new vislib::graphics::CameraParamsStore),
 isClipMachine(false),
-sleep(0),
-fullLoop(0){
+sleep(0), fullLoop(0),
+isInitialized(false) {
 
 	this->serverNameSlot << new param::StringParam("");
 	this->MakeSlotAvailable(&this->serverNameSlot);
@@ -99,25 +99,30 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 		/*
 		* init Network, encoder and the HAMMER
 		*/
-		if (!this->socket.isInitialized()) {
+		if (!this->isInitialized) {
 			using namespace vislib::graphics;
 			/*
 			* Init socket Connection
 			*/
 			std::string sn = this->serverNameSlot.Param<param::StringParam>()->Value();
-			std::string pt_str = std::to_string(this->portSlot.Param<param::IntParam>()->Value());
-			PCSTR pt = (PCSTR)pt_str.c_str();
+			uint32_t pt = this->portSlot.Param<param::IntParam>()->Value();
+			std::string pt_str = std::to_string(pt);
 
 			Log::DefaultLog.WriteInfo("Connecting to %hs:%hs ...",
 				sn.c_str(), pt_str.c_str());
-			this->socket.init(sn, pt);
-			this->socket.connect();
+
+			// try to start up socket
+			vislib::net::Socket::Startup();
+			// create socket
+			this->socket.Create(vislib::net::Socket::FAMILY_INET, vislib::net::Socket::TYPE_STREAM, vislib::net::Socket::PROTOCOL_TCP);
+			// connect socket
+			this->socket.Connect(vislib::net::IPEndPoint::CreateIPv4(sn.c_str(), pt));
 			Log::DefaultLog.WriteInfo("Connecting to %hs:%hs - success.",
 				sn.c_str(), pt_str.c_str());
 			// receive initial buffer - ltrbwh
 			std::array<int32_t, 6> bounds;
 			Log::DefaultLog.WriteInfo("Receiving bounds data ...");
-			this->socket.receive(bounds.data(), bounds.size() * sizeof(bounds[0]));
+			this->socket.Receive(bounds.data(), bounds.size() * sizeof(bounds[0]));
 			std::transform(bounds.begin(), bounds.end(), bounds.begin(), ::ntohl);
 			Log::DefaultLog.WriteInfo("Receiving bounds data - complete.");
 			Log::DefaultLog.WriteInfo("left: %i top: %i right: %i bottom: %i width: %i height: %i",
@@ -173,6 +178,7 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 			if (returnValue != cudaSuccess) {
 				throw vislib::Exception("Registering FBO with CUDA - failed", __FILE__, __LINE__);
 			}
+			this->isInitialized = true;
 		} // end init Network, encoder and the HAMMER
 
 
@@ -192,7 +198,7 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 			auto zero_mus = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::duration<uint32_t>(0));
 			auto t0 = std::chrono::high_resolution_clock::now();
 			this->fullLoop = 0;
-			while (nxt != this->curRead.load()) {
+			while (nxt == this->curRead.load()) {
 				if (this->sleep != zero_mus) {
 					Log::DefaultLog.WriteWarn("Sleeping for %i microseconds ...", this->sleep);
 					std::this_thread::sleep_for(this->sleep);
@@ -283,7 +289,7 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 
 void nvpipe::NVpipeView::release(void) {
 	try {
-		this->socket.closeConnection();
+		this->socket.Close();
 	}
 	catch (...) {
 		Log::DefaultLog.WriteWarn("Close connection failed.");
@@ -304,7 +310,7 @@ void nvpipe::NVpipeView::doSend(void) {
 			if (cur != this->curWrite.load()) {
 				auto len = *this->sendQueue[cur].As<std::uint32_t>() + sizeof(std::uint32_t);
 				// Send frame
-				this->socket.sendFrame(len, this->sendQueue[cur].As<uint8_t>());
+				this->sendFrame(len, this->sendQueue[cur].As<uint8_t>());
 				this->curRead = this->advanceIndex(cur);
 			} else {
 				std::this_thread::yield();
@@ -315,4 +321,13 @@ void nvpipe::NVpipeView::doSend(void) {
 		Log::DefaultLog.WriteInfo("NVPipe thread is exiting.");
 	}
 
+}
+
+void nvpipe::NVpipeView::sendFrame(size_t numBytes, uint8_t* sendBuffer) {
+	uint32_t nl_numBytes = ::htonl(numBytes);
+	
+	// send encoded size
+	this->socket.Send(&nl_numBytes, sizeof(nl_numBytes));
+	// send encoded frame
+	this->socket.Send(sendBuffer, numBytes);
 }

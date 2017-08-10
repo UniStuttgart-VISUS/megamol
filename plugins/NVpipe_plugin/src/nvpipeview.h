@@ -19,7 +19,8 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include "nvpipe.h"
-#include "socket.h"
+
+#include "vislib/net/Socket.h"
 
 using namespace megamol::core;
 
@@ -88,7 +89,9 @@ protected:
 	size_t numBytes;
 	param::ParamSlot serverNameSlot;
 	param::ParamSlot portSlot;
-	nvpipe::socket socket;
+	vislib::net::Socket socket;
+	bool isInitialized;
+	void sendFrame(size_t numBytes, uint8_t* serverSendBuffer);
 
 	// thread stuff
 	std::thread sender;
