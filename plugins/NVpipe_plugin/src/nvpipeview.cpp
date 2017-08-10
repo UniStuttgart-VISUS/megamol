@@ -104,7 +104,8 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 			/*
 			* Init socket Connection
 			*/
-			std::string sn = this->serverNameSlot.Param<param::StringParam>()->Value();
+			std::string sn = (const char*)T2A(this->serverNameSlot.Param<param::StringParam>()->Value());
+      
 			uint32_t pt = this->portSlot.Param<param::IntParam>()->Value();
 			std::string pt_str = std::to_string(pt);
 
@@ -270,7 +271,7 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 				this->offscreenTile.Width(), this->offscreenTile.Height(), NVPIPE_RGBA);
 			if (encodeStatus != NVPIPE_SUCCESS) {
 				Log::DefaultLog.WriteError("NVPipe encode failed with error code %i.", encodeStatus);
-				throw std::exception("Encode failed");
+				vislib::Exception("Encode failed", __FILE__, __LINE__);
 			}
 			*this->sendQueue[cur].As<std::uint32_t>() = cntEncoded;
 
