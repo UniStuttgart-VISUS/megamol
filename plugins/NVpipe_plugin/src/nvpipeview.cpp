@@ -28,7 +28,7 @@
 #include <iostream>
 #include <fstream>
 #include <array>
-
+#include <cstdint>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -166,7 +166,7 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 			this->sendQueue.resize(ql);
 			
 			for (auto& sq : this->sendQueue) {
-				sq.AssertSize(deviceBufferSize + sizeof(std::uint32_t));
+				sq.AssertSize(deviceBufferSize + sizeof(uint32_t));
 			}
 
 			Log::DefaultLog.WriteInfo("Starting sender thread ...");
@@ -177,7 +177,8 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 			auto returnValue = cudaGraphicsGLRegisterImage(&graphicsResource, this->fbo.GetColourTextureID(),
 				GL_TEXTURE_2D, cudaGraphicsRegisterFlagsReadOnly);
 			if (returnValue != cudaSuccess) {
-				throw vislib::Exception("Registering FBO with CUDA - failed", __FILE__, __LINE__);
+			  Log::DefaultLog.WriteError("Registering FBO with CUDA failed with error code %i", returnValue);
+			  throw vislib::Exception("Registering FBO with CUDA - failed", __FILE__, __LINE__);
 			}
 			this->isInitialized = true;
 		} // end init Network, encoder and the HAMMER
@@ -264,16 +265,16 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 			cudaGraphicsUnmapResources(1, &graphicsResource);
 
 			Log::DefaultLog.WriteInfo("Starting NVPipe encode ...");
-			auto cntEncoded = static_cast<size_t>(this->sendQueue[cur].GetSize()) - sizeof(std::uint32_t);
+			auto cntEncoded = static_cast<size_t>(this->sendQueue[cur].GetSize()) - sizeof(uint32_t);
 			nvp_err_t encodeStatus = nvpipe_encode(this->encoder,
 				this->deviceBuffer, this->deviceBufferSize,
-				this->sendQueue[cur].At(sizeof(std::uint32_t)), &cntEncoded,
+				this->sendQueue[cur].At(sizeof(uint32_t)), &cntEncoded,
 				this->offscreenTile.Width(), this->offscreenTile.Height(), NVPIPE_RGBA);
 			if (encodeStatus != NVPIPE_SUCCESS) {
 				Log::DefaultLog.WriteError("NVPipe encode failed with error code %i.", encodeStatus);
 				throw vislib::Exception("Encode failed", __FILE__, __LINE__);
 			}
-			*this->sendQueue[cur].As<std::uint32_t>() = cntEncoded;
+			*this->sendQueue[cur].As<uint32_t>() = cntEncoded;
 
 			this->curWrite = nxt;
 
@@ -309,7 +310,7 @@ void nvpipe::NVpipeView::doSend(void) {
 			auto cur = this->curRead.load();
 
 			if (cur != this->curWrite.load()) {
-				auto len = *this->sendQueue[cur].As<std::uint32_t>() + sizeof(std::uint32_t);
+				auto len = *this->sendQueue[cur].As<uint32_t>() + sizeof(uint32_t);
 				// Send frame
 				this->sendFrame(len, this->sendQueue[cur].As<uint8_t>());
 				this->curRead = this->advanceIndex(cur);
