@@ -267,7 +267,8 @@ namespace megamol {
 		core::param::ParamSlot colorTableFileParam;
 		core::param::ParamSlot lightPosParam;
 		core::param::ParamSlot uncVisParam;
-		core::param::ParamSlot uncDistorParam;
+		core::param::ParamSlot uncDistorGainParam;
+        core::param::ParamSlot uncDistorRepParam;
         core::param::ParamSlot ditherParam;
         core::param::ParamSlot methodDataParam;
 		core::param::ParamSlot outlineParam;

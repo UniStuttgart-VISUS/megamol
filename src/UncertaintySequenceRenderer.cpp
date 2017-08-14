@@ -747,6 +747,14 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         fgColor[i] -= bgColor[i];
     }
 
+    // store current glPolygonMode
+    GLuint tmpMode[2];
+    glGetIntegerv(GL_POLYGON_MODE, (GLint*)tmpMode);
+
+    // USE LINE MODE FOR WIREFRAME RENDERING
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
     if (this->dataPrepared) {
 
         // temporary variables and constants
@@ -1406,6 +1414,10 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 // draw frames for uncertain amino-acid structure
                 if (this->showSeparatorLine) {
 
+                    // store current glPolygonMode
+                    GLuint tmpMode[2];
+                    glGetIntegerv(GL_POLYGON_MODE, (GLint*)tmpMode);
+
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
                     glColor3fv(fgColor);
@@ -1414,11 +1426,24 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     glDrawArrays(GL_QUADS, 0, (GLsizei)this->aminoacidSeparatorVertices.Count() / 2);
                     glDisable(GL_VERTEX_ARRAY);
 
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    // restore previous glPolygonMode
+                    if (tmpMode[1] == GL_LINE)
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    if (tmpMode[1] == GL_FILL)
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                  
                 }
                 yPos += 1.0f;
             }
         }
+
+        // restore previous glPolygonMode
+        if (tmpMode[1] == GL_LINE)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        if (tmpMode[1] == GL_FILL)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
 
         // draw amino-acid tiles
         glColor3fv(fgColor);

@@ -448,7 +448,9 @@
                         colors[i] = structCol[atoms[id[0] + i - 1].sortedStruct[structIndex]];
                     }     
                     else if (colorMode == COLOR_MODE_UNCERTAIN) {
-/*UNCERTAINTY to COLOR coding*/
+                    
+/*UNCERTAINTY to COLOR coding (with interpolation) */
+
                         float tempUnc = atoms[id[0] + i - 1].uncertainty;
                         
                         if (!threeColInt) {
@@ -488,7 +490,9 @@
                     color = structCol[mytype];
                 }     
                 else if (colorMode == COLOR_MODE_UNCERTAIN) {
+                
 /*UNCERTAINTY to COLOR coding*/             
+
                     if (!threeColInt) {
                         color = cCol*(1.0 - uncVal[0]) + uCol*uncVal[0]; 
                     }
@@ -656,7 +660,7 @@
 
             // UNCERTAINTY visualisation
             if (uncVisMode == UNC_VIS_SIN_U) { // SINUS U
-                float uDisp   = distorLev * 2.0 * M_PI * u * float(ceil(uncFac * 10.0));
+                float uDisp   = distorLev * 2.0 * M_PI * u * float(floor(uncFac * 10.0));
                 float fac     = uncFac * ampLevel/10.0;                
                 disp          = sin(uDisp - M_PI/2.0);
                 disp         *= fac;                
@@ -673,7 +677,7 @@
                 n             = normalize(n + uNdisp * tangent);                
             }
             else if (uncVisMode == UNC_VIS_SIN_V) { // SINUS V    
-                float vDisp   = distorLev * 2.0 * M_PI * v * float(ceil(uncFac * 10.0));
+                float vDisp   = distorLev * 2.0 * M_PI * v * float(floor(uncFac * 10.0));
                 float fac     = uncFac * ampLevel / 10.0;                
                 disp          = sin(vDisp - M_PI/2.0);
                 disp         *= fac;      
@@ -692,8 +696,8 @@
                 n             = normalize(n + vNdisp * normalize(cross(n, tangent)));                
             }    
             else if (uncVisMode == UNC_VIS_SIN_UV) {  // SINUS U,V
-                float uDisp   = distorLev * 2.0 * M_PI * u * float(ceil(uncFac * 10.0));
-                float vDisp   = distorLev * 2.0 * M_PI * v * float(ceil(uncFac * 10.0));
+                float uDisp   = distorLev * 2.0 * M_PI * u * float(floor(uncFac * 10.0));
+                float vDisp   = distorLev * 2.0 * M_PI * v * float(floor(uncFac * 10.0));
                 float fac     = uncFac * ampLevel / 10.0;    
                 float dispU   = sin(uDisp - M_PI/2.0);
                 float dispV   = sin(vDisp - M_PI/2.0);
@@ -722,7 +726,7 @@
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
             }
             else if (uncVisMode == UNC_VIS_TRI_U) {  // TRIANGLE U
-                float uMod    = u*distorLev * float(ceil(uncFac * 10.0));
+                float uMod    = u*distorLev * float(floor(uncFac * 10.0));
                 float uFunc   = 0.5 - (uMod - floor(uMod));
                 float uTri    = (0.5 - abs(uFunc));
                 float fac     = uncFac * ampLevel;
@@ -744,8 +748,8 @@
 
 			}
 			else if (uncVisMode == UNC_VIS_TRI_UV) {  // TRIANGLE U,V
-                float uMod    = u*distorLev * float(ceil(uncFac * 10.0));
-                float vMod    = v*distorLev * float(ceil(uncFac * 10.0));
+                float uMod    = u*distorLev * float(floor(uncFac * 10.0));
+                float vMod    = v*distorLev * float(floor(uncFac * 10.0));
                 float uFunc   = 0.5 - (uMod - floor(uMod));
                 float vFunc   = 0.5 - (vMod - floor(vMod));
                 float uTri    = (0.5 - abs(uFunc));

@@ -6,7 +6,7 @@ Clear
 
 Write-Host "===================================================================="
 Write-Host "Executing `"UncertaintyInputData.py`" for all PDB-files in `"../cache`""
-#Write-Host "Writing output to `"all_uncertainty_input_data.log`" "
+Write-Host "Writing output to `"all_uncertainty_input_data.log`" "
 Write-Host "===================================================================="
 
 # Delete old files ...
@@ -30,6 +30,8 @@ ForEach ($file in $fileList) {
     Write-Output "Processing PDB-ID: $id                                              " | Tee-Object -FilePath .\all_uncertainty_input_data.log -Append 
     Write-Output "====================================================================" | Tee-Object -FilePath .\all_uncertainty_input_data.log -Append 
     python.exe .\UncertaintyInputData.py  $id -o -c                                *>&1 | Tee-Object -FilePath .\all_uncertainty_input_data.log -Append 
+    Write-Output ""                                                                     | Tee-Object -FilePath .\all_uncertainty_input_data.log -Append
+    Write-Output ""                                                                     | Tee-Object -FilePath .\all_uncertainty_input_data.log -Append
 }
 
 Write-Host

@@ -154,7 +154,7 @@ class UncertaintyInputData:
         # Class variables    
         PDBId             = self.Param_PDBId.lower()                                # PDB id from arg
         PDBFileName       = (PDBId + '.pdb')                                        # PDB file name
-        CacheLocation     = os.path.normcase('./../cache')                            # cache location of for output files
+        CacheLocation     = os.path.normcase('./../cache/test')                            # cache location of for output files
         PDBFile           = os.path.join(CacheLocation, PDBFileName)                # PDB file path 
            
         ProgLocation      = os.path.normcase('.')                                    # location of program files        
@@ -959,7 +959,7 @@ class UncertaintyInputData:
             if LengthDiff > 0:
                 OutFileBuffer[x] += ('       |    |         |           |      |      |      |         |        |        |        |        |        |        |        |          |          |          |          |')
 
-
+        
         # Prosign File stuff-----------------------------------------------------
         logging.debug('  Opening Prosign file')
         logging.info('  Parsing Prosign file')
@@ -981,11 +981,13 @@ class UncertaintyInputData:
                 logging.error('>>>   {0}'.format(Error))
                 return False
 
+            skipFollowingModels = False
+            
             reader = csv.reader(ProsignFile)
             for row in reader:
             
-                # Skip duplicate pdb-indices
-                if (prosignIndex != row[0]):
+                # Skip duplicate pdb-indices 
+                if (prosignIndex != row[0] and not skipFollowingModels):
                     ChainID = row[2]
                     #search for matching chain ID
                     if(OutFileBuffer[LineOffset][30:31] != ChainID) :
@@ -999,12 +1001,17 @@ class UncertaintyInputData:
                     #while (prosignIndex != OutFileBuffer[LineOffset][(45-len(prosignIndex)):45]):
                     while (str(prosignIndex).rjust(7) != OutFileBuffer[LineOffset][38:45]):
                         LineOffset += 1
-                        
-                    OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               |'
+                        # ... and skip multiple models for same protein from NMR
+                        # Case: if last chain id is same as first one
+                        if(LineOffset > len(OutFileBuffer) - 1):
+                            skipFollowingModels = True
+                            break;
+                    if (not skipFollowingModels):
+                        OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               |'
 
-                    LineOffset += 1
-                    if(LineOffset > len(OutFileBuffer) - 1):
-                        LineOffset = 8
+                        LineOffset += 1
+                        if(LineOffset > len(OutFileBuffer) - 1):
+                            LineOffset = 8
             
             ProsignFile.close()
             logging.debug('  Completed to parse file \"{0}\"'.format(Param_ProsignFile))

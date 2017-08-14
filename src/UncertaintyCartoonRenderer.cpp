@@ -144,28 +144,29 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		uncertaintyDataSlot(    "uncertaintyDataSlot", "Connects the cartoon tesselation rendering with uncertainty data storage."),
 		resSelectionCallerSlot( "getResSelection", "Connects the cartoon rendering with residue selection storage."),
 
-		scalingParam(           "01 Scaling", "Scaling factor for particle radii."),
-		sphereParam(            "02 Spheres", "Render atoms as spheres."),
-		backboneParam(          "03 Backbone", "Render backbone as tubes."),
-		backboneWidthParam(     "04 Backbone width", "The width of the backbone."),
-		tessLevelParam(         "05 Tesselation level", "The tesselation level."),
-		lineDebugParam(         "06 Wireframe", "Render in wireframe mode."),
-		onlyTubesParam(         "07 Only tubes", "Render only tubes."),
-        methodDataParam(        "08 Method data", "Choose data of secondary structure assignment method."),
-		uncVisParam(            "09 Uncertainty visualisation", "The uncertainty visualisation."),
-		uncDistorParam(         "10 Distortion (1)gain (2)repeat", "(0) amplification of function, (1) repetition of function"),
-        ditherParam(            "11 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
-        outlineParam(           "12 Outlining", "The oulining visualisations."),
-        outlineScalingParam(    "13 Outline scaling", "The scaling of the ouline."),
-        outlineColorParam(      "14 Outline color", "The color of the outline."),
-		uncertainMaterialParam( "15 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
-		materialParam(          "16 Material", "Ambient, diffuse, specular components + exponent."),
-		colorModeParam(         "17 Color mode", "Coloring mode for secondary structure."),
-		colorInterpolationParam("18 Color interpolation", "Should the colors be interpolated?"),
-		lightPosParam(          "19 Light position", "The light position."),
-		buttonParam(            "20 Reload shaders", "Reload the shaders."),
-		colorTableFileParam(    "21 Color Table Filename", "The filename of the color table."),
-		bFactorAsUncertaintyParam("22 BFactor Uncertainty", "Use the value stored in the BFactor as uncertainty value. Only useful for preprocessed simulation data."),
+		scalingParam(             "01 Scaling", "Scaling factor for particle radii."),
+		sphereParam(              "02 Spheres", "Render atoms as spheres."),
+		backboneParam(            "03 Backbone", "Render backbone as tubes."),
+		backboneWidthParam(       "04 Backbone width", "The width of the backbone."),
+		tessLevelParam(           "05 Tesselation level", "The tesselation level."),
+		lineDebugParam(           "06 Wireframe", "Render in wireframe mode."),
+		onlyTubesParam(           "07 Only tubes", "Render only tubes."),
+        methodDataParam(          "08 Method data", "Choose data of secondary structure assignment method."),
+	    uncVisParam(              "09 Uncertainty visualisation", "The uncertainty visualisation."),
+        uncDistorGainParam(       "10 Distortion: GAIN ", "amplification of function"),
+        uncDistorRepParam(        "11 Distortion: REPEAT", "repetition of function"),
+        ditherParam(              "12 Dithering", "enable and add additional dithering passes, dithering is disabled for 0."),
+        outlineParam(             "13 Outlining", "The oulining visualisations."),
+        outlineScalingParam(      "14 Outline scaling", "The scaling of the ouline."),
+        outlineColorParam(        "15 Outline color", "The color of the outline."),
+		uncertainMaterialParam(   "16 Uncertain material", "material properties for uncertain structure assignment: Ambient, diffuse, specular components + exponent"),
+		materialParam(            "17 Material", "Ambient, diffuse, specular components + exponent."),
+		colorModeParam(           "18 Color mode", "Coloring mode for secondary structure."),
+		colorInterpolationParam(  "19 Color interpolation", "Should the colors be interpolated?"),
+		lightPosParam(            "20 Light position", "The light position."),
+		buttonParam(              "21 Reload shaders", "Reload the shaders."),
+		colorTableFileParam(      "22 Color Table Filename", "The filename of the color table."),
+		bFactorAsUncertaintyParam("23 BFactor Uncertainty", "Use the value stored in the BFactor as uncertainty value. Only useful for preprocessed simulation data."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
@@ -246,8 +247,12 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
     this->lightPosParam << new core::param::Vector4fParam(this->currentLightPos);
 	this->MakeSlotAvailable(&this->lightPosParam);
 
-    this->uncDistorParam << new core::param::Vector2fParam(this->currentUncDist);
-	this->MakeSlotAvailable(&this->uncDistorParam);
+    this->uncDistorGainParam << new core::param::IntParam(this->currentUncDist[0]);
+	this->MakeSlotAvailable(&this->uncDistorGainParam);
+
+    this->uncDistorRepParam << new core::param::IntParam(this->currentUncDist[1]);
+    this->MakeSlotAvailable(&this->uncDistorRepParam);
+
 
     this->outlineColorParam << new core::param::Vector3fParam(this->currentOutlineColor);
     this->MakeSlotAvailable(&this->outlineColorParam);
@@ -764,11 +769,18 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		this->uncertainMaterialParam.ResetDirty();
 		this->currentUncertainMaterial = static_cast<vislib::math::Vector<float, 4>>(this->uncertainMaterialParam.Param<param::Vector4fParam>()->Value());
 	}
-	// get uncertainty distortion
-	if (this->uncDistorParam.IsDirty()) {
-		this->uncDistorParam.ResetDirty();
-		this->currentUncDist = static_cast<vislib::math::Vector<float, 2>>(this->uncDistorParam.Param<param::Vector2fParam>()->Value());
+
+	// get uncertainty distortion: gain
+	if (this->uncDistorGainParam.IsDirty()) {
+		this->uncDistorGainParam.ResetDirty();
+		this->currentUncDist[0] = static_cast<float>(this->uncDistorGainParam.Param<param::IntParam>()->Value());
 	}
+    // get uncertainty distortion: repeat
+    if (this->uncDistorRepParam.IsDirty()) {
+        this->uncDistorRepParam.ResetDirty();
+        this->currentUncDist[1] = static_cast<float>(this->uncDistorRepParam.Param<param::IntParam>()->Value());
+    }
+
 	// get uncertainty visualisation mode
 	if (this->uncVisParam.IsDirty()) {
 		this->uncVisParam.ResetDirty();
