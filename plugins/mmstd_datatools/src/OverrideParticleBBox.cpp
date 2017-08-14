@@ -134,10 +134,10 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
         size_t step;
 
         for (size_t l = 0, max = inData.GetParticleListCount(); l < max; l++) {
-            if (inData.AccessParticles(l).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ
-                || inData.AccessParticles(l).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
+            if (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ
+                || inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType() == megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR) {
                 posFromSomethingFunc getPoint;
-                switch (inData.AccessParticles(l).GetVertexDataType()) {
+                switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
                     case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         getPoint = posFromXYZ;
                         break;
@@ -145,14 +145,14 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                         getPoint = posFromXYZR;
                         break;
                 }
-                size_t maxP = inData.AccessParticles(l).GetCount();
+                size_t maxP = inData.AccessParticles(static_cast<unsigned int>(l)).GetCount();
                 if (samples == 0) {
                     step = 1;
                 } else {
                     step = maxP / samples;
                 }
-                void *vertPtr = const_cast<void *>(inData.AccessParticles(l).GetVertexData());
-                size_t stride = inData.AccessParticles(l).GetVertexDataStride();
+                void *vertPtr = const_cast<void *>(inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexData());
+                size_t stride = inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataStride();
                 // gief openmp 3.1
                 //#pragma omp parallel for reduction(min: minX, max: maxX)
                 for (size_t p = 0; p < maxP; p += step) {
@@ -177,7 +177,7 @@ bool datatools::OverrideParticleBBox::manipulateExtent(
                     }
                 }
             } else {
-                switch (inData.AccessParticles(l).GetVertexDataType()) {
+                switch (inData.AccessParticles(static_cast<unsigned int>(l)).GetVertexDataType()) {
                     case megamol::core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                         //getPoint = posFromXYZ_SHORT;
                         vislib::sys::Log::DefaultLog.WriteError("OverrideParticleBBox does not support re-computation of short coordinates");

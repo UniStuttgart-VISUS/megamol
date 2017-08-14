@@ -1,0 +1,15 @@
+## Ensure LF line endings
+*.c         eol=lf
+*.h         eol=lf
+*.cpp       eol=lf
+*.txt       eol=lf
+*.sh        eol=lf
+*.cfg       eol=lf
+*.btf       eol=lf
+*.glfp      eol=lf
+*.glvp      eol=lf
+*.glfs      eol=lf
+*.glvs      eol=lf
+*.glgs      eol=lf
+*.glsl      eol=lf
+*.pl        eol=lf

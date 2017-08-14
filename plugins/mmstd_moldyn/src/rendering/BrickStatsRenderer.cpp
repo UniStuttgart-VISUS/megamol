@@ -94,6 +94,7 @@ bool BrickStatsRenderer::makeProgram(std::string name, vislib::graphics::gl::GLS
             "Unable to compile %s: Unknown exception\n", name.c_str());
         return false;
     }
+	return false;
 }
 
 /*
@@ -205,7 +206,7 @@ bool BrickStatsRenderer::assertData(Call& call) {
     if ((*cb)(0)) {
         auto bricks = cb->GetBricks();
         this->numBricks = bricks->Count();
-        this->numBricksSlot.Param<param::IntParam>()->SetValue(this->numBricks);
+        this->numBricksSlot.Param<param::IntParam>()->SetValue(static_cast<int>(this->numBricks));
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->statsBuffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, bricks->Count() * sizeof(BrickStatsCall::BrickInfo), bricks->PeekElements(), GL_STATIC_DRAW);
         return true;
@@ -250,10 +251,10 @@ bool BrickStatsRenderer::Render(Call& call) {
 
         auto show = this->showBrickSlot.Param<param::StringParam>()->Value();
         if (show.IsEmpty()) {
-            glDrawArrays(GL_LINES, 0, this->numBricks * 6);
+            glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(this->numBricks * 6));
         } else {
             auto num = vislib::TCharTraits::ParseUInt64(show);
-            glDrawArrays(GL_LINES, num * 6, 6);
+            glDrawArrays(GL_LINES, static_cast<GLint>(num * 6), 6);
         }
         this->statsShader.Disable();
     }
@@ -266,10 +267,10 @@ bool BrickStatsRenderer::Render(Call& call) {
 
         auto show = this->showBrickSlot.Param<param::StringParam>()->Value();
         if (show.IsEmpty()) {
-            glDrawArrays(GL_LINES, 0, this->numBricks * 24);
+            glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(this->numBricks * 24));
         } else {
             auto num = vislib::TCharTraits::ParseUInt64(show);
-            glDrawArrays(GL_LINES, num * 24, 24);
+            glDrawArrays(GL_LINES, static_cast<GLint>(num * 24), 24);
         }
         this->boxesShader.Disable();
     }
