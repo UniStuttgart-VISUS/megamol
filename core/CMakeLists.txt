@@ -85,26 +85,23 @@ if(BUILD_CORE)
     "src/vismol2/Mol20Renderer.cpp"
     "src/vismol2/Mol2Data.cpp"
     )    
-  # shader files for installation
-  file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
   include_directories(BEFORE "include" "src")
 
-  source_group("Public Header Files" FILES ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  source_group("Header Files" FILES ${header_files})
-  source_group("Source Files" FILES ${source_files})
-  source_group("Shaders" FILES ${shader_files})
-  
   # Target definition
-  add_library(core SHARED ${header_files} ${source_files})
+  add_library(core SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_dependencies(core vislib glload)
   # Note: linking private prevents that dependent projects are required to link agains all these again.
   # Dependent projects only need to link against the core.so itself.
   target_link_libraries(core PRIVATE ${LIBS})
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-
   set_target_properties(core PROPERTIES FOLDER base)
+  source_group("Public Header Files" FILES ${public_header_files})
+  source_group("Header Files" FILES ${header_files})
+  source_group("Source Files" FILES ${source_files})
+  source_group("Shaders" FILES ${shader_files})
+
   target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   if(WIN32)
     set_target_properties(core PROPERTIES LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")

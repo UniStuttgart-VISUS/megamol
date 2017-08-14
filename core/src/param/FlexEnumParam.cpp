@@ -49,7 +49,7 @@ void FlexEnumParam::Definition(vislib::RawStorage& outDef) const {
     unsigned int s = 6;
     unsigned int c = 0;
     for (auto &v : this->values) {
-        s += v.length() + 1; //terminating zero
+        s += static_cast<unsigned int>(v.length() + 1); //terminating zero
     }
     s += sizeof(unsigned int);
 
@@ -58,7 +58,7 @@ void FlexEnumParam::Definition(vislib::RawStorage& outDef) const {
     s = 6 + sizeof(unsigned int);
     std::set<std::string> sorted(this->values.begin(), this->values.end());
     for (auto &v: sorted) {
-        unsigned int strsize = v.length() + 1;
+        unsigned int strsize = static_cast<unsigned int>(v.length() + 1);
         memcpy(outDef.AsAt<char>(s), v.c_str(), strsize);
         s += strsize;
         c++;
