@@ -1,0 +1,4 @@
+shallow_clone: true
+
+build_script:
+  - ps: ci\build.ps1
