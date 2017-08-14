@@ -98,6 +98,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
             clearResSelectionParam(             "23 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
             colorTableFileParam(                "24 Color Table Filename", "The filename of the color table."),
 			reloadShaderParam(                  "25 Reload shaders", "Reload the shaders."),
+			toggleWireframeParam("Wireframe", "Toggle wireframe."),
             dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), currentGeometryTess(25),
             markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), secStructRows(0), pdbID(""), pdbLegend("")
 #ifndef USE_SIMPLE_FONT
@@ -161,7 +162,11 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     // param slot for DSSP threshold toggling
     this->toggleDsspThreshParam.SetParameter(new param::BoolParam(true)); 
     this->MakeSlotAvailable(&this->toggleDsspThreshParam);
-	
+
+	// param slot for DSSP threshold toggling
+	this->toggleWireframeParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->toggleWireframeParam);
+
     ////////////////////////////////////////////////
     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
     ////////////////////////////////////////////////    
@@ -501,7 +506,7 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
     if(this->toggleStrideThreshParam.IsDirty()) {
         this->dataPrepared = false;
     }   
-	    if(this->toggleDsspThreshParam.IsDirty()) {
+	if(this->toggleDsspThreshParam.IsDirty()) {
         this->dataPrepared = false;
     }
 	if (this->toggleProsignParam.IsDirty()) {
@@ -2814,6 +2819,11 @@ void UncertaintySequenceRenderer::DrawSecStructGeometryTiles(UncertaintyDataCall
 
     UncertaintyDataCall::secStructure curTemp = cur;                                                            
     
+	if (this->toggleWireframeParam.Param<param::BoolParam>()->Value()) {
+		glLineWidth(1.0f);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+
     // ignore as missing flagged amino-acids and NOTDEFINED secondary structure types
     if((f != UncertaintyDataCall::addFlags::MISSING) && (cur != UncertaintyDataCall::secStructure::NOTDEFINED)) {
         glColor3fv(this->secStructColor[(int)cur].PeekComponents()); 
@@ -2827,6 +2837,9 @@ void UncertaintySequenceRenderer::DrawSecStructGeometryTiles(UncertaintyDataCall
         }
         glEnd();
     }                                                       
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 }                                 
 
 

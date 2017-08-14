@@ -378,6 +378,8 @@ namespace megamol {
 		// parameter to show/hide threshold of dssp
         megamol::core::param::ParamSlot toggleDsspThreshParam;
 		unsigned int                    dsspThresholdCount;
+		// Wireframe rendering.
+		megamol::core::param::ParamSlot toggleWireframeParam;
 		
         ////////////////////////////////////////////////
         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
