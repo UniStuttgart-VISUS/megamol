@@ -47,7 +47,8 @@ queueLength("queueLength", "Defines the size of the sending ringbuffer"),
 offscreenOverride(new vislib::graphics::CameraParamsStore),
 isClipMachine(false),
 sleep(0), fullLoop(0),
-isInitialized(false) {
+isInitialized(false),
+curRead(0), curWrite(0){
 
 	this->serverNameSlot << new param::StringParam("");
 	this->MakeSlotAvailable(&this->serverNameSlot);
@@ -137,6 +138,8 @@ void nvpipe::NVpipeView::Render(const mmcRenderViewContext& context) {
 
 			this->deviceBufferSize = this->offscreenTile.Width() * this->offscreenTile.Height() * 4;
 
+			Log::DefaultLog.WriteInfo("Loading all GL extensions ...");
+			vislib::graphics::gl::LoadAllGL();
 			Log::DefaultLog.WriteInfo("Creating FrameBufferObject for NVPipe with [%f, %f] px ...",
 				this->offscreenTile.Width(), this->offscreenTile.Height());
 			this->fbo.Create(this->offscreenTile.Width(), this->offscreenTile.Height(), GL_RGBA, GL_RGBA);
