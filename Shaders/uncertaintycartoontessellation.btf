@@ -327,6 +327,21 @@
         5.0, 5.0, 5.0, 8.0, 7.0, 6.0, 4.5, 3.0, 2.0, 1.0
     };
 
+
+    ///////////////
+    // FUNCTIONS //
+    ///////////////
+    
+    float unitSin(float x) {
+    
+        return (sin((x*M_PI*2.0) - M_PI/2.0) + 1.0);
+    }
+    
+    float unitTri(float x) {
+    
+        return ((1.0 - 2.0*abs(0.5 - (x - floor(x)))) * 2.0);
+    }
+    
     //////////
     // MAIN //
     //////////
@@ -650,7 +665,7 @@
             // apply surface displacement parameter
             u = gl_TessCoord.x;
             v = gl_TessCoord.y;
-            float ampLevel  = uncDistor[0];  
+            float ampLevel  = uncDistor[0]/10.0;  
             float distorLev = uncDistor[1];       
             float uncFac    = uncVal[0];
             // displacement of geometry and adjustment of normal vector
@@ -660,10 +675,9 @@
 
             // UNCERTAINTY visualisation
             if (uncVisMode == UNC_VIS_SIN_U) { // SINUS U
-                float uDisp   = distorLev * 2.0 * M_PI * u * float(floor(uncFac * 10.0));
-                float fac     = uncFac * ampLevel/10.0;                
-                disp          = sin(uDisp - M_PI/2.0);
-                disp         *= fac;                
+                float uDisp   = u * distorLev * float(floor(uncFac * 10.0));
+                float fac     = uncFac * ampLevel; 
+                disp          = fac * unitSin(uDisp);             
                 
                 float uM      = fac * cos(uDisp);                          // gradient = derivation of fac*sin(uDisp)
                 if (uM >= EPS) {
@@ -673,14 +687,13 @@
                     uNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
                 }
 
-                mypos.xyz    += (disp + fac) * n;           
+                mypos.xyz    += (disp * n);           
                 n             = normalize(n + uNdisp * tangent);                
             }
             else if (uncVisMode == UNC_VIS_SIN_V) { // SINUS V    
-                float vDisp   = distorLev * 2.0 * M_PI * v * float(floor(uncFac * 10.0));
-                float fac     = uncFac * ampLevel / 10.0;                
-                disp          = sin(vDisp - M_PI/2.0);
-                disp         *= fac;      
+                float vDisp   = v * distorLev * float(floor(uncFac * 10.0));
+                float fac     = uncFac * ampLevel;                
+                disp          = fac * unitSin(vDisp);     
                 
                 float vM          = fac * cos(vDisp);                       // gradient = derivation of fac*sin(uDisp)            
                 if (vM >= EPS) {
@@ -691,18 +704,17 @@
                 }
                 
 				if (((1.0 - EPS) > u) && (u > EPS)) {
-                    mypos.xyz    += (disp + fac) * n;
+                    mypos.xyz    += (disp * n);
                 }        
                 n             = normalize(n + vNdisp * normalize(cross(n, tangent)));                
             }    
             else if (uncVisMode == UNC_VIS_SIN_UV) {  // SINUS U,V
-                float uDisp   = distorLev * 2.0 * M_PI * u * float(floor(uncFac * 10.0));
-                float vDisp   = distorLev * 2.0 * M_PI * v * float(floor(uncFac * 10.0));
-                float fac     = uncFac * ampLevel / 10.0;    
-                float dispU   = sin(uDisp - M_PI/2.0);
-                float dispV   = sin(vDisp - M_PI/2.0);
-                disp          = (dispU + dispV);
-                disp         *= fac; 
+                float uDisp   = u * distorLev * float(floor(uncFac * 10.0));
+                float vDisp   = v * distorLev * float(floor(uncFac * 10.0));
+                float fac     = uncFac * ampLevel;    
+                float dispU   = fac * unitSin(uDisp);
+                float dispV   = fac * unitSin(vDisp);
+                disp          = (dispU + dispV)/2.0;
 
                 float uM      = fac * cos(uDisp);                          // gradient = derivation of fac*sin(uDisp)
                 if (uM >= EPS) {
@@ -721,18 +733,17 @@
                 }
                 
 				if (((1.0 - EPS) > u) && (u > EPS)) {                   // for smooth transition between amino-acids
-                    mypos.xyz    += (disp + fac) * n;
+                    mypos.xyz    += (disp * n);
                 }
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
             }
             else if (uncVisMode == UNC_VIS_TRI_U) {  // TRIANGLE U
-                float uMod    = u*distorLev * float(floor(uncFac * 10.0));
-                float uFunc   = 0.5 - (uMod - floor(uMod));
-                float uTri    = (0.5 - abs(uFunc));
-                float fac     = uncFac * ampLevel;
+                float uMod    = u * distorLev * float(floor(uncFac * 10.0));
+                float fac     = uncFac * ampLevel;                
+                disp          = fac * unitTri(uMod);
 
                 float uM      = fac;                                        // gradient = derivation of fac*sin(uDisp)
-                if (uFunc < 0.0) {
+                if ((0.5 - (uMod - floor(uMod))) < 0.0) {
                     uM       *= -1.0;
                 }
                              
@@ -743,22 +754,21 @@
                     uNdisp        = 1.0/sin(beta) * sin(alpha);             // with |n|=1
                 }
                 
-			    mypos.xyz    += (n * uTri * fac); 
+			    mypos.xyz    += (n * disp); 
 			    n             = normalize(n + uNdisp * tangent);    
 
 			}
 			else if (uncVisMode == UNC_VIS_TRI_UV) {  // TRIANGLE U,V
-                float uMod    = u*distorLev * float(floor(uncFac * 10.0));
-                float vMod    = v*distorLev * float(floor(uncFac * 10.0));
+                float uMod    = u * distorLev * float(floor(uncFac * 10.0));
+                float vMod    = v * distorLev * float(floor(uncFac * 10.0));
                 float uFunc   = 0.5 - (uMod - floor(uMod));
                 float vFunc   = 0.5 - (vMod - floor(vMod));
-                float uTri    = (0.5 - abs(uFunc));
-                float vTri    = (0.5 - abs(vFunc));
-                float fac     = uncFac * ampLevel;
-                // fac /= 2.0;
+                float fac     = uncFac * ampLevel;                
+                float uTri    = fac * unitTri(uMod);
+                float vTri    = fac * unitTri(vMod);
 
                 float uM      = fac;
-                if (uFunc < 0.0) {
+                if ((0.5 - (uMod - floor(uMod))) < 0.0) {
                     uM       *= -1.0;
                 }
                 if (uM >= EPS) {
@@ -769,7 +779,7 @@
                 }
                 
                 float vM      = fac;
-                if (vFunc < 0.0) {
+                if ((0.5 - (vMod - floor(vMod))) < 0.0) {
                     vM       *= -1.0;
                 }
                 if (vM >= EPS) {
@@ -781,7 +791,7 @@
                 
                 float factor = EPS;
 				if (((1.0 - factor) > u) && (u > factor)) {
-                    mypos.xyz   += (n * (uTri + vTri) * fac);  
+                    mypos.xyz   += (n * (uTri + vTri)/2.0);  
                 }
                 n = normalize(n + uNdisp * tangent + vNdisp * normalize(cross(n, tangent)));
 			}
