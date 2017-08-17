@@ -2256,7 +2256,11 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
         &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
 
 	glDisable(GL_DEPTH_TEST); // disabled depth test is necessary because of geometry overlay drawing
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
+
+	if (this->toggleWireframeParam.Param<param::BoolParam>()->Value()) {
+		glLineWidth(1.0f);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
     
     for (unsigned int i = 0; i < this->aminoAcidCount; i++) { // loop over all amino-acids
         
@@ -2774,7 +2778,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
     }
 
 	glEnable(GL_DEPTH_TEST);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 
