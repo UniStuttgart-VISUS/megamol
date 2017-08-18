@@ -43,7 +43,7 @@ if(BUILD_OSPRAY_PLUGIN)
   else()
 	install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
-  install(FILES ${OSPRAY_LIBRARIES} DESTINATION "lib")
+  #install(FILES ${OSPRAY_LIBRARIES} DESTINATION "lib")
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
   source_group("Public Header Files" FILES ${public_header_files})
