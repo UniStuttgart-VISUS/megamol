@@ -7,9 +7,16 @@ option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" ON)
 
 if(BUILD_PROTEIN_CUDA_PLUGIN)
   project(protein_cuda)
+  find_package(CUDA QUIET REQUIRED)
 
+  #NVCC options
+  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -03 -gencode arch=compute_30,code=sm_30)
+  if(NOT MSVC)
+	list(APPEND CUDA_NVCC_FLAGS -std=c++11)
+  endif()
+  
   set(LIBS vislib core mmstd_trisoup protein_calls glload)
-  include_directories("include" "src")
+  include_directories("include" "src" "src/helper_includes")
 
   # Build MegaMol Plugin
   # public header files for installation
@@ -34,8 +41,10 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   # shader files for installation
   #file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
+  set(CUDA_LINK_LIBRARIES_KEYWORD PRIVATE)
+  
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
+  cuda_add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
   add_dependencies(${PROJECT_NAME} vislib glload core mmstd_trisoup protein_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
