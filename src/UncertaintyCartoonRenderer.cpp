@@ -38,6 +38,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 
+#include "protein/RMSF.h"
+
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowMatrix.h"
@@ -167,10 +169,12 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		buttonParam(              "21 Reload shaders", "Reload the shaders."),
 		colorTableFileParam(      "22 Color Table Filename", "The filename of the color table."),
 		bFactorAsUncertaintyParam("23 BFactor Uncertainty", "Use the value stored in the BFactor as uncertainty value. Only useful for preprocessed simulation data."),
+		showRMSFParam(            "24 Show RMSF", "Use the computed RMSF and visualize it as uncertainty."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
-        singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) 
+        singleBufferMappingBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT | GL_MAP_FLUSH_EXPLICIT_BIT) ,
+		firstframe(true)
         {
 
 	// number of different secondary structure types
@@ -247,10 +251,10 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
     this->lightPosParam << new core::param::Vector4fParam(this->currentLightPos);
 	this->MakeSlotAvailable(&this->lightPosParam);
 
-    this->uncDistorGainParam << new core::param::IntParam(this->currentUncDist[0]);
+    this->uncDistorGainParam << new core::param::FloatParam(this->currentUncDist[0]);
 	this->MakeSlotAvailable(&this->uncDistorGainParam);
 
-    this->uncDistorRepParam << new core::param::IntParam(this->currentUncDist[1]);
+    this->uncDistorRepParam << new core::param::FloatParam(this->currentUncDist[1]);
     this->MakeSlotAvailable(&this->uncDistorRepParam);
 
 
@@ -301,6 +305,9 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 
 	this->bFactorAsUncertaintyParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->bFactorAsUncertaintyParam);
+
+	this->showRMSFParam << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->showRMSFParam);
 
 	this->fences.resize(this->numBuffers);
 }
@@ -729,10 +736,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	MolecularDataCall *mol = this->GetData(static_cast<unsigned int>(cr->Time()), scaling);
 	if (mol == NULL) return false;
 
+	if ( this->showRMSFParam.Param<megamol::core::param::BoolParam>()->Value()) {
+		firstframe = !protein::computeRMSF(mol);
+	}
+
 	// get pointer to UncertaintyDataCall
 	UncertaintyDataCall *ud = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
     if(ud == NULL) return false;
-    
+
 	// if amino-acid count changed get new data
 	if ((ud->GetAminoAcidCount() != this->aminoAcidCount) && (mol->AtomCount() != this->molAtomCount)) {
 		this->GetUncertaintyData(ud, mol); // use return value ...?
@@ -773,12 +784,12 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	// get uncertainty distortion: gain
 	if (this->uncDistorGainParam.IsDirty()) {
 		this->uncDistorGainParam.ResetDirty();
-		this->currentUncDist[0] = static_cast<float>(this->uncDistorGainParam.Param<param::IntParam>()->Value());
+		this->currentUncDist[0] = this->uncDistorGainParam.Param<param::FloatParam>()->Value();
 	}
     // get uncertainty distortion: repeat
     if (this->uncDistorRepParam.IsDirty()) {
         this->uncDistorRepParam.ResetDirty();
-        this->currentUncDist[1] = static_cast<float>(this->uncDistorRepParam.Param<param::IntParam>()->Value());
+        this->currentUncDist[1] = this->uncDistorRepParam.Param<param::FloatParam>()->Value();
     }
 
 	// get uncertainty visualisation mode
@@ -971,7 +982,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 						calpha.sortedStruct[k] = static_cast<int>(this->sortedSecStructAssignment[(int)this->currentMethodData][uncIndex][k]);
 						calpha.unc[k] = this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
 						if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
-							calpha.unc[k] = mol->AtomBFactors()[acid->CAlphaIndex()];
+							calpha.unc[k] = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor())/(mol->MaximumBFactor() - mol->MinimumBFactor());
 						}
 					}
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
@@ -986,7 +997,7 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					calpha.uncertainty = this->uncertainty[uncIndex];
 
 					if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
-						calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()];
+						calpha.uncertainty = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor()) / (mol->MaximumBFactor() - mol->MinimumBFactor());;
 					}
 					
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];

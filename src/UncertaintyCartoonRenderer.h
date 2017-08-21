@@ -275,6 +275,7 @@ namespace megamol {
         core::param::ParamSlot outlineScalingParam;
         core::param::ParamSlot outlineColorParam;
 		core::param::ParamSlot bFactorAsUncertaintyParam;
+		core::param::ParamSlot showRMSFParam;
                 
         // local parameter values 
 		int                            currentTessLevel;
@@ -359,6 +360,8 @@ namespace megamol {
 		// selection 
 		vislib::Array<bool> selection;                                     // unused so far ...
 		protein_calls::ResidueSelectionCall *resSelectionCall;             // unused so far ...
+
+		bool firstframe;
     };
 
 	} /* end namespace protein_uncertainty */
