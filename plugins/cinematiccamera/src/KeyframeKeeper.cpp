@@ -2,655 +2,529 @@
 * KeyframeKeeper.cpp
 *
 */
+
+
 #include "stdafx.h"
-#include "KeyframeKeeper.h"
-#include "CallCinematicCamera.h"
-#include "vislib/math/Point.h"
-#include "vislib/math/Vector.h"
+
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/utility/xml/XmlParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
+
+#include "vislib/math/Point.h"
+#include "vislib/math/Vector.h"
 #include "vislib/StringSerialiser.h"
 #include "vislib/assert.h"
+
 #include <iostream>
 #include <fstream>
 
+#include "KeyframeKeeper.h"
+#include "CallCinematicCamera.h"
+
+
 using namespace megamol;
 using namespace megamol::cinematiccamera;
+using namespace vislib;
 using namespace vislib::math;
 using namespace megamol::core;
-
-//TODO: Load/Save/Filename params
 
 
 /*
 * KeyframeKeeper::KeyframeKeeper
 */
 KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
-	cinematicRendererSlot("scene3D", "Sends data to the 3D Scene"), 
-	saveKeyframesParam("save", "Serializes and saves the Keyframes"),
-	loadKeyframesParam("load", "Deserializes and loads the Keyframes"),
-	fileNameParam("filename", "The name of the file to load or save"),
-	totalTime("totalTime", "The total timespan of the movie in seconds"),
-	selectedKeyframe("selectedKeyframe", "the index of the selected Keyframe"),
-	addKeyframeAtSelectedPosition("addKeyframeAtSelectedPosition", "adds a Keyframe at the currently selected position inbetween two keyframes"),
-	deleteKeyframe("deleteKeyframe", "deletes the currently selected keyframe"),
-	currentKeyframeTime("currentKeyframeTime", "timestamp of the currently selected keyframe"),
-	currentPos("currentPos", "Position of the selected keyframe"),
-	currentLookAt("currentLookAt", "LookAt of the selected keyframe"),
-	currentUp("currentUp", "LookAt of the selected keyframe"),
-	keyframeDistance("keyframeDistance", "distance between two keyframes in fractions of the total time"),
-	keyframes(), selectedKeyframeIndex(0) {
+    cinematicCallSlot("scene3D", "holds keyframe data"),
+    addKeyframeParam(             "01 Add keyframe", "Adds new eyframe at the currently selected position inbetween two keyframes"),
+    timeForNewKeyframeParam(      "02 Time for new keyframe", "Time of new keyframe."),
+    deleteSelectedKeyframeParam(  "03 Delete keyframe", "Deletes the currently selected keyframe."),
+    editCurrentTimeParam(         "04 Edit TIME of selected keyframe", "Edit time of the selected keyframe."),
+    editCurrentPosParam(          "05 Edit POSITION of selected keyframe", "Edit  position vector of the selected keyframe."),
+    editCurrentLookAtParam(       "06 Edit LOOKAT of selected keyframe", "Edit LookAt vector of the selected keyframe."),
+    editCurrentUpParam(           "07 Edit UP of selected keyframe", "Edit Up vector of the selected keyframe."),
+    setTotalTimeParam(            "08 Total time", "The total timespan of the movie in seconds."),
+    fileNameParam(                "09 Filename", "The name of the file to load or save."),
+    saveKeyframesParam(           "10 Save Keyframes", "Saves keyframes to file."),
+    loadKeyframesParam(           "11 Load Keyframes", "Loads keyframes from file."),
+    autoLoadKeyframesAtStartParam("12 Auto load keyframes at start", "Automatically load keyframes from file at start."),
+    selectedKeyframe(), cameraParam(NULL)
+    {
 
-	// setting up callbacks for the Cinematic renderer
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetKeyframes), &KeyframeKeeper::cbAllKeyframes);
+	// setting up callback
+	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
+		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForUpdateKeyframeKeeper), &KeyframeKeeper::CallForUpdateKeyframeKeeper);
+	this->MakeSlotAvailable(&this->cinematicCallSlot);
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSelectKeyframe), &KeyframeKeeper::cbSelectKeyframe);
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetSelectedKeyframe), &KeyframeKeeper::cbSelectedKeyframe);
+    // init variables
+    this->keyframes.Clear();
+    this->keyframes.AssertCapacity(1000);
+    this->boundingBox.SetNull();
+    this->totalTime            = 1.0f;
+    this->filename             = ".\\keyframes.kf";
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForInterpolatedKeyframe), &KeyframeKeeper::cbInterpolateKeyframe);
+    // init parameters
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetTotalTime), &KeyframeKeeper::cbGetTotalTime);
+    this->addKeyframeParam.SetParameter(new param::ButtonParam('a'));
+    this->MakeSlotAvailable(&this->addKeyframeParam);
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetKeyframeAtTime), &KeyframeKeeper::cbGetKeyframeAtTime);
+    this->timeForNewKeyframeParam.SetParameter(new param::FloatParam(0.0f, 0.0f));
+    this->MakeSlotAvailable(&this->timeForNewKeyframeParam);
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForNewKeyframeAtPosition), &KeyframeKeeper::cbNewKeyframe);
+    this->deleteSelectedKeyframeParam.SetParameter(new param::ButtonParam('d'));
+    this->MakeSlotAvailable(&this->deleteSelectedKeyframeParam);
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForLoadKeyframe), &KeyframeKeeper::cbLoad);
+    this->editCurrentTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.getTime()));
+    this->MakeSlotAvailable(&this->editCurrentTimeParam);
 
-	this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetTotalTime), &KeyframeKeeper::cbSetTotalTime);
+    this->editCurrentPosParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamPosition()));
+    this->MakeSlotAvailable(&this->editCurrentPosParam);
 
-    this->cinematicRendererSlot.SetCallback(CallCinematicCamera::ClassName(),
-        CallCinematicCamera::FunctionName(CallCinematicCamera::CallForKeyFrameUpdate), &KeyframeKeeper::cbUpdate);
+    this->editCurrentLookAtParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamLookAt()));
+    this->MakeSlotAvailable(&this->editCurrentLookAtParam);
 
-	this->MakeSlotAvailable(&this->cinematicRendererSlot);
+    this->editCurrentUpParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamUp()));
+    this->MakeSlotAvailable(&this->editCurrentUpParam);
 
-	this->keyframeDistance.SetParameter(new param::FloatParam(0.1f, 0.000001f, 1.0f));
-	this->MakeSlotAvailable(&this->keyframeDistance);
+    this->setTotalTimeParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+    this->MakeSlotAvailable(&this->setTotalTimeParam);
+
+    this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
+    this->MakeSlotAvailable(&this->fileNameParam);
 
 	this->saveKeyframesParam.SetParameter(new param::ButtonParam());
-	this->saveKeyframesParam.SetUpdateCallback(this, &KeyframeKeeper::cbSave);
 	this->MakeSlotAvailable(&this->saveKeyframesParam);
 
-	
 	this->loadKeyframesParam.SetParameter(new param::ButtonParam());
-	this->loadKeyframesParam.SetUpdateCallback(this, &KeyframeKeeper::cbLoad);
 	this->MakeSlotAvailable(&this->loadKeyframesParam);
 
-	this->fileNameParam.SetParameter(new param::FilePathParam("keyframes.txt"));
-	this->MakeSlotAvailable(&this->fileNameParam);
-
-	this->totalTime.SetParameter(new param::FloatParam(1));
-	this->MakeSlotAvailable(&this->totalTime);
-	prevTotalTime = 1;
-
-	this->selectedKeyframe.SetParameter(new param::FloatParam(-1));
-	this->MakeSlotAvailable(&this->selectedKeyframe);
-
-	this->addKeyframeAtSelectedPosition.SetParameter(new param::ButtonParam());
-	this->addKeyframeAtSelectedPosition.SetUpdateCallback(this, &KeyframeKeeper::cbAddKeyframeAtSelectedPosition);
-	this->MakeSlotAvailable(&this->addKeyframeAtSelectedPosition);
-
-	this->deleteKeyframe.SetParameter(new param::ButtonParam());
-	this->deleteKeyframe.SetUpdateCallback(this, &KeyframeKeeper::cbDelKeyframe);
-	this->MakeSlotAvailable(&this->deleteKeyframe);
-
-	keyframes.Add(Keyframe(vislib::graphics::Camera(), 0.0f, -2));
-
-	this->currentKeyframeTime.SetParameter(new param::FloatParam(keyframes[(int)selectedKeyframeIndex].getTime()*totalTime.Param<param::FloatParam>()->Value()));
-	this->MakeSlotAvailable(&this->currentKeyframeTime);
-
-	this->currentPos.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(keyframes[(int)selectedKeyframeIndex].getCamPosition())));
-	this->MakeSlotAvailable(&this->currentPos);
-
-	this->currentLookAt.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(keyframes[(int)selectedKeyframeIndex].getCamLookAt())));
-	this->MakeSlotAvailable(&this->currentLookAt);
-
-	this->currentUp.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(keyframes[(int)selectedKeyframeIndex].getCamUp())));
-	this->MakeSlotAvailable(&this->currentUp);
-
-	IDCounter = 0;
+    this->autoLoadKeyframesAtStartParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->autoLoadKeyframesAtStartParam);
 }
+
 
 /*
 * KeyframeKeeper::~KeyframeKeeper
 */
 KeyframeKeeper::~KeyframeKeeper(void) {
+
 	this->Release();
 }
+
 
 /*
 * KeyframeKeeper::create(void)
 */
 bool KeyframeKeeper::create(void) {
-	// intentionally empty
+
 	return true;
 }
+
 
 /*
 * KeyframeKeeper::release(void)
 */
 void KeyframeKeeper::release(void) {
+
 	// intentionally empty
 }
 
-/** Callback for getting all Keyframes*/
-bool KeyframeKeeper::cbAllKeyframes(core::Call& c){
-	updateParameters();
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	if (inCall == NULL) return false;
 
-	inCall->setBoundingBox(&this->boundingBox);
-	inCall->setKeyframes(&this->keyframes);
-	inCall->setTotalTime(totalTime.Param<param::FloatParam>()->Value());
-	return true;
-}
+/*
+* KeyframeKeeper::CallForUpdateKeyframeKeeper
+*/
+bool KeyframeKeeper::CallForUpdateKeyframeKeeper(core::Call& c) {
 
-/** Callback for getting selected Keyframe*/
-bool KeyframeKeeper::cbSelectedKeyframe(core::Call& c){
-	updateParameters();
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	if (inCall == NULL) return false;
-	if (this->keyframes.IsEmpty()) return false;
-	inCall->setKeyframes(&this->keyframes);
-
-	if (this->selectedKeyframeIndex < 0 || this->selectedKeyframeIndex >= this->keyframes.Count()) return false;
-	inCall->setSelectedKeyframeIndex(this->selectedKeyframeIndex);
-	
-	if (ceilf(selectedKeyframeIndex) != selectedKeyframeIndex){
-		inCall->setInterpolatedKeyframe(interpolateKeyframe(selectedKeyframeIndex));
-	}
-
-	inCall->setBoundingBox(&this->boundingBox);
-
-	return true;
-}
+    CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
+    if (ccc == NULL) return false;
 
 
-/** Callback for selecting a new Keyframe */
-bool KeyframeKeeper::cbSelectKeyframe(core::Call& c){
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	if (inCall == NULL) return false;
-	
-	this->selectedKeyframeIndex = inCall->getSelectedKeyframeIndex();
+    // CHECK for CHANGES in CinematicCamera CALL ------------------------------
 
-	selectedKeyframe.Param<param::FloatParam>()->SetValue(selectedKeyframeIndex);
-	
-	if (ceilf(selectedKeyframeIndex) != selectedKeyframeIndex){
-		inCall->setInterpolatedKeyframe(interpolateKeyframe(selectedKeyframeIndex));
-		currentKeyframeTime.Param<param::FloatParam>()->SetValue(inCall->getInterpolatedKeyframe().getTime()*totalTime.Param<param::FloatParam>()->Value());
-		currentPos.Param<param::Vector3fParam>()->SetValue(inCall->getInterpolatedKeyframe().getCamPosition());
-		currentLookAt.Param<param::Vector3fParam>()->SetValue(inCall->getInterpolatedKeyframe().getCamLookAt());
-		currentUp.Param<param::Vector3fParam>()->SetValue(inCall->getInterpolatedKeyframe().getCamUp());
-	}
-	else {
-		currentKeyframeTime.Param<param::FloatParam>()->SetValue(keyframes[(int)(selectedKeyframeIndex)].getTime()*totalTime.Param<param::FloatParam>()->Value());
-		currentPos.Param<param::Vector3fParam>()->SetValue(keyframes[(int)ceil(selectedKeyframeIndex)].getCamPosition());
-		currentUp.Param<param::Vector3fParam>()->SetValue(keyframes[(int)ceil(selectedKeyframeIndex)].getCamUp());
-	}
+    // Check for request of new interpolated keyframe
+    if (ccc->changedInterpolatedKeyframeTime()) {
+        ccc->setChangedInterpolatedKeyframeTime(false);
 
-	currentKeyframeTime.ResetDirty();
-	currentPos.ResetDirty();
-	currentLookAt.ResetDirty();
-	currentUp.ResetDirty();
-	selectedKeyframe.ResetDirty();
-
-	return true;
-}
-
-/**
- *	KeyframeKeeper::cbSetTotalTime
- */
-bool KeyframeKeeper::cbSetTotalTime(core::Call& c) {
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	this->totalTime.Param<param::FloatParam>()->SetValue(inCall->getTotalTime());
-	return true;
-}
-
-/** Callback for deleting selected Keyframe */
-bool KeyframeKeeper::cbDelKeyframe(core::param::ParamSlot& slot){
-	if (ceilf(selectedKeyframeIndex) == selectedKeyframeIndex) {
-		this->keyframes.RemoveAt(static_cast<SIZE_T>(selectedKeyframeIndex));
-	}
-	// decrease selectedKeyframeIndex by 1 or set to 0 if it would become negative
-	this->selectedKeyframeIndex = (0 < selectedKeyframeIndex - 1 ? selectedKeyframeIndex - 1 : 0);
-	return true;
-}
-
-/** Callback for interpolating Keyframe */
-bool KeyframeKeeper::cbInterpolateKeyframe(core::Call& c){
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	if (inCall == NULL){
-		vislib::sys::Log::DefaultLog.WriteError("inCall was NULL at cbInterpolateKeyframe!");
-		return false;
-	}
-	inCall->setInterpolatedKeyframe(interpolateKeyframe(inCall->getIndexToInterPolate()));
-	float idx = inCall->getIndexToInterPolate();
-	
-	return true;
-	
-}
-
-
-/** Callback for creating new Keyframe */
-bool KeyframeKeeper::cbNewKeyframe(core::Call& c){
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	if (inCall == NULL){
-		vislib::sys::Log::DefaultLog.WriteError("inCall was NULL at cbNewKeyframe!");
-		return false;
-	}
-	if (keyframes.Count() == 0){
-		keyframes.Add(Keyframe(inCall->getCameraForNewKeyframe(), 0.0f, IDCounter));
-		IDCounter++;
-	}
-	else{
-		keyframes.Add(Keyframe(inCall->getCameraForNewKeyframe(), keyframes[keyframes.Count() - 1].getTime() + this->keyframeDistance.Param<param::FloatParam>()->Value(), IDCounter));
-		IDCounter++;
-	}
-	ASSERT(keyframes.Count() >= 1);
-	boundingBox.GrowToPoint(keyframes[keyframes.Count() - 1].getCamPosition());
-	sortKeyframes();
-	return true;
-}
-
-/** Callback for getting total time */
-bool KeyframeKeeper::cbGetTotalTime(core::Call& c){
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	if (inCall == NULL){
-		vislib::sys::Log::DefaultLog.WriteError("inCall was NULL at cbGetTotalTime!");
-		return false;
-	}
-	inCall->setTotalTime(totalTime.Param<param::FloatParam>()->Value());
-	return true;
-}
-
-/** Callback for getting the keyframe at a time bookmarked in the call*/
-bool KeyframeKeeper::cbGetKeyframeAtTime(core::Call& c){
-	//ignore dummy keyframe
-	if (keyframes.Count() <= selectedKeyframeIndex) return false;
-	if (keyframes[(int)selectedKeyframeIndex].getID() == -2) return false;
-
-	CallCinematicCamera *inCall = dynamic_cast<CallCinematicCamera*>(&c);
-	
-	if (inCall == NULL){
-		vislib::sys::Log::DefaultLog.WriteError("inCall was NULL at cbGetKeyframeAtTime!");
-		return false;
-	}
-	float time = inCall->getTimeofKeyframeToGet();
-
-	int i = 0;
-	// search keyframes until time is keyframe with a greater time is found
-	while (keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() < time){
-		if (static_cast<SIZE_T>(i + 1) < keyframes.Count()){
-			i++;
-		}
-		else{
-			vislib::sys::Log::DefaultLog.WriteWarn("Trajectory ended. Rendering last position");
-			inCall->setInterpolatedKeyframe(keyframes[i]);
-			return true;
-		}
-	}
-
-	// first keyframe has been selected -> early exit
-	if (i == 0) {
-		inCall->setInterpolatedKeyframe(keyframes[i]);
-		return true;
-	}
-
-	// time matches the time of an exact keyframe
-	ASSERT(keyframes.Count() > static_cast<SIZE_T>(i));
-	if (keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() == time){
-		inCall->setInterpolatedKeyframe(keyframes[i]);
-		return true;
-	}
-	else{
-		// index of wanted keyframe is
-		// i - (i'th Keyframe time - time) / (i'th Keyframe time - i-1'th Keyframe time)
-		// with denormalized Keyframe times
-		inCall->setInterpolatedKeyframe(interpolateKeyframe(i - 
-			((keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() - time) /
-			(keyframes[i].getTime()*totalTime.Param<param::FloatParam>()->Value() - keyframes[i - 1].getTime()*totalTime.Param<param::FloatParam>()->Value()))));
-		return true;
-	}
-}
-
-/** Callback for the save button */
-bool KeyframeKeeper::cbSave(core::param::ParamSlot& slot){
-	//ensure saved Keyframes are sorted
-	sortKeyframes();
-
-	std::ofstream myfile;
-	myfile.open(fileNameParam.Param<param::FilePathParam>()->Value(), std::ios::binary);
-	vislib::StringSerialiserA ser;
-	myfile << "totalTime=" << totalTime.Param<param::FloatParam>()->Value() << "\n";
-	for (unsigned int i = 0; i < keyframes.Count(); i++){
-		keyframes[i].getCamParameters()->Serialise(ser);
-		myfile << "time=" << keyframes[i].getTime() << "\n";
-		myfile << "ID=" << keyframes[i].getID() << "\n";
-		myfile << ser.GetString().PeekBuffer() << "\n";
-	}
-	myfile.close();
-
-	return true;
-}
-
-/** */
-bool KeyframeKeeper::cbLoad(core::Call& c) {
-	this->loadKeyframesParam.ForceSetDirty();
-	return true;
-}
-
-/** Callback for the load button */
-bool KeyframeKeeper::cbLoad(core::param::ParamSlot& slot){
-	int i = 1;
-	try {
-		keyframes.Clear();
-		std::ifstream myfile;
-		myfile.open(fileNameParam.Param<param::FilePathParam>()->Value());
-
-		vislib::StringSerialiserA ser;
-		std::string line;
-		vislib::StringA camera;
-		int maxID = 0;
-		// set totalTime
-		std::getline(myfile, line);
-		totalTime.Param<param::FloatParam>()->SetValue(std::stof(line.erase(0, 10)));
-		totalTime.ResetDirty();
-
-		int currentKeyframe = 0;
-		while (std::getline(myfile, line)){
-			if (line.substr(0, 5) == "time="){
-				keyframes.Add(Keyframe());
-				keyframes[currentKeyframe].setTime(static_cast<float>(std::stof(line.erase(0, 5))));
-			}
-			else if (line.substr(0, 3) == "ID="){
-				keyframes[currentKeyframe].setID(static_cast<int>(std::stof(line.erase(0, 3))));
-				maxID = maxID > keyframes[currentKeyframe].getID() ? maxID : keyframes[currentKeyframe].getID();
-			}
-			else if (line.empty()) {
-				if (!camera.IsEmpty()) {
-					// this line suddenly crashes (stack overflow). WHY?
-					ser.SetInputString(camera);
-					keyframes[currentKeyframe].getCamParameters()->Deserialise(ser);
-					boundingBox.GrowToPoint(keyframes[currentKeyframe].getCamPosition());
-					currentKeyframe++;
-					camera.Clear();
-				}
-
-			}
-			else {
-				camera.Append(line.c_str());
-				camera.Append("\n");
-			}
-		}
-		IDCounter = maxID + 1;
-		selectedKeyframeIndex = 0;
-		// ensure loaded Keyframes are sorted
-		sortKeyframes();
-		return true;
-	}
-	catch (...) {
-		vislib::sys::Log::DefaultLog.WriteError("It did not work!");
-		return false;
-	}
-}
-
-/** Callback for inserting a keyframe at the currently selected position */
-bool KeyframeKeeper::cbAddKeyframeAtSelectedPosition(core::param::ParamSlot& slot){
-	if (ceilf(selectedKeyframeIndex) == selectedKeyframeIndex) {
-		vislib::sys::Log::DefaultLog.WriteWarn("Did not insert Keyframe since no interpolated Keyframe was selected.");
-		return false;
-	}
-	else{
-		Keyframe k = interpolateKeyframe(selectedKeyframeIndex);
-		k.setID(IDCounter);
-		IDCounter++;
-		keyframes.Add(k);
-		selectedKeyframe.Param<param::FloatParam>()->SetValue(keyframes.Count() - 1.0f);
-		ASSERT(keyframes.Count() >= 1);
-		boundingBox.GrowToPoint(keyframes[keyframes.Count() - 1].getCamPosition());
-		sortKeyframes();
-	}
-	return true;
-}
-
-
-bool KeyframeKeeper::cbUpdate(core::Call& call) {
-    auto c = dynamic_cast<CallCinematicCamera*>(&call);
-    if (c == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("Invalid call in KeyframeKeeper::cbUpdate.");
-        return false;
+        this->interpolatedKeyframe = this->interpolateKeyframe(ccc->getInterpolatedKeyframeTime());
     }
 
-    auto idx = c->getSelectedKeyframe().getID();
-    if (idx < 0) {
-        vislib::sys::Log::DefaultLog.WriteError("No key frame was selected for update.");
-        return false;
+    // Check for request of new selected keyframe
+    if (ccc->changedSelectedKeyframeTime()) {
+        ccc->setChangedSelectedKeyframeTime(false);
+
+        float  time  = ccc->getSelectedKeyframeTime();
+        int    index = -1; // vislib::Array<Keyframe>::INVALID_POS = -1
+
+        // Check if requested selected keyframe is in keyframe array
+        for (unsigned int i = 0; i < this->keyframes.Count(); i++) {
+            if (time == this->keyframes[i].getTime()) {
+                this->selectedKeyframe = this->keyframes[i];
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) {
+            this->selectedKeyframe = this->interpolateKeyframe(time);
+        }
     }
 
-    ASSERT(idx >= 0);
-    ASSERT(idx < this->keyframes.Count());
-    this->keyframes[idx].setCamera(c->getCameraForNewKeyframe());
+    // Check for new total time
+    if (ccc->changedTotalTime()) {
+        ccc->setChangedTotalTime(false);
+
+        this->totalTime = ccc->getTotalTime();
+        this->setTotalTimeParam.Param<param::FloatParam>()->SetValue(this->totalTime);
+    }
+
+    // Check for new camera parameters for selected keyframe
+    if (ccc->changedCameraParameter()) {
+        ccc->setChangedCameraParameter(false);
+        this->cameraParam = ccc->getCameraParameter();
+        // update parameter
+        /* wrong data type
+        this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(this->cameraParam->Position());
+        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(this->cameraParam->LookAt());
+        this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(this->cameraParam->Up());
+        */
+    }
+
+
+    // UPDATE PARAMETERS-------------------------------------------------------
+
+    // DEBUG
+    // vislib::sys::Log::DefaultLog.WriteWarn("<what happened>.<what to do>");
+
+    // addKeyframeParam
+    if (this->addKeyframeParam.IsDirty()) {
+
+        // update bounding box
+        // add new keyframe on right position in array
+        // boundingBox.GrowToPoint(keyframes[keyframes.Count() - 1].getCamPosition());
+        // inCall->getCameraForNewKeyframe() !!!!
+        // increase time for new keyframe of 1/10 of total time ?
+
+        vislib::graphics::Camera c;
+        if (!this->cameraParam.IsNull()) {
+            c.Parameters()->SetPosition(this->cameraParam->Position());
+            c.Parameters()->SetLookAt(this->cameraParam->LookAt());
+            c.Parameters()->SetUp(this->cameraParam->Up());
+            c.Parameters()->SetApertureAngle(this->cameraParam->ApertureAngle());
+        }
+        float t = this->timeForNewKeyframeParam.Param<param::FloatParam>()->Value();
+
+        this->keyframes.Add(Keyframe(c, t));
+        this->selectedKeyframe = this->keyframes.Last();
+        this->boundingBox.GrowToPoint(this->keyframes.Last().getCamPosition());
+
+      
+        this->addKeyframeParam.ResetDirty();
+    }
+
+    // timeForNewKeyframeParam
+    if (this->timeForNewKeyframeParam.IsDirty()) {
+
+        // update selected keyframe ...
+
+
+        this->timeForNewKeyframeParam.ResetDirty();
+    }
+
+    // deleteSelectedKeyframeParam
+    if (this->deleteSelectedKeyframeParam.IsDirty()) {
+
+        // check if it was the last keyframe
+        // ccc: set seleected keyframe pointer to NULL
+
+
+        this->deleteSelectedKeyframeParam.ResetDirty();
+    }
+
+    // editCurrentTimeParam
+    if (this->editCurrentTimeParam.IsDirty()) {
+        // CHANGE VALUE ONLY IF: !this->keyframes.IsEmpty()
+
+
+
+        this->editCurrentTimeParam.ResetDirty();
+    }
+
+    // editCurrentPosParam
+    if (this->editCurrentPosParam.IsDirty()) {
+        // CHANGE VALUE ONLY IF: !this->keyframes.IsEmpty()
+
+
+
+        this->editCurrentPosParam.ResetDirty();
+    }
+
+    // editCurrentLookAtParam
+    if (this->editCurrentLookAtParam.IsDirty()) {
+        // CHANGE VALUE ONLY IF: !this->keyframes.IsEmpty()
+
+
+
+        this->editCurrentLookAtParam.ResetDirty();
+    }
+
+    // editCurrentUpParam
+    if (this->editCurrentUpParam.IsDirty()) {
+        // CHANGE VALUE ONLY IF: !this->keyframes.IsEmpty()
+
+
+
+        this->editCurrentUpParam.ResetDirty();
+    }
+
+    // setTotalTimeParam
+    if (this->setTotalTimeParam.IsDirty()) {
+        float tt = this->setTotalTimeParam.Param<param::FloatParam>()->Value();
+        if (!this->keyframes.IsEmpty()) {
+            if (tt < this->keyframes.Last().getTime()) {
+                tt = this->keyframes.Last().getTime();
+                this->setTotalTimeParam.Param<param::FloatParam>()->SetValue(tt);
+                vislib::sys::Log::DefaultLog.WriteWarn("KEYFRAME KEEPER [setTotalTimeParam] TOTAL TIME is smaller than time of last keyframe. Delete Keyframe(s) to reduce TOTAL TIME to desired value.");
+            }
+        }
+        this->totalTime = tt;
+        this->setTotalTimeParam.ResetDirty();
+    }
+
+    // fileNameParam
+    if (this->fileNameParam.IsDirty()) {
+
+
+
+
+        this->fileNameParam.ResetDirty();
+    }
+
+    // saveKeyframesParam
+    if (this->saveKeyframesParam.IsDirty()) {
+
+
+
+
+        this->saveKeyframesParam.ResetDirty();
+    }
+
+    // loadKeyframesParam
+    if (this->loadKeyframesParam.IsDirty()) {
+
+
+
+
+        this->loadKeyframesParam.ResetDirty();
+    }
+
+    // autoLoadKeyframesAtStartParam
+    if (this->autoLoadKeyframesAtStartParam.IsDirty()) {
+
+
+
+
+        this->autoLoadKeyframesAtStartParam.ResetDirty();
+    }
+
+
+
+    // PROPAGATE CHANGES TO CALL ----------------------------------------------
+
+    ccc->setKeyframes(&this->keyframes);
+    ccc->setBoundingBox(&this->boundingBox);
+    ccc->setSelectedKeyframe(&this->selectedKeyframe);
+    ccc->setInterpolatedKeyframe(&this->interpolatedKeyframe);
+    ccc->setTotalTime(this->totalTime);
+
+
     return true;
 }
 
 
-void KeyframeKeeper::updateParameters(){
-	if (selectedKeyframe.IsDirty()){
-		if (selectedKeyframe.Param<param::FloatParam>()->Value() <= (float)keyframes.Count() - 1 && selectedKeyframe.Param<param::FloatParam>()->Value() >= 0){
-			selectedKeyframeIndex = selectedKeyframe.Param<param::FloatParam>()->Value();
-			currentKeyframeTime.Param<param::FloatParam>()->SetValue(interpolateKeyframe(selectedKeyframeIndex).getTime()*totalTime.Param<param::FloatParam>()->Value());
-			currentKeyframeTime.ResetDirty();
-		}
-		else {
-			vislib::sys::Log::DefaultLog.WriteWarn("Do not enter a Keyframeindex out of bounds you madman!");
-			selectedKeyframe.Param<param::FloatParam>()->SetValue(selectedKeyframeIndex);
-		}
-		selectedKeyframe.ResetDirty();
-	}
+/*
+* KeyframeKeeper::interpolateKeyframe
+*/
+Keyframe KeyframeKeeper::interpolateKeyframe(float t) {
 
-	if (ceilf(selectedKeyframeIndex) == selectedKeyframeIndex){
-		if (currentPos.IsDirty()){
-			keyframes[(int)selectedKeyframeIndex].setCameraPosition(
-				vislib::math::Point<float, 3>(currentPos.Param<param::Vector3fParam>()->Value().GetX(),
-											currentPos.Param<param::Vector3fParam>()->Value().GetY(),
-											currentPos.Param<param::Vector3fParam>()->Value().GetZ()));
-			boundingBox.GrowToPoint(keyframes[(int)selectedKeyframeIndex].getCamPosition());
-			currentPos.ResetDirty();
-		}
-		if (currentLookAt.IsDirty()){
-			keyframes[(int)selectedKeyframeIndex].setCameraLookAt(
-				vislib::math::Point<float, 3>(currentLookAt.Param<param::Vector3fParam>()->Value().GetX(),
-												currentLookAt.Param<param::Vector3fParam>()->Value().GetY(),
-												currentLookAt.Param<param::Vector3fParam>()->Value().GetZ()));
-			currentLookAt.ResetDirty();
-		}
-		if (currentKeyframeTime.IsDirty()){
-			keyframes[(int)selectedKeyframeIndex].setTime(currentKeyframeTime.Param<param::FloatParam>()->Value()
-															/ totalTime.Param<param::FloatParam>()->Value());
-			currentKeyframeTime.ResetDirty();
-			sortKeyframes();
-		}
-		if (currentUp.IsDirty()) {
-			keyframes[(int)selectedKeyframeIndex].setCameraLookAt(
-				vislib::math::Point<float, 3>(currentUp.Param<param::Vector3fParam>()->Value().GetX(),
-					currentUp.Param<param::Vector3fParam>()->Value().GetY(),
-					currentUp.Param<param::Vector3fParam>()->Value().GetZ()));
-			currentUp.ResetDirty();
-		}
-	}
-	if (totalTime.IsDirty()){
-		// scaling the normalized time of the keyframes to fit the new total Time
-		for (unsigned int i = 0; i < keyframes.Count(); i++){
-			keyframes[i].setTime(keyframes[i].getTime()*prevTotalTime / totalTime.Param<param::FloatParam>()->Value());
-		}
-		totalTime.ResetDirty();
-		prevTotalTime = totalTime.Param<param::FloatParam>()->Value();
-	}
+    // checking if keyframe for given time is already in keyframe array is intentionally omitted
+
+    Keyframe retKeyframe;
+
+    if (this->keyframes.IsEmpty()) {
+        vislib::sys::Log::DefaultLog.WriteWarn("KEYFRAME KEEPER [interpolateKeyframe] INTERPOLATING KEYFRAME is not possible on empty keyframe array. Add some keyframes first.");
+        return Keyframe();
+    }
+    else if (this->keyframes.Count() == 1) {
+        vislib::sys::Log::DefaultLog.WriteWarn("KEYFRAME KEEPER [interpolateKeyframe] INTERPOLATING KEYFRAME is not possible for just one existing keyframe. Add some keyframes first.");
+        return this->keyframes.First();
+    }
+    else if (t <= this->keyframes.First().getTime()) {
+        //vislib::sys::Log::DefaultLog.WriteWarn("KEYFRAME KEEPER [interpolateKeyframe] INTERPOLATING KEYFRAME is not possible for time less than minimum time of keyframes. Add keyframe with lower time first.");
+        return this->keyframes.First();
+    }
+    else if (t >= this->keyframes.Last().getTime()) {
+        //vislib::sys::Log::DefaultLog.WriteWarn("KEYFRAME KEEPER [interpolateKeyframe] INTERPOLATING KEYFRAME is not possible for time greater than maximum time of keyframes. Add keyframe with greater time first.");
+        return this->keyframes.Last();
+    }
+    else { // if ((t > this->keyframes.First().getTime()) && (t < this->keyframes.Last().getTime())) {
+        // ASSUMPTION: there are at least two keyframes and the given time lies in between them
+
+// TODO 
+
+        // new default keyframe
+        Keyframe k = Keyframe(vislib::graphics::Camera(), t);
+
+        // determine indices of in interpolation involved keyframes
+        int i0 = 0;
+        int i1 = 0;
+        int i2 = 0;
+        int i3 = 0;
+        int kfCnt = (int)keyframes.Count()-1;
+
+        for (int i = 0; i < kfCnt; i++) {
+            if ((this->keyframes[i].getTime() < t) && (t < this->keyframes[i + 1].getTime())) {
+                i1 = i;
+                i2 = i + 1;
+                break;
+            }
+        }
+        i0 = (i1 > 0) ? (i1 - 1) : (0);
+        i3 = (i2 < kfCnt) ? (i2 + 1) : (kfCnt);
+
+        //interpolate position
+        vislib::math::Vector<float, 3> p0(keyframes[i0].getCamPosition());
+        vislib::math::Vector<float, 3> p1(keyframes[i1].getCamPosition());
+        vislib::math::Vector<float, 3> p2(keyframes[i2].getCamPosition());
+        vislib::math::Vector<float, 3> p3(keyframes[i3].getCamPosition());
+
+        vislib::math::Vector<float, 3> pk = (((p1 * 2.0f) +
+            (p2 - p0) * t +
+            (p0 * 2 - p1 * 5 + p2 * 4 - p3) * t * t +
+            (-p0 + p1 * 3 - p2 * 3 + p3) * t * t * t) * 0.5);
+        k.setCameraPosition(Point<float, 3>(pk.GetX(), pk.GetY(), pk.GetZ()));
+
+        //interpolate lookAt
+        vislib::math::Vector<float, 3> l0(keyframes[i0].getCamLookAt());
+        vislib::math::Vector<float, 3> l1(keyframes[i1].getCamLookAt());
+        vislib::math::Vector<float, 3> l2(keyframes[i2].getCamLookAt());
+        vislib::math::Vector<float, 3> l3(keyframes[i3].getCamLookAt());
+
+        vislib::math::Vector<float, 3> lk = (((l1 * 2) +
+            (l2 - l0) * t +
+            (l0 * 2 - l1 * 5 + l2 * 4 - l3) * t * t +
+            (-l0 + l1 * 3 - l2 * 3 + l3) * t * t * t) * 0.5);
+        k.setCameraLookAt(Point<float, 3>(lk.GetX(), lk.GetY(), lk.GetZ()));
+
+        //interpolate up
+        vislib::math::Vector<float, 3> u0 = p0 + keyframes[i0].getCamUp();
+        vislib::math::Vector<float, 3> u1 = p1 + keyframes[i1].getCamUp();
+        vislib::math::Vector<float, 3> u2 = p2 + keyframes[i2].getCamUp();
+        vislib::math::Vector<float, 3> u3 = p3 + keyframes[i3].getCamUp();
+
+        vislib::math::Vector<float, 3> uk = (((u1 * 2) +
+            (u2 - u0) * t +
+            (u0 * 2 - u1 * 5 + u2 * 4 - u3) * t * t +
+            (-u0 + u1 * 3 - u2 * 3 + u3) * t * t * t) * 0.5);
+        k.setCameraUp(uk - pk);
+
+        //interpolate aperture angle
+        float a0 = keyframes[i0].getCamApertureAngle();
+        float a1 = keyframes[i1].getCamApertureAngle();
+        float a2 = keyframes[i2].getCamApertureAngle();
+        float a3 = keyframes[i3].getCamApertureAngle();
+
+        a0 = (((a1 * 2) +
+            (a2 - a0) * t +
+            (a0 * 2 - a1 * 5 + a2 * 4 - a3) * t * t +
+            (-a0 + a1 * 3 - a2 * 3 + a3) * t * t * t) * 0.5f);
+
+        k.setCameraApertureAngele(a0);
+
+        return k;
+    }
 }
 
-Keyframe KeyframeKeeper::interpolateKeyframe(float idx){
 
-	if (idx > 0 && idx < keyframes.Count() - 1) {
-		if (ceilf(idx) == idx) {
-			return keyframes[(int)idx];
-		}
-		else {
+/*
+* KeyframeKeeper::loadKeyframes
+*/
+void KeyframeKeeper::loadKeyframes() {
 
-			Keyframe k = Keyframe(-1);
+    /*
+    try {
+    keyframes.Clear();
+    std::ifstream myfile;
+    myfile.open(fileNameParam.Param<param::FilePathParam>()->Value());
 
-			float t = idx - floorf(idx);
+    vislib::StringSerialiserA ser;
+    std::string line;
+    vislib::StringA camera;
+    int maxID = 0;
+    // set totalTime
+    std::getline(myfile, line);
 
-			//interpolate time
-			k.setTime(keyframes[(int)floorf(idx)].getTime() + (keyframes[(int)ceilf(idx)].getTime() - keyframes[(int)floorf(idx)].getTime()) * t);
+    totalTimeParam.Param<param::FloatParam>()->SetValue(std::stof(line.erase(0, 10)));
+    totalTimeParam.ResetDirty();
 
+    int currentKeyframe = 0;
+    while (std::getline(myfile, line)){
 
-			//interpolate position
-			vislib::math::Vector<float, 3> p0(keyframes[(0 > ((int)floor(idx) - 1)) ? (0) : ((int)floor(idx) - 1)].getCamPosition());
-			vislib::math::Vector<float, 3> p1(keyframes[(int)floor(idx)].getCamPosition());
-			vislib::math::Vector<float, 3> p2(keyframes[(int)ceil(idx)].getCamPosition());
-			vislib::math::Vector<float, 3> p3(keyframes[(keyframes.Count() - 1 < ((int)ceil(idx) + 1)) ? (keyframes.Count() - 1) : ((int)ceil(idx) + 1)].getCamPosition());
+        if (line.substr(0, 5) == "time="){
+            keyframes.Add(Keyframe());
+            keyframes[currentKeyframe].setTime(static_cast<float>(std::stof(line.erase(0, 5))));
+        }
+        else if (line.empty()) {
+            if (!camera.IsEmpty()) {
+                // this line suddenly crashes (stack overflow). WHY?
+                ser.SetInputString(camera);
+                keyframes[currentKeyframe].getCamParameters()->Deserialise(ser);
+                boundingBox.GrowToPoint(keyframes[currentKeyframe].getCamPosition());
+                currentKeyframe++;
+                camera.Clear();
+            }
 
-			vislib::math::Vector<float, 3> pk = (((p1 * 2.0f) +
-				(p2 - p0) * t +
-				(p0 * 2 - p1 * 5 + p2 * 4 - p3) * t * t +
-				(-p0 + p1 * 3 - p2 * 3 + p3) * t * t * t) * 0.5);
-			k.setCameraPosition(Point<float, 3>(pk.GetX(), pk.GetY(), pk.GetZ()));
+        }
+        else {
+            camera.Append(line.c_str());
+            camera.Append("\n");
+        }
+    }
 
-			//interpolate lookAt
-			vislib::math::Vector<float, 3> l0(keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamLookAt());
-			vislib::math::Vector<float, 3> l1(keyframes[(int)floor(idx)].getCamLookAt());
-			vislib::math::Vector<float, 3> l2(keyframes[(int)ceil(idx)].getCamLookAt());
-			vislib::math::Vector<float, 3> l3(keyframes[(keyframes.Count() < (int)ceil(idx) + 1) ? (keyframes.Count()) : ((int)ceil(idx))].getCamLookAt());
+    selectedKeyframeIndex = 0;
+    // ensure loaded Keyframes are sorted
+    this->sortKeyframes();
+    return true;
+    }
+    catch (...) {
+    vislib::sys::Log::DefaultLog.WriteError("Loading keyframes failed!");
+    return false;
+    }
+    */
 
-			vislib::math::Vector<float, 3> lk = (((l1 * 2) +
-				(l2 - l0) * t +
-				(l0 * 2 - l1 * 5 + l2 * 4 - l3) * t * t +
-				(-l0 + l1 * 3 - l2 * 3 + l3) * t * t * t) * 0.5);
-			k.setCameraLookAt(Point<float, 3>(lk.GetX(), lk.GetY(), lk.GetZ()));
-
-			//interpolate up
-			vislib::math::Vector<float, 3> u0 = p0 + keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamUp();
-			vislib::math::Vector<float, 3> u1 = p1 + keyframes[(int)floor(idx)].getCamUp();
-			vislib::math::Vector<float, 3> u2 = p2 + keyframes[(int)ceil(idx)].getCamUp();
-			vislib::math::Vector<float, 3> u3 = p3 + keyframes[(keyframes.Count() < (int)ceil(idx) + 1) ? (keyframes.Count()) : ((int)ceil(idx))].getCamUp();
-
-			vislib::math::Vector<float, 3> uk = (((u1 * 2) +
-				(u2 - u0) * t +
-				(u0 * 2 - u1 * 5 + u2 * 4 - u3) * t * t +
-				(-u0 + u1 * 3 - u2 * 3 + u3) * t * t * t) * 0.5);
-			k.setCameraUp(uk - pk);
-
-
-			/*
-			//interpolate position
-			vislib::math::Vector<float, 3> p0(keyframes[(0 > ((int)floor(idx) - 1)) ? (0) : ((int)floor(idx) - 1)].getCamPosition());
-			vislib::math::Vector<float, 3> p1(keyframes[(int)floor(idx)].getCamPosition());
-			vislib::math::Vector<float, 3> p2(keyframes[(int)ceil(idx)].getCamPosition());
-			vislib::math::Vector<float, 3> p3(keyframes[(static_cast<int>(keyframes.Count()) - 1 < ((int)ceil(idx) + 1)) ? (static_cast<int>(keyframes.Count()) - 1) : ((int)ceil(idx) + 1)].getCamPosition());
-
-			p0 = (((p1 * 2) +
-				(p2 - p0) * t +
-				(p0 * 2 - p1 * 5 + p2 * 4 - p3) * t * t +
-				(-p0 + p1 * 3 - p2 * 3 + p3) * t * t * t) * 0.5);
-			Point<float, 3> p(p0.GetX(), p0.GetY(), p0.GetZ());
-			k.setCameraPosition(p);
-
-			//interpolate lookAt
-			p0 = keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamLookAt();
-			p1 = keyframes[(int)floor(idx)].getCamLookAt();
-			p2 = keyframes[(int)ceil(idx)].getCamLookAt();
-			p3 = keyframes[(static_cast<int>(keyframes.Count()) < (int)ceil(idx) + 1) ? (static_cast<int>(keyframes.Count())) : ((int)ceil(idx))].getCamLookAt();
-
-			p0 = (((p1 * 2) +
-				(p2 - p0) * t +
-				(p0 * 2 - p1 * 5 + p2 * 4 - p3) * t * t +
-				(-p0 + p1 * 3 - p2 * 3 + p3) * t * t * t) * 0.5);
-			p.Set(p0.GetX(), p0.GetY(), p0.GetZ());
-			k.setCameraLookAt(p);
-
-			//interpolate up
-			p0 = keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamUp();
-			p1 = keyframes[(int)floor(idx)].getCamUp();
-			p2 = keyframes[(int)ceil(idx)].getCamUp();
-			p3 = keyframes[(static_cast<int>(keyframes.Count()) < (int)ceil(idx) + 1) ? (static_cast<int>(keyframes.Count())) : ((int)ceil(idx))].getCamUp();
-
-			p0 = (((p1 * 2) +
-				(p2 - p0) * t +
-				(p0 * 2 - p1 * 5 + p2 * 4 - p3) * t * t +
-				(-p0 + p1 * 3 - p2 * 3 + p3) * t * t * t) * 0.5);
-			p.Set(p0.GetX(), p0.GetY(), p0.GetZ());
-			k.setCameraUp(p);
-			*/
-
-			//interpolate aperture angle
-			float a0 = keyframes[(0 > (int)floor(idx) - 1) ? (0) : ((int)floor(idx))].getCamApertureAngle();
-			float a1 = keyframes[(int)floor(idx)].getCamApertureAngle();
-			float a2 = keyframes[(int)ceil(idx)].getCamApertureAngle();
-			float a3 = keyframes[(static_cast<int>(keyframes.Count()) < (int)ceil(idx) + 1) ? (static_cast<int>(keyframes.Count())) : ((int)ceil(idx))].getCamApertureAngle();
-
-			a0 = (((a1 * 2) +
-				(a2 - a0) * t +
-				(a0 * 2 - a1 * 5 + a2 * 4 - a3) * t * t +
-				(-a0 + a1 * 3 - a2 * 3 + a3) * t * t * t) * 0.5f);
-			
-			k.setCameraApertureAngele(a0);
-
-			return k;
-		}
-	}
-	else {
-		//requested a keyframe out of bounds
-		return keyframes.First();
-	}
 }
 
-void KeyframeKeeper::sortKeyframes(){
-	int selectedKeyframeID;
 
-	if (ceilf(selectedKeyframeIndex) == selectedKeyframeIndex) {
-		if (selectedKeyframeIndex != -1){
-			selectedKeyframeID = keyframes[(int)selectedKeyframeIndex].getID();
-		}
-	}
+/*
+* KeyframeKeeper::saveKeyframes
+*/
+void KeyframeKeeper::saveKeyframes() {
 
-	//sorting by time
-	//bubbleSort should be fast because array is usually almost sorted
-	bool swapped;
-	do {
-		swapped = false;
-		for (unsigned int i = 0; i < keyframes.Count() - 1; i++){
-			if (keyframes[i].getTime() > keyframes[i + 1].getTime()){
-				Keyframe temp = keyframes[i];
-				keyframes[i] = keyframes[i + 1];
-				keyframes[i + 1] = temp;
-				swapped = true;
-			}
-		}
-	} while (swapped);
+    /*
+    std::ofstream myfile;
+    myfile.open(fileNameParam.Param<param::FilePathParam>()->Value(), std::ios::binary);
+    vislib::StringSerialiserA ser;
+    myfile << "totalTime=" << totalTimeParam.Param<param::FloatParam>()->Value() << "\n";
+    for (unsigned int i = 0; i < keyframes.Count(); i++){
+        keyframes[i].getCamParameters()->Serialise(ser);
+        myfile << "time=" << keyframes[i].getTime() << "\n";
+        myfile << ser.GetString().PeekBuffer() << "\n";
+    }
+    myfile.close();
+    */
 
-	if (ceilf(selectedKeyframeIndex) == selectedKeyframeIndex) {
-		if (selectedKeyframeIndex != -1){
-			for (unsigned int i = 0; i < keyframes.Count(); i++){
-				if (keyframes[i].getID() == selectedKeyframeID){
-					selectedKeyframeIndex = static_cast<float>(i);
-				}
-			}
-		}
-	}
 }

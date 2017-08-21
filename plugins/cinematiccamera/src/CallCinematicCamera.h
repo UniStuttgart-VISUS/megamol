@@ -9,12 +9,22 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "CinematicCamera/CinematicCamera.h"
+
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+
 #include "vislib/Array.h"
-#include "Keyframe.h"
 #include "vislib/sys/Log.h"
 #include "vislib/math/Point.h"
+
+#include "Keyframe.h"
+
+#include <iostream>
+
+
+using namespace vislib;
+
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -27,25 +37,7 @@ namespace megamol {
 		public:
 
 			/** function name for getting all Keyframes */
-			static const unsigned int CallForGetKeyframes = 0;
-			/** function name for getting selected Keyframes */
-			static const unsigned int CallForGetSelectedKeyframe = 1;
-			/** function name for setting the selected Keyframe */
-			static const unsigned int CallForSelectKeyframe = 2;
-			/**function name for getting interpolated Keyframe */
-			static const unsigned int CallForInterpolatedKeyframe = 3;
-			/**function name for getting total time */
-			static const unsigned int CallForGetTotalTime = 4;
-			/**function name for getting a keyframe at a certain time*/
-			static const unsigned int CallForGetKeyframeAtTime = 5;
-			/**function name for adding a keyframe at a certain position*/
-			static const unsigned int CallForNewKeyframeAtPosition = 6;
-			/**function name for load of a keyframe*/
-			static const unsigned int CallForLoadKeyframe = 7;
-			/**function name for setting of total time*/
-			static const unsigned int CallForSetTotalTime = 8;
-            /** Requests the selected key frame being replaced by 'cameraForNewKeyframe' */
-            static const unsigned int CallForKeyFrameUpdate = 9;
+			static const unsigned int CallForUpdateKeyframeKeeper = 0;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -71,7 +63,7 @@ namespace megamol {
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return 10;
+				return 1;
 			}
 
 			/**
@@ -83,16 +75,7 @@ namespace megamol {
 			*/
 			static const char * FunctionName(unsigned int idx) {
 				switch (idx) {
-					case CallForGetKeyframes: return "CallForGetKeyframes";
-					case CallForGetSelectedKeyframe: return "CallForGetSelectedKeyframe";
-					case CallForSelectKeyframe: return "CallForSelectKeyframe";
-					case CallForInterpolatedKeyframe: return "CallForInterpolatedKeyframe";
-					case CallForGetTotalTime: return "CallForGetTotalTime";
-					case CallForGetKeyframeAtTime : return "CallForGetKeyframeAtTime";
-					case CallForNewKeyframeAtPosition: return "CallForNewKeyframeAtPosition";
-					case CallForLoadKeyframe: return "CallForLoadKeyframe";
-					case CallForSetTotalTime: return "CallForSetTotalTime";
-                    case CallForKeyFrameUpdate: return "CallForKeyFrameUpdate";
+					case CallForUpdateKeyframeKeeper: return "CallForUpdateKeyframeKeeper";
 					default: return "";
 				}
 				
@@ -104,147 +87,138 @@ namespace megamol {
 			/** Dtor */
 			virtual ~CallCinematicCamera(void);
 
-			inline void setTimeofKeyframeToGet(float time){
-				timeToGet = time;
-			}
-			
-			inline float getTimeofKeyframeToGet(){
-				return timeToGet;
-			}
-			/**
-			* TODO
-			*/
-			inline Keyframe getKeyframeAtTime(float t){
-				
-			}
 
-			inline vislib::Array <Keyframe>* getKeyframes(){
-				return keyframes;
-			}
+            /**********************************************************************
+            * functions
+            **********************************************************************/
 
-			/**
-			* Returning the selected Keyframe if an exact Keyframe is selected.
-			* Returning a generic keyframe otherwise
-			*/
-			inline cinematiccamera::Keyframe getSelectedKeyframe() {
-
-				if (ceilf(selectedKeyframe) == selectedKeyframe) {
-					return (*keyframes)[(int)ceil(selectedKeyframe)];
-				}
-				else {
-					return interpolatedKeyframe;
-				}
+            // KEYFRAME ARRAY
+			inline vislib::Array<Keyframe>* getKeyframes(){
+				return this->keyframes;
 			}
+            inline void setKeyframes(vislib::Array<Keyframe>* kfs) {
+                this->keyframes = kfs;
+            }
 
-			inline bool setSelectedKeyframeIndex(float select){
-				if (select >= 0 && select <= keyframes->Count())
-					selectedKeyframe = select;
-				else
-					return false;
-				return true;
-			}
-
-			inline void addKeyframe (Keyframe keyframe) {
-				keyframes->Add(keyframe);
-				boundingbox->GrowToPoint(keyframe.getCamPosition());
-			}
-
-			inline void deleteKeyframe(int number) {
-				keyframes->RemoveAt(number);
-			}
+            inline void setChangedKeyframes(bool b) {
+                this->keyframesChanged = b;
+            }
+            inline bool changedKeyframes() {
+                return this->keyframesChanged;
+            }
 
 
-			inline void setKeyframes(vislib::Array <Keyframe> *kfs){
-				keyframes = kfs;
-			}
+            // BOUNDINGBOX
+            inline void setBoundingBox(vislib::math::Cuboid<float>* bbx) {
+                this->boundingbox = bbx;
+            }
+            inline vislib::math::Cuboid<float> *getBoundingBox() {
+                return this->boundingbox;
+            }
 
-			inline float getSelectedKeyframeIndex(){
-				return selectedKeyframe;
-			}
 
-			inline void setBoundingBox(vislib::math::Cuboid<float> *bbx){
-				this->boundingbox = bbx;
-			}
+            // SELECTED KEYFRAME
+            inline void setSelectedKeyframeTime(float t) { // set value for one specific ccc (called from keyframe keeper)
+                this->selectedTime = t;
+            }
+            inline float getSelectedKeyframeTime() {
+                return this->selectedTime;
+            }
 
-			inline vislib::math::Cuboid<float>* getBoundingBox(){
-				return this->boundingbox;
-			}
+            inline void setChangedSelectedKeyframeTime(bool b) {
+                this->selTimeChanged = b;
+            }
+            inline bool changedSelectedKeyframeTime() {
+                return this->selTimeChanged;
+            }
 
-			inline void setIndexToInterpolate(float f){
-				interpolatedIndex = f;
-			}
+            inline Keyframe* getSelectedKeyframe() {
+                return this->selectedKeyframe;
+            }
+            inline void setSelectedKeyframe(Keyframe* k) {
+                this->selectedKeyframe = k;
+            }
 
-			inline float getIndexToInterPolate(){
-				return interpolatedIndex;
-			}
 
-			inline void setInterpolatedKeyframe(Keyframe k){
-				interpolatedKeyframe = k;
+            // INTERPOLATED KEYFRAME
+			inline void setInterpolatedKeyframeTime(float t){
+                this->interpolatedTime = t;
 			}
-			inline Keyframe getInterpolatedKeyframe(){
-				return interpolatedKeyframe;
-			}
+            inline float getInterpolatedKeyframeTime(){
+                return this->interpolatedTime;
+            }
 
-			inline void setTotalTime(float f){
-				totalTime = f;
-			}
+            inline void setChangedInterpolatedKeyframeTime(bool b) {
+                this->intTimeChanged = b;
+            }
+            inline bool changedInterpolatedKeyframeTime(){
+                return this->intTimeChanged;
+            }
 
+			inline Keyframe* getInterpolatedKeyframe(){
+				return this->interpolatedKeyframe;
+			}
+            inline void setInterpolatedKeyframe(Keyframe* k){
+                this->interpolatedKeyframe = k;
+            }
+
+
+            // TOTAL TIME
+            inline void setTotalTime(float f) {
+                this->totalTime = f;
+            }
 			inline float getTotalTime(){
-				return totalTime;
+				return this->totalTime;
 			}
 
-			inline bool setTimeToSet(float f){
-				if (f >= 0 && f <= 1){
-					timeToSet = f;
-				}
-				else {
-					vislib::sys::Log::DefaultLog.WriteError("Tried to set the time of a Keyframe out of the interval of [0,1]");
-					return false;
-				}
-			}
+            inline void setChangedTotalTime(bool b) {
+                this->totTimeChanged = b;
+            }
+            inline bool changedTotalTime(){
+                return this->totTimeChanged;
+            }
 
-			inline float getTimeToSet(){
-				return timeToSet;
-			}
+            // CAMERA PARAMETER
+            inline void setCameraParameter(SmartPtr<graphics::CameraParameters> c) {
+                this->cameraParam = c;
+            }
+            inline SmartPtr<graphics::CameraParameters> getCameraParameter() {
+                return this->cameraParam;
+            }
 
-			inline void setPosToSet(vislib::math::Point<float, 3> pt){
-				posToSet = pt;
-			}
-			inline void setLookToSet(vislib::math::Point<float, 3> pt){
-				lookToSet = pt;
-			}
+            inline void setChangedCameraParameter(bool b) {
+                this->camParamChanged = b;
+            }
+            inline bool changedCameraParameter() {
+                return this->camParamChanged;
+            }
 
-			inline vislib::math::Point<float, 3> getPosToSet(){
-				return posToSet;
-			}
-			inline vislib::math::Point<float, 3> getLookToSet(){
-				return lookToSet;
-			}
 
-			inline void setCameraForNewKeyframe(vislib::graphics::Camera cam){
-				cameraForNewKeyframe = cam;
-			}
+		private:
 
-			vislib::graphics::Camera getCameraForNewKeyframe(){
-				return cameraForNewKeyframe;
-			}
+            /**********************************************************************
+            * variables
+            **********************************************************************/
 
-		protected:
-
-			/** Array of keyframes */
-			vislib::Array <Keyframe> *keyframes;
-			float selectedKeyframe;
+			// Pointer to array of keyframes
+			vislib::Array<Keyframe>     *keyframes;
+            bool                        keyframesChanged;
 
 			vislib::math::Cuboid<float> *boundingbox;
 
-			Keyframe interpolatedKeyframe;
-			float interpolatedIndex;
-			float totalTime;
-			float timeToSet;	
-			vislib::math::Point<float, 3> posToSet;
-			vislib::math::Point<float, 3> lookToSet;
-			float timeToGet;
-			vislib::graphics::Camera cameraForNewKeyframe;
+            Keyframe                    *selectedKeyframe;
+            float                       selectedTime;
+            bool                        selTimeChanged;
+
+			Keyframe                    *interpolatedKeyframe;
+			float                       interpolatedTime;
+            bool                        intTimeChanged;
+
+			float                       totalTime;
+            bool                        totTimeChanged;
+
+            SmartPtr<graphics::CameraParameters> cameraParam;
+            bool                       camParamChanged;
 		};
 
 		/** Description class typedef */

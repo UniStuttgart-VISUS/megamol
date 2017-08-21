@@ -11,19 +11,22 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "CinematicCamera/CinematicCamera.h"
+
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule.h"
+
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/String.h"
-#include "mmcore/view/Renderer3DModule.h"
 
 
 namespace megamol {
@@ -142,14 +145,25 @@ namespace megamol {
 			*/
 			virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
-			virtual bool RenderOverview(core::Call& call);
-			virtual bool RenderPreview(core::Call& call);
-
 		private:
 
-			bool startup = true;
+            /**********************************************************************
+            * variables
+            **********************************************************************/
 
-			void UpdateParameters(core::view::CallRender3D *cr3d);
+            /* UNUSED ... so far
+            // The current mouse coordinates
+            int mouseX;
+            int mouseY;
+            // Starting point for dragging the manipulator
+            vislib::math::Vector<int, 2> startSelect;
+            // End point for dragging the manipulator
+            vislib::math::Vector<int, 2> endSelect;
+            */
+
+            /**********************************************************************
+            * callback stuff
+            **********************************************************************/
 
 			/** The renderer caller slot */
 			core::CallerSlot slaveRendererSlot;
@@ -157,45 +171,21 @@ namespace megamol {
 			/** The keyframe keeper caller slot */
 			core::CallerSlot keyframeKeeperSlot;
 
-			/** Activation flags for the rendering slot */
-			core::param::ParamSlot rendererActiveSlot;
+            /**********************************************************************
+            * parameters
+            **********************************************************************/
 
-			/** Param slot for rendering mode */
-			core::param::ParamSlot renderModeParam;
+			/** Bool Param for toggling manipulation of the currently selected Keyframe */
+			core::param::ParamSlot editKeyframeParam;
 
-			/** Button param for adding new Keyframe */
-			core::param::ParamSlot addKeyframeParam;
-
-			/**Bool Param for toggling manipulation of the currently selected Keyframe */
-			core::param::ParamSlot manipulateKeyframe;
-
-			/**Bool Param enabling the display of the camera lookat path */
-			core::param::ParamSlot showLookat;
+			/** Bool Param enabling the display of the camera lookat path */
+			core::param::ParamSlot showLookatParam;
 			
-			/** The frame count */
-			unsigned int frameCnt;
+            /** amount of interpolation steps between keyframes */
+            core::param::ParamSlot stepsParam;
 
-			/** The bounding boxes */
-			core::BoundingBoxes bboxs;
-
-			/** A scaling factor */
-			float scale;
-
-			/** The rendering mode */
-			RenderingMode currentMode;
-
-			/**amount of interpolation steps between keyframes*/
-			core::param::ParamSlot steps;
-
-			/// The current mouse coordinates
-			int mouseX, mouseY;
-
-			/// Starting point for dragging the manipulator
-			vislib::math::Vector<int, 2> startSelect;
-
-			/// End point for dragging the manipulator
-			vislib::math::Vector<int, 2> endSelect;
-
+            /** Param to load total time from slave renderer */
+            core::param::ParamSlot loadTimeParam;
 		};
 
 	} /* end namespace cinematiccamera */

@@ -9,15 +9,22 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "CinematicCamera/CinematicCamera.h"
+
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/Module.h"
-#include "vislib/Array.h"
-#include "CinematicCamera/CinematicCamera.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "Keyframe.h"
+
+#include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
+
+#include "Keyframe.h"
+
+
+using namespace vislib;
+
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -53,107 +60,86 @@ namespace megamol {
 			/** Dtor */
 			virtual ~KeyframeKeeper(void);
 
+            // ...
 			static bool IsAvailable(void) {
 				return true;
 			}
 			
 		protected:
+
+            // ...
 			virtual bool create(void);
+
+            // ...
 			virtual void release(void);
 
-			/** Array of keyframes */
-			vislib::Array <Keyframe> keyframes;
-			float selectedKeyframeIndex;
-
-			int IDCounter;
-
 		private:
-			/** knowing the total Time before the Variable is changed is mandatory
-				in order to scale the time of the keyframes correctly*/
-			float prevTotalTime;
 
-			/** Callback for getting all Keyframes*/
-			bool cbAllKeyframes(core::Call& c);
+            /**********************************************************************
+            * functions
+            ***********************************************************************/
 
-			/** Callback for getting selected Keyframe*/
-			bool cbSelectedKeyframe(core::Call& c);
+            // get an interpolated keyframe at time
+            Keyframe interpolateKeyframe(float time);
 
-			/** Callback for selecting a new Keyframe */
-			bool cbSelectKeyframe(core::Call& c);
+            // load keyframes from file
+            void loadKeyframes();
 
-			/** Callback for creating new Keyframe */
-			bool cbNewKeyframe(core::Call& c);
+            // save keyframes to file
+            void saveKeyframes();
 
-			/** Callback for deleting selected Keyframe */
-			bool cbDelKeyframe(core::param::ParamSlot& slot);
+            /**********************************************************************
+            * variables
+            **********************************************************************/
 
-			/**Callback for interpolating Keyframe */
-			bool cbInterpolateKeyframe(core::Call& c);
+            // variables shared with call
+            vislib::Array<Keyframe>             keyframes;
+            vislib::math::Cuboid<float>          boundingBox;
+            Keyframe                             selectedKeyframe;
+            Keyframe                             interpolatedKeyframe;
+            float                                totalTime;
+            SmartPtr<graphics::CameraParameters> cameraParam; 
 
-			/**Callback for getting total Time */
-			bool cbGetTotalTime(core::Call& c);
+            // variables only used in keyframe keeper
+            vislib::StringA                     filename;
 
-			/**Callback for setting total Time*/
-			bool cbSetTotalTime(core::Call& c);
+            /**********************************************************************
+            * callback stuff
+            **********************************************************************/
 
-			/**Callback for getting Keyframe at a certain time */
-			bool cbGetKeyframeAtTime(core::Call& c);
+            megamol::core::CalleeSlot cinematicCallSlot;
 
-			/**Callback for saving Keyframes */
-			bool cbSave(core::param::ParamSlot& slot);
+			/** Callback for updating the keyframe keeper */
+			bool CallForUpdateKeyframeKeeper(core::Call& c);
 
-			/**Callback for loading Keyframes */
-			bool cbLoad(core::param::ParamSlot& slot);
-			bool cbLoad(core::Call& c);
+            /**********************************************************************
+            * parameters
+            **********************************************************************/
 
-			bool cbAddKeyframeAtSelectedPosition(core::param::ParamSlot& slot);
-
-            bool cbUpdate(core::Call& call);
-
-
-			void updateParameters();
-
-			Keyframe interpolateKeyframe(float idx);
-
-		
-
-			megamol::core::CalleeSlot cinematicRendererSlot;
-
-			core::param::ParamSlot saveKeyframesParam;
-			core::param::ParamSlot loadKeyframesParam;
-			core::param::ParamSlot fileNameParam;
-			core::param::ParamSlot totalTime;
-			core::param::ParamSlot selectedKeyframe;
-			core::param::ParamSlot addKeyframeAtSelectedPosition;
-			core::param::ParamSlot deleteKeyframe;
-			core::param::ParamSlot keyframeDistance;
-
+            /** */
+            core::param::ParamSlot addKeyframeParam;
+            /** */
+            core::param::ParamSlot deleteSelectedKeyframeParam;
+            /** */
+			core::param::ParamSlot timeForNewKeyframeParam;
 			/**param for currentkeyframe Time */
-			megamol::core::param::ParamSlot currentKeyframeTime;
-
+			core::param::ParamSlot editCurrentTimeParam;
 			/**param for currentkeyframe Position */
-			core::param::ParamSlot currentPos;
-
+			core::param::ParamSlot editCurrentPosParam;
 			/**param for currentkeyframe LookAt */
-			core::param::ParamSlot currentLookAt;
-
+			core::param::ParamSlot editCurrentLookAtParam;
 			/**param for currentkeyframe Up */
-			core::param::ParamSlot currentUp;
-
-			vislib::math::Cuboid<float> boundingBox;
-
-	//		megamol::core::AbstractSlot::Listener lisCreateKeyframe;
-
-			vislib::Array<Keyframe> getKeyframes(){
-				return keyframes;
-			}
-
-			float getSelectedKeyframeIndex(){
-				return selectedKeyframeIndex;
-			}
-
-			/**sorts Keyframes by time*/
-			void sortKeyframes();
+			core::param::ParamSlot editCurrentUpParam;
+            /** */
+            core::param::ParamSlot setTotalTimeParam;
+            /** */
+            core::param::ParamSlot saveKeyframesParam;
+            /** */
+            core::param::ParamSlot loadKeyframesParam;
+            /** */
+            core::param::ParamSlot fileNameParam;
+            /** */
+            core::param::ParamSlot autoLoadKeyframesAtStartParam;
 
 		};
 

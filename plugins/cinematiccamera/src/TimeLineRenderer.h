@@ -11,15 +11,20 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "CinematicCamera/CinematicCamera.h"
+
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/ParamSlot.h"
+
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "Keyframe.h"
 #include "vislib/Array.h"
+
+#include "Keyframe.h"
+
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -85,68 +90,77 @@ namespace megamol {
 			* @param flags The mouse flags
 			*/
 			virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
-
-			bool LoadTexture(vislib::StringA filename);
-
-			void DrawKeyframeSymbol(Keyframe k, float lineLength, float lineYPos, bool selected);
 			
+            /**
+            * The get extents callback. The module should set the members of
+            * 'call' to tell the caller the extents of its data (bounding boxes
+            * and times).
+            *
+            * @param call The calling call.
+            *
+            * @return The return value of the function.
+            */
+            virtual bool GetExtents(core::view::CallRender2D& call);
+
+            /**
+            * The render callback.
+            *
+            * @param call The calling call.
+            *
+            * @return The return value of the function.
+            */
+            virtual bool Render(core::view::CallRender2D& call);
+
 		private:
 			
-			/**
-			* The get extents callback. The module should set the members of
-			* 'call' to tell the caller the extents of its data (bounding boxes
-			* and times).
-			*
-			* @param call The calling call.
-			*
-			* @return The return value of the function.
-			*/
-			virtual bool GetExtents(core::view::CallRender2D& call);
-
-			/**
-			* The render callback.
-			*
-			* @param call The calling call.
-			*
-			* @return The return value of the function.
-			*/
-			virtual bool Render(core::view::CallRender2D& call);
-
 			/**********************************************************************
 			* variables
 			**********************************************************************/
 
-			/** The call for keyframe data */
-			core::CallerSlot getDataSlot;
+            // font rendering
+#ifdef USE_SIMPLE_FONT
+            vislib::graphics::gl::SimpleFont  theFont;
+#else
+            vislib::graphics::gl::OutlineFont theFont;
+#endif
+            // ...
+            vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
 
-			/** texture resolution parameter */
+            vislib::math::Vector<float, 2> tlStartPos;
+            vislib::math::Vector<float, 2> tlEndPos;
+            float                          tlLength;
+            unsigned int                   tlRes;
+            float                          devX, devY;
+            float                          fontSize;
+            float                          markerSize;
+            float                          maxTime;
+
+            /**********************************************************************
+            * callback stuff
+            **********************************************************************/
+
+			/** The call for keyframe data */
+            core::CallerSlot keyframeKeeperSlot;
+
+            /**********************************************************************
+            * parameter
+            **********************************************************************/
+
+			/** time line resolution parameter */
 			megamol::core::param::ParamSlot resolutionParam;
 
+            /** marker size parameter */
+            megamol::core::param::ParamSlot markerSizeParam;
 
-			// font rendering
-#ifdef USE_SIMPLE_FONT
-			vislib::graphics::gl::SimpleFont theFont;
-#else
-			vislib::graphics::gl::OutlineFont theFont;
-#endif
+            /**********************************************************************
+            * functions
+            **********************************************************************/
 
-			// the vertex buffer array for the keyframes
-			vislib::Array<float> vertices;
+            // ...
+            bool LoadTexture(vislib::StringA filename);
 
-			vislib::Array<vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D> > markerTextures;
-
-			// mouse hover
-			vislib::math::Vector<float, 2> mousePos;
-			int mousePosResIdx;
-			bool leftMouseDown;
-			bool initialClickSelection;
-			// selection 
-			vislib::Array<bool> selection;
-
-			float lineLength;
-			float lineYPos;
-
-			bool updateParameters();
+            // ...
+            void DrawKeyframeSymbol(float posX, float posY, bool selected);
 
 		};
 

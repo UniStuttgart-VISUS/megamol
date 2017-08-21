@@ -10,14 +10,15 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/versioninfo.h"
+
 #include "vislib/vislibversion.h"
 
 #include "CinematicRenderer.h"
 #include "TimeLineRenderer.h"
 #include "CallCinematicCamera.h"
 #include "KeyframeKeeper.h"
-#include "PreviewView.h"
 #include "CinematicView.h"
+
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -48,25 +49,10 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::CinematicRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::TimeLineRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::KeyframeKeeper>();
-			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::PreviewView>();
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematiccamera::CinematicView>();
-            //
-            // TODO: Register your plugin's modules here
-            // like:
-            //   this->module_descriptions.RegisterAutoDescription<megamol::CinematicCamera::MyModule1>();
-            //   this->module_descriptions.RegisterAutoDescription<megamol::CinematicCamera::MyModule2>();
-            //   ...
-            //
 
             // register calls here:
 			this->call_descriptions.RegisterAutoDescription < megamol::cinematiccamera::CallCinematicCamera>();
-            //
-            // TODO: Register your plugin's calls here
-            // like:
-            //   this->call_descriptions.RegisterAutoDescription<megamol::CinematicCamera::MyCall1>();
-            //   this->call_descriptions.RegisterAutoDescription<megamol::CinematicCamera::MyCall2>();
-            //   ...
-            //
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics

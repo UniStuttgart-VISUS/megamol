@@ -3,38 +3,41 @@
 */
 
 #include "stdafx.h"
-#include "CinematicView.h"
-#include "CallCinematicCamera.h"
-#include "CameraParamsOverride.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/view/CallRender3D.h"
+
+#include "CinematicView.h"
+#include "CallCinematicCamera.h"
+
+#include <iostream>
+
 
 using namespace megamol;
 using namespace megamol::core;
 using namespace cinematiccamera;
 
+
+/*
+* CinematicView::CinematicView
+*/
 CinematicView::CinematicView(void) : View3D(),
-		keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-		selectedKeyframeParam("cinematicCam::selectedKeyframeParam", "render selected Keyframe if true. render keyframe at animationtime if false"),
-		selectedSkyboxSideParam("cinematicCam::skyboxSide", "Skybox side rendering"),
-		autoLoadKeyframes("keyframeAutoLoad","shall the keyframes be loaded automatically from the file provided in the keyframe-keeper?"),
-		autoSetTotalTime("totalTimeAutoSet", "shall the total animation time be determined automatically?"),
-        paramEdit("cinematicCam::edit", "Do not overwrite the camera such that the selected key frame can be edited."),
-		firstframe(true) {
+	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
+    viewModeParam(          "cinematic::01 VIEW MODE", "render only selected keyframe or render keyframe at animation time"),
+	selectedSkyboxSideParam("cinematic::02 Skybox Side", "Skybox side rendering")
+    {
 
+    this->currentViewMode = VIEWMODE_SELECTION;
 
-	this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
-	this->MakeSlotAvailable(&this->keyframeKeeperSlot);
+    param::EnumParam *rm = new param::EnumParam(int(this->currentViewMode));
+    rm->SetTypePair(VIEWMODE_SELECTION, "Selected Keyframe");
+    rm->SetTypePair(VIEWMODE_ANIMATION, "Animation");
+    this->viewModeParam << rm;
+    this->MakeSlotAvailable(&this->viewModeParam);
 
-	this->selectedKeyframeParam << new core::param::BoolParam(true);
-	this->MakeSlotAvailable(&this->selectedKeyframeParam);
-
-	this->autoLoadKeyframes.SetParameter(new core::param::BoolParam(false));
-	this->MakeSlotAvailable(&this->autoLoadKeyframes);
-
-	this->autoSetTotalTime.SetParameter(new core::param::BoolParam(true));
-	this->MakeSlotAvailable(&this->autoSetTotalTime);
+    this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
+    this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
 	param::EnumParam *sbs = new param::EnumParam(SKYBOX_NONE);
 	sbs->SetTypePair(SKYBOX_NONE,   "None");
@@ -46,99 +49,74 @@ CinematicView::CinematicView(void) : View3D(),
 	sbs->SetTypePair(SKYBOX_DOWN,	"Down");
 	this->selectedSkyboxSideParam << sbs;
 	this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
-
-    this->paramEdit << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->paramEdit);
 }
 
 
-megamol::cinematiccamera::CinematicView::~CinematicView() {}
+/*
+* CinematicView::~CinematicView
+*/
+CinematicView::~CinematicView() {
 
-void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext& context) {
-	auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
-	(*cr3d)(1); // get extents
-
-	auto kfc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-	if (!kfc) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "KeyframeKeeper slot not connected!");
-	}
-
-	
-
-	if (firstframe) {
-		if (autoLoadKeyframes.Param<param::BoolParam>()->Value()) {
-			(*kfc)(CallCinematicCamera::CallForLoadKeyframe);
-		}
-		if (autoSetTotalTime.Param<param::BoolParam>()->Value()) {
-			kfc->setTotalTime(static_cast<float>(cr3d->TimeFramesCount()));
-			(*kfc)(CallCinematicCamera::CallForSetTotalTime);
-		}
-		firstframe = false;
-	}
+}
 
 
-    bool isSelectedKeyFrame = this->selectedKeyframeParam.Param<core::param::BoolParam>()->Value();
-    if (isSelectedKeyFrame) {
-        // Preview the currently selected key frame.
+/*
+* CinematicView::Render
+*/
+void CinematicView::Render(const mmcRenderViewContext& context) {
 
-        if ((*kfc)(CallCinematicCamera::CallForGetSelectedKeyframe)) {
-            auto id = kfc->getSelectedKeyframe().getID();
-            bool isEdit = this->paramEdit.Param<core::param::BoolParam>()->Value();
+	view::CallRender3D *cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
+	if (!(*cr3d)(1)) return; // get extents
 
-            // Note: It is important that we do that before interpolation.
-            if (this->paramEdit.IsDirty()) {
-                if (!isEdit && isSelectedKeyFrame && (id >= 0)) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("Updating key frame %d ...", id);
-                    // Note: It is important to create a deep copy here
-                    kfc->setCameraForNewKeyframe(vislib::SmartPtr<vislib::graphics::CameraParameters>(
-                        new vislib::graphics::CameraParamsStore(*this->cam.Parameters())));
-                    if ((*kfc)(CallCinematicCamera::CallForKeyFrameUpdate)) {
-                        vislib::sys::Log::DefaultLog.WriteInfo("Key frame %d was updated.", id);
-                    }
-                }
-                this->paramEdit.ResetDirty();
-            }
+	CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    if (!ccc) return;
+    // Update data in cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return;
 
-            switch (id) {
-                case -2:
-                    // There is no key frame yet.
-                    break;
+    // Update parameter
+    if (this->viewModeParam.IsDirty()) {
+        this->currentViewMode =static_cast<ViewMode>(this->viewModeParam.Param<param::EnumParam>()->Value());
+        this->viewModeParam.ResetDirty();
+    }
 
-                case -1:
-                    // An interpolated position was selected.
-                    kfc->getInterpolatedKeyframe().putCamParameters(this->cam.Parameters());
-                    break;
+    // Preview the currently selected key frame.
+    if (this->currentViewMode == VIEWMODE_SELECTION) {
 
-                default:
-                    // A key frame was selected.
-                    if (!isEdit) {
-                        kfc->getSelectedKeyframe().putCamParameters(this->cam.Parameters());
-                    }
-                    break;
-            }
-
-            Base::Render(context);
-
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError("CallForGetSelectedKeyframe failed!");
+        // set camera parameters of selected keyframe for this view
+        if (ccc->getKeyframes()->Count() > 0) {
+            Keyframe *s = ccc->getSelectedKeyframe();
+            vislib::SmartPtr<vislib::graphics::CameraParameters> p = s->getCamParameters();
+            this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
+            this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
         }
 
-	} else {
-        // Select the key frame based on the current animation time.
+        Base::Render(context);
+           
+	} 
+    else { // this->currentViewMode == VIEWMODE_ANIMATION
 
-		kfc->setTimeofKeyframeToGet(static_cast<float>(context.Time));
-		if ((*kfc)(CallCinematicCamera::CallForGetKeyframeAtTime)){
-			kfc->getInterpolatedKeyframe().putCamParameters(this->cam.Parameters());
+        if (ccc->getKeyframes()->Count() > 0) {
 
-		}
+            // Select the keyframe based on the current animation time.
+            ccc->setSelectedKeyframeTime(static_cast<float>(context.Time));
+            ccc->setChangedSelectedKeyframeTime(true);
+            // Update data in cinematic camera call
+            if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return;
+    
+            // Set camera parameters of this view based on selected keyframe 
+            Keyframe *k = ccc->getSelectedKeyframe();
+            vislib::SmartPtr<vislib::graphics::CameraParameters> p = k->getCamParameters();
+            this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
+            this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
+        }
 
+        // Adjust cam to selected skybox side
 		vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
 		vislib::math::Point<float, 3> camPos = cp->Position();
 		vislib::math::Vector<float, 3> camRight = cp->Right();
 		vislib::math::Vector<float, 3> camUp = cp->Up();
 		vislib::math::Vector<float, 3> camFront = cp->Front();
 		float tmpDist = cp->FocalDistance();
-		// adjust cam to selected skybox side
 		SkyboxSides side = static_cast<SkyboxSides>(this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
 		if (side != SKYBOX_NONE) {
 			// set aperture angle to 90 deg
@@ -161,13 +139,12 @@ void megamol::cinematiccamera::CinematicView::Render(const mmcRenderViewContext&
 
 		}
 
+        // ...
 		Base::Render(context);
 
 		// reset cam (in case some skybox side was rendered)
 		//if (side != SKYBOX_NONE) {
 		//	cp->SetView(camPos, camPos + camFront * tmpDist, camUp);
 		//}
-
 	}
-
 }

@@ -9,10 +9,14 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "CinematicCamera/CinematicCamera.h"
+
+#include "mmcore/view/View3D.h"
+
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
-#include "mmcore/view/View3D.h"
+
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -22,14 +26,19 @@ namespace megamol {
 		public:
 
 			enum SkyboxSides {
-				SKYBOX_NONE = 0,
+				SKYBOX_NONE  = 0,
 				SKYBOX_FRONT = 1,
-				SKYBOX_BACK = 2,
-				SKYBOX_LEFT = 4,
+				SKYBOX_BACK  = 2,
+				SKYBOX_LEFT  = 4,
 				SKYBOX_RIGHT = 8, 
-				SKYBOX_UP = 16,
-				SKYBOX_DOWN = 32
+				SKYBOX_UP    = 16,
+				SKYBOX_DOWN  = 32
 			};
+
+            enum ViewMode {
+                VIEWMODE_SELECTION = 0,
+                VIEWMODE_ANIMATION = 1
+            };
 
 			typedef core::view::View3D Base;
 
@@ -82,16 +91,25 @@ namespace megamol {
 
 		private:
 
+            /**********************************************************************
+            * callback stuff
+            **********************************************************************/
+
 			/** The keyframe keeper caller slot */
 			core::CallerSlot keyframeKeeperSlot;
 
-			core::param::ParamSlot selectedKeyframeParam;
-			core::param::ParamSlot selectedSkyboxSideParam;
-			core::param::ParamSlot autoLoadKeyframes;
-			core::param::ParamSlot autoSetTotalTime;
-            core::param::ParamSlot paramEdit;
+            /**********************************************************************
+            * parameters
+            **********************************************************************/
 
-			bool firstframe;
+			core::param::ParamSlot viewModeParam;
+			core::param::ParamSlot selectedSkyboxSideParam;
+
+            /**********************************************************************
+            * variables
+            **********************************************************************/
+
+            ViewMode currentViewMode;
 		};
 
 	} /* end namespace cinematiccamera */
