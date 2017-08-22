@@ -22,12 +22,14 @@
 
 #ifdef _DEBUG
 #define MAKE_OBJECT_LABEL(TYPE, ID) (glObjectLabel(TYPE, ID, sizeof(#ID) - 1, #ID))
-#define MAKE_OBJECT_LABEL_EXPLICIT(TYPE, ID, LENGTH, LABEL) (glObjectLabel(TYPE, ID, LENGTH, LABEL))
-#define PUSH_DEBUG_GROUP(ID, LABEL) (glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, ID, sizeof(#LABEL), #LABEL))
+#define MAKE_OBJECT_LABEL_EXPLICIT(TYPE, ID, LABEL) (glObjectLabel(TYPE, ID, -1, LABEL))
+#define INSERT_MARKER(ID, LABEL) (glDebugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, ID, GL_DEBUG_SEVERITY_NOTIFICATION, -1, LABEL))
+#define PUSH_DEBUG_GROUP(ID, LABEL) (glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, ID, -1, #LABEL))
 #define POP_DEBUG_GROUP (glPopDebugGroup())
 #else
 #define MAKE_OBJECT_LABEL
 #define MAKE_OBJECT_LABEL_EXPLICIT
+#define INSERT_MARKER
 #define PUSH_DEBUG_GROUP
 #define POP_DEBUG_GROUP
 #endif
@@ -222,7 +224,7 @@ bool NGParallelCoordinatesRenderer2D::makeProgram(std::string prefix, vislib::gr
 						  "Unable to compile %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
-        MAKE_OBJECT_LABEL_EXPLICIT(GL_PROGRAM, program.ProgramHandle(), pref.Length(), pref.PeekBuffer());
+        MAKE_OBJECT_LABEL_EXPLICIT(GL_PROGRAM, program.ProgramHandle(), pref.PeekBuffer());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
 					      "Unable to compile %s (@%s): %s\n", pref.PeekBuffer(),
@@ -260,7 +262,7 @@ bool NGParallelCoordinatesRenderer2D::makeComputeProgram(std::string prefix, vis
 						  "Unable to link %s: Unknown error\n", pref.PeekBuffer());
             return false;
         }
-        MAKE_OBJECT_LABEL_EXPLICIT(GL_PROGRAM, program.ProgramHandle(), pref.Length(), pref.PeekBuffer());
+        MAKE_OBJECT_LABEL_EXPLICIT(GL_PROGRAM, program.ProgramHandle(), pref.PeekBuffer());
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
