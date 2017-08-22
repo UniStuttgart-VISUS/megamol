@@ -170,7 +170,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		colorTableFileParam(      "22 Color Table Filename", "The filename of the color table."),
 		bFactorAsUncertaintyParam("23 BFactor Uncertainty", "Use the value stored in the BFactor as uncertainty value. Only useful for preprocessed simulation data."),
 		showRMSFParam(            "24 Show RMSF", "Use the computed RMSF and visualize it as uncertainty."),
-        useAlphaBlendingParam(    "25 Alpha Blending instead of Dithering", "Switch from dithering to simple alpha blending of uncertain structure."),
+		maxRMSFParam(             "25 Max. RMSF value", "The maximum RMSF value used for normalization."),
+        useAlphaBlendingParam(    "26 Alpha Blending instead of Dithering", "Switch from dithering to simple alpha blending of uncertain structure."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
@@ -312,6 +313,9 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 
     this->useAlphaBlendingParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->useAlphaBlendingParam);
+
+	this->maxRMSFParam << new core::param::FloatParam(10.0f, 0.0f);
+	this->MakeSlotAvailable(&this->maxRMSFParam);
 
 	this->fences.resize(this->numBuffers);
 }
@@ -741,7 +745,12 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 	if (mol == NULL) return false;
 
 	if ( this->showRMSFParam.Param<megamol::core::param::BoolParam>()->Value()) {
-		firstframe = !protein::computeRMSF(mol);
+		firstframe = protein::computeRMSF(mol);
+		if (firstframe) {
+			vislib::sys::Log::DefaultLog.WriteInfo("Successfully computed RMSF (min: %.3f, max: %.3f).", mol->MinimumBFactor(), mol->MaximumBFactor());
+		} else {
+			vislib::sys::Log::DefaultLog.WriteInfo("Could not compute RMSF.");
+		}
 	}
 
 	// get pointer to UncertaintyDataCall
@@ -981,12 +990,14 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 							  << " | unc index: " << this->synchronizedIndex[aaIdx]
 							  << std::endl;
 					*/
+
 					uncIndex = this->synchronizedIndex[aaIdx];
 					for (unsigned int k = 0; k < this->structCount; k++) {
 						calpha.sortedStruct[k] = static_cast<int>(this->sortedSecStructAssignment[(int)this->currentMethodData][uncIndex][k]);
 						calpha.unc[k] = this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
 						if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
-							calpha.unc[k] = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor())/(mol->MaximumBFactor() - mol->MinimumBFactor());
+							//calpha.unc[k] = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor())/(mol->MaximumBFactor() - mol->MinimumBFactor());
+							calpha.unc[k] = mol->AtomBFactors()[acid->CAlphaIndex()] / (std::fmaxf(mol->MaximumBFactor(), this->maxRMSFParam.Param<param::FloatParam>()->Value()));
 						}
 					}
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
@@ -1001,7 +1012,8 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 					calpha.uncertainty = this->uncertainty[uncIndex];
 
 					if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
-						calpha.uncertainty = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor()) / (mol->MaximumBFactor() - mol->MinimumBFactor());;
+						//calpha.uncertainty = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor()) / (mol->MaximumBFactor() - mol->MinimumBFactor());
+						calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()] / (std::fmaxf(mol->MaximumBFactor(), this->maxRMSFParam.Param<param::FloatParam>()->Value()));
 					}
 					
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];

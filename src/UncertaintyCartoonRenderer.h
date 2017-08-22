@@ -277,6 +277,7 @@ namespace megamol {
 		core::param::ParamSlot bFactorAsUncertaintyParam;
 		core::param::ParamSlot showRMSFParam;
         core::param::ParamSlot useAlphaBlendingParam;
+		core::param::ParamSlot maxRMSFParam;
                 
         // local parameter values 
 		int                            currentTessLevel;
