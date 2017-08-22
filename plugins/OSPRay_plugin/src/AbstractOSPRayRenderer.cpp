@@ -602,20 +602,22 @@ void AbstractOSPRayRenderer::fillWorld() {
 
                 geo.push_back(ospNewGeometry("spheres"));
 
+                vertexData = ospNewData(element.partCount * element.vertexLength, OSP_FLOAT, element.vertexData->data());
+                ospSet1i(geo.back(), "bytes_per_sphere", element.vertexLength * sizeof(float));
+
                 if (element.vertexLength > 3) {
-                    vertexData = ospNewData(element.partCount, OSP_FLOAT4, element.vertexData->data());
-                    ospSet1i(geo.back(), "bytes_per_sphere", 4 * sizeof(float));
+                    //ospRemoveParam(geo.back(), "radius");
                     ospSet1f(geo.back(), "offset_radius", 3 * sizeof(float));
+                    // TODO: HACK
+                    ospSet1f(geo.back(), "radius", 1);
                 } else {
-                    vertexData = ospNewData(element.partCount, OSP_FLOAT3, element.vertexData->data());
-                    ospSet1i(geo.back(), "bytes_per_sphere", 3 * sizeof(float));
                     ospSet1f(geo.back(), "radius", element.globalRadius);
                 }
                 ospCommit(vertexData);
                 ospSetData(geo.back(), "spheres", vertexData);
 
                 if (element.colorLength == 4) {
-                    colorData = ospNewData(element.partCount, OSP_FLOAT4, element.colorData->data());
+                    colorData = ospNewData(element.partCount * element.colorLength, OSP_FLOAT, element.colorData->data());
                     ospCommit(colorData);
                     ospSetData(geo.back(), "color", colorData);
                 } 
