@@ -170,6 +170,7 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 		colorTableFileParam(      "22 Color Table Filename", "The filename of the color table."),
 		bFactorAsUncertaintyParam("23 BFactor Uncertainty", "Use the value stored in the BFactor as uncertainty value. Only useful for preprocessed simulation data."),
 		showRMSFParam(            "24 Show RMSF", "Use the computed RMSF and visualize it as uncertainty."),
+        useAlphaBlendingParam(    "25 Alpha Blending instead of Dithering", "Switch from dithering to simple alpha blending of uncertain structure."),
 		fences(), currBuf(0), bufSize(32 * 1024 * 1024), numBuffers(3), aminoAcidCount(0), resSelectionCall(NULL), molAtomCount(0),
         // this variant should not need the fence
         singleBufferCreationBits(GL_MAP_PERSISTENT_BIT | GL_MAP_WRITE_BIT),
@@ -308,6 +309,9 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void) : Renderer3DModule(
 
 	this->showRMSFParam << new core::param::BoolParam(false);
 	this->MakeSlotAvailable(&this->showRMSFParam);
+
+    this->useAlphaBlendingParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useAlphaBlendingParam);
 
 	this->fences.resize(this->numBuffers);
 }
@@ -1104,6 +1108,18 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
         glUniform1f(this->tubeShader.ParameterLocation("outlineScale"), (GLfloat)this->currentOutlineScaling);
         glUniform3fv(this->tubeShader.ParameterLocation("outlineColor"), 1, (GLfloat *)this->currentOutlineColor.PeekComponents());
 
+
+        // Switch from dithering to alpha blending
+        if (this->useAlphaBlendingParam.Param<megamol::core::param::BoolParam>()->Value()) {
+            glEnable(GL_BLEND);
+            glDisable(GL_DEPTH_TEST);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glUniform1i(this->tubeShader.ParameterLocation("alphaBlending"), 1);
+        }
+        else {
+            glUniform1i(this->tubeShader.ParameterLocation("alphaBlending"), 0);
+        }
+
         // outlining
         int outlinePass = 0;
         if (this->currentOutlineMode != OUTLINE_NONE) {
@@ -1189,6 +1205,12 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisable(GL_TEXTURE_1D);
 		this->tubeShader.Disable();
+
+        // Switch from dithering to alpha blending
+        if (this->useAlphaBlendingParam.Param<megamol::core::param::BoolParam>()->Value()) {
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+        }
 	}
 
 

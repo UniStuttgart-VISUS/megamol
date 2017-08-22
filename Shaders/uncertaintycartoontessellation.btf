@@ -295,6 +295,7 @@
     uniform float minDistance = 1.0;                                    // UNUSED ?
     uniform float maxDistance = 1.0;                                    // UNUSED ?
     
+    uniform int                 alphaBlending     = 0;                  // Using alpha blending instead of dithering
     uniform int                 ditherCount       = 0;                  // DITHERING - current dithering pass - in range [1,number of sec truct types - 1], dithering is disabled for 0
     uniform bool                interpolateColors = false;
     uniform bool                onlyTubes         = false;  
@@ -835,6 +836,14 @@
 
             gl_Position = mypos;
         }
+        
+        /*
+        if ((ditherCount > 0) && (alphaBlending == 1)) {
+            CAlpha alpha = atoms[id[1]]; 
+            uncVal[0] = alpha.unc[alpha.sortedStruct[0]];
+        }
+        */
+        
     }
 -->
       </snippet>
@@ -955,6 +964,7 @@
     uniform vec4 phong          = vec4(0.6, 0.6, 0.8, 10.0);             // ambient - diffuse - specular - exponent
     uniform vec4 phongUncertain = vec4(0.6, 0.6, 0.8, 10.0);    
   
+    uniform int  alphaBlending  = 0;                                     // Using alpha blending instead of dithering
     uniform int  ditherCount    = 0;                                     // DITHERING - current dithering pass - in range [0,number of struct types - 1]                   
     uniform int  outlineMode    = 0;
     uniform vec3 outlineColor;
@@ -985,22 +995,26 @@
             outCol = vec4(outlineColor.xyz, 1.0);
         }
         else {
+            vec4 material = phong;
+        
             // dithering - check if fragment is discarded
             if (ditherCount > 0) {
-                if ((uncValues[1] - uncValues[2]) < EPS) {
-                    discard;  
-                }
-                else {
-                    int index = (int(gl_FragCoord.y)%8 * 8 + int(gl_FragCoord.x)%8);
-                    float t   = dithMat[index] / 64.0;
-                    // draw fragment only if (uncValues[1] = start = max) >= t >=  (uncValues[2] = end = min)
-                    if ((t > uncValues[1]) || (uncValues[2] > t)) { 
-                        discard;
-                    }   
+                if (alphaBlending == 0) {
+                    if ((uncValues[1] - uncValues[2]) < EPS) {
+                        discard;  
+                    }
+                    else {
+                        int index = (int(gl_FragCoord.y)%8 * 8 + int(gl_FragCoord.x)%8);
+                        float t   = dithMat[index] / 64.0;
+                        // draw fragment only if (uncValues[1] = start = max) >= t >=  (uncValues[2] = end = min)
+                        if ((t > uncValues[1]) || (uncValues[2] > t)) { 
+                            discard;
+                        }   
+                    }
                 }
             }
         
-		    vec4 material = phong;
+		    
             // assign uncertain material properties if probability of assigned structure is > 0.0
             if (uncValues[0]  > 0.0) {
                 material = phongUncertain;
@@ -1027,6 +1041,10 @@
             }
         
             outCol = vec4(c, 1.0);
+        
+            if ((ditherCount > 0) && (alphaBlending == 1)) {        
+                outCol = vec4(c, 1.0 - uncValues[0]);
+            }
         }
     }
 -->
