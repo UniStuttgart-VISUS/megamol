@@ -8,6 +8,11 @@
 #include "stdafx.h"
 #include "RamachandranPlot.h"
 
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ColourParser.h"
 #include <iostream>
 
 using namespace megamol;
@@ -18,10 +23,26 @@ using namespace megamol::protein_calls;
  * RamachandranPlot::RamachandranPlot
  */
 RamachandranPlot::RamachandranPlot(void) : Renderer2DModule(),
-	molDataSlot("molecularDataIn","Slot for the incoming molecular data") {
+	molDataSlot("molecularDataIn","Slot for the incoming molecular data"),
+	pointSize("pointSize", "The size of the drawn points"),
+	ownBBParam("drawBBExtra", "Tell the renderer to draw the bounding box again in black, in case the background is white"),
+	pointColorParam("pointColor", "The color of the drawn points")
+#ifndef USE_SIMPLER_FONT
+	,theFont(vislib::graphics::gl::FontInfo_Verdana)
+#endif
+{
 
 	this->molDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable(&this->molDataSlot);
+
+	this->pointSize << new core::param::IntParam(10, 1, 20);
+	this->MakeSlotAvailable(&this->pointSize);
+
+	this->pointColorParam << new core::param::StringParam("#ffffff");
+	this->MakeSlotAvailable(&this->pointColorParam);
+
+	this->ownBBParam << new core::param::BoolParam(false);
+	this->MakeSlotAvailable(&this->ownBBParam);
 }
 
 /**
@@ -35,30 +56,6 @@ RamachandranPlot::~RamachandranPlot(void) {
  * RamachandranPlot::create
  */
 bool RamachandranPlot::create(void) {
-	std::cout << "create" << std::endl;
-	return true;
-}
-
-/**
- * RamachandranPlot::release
- */
-void RamachandranPlot::release(void) {
-}
-
-/**
- * RamachandranPlot::MouseEvent
- */
-bool RamachandranPlot::MouseEvent(float x, float y, core::view::MouseFlags flags) {
-	bool consumeEvent = false;
-	return consumeEvent;
-}
-
-/**
- * RamachandranPlot::GetExtents
- */
-bool RamachandranPlot::GetExtents(core::view::CallRender2D& call) {
-	call.SetBoundingBox(-180.0f, -180.0f, 180.0f, 180.0f);
-
 	// be careful here, the point order is important to be able to draw all of this as GL_TRIANGLE_FAN
 
 	// light sheets
@@ -116,7 +113,7 @@ bool RamachandranPlot::GetExtents(core::view::CallRender2D& call) {
 	poly.push_back(vislib::math::Vector<float, 2>(-106.9f, -21.4f));
 	poly.push_back(vislib::math::Vector<float, 2>(-44.3f, -21.4f));
 	poly.push_back(vislib::math::Vector<float, 2>(-44.3f, -71.1f));
-	
+
 	semiHelixPolygons.push_back(poly);
 
 	// helix central
@@ -129,6 +126,36 @@ bool RamachandranPlot::GetExtents(core::view::CallRender2D& call) {
 	poly.push_back(vislib::math::Vector<float, 2>(-156.5f, -51.0f));
 	poly.push_back(vislib::math::Vector<float, 2>(-156.5f, -60.4f));
 	sureHelixPolygons.push_back(poly);
+	return true;
+}
+
+/**
+ * RamachandranPlot::release
+ */
+void RamachandranPlot::release(void) {
+}
+
+/**
+ * RamachandranPlot::MouseEvent
+ */
+bool RamachandranPlot::MouseEvent(float x, float y, core::view::MouseFlags flags) {
+	bool consumeEvent = false;
+	return consumeEvent;
+}
+
+/**
+ * RamachandranPlot::GetExtents
+ */
+bool RamachandranPlot::GetExtents(core::view::CallRender2D& call) {
+	call.SetBoundingBox(-180.0f, -180.0f, 180.0f, 180.0f);
+
+	MolecularDataCall * mol = this->molDataSlot.CallAs<MolecularDataCall>();
+
+	if (mol != nullptr && ((*mol)(MolecularDataCall::CallForGetExtent))) {
+		call.SetTimeFramesCount(mol->FrameCount());
+	} else {
+		call.SetTimeFramesCount(1);
+	}
 
 	return true;
 }
@@ -141,10 +168,13 @@ bool RamachandranPlot::Render(core::view::CallRender2D& call) {
 	MolecularDataCall * mol = this->molDataSlot.CallAs<MolecularDataCall>();
 	if (mol == nullptr) return false;
 
+	mol->SetFrameID(static_cast<unsigned int>(call.Time()), true);
 	if (!(*mol)(MolecularDataCall::CallForGetExtent)) return false;
+	mol->SetFrameID(static_cast<unsigned int>(call.Time()), true);
 	if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
 
 	computeDihedralAngles(mol);
+	computePolygonPositions();
 
 	// draw the unsure sheet polygons
 	for (auto & poly : semiSheetPolygons) {
@@ -200,15 +230,97 @@ bool RamachandranPlot::Render(core::view::CallRender2D& call) {
 		glEnd();
 	}
 
+	glEnable(GL_LINE_STIPPLE);
+	glLineStipple(1, 0x5555);
+	glBegin(GL_LINES);
+	glColor3f(0.4f, 0.4f, 0.4f);
+	glVertex2f(0.0f, -180.0f);
+	glVertex2f(0.0f, 180.0f);
+	glVertex2f(-180.0f, 0.0f);
+	glVertex2f(180.0f, 0.0f);
+	glEnd();
+	glDisable(GL_LINE_STIPPLE);
+
+
+	float r, g, b;
+	core::utility::ColourParser::FromString(this->pointColorParam.Param<core::param::StringParam>()->Value(), r, g, b);
+	glPointSize(static_cast<GLfloat>(this->pointSize.Param<core::param::IntParam>()->Value()));
 	// draw the points
 	glBegin(GL_POINTS);
-	glColor3f(1.0f, 1.0f, 1.0f);
-	for (int i = 0; i < this->angles.size(); i++) {
-		for (int j = 0; j < this->angles[i].size(); j = j + 2) {
-			glVertex2f(this->angles[i][j], this->angles[i][j + 1]);
+	glColor3f(r, g, b);
+	for (int i = 0; i < static_cast<int>(this->angles.size()); i++) {
+		for (int j = 0; j < static_cast<int>(this->angles[i].size()); j = j + 2) {
+			switch (this->pointStates[i][j / 2]) {
+			case NONE: 
+				glColor3f(r, g, b);
+				break;
+			case UNSURE_ALPHA:
+				glColor3f(0.5f, 0.5f, 0.0f);
+				break;
+			case SURE_ALPHA:
+				glColor3f(1.0f, 1.0f, 0.0f);
+				break;
+			case UNSURE_BETA:
+				glColor3f(0.0f, 0.5f, 0.5f);
+				break;
+			case SURE_BETA:
+				glColor3f(0.0f, 1.0f, 1.0f);
+				break;
+			default: 
+				glColor3f(r, g, b);
+				break;
+			}
+			if (this->angles[i][j] > -500.0f && this->angles[i][j + 1] > -500.0f) {
+				glVertex2f(this->angles[i][j], this->angles[i][j + 1]);
+			}
 		}
 	}
 	glEnd();
+
+	if (this->ownBBParam.Param<core::param::BoolParam>()->Value()) {
+		// draw the bounding box
+		glLineWidth(1.0f);
+		glBegin(GL_LINE_LOOP);
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glVertex2f(-180.0f, -180.0f);
+		glVertex2f(-180.0f, 180.0f);
+		glVertex2f(180.0f, 180.0f);
+		glVertex2f(180.0f, -180.0f);
+		glEnd();
+	}
+
+	if (theFont.Initialise()) {
+		vislib::StringA mystring;
+		float fontsize = 20.0f;
+		float wordlength;
+
+		// draw labels
+		mystring = L"phi";
+		wordlength = theFont.LineWidth(fontsize, mystring);
+		theFont.DrawString(0.0, -200.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+
+		mystring = L"psi";
+		wordlength = theFont.LineWidth(fontsize, mystring);
+		theFont.DrawString(-200.0f, 0.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_RIGHT_MIDDLE);
+
+		fontsize = 10.0f;
+
+		mystring = L"0°";
+		wordlength = theFont.LineWidth(fontsize, mystring);
+		theFont.DrawString(0.0f, -180.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
+		theFont.DrawString(-180.0f, 0.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_RIGHT_MIDDLE);
+
+		fontsize = 5.0f;
+		mystring = L"180°";
+		wordlength = theFont.LineWidth(fontsize, mystring);
+		theFont.DrawString(180.0f, -180.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);
+		theFont.DrawString(-180.0f, 180.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_RIGHT_TOP);
+
+		mystring = L"-180°";
+		wordlength = theFont.LineWidth(fontsize, mystring);
+		theFont.DrawString(-180.0f, -180.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_RIGHT_BOTTOM);
+		theFont.DrawString(-180.0f, -180.0f, wordlength + 1.0f, 1.0f, mystring, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
+	}
 
 	return true;
 }
@@ -231,6 +343,7 @@ void RamachandranPlot::computeDihedralAngles(MolecularDataCall * mol) {
 
 	int molCount = mol->MoleculeCount();
 	this->angles.resize(molCount);
+	this->pointStates.resize(molCount);
 
 	// the 5 needed positions for the dihedral angles
 	vislib::math::Vector<float, 3> prevCPos;
@@ -265,6 +378,7 @@ void RamachandranPlot::computeDihedralAngles(MolecularDataCall * mol) {
 					// TODO is this correct?
 					this->angles[molIdx].push_back(-1000.0f);
 					this->angles[molIdx].push_back(-1000.0f);
+					this->pointStates[molIdx].push_back(PointState::NONE);
 					continue;
 				}
 
@@ -313,11 +427,64 @@ void RamachandranPlot::computeDihedralAngles(MolecularDataCall * mol) {
 
 				this->angles[molIdx].push_back(phi);
 				this->angles[molIdx].push_back(psi);
+				this->pointStates[molIdx].push_back(PointState::NONE);
 
 				/*acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
 				if (acid != nullptr) {
 					std::cout << "Acid " << aaIdx << ": " << mol->ResidueTypeNames()[acid->Type()] << "; phi = " << phi << "  psi = " << psi << std::endl;
 				}*/
+			}
+		}
+	}
+}
+
+/**
+ * RamachandranPlot::computePolygonPositions
+ */
+void RamachandranPlot::computePolygonPositions(void) {
+	for (int molIdx = 0; molIdx < static_cast<int>(this->angles.size()); molIdx++) {
+		for (int i = 0; i < static_cast<int>(this->angles[molIdx].size()); i = i + 2) {
+			vislib::math::Vector<float, 2> pos(&this->angles[molIdx][i]);
+
+			if (pos.X() < -500.0f || pos.Y() < -500.0f) continue;
+
+			float posx = pos.X();
+			float posy = pos.Y();
+
+			bool semiHelixState = false;
+			bool semiSheetState = false;
+			bool trueHelixState = false;
+			bool trueSheetState = false;
+
+			// test against sheets
+			for (auto & semiSheet : this->semiSheetPolygons) {
+				semiSheetState = locateInPolygon(semiSheet, pos) ? true : semiSheetState;
+			}
+
+			for (auto & sureSheet : this->sureSheetPolygons) {
+				trueSheetState = locateInPolygon(sureSheet, pos) ? true : trueSheetState;
+			}
+
+			// test against helices
+			for (auto & semiHelix : this->semiHelixPolygons) {
+				semiHelixState = locateInPolygon(semiHelix, pos) ? true : semiHelixState;
+			}
+
+			for (auto & sureHelix : this->sureHelixPolygons) {
+				trueHelixState = locateInPolygon(sureHelix, pos) ? true : trueHelixState;
+			}
+
+			if (semiSheetState) {
+				this->pointStates[molIdx][i / 2] = PointState::UNSURE_BETA;
+			}
+			if (trueSheetState) {
+				this->pointStates[molIdx][i / 2] = PointState::SURE_BETA;
+			}
+			if (semiHelixState) {
+				this->pointStates[molIdx][i / 2] = PointState::UNSURE_ALPHA;
+			}
+			if (trueHelixState) {
+				this->pointStates[molIdx][i / 2] = PointState::SURE_ALPHA;
 			}
 		}
 	}
@@ -343,4 +510,26 @@ float RamachandranPlot::dihedralAngle(const vislib::math::Vector<float, 3>& v1, 
 		result = -result;
 	}
 	return vislib::math::AngleRad2Deg(result);
+}
+
+/**
+ * RamachandranPlot::locateInPolygon
+ */
+bool RamachandranPlot::locateInPolygon(const std::vector<vislib::math::Vector<float, 2>>& polyVector, const vislib::math::Vector<float, 2> inputPos) {
+	int nvert = static_cast<int>(polyVector.size());
+	int i, j, c = 0;
+	float testx = inputPos.X();
+	float testy = inputPos.Y();
+	for (i = 0, j = nvert - 1; i < nvert; j = i++) {
+		float vertxi = polyVector[i].X();
+		float vertxj = polyVector[j].X();
+		float vertyi = polyVector[i].Y();
+		float vertyj = polyVector[j].Y();
+
+		if (((vertyi > testy) != (vertyj > testy)) &&
+			(testx < (vertxj - vertxi) * (testy - vertyi) / (vertyj - vertyi) + vertxi)) {
+			c = !c;
+		}
+	}
+	return (c != 0);
 }

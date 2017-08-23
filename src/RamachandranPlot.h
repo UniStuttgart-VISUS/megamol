@@ -19,10 +19,10 @@
 
 #ifdef USE_SIMPLER_FONT
 #include "vislib/graphics/gl/SimpleFont.h"
-#else //  USE_SIMPLE_FONT
+#else //  USE_SIMPLER_FONT
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
-#endif //  USE_SIMPLE_FONT
+#endif //  USE_SIMPLER_FONT
 
 #include "protein_calls/MolecularDataCall.h"
 
@@ -91,6 +91,14 @@ namespace protein_uncertainty {
         virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 	private:
 
+		enum PointState {
+			NONE = 0,
+			UNSURE_ALPHA = 1,
+			SURE_ALPHA = 2,
+			UNSURE_BETA = 3,
+			SURE_BETA = 4
+		};
+
 		/**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
@@ -118,6 +126,20 @@ namespace protein_uncertainty {
 		void computeDihedralAngles(protein_calls::MolecularDataCall * mol);
 
 		/**
+		 * Computes the polygon positions of each available amino acid.
+		 */
+		void computePolygonPositions(void);
+
+		/**
+		 *	Tells whether a given point lies inside a given polygon
+		 *
+		 * @param polyVector A vector containing all points of the polygon ordererd clockwise or counterclockwise
+		 * @param inputPos The position to test against the polygon
+		 * @return True, if the point lies inside the polygon, false otherwise
+		 */
+		bool locateInPolygon(const std::vector<vislib::math::Vector<float, 2>>& polyVector, const vislib::math::Vector<float, 2> inputPos);
+
+		/**
 		 * Computes the dihedral angle between four given vectors
 		 *
 		 * @param v1 The first vector
@@ -132,13 +154,27 @@ namespace protein_uncertainty {
 		/** The call for the molecular data */
 		core::CallerSlot molDataSlot;
 
+		/** Parameter slot for the drawn point size */
+		core::param::ParamSlot pointSize;
+		/** Parameter for the drawing of the own bounding box */
+		core::param::ParamSlot ownBBParam;
+		/** Parameter for the point color */
+		core::param::ParamSlot pointColorParam;
+
 		/** Vector containing all dihedral angles for all molecules. */
 		std::vector<std::vector<float>> angles;
+		std::vector<std::vector<PointState>> pointStates;
 
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> sureHelixPolygons;
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> sureSheetPolygons;
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> semiHelixPolygons;
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> semiSheetPolygons;
+
+#ifdef USE_SIMPLER_FONT
+		vislib::graphics::gl::SimpleFont theFont;
+#else
+		vislib::graphics::gl::OutlineFont theFont;
+#endif
 	};
 }
 }
