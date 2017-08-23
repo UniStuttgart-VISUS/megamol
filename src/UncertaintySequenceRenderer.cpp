@@ -898,7 +898,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     if (i == 0) {
                         first = 0.0f;
                     }
-                    else if (i == this->aminoAcidCount - 1) {
+                    if (i == this->aminoAcidCount - 1) {
                         last = 1.0f;
                     }
 
@@ -909,9 +909,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     glVertex3f(posOffset.X() + last, -posOffset.Y() + loBound, 0.0f);
                     glEnd();
                 }
-
                 // draw geometry additionally at line endings
-                if (i % this->resCols == (this->resCols - 1) && (i < this->aminoAcidCount - 1)) {
+                if ((i % this->resCols == (this->resCols - 1)) && (i < this->aminoAcidCount - 1)) {
                     if (sucCnt == curCnt) {
                         float first = 0.5f;
                         float last = 1.5f;
@@ -967,8 +966,21 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         glEvalMesh1(GL_LINE, 0, steps);
                     }
                 }
+                // Draw last segment for last aminoacid
+                if (i == this->aminoAcidCount - 1) {
+                    float first = 0.5f;
+                    float last = 1.0f;
 
-                // separator of uncertain amino-acids
+                    glBegin(GL_LINES);
+                    glVertex3f(posOffset.X() + first, -posOffset.Y() + upBound, 0.0f);
+                    glVertex3f(posOffset.X() + last, -posOffset.Y() + upBound, 0.0f);
+                    glVertex3f(posOffset.X() + first, -posOffset.Y() + loBound, 0.0f);
+                    glVertex3f(posOffset.X() + last, -posOffset.Y() + loBound, 0.0f);
+                    glEnd();
+                }
+
+
+                // separator of  amino-acids
                 if (this->showSeparatorLine) {
 
                     float off = 0.35f;
@@ -987,19 +999,31 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     glEnd();
 
                     // draw geometry twice at line endings
-                    if ((i > 0) && (i % this->resCols == (this->resCols-1))) {
+                    if (i == this->aminoAcidCount - 1) {
+
+                        upBound = -1.0f*(float)(this->methodRows - curCnt) / 2.0f;
+                        loBound = upBound - (float)curCnt;
+
+                        glBegin(GL_LINES);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, 0.5f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + loBound, 0.5f);
+                        glEnd();
+                    }
+                    else if ((i > 0) && (i % this->resCols == (this->resCols-1))) {
+
                         upBndPre = -1.0f*(float)(this->methodRows - sucCnt) / 2.0f;
                         loBndPre = upBndPre - (float)sucCnt;
 
                         if (sucCnt != curCnt) {
-                            upBound = (upBound > upBndPre) ? (upBound - off) : (upBndPre - off);
-                            loBound = (loBndPre > loBound) ? (loBound + off) : (loBndPre + off);
+                            upBound = (upBound > upBndPre) ? (upBound ) : (upBndPre - off);
+                            loBound = (loBndPre > loBound) ? (loBound ) : (loBndPre + off);
                         }
                         glBegin(GL_LINES);
                         glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, 0.5f);
                         glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + loBound, 0.5f);
                         glEnd();
                     }
+
                 }
 
                 glDisable(GL_DEPTH_TEST);
@@ -1136,8 +1160,6 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
             GLfloat tmpLw;
             glGetFloatv(GL_LINE_WIDTH, &tmpLw);
 
-            float offsetTmp = offset;
-
             for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                 
                 posOffset.SetX(this->vertices[2 * i]);
@@ -1167,20 +1189,21 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 }
 
                 glColor3f(0.0f, 0.0f, 0.0f);
-                //glLineWidth(1.0f);
-                glDisable(GL_DEPTH_TEST);
+                glLineWidth(1.5f);
+                glEnable(GL_DEPTH_TEST);
 
-                if (uncCur >= 1.0f) {
-                    if (uncPre < 1.0f) {
 
+                if (uncCur >= 1.0f) { // certain
+
+                    if ((uncPre < 1.0f) && (i % this->resCols != 0)) {
                         // upper closing brackets
                         GLfloat cpUpClose[4][3] = {
-                            { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + offset, 0.0f },
-                            { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + upBound, 0.0f } };
+                            { posOffset.X() + 0.5f, -posOffset.Y() + offset, -0.2f },{ posOffset.X() - 0.5f, -posOffset.Y() + offset, -0.2f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() + upBound, -0.2f },{ posOffset.X() - 0.5f, -posOffset.Y() + upBound, -0.2f } };
                         // lower closing brackets
                         GLfloat cpDownClose[4][3] = {
-                            { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() + 0.0f, 0.0f },
-                            { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() - 0.5f, -posOffset.Y() - loBound, 0.0f } };
+                            { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, -0.2f },{ posOffset.X() - 0.5f, -posOffset.Y() + 0.0f, -0.2f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() - loBound, -0.2f },{ posOffset.X() - 0.5f, -posOffset.Y() - loBound, -0.2f } };
 
                         glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpClose[0][0]);
                         glEnable(GL_MAP1_VERTEX_3);
@@ -1191,23 +1214,24 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                     else {
                         glBegin(GL_LINES);
-                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() + offset);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + offset);
-                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() + 0.0f);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + 0.0f);
+                        glVertex3f(posOffset.X() + 0.0f, -posOffset.Y() + offset, -0.2f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + offset, -0.2f);
+                        glVertex3f(posOffset.X() + 0.0f, -posOffset.Y() + 0.0f, -0.2f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, -0.2f);
                         glEnd();
                     }
-                    if (uncSuc < 1.0f) {
+
+                    if ((uncSuc < 1.0f) && (i % this->resCols != (this->resCols - 1))) {
 
                         // upper opening brackets 
                         GLfloat cpUpOpen[4][3] = {
-                            { posOffset.X() + 0.5f, -posOffset.Y() + offset, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + offset, 0.0f },
-                            { posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + upBound, 0.0f } };
+                            { posOffset.X() + 0.5f, -posOffset.Y() + offset, -0.2f },{ posOffset.X() + 1.5f, -posOffset.Y() + offset, -0.2f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() + upBound, -0.2f },{ posOffset.X() + 1.5f, -posOffset.Y() + upBound, -0.2f } };
 
                         // lower opening brackets 
                         GLfloat cpDownOpen[4][3] = {
-                            { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() + 0.0f, 0.0f },
-                            { posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f },{ posOffset.X() + 1.5f, -posOffset.Y() - loBound, 0.0f } };
+                            { posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, -0.2f },{ posOffset.X() + 1.5f, -posOffset.Y() + 0.0f, -0.2f },
+                            { posOffset.X() + 0.5f, -posOffset.Y() - loBound, -0.2f },{ posOffset.X() + 1.5f, -posOffset.Y() - loBound, -0.2f } };
 
                         glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &cpUpOpen[0][0]);
                         glEnable(GL_MAP1_VERTEX_3);
@@ -1218,46 +1242,120 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     }
                     else {
                         glBegin(GL_LINES);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + offset);
-                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + offset);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + 0.0f);
-                        glVertex2f(posOffset.X() + 1.0f, -posOffset.Y() + 0.0f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + offset, -0.2f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + offset, -0.2f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + 0.0f, -0.2f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + 0.0f, -0.2f);
                         glEnd();
                     }
                 }
                 else {
-                    if (uncPre < 1.0f) {
+                    if ((uncPre < 1.0f) || (i % this->resCols == 0)) {
                         glBegin(GL_LINES);
-                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() + upBound);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() + upBound);
-                        glVertex2f(posOffset.X() + 0.0f, -posOffset.Y() - loBound);
-                        glVertex2f(posOffset.X() + 0.5f, -posOffset.Y() - loBound);
+                        glVertex3f(posOffset.X() + 0.0f, -posOffset.Y() + upBound, -0.2f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + upBound, -0.2f);
+                        glVertex3f(posOffset.X() + 0.0f, -posOffset.Y() - loBound, -0.2f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() - loBound, -0.2f);
                         glEnd();
                     }
-                    if (uncSuc < 1.0f) {
-                        glEnable(GL_DEPTH_TEST);
-
+                    if ((uncSuc < 1.0f) || (i % this->resCols == (this->resCols - 1))) {
                         glBegin(GL_LINES);
-                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + upBound, 0.0f);
-                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, 0.0f);
-                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() - loBound, 0.0f);
-                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() - loBound, 0.0f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() + upBound, -0.2f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, -0.2f);
+                        glVertex3f(posOffset.X() + 0.5f, -posOffset.Y() - loBound, -0.2f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() - loBound, -0.2f);
                         glEnd();
-
-                        // separator of uncertain amino-acids
-                        if (this->showSeparatorLine) {
-                            glColor3f(0.8f, 0.8f, 0.8f);
-                            //glLineWidth(1.0f);
-
-                            glBegin(GL_LINES);
-                            glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBound, 0.5f);
-                            glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() - loBound, 0.5f);
-                            glEnd();
-                                
-                        }
-                        glDisable(GL_DEPTH_TEST);
                     }
                 }
+
+                // separator of  amino-acids
+                if (this->showSeparatorLine) {
+                    float ofst       = 1.25f;
+                    float upBoundTmp = offset;
+                    float loBoundTmp = 0.0f;
+
+                    glColor3f(0.8f, 0.8f, 0.8f);
+                    //glLineWidth(1.0f);
+
+                    // draw geometry twice at line endings
+                    if (i == this->aminoAcidCount - 1) { // end of protein
+                        
+                        if (uncCur >= 1.0f) { // certain
+                            upBoundTmp = offset;
+                            loBoundTmp = 0.0f;
+                        }
+                        else {
+                            upBoundTmp = upBound;
+                            loBoundTmp = loBound;
+                        }
+                                  
+                        glBegin(GL_LINES);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBoundTmp, 0.5f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() - loBoundTmp, 0.5f);
+                        glEnd();
+                    }
+                    else if (i % this->resCols == (this->resCols - 1)) { // end of line
+
+                        if (uncCur >= 1.0f) { // certain
+                            upBoundTmp = offset;
+                            loBoundTmp = 0.0f;
+                        }
+                        else {
+                            upBoundTmp = upBound;
+                            loBoundTmp = loBound;
+                        }
+
+                        glBegin(GL_LINES);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() + upBoundTmp, 0.5f);
+                        glVertex3f(posOffset.X() + 1.0f, -posOffset.Y() - loBoundTmp, 0.5f);
+                        glEnd();
+                    }
+                    
+                    if (i % this->resCols == 0) { // beginning of line
+                        if (uncCur >= 1.0f) { // certain
+                            upBoundTmp = offset;
+                            loBoundTmp = 0.0f;
+                        }
+                        else {
+                            upBoundTmp = upBound;
+                            loBoundTmp = loBound;
+                        }
+
+                        glBegin(GL_LINES);
+                        glVertex3f(posOffset.X() + 0.0f, -posOffset.Y() + upBoundTmp, 0.5f);
+                        glVertex3f(posOffset.X() + 0.0f, -posOffset.Y() - loBoundTmp, 0.5f);
+                        glEnd();
+                    }
+                    else { // else ...
+                        if (uncCur >= 1.0f) { // certain
+                            if (uncPre < 1.0f) {
+                                upBoundTmp = upBound - ofst;
+                                loBoundTmp = loBound - ofst;
+                            }
+                            else {
+                                // do nothing
+                            }
+                        }
+                        else {
+                            if (uncPre < 1.0f) {
+                                upBoundTmp = upBound;
+                                loBoundTmp = loBound;
+                            }
+                            else {
+                                upBoundTmp = upBound - ofst;
+                                loBoundTmp = loBound - ofst;
+                            }
+                        }
+
+                        glBegin(GL_LINES);
+                        glVertex3f(posOffset.X(), -posOffset.Y() + upBoundTmp, 0.5f);
+                        glVertex3f(posOffset.X(), -posOffset.Y() - loBoundTmp, 0.5f);
+                        glEnd();
+                    }
+
+                }
+                glDisable(GL_DEPTH_TEST);
+
             }
 
             // draw uncertainty 
@@ -1417,6 +1515,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 this->RenderUncertainty(yPos, fgColor, bgColor);
 
                 // draw frames for uncertain amino-acid structure
+                /*
                 if (this->showSeparatorLine) {
 
                     // store current glPolygonMode
@@ -1438,7 +1537,31 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                   
                 }
+                */
                 yPos += 1.0f;
+            }
+
+
+            // separator of  amino-acids
+            if (this->showSeparatorLine) {
+                vislib::math::Vector<float, 2> posOffset;
+                for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+
+                    posOffset.SetX(this->vertices[2 * i]);
+                    posOffset.SetY(this->vertices[2 * i + 1] + yPos - 1.0f);
+
+                    float ofst = 1.25f;
+                    float upBoundTmp = 0.0f;
+                    float loBoundTmp = 1.0f;
+
+                    glColor3f(0.8f, 0.8f, 0.8f);
+                    //glLineWidth(1.0f);
+
+                    glBegin(GL_LINES);
+                    glVertex3f(posOffset.X(), -posOffset.Y() + upBoundTmp, 0.5f);
+                    glVertex3f(posOffset.X(), -posOffset.Y() - 1.0f, 0.5f);
+                    glEnd();
+                }
             }
         }
 
@@ -2255,7 +2378,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
     vislib::Array<vislib::math::Vector<UncertaintyDataCall::secStructure, static_cast<int>(UncertaintyDataCall::secStructure::NOE)> > *sortedUncertainty = 
         &this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::UNCERTAINTY];
 
-	glDisable(GL_DEPTH_TEST); // disabled depth test is necessary because of geometry overlay drawing
+	//glDisable(GL_DEPTH_TEST); // disabled depth test is necessary because of geometry overlay drawing
 
 	if (this->toggleWireframeParam.Param<param::BoolParam>()->Value()) {
 		glLineWidth(1.0f);
@@ -2283,18 +2406,15 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
                     // block chart color
                     if (this->currentCertainBlockChartColor == CERTAIN_BC_COLORED) {
                         glColor3fv(this->secStructColor[sMax].PeekComponents());
-                    }
-                    else { // this->currentCertainBlockChartColor == CERTAIN_BC_NONE
-                        glColor3fv(bgColor);
-                    }
 
-                    // draw block chart quad
-                    glBegin(GL_QUADS);
-                    glVertex2f(posOffset.X(),        -(posOffset.Y() - 1.0f));
-                    glVertex2f(posOffset.X(),        -(posOffset.Y()));
-                    glVertex2f(posOffset.X() + 1.0f, -(posOffset.Y()));
-                    glVertex2f(posOffset.X() + 1.0f, -(posOffset.Y() - 1.0f));          
-                    glEnd();
+                        // draw block chart quad
+                        glBegin(GL_QUADS);
+                        glVertex2f(posOffset.X(), -(posOffset.Y() - 1.0f));
+                        glVertex2f(posOffset.X(), -(posOffset.Y()));
+                        glVertex2f(posOffset.X() + 1.0f, -(posOffset.Y()));
+                        glVertex2f(posOffset.X() + 1.0f, -(posOffset.Y() - 1.0f));
+                        glEnd();
+                    }
         
                     // draw colored structure only when block chart is not colored
                     if (!((this->currentCertainBlockChartColor == CERTAIN_BC_COLORED) && (this->currentCertainStructColor == CERTAIN_STRUCT_COLORED))) {
@@ -2777,7 +2897,7 @@ void UncertaintySequenceRenderer::RenderUncertainty(float yPos, float fgColor[4]
         }
     }
 
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
