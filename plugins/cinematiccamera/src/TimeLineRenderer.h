@@ -135,6 +135,9 @@ namespace megamol {
             float                          markerSize;
             float                          maxTime;
 
+            float                          lastMouseX;
+            float                          lastMouseY;
+
             /**********************************************************************
             * callback stuff
             **********************************************************************/

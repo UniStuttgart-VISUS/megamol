@@ -37,7 +37,11 @@ namespace megamol {
 		public:
 
 			/** function name for getting all Keyframes */
-			static const unsigned int CallForUpdateKeyframeKeeper = 0;
+			static const unsigned int CallForUpdateKeyframeKeeperData     = 0;
+			static const unsigned int CallForSetTotalTime                 = 1;
+			static const unsigned int CallForRequestInterpolatedKeyframe  = 2;
+			static const unsigned int CallForSetSelectedKeyframe          = 3;
+			static const unsigned int CallForSetCameraForKeyframe         = 4;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -63,7 +67,7 @@ namespace megamol {
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return 1;
+				return 5;
 			}
 
 			/**
@@ -75,7 +79,11 @@ namespace megamol {
 			*/
 			static const char * FunctionName(unsigned int idx) {
 				switch (idx) {
-					case CallForUpdateKeyframeKeeper: return "CallForUpdateKeyframeKeeper";
+					case CallForUpdateKeyframeKeeperData:     return "CallForUpdateKeyframeKeeperData";
+					case CallForSetTotalTime:                 return "CallForSetTotalTime";
+					case CallForRequestInterpolatedKeyframe:  return "CallForRequestInterpolatedKeyframe";
+					case CallForSetSelectedKeyframe:          return "CallForSetSelectedKeyframe";
+					case CallForSetCameraForKeyframe:         return "CallForSetCameraForKeyframe";
 					default: return "";
 				}
 				
@@ -100,13 +108,6 @@ namespace megamol {
                 this->keyframes = kfs;
             }
 
-            inline void setChangedKeyframes(bool b) {
-                this->keyframesChanged = b;
-            }
-            inline bool changedKeyframes() {
-                return this->keyframesChanged;
-            }
-
 
             // BOUNDINGBOX
             inline void setBoundingBox(vislib::math::Cuboid<float>* bbx) {
@@ -118,24 +119,18 @@ namespace megamol {
 
 
             // SELECTED KEYFRAME
-            inline void setSelectedKeyframeTime(float t) { // set value for one specific ccc (called from keyframe keeper)
+            inline void setSelectedKeyframeTime(float t) { 
                 this->selectedTime = t;
             }
             inline float getSelectedKeyframeTime() {
                 return this->selectedTime;
             }
 
-            inline void setChangedSelectedKeyframeTime(bool b) {
-                this->selTimeChanged = b;
-            }
-            inline bool changedSelectedKeyframeTime() {
-                return this->selTimeChanged;
-            }
 
-            inline Keyframe* getSelectedKeyframe() {
+            inline Keyframe getSelectedKeyframe() {
                 return this->selectedKeyframe;
             }
-            inline void setSelectedKeyframe(Keyframe* k) {
+            inline void setSelectedKeyframe(Keyframe k) {
                 this->selectedKeyframe = k;
             }
 
@@ -148,17 +143,11 @@ namespace megamol {
                 return this->interpolatedTime;
             }
 
-            inline void setChangedInterpolatedKeyframeTime(bool b) {
-                this->intTimeChanged = b;
-            }
-            inline bool changedInterpolatedKeyframeTime(){
-                return this->intTimeChanged;
-            }
 
-			inline Keyframe* getInterpolatedKeyframe(){
+			inline Keyframe getInterpolatedKeyframe(){
 				return this->interpolatedKeyframe;
 			}
-            inline void setInterpolatedKeyframe(Keyframe* k){
+            inline void setInterpolatedKeyframe(Keyframe k){
                 this->interpolatedKeyframe = k;
             }
 
@@ -171,12 +160,6 @@ namespace megamol {
 				return this->totalTime;
 			}
 
-            inline void setChangedTotalTime(bool b) {
-                this->totTimeChanged = b;
-            }
-            inline bool changedTotalTime(){
-                return this->totTimeChanged;
-            }
 
             // CAMERA PARAMETER
             inline void setCameraParameter(SmartPtr<graphics::CameraParameters> c) {
@@ -184,13 +167,6 @@ namespace megamol {
             }
             inline SmartPtr<graphics::CameraParameters> getCameraParameter() {
                 return this->cameraParam;
-            }
-
-            inline void setChangedCameraParameter(bool b) {
-                this->camParamChanged = b;
-            }
-            inline bool changedCameraParameter() {
-                return this->camParamChanged;
             }
 
 
@@ -201,24 +177,15 @@ namespace megamol {
             **********************************************************************/
 
 			// Pointer to array of keyframes
-			vislib::Array<Keyframe>     *keyframes;
-            bool                        keyframesChanged;
-
-			vislib::math::Cuboid<float> *boundingbox;
-
-            Keyframe                    *selectedKeyframe;
-            float                       selectedTime;
-            bool                        selTimeChanged;
-
-			Keyframe                    *interpolatedKeyframe;
-			float                       interpolatedTime;
-            bool                        intTimeChanged;
-
-			float                       totalTime;
-            bool                        totTimeChanged;
-
+			vislib::Array<Keyframe>				*keyframes;
+			vislib::math::Cuboid<float>		    *boundingbox;
+            Keyframe						     selectedKeyframe;
+            float								 selectedTime;
+			Keyframe						     interpolatedKeyframe;
+			float							     interpolatedTime;
+			float								 totalTime;
             SmartPtr<graphics::CameraParameters> cameraParam;
-            bool                       camParamChanged;
+
 		};
 
 		/** Description class typedef */

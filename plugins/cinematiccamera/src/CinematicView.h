@@ -17,6 +17,8 @@
 #include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
 
+#include "Keyframe.h"
+
 
 namespace megamol {
 	namespace cinematiccamera {
@@ -102,14 +104,15 @@ namespace megamol {
             * parameters
             **********************************************************************/
 
-			core::param::ParamSlot viewModeParam;
 			core::param::ParamSlot selectedSkyboxSideParam;
 
             /**********************************************************************
             * variables
             **********************************************************************/
 
-            ViewMode currentViewMode;
+            float    currentTime;
+            Keyframe selectedKeyframe;
+
 		};
 
 	} /* end namespace cinematiccamera */

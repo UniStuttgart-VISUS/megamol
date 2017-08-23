@@ -148,20 +148,6 @@ namespace megamol {
 		private:
 
             /**********************************************************************
-            * variables
-            **********************************************************************/
-
-            /* UNUSED ... so far
-            // The current mouse coordinates
-            int mouseX;
-            int mouseY;
-            // Starting point for dragging the manipulator
-            vislib::math::Vector<int, 2> startSelect;
-            // End point for dragging the manipulator
-            vislib::math::Vector<int, 2> endSelect;
-            */
-
-            /**********************************************************************
             * callback stuff
             **********************************************************************/
 
@@ -174,18 +160,18 @@ namespace megamol {
             /**********************************************************************
             * parameters
             **********************************************************************/
-
-			/** Bool Param for toggling manipulation of the currently selected Keyframe */
-			core::param::ParamSlot editKeyframeParam;
-
-			/** Bool Param enabling the display of the camera lookat path */
-			core::param::ParamSlot showLookatParam;
 			
-            /** amount of interpolation steps between keyframes */
+            /** Amount of interpolation steps between keyframes */
             core::param::ParamSlot stepsParam;
 
             /** Param to load total time from slave renderer */
             core::param::ParamSlot loadTimeParam;
+
+            /**********************************************************************
+            * parameters
+            **********************************************************************/
+
+
 		};
 
 	} /* end namespace cinematiccamera */

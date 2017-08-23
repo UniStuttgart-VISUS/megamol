@@ -25,7 +25,6 @@
 #include "TimeLineRenderer.h"
 #include "CallCinematicCamera.h"
 
-#include <iostream>
 
 //#define _USE_MATH_DEFINES
 
@@ -60,6 +59,9 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->markerSize  = 30.0f;
     this->maxTime     = 1.0f;
 
+    this->lastMouseX  = 0.0f;
+    this->lastMouseY  = 0.0f;
+
 	// Set up the resolution of the time line
 	this->resolutionParam.SetParameter(new param::IntParam(this->tlRes, 1));
 	this->MakeSlotAvailable(&this->resolutionParam);
@@ -68,7 +70,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->markerSizeParam.SetParameter(new param::FloatParam(this->markerSize, 1.0f));
     this->MakeSlotAvailable(&this->markerSizeParam);
 
-    // Adjust font size right at the beginning
+    // Adapt font size at startup
     this->resolutionParam.ForceSetDirty();
 }
 
@@ -102,7 +104,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 	core::view::CallRender2D *cr = dynamic_cast<core::view::CallRender2D*>(&call);
 	if (cr == NULL) return false;
 
-    call.SetBoundingBox(cr->GetViewport());
+    cr->SetBoundingBox(cr->GetViewport());
 
     // Set time line position in percentage of viewport
     this->devX        = cr->GetViewport().GetSize().GetWidth() / 100.0f  * 8.0f; // DO CHANGES HERE
@@ -111,6 +113,22 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     this->tlStartPos  = vislib::math::Vector<float, 2>(this->devX, cr->GetViewport().GetSize().GetHeight() / 2.0f);
     this->tlEndPos    = vislib::math::Vector<float, 2>(cr->GetViewport().GetSize().GetWidth() - this->devX, cr->GetViewport().GetSize().GetHeight() / 2.0f);
     this->tlLength    = (this->tlEndPos - this->tlStartPos).Norm();
+
+	// Get suitable font size
+	vislib::StringA tmpStr;
+	float strWidth;
+	float posFrac = this->tlLength / (float)this->tlRes;
+	tmpStr.Format("%.2f", this->maxTime);
+	this->fontSize = 32.0f; //reset
+	strWidth = theFont.LineWidth(this->fontSize, tmpStr);
+	while (strWidth > posFrac*0.8f) {
+		this->fontSize = this->fontSize - 0.1f;
+		strWidth = theFont.LineWidth(this->fontSize, tmpStr);
+		if (this->fontSize < 0.0f) {
+			this->fontSize = 0.1f;
+			break;
+		}
+	}
 
 	return true;
 }
@@ -133,7 +151,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Update data in cinematic camera call
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (!ccc) return false;
-    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return false;
+    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeperData)) return false;
 
     bool updateFontSize = false;
 
@@ -159,9 +177,9 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float timeFrac = maxTime / (float)this->tlRes;
     float posFrac  = this->tlLength / (float)this->tlRes;
 
-    // Get suitable font size
+    // Adapt font size
     if (updateFontSize) {
-        tmpStr.Format("%.2f", maxTime);
+        tmpStr.Format("%.2f", this->maxTime);
         this->fontSize = 32.0f; //reset
         strWidth = theFont.LineWidth(this->fontSize, tmpStr);
         while (strWidth > posFrac*0.8f) {
@@ -221,23 +239,25 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
 	// Draw keyframes
     vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
-    Keyframe                *s = ccc->getSelectedKeyframe();
+    Keyframe                s = ccc->getSelectedKeyframe();
+    float frameFrac = this->tlLength / maxTime;
+
     if (keyframes->Count() > 0) {
-        float frameFrac = this->tlLength / maxTime;
         // draw the defined keyframes
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            this->DrawKeyframeSymbol(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), ((*keyframes)[i] == (*s)));
+            this->DrawKeyframeSymbol(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), ((*keyframes)[i] == s));
         }
+    }
 
-        // Draw interpolated selected keyframe
-        if (!keyframes->Contains(*s)) {
-            float x = this->tlStartPos.GetX() + s->getTime() * frameFrac;
-            glColor3f(1.0f, 0.0f, 0.0f);
-            glBegin(GL_LINES);
-                glVertex2f(x, this->tlStartPos.GetY() + this->devY);
-                glVertex2f(x, this->tlStartPos.GetY() - this->devY);
-            glEnd();
-        }
+    // Draw interpolated selected keyframe
+    if (!keyframes->Contains(s)) {
+        float x = this->tlStartPos.GetX() + s.getTime() * frameFrac;
+        glLineWidth(3.0f);
+        glColor3f(0.0f, 0.0f, 1.0f);
+        glBegin(GL_LINES);
+            glVertex2f(x, this->tlStartPos.GetY() + this->markerSize);
+            glVertex2f(x, this->tlStartPos.GetY());
+        glEnd();
     }
 
 	return true;
@@ -321,7 +341,7 @@ bool TimeLineRenderer::LoadTexture(vislib::StringA filename) {
             markerTextures.Add(vislib::SmartPtr<vislib::graphics::gl::OpenGLTexture2D>());
             markerTextures.Last() = new vislib::graphics::gl::OpenGLTexture2D();
             if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-                vislib::sys::Log::DefaultLog.WriteError("TIME LINE RENDERER [LoadTexture] Could not load \"%s\" texture.", filename.PeekBuffer());
+                vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not load \"%s\" texture.", filename.PeekBuffer());
                 ARY_SAFE_DELETE(buf);
                 return false;
             }
@@ -330,11 +350,11 @@ bool TimeLineRenderer::LoadTexture(vislib::StringA filename) {
             return true;
         }
         else {
-            vislib::sys::Log::DefaultLog.WriteError("TIME LINE RENDERER [LoadTexture] Could not read \"%s\" texture.", filename.PeekBuffer());
+            vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not read \"%s\" texture.", filename.PeekBuffer());
         }
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("TIME LINE RENDERER [LoadTexture] Could not find \"%s\" texture.", filename.PeekBuffer());
+        vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not find \"%s\" texture.", filename.PeekBuffer());
     }
     return false;
 }
@@ -347,17 +367,17 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 	
     const bool error = true;
 
-	// on leftclick, check if a keyframe is hit and set the selected keyframe: MOUSEFLAG_BUTTON_LEFT_DOWN
-	if (flags == view::MOUSEFLAG_BUTTON_LEFT_CHANGED+1){  // WHY THIS FLAG ???
+	// on leftclick, check if a keyframe is hit and set the selected keyframe
+	if (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN) { 
 
 		// y-Position of mouse within keyframe symbol range?
-		if ((y < this->markerSize + this->tlStartPos.GetY()) && (y > this->tlStartPos.GetY() - this->devY*1.0f)) {
+		if ((y < this->markerSize + this->tlStartPos.GetY()) && (y > this->tlStartPos.GetY() - this->devY*1.0f) && 
+            (x > this->tlStartPos.GetX() - this->markerSize/2.0f) && (x < this->tlEndPos.GetX()) + this->markerSize / 2.0f) {
 
             bool hit = false;
 
 			CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
 			if (ccc == NULL) return error;
-            if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return error;
 
             //Get keyframes
 			vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
@@ -365,15 +385,21 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 			// Get maximum time of keyframes
 			float maxTime = ccc->getTotalTime();
 
+            // Do not snap to keyframe when mouse movement is continuous
+            float offset = 0.0f;
+            if (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED || ((x == this->lastMouseX) && (y == this->lastMouseY))) {
+                offset = this->markerSize / 2.0f;
+            }
+
 			//Check all keyframes if they are hit
 			for (unsigned int i = 0; i < keyframes->Count(); i++){
 
 				float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
 
-				if ((x < (posX + this->markerSize/2.0f)) && (x > (posX - this->markerSize/2.0f))) {
+				if ((x < (posX + offset)) && (x > (posX - offset))) {
                     // Set keyframe as selected
 					ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
-                    ccc->setChangedSelectedKeyframeTime(true);
+					if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return error;
                     hit = true;
                     break;
 				}
@@ -381,14 +407,15 @@ bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
 
             // Get interpolated keyframe selection
             if (!hit) {
-                if ((x > this->tlStartPos.GetX()) && (x < this->tlEndPos.GetX())) {
-                    // Set an interpolated keyframe as selected
-                    float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
-                    ccc->setSelectedKeyframeTime(st);
-                    ccc->setChangedSelectedKeyframeTime(true);
-                    hit = true;
-                }
+                // Set an interpolated keyframe as selected
+                float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
+                ccc->setSelectedKeyframeTime(st);
+				if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return error;
+                hit = true;
             }
+
+            this->lastMouseX = x;
+            this->lastMouseY = y;
 
 			return hit;
 		}

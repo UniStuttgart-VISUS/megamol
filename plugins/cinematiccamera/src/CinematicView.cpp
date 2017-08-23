@@ -11,7 +11,6 @@
 #include "CinematicView.h"
 #include "CallCinematicCamera.h"
 
-#include <iostream>
 
 
 using namespace megamol;
@@ -24,17 +23,9 @@ using namespace cinematiccamera;
 */
 CinematicView::CinematicView(void) : View3D(),
 	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-    viewModeParam(          "cinematic::01 VIEW MODE", "render only selected keyframe or render keyframe at animation time"),
-	selectedSkyboxSideParam("cinematic::02 Skybox Side", "Skybox side rendering")
+	selectedSkyboxSideParam("cinematic::01 Skybox Side", "Skybox side rendering"),
+    selectedKeyframe()
     {
-
-    this->currentViewMode = VIEWMODE_SELECTION;
-
-    param::EnumParam *rm = new param::EnumParam(int(this->currentViewMode));
-    rm->SetTypePair(VIEWMODE_SELECTION, "Selected Keyframe");
-    rm->SetTypePair(VIEWMODE_ANIMATION, "Animation");
-    this->viewModeParam << rm;
-    this->MakeSlotAvailable(&this->viewModeParam);
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -49,6 +40,8 @@ CinematicView::CinematicView(void) : View3D(),
 	sbs->SetTypePair(SKYBOX_DOWN,	"Down");
 	this->selectedSkyboxSideParam << sbs;
 	this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
+
+    this->currentTime  = 0.0f;
 }
 
 
@@ -70,81 +63,67 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
 	CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (!ccc) return;
-    // Update data in cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return;
+    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeperData)) return;
 
-    // Update parameter
-    if (this->viewModeParam.IsDirty()) {
-        this->currentViewMode =static_cast<ViewMode>(this->viewModeParam.Param<param::EnumParam>()->Value());
-        this->viewModeParam.ResetDirty();
+    // ...
+    float viewTime = static_cast<float>(context.Time);
+    if (this->currentTime != viewTime) {
+
+        // Select the keyframe based on the current animation time.
+        ccc->setSelectedKeyframeTime(viewTime);
+        // Update data in cinematic camera call
+        if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return;
+        this->currentTime = viewTime;
     }
 
-    // Preview the currently selected key frame.
-    if (this->currentViewMode == VIEWMODE_SELECTION) {
-
-        // set camera parameters of selected keyframe for this view
-        if (ccc->getKeyframes()->Count() > 0) {
-            Keyframe *s = ccc->getSelectedKeyframe();
-            vislib::SmartPtr<vislib::graphics::CameraParameters> p = s->getCamParameters();
+    if (ccc->getKeyframes()->Count() > 0) {
+        // Set camera parameters of selected keyframe for this view
+        Keyframe s = ccc->getSelectedKeyframe();
+        if (!(this->selectedKeyframe.getCamera() == s.getCamera())) {
+            vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
             this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
             this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
+            this->selectedKeyframe = s;
         }
+    }
 
-        Base::Render(context);
-           
-	} 
-    else { // this->currentViewMode == VIEWMODE_ANIMATION
+    // Propagate camera parameter to keyframe keeper
+    ccc->setCameraParameter(this->cam.Parameters());
+    if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
 
-        if (ccc->getKeyframes()->Count() > 0) {
+    // Set time of keyframe to animation time
+    // this->timeCtrl.SetTimeExtend(static_cast<int>(s.getTime()), false); // -> TimeControl
 
-            // Select the keyframe based on the current animation time.
-            ccc->setSelectedKeyframeTime(static_cast<float>(context.Time));
-            ccc->setChangedSelectedKeyframeTime(true);
-            // Update data in cinematic camera call
-            if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return;
-    
-            // Set camera parameters of this view based on selected keyframe 
-            Keyframe *k = ccc->getSelectedKeyframe();
-            vislib::SmartPtr<vislib::graphics::CameraParameters> p = k->getCamParameters();
-            this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
-            this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
-        }
-
-        // Adjust cam to selected skybox side
-		vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
-		vislib::math::Point<float, 3> camPos = cp->Position();
-		vislib::math::Vector<float, 3> camRight = cp->Right();
-		vislib::math::Vector<float, 3> camUp = cp->Up();
-		vislib::math::Vector<float, 3> camFront = cp->Front();
-		float tmpDist = cp->FocalDistance();
-		SkyboxSides side = static_cast<SkyboxSides>(this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
-		if (side != SKYBOX_NONE) {
-			// set aperture angle to 90 deg
-			cp->SetApertureAngle(90.0f);
-			if (side == SKYBOX_BACK) {
-				cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
-			}
-			else if (side == SKYBOX_RIGHT) {
-				cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
-			}
-			else if (side == SKYBOX_LEFT) {
-				cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
-			}
-			else if (side == SKYBOX_UP) {
-				cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
-			}
-			else if (side == SKYBOX_DOWN) {
-				cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
-			}
-
+    // Adjust cam to selected skybox side
+	vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
+	vislib::math::Point<float, 3> camPos = cp->Position();
+	vislib::math::Vector<float, 3> camRight = cp->Right();
+	vislib::math::Vector<float, 3> camUp = cp->Up();
+	vislib::math::Vector<float, 3> camFront = cp->Front();
+	float tmpDist = cp->FocalDistance();
+	SkyboxSides side = static_cast<SkyboxSides>(this->selectedSkyboxSideParam.Param<param::EnumParam>()->Value());
+	if (side != SKYBOX_NONE) {
+		// set aperture angle to 90 deg
+		cp->SetApertureAngle(90.0f);
+		if (side == SKYBOX_BACK) {
+			cp->SetView(camPos, camPos - camFront * tmpDist, camUp);
+		}
+		else if (side == SKYBOX_RIGHT) {
+			cp->SetView(camPos, camPos + camRight * tmpDist, camUp);
+		}
+		else if (side == SKYBOX_LEFT) {
+			cp->SetView(camPos, camPos - camRight * tmpDist, camUp);
+		}
+		else if (side == SKYBOX_UP) {
+			cp->SetView(camPos, camPos + camUp * tmpDist, -camFront);
+		}
+		else if (side == SKYBOX_DOWN) {
+			cp->SetView(camPos, camPos - camUp * tmpDist, camFront);
 		}
 
-        // ...
-		Base::Render(context);
-
-		// reset cam (in case some skybox side was rendered)
-		//if (side != SKYBOX_NONE) {
-		//	cp->SetView(camPos, camPos + camFront * tmpDist, camUp);
-		//}
 	}
+
+    // Call Renderer
+    Base::Render(context);
+
 }

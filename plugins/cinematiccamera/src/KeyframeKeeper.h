@@ -79,13 +79,22 @@ namespace megamol {
             * functions
             ***********************************************************************/
 
-            // get an interpolated keyframe at time
+            // Get an interpolated keyframe at time
             Keyframe interpolateKeyframe(float time);
 
-            // load keyframes from file
+            // Add new keyframe to keyframe array
+            bool addKeyframe(Keyframe kf);
+
+            // Replace keyframe in keyframe array
+            bool replaceKeyframe(Keyframe kf);
+
+            // Delete keyframe from keyframe array
+            bool deleteKeyframe(Keyframe kf);
+
+            // Load keyframes from file
             void loadKeyframes();
 
-            // save keyframes to file
+            // Save keyframes to file
             void saveKeyframes();
 
             /**********************************************************************
@@ -93,10 +102,9 @@ namespace megamol {
             **********************************************************************/
 
             // variables shared with call
-            vislib::Array<Keyframe>             keyframes;
+            vislib::Array<Keyframe>              keyframes;
             vislib::math::Cuboid<float>          boundingBox;
             Keyframe                             selectedKeyframe;
-            Keyframe                             interpolatedKeyframe;
             float                                totalTime;
             SmartPtr<graphics::CameraParameters> cameraParam; 
 
@@ -110,7 +118,15 @@ namespace megamol {
             megamol::core::CalleeSlot cinematicCallSlot;
 
 			/** Callback for updating the keyframe keeper */
-			bool CallForUpdateKeyframeKeeper(core::Call& c);
+			bool CallForUpdateKeyframeKeeperData(core::Call& c);
+			/** */
+			bool CallForSetTotalTime(core::Call& c);
+			/** */
+			bool CallForRequestInterpolatedKeyframe(core::Call& c);
+			/** */
+			bool CallForSetSelectedKeyframe(core::Call& c);
+			/** */
+			bool CallForSetCameraForKeyframe(core::Call& c);
 
             /**********************************************************************
             * parameters
@@ -119,9 +135,9 @@ namespace megamol {
             /** */
             core::param::ParamSlot addKeyframeParam;
             /** */
-            core::param::ParamSlot deleteSelectedKeyframeParam;
+            core::param::ParamSlot replaceKeyframeParam;
             /** */
-			core::param::ParamSlot timeForNewKeyframeParam;
+            core::param::ParamSlot deleteSelectedKeyframeParam;
 			/**param for currentkeyframe Time */
 			core::param::ParamSlot editCurrentTimeParam;
 			/**param for currentkeyframe Position */
@@ -139,7 +155,7 @@ namespace megamol {
             /** */
             core::param::ParamSlot fileNameParam;
             /** */
-            core::param::ParamSlot autoLoadKeyframesAtStartParam;
+            core::param::ParamSlot  editCurrentApertureParam;
 
 		};
 
