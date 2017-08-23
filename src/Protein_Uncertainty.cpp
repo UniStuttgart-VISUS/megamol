@@ -22,6 +22,7 @@
 #include "UncertaintySequenceRenderer.h"
 #include "UncertaintyCartoonRenderer.h"
 #include "UncertaintyDataLoader.h"
+#include "RamachandranPlot.h"
 
 // Calls
 #include "UncertaintyDataCall.h"
@@ -56,6 +57,7 @@ namespace {
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintySequenceRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyCartoonRenderer>();
 			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataLoader>();
+			this->module_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::RamachandranPlot>();
 
 
             // register calls here:
