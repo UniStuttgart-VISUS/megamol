@@ -1,22 +1,28 @@
 #
-# MegaMol™ protein Plugin
+# MegaMol™ protein_cuda Plugin
 # Copyright 2015, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" ON)
+option(BUILD_PROTEIN_CUDA_PLUGIN "Option to build protein_cuda" OFF)
+
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
 if(BUILD_PROTEIN_CUDA_PLUGIN)
-  project(protein_cuda)
-  find_package(CUDA QUIET REQUIRED)
+  project(protein_cuda LANGUAGES CXX CUDA)
 
   #NVCC options
-  set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -03 -gencode arch=compute_30,code=sm_30)
   if(NOT MSVC)
-	list(APPEND CUDA_NVCC_FLAGS -std=c++11)
+    if(NOT "--std" IN_LIST CUDA_NVCC_FLAGS)
+      list(APPEND CUDA_NVCC_FLAGS "--std c++11")
+    endif()
   endif()
+  list(APPEND CUDA_NVCC_FLAGS "-03")
+  list(APPEND CUDA_NVCC_FLAGS "-gencode")
+  list(APPEND CUDA_NVCC_FLAGS "-arch=compute_30, code=sm_30")
   
   set(LIBS vislib core mmstd_trisoup protein_calls glload)
   include_directories("include" "src" "src/helper_includes")
+
 
   # Build MegaMol Plugin
   # public header files for installation
@@ -30,6 +36,10 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")
   file(GLOB_RECURSE cuda_helpers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/helper_includes/*.h")
   
+  set_source_files_properties(cuda_source_files PROPERTIES LANGUAGE CUDA)
+  set_source_files_properties(cuda_header_files PROPERTIES LANGUAGE CUDA)
+  set_source_files_properties(cuda_helpers PROPERTIES LANGUAGE CUDA)
+
   #remove all items contained in the cuda_helpers from the normal headers
   list(REMOVE_ITEM header_files cuda_helpers)
 
@@ -38,13 +48,10 @@ if(BUILD_PROTEIN_CUDA_PLUGIN)
       "src/dllmain.cpp"
       )
   endif()
-  # shader files for installation
-  #file(GLOB_RECURSE shaders_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
 
-  set(CUDA_LINK_LIBRARIES_KEYWORD PRIVATE)
   
   # Target definition
-  cuda_add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
   add_dependencies(${PROJECT_NAME} vislib glload core mmstd_trisoup protein_calls)
   # Set target naming conventions for different build types
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
