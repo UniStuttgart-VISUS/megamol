@@ -9,10 +9,8 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build infovis" ON)
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(infovis)
 
-  add_subdirectory(3rd/nanovg)
-
-  set(LIBS vislib core glload mmstd_datatools nanovg)
-  include_directories("include" "src" "3rd/nanoflann" "3rd/oui-blendish")
+  set(LIBS vislib core glload mmstd_datatools)
+  include_directories("include" "src")
 
   # Build MegaMol Plugin
   # public header files for installation
