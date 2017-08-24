@@ -97,13 +97,17 @@ namespace megamol {
             // Save keyframes to file
             void saveKeyframes();
 
+            // Refresh interpolated camera positions (called on keyframe changes)
+            void refreshInterpolCamPos(unsigned int s);
+
             /**********************************************************************
             * variables
             **********************************************************************/
 
             // variables shared with call
-            vislib::Array<Keyframe>              keyframes;
-            vislib::math::Cuboid<float>          boundingBox;
+            Array<Keyframe>                      keyframes;
+            Array<math::Point<float, 3> >        interpolCamPos;
+            math::Cuboid<float>                  boundingBox;
             Keyframe                             selectedKeyframe;
             float                                totalTime;
             SmartPtr<graphics::CameraParameters> cameraParam; 
@@ -118,11 +122,11 @@ namespace megamol {
             megamol::core::CalleeSlot cinematicCallSlot;
 
 			/** Callback for updating the keyframe keeper */
-			bool CallForUpdateKeyframeKeeperData(core::Call& c);
+			bool CallForUpdateKeyframeKeeper(core::Call& c);
 			/** */
 			bool CallForSetTotalTime(core::Call& c);
 			/** */
-			bool CallForRequestInterpolatedKeyframe(core::Call& c);
+			bool CallForInterpolatedCamPos(core::Call& c);
 			/** */
 			bool CallForSetSelectedKeyframe(core::Call& c);
 			/** */

@@ -37,11 +37,11 @@ namespace megamol {
 		public:
 
 			/** function name for getting all Keyframes */
-			static const unsigned int CallForUpdateKeyframeKeeperData     = 0;
-			static const unsigned int CallForSetTotalTime                 = 1;
-			static const unsigned int CallForRequestInterpolatedKeyframe  = 2;
-			static const unsigned int CallForSetSelectedKeyframe          = 3;
-			static const unsigned int CallForSetCameraForKeyframe         = 4;
+			static const unsigned int CallForUpdateKeyframeKeeper   = 0;
+			static const unsigned int CallForSetTotalTime           = 1;
+			static const unsigned int CallForInterpolatedCamPos     = 2;
+			static const unsigned int CallForSetSelectedKeyframe    = 3;
+			static const unsigned int CallForSetCameraForKeyframe   = 4;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -79,11 +79,11 @@ namespace megamol {
 			*/
 			static const char * FunctionName(unsigned int idx) {
 				switch (idx) {
-					case CallForUpdateKeyframeKeeperData:     return "CallForUpdateKeyframeKeeperData";
-					case CallForSetTotalTime:                 return "CallForSetTotalTime";
-					case CallForRequestInterpolatedKeyframe:  return "CallForRequestInterpolatedKeyframe";
-					case CallForSetSelectedKeyframe:          return "CallForSetSelectedKeyframe";
-					case CallForSetCameraForKeyframe:         return "CallForSetCameraForKeyframe";
+					case CallForUpdateKeyframeKeeper:   return "CallForUpdateKeyframeKeeper";
+					case CallForSetTotalTime:           return "CallForSetTotalTime";
+					case CallForInterpolatedCamPos:     return "CallForInterpolatedCamPos";
+					case CallForSetSelectedKeyframe:    return "CallForSetSelectedKeyframe";
+					case CallForSetCameraForKeyframe:   return "CallForSetCameraForKeyframe";
 					default: return "";
 				}
 				
@@ -136,19 +136,18 @@ namespace megamol {
 
 
             // INTERPOLATED KEYFRAME
-			inline void setInterpolatedKeyframeTime(float t){
-                this->interpolatedTime = t;
-			}
-            inline float getInterpolatedKeyframeTime(){
-                return this->interpolatedTime;
+            inline void setInterpolationSteps(unsigned int s) {
+                this->interpolSteps = s;
+            }
+            inline unsigned int getInterpolationSteps() {
+                return this->interpolSteps;
             }
 
-
-			inline Keyframe getInterpolatedKeyframe(){
-				return this->interpolatedKeyframe;
+			inline vislib::Array<vislib::math::Point<float, 3> >* getInterpolatedCamPos(){
+				return this->interpolCamPos;
 			}
-            inline void setInterpolatedKeyframe(Keyframe k){
-                this->interpolatedKeyframe = k;
+            inline void setInterpolatedCamPos(vislib::Array<vislib::math::Point<float, 3> >* k){
+                this->interpolCamPos = k;
             }
 
 
@@ -177,13 +176,18 @@ namespace megamol {
             **********************************************************************/
 
 			// Pointer to array of keyframes
-			vislib::Array<Keyframe>				*keyframes;
-			vislib::math::Cuboid<float>		    *boundingbox;
+			Array<Keyframe>				        *keyframes;
+
+            Array<math::Point<float, 3> >       *interpolCamPos;
+            unsigned int                         interpolSteps;
+
+			math::Cuboid<float>		            *boundingbox;
+
             Keyframe						     selectedKeyframe;
             float								 selectedTime;
-			Keyframe						     interpolatedKeyframe;
-			float							     interpolatedTime;
+
 			float								 totalTime;
+
             SmartPtr<graphics::CameraParameters> cameraParam;
 
 		};

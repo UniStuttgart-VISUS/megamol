@@ -14,13 +14,13 @@ using namespace megamol::cinematiccamera;
 * CallCinematicCamera::CallCinematicCamera
 */
 CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(), 
-    keyframes(NULL), boundingbox(NULL), selectedKeyframe(), interpolatedKeyframe(), cameraParam()
+    keyframes(NULL), boundingbox(NULL), interpolCamPos(NULL),
+    selectedKeyframe(), cameraParam()
     {
 
     this->selectedTime     = 0.0f;
-    this->interpolatedTime = 0.0f;
     this->totalTime        = 1.0f;
-
+    this->interpolSteps    = 1;
 }
 
 
@@ -28,6 +28,7 @@ CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
 * CallCinematicCamera::~CallCinematicCamera
 */
 CallCinematicCamera::~CallCinematicCamera(void) {
-	this->keyframes            = NULL;
-    this->boundingbox          = NULL;
+	this->keyframes      = NULL;
+    this->interpolCamPos = NULL;
+    this->boundingbox    = NULL;
 }

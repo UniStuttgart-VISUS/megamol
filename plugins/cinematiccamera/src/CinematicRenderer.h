@@ -27,6 +27,8 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/String.h"
+#include "vislib/math/ShallowMatrix.h"
+#include "vislib/math/Matrix.h"
 
 
 namespace megamol {
@@ -135,15 +137,14 @@ namespace megamol {
 			*/
 			virtual bool Render(core::Call& call);
 
-			/**
-			* Callback for mouse events (move, press, and release)
-			*
-			* @param[in] x The x coordinate of the mouse in screen space
-			* @param[in] y The y coordinate of the mouse in screen space
-			* @param[in] flags The mouse flags
-			* @return 'true' on success
-			*/
-			virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+            /**
+            * Callback for mouse events (move, press, and release)
+            *
+            * @param x The x coordinate of the mouse in world space
+            * @param y The y coordinate of the mouse in world space
+            * @param flags The mouse flags
+            */
+            virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 
 		private:
 
@@ -168,9 +169,14 @@ namespace megamol {
             core::param::ParamSlot loadTimeParam;
 
             /**********************************************************************
-            * parameters
+            * variables
             **********************************************************************/
 
+            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
+
+            float viewportStuff[4];
+
+            unsigned int   interpolSteps;
 
 		};
 

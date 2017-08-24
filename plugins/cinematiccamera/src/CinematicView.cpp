@@ -6,7 +6,9 @@
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/param/FloatParam.h"
 
 #include "CinematicView.h"
 #include "CallCinematicCamera.h"
@@ -24,7 +26,7 @@ using namespace cinematiccamera;
 CinematicView::CinematicView(void) : View3D(),
 	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
 	selectedSkyboxSideParam("cinematic::01 Skybox Side", "Skybox side rendering"),
-    selectedKeyframe()
+    shownKeyframe()
     {
 
     this->keyframeKeeperSlot.SetCompatibleCall<CallCinematicCameraDescription>();
@@ -41,7 +43,12 @@ CinematicView::CinematicView(void) : View3D(),
 	this->selectedSkyboxSideParam << sbs;
 	this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
 
+    // init variables
     this->currentTime  = 0.0f;
+
+    // TEMPORARY HACK #########################################################
+    // Disable parameter slot -> 'TAB'-key is needed in cinematic renderer to enable mouse selection
+    this->enableMouseSelectionSlot.MakeUnavailable();
 }
 
 
@@ -58,41 +65,48 @@ CinematicView::~CinematicView() {
 */
 void CinematicView::Render(const mmcRenderViewContext& context) {
 
+
+
 	view::CallRender3D *cr3d = this->rendererSlot.CallAs<core::view::CallRender3D>();
 	if (!(*cr3d)(1)) return; // get extents
 
 	CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (!ccc) return;
-    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeperData)) return;
+    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return;
 
-    // ...
+
+    // Get selected keyframe
+    Keyframe s = ccc->getSelectedKeyframe();
+
+    // Time is set by running ANIMATION from view (e.g. anim::play parameter)
     float viewTime = static_cast<float>(context.Time);
     if (this->currentTime != viewTime) {
-
         // Select the keyframe based on the current animation time.
         ccc->setSelectedKeyframeTime(viewTime);
         // Update data in cinematic camera call
         if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return;
         this->currentTime = viewTime;
     }
+    else { // Time is set by SELECTED FRAME
+        // Set animation time based on selected keyframe (GetSlot(2)= this->animTimeSlot)
+        param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
+        animTimeParam->Param<param::FloatParam>()->SetValue(s.getTime(), true);
+        this->currentTime = s.getTime();
+    }
 
-    if (ccc->getKeyframes()->Count() > 0) {
-        // Set camera parameters of selected keyframe for this view
-        Keyframe s = ccc->getSelectedKeyframe();
-        if (!(this->selectedKeyframe.getCamera() == s.getCamera())) {
-            vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
-            this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
-            this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
-            this->selectedKeyframe = s;
-        }
+    // Set camera parameters of selected keyframe for this view
+    // but ONLY if selected keyframe differs to last locally stored and shown keyframe
+    if (!(this->shownKeyframe.getTime() == s.getTime())) {
+        vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
+        this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
+        this->cam.Parameters()->SetApertureAngle(p->ApertureAngle());
+        this->shownKeyframe = s;
     }
 
     // Propagate camera parameter to keyframe keeper
     ccc->setCameraParameter(this->cam.Parameters());
     if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
 
-    // Set time of keyframe to animation time
-    // this->timeCtrl.SetTimeExtend(static_cast<int>(s.getTime()), false); // -> TimeControl
 
     // Adjust cam to selected skybox side
 	vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();

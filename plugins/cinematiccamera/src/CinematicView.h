@@ -111,7 +111,7 @@ namespace megamol {
             **********************************************************************/
 
             float    currentTime;
-            Keyframe selectedKeyframe;
+            Keyframe shownKeyframe;
 
 		};
 

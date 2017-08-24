@@ -137,6 +137,10 @@ namespace megamol {
 
             float                          lastMouseX;
             float                          lastMouseY;
+            bool                           moveTimeLine;
+
+            Keyframe                       dragDropKeyframe;
+            bool                           aktiveDragDrop;
 
             /**********************************************************************
             * callback stuff
@@ -155,6 +159,9 @@ namespace megamol {
             /** marker size parameter */
             megamol::core::param::ParamSlot markerSizeParam;
 
+            /** move time line parameter */
+            megamol::core::param::ParamSlot moveTimeLineParam;
+
             /**********************************************************************
             * functions
             **********************************************************************/
@@ -163,7 +170,7 @@ namespace megamol {
             bool LoadTexture(vislib::StringA filename);
 
             // ...
-            void DrawKeyframeSymbol(float posX, float posY, bool selected);
+            void DrawKeyframeSymbol(float posX, float posY, bool selected, bool dragdrop);
 
 		};
 
