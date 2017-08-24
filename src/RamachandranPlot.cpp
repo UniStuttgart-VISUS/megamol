@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "RamachandranPlot.h"
 
+#include "RamachandranDataCall.h"
+
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
@@ -26,11 +28,15 @@ RamachandranPlot::RamachandranPlot(void) : Renderer2DModule(),
 	molDataSlot("molecularDataIn","Slot for the incoming molecular data"),
 	pointSize("pointSize", "The size of the drawn points"),
 	ownBBParam("drawBBExtra", "Tell the renderer to draw the bounding box again in black, in case the background is white"),
-	pointColorParam("pointColor", "The color of the drawn points")
+	pointColorParam("pointColor", "The color of the drawn points"),
+	plotDataSlot("plotDataOut","The slot providing the data of the Ramachandran plot"),
+	selectedAcid(-1)
 #ifndef USE_SIMPLER_FONT
 	,theFont(vislib::graphics::gl::FontInfo_Verdana)
 #endif
 {
+	this->plotDataSlot.SetCallback(RamachandranDataCall::ClassName(), RamachandranDataCall::FunctionName(RamachandranDataCall::CallForGetData), &RamachandranPlot::GetDataCallback);
+	this->MakeSlotAvailable(&this->plotDataSlot);
 
 	this->molDataSlot.SetCompatibleCall<MolecularDataCallDescription>();
 	this->MakeSlotAvailable(&this->molDataSlot);
@@ -126,6 +132,9 @@ bool RamachandranPlot::create(void) {
 	poly.push_back(vislib::math::Vector<float, 2>(-156.5f, -51.0f));
 	poly.push_back(vislib::math::Vector<float, 2>(-156.5f, -60.4f));
 	sureHelixPolygons.push_back(poly);
+
+	initProcheckArray();
+
 	return true;
 }
 
@@ -161,6 +170,33 @@ bool RamachandranPlot::GetExtents(core::view::CallRender2D& call) {
 }
 
 /**
+ * RamachandranPlot::GetDataCallback
+ */
+bool RamachandranPlot::GetDataCallback(core::Call& call) {
+	MolecularDataCall * mol = this->molDataSlot.CallAs<MolecularDataCall>();
+	if (mol == nullptr) return false;
+
+	RamachandranDataCall * rdc = dynamic_cast<RamachandranDataCall*>(&call);
+
+	mol->SetFrameID(static_cast<unsigned int>(rdc->Time()), true);
+	if (!(*mol)(MolecularDataCall::CallForGetExtent)) return false;
+	mol->SetFrameID(static_cast<unsigned int>(rdc->Time()), true);
+	if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+
+	computeDihedralAngles(mol);
+	computePolygonPositions();
+	computeAssignmentProbabilities();
+
+	this->selectedAcid = rdc->GetSelectedAminoAcid();
+
+	rdc->SetAngleVector(this->angles);
+	rdc->SetPointStateVector(this->pointStates);
+	rdc->SetProbabilityVector(this->probabilities);
+
+	return true;
+}
+
+/**
  * RamachandranPlot::Render
  */
 bool RamachandranPlot::Render(core::view::CallRender2D& call) {
@@ -175,6 +211,7 @@ bool RamachandranPlot::Render(core::view::CallRender2D& call) {
 
 	computeDihedralAngles(mol);
 	computePolygonPositions();
+	computeAssignmentProbabilities();
 
 	// draw the unsure sheet polygons
 	for (auto & poly : semiSheetPolygons) {
@@ -248,34 +285,42 @@ bool RamachandranPlot::Render(core::view::CallRender2D& call) {
 	// draw the points
 	glBegin(GL_POINTS);
 	glColor3f(r, g, b);
-	for (int i = 0; i < static_cast<int>(this->angles.size()); i++) {
-		for (int j = 0; j < static_cast<int>(this->angles[i].size()); j = j + 2) {
-			switch (this->pointStates[i][j / 2]) {
-			case NONE: 
-				glColor3f(r, g, b);
-				break;
-			case UNSURE_ALPHA:
-				glColor3f(0.5f, 0.5f, 0.0f);
-				break;
-			case SURE_ALPHA:
-				glColor3f(1.0f, 1.0f, 0.0f);
-				break;
-			case UNSURE_BETA:
-				glColor3f(0.0f, 0.5f, 0.5f);
-				break;
-			case SURE_BETA:
-				glColor3f(0.0f, 1.0f, 1.0f);
-				break;
-			default: 
-				glColor3f(r, g, b);
-				break;
-			}
-			if (this->angles[i][j] > -500.0f && this->angles[i][j + 1] > -500.0f) {
-				glVertex2f(this->angles[i][j], this->angles[i][j + 1]);
-			}
+	for (int i = 0; i < static_cast<int>(this->angles.size()); i = i + 2) {
+		switch (this->pointStates[i / 2]) {
+		case RamachandranDataCall::PointState::NONE:
+			glColor3f(r, g, b);
+			break;
+		case RamachandranDataCall::PointState::UNSURE_ALPHA:
+			glColor3f(0.5f, 0.5f, 0.0f);
+			break;
+		case RamachandranDataCall::PointState::SURE_ALPHA:
+			glColor3f(1.0f, 1.0f, 0.0f);
+			break;
+		case RamachandranDataCall::PointState::UNSURE_BETA:
+			glColor3f(0.0f, 0.5f, 0.5f);
+			break;
+		case RamachandranDataCall::PointState::SURE_BETA:
+			glColor3f(0.0f, 1.0f, 1.0f);
+			break;
+		default:
+			glColor3f(r, g, b);
+			break;
+		}
+
+		
+
+		if (this->angles[i] > -500.0f && this->angles[i + 1] > -500.0f) {
+			glVertex2f(this->angles[i], this->angles[i + 1]);
 		}
 	}
+
+	if (selectedAcid >= 0 && selectedAcid < this->pointStates.size()) {
+		glColor3f(1.0f, 0.0f, 1.0f);
+		glVertex2f(this->angles[selectedAcid * 2], this->angles[selectedAcid * 2 + 1]);
+	}
 	glEnd();
+
+	
 
 	if (this->ownBBParam.Param<core::param::BoolParam>()->Value()) {
 		// draw the bounding box
@@ -336,14 +381,12 @@ void RamachandranPlot::computeDihedralAngles(MolecularDataCall * mol) {
 	unsigned int firstAtomIdx = 0;
 	unsigned int lastAtomIdx = 0;
 	unsigned int atomTypeIdx = 0;
-	unsigned int firstSecIdx = 0;
-	unsigned int lastSecIdx = 0;
 	unsigned int firstAAIdx = 0;
 	unsigned int lastAAIdx = 0;
 
 	int molCount = mol->MoleculeCount();
-	this->angles.resize(molCount);
-	this->pointStates.resize(molCount);
+	this->angles.resize(mol->ResidueCount() * 2);
+	this->pointStates.resize(mol->ResidueCount(), RamachandranDataCall::PointState::NONE);
 
 	// the 5 needed positions for the dihedral angles
 	vislib::math::Vector<float, 3> prevCPos;
@@ -359,81 +402,74 @@ void RamachandranPlot::computeDihedralAngles(MolecularDataCall * mol) {
 			continue;
 		}
 
-		firstSecIdx = chain.FirstSecStructIndex();
-		lastSecIdx = firstSecIdx + chain.SecStructCount();
+		firstAAIdx = chain.FirstResidueIndex();
+		lastAAIdx = firstAAIdx + chain.ResidueCount();
 
-		for (unsigned int secIdx = firstSecIdx; secIdx < lastSecIdx; secIdx++) {
-			firstAAIdx = mol->SecondaryStructures()[secIdx].FirstAminoAcidIndex();
-			lastAAIdx = firstAAIdx + mol->SecondaryStructures()[secIdx].AminoAcidCount();
+		for (unsigned int aaIdx = firstAAIdx; aaIdx < lastAAIdx; aaIdx++) {
 
-			MolecularDataCall::SecStructure secStruct = mol->SecondaryStructures()[secIdx];
+			MolecularDataCall::AminoAcid * acid = nullptr;
 
-			for (unsigned int aaIdx = firstAAIdx; aaIdx < lastAAIdx; aaIdx++) {
-
-				MolecularDataCall::AminoAcid * acid = nullptr;
-
-				if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID) {
-					acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
-				} else {
-					// TODO is this correct?
-					this->angles[molIdx].push_back(-1000.0f);
-					this->angles[molIdx].push_back(-1000.0f);
-					this->pointStates[molIdx].push_back(PointState::NONE);
-					continue;
-				}
-
-				float phi = 0.0f;
-				float psi = 0.0f;
-
-				// get all relevant atom positions of the current amino acid
-				NPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->NIndex() * 3]);
-				CaPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->CAlphaIndex() * 3]);
-				CPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->CCarbIndex() * 3]);
-
-				// get all relevant atom positions of the last and the next amino acid
-				
-				// is this the first residue?
-				if (aaIdx == chain.FirstResidueIndex()) {
-					// we have no prevCPos
-					phi = -1000.0f;
-				} else {
-					acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx - 1]);
-					if (acid != nullptr) {
-						prevCPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->CCarbIndex() * 3]);
-					} else {
-						phi = -1000.0f;
-					}
-				}
-
-				if (aaIdx == chain.FirstResidueIndex() + chain.ResidueCount() - 1) {
-					// we have no nextNPos
-					psi = -1000.0f;
-				} else {
-					acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx + 1]);
-					if (acid != nullptr) {
-						nextNPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->NIndex() * 3]);
-					} else {
-						psi = -1000.0f;
-					}
-				}
-
-				// if nothing speaks against it, compute the angles
-				if (phi > -500.0f) {
-					phi = dihedralAngle(prevCPos, NPos, CaPos, CPos);
-				}
-				if (psi > -500.0f) {
-					psi = dihedralAngle(NPos, CaPos, CPos, nextNPos);
-				}
-
-				this->angles[molIdx].push_back(phi);
-				this->angles[molIdx].push_back(psi);
-				this->pointStates[molIdx].push_back(PointState::NONE);
-
-				/*acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
-				if (acid != nullptr) {
-					std::cout << "Acid " << aaIdx << ": " << mol->ResidueTypeNames()[acid->Type()] << "; phi = " << phi << "  psi = " << psi << std::endl;
-				}*/
+			if (mol->Residues()[aaIdx]->Identifier() == MolecularDataCall::Residue::AMINOACID) {
+				acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
+			} else {
+				// TODO is this correct?
+				this->angles[aaIdx * 2 + 0] = -1000.0f;
+				this->angles[aaIdx * 2 + 1] = -1000.0f;
+				this->pointStates[aaIdx] = RamachandranDataCall::PointState::NONE;
+				continue;
 			}
+
+			float phi = 0.0f;
+			float psi = 0.0f;
+
+			// get all relevant atom positions of the current amino acid
+			NPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->NIndex() * 3]);
+			CaPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->CAlphaIndex() * 3]);
+			CPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->CCarbIndex() * 3]);
+
+			// get all relevant atom positions of the last and the next amino acid
+			
+			// is this the first residue?
+			if (aaIdx == chain.FirstResidueIndex()) {
+				// we have no prevCPos
+				phi = -1000.0f;
+			} else {
+				acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx - 1]);
+				if (acid != nullptr) {
+					prevCPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->CCarbIndex() * 3]);
+				} else {
+					phi = -1000.0f;
+				}
+			}
+
+			if (aaIdx == chain.FirstResidueIndex() + chain.ResidueCount() - 1) {
+				// we have no nextNPos
+				psi = -1000.0f;
+			} else {
+				acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx + 1]);
+				if (acid != nullptr) {
+					nextNPos = vislib::math::Vector<float, 3>(&mol->AtomPositions()[acid->NIndex() * 3]);
+				} else {
+					psi = -1000.0f;
+				}
+			}
+
+			// if nothing speaks against it, compute the angles
+			if (phi > -500.0f) {
+				phi = dihedralAngle(prevCPos, NPos, CaPos, CPos);
+			}
+			if (psi > -500.0f) {
+				psi = dihedralAngle(NPos, CaPos, CPos, nextNPos);
+			}
+
+			this->angles[aaIdx * 2 + 0] = phi;
+			this->angles[aaIdx * 2 + 1] = psi;
+			this->pointStates[aaIdx] = RamachandranDataCall::PointState::NONE;
+
+			/*acid = (MolecularDataCall::AminoAcid*)(mol->Residues()[aaIdx]);
+			if (acid != nullptr) {
+				std::cout << "Acid " << aaIdx << ": " << mol->ResidueTypeNames()[acid->Type()] << "; phi = " << phi << "  psi = " << psi << std::endl;
+			}*/
 		}
 	}
 }
@@ -442,52 +478,59 @@ void RamachandranPlot::computeDihedralAngles(MolecularDataCall * mol) {
  * RamachandranPlot::computePolygonPositions
  */
 void RamachandranPlot::computePolygonPositions(void) {
-	for (int molIdx = 0; molIdx < static_cast<int>(this->angles.size()); molIdx++) {
-		for (int i = 0; i < static_cast<int>(this->angles[molIdx].size()); i = i + 2) {
-			vislib::math::Vector<float, 2> pos(&this->angles[molIdx][i]);
+	this->pointStates = std::vector<RamachandranDataCall::PointState>(this->pointStates.size(), RamachandranDataCall::PointState::NONE);
+	for (int i = 0; i < static_cast<int>(this->angles.size()); i = i + 2) {
+		vislib::math::Vector<float, 2> pos(&this->angles[i]);
 
-			if (pos.X() < -500.0f || pos.Y() < -500.0f) continue;
+		if (pos.X() < -500.0f || pos.Y() < -500.0f) continue;
 
-			float posx = pos.X();
-			float posy = pos.Y();
+		float posx = pos.X();
+		float posy = pos.Y();
 
-			bool semiHelixState = false;
-			bool semiSheetState = false;
-			bool trueHelixState = false;
-			bool trueSheetState = false;
+		bool semiHelixState = false;
+		bool semiSheetState = false;
+		bool trueHelixState = false;
+		bool trueSheetState = false;
 
-			// test against sheets
-			for (auto & semiSheet : this->semiSheetPolygons) {
-				semiSheetState = locateInPolygon(semiSheet, pos) ? true : semiSheetState;
-			}
+		// test against sheets
+		for (auto & semiSheet : this->semiSheetPolygons) {
+			semiSheetState = locateInPolygon(semiSheet, pos) ? true : semiSheetState;
+		}
 
-			for (auto & sureSheet : this->sureSheetPolygons) {
-				trueSheetState = locateInPolygon(sureSheet, pos) ? true : trueSheetState;
-			}
+		for (auto & sureSheet : this->sureSheetPolygons) {
+			trueSheetState = locateInPolygon(sureSheet, pos) ? true : trueSheetState;
+		}
 
-			// test against helices
-			for (auto & semiHelix : this->semiHelixPolygons) {
-				semiHelixState = locateInPolygon(semiHelix, pos) ? true : semiHelixState;
-			}
+		// test against helices
+		for (auto & semiHelix : this->semiHelixPolygons) {
+			semiHelixState = locateInPolygon(semiHelix, pos) ? true : semiHelixState;
+		}
 
-			for (auto & sureHelix : this->sureHelixPolygons) {
-				trueHelixState = locateInPolygon(sureHelix, pos) ? true : trueHelixState;
-			}
+		for (auto & sureHelix : this->sureHelixPolygons) {
+			trueHelixState = locateInPolygon(sureHelix, pos) ? true : trueHelixState;
+		}
 
-			if (semiSheetState) {
-				this->pointStates[molIdx][i / 2] = PointState::UNSURE_BETA;
-			}
-			if (trueSheetState) {
-				this->pointStates[molIdx][i / 2] = PointState::SURE_BETA;
-			}
-			if (semiHelixState) {
-				this->pointStates[molIdx][i / 2] = PointState::UNSURE_ALPHA;
-			}
-			if (trueHelixState) {
-				this->pointStates[molIdx][i / 2] = PointState::SURE_ALPHA;
-			}
+		if (semiSheetState) {
+			this->pointStates[i / 2] = RamachandranDataCall::PointState::UNSURE_BETA;
+		}
+		if (trueSheetState) {
+			this->pointStates[i / 2] = RamachandranDataCall::PointState::SURE_BETA;
+		}
+		if (semiHelixState) {
+			this->pointStates[i / 2] = RamachandranDataCall::PointState::UNSURE_ALPHA;
+		}
+		if (trueHelixState) {
+			this->pointStates[i / 2] = RamachandranDataCall::PointState::SURE_ALPHA;
 		}
 	}
+}
+
+/**
+ * RamachandranPlot::computeAssignmentProbabilities
+ */
+void RamachandranPlot::computeAssignmentProbabilities(void) {
+	this->probabilities = std::vector<float>(this->pointStates.size(), 1.0f);
+	// TODO
 }
 
 /**
@@ -532,4 +575,83 @@ bool RamachandranPlot::locateInPolygon(const std::vector<vislib::math::Vector<fl
 		}
 	}
 	return (c != 0);
+}
+
+/**
+ * RamachandranPlot::initProcheckArray
+ */
+void RamachandranPlot::initProcheckArray(void) {
+	std::vector<std::vector<char>> charArray = {
+		{ 'b','B','B','B','B','B','B','B','B','B','B','b','b','b','x','x','o','o','o','o','o','w','w','w','w','w','o','o','o','o','o','x','x','x','x','b' },
+		{ 'b','B','B','B','B','B','B','B','B','B','B','B','b','b','b','x','x','o','o','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x','b','b' },
+		{ 'b','B','B','B','B','B','B','B','B','B','B','B','b','b','b','x','x','x','x','o','o','o','o','o','o','o','o','o','o','o','o','x','x','b','b','b' },
+		{ 'b','b','B','B','B','B','B','B','B','B','B','B','B','b','b','b','b','x','x','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x','b','b' },
+		{ 'b','b','B','B','B','B','B','B','B','B','B','B','B','B','b','b','x','x','x','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x','x','b' },
+		{ 'b','b','B','B','B','B','B','B','B','B','B','B','B','b','b','b','x','x','x','o','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x','b' },
+		{ 'b','b','b','B','B','B','B','B','B','B','B','B','b','b','b','b','x','x','x','o','o','o','z','z','z','z','z','z','o','o','o','o','o','x','x','b' },
+		{ 'b','b','b','b','B','B','B','B','B','B','B','b','b','b','b','b','b','x','x','z','z','z','z','z','z','z','z','z','o','o','o','o','o','x','x','b' },
+		{ 'b','b','b','b','b','B','b','b','B','b','b','b','b','b','b','b','b','x','x','z','z','z','z','z','l','l','z','z','o','o','o','o','o','x','x','b' },
+		{ 'b','b','b','b','b','b','b','b','b','b','b','b','b','b','x','x','x','x','x','z','z','l','l','l','l','z','z','z','o','o','o','o','o','x','x','x' },
+		{ 'b','b','b','b','b','b','b','b','b','b','b','b','x','x','x','x','x','x','x','z','z','l','l','l','l','z','z','z','o','o','o','o','o','x','x','x' },
+		{ 'x','b','b','b','b','b','b','b','b','b','b','b','b','x','x','o','o','o','o','z','z','z','l','l','l','z','z','z','z','o','o','o','o','x','x','x' },
+		{ 'x','x','b','b','b','b','b','b','b','b','b','b','b','x','x','o','o','o','o','z','z','l','l','l','l','l','l','z','z','o','o','o','o','x','x','x' },
+		{ 'y','y','a','a','a','a','a','a','a','a','a','a','y','y','y','o','o','o','o','z','z','l','l','L','l','l','z','z','z','o','o','o','o','x','x','x' },
+		{ 'y','a','a','a','a','a','a','a','a','a','a','a','y','y','y','o','o','o','o','z','z','z','l','L','L','l','z','z','z','o','o','o','o','x','x','x' },
+		{ 'y','a','a','a','a','a','a','A','a','a','a','a','a','y','y','y','o','o','o','z','z','z','l','l','l','l','l','z','z','o','o','o','o','x','x','x' },
+		{ 'y','a','a','a','a','a','A','A','A','A','a','a','a','y','y','y','y','o','o','o','z','z','z','l','l','l','z','z','z','o','o','o','o','x','x','x' },
+		{ 'y','a','a','a','a','a','A','A','A','A','A','a','a','a','y','y','y','o','o','o','z','z','z','z','l','l','l','z','z','o','o','o','o','x','x','x' },
+		{ 'y','a','a','a','a','A','A','A','A','A','A','A','a','a','a','y','y','y','o','o','z','z','z','l','z','l','l','z','z','o','o','o','o','x','x','x' },
+		{ 'y','a','a','a','a','a','A','A','A','A','A','A','A','a','a','y','y','y','y','o','z','z','z','z','z','z','z','z','z','o','o','o','o','x','x','x' },
+		{ 'y','y','a','a','a','a','A','A','A','A','A','A','A','A','a','a','y','y','y','o','z','z','z','z','z','z','z','z','z','o','o','o','o','x','x','x' },
+		{ 'y','y','a','a','a','a','a','A','A','A','A','A','A','A','a','a','a','y','y','y','o','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x' },
+		{ 'y','y','y','a','a','a','a','a','A','A','A','A','A','A','A','a','a','y','y','y','o','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x' },
+		{ 'y','a','a','a','a','a','a','a','a','A','A','A','A','A','A','a','a','a','y','y','y','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x' },
+		{ 'a','a','y','a','a','a','a','a','a','a','a','A','A','A','A','a','a','a','y','y','y','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x' },
+		{ 'y','y','y','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','y','y','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x' },
+		{ 'y','y','y','y','y','a','a','a','a','a','a','a','a','a','a','a','a','a','y','y','y','o','o','o','o','o','o','o','o','o','o','o','o','x','x','x' },
+		{ 'o','y','y','y','y','a','a','a','a','a','a','a','a','a','a','y','y','y','y','y','y','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o' },
+		{ 'o','o','o','y','y','y','y','y','y','y','y','a','y','y','y','y','y','y','y','y','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o' },
+		{ 'o','o','o','x','x','x','x','b','b','x','x','x','x','x','x','x','x','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o','o' },
+		{ 'x','x','x','x','x','b','b','x','x','x','x','x','x','x','o','o','o','o','o','o','o','w','w','w','w','w','o','o','o','o','o','o','o','o','o','o' },
+		{ 'x','x','x','x','x','x','b','b','b','b','x','x','x','x','o','o','o','o','o','o','o','w','w','w','w','w','o','o','o','o','o','o','o','o','o','o' },
+		{ 'x','b','b','b','x','b','b','b','b','b','x','x','x','x','x','o','o','o','o','o','o','w','w','e','w','w','w','o','o','o','o','o','o','o','o','o' },
+		{ 'x','b','b','b','b','b','b','b','b','b','b','x','x','x','x','o','o','o','o','o','o','w','w','e','w','w','w','o','o','o','o','o','o','x','x','x' },
+		{ 'x','b','b','b','b','b','b','b','b','b','b','b','b','x','x','o','o','o','o','o','o','w','w','e','e','w','w','o','o','o','o','o','o','x','x','x' },
+		{ 'b','b','b','b','b','b','b','b','b','b','b','b','b','x','x','o','o','o','o','o','o','w','w','w','w','w','w','o','o','o','o','o','o','x','x','b' },
+	};
+
+	this->procheckArray.resize(charArray.size());
+	for (size_t i = 0; i < charArray.size(); i++) {
+		this->procheckArray[i].resize(charArray[i].size());
+		for (size_t j = 0; j < charArray[i].size(); j++) {
+			switch (charArray[i][j]) {
+			case 'o':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_NONE; break;
+			case 'y':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_UNSURE_ALPHA; break;
+			case 'a':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_MIDDLE_ALPHA; break;
+			case 'A':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_SURE_ALPHA; break;
+			case 'x':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_UNSURE_BETA; break;
+			case 'b':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_MIDDLE_BETA; break;
+			case 'B':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_SURE_BETA; break;
+			case 'z':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_UNSURE_LEFT_HANDED; break;
+			case 'l':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_MIDDLE_LEFT_HANDED; break;
+			case 'L':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_SURE_LEFT_HANDED; break;
+			case 'w':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_UNSURE_E; break;
+			case 'e':
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_MIDDLE_E; break;
+			default:
+				procheckArray[i][j] = RamachandranDataCall::ProcheckState::PS_NONE; break;
+			}
+		}
+	}
 }

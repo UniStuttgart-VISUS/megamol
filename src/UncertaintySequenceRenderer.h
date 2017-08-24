@@ -350,6 +350,8 @@ namespace megamol {
         core::CallerSlot bindingSiteCallerSlot;
         /** residue selection caller slot */
         core::CallerSlot resSelectionCallerSlot;
+		/** ramachandran plot caller slot */
+		core::CallerSlot ramachandranCallerSlot;
 
         // the number of residues in one row
         megamol::core::param::ParamSlot resCountPerRowParam;

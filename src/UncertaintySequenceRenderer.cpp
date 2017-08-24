@@ -45,6 +45,7 @@
 #include "vislib/math/Matrix.h"
 
 #include "UncertaintyColor.h" 
+#include "RamachandranDataCall.h"
 
 #include <iostream> // DEBUG
 
@@ -69,6 +70,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
             uncertaintyDataSlot(    "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage."),
             bindingSiteCallerSlot(  "getBindingSites", "Connects the sequence diagram rendering with binding site storage."),
             resSelectionCallerSlot( "getResSelection", "Connects the sequence diagram rendering with residue selection storage."),
+			ramachandranCallerSlot( "getRamachandranPlot", "Connects the sequence diagram rendering with the ramachandran plot generator."),
             toggleStrideParam(                  "01 Stride", "Show/hide STRIDE secondary structure row."),
 			toggleStrideThreshParam(            "02 Stride Threshold", "Show/hide STRIDE threshold(s)."),
             toggleDsspParam(                    "03 Dssp", "Show/hide DSSP secondary structure row."),
@@ -117,6 +119,10 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     // residue selection caller slot
     this->resSelectionCallerSlot.SetCompatibleCall<ResidueSelectionCallDescription>();
     this->MakeSlotAvailable(&this->resSelectionCallerSlot);
+
+	// ramachandran plot caller slot
+	this->ramachandranCallerSlot.SetCompatibleCall<RamachandranDataCallDescription>();
+	this->MakeSlotAvailable(&this->ramachandranCallerSlot);
     
     // param slot for number of residues per row
     this->resCountPerRowParam.SetParameter(new param::IntParam(50, 1));
@@ -643,6 +649,13 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
     if(ud == NULL) return false;
     // execute the call
     if( !(*ud)(UncertaintyDataCall::CallForGetData)) return false;
+
+	// get pointer to the RamachandranPlotCall
+	RamachandranDataCall *rdc = this->ramachandranCallerSlot.CallAs<RamachandranDataCall>();
+	if (rdc != nullptr) {
+		rdc->SetSelectedAminoAcid(this->mousePosResIdx);
+		(*rdc)(RamachandranDataCall::CallForGetData);
+	}
   
     // check sparator line parameter
     if (this->toggleUncSeparatorParam.IsDirty()) {

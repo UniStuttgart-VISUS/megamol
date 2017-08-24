@@ -6,8 +6,8 @@
  * All rights reserved.
  *
  */
-#ifndef MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCOLOR_H_INCLUDED
-#define MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCOLOR_H_INCLUDED
+#ifndef MM_PROTEIN_UNCERTAINTY_PLUGIN_RAMACHANDRANPLOT_H_INCLUDED
+#define MM_PROTEIN_UNCERTAINTY_PLUGIN_RAMACHANDRANPLOT_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -25,8 +25,10 @@
 #endif //  USE_SIMPLER_FONT
 
 #include "protein_calls/MolecularDataCall.h"
+#include "RamachandranDataCall.h"
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
@@ -91,14 +93,6 @@ namespace protein_uncertainty {
         virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 	private:
 
-		enum PointState {
-			NONE = 0,
-			UNSURE_ALPHA = 1,
-			SURE_ALPHA = 2,
-			UNSURE_BETA = 3,
-			SURE_BETA = 4
-		};
-
 		/**
          * The get extents callback. The module should set the members of
          * 'call' to tell the caller the extents of its data (bounding boxes
@@ -109,6 +103,11 @@ namespace protein_uncertainty {
          * @return The return value of the function.
          */
         virtual bool GetExtents(core::view::CallRender2D& call);
+
+		/**
+		 * Callback providing the data that this module is able to compute
+		 */
+		virtual bool GetDataCallback(megamol::core::Call& call);
 
         /**
         * The Open GL Render callback.
@@ -131,6 +130,11 @@ namespace protein_uncertainty {
 		void computePolygonPositions(void);
 
 		/**
+		 * Computes the assignment probabilities for each amino acid
+		 */
+		void computeAssignmentProbabilities(void);
+
+		/**
 		 *	Tells whether a given point lies inside a given polygon
 		 *
 		 * @param polyVector A vector containing all points of the polygon ordererd clockwise or counterclockwise
@@ -151,8 +155,15 @@ namespace protein_uncertainty {
 		float dihedralAngle(const vislib::math::Vector<float, 3>& v1, const vislib::math::Vector<float, 3>& v2,
 			const vislib::math::Vector<float, 3>& v3, const vislib::math::Vector<float, 3>& v4);
 
+		/**
+		 * Initializes the procheck array.
+		 */
+		void initProcheckArray(void);
+
 		/** The call for the molecular data */
 		core::CallerSlot molDataSlot;
+		/** The call to write out the ramachandran data. */
+		core::CalleeSlot plotDataSlot;
 
 		/** Parameter slot for the drawn point size */
 		core::param::ParamSlot pointSize;
@@ -162,13 +173,18 @@ namespace protein_uncertainty {
 		core::param::ParamSlot pointColorParam;
 
 		/** Vector containing all dihedral angles for all molecules. */
-		std::vector<std::vector<float>> angles;
-		std::vector<std::vector<PointState>> pointStates;
+		std::vector<float> angles;
+		std::vector<RamachandranDataCall::PointState> pointStates;
+		std::vector<float> probabilities;
+
+		std::vector<std::vector<RamachandranDataCall::ProcheckState>> procheckArray;
 
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> sureHelixPolygons;
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> sureSheetPolygons;
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> semiHelixPolygons;
 		std::vector<std::vector<vislib::math::Vector<float, 2>>> semiSheetPolygons;
+
+		int selectedAcid;
 
 #ifdef USE_SIMPLER_FONT
 		vislib::graphics::gl::SimpleFont theFont;
@@ -179,4 +195,4 @@ namespace protein_uncertainty {
 }
 }
 
-#endif /* MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYCOLOR_H_INCLUDED */
+#endif /* MM_PROTEIN_UNCERTAINTY_PLUGIN_RAMACHANDRANPLOT_H_INCLUDED */

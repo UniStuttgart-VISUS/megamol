@@ -26,7 +26,7 @@
 
 // Calls
 #include "UncertaintyDataCall.h"
-
+#include "RamachandranDataCall.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -63,6 +63,7 @@ namespace {
             // register calls here:
 
             this->call_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::UncertaintyDataCall>();
+			this->call_descriptions.RegisterAutoDescription<megamol::protein_uncertainty::RamachandranDataCall>();
 
         }
         MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
