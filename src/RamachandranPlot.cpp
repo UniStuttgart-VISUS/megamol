@@ -316,7 +316,9 @@ bool RamachandranPlot::Render(core::view::CallRender2D& call) {
 
 	if (selectedAcid >= 0 && selectedAcid < this->pointStates.size()) {
 		glColor3f(1.0f, 0.0f, 1.0f);
-		glVertex2f(this->angles[selectedAcid * 2], this->angles[selectedAcid * 2 + 1]);
+		if (this->angles[selectedAcid * 2] > -500.0f && this->angles[selectedAcid * 2 + 1] > -500.0f) {
+			glVertex2f(this->angles[selectedAcid * 2], this->angles[selectedAcid * 2 + 1]);
+		}
 	}
 	glEnd();
 
