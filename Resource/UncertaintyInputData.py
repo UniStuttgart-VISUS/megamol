@@ -112,13 +112,13 @@ class UncertaintyInputData:
         self.Param_ScriptPath = Param_ScriptPath      
             
         # Checking if Param_PDBId is a valid PDB ID
-        if (len(self.Param_PDBId) != 4) or (not self.Param_PDBId[0].isdigit()):
-            try:
-                raise NameError(' \"{0}\" is no valid PDB ID.'.format(self.Param_PDBId))
-            except Exception as Error:          
-                logging.error('  Checking PDB ID failed with error:')
-                logging.error('>>>   {0}'.format(Error))
-                return
+        #if (len(self.Param_PDBId) != 4) or (not self.Param_PDBId[0].isdigit()):
+        #    try:
+        #        raise NameError(' \"{0}\" is no valid PDB ID.'.format(self.Param_PDBId))
+        #    except Exception as Error:          
+        #        logging.error('  Checking PDB ID failed with error:')
+        #        logging.error('>>>   {0}'.format(Error))
+        #        return
             
         # Change path if script is executed from other location
         if os.path.isdir(os.path.split(self.Param_ScriptPath)[0]):
@@ -154,7 +154,7 @@ class UncertaintyInputData:
         # Class variables    
         PDBId             = self.Param_PDBId.lower()                                # PDB id from arg
         PDBFileName       = (PDBId + '.pdb')                                        # PDB file name
-        CacheLocation     = os.path.normcase('./../cache/test')                            # cache location of for output files
+        CacheLocation     = os.path.normcase('./../cache')                            # cache location of for output files
         PDBFile           = os.path.join(CacheLocation, PDBFileName)                # PDB file path 
            
         ProgLocation      = os.path.normcase('.')                                    # location of program files        
@@ -964,11 +964,11 @@ class UncertaintyInputData:
         logging.debug('  Opening Prosign file')
         logging.info('  Parsing Prosign file')
 
-        OutFileBuffer[2] += ('------------------------------------------|')
-        OutFileBuffer[3] += (' Prosign                                  |')
-        OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|')
-        OutFileBuffer[7] += ('-------|------|---------|-----------------|')
-        #Length of columns:      7       6      9           17
+        OutFileBuffer[2] += ('--------------------------------------------------------------------------------------------------------------------|')
+        OutFileBuffer[3] += (' Prosign                                                                                                            |')
+        OutFileBuffer[4] += ('-Nr----|-AA---|-ChainID-|--Structure------|-AlphaValue-|-3_10Value-|-PiValue-|-BetaValue-|-HelixThresh-|-BetaThresh-|')
+        OutFileBuffer[7] += ('-------|------|---------|-----------------|------------|-----------|---------|-----------|-------------|------------|')
+        #Length of columns:      7       6      9           17                12          11           9         11          13           12
 
         ''' '''
         LineOffset   = 8
@@ -1008,6 +1008,8 @@ class UncertaintyInputData:
                             break;
                     if (not skipFollowingModels):
                         OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               |'
+                        OutFileBuffer[LineOffset] += str(row[4]).rjust(11) + ' |' + str(row[5]).rjust(10) + ' |' + str(row[6]).rjust(8) + ' |'
+                        OutFileBuffer[LineOffset] += str(row[7]).rjust(10) + ' |' + str(row[8]).rjust(12) + ' |' + str(row[9]).rjust(11) + ' |'
 
                         LineOffset += 1
                         if(LineOffset > len(OutFileBuffer) - 1):
@@ -1024,7 +1026,7 @@ class UncertaintyInputData:
         for x in range(LineOffset, len(OutFileBuffer)):
             LengthDiff = len(OutFileBuffer[2]) - len(OutFileBuffer[x])
             if(LengthDiff > 0):
-                OutFileBuffer[x] += ('       |      |         |                 |')
+                OutFileBuffer[x] += ('       |      |         |                 |            |           |         |           |             |            |')
 
         # Adding column numbers to buffer lines 5 and 6 - Index is starting with 0!
         logging.debug('  Writing column numbers to buffer lines 5 and 6')
