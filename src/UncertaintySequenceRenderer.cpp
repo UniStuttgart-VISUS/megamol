@@ -1547,7 +1547,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 							}
 
 							this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], this->vertices[i * 2 + 1] + yPos + (float)j,
-								this->prosignStructThreshold[i][j], min, max, threshold);
+								this->prosignStructThreshold[i][j], min, max, threshold, true);
 						}
 					}
 				}
@@ -2435,7 +2435,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 * UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles
 */
 void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataCall::secStructure str, UncertaintyDataCall::addFlags f, 
-                                                                float x, float y, float value, float min, float max, float thresh) {
+                                                                float x, float y, float value, float min, float max, float thresh, bool invert) {
 
     float yDMax = 0.475f;
 
@@ -2457,11 +2457,12 @@ void UncertaintySequenceRenderer::DrawThresholdEnergyValueTiles(UncertaintyDataC
 		float yVar = (clampVal < thresh) ? (-1.0f * std::abs(thresh - clampVal) / std::abs(thresh - min) * yDMax) : (std::abs(thresh - clampVal) / std::abs(thresh - max) *yDMax);
 		float col      = 0.75f; // (0.1f + (0.9f - (yDMax - std::abs(yVar)*0.9f)));
 		glColor3f(col, col, col);
+		float factor = invert ? 1.0f : -1.0f;
         glBegin(GL_QUADS);
-            glVertex2f(x,        -(y + 0.5f - yVar));
+            glVertex2f(x,        -(y + 0.5f + yVar * factor));
             glVertex2f(x,        -(y + 0.5f));
             glVertex2f(x + 1.0f, -(y + 0.5f));
-            glVertex2f(x + 1.0f, -(y + 0.5f - yVar));
+            glVertex2f(x + 1.0f, -(y + 0.5f + yVar * factor));
         glEnd();
 
     }

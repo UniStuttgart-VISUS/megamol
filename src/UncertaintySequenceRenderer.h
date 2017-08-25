@@ -186,7 +186,7 @@ namespace megamol {
         * @param thresh  The ... .
         */
         void DrawThresholdEnergyValueTiles(UncertaintyDataCall::secStructure str, UncertaintyDataCall::addFlags f, 
-                                           float x, float y, float value, float min, float max, float thresh);
+                                           float x, float y, float value, float min, float max, float thresh, bool invert = false);
 
         /**
         * Renders a two lined tooltip text.
