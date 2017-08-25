@@ -380,6 +380,9 @@ namespace megamol {
 		// parameter to show/hide threshold of dssp
         megamol::core::param::ParamSlot toggleDsspThreshParam;
 		unsigned int                    dsspThresholdCount;
+		// parameter to show/hide threshold of prosign
+		megamol::core::param::ParamSlot toggleProsignThreshParam;
+		unsigned int                    prosignThresholdCount;
 		// Wireframe rendering.
 		megamol::core::param::ParamSlot toggleWireframeParam;
 		
@@ -490,6 +493,8 @@ namespace megamol {
         vislib::Array<vislib::math::Vector<float, 7> > strideStructThreshold;
         /** The 4 DSSP energy values per amino-acid */
         vislib::Array<vislib::math::Vector<float, 4> > dsspStructEnergy;
+		/** THe 4 PROSIGN threshold values per amino-acid */
+		vislib::Array<vislib::math::Vector<float, 6> > prosignStructThreshold;
 
         // color table
         vislib::Array<vislib::math::Vector<float, 3> > colorTable;

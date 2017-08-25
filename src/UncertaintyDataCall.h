@@ -39,7 +39,8 @@
 
 #define DSSP_HBENERGY      -0.5f
 
-
+#define PROSIGN_ALPHA      0.3f
+#define PROSIGN_BETA       0.75f
 
 
 namespace megamol {
@@ -380,8 +381,8 @@ namespace megamol {
         * @param i The index of the amino-acid.
         * @return The energy values.
         */
-        inline vislib::math::Vector<float, 4> GetDsspEnergy(unsigned int i) {
-            vislib::math::Vector<float, 4> default = {0.0f, 0.0f, 0.0f, 0.0f};
+		inline vislib::math::Vector<float, 4> GetDsspEnergy(unsigned int i) {
+			vislib::math::Vector<float, 4> default = { 0.0f, 0.0f, 0.0f, 0.0f };
             if (!this->dsspStructEnergy)
                 return default;
             else if (this->dsspStructEnergy->Count() <= i)
@@ -389,6 +390,27 @@ namespace megamol {
             else
                 return (this->dsspStructEnergy->operator[](i));
         }
+
+		/**
+		* Get the PROSIGN threshold values.
+		*
+		* @param i The index of the amino-acid.
+		* @return The energy values.
+		*/
+		inline vislib::math::Vector<float, 6> GetProsignThreshold(unsigned int i) {
+			vislib::math::Vector<float, 6> default;
+			for (unsigned int j = 0; j < 6; j++) {
+				default[j] = 1.0f;
+			}
+			default[4] = 0.3f;
+			default[5] = 0.75f;
+			if (!this->prosignStructThreshold)
+				return default;
+			else if (this->prosignStructThreshold->Count() <= i)
+				return default;
+			else
+				return (this->prosignStructThreshold->operator[](i));
+		}
 
 
         // ------------------ SET functions ------------------- 
@@ -510,6 +532,15 @@ namespace megamol {
             this->dsspStructEnergy = rnPtr;
         }
 
+		/**
+		* Set the pointer to the PROSIGN threshold values.
+		*
+		* @param rnPtr The pointer.
+		*/
+		inline void SetProsignThreshold(vislib::Array<vislib::math::Vector<float, 6> > *rnPtr) {
+			this->prosignStructThreshold = rnPtr;
+		}
+
 
 	private:
 
@@ -568,7 +599,9 @@ namespace megamol {
         vislib::Array<vislib::math::Vector<float, 7> > *strideStructThreshold;
         /** The pointer to the 4 DSSP energy values per amino-acid */
         vislib::Array<vislib::math::Vector<float, 4> > *dsspStructEnergy;
-                    
+		/** The pointer to the 4 PROSIGN values per amino acid*/
+		vislib::Array<vislib::math::Vector<float, 6> > *prosignStructThreshold;
+       
     };
 
     /** Description class typedef */

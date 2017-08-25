@@ -1007,9 +1007,9 @@ class UncertaintyInputData:
                             skipFollowingModels = True
                             break;
                     if (not skipFollowingModels):
-                        OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               |'
-                        OutFileBuffer[LineOffset] += str(row[4]).rjust(11) + ' |' + str(row[5]).rjust(10) + ' |' + str(row[6]).rjust(8) + ' |'
-                        OutFileBuffer[LineOffset] += str(row[7]).rjust(10) + ' |' + str(row[8]).rjust(12) + ' |' + str(row[9]).rjust(11) + ' |'
+                        OutFileBuffer[LineOffset] += str(row[0]).rjust(6) + ' |  ' + row[1] + ' |       ' + row[2] + ' | ' + row[3] + '               | '
+                        OutFileBuffer[LineOffset] += str(round(float(row[4]), 6)).rjust(10) + ' | ' + str(round(float(row[5]), 6)).rjust(9) + ' | ' + str(round(float(row[6]), 5)).rjust(7) + ' | '
+                        OutFileBuffer[LineOffset] += str(round(float(row[7]), 6)).rjust(9) + ' | ' + str(round(float(row[8]), 6)).rjust(11) + ' | ' + str(round(float(row[9]), 6)).rjust(10) + ' |'
 
                         LineOffset += 1
                         if(LineOffset > len(OutFileBuffer) - 1):

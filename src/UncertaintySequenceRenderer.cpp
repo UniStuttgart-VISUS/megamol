@@ -77,29 +77,30 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
 			toggleDsspThreshParam(              "04 Dssp Threshold", "Show/hide DSSP threshold(s)."),
             togglePdbParam(                     "05 PDB", "Show/hide PDB secondary structure row."),
             toggleProsignParam(                 "06 Prosign", "Show/hide PDB secondary structure row."),
+			toggleProsignThreshParam(           "07 Prosign Threshold", "Show/hide PROSIGN threshold(s)."),
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
             ////////////////////////////////////////////////     
 
-            toggleUncertainStructParam(         "07 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
-            toggleUncertaintyParam(             "08 Uncertainty", "Show/hide uncertainty row."),
-            viewModeParam(                      "09 VIEW MODE", "Switch between different view modes."),
-            certainBlockChartColorParam(        "10 Certain: Block chart color", "Choose color of block chart for certain structure."),
-            certainStructColorParam(            "11 Certain: Structure color", "Choose color of structure for certain structure."),
-            uncertainBlockChartColorParam(      "12 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
-            uncertainBlockChartOrientationParam("13 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
-            uncertainStructColorParam(          "14 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
-            uncertainStructGeometryParam(       "15 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
-            geometryTessParam(                  "16 Geometry tesselation", "The geometry tesselation level."),
-            uncertainColorInterpolParam(        "17 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
-            uncertainGardientIntervalParam(     "18 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
-            toggleUncSeparatorParam(            "19 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
-            toggleLegendParam(                  "20 Legend Drawing", "Show/hide row legend/key on the left."),
-            toggleTooltipParam(                 "21 ToolTip", "Show/hide tooltip information."),
-            resCountPerRowParam(                "22 Residues Per Row", "The number of residues per row."),
-            clearResSelectionParam(             "23 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
-            colorTableFileParam(                "24 Color Table Filename", "The filename of the color table."),
-			reloadShaderParam(                  "25 Reload shaders", "Reload the shaders."),
+            toggleUncertainStructParam(         "08 Uncertain Structure", "Show/hide row with detailed uncertainty of secondary structure."),
+            toggleUncertaintyParam(             "09 Uncertainty", "Show/hide uncertainty row."),
+            viewModeParam(                      "10 VIEW MODE", "Switch between different view modes."),
+            certainBlockChartColorParam(        "11 Certain: Block chart color", "Choose color of block chart for certain structure."),
+            certainStructColorParam(            "12 Certain: Structure color", "Choose color of structure for certain structure."),
+            uncertainBlockChartColorParam(      "13 Uncertain: Block chart color", "Choose color of block chart for uncertain structure."),
+            uncertainBlockChartOrientationParam("14 Uncertain: Block orientation", "Choose orientation of block chart for uncertain structure."),
+            uncertainStructColorParam(          "15 Uncertain: Structure color", "Choose color of structure for uncertain structure."),
+            uncertainStructGeometryParam(       "16 Uncertain: Structure geometry", "Choose geometry of structure for uncertain structure."),
+            geometryTessParam(                  "17 Geometry tesselation", "The geometry tesselation level."),
+            uncertainColorInterpolParam(        "18 Uncertain: Color interpolation", "Choose method for color interpolation (only available for some uncertainty visualizations)."),
+            uncertainGardientIntervalParam(     "19 Uncertain: Gradient interval", "Choose interval width for color interpolation gradient."),
+            toggleUncSeparatorParam(            "20 Separator Line", "Show/Hide separator line for amino-acids in uncertainty visualization."),
+            toggleLegendParam(                  "21 Legend Drawing", "Show/hide row legend/key on the left."),
+            toggleTooltipParam(                 "22 ToolTip", "Show/hide tooltip information."),
+            resCountPerRowParam(                "23 Residues Per Row", "The number of residues per row."),
+            clearResSelectionParam(             "24 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
+            colorTableFileParam(                "25 Color Table Filename", "The filename of the color table."),
+			reloadShaderParam(                  "26 Reload shaders", "Reload the shaders."),
 			toggleWireframeParam("Wireframe", "Toggle wireframe."),
             dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), currentGeometryTess(25),
             markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), secStructRows(0), pdbID(""), pdbLegend("")
@@ -168,6 +169,10 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     // param slot for DSSP threshold toggling
     this->toggleDsspThreshParam.SetParameter(new param::BoolParam(true)); 
     this->MakeSlotAvailable(&this->toggleDsspThreshParam);
+
+	// param slot for PROSIGN threshold toggling
+	this->toggleProsignThreshParam.SetParameter(new param::BoolParam(true));
+	this->MakeSlotAvailable(&this->toggleProsignThreshParam);
 
 	// param slot for DSSP threshold toggling
 	this->toggleWireframeParam.SetParameter(new param::BoolParam(false));
@@ -274,8 +279,9 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->methodRows    = 4;
     this->rowHeight     = 2.0f + static_cast<float>(this->secStructRows);   
 
-	this->strideThresholdCount = 7;
-	this->dsspThresholdCount   = 2; // only showing HBondAc0 and HBondDo0
+	this->strideThresholdCount  = 7;
+	this->dsspThresholdCount    = 2; // only showing HBondAc0 and HBondDo0
+	this->prosignThresholdCount = 4; // only showing alpha, 3_10, pi and beta
 		
     // init animation timer
     this->animTimer = std::clock();
@@ -518,6 +524,9 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
 	if (this->toggleProsignParam.IsDirty()) {
 			this->dataPrepared = false;
 	}
+	if (this->toggleProsignThreshParam.IsDirty()) {
+		this->dataPrepared = false;
+	}
 	
     ////////////////////////////////////////////////
     // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -579,6 +588,8 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
                 this->secStructRows += this->strideThresholdCount;
             if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value())
                 this->secStructRows += this->dsspThresholdCount;
+			if (this->toggleProsignThreshParam.Param<param::BoolParam>()->Value())
+				this->secStructRows += this->prosignThresholdCount;
         }
         else if (this->currentViewMode == VIEWMODE_UNFOLDED_SEQUENCE) { // add an additional row to increase gap for curly braces (+0.5 above and below)
             this->methodRows++;
@@ -622,6 +633,7 @@ bool UncertaintySequenceRenderer::GetExtents(view::CallRender2D& call) {
             this->toggleStrideThreshParam.ResetDirty();
 			this->toggleDsspThreshParam.ResetDirty();	
 			this->toggleProsignParam.ResetDirty();
+			this->toggleProsignThreshParam.ResetDirty();
 			
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -1471,7 +1483,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
                     tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::DSSP)][i][0];
                     for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-                        if ((this->strideStructThreshold[i][j] < 1.0E38f) && (this->strideStructThreshold[i][j] != 0.0f)) {
+                        if ((this->dsspStructEnergy[i][j] < 1.0E38f) && (this->dsspStructEnergy[i][j] != 0.0f)) {
                             this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], (this->vertices[i * 2 + 1] + yPos + (float)j),
                                 this->dsspStructEnergy[i][j], min, max, threshold);
                         }
@@ -1497,6 +1509,50 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                 }
                 yPos += 1.0f;
             }
+			if (this->toggleProsignThreshParam.Param<param::BoolParam>()->Value()) {
+				float threshold;
+				float min, max;
+
+				for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+					tmpStruct = this->sortedSecStructAssignment[static_cast<unsigned int>(UncertaintyDataCall::assMethod::PROSIGN)][i][0];
+					for (unsigned int j = 0; j < this->prosignThresholdCount; j++) {
+						if ((this->prosignStructThreshold[i][j] < 1.0E38f) && (this->prosignStructThreshold[i][j] != 0.0f)) {
+
+							switch (j) {
+							case(0): // alpha helix
+								threshold = this->prosignStructThreshold[i][4];
+								min = 0.0f;
+								max = threshold * 2.0f;
+								break;
+							case(1): // 3_10 helix
+								threshold = this->prosignStructThreshold[i][4];
+								min = 0.0f;
+								max = threshold * 2.0f;
+								break;
+							case(2): // pi helix
+								threshold = this->prosignStructThreshold[i][4];
+								min = 0.0f;
+								max = threshold * 2.0f;
+								break;
+							case(3): // beta sheet
+								threshold = this->prosignStructThreshold[i][5];
+								min = 0.0f;
+								max = threshold * 2.0f;
+								break;
+							default:
+								threshold = this->prosignStructThreshold[i][4];
+								min = 0.0f;
+								max = threshold * 2.0f;
+								break;
+							}
+
+							this->DrawThresholdEnergyValueTiles(tmpStruct, this->residueFlag[i], this->vertices[i * 2], this->vertices[i * 2 + 1] + yPos + (float)j,
+								this->prosignStructThreshold[i][j], min, max, threshold);
+						}
+					}
+				}
+				yPos += this->prosignThresholdCount;
+			}
 
             ////////////////////////////////////////////////
             // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -1879,6 +1935,21 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                 fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                             yPos += 1.0f;
                         }
+						if (this->toggleProsignThreshParam.Param<param::BoolParam>()->Value()) {
+							for (unsigned int j = 0; j < this->prosignThresholdCount; j++) {
+								switch (j) {
+								case(0): tmpStr = "PROSIGN Threshold Alpha-Helix:"; break;
+								case(1): tmpStr = "PROSIGN Threshold 3_10-Helix:"; break;
+								case(2): tmpStr = "PROSIGN Threshold Pi-Helix:"; break;
+								case(3): tmpStr = "PROSIGN Threshold Beta-Sheet:"; break;
+								default: tmpStr = "PROSIGN UNKNOWN Threshold"; break;
+								}
+								wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+								theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos + float(j)), wordlength, 1.0f,
+									fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+							}
+							yPos += (float)this->prosignThresholdCount;
+						}
 
                         ////////////////////////////////////////////////
                         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -2232,7 +2303,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         if (this->toggleDsspThreshParam.Param<param::BoolParam>()->Value()) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 for (unsigned int j = 0; j < this->dsspThresholdCount; j++) {
-                                    if ((this->strideStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->strideStructThreshold[mousePosResIdx][j] != 0.0f)) {
+                                    if ((this->dsspStructEnergy[mousePosResIdx][j] < 1.0E38f) && (this->dsspStructEnergy[mousePosResIdx][j] != 0.0f)) {
                                         switch (j) {
                                         case (0): tmpStr = "Hb-E Acc.: "; break;
                                         case (1): tmpStr = "Hb-E Don.: "; break;
@@ -2264,6 +2335,40 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                             }
                             start += perCentRow;
                         }
+						if (this->toggleProsignThreshParam.Param<param::BoolParam>()->Value()) {
+							if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
+								for (unsigned int j = 0; j < this->prosignThresholdCount; j++) {
+									if ((this->prosignStructThreshold[mousePosResIdx][j] < 1.0E38f) && (this->prosignStructThreshold[mousePosResIdx][j] != 0.0f)) {
+										switch (j) {
+										case(0):
+											tmpStr = "Alpha-H.:";
+											tmpStr2.Format("%.3f (< %.2f)", this->prosignStructThreshold[mousePosResIdx][j], PROSIGN_ALPHA);
+											break;
+										case(1):
+											tmpStr = "3_10-H.:";
+											tmpStr2.Format("%.3f (< %.2f)", this->prosignStructThreshold[mousePosResIdx][j], PROSIGN_ALPHA);
+											break;
+										case(2):
+											tmpStr = "Pi-H.:";
+											tmpStr2.Format("%.3f (< %.2f)", this->prosignStructThreshold[mousePosResIdx][j], PROSIGN_ALPHA);
+											break;
+										case(3):
+											tmpStr = "Beta-S.:";
+											tmpStr2.Format("%.3f (< %.2f)", this->prosignStructThreshold[mousePosResIdx][j], PROSIGN_BETA);
+											break;
+										default:
+											tmpStr = "Prosign UNKNOWN Threshold";
+											tmpStr2.Format("%.3f (< %.2f)", this->prosignStructThreshold[mousePosResIdx][j], PROSIGN_ALPHA);
+											break;
+										}
+										
+									}
+									start += perCentRow;
+								}
+							} else {
+								start += (perCentRow * this->prosignThresholdCount);
+							}
+						}
 
                         ////////////////////////////////////////////////
                         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
@@ -3166,6 +3271,9 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
     this->dsspStructEnergy.Clear();
     this->dsspStructEnergy.AssertCapacity(this->aminoAcidCount);
 
+	this->prosignStructThreshold.Clear();
+	this->prosignStructThreshold.AssertCapacity(this->aminoAcidCount);
+
     this->residueFlag.Clear();
     this->residueFlag.AssertCapacity(this->aminoAcidCount);
     
@@ -3291,6 +3399,8 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
         this->strideStructThreshold.Add(udc->GetStrideThreshold(aa));
         // store dssp energy values
         this->dsspStructEnergy.Add(udc->GetDsspEnergy(aa));
+		// store prosign threshold values
+		this->prosignStructThreshold.Add(udc->GetProsignThreshold(aa));
 
 
         // count different chains and set seperator vertices and chain color

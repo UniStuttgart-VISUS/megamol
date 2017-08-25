@@ -189,7 +189,8 @@ namespace megamol {
 			vislib::Array<vislib::math::Vector<float, 7> > strideStructThreshold;
             /** The 4 DSSP energy values per amino-acid */
             vislib::Array<vislib::math::Vector<float, 4> > dsspStructEnergy;
-
+			/** The 6 PROSIGN threshold values per amino-acid */
+			vislib::Array<vislib::math::Vector<float, 6> > prosignStructThreshold;
 
             /** The pdb id */
             vislib::StringA pdbID;

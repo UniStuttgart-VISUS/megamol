@@ -190,6 +190,7 @@ bool UncertaintyDataLoader::getData(Call& call) {
 		udc->SetUncertainty(&this->uncertainty);
         udc->SetStrideThreshold(&this->strideStructThreshold);
         udc->SetDsspEnergy(&this->dsspStructEnergy);
+		udc->SetProsignThreshold(&this->prosignStructThreshold);
         return true;
     }
 }
@@ -228,6 +229,7 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 
     this->strideStructThreshold.Clear();
     this->dsspStructEnergy.Clear();
+	this->prosignStructThreshold.Clear();
 
     // check if file ending matches ".uid"
     if(!filenameA.Contains(".uid")) {
@@ -255,6 +257,7 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
 
         this->strideStructThreshold.AssertCapacity(file.Count());
         this->dsspStructEnergy.AssertCapacity(file.Count());
+		this->prosignStructThreshold.AssertCapacity(file.Count());
 
         this->chainID.AssertCapacity(file.Count());
         this->aminoAcidName.AssertCapacity(file.Count());
@@ -497,6 +500,24 @@ bool UncertaintyDataLoader::ReadInputFile(const vislib::TString& filename) {
                     tmpVec4[2] = HBondAc1;
                     tmpVec4[3] = HBondDo1;
                     this->dsspStructEnergy.Add(tmpVec4);
+
+					// Read threshold values of PROSIGN
+					std::string bla = line.Substring(498, 10);
+					float alphaValue = (float)std::atof(line.Substring(498, 10));
+					float threeTenValue = (float)std::atof(line.Substring(511, 9));
+					float piValue = (float)std::atof(line.Substring(523, 7));
+					float betaValue = (float)std::atof(line.Substring(533, 9));
+					float helixThr = (float)std::atof(line.Substring(545, 11));
+					float betaThr = (float)std::atof(line.Substring(559, 10));
+
+					vislib::math::Vector<float, 6> tmpVec6;
+					tmpVec6[0] = (alphaValue > 1.0E38f) ? (1.0E38f) : alphaValue;
+					tmpVec6[1] = (threeTenValue > 1.0E38f) ? (1.0E38f) : threeTenValue;
+					tmpVec6[2] = (piValue > 1.0E38f) ? (1.0E38f) : piValue;
+					tmpVec6[3] = (betaValue > 1.0E38f) ? (1.0E38f) : betaValue;
+					tmpVec6[4] = (helixThr > 1.0E38f) ? (1.0E38f) : helixThr;
+					tmpVec6[5] = (betaThr > 1.0E38f) ? (1.0E38f) : betaThr;
+					this->prosignStructThreshold.Add(tmpVec6);
                 }
             }
             // Next line
