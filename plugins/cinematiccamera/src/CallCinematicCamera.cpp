@@ -20,7 +20,7 @@ CallCinematicCamera::CallCinematicCamera(void) : core::AbstractGetDataCall(),
 
     this->selectedTime     = 0.0f;
     this->totalTime        = 1.0f;
-    this->interpolSteps    = 1;
+    this->interpolSteps    = 10;
 }
 
 

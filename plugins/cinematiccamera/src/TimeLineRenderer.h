@@ -117,6 +117,12 @@ namespace megamol {
 			* variables
 			**********************************************************************/
 
+            enum ColorMode {
+                DEFAULT_COLOR  = 0,
+                SELECTED_COLOR = 1,
+                DRAGDROP_COLOR = 2
+            };
+
             // font rendering
 #ifdef USE_SIMPLE_FONT
             vislib::graphics::gl::SimpleFont  theFont;
@@ -170,7 +176,7 @@ namespace megamol {
             bool LoadTexture(vislib::StringA filename);
 
             // ...
-            void DrawKeyframeSymbol(float posX, float posY, bool selected, bool dragdrop);
+            void DrawKeyframeSymbol(float posX, float posY, ColorMode color);
 
 		};
 

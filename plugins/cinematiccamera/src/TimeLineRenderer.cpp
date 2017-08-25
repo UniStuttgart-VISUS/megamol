@@ -157,7 +157,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     // Update data in cinematic camera call
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (!ccc) return false;
-    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return false;
+    // Updated data from cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
     bool updateFontSize = false;
 
@@ -260,7 +261,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (keyframes->Count() > 0) {
         // draw the defined keyframes
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            this->DrawKeyframeSymbol(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), ((*keyframes)[i] == s), false);
+            ColorMode cMode = ((*keyframes)[i] == s) ? (ColorMode::SELECTED_COLOR) : (ColorMode::DEFAULT_COLOR);
+            this->DrawKeyframeSymbol(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), cMode);
         }
     }
 
@@ -268,7 +270,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (!keyframes->Contains(s)) {
         float x = this->tlStartPos.GetX() + s.getTime() * frameFrac;
         glLineWidth(3.0f);
-        glColor3f(0.0f, 0.0f, 1.0f);
+        glColor3f(0.7f, 0.0f, 0.7f);
         glBegin(GL_LINES);
             glVertex2f(x, this->tlStartPos.GetY() + this->markerSize);
             glVertex2f(x, this->tlStartPos.GetY());
@@ -277,7 +279,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Draw dragged keyframe
     if (this->aktiveDragDrop) {
-        this->DrawKeyframeSymbol(this->tlStartPos.GetX() + this->dragDropKeyframe.getTime() * frameFrac, this->tlStartPos.GetY(), false, true);
+        this->DrawKeyframeSymbol(this->tlStartPos.GetX() + this->dragDropKeyframe.getTime() * frameFrac, this->tlStartPos.GetY(), ColorMode::DRAGDROP_COLOR);
     }
 
 	return true;
@@ -287,28 +289,14 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 /*
 * cinematiccamera::TimeLineRenderer::DrawKeyframeSymbol
 */
-void TimeLineRenderer::DrawKeyframeSymbol(float posX, float posY, bool selected, bool dragdrop) {
+void TimeLineRenderer::DrawKeyframeSymbol(float posX, float posY, ColorMode color) {
 
-    if (dragdrop) {
-        glColor3f(0.6f, 0.6f, 1.0f);
+    switch (color) {
+        case(ColorMode::DEFAULT_COLOR):  glColor3f(0.0f, 0.0f, 0.7f); break;
+        case(ColorMode::SELECTED_COLOR): glColor3f(0.7f, 0.0f, 0.7f); break;
+        case(ColorMode::DRAGDROP_COLOR): glColor3f(1.0f, 0.0f, 1.0f); break;
+        default: glColor3f(0.5f, 0.5f, 0.5f); break;
     }
-    else {
-        if (selected) {
-            glColor3f(0.2f, 0.2f, 1.0f);
-        }
-        else {
-            glColor3f(0.0f, 0.0f, 0.5f);
-        }
-    }
-
-    // as geometry
-    /*
-    glBegin(GL_TRIANGLES);
-        glVertex2f(posX, posY);
-        glVertex2f(posX - this->markerSize/2.0f, posY + this->markerSize);
-        glVertex2f(posX + this->markerSize/2.0f, posY + this->markerSize);
-    glEnd();
-    */
 
     // as texture
     glEnable(GL_TEXTURE_2D);
@@ -335,6 +323,116 @@ void TimeLineRenderer::DrawKeyframeSymbol(float posX, float posY, bool selected,
 
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
+
+    // as geometry
+    /*
+    glBegin(GL_TRIANGLES);
+    glVertex2f(posX, posY);
+    glVertex2f(posX - this->markerSize/2.0f, posY + this->markerSize);
+    glVertex2f(posX + this->markerSize/2.0f, posY + this->markerSize);
+    glEnd();
+    */
+}
+
+
+/*
+* cinematiccamera::TimeLineRenderer::MouseEvent
+*/
+bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
+
+    bool consume = false;
+
+    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
+    if (ccc == NULL) return false;
+    // Updated data from cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
+
+    //Get keyframes
+    vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
+    if (keyframes == NULL) {
+        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is NULL.");
+        return false;
+    }
+    float maxTime = ccc->getTotalTime();
+
+	// on leftclick, check if a keyframe is hit and set the selected keyframe
+	if (!this->moveTimeLine && (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN)) { 
+        consume = true; // Consume all left click events
+
+        // Do not snap to keyframe when mouse movement is continuous
+        float offset = 0.0f;
+        if (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED || ((x == this->lastMouseX) && (y == this->lastMouseY))) {
+            offset = this->markerSize / 2.0f;
+        }
+
+		//Check all keyframes if they are hit
+        bool hit = false;
+		for (unsigned int i = 0; i < keyframes->Count(); i++){
+			float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
+			if ((x < (posX + offset)) && (x > (posX - offset))) {
+                // Set keyframe as selected
+				ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
+				if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+                hit = true;
+                break; // Exit loop on hit
+			}
+		}
+
+        // Get interpolated keyframe selection
+        if (!hit && ((x > this->tlStartPos.GetX()) && (x < this->tlEndPos.GetX()))) {
+            // Set an interpolated keyframe as selected
+            float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
+            ccc->setSelectedKeyframeTime(st);
+			if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
+        }
+
+        // Store current mouse position for detecting continuous mouse movement
+        this->lastMouseX = x;
+        this->lastMouseY = y;
+	} 
+   
+
+    // Drag & Drop of keyframe with right-click
+    if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
+        consume = true; // Consume all right click events
+
+        //Check all keyframes if they are hit
+        this->aktiveDragDrop = false;
+        for (unsigned int i = 0; i < keyframes->Count(); i++) {
+            float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
+            if ((x < (posX + this->markerSize / 2.0f)) && (x > (posX - this->markerSize / 2.0f))) {
+                // Store hit keyframe locally
+                this->dragDropKeyframe = (*keyframes)[i];
+                this->aktiveDragDrop   = true;
+                ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
+                if (!(*ccc)(CallCinematicCamera::CallForDragKeyframe)) return false;
+                break; // Exit loop on hit
+            }
+        }
+    }
+    else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
+        consume = true; // Consume all right click events
+
+        // Update time of dragged keyframe. Only for locally stred dragged keyframe -> just for drawing
+        if (this->aktiveDragDrop) {
+            float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
+            this->dragDropKeyframe.setTime(st);
+        }
+    }
+    else if (!(flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
+        consume = true; // Consume all right click events
+
+        if (this->aktiveDragDrop) {
+            float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
+            ccc->setDropTime(st);
+
+            if (!(*ccc)(CallCinematicCamera::CallForDropKeyframe)) return false;
+            this->aktiveDragDrop = false;
+        }
+    }
+
+	// If true is returned, manipulator cannot move camera
+	return consume;
 }
 
 
@@ -383,113 +481,4 @@ bool TimeLineRenderer::LoadTexture(vislib::StringA filename) {
         vislib::sys::Log::DefaultLog.WriteError("[TIME LINE RENDERER] [Load Texture] Could not find \"%s\" texture.", filename.PeekBuffer());
     }
     return false;
-}
-
-
-/*
-* cinematiccamera::TimeLineRenderer::MouseEvent
-*/
-bool TimeLineRenderer::MouseEvent(float x, float y, view::MouseFlags flags){
-
-    bool consume = false;
-
-    CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-    if (ccc == NULL) return false;
-
-    //Get keyframes
-    vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();
-    if (keyframes == NULL) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Pointer to keyframe array is NULL.");
-        return false;
-    }
-    float maxTime = ccc->getTotalTime();
-
-	// on leftclick, check if a keyframe is hit and set the selected keyframe
-	if (!this->moveTimeLine && (flags & view::MOUSEFLAG_BUTTON_LEFT_DOWN)) { 
-        consume = true; // Consume all left click events
-
-        // Do not snap to keyframe when mouse movement is continuous
-        float offset = 0.0f;
-        if (flags & view::MOUSEFLAG_BUTTON_LEFT_CHANGED || ((x == this->lastMouseX) && (y == this->lastMouseY))) {
-            offset = this->markerSize / 2.0f;
-        }
-
-		//Check all keyframes if they are hit
-        bool hit = false;
-		for (unsigned int i = 0; i < keyframes->Count(); i++){
-			float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
-			if ((x < (posX + offset)) && (x > (posX - offset))) {
-                // Set keyframe as selected
-				ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
-				if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
-                hit = true;
-                break; // Exit loop on hit
-			}
-		}
-
-        // Get interpolated keyframe selection
-        if (!hit && ((x > this->tlStartPos.GetX()) && (x < this->tlEndPos.GetX()))) {
-            // Set an interpolated keyframe as selected
-            float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
-            ccc->setSelectedKeyframeTime(st);
-			if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
-        }
-
-        // Store current mouse position for detecting continuous mouse movement
-        this->lastMouseX = x;
-        this->lastMouseY = y;
-	} 
-    
-    // check if mouse position is over fixed keyframe
-    // store keyframe locally
-    // draw drag&drop keyframe in gray
-    // when right mouse button is released delete selected keyframe and insert moved one at new position (replace: no) -> insert (callback)
-
-    //this->dragDropKeyframe
-
-
-
-    // Drag & Drop of keyframe with right-click
-    if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
-        consume = true; // Consume all right click events
-
-        //Check all keyframes if they are hit
-        this->aktiveDragDrop = false;
-        for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            float posX = this->tlStartPos.GetX() + (*keyframes)[i].getTime() / maxTime * this->tlLength;
-            if ((x < (posX + this->markerSize / 2.0f)) && (x > (posX - this->markerSize / 2.0f))) {
-                // Store hit keyframe locally
-                this->dragDropKeyframe = (*keyframes)[i];
-                this->aktiveDragDrop   = true;
-                ccc->setSelectedKeyframeTime((*keyframes)[i].getTime());
-                if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return false;
-                //vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Right-Click: DOWN");
-                break; // Exit loop on hit
-            }
-        }
-    }
-    else if ((flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && !(flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
-        consume = true; // Consume all right click events
-
-        // Update time of dragged keyframe
-        if (this->aktiveDragDrop) {
-            float st = ((x - this->tlStartPos.GetX()) / this->tlLength * maxTime);
-            this->dragDropKeyframe.setTime(st);
-            //vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Right-Click: HOLD");
-        }
-    }
-    else if (!(flags & view::MOUSEFLAG_BUTTON_RIGHT_DOWN) && (flags & view::MOUSEFLAG_BUTTON_RIGHT_CHANGED)) {
-        consume = true; // Consume all right click events
-
-        if (this->aktiveDragDrop) {
-
-
-
-            this->aktiveDragDrop = false;
-            //vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Mouse Event] Right-Click: UP");
-        }
-    }
-
-	// If true is returned, manipulator cannot move camera
-	return consume;
 }

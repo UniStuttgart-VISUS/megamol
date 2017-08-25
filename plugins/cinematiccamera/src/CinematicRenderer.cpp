@@ -130,7 +130,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
 	if (oc == NULL) return false;
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
-	if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return false;
+	if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
 	// Get bounding box of renderer.
 	if (!(*oc)(1)) return false;
@@ -178,8 +178,6 @@ bool CinematicRenderer::Render(Call& call) {
 
     CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (ccc == NULL) return false;
-    // Update data in cinematic camera call
-    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return false;
 
     // Update parameter
     if (this->loadTimeParam.IsDirty()) {
@@ -194,6 +192,9 @@ bool CinematicRenderer::Render(Call& call) {
         if (!(*ccc)(CallCinematicCamera::CallForInterpolatedCamPos)) return false;
         this->stepsParam.ResetDirty();
     }
+
+    // Updated data from cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
     // ...
     *oc = *cr3d;
@@ -231,6 +232,9 @@ bool CinematicRenderer::Render(Call& call) {
     // Draw cinematic renderer stuff
     if (keyframes->Count() > 0) {
 
+        // Get the selected Keyframe
+        Keyframe s = ccc->getSelectedKeyframe();
+
         glPushMatrix();
         glDisable(GL_LIGHTING);
 
@@ -246,42 +250,40 @@ bool CinematicRenderer::Render(Call& call) {
         glLineWidth(2.0f);
         glColor3f(0.0f, 0.0f, 1.0f);
         glBegin(GL_LINE_STRIP);
-        for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
-            p = (*interpolKeyframes)[i];
-            glVertex3f(p.GetX(), p.GetY(), p.GetZ());
-        }
+            for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
+                p = (*interpolKeyframes)[i];
+                glVertex3f(p.GetX(), p.GetY(), p.GetZ());
+            }
         glEnd();
 
-        // Draw point for every fixed keyframe
+        // Draw point for every fixed keyframe (but not slected one)
         glPointSize(15.0f);
-        glColor3f(0.3f, 0.3f, 1.0f);
         glBegin(GL_POINTS);
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
             // Draw fixed keyframe
             p = (*keyframes)[i].getCamPosition();
+            glColor3f(0.3f, 0.3f, 1.0f);
+            if (p == s.getCamPosition()) {
+                glColor3f(0.7f, 0.0f, 0.7f);
+            }
             glVertex3f(p.GetX(), p.GetY(), p.GetZ());
         }
         glEnd();
 
         // draw the selected camera marker
-		Keyframe s = ccc->getSelectedKeyframe();
         vislib::math::Point<float, 3>  pos    = s.getCamPosition();
         vislib::math::Vector<float, 3> up     = s.getCamUp();
         vislib::math::Point<float, 3>  lookat = s.getCamLookAt();
-        up.ScaleToLength(0.5f);
 
         glLineWidth(1.5f);
+        glColor3f(0.0f, 0.8f, 0.8f);
         glBegin(GL_LINES);
-
-        // Up vector at camera position
-		glColor3f(1.0f, 0.0f, 1.0f);
-        glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
-        glVertex3f(pos.GetX()+ up.GetX(), pos.GetY() + up.GetY(), pos.GetZ() + up.GetZ());
-        // LookAt vector at camera position
-		glColor3f(0.0f, 1.0f, 1.0f);
-        glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
-        glVertex3f(lookat.GetX(), lookat.GetY(), lookat.GetZ());
-
+            // Up vector at camera position
+	        glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
+            glVertex3f(pos.GetX()+ up.GetX(), pos.GetY() + up.GetY(), pos.GetZ() + up.GetZ());
+            // LookAt vector at camera position
+            glVertex3f(pos.GetX(), pos.GetY(), pos.GetZ());
+            glVertex3f(lookat.GetX(), lookat.GetY(), lookat.GetZ());
         glEnd();
 
         glPopMatrix();
@@ -303,8 +305,8 @@ bool CinematicRenderer::MouseEvent(float x, float y, core::view::MouseFlags flag
 
         CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
         if (ccc == NULL) return false;
-        // Update data in cinematic camera call
-        if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return false;
+        // Updated data from cinematic camera call
+        if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
         // Get pointer to keyframes
         vislib::Array<Keyframe> *keyframes = ccc->getKeyframes();

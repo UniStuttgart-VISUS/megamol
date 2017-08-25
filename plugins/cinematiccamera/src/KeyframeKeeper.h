@@ -109,7 +109,9 @@ namespace megamol {
             Array<math::Point<float, 3> >        interpolCamPos;
             math::Cuboid<float>                  boundingBox;
             Keyframe                             selectedKeyframe;
+            Keyframe                             dragDropKeyframe;
             float                                totalTime;
+            unsigned int                         interpolSteps;
             SmartPtr<graphics::CameraParameters> cameraParam; 
 
             // variables only used in keyframe keeper
@@ -122,7 +124,7 @@ namespace megamol {
             megamol::core::CalleeSlot cinematicCallSlot;
 
 			/** Callback for updating the keyframe keeper */
-			bool CallForUpdateKeyframeKeeper(core::Call& c);
+			bool CallForGetUpdatedKeyframeData(core::Call& c);
 			/** */
 			bool CallForSetTotalTime(core::Call& c);
 			/** */
@@ -131,6 +133,10 @@ namespace megamol {
 			bool CallForSetSelectedKeyframe(core::Call& c);
 			/** */
 			bool CallForSetCameraForKeyframe(core::Call& c);
+            /** */
+            bool CallForDragKeyframe(core::Call& c); 
+            /** */
+            bool CallForDropKeyframe(core::Call& c);
 
             /**********************************************************************
             * parameters
@@ -142,6 +148,8 @@ namespace megamol {
             core::param::ParamSlot replaceKeyframeParam;
             /** */
             core::param::ParamSlot deleteSelectedKeyframeParam;
+            /** */
+            core::param::ParamSlot  setKeyframesToSameSpeed;
 			/**param for currentkeyframe Time */
 			core::param::ParamSlot editCurrentTimeParam;
 			/**param for currentkeyframe Position */

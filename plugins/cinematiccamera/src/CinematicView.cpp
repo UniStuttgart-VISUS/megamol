@@ -72,8 +72,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
 	CallCinematicCamera *ccc = this->keyframeKeeperSlot.CallAs<CallCinematicCamera>();
     if (!ccc) return;
-    if (!(*ccc)(CallCinematicCamera::CallForUpdateKeyframeKeeper)) return;
-
+    // Updated data from cinematic camera call
+    if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
 
     // Get selected keyframe
     Keyframe s = ccc->getSelectedKeyframe();
@@ -86,6 +86,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         // Update data in cinematic camera call
         if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return;
         this->currentTime = viewTime;
+        // Updated data from cinematic camera call
+        if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
     }
     else { // Time is set by SELECTED FRAME
         // Set animation time based on selected keyframe (GetSlot(2)= this->animTimeSlot)
@@ -94,8 +96,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->currentTime = s.getTime();
     }
 
+
     // Set camera parameters of selected keyframe for this view
     // but ONLY if selected keyframe differs to last locally stored and shown keyframe
+    s = ccc->getSelectedKeyframe(); // Maybe updated
     if (!(this->shownKeyframe.getTime() == s.getTime())) {
         vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
         this->cam.Parameters()->SetView(p->Position(), p->LookAt(), p->Up());
@@ -106,7 +110,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Propagate camera parameter to keyframe keeper
     ccc->setCameraParameter(this->cam.Parameters());
     if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
-
 
     // Adjust cam to selected skybox side
 	vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
