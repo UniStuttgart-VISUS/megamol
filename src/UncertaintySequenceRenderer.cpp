@@ -206,7 +206,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->currentUncertainStructColor           = UNCERTAIN_STRUCT_GRAY;
     this->currentUncertainStructGeometry        = UNCERTAIN_STRUCT_DYN_EQUAL;
     this->currentUncertainColorInterpol         = UNCERTAIN_COLOR_HSL_HP;
-    this->currentViewMode                       = VIEWMODE_UNFOLDED_AMINOACID;
+    this->currentViewMode                       = VIEWMODE_NORMAL_SEQUENCE;
         
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentCertainBlockChartColor));
     tmpEnum->SetTypePair(CERTAIN_BC_NONE, "no coloring (background)");

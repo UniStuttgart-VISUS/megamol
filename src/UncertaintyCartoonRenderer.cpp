@@ -997,7 +997,11 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 						calpha.unc[k] = this->secStructUncertainty[(int)this->currentMethodData][uncIndex][k];
 						if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
 							//calpha.unc[k] = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor())/(mol->MaximumBFactor() - mol->MinimumBFactor());
-							calpha.unc[k] = mol->AtomBFactors()[acid->CAlphaIndex()] / (std::fmaxf(mol->MaximumBFactor(), this->maxRMSFParam.Param<param::FloatParam>()->Value()));
+							if (this->showRMSFParam.Param < param::BoolParam>()->Value()) {
+								calpha.unc[k] = mol->AtomBFactors()[acid->CAlphaIndex()] / (std::fmaxf(mol->MaximumBFactor(), this->maxRMSFParam.Param<param::FloatParam>()->Value()));
+							} else {
+								calpha.unc[k] = mol->AtomBFactors()[acid->CAlphaIndex()];
+							}
 						}
 					}
 					if (this->currentColoringMode == (int)COLOR_MODE_CHAIN) {
@@ -1013,7 +1017,11 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 
 					if (this->bFactorAsUncertaintyParam.Param<param::BoolParam>()->Value()) {
 						//calpha.uncertainty = (mol->AtomBFactors()[acid->CAlphaIndex()] - mol->MinimumBFactor()) / (mol->MaximumBFactor() - mol->MinimumBFactor());
-						calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()] / (std::fmaxf(mol->MaximumBFactor(), this->maxRMSFParam.Param<param::FloatParam>()->Value()));
+						if (this->showRMSFParam.Param < param::BoolParam>()->Value()) {
+							calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()] / (std::fmaxf(mol->MaximumBFactor(), this->maxRMSFParam.Param<param::FloatParam>()->Value()));
+						} else {
+							calpha.uncertainty = mol->AtomBFactors()[acid->CAlphaIndex()];
+						}
 					}
 					
 					calpha.pos[0] = mol->AtomPositions()[3 * acid->CAlphaIndex()];
