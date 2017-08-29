@@ -3422,9 +3422,9 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall *udc, BindingS
 		this->chainColors.Add(float((int)currentChainID % 5) / 4.0f);
 		*/
 		
-		this->chainColors.Add(this->colorTable[cCnt].X());
-		this->chainColors.Add(this->colorTable[cCnt].Y());
-		this->chainColors.Add(this->colorTable[cCnt].Z());
+		this->chainColors.Add(this->colorTable[cCnt % this->colorTable.Count()].X());
+		this->chainColors.Add(this->colorTable[cCnt % this->colorTable.Count()].Y());
+		this->chainColors.Add(this->colorTable[cCnt % this->colorTable.Count()].Z());
 		
 
         // compute the position of the amino-acid icon

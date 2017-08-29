@@ -30,7 +30,7 @@
     /////////
     out vec4  objPos;
     out vec4  camPos;
-    out vec4  lightPos;
+    //out vec4  lightPos;
     out float squarRad;                                                 // radius squared
     out float rad;                                                      // radius
     out vec4  vertColor;
@@ -109,7 +109,7 @@
     camPos.xyz  -= objPos.xyz;                                          // cam pos to glyph space
 
     // calculate light position in glyph space
-    lightPos     = MVinv * gl_LightSource[0].position;
+    //lightPos     = MVinv * gl_LightSource[0].position;
     
     gl_Position  = objPos;
     gl_PointSize = 2.0;

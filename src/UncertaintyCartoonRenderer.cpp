@@ -1219,7 +1219,8 @@ bool UncertaintyCartoonRenderer::Render(Call& call) {
 			}
         }
 
-		glDisable(GL_CULL_FACE);
+		//glDisable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		glDisableClientState(GL_COLOR_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
