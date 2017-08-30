@@ -37,11 +37,6 @@ namespace megamol {
 				SKYBOX_DOWN  = 32
 			};
 
-            enum ViewMode {
-                VIEWMODE_SELECTION = 0,
-                VIEWMODE_ANIMATION = 1
-            };
-
 			typedef core::view::View3D Base;
 
 			/**
@@ -94,7 +89,16 @@ namespace megamol {
 		private:
 
             /**********************************************************************
-            * callback stuff
+            * variables
+            **********************************************************************/
+
+            float    currentTime;
+            Keyframe shownKeyframe;
+            int      cineXRes;
+            int      cineYRes;
+
+            /**********************************************************************
+            * callback
             **********************************************************************/
 
 			/** The keyframe keeper caller slot */
@@ -104,15 +108,12 @@ namespace megamol {
             * parameters
             **********************************************************************/
 
+            /** */
 			core::param::ParamSlot selectedSkyboxSideParam;
-
-            /**********************************************************************
-            * variables
-            **********************************************************************/
-
-            float    currentTime;
-            Keyframe shownKeyframe;
-
+            /** */
+            core::param::ParamSlot cinematicResolutionXParam;
+            /** */
+            core::param::ParamSlot cinematicResolutionYParam;
 		};
 
 	} /* end namespace cinematiccamera */

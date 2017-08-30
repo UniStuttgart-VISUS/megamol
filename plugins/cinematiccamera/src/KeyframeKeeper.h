@@ -67,10 +67,10 @@ namespace megamol {
 			
 		protected:
 
-            // ...
+            /** create */
 			virtual bool create(void);
 
-            // ...
+            /** release */
 			virtual void release(void);
 
 		private:
@@ -79,32 +79,35 @@ namespace megamol {
             * functions
             ***********************************************************************/
 
-            // Get an interpolated keyframe at time
+            /** Get an interpolated keyframe at specific time. */
             Keyframe interpolateKeyframe(float time);
 
-            // Add new keyframe to keyframe array
+            /** Add new keyframe to keyframe array. */
             bool addKeyframe(Keyframe kf);
 
-            // Replace keyframe in keyframe array
+            /** Replace existing keyframe in keyframe array.*/
             bool replaceKeyframe(Keyframe kf);
 
-            // Delete keyframe from keyframe array
+            /** Delete keyframe from keyframe array.*/
             bool deleteKeyframe(Keyframe kf);
 
-            // Load keyframes from file
+            /** Load keyframes from file.*/
             void loadKeyframes();
 
-            // Save keyframes to file
+            /** Save keyframes to file.*/
             void saveKeyframes();
 
-            // Refresh interpolated camera positions (called on keyframe changes)
+            /** Refresh interpolated camera positions (called when keyframe array changes). */
             void refreshInterpolCamPos(unsigned int s);
+
+            /** Updating edit parameters without setting them dirty.*/
+            void updateEditParameters(Keyframe k);
 
             /**********************************************************************
             * variables
             **********************************************************************/
 
-            // variables shared with call
+            // Variables shared/updated with call
             Array<Keyframe>                      keyframes;
             Array<math::Point<float, 3> >        interpolCamPos;
             math::Cuboid<float>                  boundingBox;
@@ -114,7 +117,7 @@ namespace megamol {
             unsigned int                         interpolSteps;
             SmartPtr<graphics::CameraParameters> cameraParam; 
 
-            // variables only used in keyframe keeper
+            // Variables only used in keyframe keeper
             vislib::StringA                     filename;
 
             /**********************************************************************
@@ -123,20 +126,22 @@ namespace megamol {
 
             megamol::core::CalleeSlot cinematicCallSlot;
 
-			/** Callback for updating the keyframe keeper */
+			/** Callback for updating parameters of the keyframe keeper */
 			bool CallForGetUpdatedKeyframeData(core::Call& c);
-			/** */
+			/** Callback for applying total time of animation */
 			bool CallForSetTotalTime(core::Call& c);
-			/** */
+			/** Callback for calculating new interpolated camera positions */
 			bool CallForInterpolatedCamPos(core::Call& c);
-			/** */
+			/** Callback for updating selected keyframe at new given time */
 			bool CallForSetSelectedKeyframe(core::Call& c);
-			/** */
+			/** Callback for updating current camera parameters for new keyframe */
 			bool CallForSetCameraForKeyframe(core::Call& c);
-            /** */
+            /** Callback for dragging selected keyframe */
             bool CallForDragKeyframe(core::Call& c); 
-            /** */
+            /** Callback for dropping selected keyframe */
             bool CallForDropKeyframe(core::Call& c);
+            /** Callback for updating selected keyframe with new given camera parameters */
+            bool CallForManipulateSelectedKeyframe(core::Call& c);
 
             /**********************************************************************
             * parameters
@@ -150,13 +155,13 @@ namespace megamol {
             core::param::ParamSlot deleteSelectedKeyframeParam;
             /** */
             core::param::ParamSlot  setKeyframesToSameSpeed;
-			/**param for currentkeyframe Time */
+			/**param for current keyframe Time */
 			core::param::ParamSlot editCurrentTimeParam;
-			/**param for currentkeyframe Position */
+			/**param for current keyframe Position */
 			core::param::ParamSlot editCurrentPosParam;
-			/**param for currentkeyframe LookAt */
+			/**param for current keyframe LookAt */
 			core::param::ParamSlot editCurrentLookAtParam;
-			/**param for currentkeyframe Up */
+			/**param for current keyframe Up */
 			core::param::ParamSlot editCurrentUpParam;
             /** */
             core::param::ParamSlot setTotalTimeParam;

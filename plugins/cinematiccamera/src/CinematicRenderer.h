@@ -34,22 +34,12 @@
 namespace megamol {
 	namespace cinematiccamera {
 		
-
-
 		/**
 		* A renderer that passes the render call to another renderer
 		*/
 		
 		class CinematicRenderer : public core::view::Renderer3DModule {
 		public:
-
-			/**
-			* The names of the rendering modes
-			*/
-			enum RenderingMode {
-				OVERVIEW	= 0,
-				PREVIEW		= 1
-			};
 
 			/**
 			* Gets the name of this module.
@@ -107,6 +97,27 @@ namespace megamol {
 
 		protected:
 
+            // enumeration of manipulator types
+            enum manipulatorType {
+                XAXIS = 0,
+                YAXIS = 1,
+                ZAXIS = 2,
+                CAMUP = 3,
+                CAMPOS = 4
+            };
+
+            // enumeration of color types
+            enum colType {
+                COL_SPLINE          = 0,
+                COL_KEYFRAME        = 1,
+                COL_SELECT_KEYFRAME = 2,
+                COL_SELECT_LOOKAT   = 3,
+                COL_SELECT_UP       = 4,
+                COL_SELECT_X_AXIS   = 5,
+                COL_SELECT_Y_AXIS   = 6,
+                COL_SELECT_Z_AXIS   = 7
+            };
+
 			/**
 			* The get capabilities callback. The module should set the members
 			* of 'call' to tell the caller its capabilities.
@@ -149,6 +160,47 @@ namespace megamol {
 		private:
 
             /**********************************************************************
+            * functions
+            **********************************************************************/
+
+            /**
+            * Check if mouse position hits point (as vector) in world space 
+            * coordinates within some offset.
+            *
+            * @param x 
+            * @param y
+            * @param o (=origin)
+            * @param m (=manipulator)
+            *
+            * @return True if point is hit.
+            */
+            bool processPointHit(float x, float y, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> manipPos, manipulatorType t);
+
+            /** Render 2D circle facing to the camera position */
+            void renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> centerPos);
+
+            /**********************************************************************
+            * variables
+            **********************************************************************/
+
+            struct manipulator {
+                bool            active;
+                manipulatorType type;
+                float           lastMouseX;
+                float           lastMouseY;
+                float           ssDiffX;
+                float           ssDiffY;
+            };
+
+
+            vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
+            vislib::Array<vislib::math::Vector<float, 3> > colors;
+            vislib::math::Rectangle<int> viewport;
+            unsigned int                 interpolSteps;
+            bool                         toggleManipulator;
+            manipulator                  currentManipulator;
+
+            /**********************************************************************
             * callback stuff
             **********************************************************************/
 
@@ -164,20 +216,10 @@ namespace megamol {
 			
             /** Amount of interpolation steps between keyframes */
             core::param::ParamSlot stepsParam;
-
             /** Param to load total time from slave renderer */
             core::param::ParamSlot loadTimeParam;
-
-            /**********************************************************************
-            * variables
-            **********************************************************************/
-
-            vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
-
-            float viewportStuff[4];
-
-            unsigned int   interpolSteps;
-
+            /** Param to toggle to manipulation mode of position or camera lookup */
+            core::param::ParamSlot toggleManipulateParam;
 		};
 
 	} /* end namespace cinematiccamera */

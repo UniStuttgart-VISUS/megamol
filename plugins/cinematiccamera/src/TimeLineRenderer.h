@@ -70,6 +70,13 @@ namespace megamol {
 
 		protected:
 
+            // The coloring mode for the keyframe marker
+            enum ColorMode {
+                DEFAULT_COLOR = 0,
+                SELECTED_COLOR = 1,
+                DRAGDROP_COLOR = 2
+            };
+
 			/**
 			* Implementation of 'Create'.
 			*
@@ -113,15 +120,19 @@ namespace megamol {
 
 		private:
 			
+            /**********************************************************************
+            * functions
+            **********************************************************************/
+
+            /** Loading texture of keyframe marker. */
+            bool LoadTexture(vislib::StringA filename);
+
+            /** Draw the keyframe marker. */
+            void DrawKeyframeMarker(float posX, float posY, ColorMode color);
+
 			/**********************************************************************
 			* variables
 			**********************************************************************/
-
-            enum ColorMode {
-                DEFAULT_COLOR  = 0,
-                SELECTED_COLOR = 1,
-                DRAGDROP_COLOR = 2
-            };
 
             // font rendering
 #ifdef USE_SIMPLE_FONT
@@ -135,7 +146,7 @@ namespace megamol {
             vislib::math::Vector<float, 2> tlStartPos;
             vislib::math::Vector<float, 2> tlEndPos;
             float                          tlLength;
-            unsigned int                   tlRes;
+            float                          timeStep;
             float                          devX, devY;
             float                          fontSize;
             float                          markerSize;
@@ -167,17 +178,6 @@ namespace megamol {
 
             /** move time line parameter */
             megamol::core::param::ParamSlot moveTimeLineParam;
-
-            /**********************************************************************
-            * functions
-            **********************************************************************/
-
-            // ...
-            bool LoadTexture(vislib::StringA filename);
-
-            // ...
-            void DrawKeyframeSymbol(float posX, float posY, ColorMode color);
-
 		};
 
 	} /* end namespace cinematiccamera */

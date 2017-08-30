@@ -37,14 +37,14 @@ namespace megamol {
 		public:
 
 			/** function name for getting all Keyframes */
-			static const unsigned int CallForGetUpdatedKeyframeData  = 0;
-			static const unsigned int CallForSetTotalTime            = 1;
-			static const unsigned int CallForInterpolatedCamPos      = 2;
-			static const unsigned int CallForSetSelectedKeyframe     = 3;
-			static const unsigned int CallForSetCameraForKeyframe    = 4;
-            static const unsigned int CallForDragKeyframe            = 5;
-            static const unsigned int CallForDropKeyframe            = 6;
-
+			static const unsigned int CallForGetUpdatedKeyframeData     = 0;
+			static const unsigned int CallForSetTotalTime               = 1;
+			static const unsigned int CallForInterpolatedCamPos         = 2;
+			static const unsigned int CallForSetSelectedKeyframe        = 3;
+			static const unsigned int CallForSetCameraForKeyframe       = 4;
+            static const unsigned int CallForDragKeyframe               = 5;
+            static const unsigned int CallForDropKeyframe               = 6;
+            static const unsigned int CallForManipulateSelectedKeyframe = 7;
 
 			/**
 			* Answer the name of the objects of this description.
@@ -70,7 +70,7 @@ namespace megamol {
 			* @return The number of functions used for this call.
 			*/
 			static unsigned int FunctionCount(void) {
-				return 7;
+				return 8;
 			}
 
 			/**
@@ -82,13 +82,14 @@ namespace megamol {
 			*/
 			static const char * FunctionName(unsigned int idx) {
 				switch (idx) {
-					case CallForGetUpdatedKeyframeData:  return "CallForGetUpdatedKeyframeData";
-					case CallForSetTotalTime:            return "CallForSetTotalTime";
-					case CallForInterpolatedCamPos:      return "CallForInterpolatedCamPos";
-					case CallForSetSelectedKeyframe:     return "CallForSetSelectedKeyframe";
-					case CallForSetCameraForKeyframe:    return "CallForSetCameraForKeyframe";
-                    case CallForDragKeyframe:            return "CallForDragKeyframe";
-                    case CallForDropKeyframe:            return "CallForDropKeyframe";
+					case CallForGetUpdatedKeyframeData:     return "CallForGetUpdatedKeyframeData";
+					case CallForSetTotalTime:               return "CallForSetTotalTime";
+					case CallForInterpolatedCamPos:         return "CallForInterpolatedCamPos";
+					case CallForSetSelectedKeyframe:        return "CallForSetSelectedKeyframe";
+					case CallForSetCameraForKeyframe:       return "CallForSetCameraForKeyframe";
+                    case CallForDragKeyframe:               return "CallForDragKeyframe";
+                    case CallForDropKeyframe:               return "CallForDropKeyframe";
+                    case CallForManipulateSelectedKeyframe: return "CallForManipulateSelectedKeyframe";
 					default: return "";
 				}
 				
@@ -125,10 +126,13 @@ namespace megamol {
 
             // SELECTED KEYFRAME
             inline void setSelectedKeyframeTime(float t) { 
-                this->selectedTime = t;
+                this->selectedKeyframe.setTime(t);
             }
-            inline float getSelectedKeyframeTime() {
-                return this->selectedTime;
+            inline void setSelectedKeyframePosition(vislib::math::Point<float, 3> p) {
+                this->selectedKeyframe.setCameraPosition(p);
+            }
+            inline void setSelectedKeyframeUp(vislib::math::Vector<float, 3> u) {
+                this->selectedKeyframe.setCameraUp(u);
             }
 
 
@@ -193,7 +197,6 @@ namespace megamol {
             unsigned int                         interpolSteps;
 			math::Cuboid<float>		            *boundingbox;
             Keyframe						     selectedKeyframe;
-            float								 selectedTime;
             float                                dropTime;
 			float								 totalTime;
             SmartPtr<graphics::CameraParameters> cameraParam;
