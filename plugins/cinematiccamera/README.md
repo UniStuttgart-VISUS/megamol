@@ -1,7 +1,7 @@
 # MegaMol module/plugin for Cinematic Camera/Tracking Shots / Video Creating
 This module allows ...
 
-![random sphere data set with purely ambient occlusion shading](https://github.com/jstaib-tud/megamol-mdao2/raw/master/demo.png)
+![random sphere data set with purely ambient occlusion shading](https://github.com/tobiasrau/megamol-dev/tree/cinematiccamera/plugins/cinematiccamera/demo.png)
 
 ## Description of the modules
 The plugin provides the modules `KeyframeKeeper`,  `CinematicRenderer`, `CinematicView` and `TimeLineRenderer`.
