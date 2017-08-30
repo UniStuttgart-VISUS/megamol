@@ -43,8 +43,8 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     addKeyframeParam(              "01 Add new keyframe", "Adds new keyframe at the currently selected time."),
     replaceKeyframeParam(          "02 Replace selected keyframe", "Replaces selected keyframe at the currently selected time."),
     deleteSelectedKeyframeParam(   "03 Delete selected keyframe", "Deletes the currently selected keyframe."),
-    setTotalTimeParam(             "04 Total time", "The total timespan of the movie in seconds."),
-    setKeyframesToSameSpeed(       "05 Set same Speed", "Shift keyframes to get same speed between all keyframes."),
+    setTotalTimeParam(             "04 Total time", "The total timespan of the animation."),
+    setKeyframesToSameSpeed(       "05 Set same Speed", "Move keyframes to get same speed between all keyframes."),
 
     editCurrentTimeParam(          "Edit Selection::01 Time", "Edit time of the selected keyframe."),
     editCurrentPosParam(           "Edit Selection::02 Position", "Edit  position vector of the selected keyframe."),
@@ -52,9 +52,9 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     editCurrentUpParam(            "Edit Selection::04 UP", "Edit Up vector of the selected keyframe."),
     editCurrentApertureParam(      "Edit Selection::05 Aperture", "Edit apperture angle of the selected keyframe."),
 
-    fileNameParam(                 "Storage::01 Filename", "The name of the file to load or save."),
-    saveKeyframesParam(            "Storage::02 Save Keyframes", "Saves keyframes to file."),
-    loadKeyframesParam(            "Storage::03 (Auto) Load Keyframes", "Loads keyframes from file."),
+    fileNameParam(                 "Storage::01 Filename", "The name of the file to load or save keyframes."),
+    saveKeyframesParam(            "Storage::02 Save Keyframes", "Save keyframes to file."),
+    loadKeyframesParam(            "Storage::03 (Auto) Load Keyframes", "Load keyframes from file when filename changes."),
     selectedKeyframe(), dragDropKeyframe(), cameraParam(NULL)
     {
 
@@ -112,7 +112,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.getTime(), 0.0f));
     this->MakeSlotAvailable(&this->editCurrentTimeParam);
 
-    this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam());
+    this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam('v'));
     this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
 
     this->editCurrentPosParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamPosition()));

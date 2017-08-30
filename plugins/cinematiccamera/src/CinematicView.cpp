@@ -26,9 +26,9 @@ using namespace cinematiccamera;
 */
 CinematicView::CinematicView(void) : View3D(),
 	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-	selectedSkyboxSideParam(  "cinematic::01 Skybox Side", "Skybox side rendering"),
-    cinematicResolutionXParam("cinematic::02 Cinematic Resolution X","Set resolution of cineamtic view in hotzontal direction."),
-    cinematicResolutionYParam("cinematic::03 Cinematic Resolution Y", "Set resolution of cineamtic view in vertical direction"),
+	selectedSkyboxSideParam(  "Cinematic::01 Skybox Side", "Select the skybox side rendering"),
+    cinematicResolutionXParam("Cinematic::02 Cinematic Resolution X","Set resolution of cineamtic view in hotzontal direction."),
+    cinematicResolutionYParam("Cinematic::03 Cinematic Resolution Y", "Set resolution of cineamtic view in vertical direction"),
     shownKeyframe()
     {
 

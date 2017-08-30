@@ -67,7 +67,7 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
-    this->loadTimeParam.SetParameter(new param::ButtonParam());
+    this->loadTimeParam.SetParameter(new param::ButtonParam(true));
     this->MakeSlotAvailable(&this->loadTimeParam);
 
     this->toggleManipulateParam.SetParameter(new param::ButtonParam('m'));

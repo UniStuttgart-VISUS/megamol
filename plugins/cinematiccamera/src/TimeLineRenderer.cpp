@@ -57,14 +57,15 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule(),
     this->tlLength       = (this->tlEndPos - this->tlStartPos).Norm();
     this->devY           = 0.1f;
     this->devX           = 0.1f;
-    this->timeStep       = 10.0f;
     this->fontSize       = 24.0f;
-    this->markerSize     = 30.0f;
     this->maxTime        = 1.0f;
     this->lastMouseX     = 0.0f;
     this->lastMouseY     = 0.0f;
     this->moveTimeLine   = false;
     this->aktiveDragDrop = false;
+
+    this->timeStep      = 10.0f;
+    this->markerSize    = 30.0f;
 
 	// Set up the resolution of the time line
 	this->resolutionParam.SetParameter(new param::FloatParam(this->timeStep, 0.0f));
