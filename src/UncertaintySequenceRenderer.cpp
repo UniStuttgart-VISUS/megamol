@@ -101,6 +101,8 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
             clearResSelectionParam(             "24 Clear Residue Selection", "Clears the current selection (everything will be deselected)."),
             colorTableFileParam(                "25 Color Table Filename", "The filename of the color table."),
 			reloadShaderParam(                  "26 Reload shaders", "Reload the shaders."),
+			alternativeMouseHoverParam(         "27 Alternative mouse hover", "Shows an alternative mouse hover text when activated."),
+			flipUncertaintyVisParam(            "28 Flip uncertainty visualizations", "Flips the order of the lines Uncertainty and Uncertain Structure"),
 			toggleWireframeParam("Wireframe", "Toggle wireframe."),
             dataPrepared(false), aminoAcidCount(0), bindingSiteCount(0), resCols(0), resRows(0), rowHeight(2.0f), currentGeometryTess(25),
             markerTextures(0), resSelectionCall(nullptr), rightMouseDown(false), secStructRows(0), pdbID(""), pdbLegend("")
@@ -205,7 +207,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     this->currentUncertainBlockChartOrientation = UNCERTAIN_BC_VERTI;
     this->currentUncertainStructColor           = UNCERTAIN_STRUCT_GRAY;
     this->currentUncertainStructGeometry        = UNCERTAIN_STRUCT_DYN_EQUAL;
-    this->currentUncertainColorInterpol         = UNCERTAIN_COLOR_HSL_HP;
+    this->currentUncertainColorInterpol         = UNCERTAIN_COLOR_RGB;
     this->currentViewMode                       = VIEWMODE_NORMAL_SEQUENCE;
         
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(this->currentCertainBlockChartColor));
@@ -273,6 +275,14 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer( void ) : Renderer2DMod
     
 	this->reloadShaderParam << new core::param::ButtonParam(vislib::sys::KeyCode::KEY_F5);
 	this->MakeSlotAvailable(&this->reloadShaderParam);
+
+	// param slot for the alternative tooltip
+	this->alternativeMouseHoverParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->alternativeMouseHoverParam);
+
+	// param slot for the flipping of the uncertainty visualization
+	this->flipUncertaintyVisParam.SetParameter(new param::BoolParam(false));
+	this->MakeSlotAvailable(&this->flipUncertaintyVisParam);
 
     // setting initial row height, as if all secondary structure rows would be shown
     this->secStructRows = 5;
@@ -722,7 +732,6 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
         this->uncertainGardientIntervalParam.ResetDirty();
         this->currentUncertainGardientInterval = static_cast<float>(this->uncertainGardientIntervalParam.Param<param::FloatParam>()->Value());
     }
-
 
     // updating selection
     this->resSelectionCall = this->resSelectionCallerSlot.CallAs<ResidueSelectionCall>();
@@ -1560,7 +1569,7 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
 
 
             // draw uncertainty 
-            if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+            if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value() && !this->flipUncertaintyVisParam.Param<param::BoolParam>()->Value()) {
                 float col;
                 glBegin(GL_QUADS);
                 for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
@@ -1632,6 +1641,25 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                     glEnd();
                 }
             }
+
+			// draw uncertainty in the flipped case
+			if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value() && this->flipUncertaintyVisParam.Param<param::BoolParam>()->Value()) {
+				float col;
+				glBegin(GL_QUADS);
+				for (unsigned int i = 0; i < this->aminoAcidCount; i++) {
+					col = 1.0f - this->uncertainty[i];
+					glColor3f(col, col, col);
+					if (this->residueFlag[i] != UncertaintyDataCall::addFlags::MISSING) {
+						// assuming values are in range 0.0-1.0
+						glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+						glVertex2f(this->vertices[2 * i], -(this->vertices[2 * i + 1] + yPos + 1.0f));
+						glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f));
+						glVertex2f(this->vertices[2 * i] + 1.0f, -(this->vertices[2 * i + 1] + yPos + 1.0f - this->uncertainty[i]));
+					}
+				}
+				glEnd();
+				yPos += 1.0f;
+			}
         }
 
         // restore previous glPolygonMode
@@ -1955,7 +1983,8 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                         // INSERT CODE FROM OBOVE FOR NEW METHOD HERE //
                         ////////////////////////////////////////////////
 
-                        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value()) {
+						// draw the uncertainty tag in the unflipped case
+                        if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value() && !this->flipUncertaintyVisParam.Param<param::BoolParam>()->Value()) {
                             tmpStr = "Uncertainty";
                             wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                             theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
@@ -1970,6 +1999,16 @@ bool UncertaintySequenceRenderer::Render(view::CallRender2D &call) {
                                 fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
                             yPos += 1.0f;
                         }
+
+						// draw the uncertainty tag in the flipped case
+						if (this->toggleUncertaintyParam.Param<param::BoolParam>()->Value() && this->flipUncertaintyVisParam.Param<param::BoolParam>()->Value()) {
+							tmpStr = "Uncertainty";
+							wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
+							theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,
+								fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+							yPos += 1.0f;
+						}
+
                         tmpStr = "Amino-Acid";
                         wordlength = theFont.LineWidth(fontSize, tmpStr) + fontSize;
                         theFont.DrawString(-wordlength, -(static_cast<float>(i)*this->rowHeight + yPos), wordlength, 1.0f,

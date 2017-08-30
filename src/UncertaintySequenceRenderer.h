@@ -407,6 +407,8 @@ namespace megamol {
         megamol::core::param::ParamSlot uncertainColorInterpolParam;
         megamol::core::param::ParamSlot uncertainGardientIntervalParam;
         megamol::core::param::ParamSlot geometryTessParam;
+		megamol::core::param::ParamSlot alternativeMouseHoverParam;
+		megamol::core::param::ParamSlot flipUncertaintyVisParam;
 
         megamol::core::param::ParamSlot viewModeParam;
 
