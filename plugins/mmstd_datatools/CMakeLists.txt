@@ -8,12 +8,14 @@ option(BUILD_MMSTD_DATATOOLS_PLUGIN "Option to build mmstd_datatools" ON)
 if(BUILD_MMSTD_DATATOOLS_PLUGIN)
   project(mmstd_datatools)
 
-  find_package(OpenMP)
+  if(UNIX)
+    find_package(OpenMP)
+  endif()
 
   set(LIBS vislib core glload)
   include_directories("include" "src" "3rd/nanoflann")
 
-  if (OPENMP_FOUND)
+  if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
 

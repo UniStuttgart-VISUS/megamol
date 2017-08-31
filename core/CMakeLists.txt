@@ -13,6 +13,9 @@ if(BUILD_CORE)
   set(CMAKE_THREAD_PREFER_PTHREAD)
 
   find_package(Threads REQUIRED)
+
+  # include lua sources
+  add_subdirectory(lua)
   
   option(USE_INTERNAL_LIBPNG "adds libpng to the build targets" ON)
   if(USE_INTERNAL_LIBPNG)
@@ -30,7 +33,9 @@ if(BUILD_CORE)
     endif()
   endif()
 
-  find_package(OpenMP)
+  if(UNIX)
+    find_package(OpenMP)
+  endif()
   find_package(MPI)
 
   if(WIN32)
@@ -45,18 +50,13 @@ if(BUILD_CORE)
       find_package(EXPAT REQUIRED)
   endif()
 
-  set(LIBS vislib glload ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+  set(LIBS vislib glload lua ${EXPAT_LIBRARIES} ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   include_directories(${EXPAT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS})
 
-  if (OPENMP_FOUND)
-    #message(STATUS "comp ${OpenMP_CXX_FLAGS}")
+  if (OPENMP_FOUND OR WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   endif()
   if (MPI_C_FOUND)
-    #message(STATUS "comp ${MPI_C_COMPILE_FLAGS}")
-    #message(STATUS "incl ${MPI_C_INCLUDE_PATH}")
-    #message(STATUS "link ${MPI_C_LINK_FLAGS}")
-    #message(STATUS "libs ${MPI_C_LIBRARIES}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_C_COMPILE_FLAGS}")
     include_directories(${MPI_C_INCLUDE_PATH})
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${MPI_C_LINK_FLAGS}")
