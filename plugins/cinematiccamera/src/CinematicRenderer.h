@@ -99,11 +99,15 @@ namespace megamol {
 
             // enumeration of manipulator types
             enum manipulatorType {
-                XAXIS = 0,
-                YAXIS = 1,
-                ZAXIS = 2,
-                CAMUP = 3,
-                CAMPOS = 4
+                NONE          = 0,
+                CAM_X_AXIS    = 1,
+                CAM_Y_AXIS    = 2,
+                CAM_Z_AXIS    = 3,
+                CAM_POS       = 4,
+                CAM_UP        = 5,
+                LOOKAT_X_AXIS = 6,
+                LOOKAT_Y_AXIS = 7,
+                LOOKAT_Z_AXIS = 8
             };
 
             // enumeration of color types
@@ -177,7 +181,7 @@ namespace megamol {
             bool processPointHit(float x, float y, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> manipPos, manipulatorType t);
 
             /** Render 2D circle facing to the camera position */
-            void renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> centerPos);
+            void renderCircle2D(float radius, unsigned int subdiv, vislib::math::Point<GLfloat, 3> camPos, vislib::math::Point<GLfloat, 3> centerPos, vislib::math::Vector<float, 3> col);
 
             /**********************************************************************
             * variables

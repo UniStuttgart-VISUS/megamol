@@ -134,7 +134,9 @@ namespace megamol {
             inline void setSelectedKeyframeUp(vislib::math::Vector<float, 3> u) {
                 this->selectedKeyframe.setCameraUp(u);
             }
-
+            inline void setSelectedKeyframeLookAt(vislib::math::Point<float, 3> u) {
+                this->selectedKeyframe.setCameraLookAt(u);
+            }
 
             inline Keyframe getSelectedKeyframe() {
                 return this->selectedKeyframe;

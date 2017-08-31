@@ -24,7 +24,7 @@ The ...
 
 
 ## Parameters
-The values in brackets indicate the default values:
+The values in brackets indicate the default values.
 
 The module `KeyframeKeeper` exposes the following parameters:
 * `01 Add new keyframe`                   (Assigned key: `a`):   Adds new keyframe at the currently selected time.

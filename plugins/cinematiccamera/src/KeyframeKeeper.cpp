@@ -238,13 +238,14 @@ bool KeyframeKeeper::CallForManipulateSelectedKeyframe(core::Call& c) {
     Keyframe s = ccc->getSelectedKeyframe();
     this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
 
-    // Apply camera changes to existing or new keyframe
+    // Apply camera changes to existing keyframe
     int selIndex = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
-    this->selectedKeyframe = s;
-    if (!this->replaceKeyframe(this->selectedKeyframe)) {
-        this->addKeyframe(this->selectedKeyframe);
+    if (selIndex >= 0) {
+        this->selectedKeyframe = s;
+        if (this->replaceKeyframe(this->selectedKeyframe)) {
+            this->refreshInterpolCamPos(this->interpolSteps);
+        }
     }
-    this->refreshInterpolCamPos(this->interpolSteps);
     this->updateEditParameters(this->selectedKeyframe);
 
     return true;
@@ -412,23 +413,26 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             // Get total values
             float totTime = this->keyframes.Last().getTime() - this->keyframes.First().getTime();
             float totDist = 0.0f;
+
             for (unsigned int i = 0; i < this->interpolCamPos.Count() - 1; i++) {
-                totDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Norm();
+                totDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Length();
             }
             float totVelocity = totDist / totTime; // unit doesn't matter ... it is only relative
 
             // Get values between two consecutive keyframes and shift remoter keyframe if necessary
             float kfTime = 0.0f;
             float kfDist = 0.0f;
-            for (unsigned int i = 0; i < this->interpolCamPos.Count() - 1; i++) {
+            for (unsigned int i = 0; i < this->interpolCamPos.Count() - 2; i++) {
                 if ((i > 0) && (i % this->interpolSteps == 0)) {  // skip checking for first keyframe (last keyframe is skipped by prior loop)
-                    unsigned int index = (unsigned int)(i / this->interpolSteps);
                     kfTime = kfDist / totVelocity;
+
+                    unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
                     this->keyframes[index].setTime(this->keyframes[index-1].getTime() + kfTime);
+
                     kfDist = 0.0f;
                 }
                 // Add distance up to existing keyframe
-                kfDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Norm();
+                kfDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Length();
             }
         }
     }
@@ -591,11 +595,11 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
             for (unsigned int j = 0; j < s; j++) {
                 k = this->interpolateKeyframe(startTime + deltaTimeStep*(float)j);
+                this->interpolCamPos.Add(k.getCamPosition());
                 // Extend camera position for bounding box to cover manipulator axis
                 manipulator = vislib::math::Vector<float, 3>(k.getCamPosition().GetX(), k.getCamPosition().GetY(), k.getCamPosition().GetZ());
                 manipulator.ScaleToLength(1.0f);
                 this->boundingBox.GrowToPoint(static_cast<vislib::math::Point<float, 3>>(k.getCamPosition() + manipulator));
-                this->interpolCamPos.Add(k.getCamPosition());
             }
         }
         // Add last existing camera position
