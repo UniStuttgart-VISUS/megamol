@@ -1,4 +1,4 @@
-totalTime=255
+totalTime=500
 
 time=13.3094
 ApertureAngle=30
@@ -11,13 +11,13 @@ StereoEye=0
 FocalDistance=4.517262935638427734375
 PositionX=3.5631544589996337890625
 PositionY=1.72115802764892578125
-PositionZ=6.07631397247314453125
+PositionZ=6.4063167572021484375
 LookAtX=1.1670320034027099609375
 LookAtY=1.2122504711151123046875
 LookAtZ=2.2808856964111328125
-UpX=-0.03568296134471893310546875
-UpY=0.993218898773193359375
-UpZ=-0.11064781248569488525390625
+UpX=-0.0317724011838436126708984375
+UpY=0.99405181407928466796875
+UpZ=-0.10417091846466064453125
 TileLeft=0
 TileBottom=0
 TileRight=100
@@ -26,7 +26,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=43.4747
+time=56.8175
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -52,7 +52,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=74.5107
+time=99.4041
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -78,7 +78,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=94.1984
+time=126.349
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -104,7 +104,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=117.051
+time=157.625
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -130,7 +130,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=131.556
+time=177.48
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -156,7 +156,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=169.1
+time=228.863
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -182,7 +182,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=183.305
+time=248.304
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -208,7 +208,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=201.323
+time=272.965
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625
@@ -223,7 +223,7 @@ PositionZ=-1.2789137363433837890625
 LookAtX=1.1670322418212890625
 LookAtY=1.21225070953369140625
 LookAtZ=2.2808856964111328125
-UpX=-0.1444064080715179443359375
+UpX=-0.14440643787384033203125
 UpY=-0.9731843471527099609375
 UpZ=0.17905037105083465576171875
 TileLeft=0
@@ -234,7 +234,7 @@ VirtualViewWidth=100
 VirtualViewHeight=100
 AutoFocusOffset=0
 
-time=225.5
+time=306.054
 ApertureAngle=30
 CoordSystemType=2
 NearClip=0.100000001490116119384765625

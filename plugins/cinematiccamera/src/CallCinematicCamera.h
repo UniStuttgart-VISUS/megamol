@@ -38,7 +38,7 @@ namespace megamol {
 
 			/** function name for getting all Keyframes */
 			static const unsigned int CallForGetUpdatedKeyframeData     = 0;
-			static const unsigned int CallForSetTotalTime               = 1;
+			static const unsigned int CallForSetAnimationData           = 1;
 			static const unsigned int CallForInterpolatedCamPos         = 2;
 			static const unsigned int CallForSetSelectedKeyframe        = 3;
 			static const unsigned int CallForSetCameraForKeyframe       = 4;
@@ -83,7 +83,7 @@ namespace megamol {
 			static const char * FunctionName(unsigned int idx) {
 				switch (idx) {
 					case CallForGetUpdatedKeyframeData:     return "CallForGetUpdatedKeyframeData";
-					case CallForSetTotalTime:               return "CallForSetTotalTime";
+					case CallForSetAnimationData:           return "CallForSetAnimationData";
 					case CallForInterpolatedCamPos:         return "CallForInterpolatedCamPos";
 					case CallForSetSelectedKeyframe:        return "CallForSetSelectedKeyframe";
 					case CallForSetCameraForKeyframe:       return "CallForSetCameraForKeyframe";
@@ -170,6 +170,13 @@ namespace megamol {
 				return this->totalTime;
 			}
 
+            // MAXIMUM ANIMATION TIME
+            inline void setMaxAnimTime(float f) {
+                this->maxAnimTime = f;
+            }
+            inline float getMaxAnimTime() {
+                return this->maxAnimTime;
+            }
 
             // CAMERA PARAMETER
             inline void setCameraParameter(SmartPtr<graphics::CameraParameters> c) {
@@ -187,6 +194,14 @@ namespace megamol {
                 return this->dropTime;
             }
 
+            // BOUNDING-BOX CENTER
+            inline void setBboxCenter(vislib::math::Point<float, 3>  c) {
+                this->bboxCenter = c;
+            }
+            inline vislib::math::Point<float, 3> getBboxCenter() {
+                return this->bboxCenter;
+            }
+
 		private:
 
             /**********************************************************************
@@ -202,7 +217,8 @@ namespace megamol {
             float                                dropTime;
 			float								 totalTime;
             SmartPtr<graphics::CameraParameters> cameraParam;
-
+            float                                maxAnimTime;
+            vislib::math::Point<float, 3>        bboxCenter;
 		};
 
 		/** Description class typedef */

@@ -70,13 +70,6 @@ namespace megamol {
 
 		protected:
 
-            // The coloring mode for the keyframe marker
-            enum ColorMode {
-                DEFAULT_COLOR = 0,
-                SELECTED_COLOR = 1,
-                DRAGDROP_COLOR = 2
-            };
-
 			/**
 			* Implementation of 'Create'.
 			*
@@ -121,18 +114,21 @@ namespace megamol {
 		private:
 			
             /**********************************************************************
-            * functions
+            * variables
             **********************************************************************/
 
-            /** Loading texture of keyframe marker. */
-            bool LoadTexture(vislib::StringA filename);
+            // The coloring mode for the keyframe marker
+            enum ColorMode {
+                DEFAULT_COLOR  = 0,
+                SELECTED_COLOR = 1,
+                DRAGDROP_COLOR = 2
+            };
 
-            /** Draw the keyframe marker. */
-            void DrawKeyframeMarker(float posX, float posY, ColorMode color);
-
-			/**********************************************************************
-			* variables
-			**********************************************************************/
+            // The rulerScaling
+            enum rulerMode {
+                RULER_FIXED_FONT    = 0,
+                RULER_FIXED_SEGMENT = 1
+            };
 
             // font rendering
 #ifdef USE_SIMPLE_FONT
@@ -146,18 +142,32 @@ namespace megamol {
             vislib::math::Vector<float, 2> tlStartPos;
             vislib::math::Vector<float, 2> tlEndPos;
             float                          tlLength;
-            float                          timeStep;
             float                          devX, devY;
-            float                          fontSize;
-            float                          markerSize;
-            float                          maxTime;
-
+            float                          totalTime;
             float                          lastMouseX;
             float                          lastMouseY;
-            bool                           moveTimeLine;
-
             Keyframe                       dragDropKeyframe;
             bool                           aktiveDragDrop;
+            float                          adaptFontSize;
+            float                          adaptSegSize;
+            bool                           moveTimeLine;
+            float                          segmentSize;
+            float                          fontSize;
+            float                          markerSize;
+            rulerMode                      currentRulerMode;
+            float                          initScaleFac;
+            float                          scaleFac;
+
+            /**********************************************************************
+            * functions
+            **********************************************************************/
+
+            /** Loading texture of keyframe marker. */
+            bool LoadTexture(vislib::StringA filename);
+
+            /** Draw the keyframe marker. */
+            void DrawKeyframeMarker(float posX, float posY, ColorMode color);
+
 
             /**********************************************************************
             * callback stuff
@@ -170,14 +180,20 @@ namespace megamol {
             * parameter
             **********************************************************************/
 
-			/** time line resolution parameter */
-			megamol::core::param::ParamSlot resolutionParam;
-
             /** marker size parameter */
             megamol::core::param::ParamSlot markerSizeParam;
 
             /** move time line parameter */
             megamol::core::param::ParamSlot moveTimeLineParam;
+
+            /** move time line parameter */
+            megamol::core::param::ParamSlot rulerModeParam;
+
+            /** time line resolution parameter */
+            megamol::core::param::ParamSlot rulerFixedSegParam;
+
+            /** time line resolution parameter */
+            megamol::core::param::ParamSlot rulerFixedFontParam;
 		};
 
 	} /* end namespace cinematiccamera */

@@ -92,10 +92,18 @@ namespace megamol {
             * variables
             **********************************************************************/
 
-            float    currentTime;
-            Keyframe shownKeyframe;
-            int      cineXRes;
-            int      cineYRes;
+            float        currentViewTime;
+            Keyframe     shownKeyframe;
+            int          cineXRes;
+            int          cineYRes;
+            float        maxAnimTime;
+            vislib::math::Point<float, 3> bboxCenter;
+
+            /**********************************************************************
+            * functions
+            **********************************************************************/
+
+            void setupRenderToTexture();
 
             /**********************************************************************
             * callback

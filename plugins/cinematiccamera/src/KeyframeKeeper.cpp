@@ -44,17 +44,18 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     replaceKeyframeParam(          "02 Replace selected keyframe", "Replaces selected keyframe at the currently selected time."),
     deleteSelectedKeyframeParam(   "03 Delete selected keyframe", "Deletes the currently selected keyframe."),
     setTotalTimeParam(             "04 Total time", "The total timespan of the animation."),
-    setKeyframesToSameSpeed(       "05 Set same Speed", "Move keyframes to get same speed between all keyframes."),
+    setKeyframesToSameSpeed(       "05 Set same speed", "Move keyframes to get same speed between all keyframes."),
 
     editCurrentTimeParam(          "Edit Selection::01 Time", "Edit time of the selected keyframe."),
     editCurrentPosParam(           "Edit Selection::02 Position", "Edit  position vector of the selected keyframe."),
     editCurrentLookAtParam(        "Edit Selection::03 LookAt", "Edit LookAt vector of the selected keyframe."),
-    editCurrentUpParam(            "Edit Selection::04 UP", "Edit Up vector of the selected keyframe."),
-    editCurrentApertureParam(      "Edit Selection::05 Aperture", "Edit apperture angle of the selected keyframe."),
+    resetLookAtParam(              "Edit Selection::04 Reset LookAt", "Reset the LookAt vector of the selected keyframe."),
+    editCurrentUpParam(            "Edit Selection::05 UP", "Edit Up vector of the selected keyframe."),
+    editCurrentApertureParam(      "Edit Selection::06 Aperture", "Edit apperture angle of the selected keyframe."),
 
     fileNameParam(                 "Storage::01 Filename", "The name of the file to load or save keyframes."),
-    saveKeyframesParam(            "Storage::02 Save Keyframes", "Save keyframes to file."),
-    loadKeyframesParam(            "Storage::03 (Auto) Load Keyframes", "Load keyframes from file when filename changes."),
+    saveKeyframesParam(            "Storage::02 Save keyframes", "Save keyframes to file."),
+    loadKeyframesParam(            "Storage::03 (Auto) Load keyframes", "Load keyframes from file when filename changes."),
     selectedKeyframe(), dragDropKeyframe(), cameraParam(NULL)
     {
 
@@ -63,7 +64,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
 		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForGetUpdatedKeyframeData), &KeyframeKeeper::CallForGetUpdatedKeyframeData);
 
 	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
-		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetTotalTime), &KeyframeKeeper::CallForSetTotalTime);
+		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForSetAnimationData), &KeyframeKeeper::CallForSetAnimationData);
 
 	this->cinematicCallSlot.SetCallback(CallCinematicCamera::ClassName(),
 		CallCinematicCamera::FunctionName(CallCinematicCamera::CallForInterpolatedCamPos), &KeyframeKeeper::CallForInterpolatedCamPos);
@@ -98,6 +99,10 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->totalTime            = 1.0f;
     this->filename             = "";
     this->interpolSteps        = 10;
+    this->sameSpeed            = false;
+    this->totVelocity          = 1.0f;
+    this->maxAnimTime          = 1.0f;
+    this->bboxCenter           = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f); 
 
     // init parameters
     this->addKeyframeParam.SetParameter(new param::ButtonParam('a'));
@@ -112,7 +117,7 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentTimeParam.SetParameter(new param::FloatParam(this->selectedKeyframe.getTime(), 0.0f));
     this->MakeSlotAvailable(&this->editCurrentTimeParam);
 
-    this->setKeyframesToSameSpeed.SetParameter(new param::ButtonParam('v'));
+    this->setKeyframesToSameSpeed.SetParameter(new param::BoolParam(this->sameSpeed));
     this->MakeSlotAvailable(&this->setKeyframesToSameSpeed);
 
     this->editCurrentPosParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamPosition()));
@@ -121,13 +126,16 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module(),
     this->editCurrentLookAtParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamLookAt()));
     this->MakeSlotAvailable(&this->editCurrentLookAtParam);
 
+    this->resetLookAtParam.SetParameter(new param::ButtonParam('l'));
+    this->MakeSlotAvailable(&this->resetLookAtParam);
+    
     this->editCurrentUpParam.SetParameter(new param::Vector3fParam(this->selectedKeyframe.getCamUp()));
     this->MakeSlotAvailable(&this->editCurrentUpParam);
 
     this->editCurrentApertureParam.SetParameter(new param::FloatParam(this->selectedKeyframe.getCamApertureAngle(), 0.0f, 180.0f));
     this->MakeSlotAvailable(&this->editCurrentApertureParam);
 
-    this->setTotalTimeParam.SetParameter(new param::FloatParam(1.0f, 0.0f));
+    this->setTotalTimeParam.SetParameter(new param::FloatParam(this->totalTime, 0.0f));
     this->MakeSlotAvailable(&this->setTotalTimeParam);
 
     this->fileNameParam.SetParameter(new param::FilePathParam(this->filename));
@@ -169,25 +177,23 @@ void KeyframeKeeper::release(void) {
 
 
 /*
-* KeyframeKeeper::CallForSetTotalTime
+* KeyframeKeeper::CallForSetAnimationData
 */
-bool KeyframeKeeper::CallForSetTotalTime(core::Call& c) {
+bool KeyframeKeeper::CallForSetAnimationData(core::Call& c) {
 
 	CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
 	if (ccc == NULL) return false;
 
-    float tt = ccc->getTotalTime();
-    if (!this->keyframes.IsEmpty()) {
-        if (tt < this->keyframes.Last().getTime()) {
-            tt = this->keyframes.Last().getTime();
-            this->setTotalTimeParam.Param<param::FloatParam>()->SetValue(tt, false);
-            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Set Total Time ] Total time is smaller than time of last keyframe. Delete Keyframe(s) to reduce total time to desired value.");
-        }
+    // Get max anim time
+    this->maxAnimTime = ccc->getMaxAnimTime();
+    if (this->totalTime < this->maxAnimTime) {
+        this->totalTime = this->maxAnimTime;
+        // Put new value of changed total time to parameter
+        this->setTotalTimeParam.Param<param::FloatParam>()->SetValue(this->totalTime, false);
     }
-    this->totalTime = tt;
 
-    // Put new value of changed total time to parameter
-	this->setTotalTimeParam.Param<param::FloatParam>()->SetValue(ccc->getTotalTime(), false);
+    // Get bounding box center
+    this->bboxCenter = ccc->getBboxCenter();
 
 	return true;
 }
@@ -219,7 +225,17 @@ bool KeyframeKeeper::CallForSetSelectedKeyframe(core::Call& c) {
     // Update selected keyframe
     Keyframe s = ccc->getSelectedKeyframe();
 
-    this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
+    if (this->sameSpeed) {
+
+////////
+// TODO: Set truly! same speed between to consecutive keyframes
+////////
+
+        this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
+    }
+    else {
+        this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
+    }
     this->updateEditParameters(this->selectedKeyframe);
 
 	return true;
@@ -242,8 +258,11 @@ bool KeyframeKeeper::CallForManipulateSelectedKeyframe(core::Call& c) {
     int selIndex = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
     if (selIndex >= 0) {
         this->selectedKeyframe = s;
-        if (this->replaceKeyframe(this->selectedKeyframe)) {
+        if (this->replaceKeyframe(s)) {
             this->refreshInterpolCamPos(this->interpolSteps);
+            if (this->sameSpeed) {
+                this->setSameSpeed();
+            }
         }
     }
     this->updateEditParameters(this->selectedKeyframe);
@@ -274,16 +293,16 @@ bool KeyframeKeeper::CallForDragKeyframe(core::Call& c) {
     CallCinematicCamera *ccc = dynamic_cast<CallCinematicCamera*>(&c);
     if (ccc == NULL) return false;
 
+    // Checking if selected keyframe exists in keyframe array is done by caller
+
     // Update selected keyframe
     Keyframe s = ccc->getSelectedKeyframe();
-    if (s.getTime() != this->selectedKeyframe.getTime()) {
-        this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
-    }
+
+    this->selectedKeyframe = this->interpolateKeyframe(s.getTime());
+    this->updateEditParameters(this->selectedKeyframe);
 
     // Save currently selected keyframe as drag and drop keyframe
     this->dragDropKeyframe = this->selectedKeyframe;
-    this->updateEditParameters(this->selectedKeyframe);
-    this->refreshInterpolCamPos(this->interpolSteps);
 
     return true;
 }
@@ -309,6 +328,9 @@ bool KeyframeKeeper::CallForDropKeyframe(core::Call& c) {
     this->selectedKeyframe = this->dragDropKeyframe;
     this->updateEditParameters(this->selectedKeyframe);
     this->refreshInterpolCamPos(this->interpolSteps);
+    if (this->sameSpeed) {
+        this->setSameSpeed();
+    }
 
     return true;
 }
@@ -353,6 +375,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             }
         }
         this->refreshInterpolCamPos(this->interpolSteps);
+        if (this->sameSpeed) {
+            this->setSameSpeed();
+        }
         this->updateEditParameters(this->selectedKeyframe);
     }
 
@@ -375,6 +400,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->replaceKeyframe(this->selectedKeyframe)) {
             // Refresh interoplated camera positions
             this->refreshInterpolCamPos(this->interpolSteps);
+            if (this->sameSpeed) {
+                this->setSameSpeed();
+            }
         }
         this->updateEditParameters(this->selectedKeyframe);
     }
@@ -388,6 +416,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         // Refresh interoplated camera positions
         this->refreshInterpolCamPos(this->interpolSteps);
+        if (this->sameSpeed) {
+            this->setSameSpeed();
+        }
     }
 
     // setTotalTimeParam ------------------------------------------------------
@@ -408,32 +439,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     // setKeyframesToSameSpeed ------------------------------------------------
     if (this->setKeyframesToSameSpeed.IsDirty()) {
         this->setKeyframesToSameSpeed.ResetDirty();
-
-        if (this->keyframes.Count() > 2) {
-            // Get total values
-            float totTime = this->keyframes.Last().getTime() - this->keyframes.First().getTime();
-            float totDist = 0.0f;
-
-            for (unsigned int i = 0; i < this->interpolCamPos.Count() - 1; i++) {
-                totDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Length();
-            }
-            float totVelocity = totDist / totTime; // unit doesn't matter ... it is only relative
-
-            // Get values between two consecutive keyframes and shift remoter keyframe if necessary
-            float kfTime = 0.0f;
-            float kfDist = 0.0f;
-            for (unsigned int i = 0; i < this->interpolCamPos.Count() - 2; i++) {
-                if ((i > 0) && (i % this->interpolSteps == 0)) {  // skip checking for first keyframe (last keyframe is skipped by prior loop)
-                    kfTime = kfDist / totVelocity;
-
-                    unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
-                    this->keyframes[index].setTime(this->keyframes[index-1].getTime() + kfTime);
-
-                    kfDist = 0.0f;
-                }
-                // Add distance up to existing keyframe
-                kfDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Length();
-            }
+        this->sameSpeed = this->setKeyframesToSameSpeed.Param<param::BoolParam>()->Value();
+        if (this->sameSpeed) {
+            this->setSameSpeed();
         }
     }
 
@@ -478,6 +486,9 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             this->keyframes[selIndex] = this->selectedKeyframe;
             // Refresh interoplated camera positions
             this->refreshInterpolCamPos(this->interpolSteps);
+            if (this->sameSpeed) {
+                this->setSameSpeed();
+            }
         }
         else {
             vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Edit Current Pos] No existing keyframe selected.");
@@ -496,13 +507,28 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (selIndex >= 0) {
             this->selectedKeyframe.setCameraLookAt(lookat);
             this->keyframes[selIndex] = this->selectedKeyframe;
-            this->boundingBox.GrowToPoint(this->keyframes[selIndex].getCamPosition());
         }
         else {
             vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Edit Current LookAt] No existing keyframe selected.");
         }
     }
 
+    // resetLookAtParam -------------------------------------------------
+    if (this->resetLookAtParam.IsDirty()) {
+        this->resetLookAtParam.ResetDirty();
+
+        this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(this->bboxCenter);
+        // Get index of existing keyframe
+        int selIndex = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
+        if (selIndex >= 0) {
+            this->selectedKeyframe.setCameraLookAt(this->bboxCenter);
+            this->keyframes[selIndex] = this->selectedKeyframe;
+        }
+        else {
+            vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Edit Current LookAt] No existing keyframe selected.");
+        }
+    }
+    
     // editCurrentUpParam -----------------------------------------------------
     if (this->editCurrentUpParam.IsDirty()) {
         this->editCurrentUpParam.ResetDirty();
@@ -514,7 +540,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (selIndex >= 0) {
             this->selectedKeyframe.setCameraUp(up);
             this->keyframes[selIndex] = this->selectedKeyframe;
-            this->boundingBox.GrowToPoint(this->keyframes[selIndex].getCamPosition());
         }
         else {
             vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Edit Current Up] No existing keyframe selected.");
@@ -532,7 +557,6 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (selIndex >= 0) {
             this->selectedKeyframe.setCameraApertureAngele(aperture);
             this->keyframes[selIndex] = this->selectedKeyframe;
-            this->boundingBox.GrowToPoint(this->keyframes[selIndex].getCamPosition());
         }
         else {
             vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Edit Current Aperture] No existing keyframe selected.");
@@ -564,15 +588,57 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         }
     }
 
-
     // PROPAGATE CURRENT DATA TO CALL -----------------------------------------
     ccc->setKeyframes(&this->keyframes);
     ccc->setBoundingBox(&this->boundingBox);
     ccc->setSelectedKeyframe(this->selectedKeyframe);
     ccc->setTotalTime(this->totalTime);
     ccc->setInterpolatedCamPos(&this->interpolCamPos);
+    ccc->setMaxAnimTime(this->maxAnimTime);
 
     return true;
+}
+
+/*
+* KeyframeKeeper::setSameSpeed
+*/
+void KeyframeKeeper::setSameSpeed() {
+
+    if (this->keyframes.Count() > 2) {
+
+        // Store index of selected keyframe to restore seleection after changing time of keyframes
+        int selIndex = static_cast<int>(this->keyframes.IndexOf(this->selectedKeyframe));
+
+        // Get total values
+        float totTime = this->keyframes.Last().getTime() - this->keyframes.First().getTime();
+        float totDist = 0.0f;
+
+        for (unsigned int i = 0; i < this->interpolCamPos.Count() - 1; i++) {
+            totDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Length();
+        }
+        this->totVelocity = totDist / totTime; // unit doesn't matter ... it is only relative
+
+        // Get values between two consecutive keyframes and shift remoter keyframe if necessary
+        float kfTime = 0.0f;
+        float kfDist = 0.0f;
+        for (unsigned int i = 0; i < this->interpolCamPos.Count() - 2; i++) {
+            if ((i > 0) && (i % this->interpolSteps == 0)) {  // skip checking for first keyframe (last keyframe is skipped by prior loop)
+                kfTime = kfDist / this->totVelocity;
+
+                unsigned int index = static_cast<unsigned int>(floorf(((float)i / (float)this->interpolSteps)));
+                this->keyframes[index].setTime(this->keyframes[index - 1].getTime() + kfTime);
+
+                kfDist = 0.0f;
+            }
+            // Add distance up to existing keyframe
+            kfDist += (this->interpolCamPos[i + 1] - this->interpolCamPos[i]).Length();
+        }
+
+        // Restore previous selected keyframe
+        if (selIndex >= 0) {
+            this->selectedKeyframe = this->keyframes[selIndex];
+        }
+    }
 }
 
 
@@ -867,6 +933,7 @@ void KeyframeKeeper::loadKeyframes() {
         // get total time
         std::getline(infile, line); 
         this->totalTime = std::stof(line.erase(0, 10)); // "totalTime="
+        this->setTotalTimeParam.Param<param::FloatParam>()->SetValue(this->totalTime, false);
         // Consume empty line
         std::getline(infile, line); 
 
@@ -880,7 +947,6 @@ void KeyframeKeeper::loadKeyframes() {
                 Keyframe k;
                 k.setTime(time);
                 k.getCamParameters()->Deserialise(ser);
-                this->boundingBox.GrowToPoint(k.getCamPosition());
                 this->keyframes.Add(k);
                 cameraStr.Clear();
                 ser.ClearData();
@@ -895,6 +961,22 @@ void KeyframeKeeper::loadKeyframes() {
         // Set selected keyframe to first in keyframe array
         if (!this->keyframes.IsEmpty()) {
             this->selectedKeyframe = this->keyframes.First();
+
+            // Put new values of changes selected keyframe to parameters (and update parameters to apply new selected keyframe to all calls)
+            vislib::math::Vector<float, 3> lookatV = this->selectedKeyframe.getCamLookAt();
+            vislib::math::Point<float, 3>  lookat = vislib::math::Point<float, 3>(lookatV.GetX(), lookatV.GetY(), lookatV.GetZ());
+            vislib::math::Vector<float, 3> posV = this->selectedKeyframe.getCamPosition();
+            vislib::math::Point<float, 3>  pos = vislib::math::Point<float, 3>(posV.GetX(), posV.GetY(), posV.GetZ());
+            this->editCurrentTimeParam.Param<param::FloatParam>()->SetValue(this->selectedKeyframe.getTime(), true);
+            this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(pos, true);
+            this->editCurrentLookAtParam.Param<param::Vector3fParam>()->SetValue(lookat, true);
+            this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(this->selectedKeyframe.getCamUp(), true);
+            this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(this->selectedKeyframe.getCamApertureAngle(), true);
+
+            this->refreshInterpolCamPos(this->interpolSteps);
+            if (this->sameSpeed) {
+                this->setSameSpeed();
+            }
         }
         vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Load Keyframes] Successfully loaded keyframes from file.");
     }

@@ -29,6 +29,8 @@
 #include "vislib/String.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/graphics/gl/OutlineFont.h"
+#include "vislib/graphics/gl/Verdana.inc"
 
 
 namespace megamol {
@@ -97,32 +99,7 @@ namespace megamol {
 
 		protected:
 
-            // enumeration of manipulator types
-            enum manipulatorType {
-                NONE          = 0,
-                CAM_X_AXIS    = 1,
-                CAM_Y_AXIS    = 2,
-                CAM_Z_AXIS    = 3,
-                CAM_POS       = 4,
-                CAM_UP        = 5,
-                LOOKAT_X_AXIS = 6,
-                LOOKAT_Y_AXIS = 7,
-                LOOKAT_Z_AXIS = 8
-            };
-
-            // enumeration of color types
-            enum colType {
-                COL_SPLINE          = 0,
-                COL_KEYFRAME        = 1,
-                COL_SELECT_KEYFRAME = 2,
-                COL_SELECT_LOOKAT   = 3,
-                COL_SELECT_UP       = 4,
-                COL_SELECT_X_AXIS   = 5,
-                COL_SELECT_Y_AXIS   = 6,
-                COL_SELECT_Z_AXIS   = 7
-            };
-
-			/**
+  			/**
 			* The get capabilities callback. The module should set the members
 			* of 'call' to tell the caller its capabilities.
 			*
@@ -163,6 +140,31 @@ namespace megamol {
 
 		private:
 
+            // enumeration of manipulator types
+            enum manipulatorType {
+                NONE          = 0,
+                CAM_X_AXIS    = 1,
+                CAM_Y_AXIS    = 2,
+                CAM_Z_AXIS    = 3,
+                CAM_POS       = 4,
+                CAM_UP        = 5,
+                LOOKAT_X_AXIS = 6,
+                LOOKAT_Y_AXIS = 7,
+                LOOKAT_Z_AXIS = 8
+            };
+
+            // enumeration of color types
+            enum colType {
+                COL_SPLINE          = 0,
+                COL_KEYFRAME        = 1,
+                COL_SELECT_KEYFRAME = 2,
+                COL_SELECT_LOOKAT   = 3,
+                COL_SELECT_UP       = 4,
+                COL_SELECT_X_AXIS   = 5,
+                COL_SELECT_Y_AXIS   = 6,
+                COL_SELECT_Z_AXIS   = 7
+            };
+
             /**********************************************************************
             * functions
             **********************************************************************/
@@ -188,21 +190,28 @@ namespace megamol {
             **********************************************************************/
 
             struct manipulator {
-                bool            active;
-                manipulatorType type;
-                float           lastMouseX;
-                float           lastMouseY;
-                float           ssDiffX;
-                float           ssDiffY;
+                bool                           active;
+                manipulatorType                type;
+                vislib::math::Vector<float, 3> lastMouse;
+                vislib::math::Vector<float, 3> ssKeyframePos;
+                vislib::math::Vector<float, 3> ssManipulatorPos;
             };
 
+            // font rendering
+#ifdef USE_SIMPLE_FONT
+            vislib::graphics::gl::SimpleFont  theFont;
+#else
+            vislib::graphics::gl::OutlineFont theFont;
+#endif
 
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
             vislib::Array<vislib::math::Vector<float, 3> > colors;
-            vislib::math::Rectangle<int> viewport;
-            unsigned int                 interpolSteps;
-            bool                         toggleManipulator;
-            manipulator                  currentManipulator;
+            vislib::math::Rectangle<int>  viewport;
+            unsigned int                  interpolSteps;
+            bool                          toggleManipulator;
+            manipulator                   currentManipulator;
+            float                         maxAnimTime;
+            vislib::math::Point<float, 3> bboxCenter;
 
             /**********************************************************************
             * callback stuff
@@ -220,8 +229,6 @@ namespace megamol {
 			
             /** Amount of interpolation steps between keyframes */
             core::param::ParamSlot stepsParam;
-            /** Param to load total time from slave renderer */
-            core::param::ParamSlot loadTimeParam;
             /** Param to toggle to manipulation mode of position or camera lookup */
             core::param::ParamSlot toggleManipulateParam;
 		};

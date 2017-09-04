@@ -103,6 +103,12 @@ namespace megamol {
             /** Updating edit parameters without setting them dirty.*/
             void updateEditParameters(Keyframe k);
 
+            /** Set speed between al keyframes to same speed 
+             *  Uses interpolSteps for approximation of keyframe positions 
+             *  
+             */
+            void setSameSpeed();
+
             /**********************************************************************
             * variables
             **********************************************************************/
@@ -114,11 +120,15 @@ namespace megamol {
             Keyframe                             selectedKeyframe;
             Keyframe                             dragDropKeyframe;
             float                                totalTime;
+            float                                maxAnimTime;
             unsigned int                         interpolSteps;
             SmartPtr<graphics::CameraParameters> cameraParam; 
+            vislib::math::Point<float, 3>        bboxCenter;
 
             // Variables only used in keyframe keeper
-            vislib::StringA                     filename;
+            vislib::StringA                      filename;
+            bool                                 sameSpeed;
+            float                                totVelocity;
 
             /**********************************************************************
             * callback stuff
@@ -129,7 +139,7 @@ namespace megamol {
 			/** Callback for updating parameters of the keyframe keeper */
 			bool CallForGetUpdatedKeyframeData(core::Call& c);
 			/** Callback for applying total time of animation */
-			bool CallForSetTotalTime(core::Call& c);
+			bool CallForSetAnimationData(core::Call& c);
 			/** Callback for calculating new interpolated camera positions */
 			bool CallForInterpolatedCamPos(core::Call& c);
 			/** Callback for updating selected keyframe at new given time */
@@ -173,6 +183,9 @@ namespace megamol {
             core::param::ParamSlot fileNameParam;
             /** */
             core::param::ParamSlot  editCurrentApertureParam;
+            /** */
+            core::param::ParamSlot  resetLookAtParam;
+
 
 		};
 

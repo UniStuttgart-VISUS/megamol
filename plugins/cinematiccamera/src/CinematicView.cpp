@@ -26,9 +26,9 @@ using namespace cinematiccamera;
 */
 CinematicView::CinematicView(void) : View3D(),
 	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
-	selectedSkyboxSideParam(  "Cinematic::01 Skybox Side", "Select the skybox side rendering"),
-    cinematicResolutionXParam("Cinematic::02 Cinematic Resolution X","Set resolution of cineamtic view in hotzontal direction."),
-    cinematicResolutionYParam("Cinematic::03 Cinematic Resolution Y", "Set resolution of cineamtic view in vertical direction"),
+	selectedSkyboxSideParam(  "Cinematic::01 Skybox side", "Select the skybox side rendering"),
+    cinematicResolutionXParam("Cinematic::02 Cinematic resolution X","Set resolution of cineamtic view in hotzontal direction."),
+    cinematicResolutionYParam("Cinematic::03 Cinematic resolution Y", "Set resolution of cineamtic view in vertical direction"),
     shownKeyframe()
     {
 
@@ -47,9 +47,11 @@ CinematicView::CinematicView(void) : View3D(),
 	this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
 
     // init variables
-    this->currentTime       = 0.0f;
-    this->cineXRes          = 1920;
-    this->cineYRes          = 1080;
+    this->currentViewTime = 0.0f;     
+    this->cineXRes        = 1920;
+    this->cineYRes        = 1080;
+    this->maxAnimTime     = 1.0f;
+    this->bboxCenter      = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
 
     // init parameters
     this->cinematicResolutionXParam.SetParameter(new param::IntParam(this->cineXRes, 1));
@@ -62,13 +64,33 @@ CinematicView::CinematicView(void) : View3D(),
     // TEMPORARY HACK #########################################################
     // Disable parameter slot -> 'TAB'-key is needed in cinematic renderer to enable mouse selection
     this->enableMouseSelectionSlot.MakeUnavailable();
+
+    this->setupRenderToTexture();
 }
 
 
 /*
 * CinematicView::~CinematicView
 */
-CinematicView::~CinematicView() {
+CinematicView::~CinematicView(void) {
+    // intentionally empty
+}
+
+
+/*
+* CinematicView::setupRenderToTexture
+*/
+void CinematicView::setupRenderToTexture() {
+
+
+
+
+
+
+
+
+
+
 
 }
 
@@ -95,32 +117,58 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         this->cinematicResolutionYParam.ResetDirty();
         this->cineYRes = this->cinematicResolutionYParam.Param<param::IntParam>()->Value();
     }
+    // Check for new max anim time
+    this->maxAnimTime = static_cast<float>(cr3d->TimeFramesCount());
+    if(this->maxAnimTime != ccc->getMaxAnimTime()){
+        ccc->setMaxAnimTime(this->maxAnimTime);
+        if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return;
+    }
 
-
-    // Get selected keyframe
-    Keyframe s = ccc->getSelectedKeyframe();
+    // Check for new bounding box center
+    this->bboxCenter = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
+    if (this->bboxCenter != ccc->getBboxCenter()) {
+        ccc->setBboxCenter(this->bboxCenter);
+        if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return;
+    }
 
     // Time is set by running ANIMATION from view (e.g. anim::play parameter)
-    float viewTime = static_cast<float>(context.Time);
-    if (this->currentTime != viewTime) {
+    float animTime    = static_cast<float>(context.Time);
+    float repeat      = floorf(this->currentViewTime / this->maxAnimTime) * this->maxAnimTime;
+    if (this->currentViewTime != (animTime + repeat)) {
         // Select the keyframe based on the current animation time.
-        ccc->setSelectedKeyframeTime(viewTime);
-        // Update data in cinematic camera call
+        if (this->currentViewTime < (animTime + repeat)) {
+            this->currentViewTime = repeat + animTime;
+        }
+        else { // animTime < tmpAnimTime -> animation time restarts from 0
+            this->currentViewTime = repeat + this->maxAnimTime + animTime;
+        }
+
+        // Reset view time and animation time to beginning if total time is reached
+        if (this->currentViewTime > ccc->getTotalTime()) {
+            param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
+            animTimeParam->Param<param::FloatParam>()->SetValue(0.0f, true);
+            this->currentViewTime = 0.0f;
+        }
+
+        ccc->setSelectedKeyframeTime(this->currentViewTime);
+        // Update selected keyframe
         if (!(*ccc)(CallCinematicCamera::CallForSetSelectedKeyframe)) return;
-        this->currentTime = viewTime;
-        // Updated data from cinematic camera call
+        // Updated call data 
         if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
     }
-    else { // Time is set by SELECTED FRAME
+    else { // Time is set by SELECTED KEYFRAME
+        // wrap time if total time exceeds animation time of data set
+        float selectTime     = ccc->getSelectedKeyframe().getTime();
+        float selectAnimTime = selectTime - (floorf(selectTime / this->maxAnimTime) * this->maxAnimTime);
         // Set animation time based on selected keyframe (GetSlot(2)= this->animTimeSlot)
         param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
-        animTimeParam->Param<param::FloatParam>()->SetValue(s.getTime(), true);
-        this->currentTime = s.getTime();
+        animTimeParam->Param<param::FloatParam>()->SetValue(selectAnimTime, true);
+        this->currentViewTime = selectTime;
     }
 
     // Set camera parameters of selected keyframe for this view
     // but ONLY if selected keyframe differs to last locally stored and shown keyframe
-    s = ccc->getSelectedKeyframe(); // Got maybe updated
+    Keyframe s = ccc->getSelectedKeyframe(); // maybe updated
     vislib::SmartPtr<vislib::graphics::CameraParameters> p = s.getCamParameters();
     // Every camera parameter has be compared separatly because euqality of cameras only checks pointer equality
     if ((this->shownKeyframe.getTime()             != s.getTime())   ||
