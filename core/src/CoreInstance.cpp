@@ -549,17 +549,6 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key,
                 this->preInit->SetConfigFile(
                     utility::APIValueUtil::AsStringW(type, value));
                 break;
-            case MMC_INITVAL_CFGSET:
-                if (!utility::APIValueUtil::IsStringType(type)) {
-                    return MMC_ERR_TYPE;
-                }
-                this->config.ActivateConfigSet(
-                    utility::APIValueUtil::AsStringW(type, value));
-                this->log.WriteMsg(250,
-                    "Configuration Set \"%s\" added to be activated\n",
-                    utility::APIValueUtil::AsStringA(type, value)
-                    .PeekBuffer());
-                break;
             case MMC_INITVAL_LOGFILE:
                 if (!utility::APIValueUtil::IsStringType(type)) {
                     return MMC_ERR_TYPE;
@@ -2103,7 +2092,6 @@ void megamol::core::CoreInstance::addProject(
         megamol::core::utility::xml::XmlReader& reader) {
     using vislib::sys::Log;
     utility::ProjectParser parser(this);
-    parser.SetConfigSetProvider(&this->config);
     if (parser.Parse(reader)) {
         // success, add project elements
         std::shared_ptr<ViewDescription> vd;

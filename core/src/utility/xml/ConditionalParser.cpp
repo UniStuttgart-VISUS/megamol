@@ -28,7 +28,7 @@ using namespace megamol::core::utility::xml;
  * ConditionalParser::ConditionalParser
  */
 ConditionalParser::ConditionalParser(void) : XmlParser(), 
-        cfgSetProvider(NULL), ifCheckerVer(VERSION_1_0), conditions() {
+        ifCheckerVer(VERSION_1_0), conditions() {
 }
 
 
@@ -205,23 +205,6 @@ bool ConditionalParser::evaluateIf(const MMXML_CHAR** attrib) const {
                 oneTrue = true;
             } else {
                 allTrue = false;
-            }
-
-        } else if (MMXML_STRING("configset").Equals(attrib[i])) {
-
-            if (this->cfgSetProvider == NULL) {
-                this->Warning("No config set provider found. Test failed.");
-                allTrue = false;
-            } else {
-                //vislib::StringW rcsm; // requested config set name
-                //vislib::UTF8Encoder::Decode(rcsm, attrib[i + 1]);
-
-                if (this->cfgSetProvider->IsConfigSetActive(
-                        vislib::StringW(attrib[i + 1]))) {
-                    oneTrue = true;
-                } else {
-                    allTrue = false;
-                }
             }
 
         } else if (MMXML_STRING("debug").Equals(attrib[i])) {
@@ -577,16 +560,6 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
         if (tokenz[2].Equals("computer", false)) {
             return tokenz[0].Equals(
                 vislib::sys::SystemInformation::ComputerNameA(), false);
-        }
-        if (tokenz[0].Equals("configset", false)) {
-            return (this->cfgSetProvider != NULL)
-                && this->cfgSetProvider->IsConfigSetActive(
-                    vislib::StringW(tokenz[2]));
-        }
-        if (tokenz[2].Equals("configset", false)) {
-            return (this->cfgSetProvider != NULL)
-                && this->cfgSetProvider->IsConfigSetActive(
-                    vislib::StringW(tokenz[0]));
         }
         if (tokenz[0].Equals("os", false)) {
             switch (vislib::sys::SystemInformation::SystemType()) {

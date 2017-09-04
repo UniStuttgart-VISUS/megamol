@@ -283,7 +283,7 @@ bool megamol::core::utility::Configuration::logFilenameLocked = false;
  */
 megamol::core::utility::Configuration::Configuration(void) 
         : cfgFileName(), criticalParserError(false), appDir(),
-        shaderDirs(), resourceDirs(), configSets(), configValues(), instanceRequests(),
+        shaderDirs(), resourceDirs(), configValues(), instanceRequests(),
         pluginLoadInfos() {
     this->setDefaultValues();
 }
@@ -702,41 +702,6 @@ const void * megamol::core::utility::Configuration::GetValue(
 
     if (outType != NULL) { *outType = MMC_TYPE_VOIDP; }
     return NULL;
-}
-
-
-/*
- * megamol::core::utility::Configuration::ActivateConfigSet
- */
-void megamol::core::utility::Configuration::ActivateConfigSet(
-        const vislib::StringW& set) {
-    vislib::SingleLinkedList<vislib::StringW>::Iterator iter 
-        = this->configSets.GetIterator();
-    while (iter.HasNext()) {
-        vislib::StringW& s = iter.Next();
-        if (s.Equals(set, false)) {
-            return;
-        }
-    }
-    this->configSets.Append(set);
-}
-
-
-/*
- * megamol::core::utility::Configuration::IsConfigSetActive
- */
-bool megamol::core::utility::Configuration::IsConfigSetActive(
-        const vislib::StringW& set) const {
-    vislib::SingleLinkedList<vislib::StringW>::Iterator iter 
-        = const_cast<vislib::SingleLinkedList<vislib::StringW>& >(
-        this->configSets).GetIterator();
-    while (iter.HasNext()) {
-        vislib::StringW& s = iter.Next();
-        if (s.Equals(set, false)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 
