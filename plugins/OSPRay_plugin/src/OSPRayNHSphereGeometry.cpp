@@ -38,20 +38,12 @@ typedef unsigned char(*byteFromArrayFunc)(const megamol::core::moldyn::MultiPart
 OSPRayNHSphereGeometry::OSPRayNHSphereGeometry(void) :
     AbstractOSPRayStructure(),
     getDataSlot("getdata", "Connects to the data source"),
-    getTFSlot("gettransferfunction", "Connects to the transfer function module"),
-    getClipPlaneSlot("getclipplane", "Connects to a clipping plane module"),
 
     particleList("ParticleList", "Switches between particle lists")
 {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
-
-    this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
-    this->MakeSlotAvailable(&this->getTFSlot);
-
-    this->getClipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
-    this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
     this->particleList << new core::param::IntParam(0);
     this->MakeSlotAvailable(&this->particleList);
@@ -105,18 +97,12 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
         colorLength = 1 * sizeof(float);
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-        colorLength = 3 * sizeof(unsigned char);
+        colorLength = 3 * sizeof(float);
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-        colorLength = 4 * sizeof(unsigned char);
+        colorLength = 4 * sizeof(uint8_t);
     } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
         colorLength = 0;
     }
-
-
-    // clipPlane setup
-    std::vector<float> clipDat(4);
-    std::vector<float> clipCol(4);
-    this->getClipData(clipDat.data(), clipCol.data());
 
 
     // Write stuff into the structureContainer
@@ -127,8 +113,6 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     this->structureContainer.colorLength = colorLength;
     this->structureContainer.partCount = partCount;
     this->structureContainer.globalRadius = globalRadius;
-    this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
-    this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
 
 
     // material container
@@ -177,28 +161,6 @@ bool OSPRayNHSphereGeometry::InterfaceIsDirty() {
     }
 }
 
-/*
-* ospray::OSPRayNHSphereGeometry::getClipData
-*/
-void OSPRayNHSphereGeometry::getClipData(float *clipDat, float *clipCol) {
-    megamol::core::view::CallClipPlane *ccp = this->getClipPlaneSlot.CallAs<megamol::core::view::CallClipPlane>();
-    if ((ccp != NULL) && (*ccp)()) {
-        clipDat[0] = ccp->GetPlane().Normal().X();
-        clipDat[1] = ccp->GetPlane().Normal().Y();
-        clipDat[2] = ccp->GetPlane().Normal().Z();
-        vislib::math::Vector<float, 3> grr(ccp->GetPlane().Point().PeekCoordinates());
-        clipDat[3] = grr.Dot(ccp->GetPlane().Normal());
-        clipCol[0] = static_cast<float>(ccp->GetColour()[0]) / 255.0f;
-        clipCol[1] = static_cast<float>(ccp->GetColour()[1]) / 255.0f;
-        clipCol[2] = static_cast<float>(ccp->GetColour()[2]) / 255.0f;
-        clipCol[3] = static_cast<float>(ccp->GetColour()[3]) / 255.0f;
-
-    } else {
-        clipDat[0] = clipDat[1] = clipDat[2] = clipDat[3] = 0.0f;
-        clipCol[0] = clipCol[1] = clipCol[2] = 0.75f;
-        clipCol[3] = 1.0f;
-    }
-}
 
 bool OSPRayNHSphereGeometry::getExtends(megamol::core::Call &call) {
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);

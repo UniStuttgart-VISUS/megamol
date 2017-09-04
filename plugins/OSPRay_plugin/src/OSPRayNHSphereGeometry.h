@@ -67,20 +67,11 @@ protected:
 
 
     bool InterfaceIsDirty();
-    void getClipData(float *clipDat, float *clipCol);
 
     core::param::ParamSlot particleList;
 
     /** The call for data */
     core::CallerSlot getDataSlot;
-
-    /** The call for clipping plane */
-    core::CallerSlot getClipPlaneSlot;
-
-    /** The call for Transfer function */
-    core::CallerSlot getTFSlot;
-
-
 
 private:
 

@@ -148,6 +148,10 @@ protected:
     // renderer
     OSPRenderer renderer;
 
+	// structure vectors
+	std::vector<OSPGeometry> geo;
+	std::vector<OSPVolume> vol;
+
     // Light map
     OSPRayLightMap lightMap;
     // Structure map

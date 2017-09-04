@@ -219,19 +219,27 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
         renderer_has_changed = true;
         this->rd_type.ResetDirty();
     }
-
-    setupOSPRayCamera(camera, cr);
-    ospCommit(camera);
+	setupOSPRayCamera(camera, cr);
+	ospCommit(camera);
 
     osprayShader.Enable();
     // if nothing changes, the image is rendered multiple times
-    if (data_has_changed || cam_has_changed || renderer_has_changed || !(this->extraSamles.Param<core::param::BoolParam>()->Value()) || time != cr->Time() || this->InterfaceIsDirty()) {
-        time = cr->Time();
-        renderer_has_changed = false;
+    if (data_has_changed ||
+		cam_has_changed ||
+		renderer_has_changed ||
+		!(this->extraSamles.Param<core::param::BoolParam>()->Value()) ||
+		time != cr->Time() ||
+		this->InterfaceIsDirty()) {
 
+		if (data_has_changed ||
+			time != cr->Time() ||
+			this->InterfaceIsDirty()) {
+				this->fillWorld();
+				ospCommit(world);
+		}
 
-        this->fillWorld();
-        ospCommit(world);
+		time = cr->Time();
+		renderer_has_changed = false;
 
         RendererSettings(renderer);
 
@@ -279,7 +287,7 @@ bool OSPRayRenderer::Render(megamol::core::Call& call) {
 
 
     } else {
-         ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
+        ospRenderFrame(framebuffer, renderer, OSP_FB_COLOR | OSP_FB_ACCUM);
         fb = (uint32_t*)ospMapFrameBuffer(framebuffer, OSP_FB_COLOR);
         this->renderTexture2D(osprayShader, fb, imgSize.x, imgSize.y);
         ospUnmapFrameBuffer(fb, framebuffer);
