@@ -35,10 +35,10 @@ const std::string megamol::core::LuaState::MEGAMOL_ENV = "megamol_env = {"
 "  print = mmLogInfo,"
 "  mmLog = mmLog,"
 "  mmLogInfo = mmLogInfo,"
-"  GetBitWidth = mmGetBitWidth,"
-"  GetConfiguration = mmGetConfiguration,"
-"  GetOS = mmGetOS,"
-"  GetMachineName = mmGetMachineName,"
+"  mmGetBitWidth = mmGetBitWidth,"
+"  mmGetConfiguration = mmGetConfiguration,"
+"  mmGetOS = mmGetOS,"
+"  mmGetMachineName = mmGetMachineName,"
 "  ipairs = ipairs,"
 "  next = next,"
 "  pairs = pairs,"
@@ -163,9 +163,9 @@ megamol::core::LuaState::LuaState(CoreInstance *inst) : L(luaL_newstate()),
         lua_register(L, "mmLog", &dispatch<&LuaState::Log>);
         lua_register(L, "mmLogInfo", &dispatch<&LuaState::LogInfo>);
 
+        lua_register(L, "mmGetOS", &dispatch<&LuaState::GetOS>);
         lua_register(L, "mmGetBitWidth", &dispatch<&LuaState::GetBitWidth>);
         lua_register(L, "mmGetConfiguration", &dispatch<&LuaState::GetConfiguration>);
-        lua_register(L, "mmGetOS", &dispatch<&LuaState::GetOS>);
         lua_register(L, "mmGetMachineName", &dispatch<&LuaState::GetMachineName>);
 
 #ifdef LUA_FULL_ENVIRONMENT

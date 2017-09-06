@@ -299,10 +299,9 @@ void megamol::core::CoreInstance::Initialise(void) {
         throw vislib::IllegalStateException(
             "Cannot initalise Lua", __FILE__, __LINE__);
     }
-    lua->RunString("mmLog(LOGINFO, 'Lua loaded Ok.')");
-    //lua->RunString("mmLog(LOGINFO, 'Running on ', mmGetBitWidth(), 'bits in ', mmGetConfiguration(),"
-    //    "' mode on ', mmGetMachineName(), ' (', mmGetOS(), ')')");
-    lua->RunString("mmLog(LOGINFO, mmGetOS())");
+    lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
+        "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
+        "' mode on ', mmGetMachineName(), '.')");
     //lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // configuration file
