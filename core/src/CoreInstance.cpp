@@ -119,7 +119,7 @@ void megamol::core::CoreInstance::ViewJobHandleDalloc(void *data,
 megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
         factories::AbstractAssemblyInstance(),
         preInit(new PreInit), config(),
-        shaderSourceFactory(config), log(),
+        shaderSourceFactory(config), log(), lua(nullptr),
         builtinViewDescs(), projViewDescs(), builtinJobDescs(), projJobDescs(),
         pendingViewInstRequests(), pendingJobInstRequests(), namespaceRoot(),
         timeOffset(0.0), paramUpdateListeners(), plugins(nullptr),
@@ -180,8 +180,6 @@ megamol::core::CoreInstance::CoreInstance(void) : ApiHandle(),
     this->timeOffset += 100.0 * static_cast<double>(::rand()) / static_cast<double>(RAND_MAX);
 //#endif
 
-
-
     this->log.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Core Instance created");
 }
 
@@ -225,6 +223,9 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     // finally plugins
     delete this->plugins;
     this->plugins = nullptr;
+
+    delete this->lua;
+    this->lua = nullptr;
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Cleanup();
@@ -292,6 +293,14 @@ void megamol::core::CoreInstance::Initialise(void) {
         }
     }
     vislib::sys::Log::DefaultLog.EchoOfflineMessages(true);
+
+    this->lua = new LuaState(this);
+    if (!this->lua->StateOk()) {
+        throw vislib::IllegalStateException(
+            "Cannot initalise Lua", __FILE__, __LINE__);
+    }
+    lua->RunString("mmLog(LOGWARNING, 'Lua loaded Ok.')"); // TODO this is broken, I cannot set the global
+    lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // configuration file
     if (this->preInit->IsConfigFileSet()) {
