@@ -166,7 +166,7 @@ namespace megamol {
             bool LoadTexture(vislib::StringA filename);
 
             /** Draw the keyframe marker. */
-            void DrawKeyframeMarker(float posX, float posY, ColorMode color);
+            void DrawKeyframeMarker(float posX, float posY, vislib::math::Vector<float, 3> color);
 
 
             /**********************************************************************

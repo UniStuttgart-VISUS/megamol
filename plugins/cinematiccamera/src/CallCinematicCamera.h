@@ -202,6 +202,27 @@ namespace megamol {
                 return this->bboxCenter;
             }
 
+            // COLORS
+
+            // enumeration of color types
+            enum colType {
+                COL_SPLINE          = 0,
+                COL_KEYFRAME        = 1,
+                COL_KEYFRAME_SELECT = 2,
+                COL_KEYFRAME_DRAG   = 3,
+                COL_MANIP_LOOKAT    = 4,
+                COL_MANIP_UP        = 5,
+                COL_MANIP_X_AXIS    = 6,
+                COL_MANIP_Y_AXIS    = 7,
+                COL_MANIP_Z_AXIS    = 8,
+                COL_ANIM_REPEAT     = 9,
+                NUM_OF_COL          = 10
+            };
+
+            /** */
+            vislib::math::Vector<float, 3> getColor(CallCinematicCamera::colType  c);
+
+
 		private:
 
             /**********************************************************************
@@ -209,16 +230,18 @@ namespace megamol {
             **********************************************************************/
 
 			// Pointer to array of keyframes
-			Array<Keyframe>				        *keyframes;
-            Array<math::Point<float, 3> >       *interpolCamPos;
-            unsigned int                         interpolSteps;
-			math::Cuboid<float>		            *boundingbox;
-            Keyframe						     selectedKeyframe;
-            float                                dropTime;
-			float								 totalTime;
-            SmartPtr<graphics::CameraParameters> cameraParam;
-            float                                maxAnimTime;
-            vislib::math::Point<float, 3>        bboxCenter;
+			Array<Keyframe>				          *keyframes;
+            Array<math::Point<float, 3> >         *interpolCamPos;
+            unsigned int                           interpolSteps;
+			math::Cuboid<float>		              *boundingbox;
+            Keyframe						       selectedKeyframe;
+            float                                  dropTime;
+			float								   totalTime;
+            SmartPtr<graphics::CameraParameters>   cameraParam;
+            float                                  maxAnimTime;
+            vislib::math::Point<float, 3>          bboxCenter;
+            Array<vislib::math::Vector<float, 3> > colorTable;
+
 		};
 
 		/** Description class typedef */

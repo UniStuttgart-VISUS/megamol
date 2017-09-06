@@ -54,13 +54,15 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     theFont(vislib::graphics::gl::FontInfo_Verdana),
 #endif // USE_SIMPLE_FONT
     stepsParam(           "01 Spline subdivision", "Amount of interpolation steps between keyframes"),
-    toggleManipulateParam("02 Toggle manipulator", "Toggle between position manipulation or lookup manipulation.")
+    toggleManipulateParam("02 Toggle manipulator", "Toggle between position manipulation or lookup manipulation."),
+    toggleHelpTextParam(  "03 Toggle help text", "Show/hide help text with key assignments.")
     {
 
     this->interpolSteps     = 20;
     this->toggleManipulator = false;
     this->maxAnimTime       = 1.0f;
     this->bboxCenter        = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
+    this->showHelpText      = false;
 
     this->slaveRendererSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->slaveRendererSlot);
@@ -74,22 +76,12 @@ CinematicRenderer::CinematicRenderer(void) : Renderer3DModule(),
     this->toggleManipulateParam.SetParameter(new param::ButtonParam('m'));
     this->MakeSlotAvailable(&this->toggleManipulateParam);
 
+    this->toggleHelpTextParam.SetParameter(new param::ButtonParam('h'));
+    this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
     // init variables
     this->modelViewProjMatrix.SetIdentity();
     this->viewport.SetNull();
-    // Setting (constant) colors
-    this->colors.Clear();
-    this->colors.AssertCapacity(100);
-    this->colors.Add(vislib::math::Vector<float, 3>(0.4f, 0.4f, 1.0f)); // COL_SPLINE          = 0,
-    this->colors.Add(vislib::math::Vector<float, 3>(0.7f, 0.7f, 1.0f)); // COL_KEYFRAME        = 1,
-    this->colors.Add(vislib::math::Vector<float, 3>(0.1f, 0.1f, 1.0f)); // COL_SELECT_KEYFRAME = 2,
-    this->colors.Add(vislib::math::Vector<float, 3>(0.3f, 0.8f, 0.8f)); // COL_SELECT_LOOKAT   = 3,
-    this->colors.Add(vislib::math::Vector<float, 3>(0.8f, 0.0f, 0.8f)); // COL_SELECT_UP       = 4,
-    this->colors.Add(vislib::math::Vector<float, 3>(0.8f, 0.1f, 0.0f)); // COL_SELECT_X_AXIS   = 5,
-    this->colors.Add(vislib::math::Vector<float, 3>(0.8f, 0.8f, 0.0f)); // COL_SELECT_Y_AXIS   = 6,
-    this->colors.Add(vislib::math::Vector<float, 3>(0.1f, 0.8f, 0.0f)); // COL_SELECT_Z_AXIS   = 7
-
 
     // Load spline interpolation keyframes at startup
     this->stepsParam.ForceSetDirty();
@@ -215,6 +207,10 @@ bool CinematicRenderer::Render(Call& call) {
         this->toggleManipulator = !this->toggleManipulator;
         this->toggleManipulateParam.ResetDirty();
     }
+    if (this->toggleHelpTextParam.IsDirty()) {
+        this->showHelpText = !this->showHelpText;
+        this->toggleHelpTextParam.ResetDirty();
+    }
 
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
@@ -275,7 +271,6 @@ bool CinematicRenderer::Render(Call& call) {
 
         glLineWidth(2.5f);
         glPointSize(15.0f);
-
         float        circleRadius = 0.15f;
         unsigned int circleSubDiv = 20;
 
@@ -293,7 +288,7 @@ bool CinematicRenderer::Render(Call& call) {
         }
         // Draw spline
         math::Point<float, 3> tmpP;
-        glColor3fv(this->colors[(int)colType::COL_SPLINE].PeekComponents());
+        glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_SPLINE).PeekComponents());
         glBegin(GL_LINE_STRIP);
             for (unsigned int i = 0; i < interpolKeyframes->Count(); i++) {
                 tmpP = (*interpolKeyframes)[i];
@@ -305,10 +300,10 @@ bool CinematicRenderer::Render(Call& call) {
             // Draw fixed keyframe
             tmpP = (*keyframes)[i].getCamPosition();
             if (tmpP == s.getCamPosition()) {
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, tmpP, this->colors[(int)colType::COL_SELECT_KEYFRAME]);
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, tmpP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT));
             }
             else {
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, tmpP, this->colors[(int)colType::COL_KEYFRAME]);
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, tmpP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME));
             }
         }
 
@@ -318,7 +313,7 @@ bool CinematicRenderer::Render(Call& call) {
         math::Point<float, 3>  sLaP = s.getCamLookAt();
         glBegin(GL_LINES);
             // LookAt vector at keyframe position
-            glColor3fv(this->colors[(int)colType::COL_SELECT_LOOKAT].PeekComponents());
+            glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT).PeekComponents());
             glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
             glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
         glEnd();
@@ -327,11 +322,11 @@ bool CinematicRenderer::Render(Call& call) {
         if (selIndex < 0) {
             glBegin(GL_LINES);
                 // Up vector at camera position
-                glColor3fv(this->colors[(int)colType::COL_SELECT_UP].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + sUpV.GetX(), sPosP.GetY() + sUpV.GetY(), sPosP.GetZ() + sUpV.GetZ());
             glEnd();
-            this->renderCircle2D(circleRadius/2.0f, circleSubDiv, camPosP, sPosP, this->colors[(int)colType::COL_SELECT_KEYFRAME]);
+            this->renderCircle2D(circleRadius/2.0f, circleSubDiv, camPosP, sPosP, ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT));
         }
         else { //(selIndex >= 0) 
             // Draw up and lookat manipulator as default
@@ -343,60 +338,61 @@ bool CinematicRenderer::Render(Call& call) {
                 laV.Normalise();
                 glBegin(GL_LINES);
                 // Up vector at camera position
-                glColor3fv(this->colors[(int)colType::COL_SELECT_UP].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + sUpV.GetX(), sPosP.GetY() + sUpV.GetY(), sPosP.GetZ() + sUpV.GetZ());
 
                 // LookAt
-                glColor3fv(this->colors[(int)colType::COL_SELECT_LOOKAT].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + laV.GetX(), sPosP.GetY() + laV.GetY(), sPosP.GetZ() + laV.GetZ());
 
                 // lookat x-axis
-                glColor3fv(this->colors[(int)colType::COL_SELECT_X_AXIS].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS).PeekComponents());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
                 glVertex3f(sLaP.GetX() + 1.0f, sLaP.GetY(), sLaP.GetZ());
 
                 // lookat y-axis
-                glColor3fv(this->colors[(int)colType::COL_SELECT_Y_AXIS].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS).PeekComponents());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
                 glVertex3f(sLaP.GetX(), sLaP.GetY() + 1.0f, sLaP.GetZ());
 
                 // lookat z-axis
-                glColor3fv(this->colors[(int)colType::COL_SELECT_Z_AXIS].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS).PeekComponents());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ());
                 glVertex3f(sLaP.GetX(), sLaP.GetY(), sLaP.GetZ() + 1.0f);
                 glEnd();
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + sUpV, this->colors[(int)colType::COL_SELECT_UP]);
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + laV, this->colors[(int)colType::COL_SELECT_LOOKAT]);
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), this->colors[(int)colType::COL_SELECT_X_AXIS]);
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), this->colors[(int)colType::COL_SELECT_Y_AXIS]);
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), this->colors[(int)colType::COL_SELECT_Z_AXIS]);
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + sUpV, ccc->getColor(CallCinematicCamera::colType::COL_MANIP_UP));
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + laV, ccc->getColor(CallCinematicCamera::colType::COL_MANIP_LOOKAT));
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS));
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS));
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sLaP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS));
             }
             else { // Draw axis for position manipulation
                 glBegin(GL_LINES);
                 // keyframe pos x-axis
-                glColor3fv(this->colors[(int)colType::COL_SELECT_X_AXIS].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX() + 1.0f, sPosP.GetY(), sPosP.GetZ());
                 // keyframe pos y-axis
-                glColor3fv(this->colors[(int)colType::COL_SELECT_Y_AXIS].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX(), sPosP.GetY() + 1.0f, sPosP.GetZ());
 
                 // keyframe  pos z-axis
-                glColor3fv(this->colors[(int)colType::COL_SELECT_Z_AXIS].PeekComponents());
+                glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS).PeekComponents());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ());
                 glVertex3f(sPosP.GetX(), sPosP.GetY(), sPosP.GetZ() + 1.0f);
                 glEnd();
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), this->colors[(int)colType::COL_SELECT_X_AXIS]);
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), this->colors[(int)colType::COL_SELECT_Y_AXIS]);
-                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), this->colors[(int)colType::COL_SELECT_Z_AXIS]);
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(1.0f, 0.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_X_AXIS));
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 1.0f, 0.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Y_AXIS));
+                this->renderCircle2D(circleRadius, circleSubDiv, camPosP, sPosP + math::Vector<float, 3>(0.0f, 0.0f, 1.0f), ccc->getColor(CallCinematicCamera::colType::COL_MANIP_Z_AXIS));
             }
             ///////////////////////////////////////////
             //// ADD CODE FOR NEW MAIPULATOR HERE /////
             ///////////////////////////////////////////
         }
+        glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
     }
 
@@ -405,16 +401,13 @@ bool CinematicRenderer::Render(Call& call) {
         vislib::sys::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [Render] Couldn't initialize the font.");
         return false;
     }
-
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0.0f, this->viewport.GetSize().GetWidth(), 0.0f, this->viewport.GetSize().GetHeight(), -1.0, 1.0);
-
+    glOrtho(0.0f, (float)this->viewport.GetSize().GetWidth(), 0.0f, (float)this->viewport.GetSize().GetHeight(), -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-
     // Get the diagram color (inverse background color)
     float bgColor[4];
     float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -423,21 +416,24 @@ bool CinematicRenderer::Render(Call& call) {
         fgColor[i] -= bgColor[i];
     }
     glColor3fv(fgColor);
-
-    float fontSize = 20.0f;
+    float fontSize = this->viewport.GetSize().GetWidth()*0.025f; // 2.5% of viewport width
     vislib::StringA tmpStr = "";
-    tmpStr += "[TAB]-Move/Select Mode.\n";
-    tmpStr += "[m]---Toggle Keyframe Manipulators.\n";
-    tmpStr += "[a]----Add New Keyframe.\n";
-    tmpStr += "[r]-----Replace selected Keyframe.\n";
-    tmpStr += "[d]----Delete Selected Keyframe.\n";
-    tmpStr += "[l]-----Reset Keyframe Lookat Vector.\n";
-    tmpStr += "[s]----Save Keyframes To File.\n";
-    tmpStr += "[t]----Timeline Move/Select Mode.\n";
-
-    float strWidth = this->theFont.LineWidth(fontSize, "-------------------------------------------------------------" );
+    float strWidth = this->theFont.LineWidth(fontSize, "------------------------------------------");
+    if (this->showHelpText) {
+        tmpStr += "[tab] Move/Select mode.\n";
+        tmpStr += "[m] Toggle keyframe manipulators.\n";
+        tmpStr += "[a] Add new keyframe.\n";
+        tmpStr += "[r] Replace selected keyframe.\n";
+        tmpStr += "[d] Delete selected keyframe.\n";
+        tmpStr += "[l] Reset keyframe lookat vector.\n";
+        tmpStr += "[s] Save keyframes to file.\n";
+        tmpStr += "[t] Timeline move/select mode.\n";
+        tmpStr += "[h] Hide help text.\n";
+    }
+    else {
+        tmpStr += "[h] Show help text.\n";
+    }
     this->theFont.DrawString(10.0f, this->viewport.GetSize().GetHeight() - 10.0f, strWidth, 1.0f, fontSize, true, tmpStr, vislib::graphics::AbstractFont::ALIGN_LEFT_TOP);
-
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();

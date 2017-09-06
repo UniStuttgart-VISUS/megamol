@@ -10,10 +10,12 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/view/CallRenderView.h"
+
+#include "vislib/math/Rectangle.h"
 
 #include "CinematicView.h"
 #include "CallCinematicCamera.h"
-
 
 
 using namespace megamol;
@@ -27,8 +29,8 @@ using namespace cinematiccamera;
 CinematicView::CinematicView(void) : View3D(),
 	keyframeKeeperSlot("keyframeKeeper", "Connects to the Keyframe Keeper."),
 	selectedSkyboxSideParam(  "Cinematic::01 Skybox side", "Select the skybox side rendering"),
-    cinematicResolutionXParam("Cinematic::02 Cinematic resolution X","Set resolution of cineamtic view in hotzontal direction."),
-    cinematicResolutionYParam("Cinematic::03 Cinematic resolution Y", "Set resolution of cineamtic view in vertical direction"),
+    cinematicHeightParam("Cinematic::02 Cinematic width","Set resolution of cineamtic view in hotzontal direction."),
+    cinematicWidthParam("Cinematic::03 Cinematic height", "Set resolution of cineamtic view in vertical direction"),
     shownKeyframe()
     {
 
@@ -48,24 +50,26 @@ CinematicView::CinematicView(void) : View3D(),
 
     // init variables
     this->currentViewTime = 0.0f;     
-    this->cineXRes        = 1920;
-    this->cineYRes        = 1080;
     this->maxAnimTime     = 1.0f;
     this->bboxCenter      = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
 
+    this->cineWidth    = -1.0f;
+    this->cineHeight   = -1.0f;
+    this->vpWidth      = -1.0f;
+    this->vpHeight     = -1.0f;
+    this->fboWidth     = -1.0f;
+    this->fboHeight    = -1.0f;
+
     // init parameters
-    this->cinematicResolutionXParam.SetParameter(new param::IntParam(this->cineXRes, 1));
-    this->MakeSlotAvailable(&this->cinematicResolutionXParam);
+    this->cinematicHeightParam.SetParameter(new param::IntParam(1, 1));
+    this->MakeSlotAvailable(&this->cinematicHeightParam);
 
-    this->cinematicResolutionYParam.SetParameter(new param::IntParam(this->cineYRes, 1));
-    this->MakeSlotAvailable(&this->cinematicResolutionYParam);
-
+    this->cinematicWidthParam.SetParameter(new param::IntParam(1, 1));
+    this->MakeSlotAvailable(&this->cinematicWidthParam);
 
     // TEMPORARY HACK #########################################################
     // Disable parameter slot -> 'TAB'-key is needed in cinematic renderer to enable mouse selection
     this->enableMouseSelectionSlot.MakeUnavailable();
-
-    this->setupRenderToTexture();
 }
 
 
@@ -73,7 +77,11 @@ CinematicView::CinematicView(void) : View3D(),
 * CinematicView::~CinematicView
 */
 CinematicView::~CinematicView(void) {
-    // intentionally empty
+
+    glDeleteTextures(1, &this->colorBuffer);
+    glDeleteTextures(1, &this->depthBuffer);
+    glDeleteFramebuffers(1, &this->frameBuffer);
+
 }
 
 
@@ -82,16 +90,64 @@ CinematicView::~CinematicView(void) {
 */
 void CinematicView::setupRenderToTexture() {
 
+    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers"))
+        return;
 
+    // Delete textures + fbo if necessary
+    if (glIsFramebuffer(this->frameBuffer)) {
+        glDeleteTextures(1, &this->colorBuffer);
+        glDeleteTextures(1, &this->depthBuffer);
+        glDeleteFramebuffers(1, &this->frameBuffer);
+    }
 
+    float vpRatio    = static_cast<float>(this->vpWidth)   / static_cast<float>(this->vpHeight);
+    float cineRatio  = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+    this->fboWidth   = this->vpWidth;
+    this->fboHeight  = this->vpHeight;
+    if (cineRatio > vpRatio) {
+        this->fboHeight = (static_cast<int>(static_cast<float>(this->vpWidth) / cineRatio));
+    }
+    else if (cineRatio < vpRatio) {
+        this->fboWidth = (static_cast<int>(static_cast<float>(this->vpHeight) * cineRatio));
+    }
 
+    // Create color texture
+    glGenTextures(1, &this->colorBuffer);
+    glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, this->fboWidth, this->fboHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    // Create depth texture
+    glGenTextures(1, &this->depthBuffer);
+    glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, this->fboWidth, this->fboHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
+    // Create FramebufferObject
+    glGenFramebuffersEXT(1, &this->frameBuffer);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, this->frameBuffer);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->colorBuffer, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depthBuffer, 0);
 
+    // Check status of fbo
+    if (glCheckFramebufferStatusEXT(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [setupRenderToTexture] Could not create framebuffer object.");
+    }
+    else {
+        sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] [setupRenderToTexture] Creating framebuffer object was successful.");
+    }
 
-
-
-
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -108,15 +164,41 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
 
+    // get viewport
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    int  vpW = vp[2] - vp[0];
+    int  vpH = vp[3] - vp[1];
+
+    bool resetFramebuffer = false;
+    if ((this->vpHeight != vpH) || (this->vpWidth != vpW)) {
+        this->vpHeight = vpH;
+        this->vpWidth  = vpW;
+        resetFramebuffer = true;
+    }
+    if ((this->cineHeight < 0) || (this->cineWidth < 0)) { // first time
+        this->cineWidth  = vpWidth;
+        this->cineHeight = vpHeight;
+        this->cinematicHeightParam.Param<param::IntParam>()->SetValue(this->cineWidth, false);
+        this->cinematicWidthParam.Param<param::IntParam>()->SetValue(this->cineHeight, false);
+        resetFramebuffer = true;
+    }
     // Update paramters
-    if (this->cinematicResolutionXParam.IsDirty()) {
-        this->cinematicResolutionXParam.ResetDirty();
-        this->cineXRes = this->cinematicResolutionXParam.Param<param::IntParam>()->Value();
+    if (this->cinematicHeightParam.IsDirty()) {
+        this->cinematicHeightParam.ResetDirty();
+        this->cineWidth = this->cinematicHeightParam.Param<param::IntParam>()->Value();
+        resetFramebuffer = true;
     }
-    if (this->cinematicResolutionYParam.IsDirty()) {
-        this->cinematicResolutionYParam.ResetDirty();
-        this->cineYRes = this->cinematicResolutionYParam.Param<param::IntParam>()->Value();
+    if (this->cinematicWidthParam.IsDirty()) {
+        this->cinematicWidthParam.ResetDirty();
+        this->cineHeight = this->cinematicWidthParam.Param<param::IntParam>()->Value();
+        resetFramebuffer = true;
     }
+    // Update framebuffer size
+    if (resetFramebuffer) {
+        this->setupRenderToTexture();
+    }
+
     // Check for new max anim time
     this->maxAnimTime = static_cast<float>(cr3d->TimeFramesCount());
     if(this->maxAnimTime != ccc->getMaxAnimTime()){
@@ -196,7 +278,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (!(*ccc)(CallCinematicCamera::CallForSetCameraForKeyframe)) return;
 
     // Get camera parameters
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->cam.Parameters();
+    vislib::SmartPtr<vislib::graphics::CameraParameters> cp = this->camParams;
     vislib::math::Point<float, 3>  camPos      = cp->Position();
     vislib::math::Vector<float, 3> camRight    = cp->Right();
     vislib::math::Vector<float, 3> camUp       = cp->Up();
@@ -227,160 +309,121 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
     }   
 
-    /*
-    GLint viewportStuff[4];
-    glGetIntegerv(GL_VIEWPORT, viewportStuff);
+    // ------------------------------------------------------------------------
+    // Render to texture
 
-    // Create color texture
-    GLuint colBuf;
-    glGenTextures(1, &colBuf);
-    glBindTexture(GL_TEXTURE_2D, colBuf);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, this->cineXRes, this->cineYRes, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    //cr3d->DisableOutputBuffer();
+    if (cr3d->FrameBufferObject() != NULL)
+        cr3d->FrameBufferObject()->Disable();
 
-    // Create depth texture
-    GLuint depBuf;
-    glGenTextures(1, &depBuf);
-    glBindTexture(GL_TEXTURE_2D, depBuf);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, this->cineXRes, this->cineYRes, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Create FramebufferObject
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colBuf, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depBuf, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
-    // Check status of fbo
-    if (glCheckFramebufferStatusEXT(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Could not create FBO");
-        return;
-    }
-
-    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glBindFramebufferEXT(GL_FRAMEBUFFER, this->frameBuffer);
+    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, DrawBuffers);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->colorBuffer, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depthBuffer, 0);
 
+    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
+    int fboVp[4] = { 0, 0, this->fboWidth, this->fboHeight };
+    this->overrideViewport = fboVp;
+    // Set new viewport settings for camera
+    this->camParams->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(this->fboWidth), static_cast<vislib::graphics::ImageSpaceType>(this->fboHeight));
+    this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f, static_cast<float>(this->fboWidth), static_cast<float>(this->fboHeight)));
 
-
-    // Render to framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glViewport(0, 0, this->cineXRes, this->cineYRes); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-    */
-
-
-
-    // Call Renderer
+    // Call Render-Function of parent View3D
     Base::Render(context);
 
+    this->overrideViewport = NULL;
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
+    //cr3d->EnableOutputBuffer();
+    if (cr3d->FrameBufferObject() != NULL)
+        cr3d->FrameBufferObject()->Enable();
 
-    /*
-    // Unbind buffers 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // ------------------------------------------------------------------------
+    // Draw final image
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
 
     // Reset viewport
-    glViewport(viewportStuff[0], viewportStuff[1], viewportStuff[2], viewportStuff[3]);
+    glViewport(vp[0], vp[1], vp[2], vp[3]);
+    glOrtho(0.0f, static_cast<float>(this->vpWidth), 0.0f, static_cast<float>(this->vpHeight), -1.0, 1.0);
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, colBuf);
-   
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    // Get the foreground color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    for (unsigned int i = 0; i < 4; i++) {
+        fgColor[i] -= bgColor[i];
+    }
 
-    // Draw
+    // Draw white background quad
+    glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2f(-1.0f, -1.0f);
-        glTexCoord2f(1, 0); glVertex2f(1.0f, -1.0f);
-        glTexCoord2f(1, 1); glVertex2f(1.0f, 1.0f);
-        glTexCoord2f(0, 1); glVertex2f(-1.0f, 1.0f);
+        glVertex2i(0, 0);
+        glVertex2i(this->vpWidth, 0);
+        glVertex2i(this->vpWidth, this->vpHeight);
+        glVertex2i(0, this->vpHeight);
     glEnd();
 
+    // Draw texture
+    float wHalfVp    = static_cast<float>(this->vpWidth) / 2.0f;
+    float hHalfVp    = static_cast<float>(this->vpHeight) / 2.0f;
+    float wHalfFbo   = static_cast<float>(this->fboWidth) / 2.0f;
+    float hHalfFbo   = static_cast<float>(this->fboHeight) / 2.0f;
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
+    glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(wHalfVp - wHalfFbo, hHalfVp - hHalfFbo);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(wHalfVp + wHalfFbo, hHalfVp - hHalfFbo);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(wHalfVp + wHalfFbo, hHalfVp + hHalfFbo);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(wHalfVp - wHalfFbo, hHalfVp + hHalfFbo);
+    glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+
+    // Draw letter box quads
+    int x = 0;
+    int y = 0;
+    if (this->fboWidth < this->vpWidth) {
+        x = (static_cast<int>(static_cast<float>(this->vpWidth - this->fboWidth) / 2.0f));
+        y = this->vpHeight;
+    }
+    else if (this->fboHeight < this->vpHeight) {
+        x = this->vpWidth;
+        y = (static_cast<int>(static_cast<float>(this->vpHeight - this->fboHeight) / 2.0f));
+    }
+    glColor3fv(fgColor);
+    glBegin(GL_QUADS);
+        glVertex2i(0, 0);
+        glVertex2i(x, 0);
+        glVertex2i(x, y);
+        glVertex2i(0, y);
+        glVertex2i(this->vpWidth,     this->vpHeight);
+        glVertex2i(this->vpWidth - x, this->vpHeight);
+        glVertex2i(this->vpWidth - x, this->vpHeight - y);
+        glVertex2i(this->vpWidth,     this->vpHeight - y);
+    glEnd();
+
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
-    glDisable(GL_TEXTURE_2D);
-
-    glDeleteTextures(1, &colBuf);
-    glDeleteTextures(1, &depBuf);
-    glDeleteFramebuffersEXT(1, &fbo);
-    */
-
-    /*
-    // Get current viewport
-    int    viewportHeight  = cr3d->GetViewport().GetSize().GetHeight();
-    int    viewportWidth   = cr3d->GetViewport().GetSize().GetWidth();
-    int    letterboxHeight = 0;
-    int    letterboxWidth  = 0;
-    float  viewportRatio   = (float)viewportWidth / (float)viewportHeight;
-    float  cinematicRatio  = (float)this->cineXRes / (float)this->cineYRes;
-
-    if (cinematicRatio < viewportRatio) { // cinematic view is higher than current viewport
-        letterboxHeight = viewportHeight;
-        letterboxWidth = (int)(((float)viewportWidth - ((float)viewportHeight * cinematicRatio)) / 2.0f);
-    }
-    else if (cinematicRatio > viewportRatio) { // cinematic view is wider than current viewport
-        letterboxHeight = (int)(((float)viewportHeight - ((float)viewportWidth / cinematicRatio)) / 2.0f);
-        letterboxWidth = viewportWidth;
-    }
-    // Draw 2D Letterbox
-    if (cinematicRatio != viewportRatio) {
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho(0.0, (GLdouble)viewportWidth, 0.0, (GLdouble)viewportHeight, -1.0, 1.0);
-
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-
-        glDisable(GL_CULL_FACE);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_LIGHTING);
-
-        glColor3f(0.5f, 0.5f, 0.5f);
-
-        // Bottom or left bar
-        glBegin(GL_QUADS);
-        glVertex2i(0, 0);
-        glVertex2i(letterboxWidth, 0);
-        glVertex2i(letterboxWidth, letterboxHeight);
-        glVertex2i(0, letterboxHeight);
-        glEnd();
-
-        // Top or right bar
-        glBegin(GL_QUADS);
-        glVertex2i(viewportWidth,                  viewportHeight);
-        glVertex2i(viewportWidth - letterboxWidth, viewportHeight);
-        glVertex2i(viewportWidth - letterboxWidth, viewportHeight - letterboxHeight);
-        glVertex2i(viewportWidth,                  viewportHeight - letterboxHeight);
-        glEnd();
-
-        glPopMatrix();
-
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-    }
-    */
 }

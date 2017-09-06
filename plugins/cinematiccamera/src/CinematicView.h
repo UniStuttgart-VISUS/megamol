@@ -16,6 +16,8 @@
 #include "vislib/graphics/Camera.h"
 #include "vislib/math/Point.h"
 #include "vislib/Serialisable.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/graphics/gl/GLSLShader.h"
 
 #include "Keyframe.h"
 
@@ -63,6 +65,10 @@ namespace megamol {
 			* @return 'true' if the module is available, 'false' otherwise.
 			*/
 			static bool IsAvailable(void) {
+                if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
+                    return false;
+                if (!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable())
+                    return false;
 				return true;
 			}
 
@@ -92,12 +98,23 @@ namespace megamol {
             * variables
             **********************************************************************/
 
+            vislib::math::Point<float, 3> bboxCenter; 
             float        currentViewTime;
             Keyframe     shownKeyframe;
-            int          cineXRes;
-            int          cineYRes;
+
             float        maxAnimTime;
-            vislib::math::Point<float, 3> bboxCenter;
+            //vislib::graphics::gl::FramebufferObject fbo;
+
+            GLuint       colorBuffer;
+            GLuint       depthBuffer;
+            GLuint       frameBuffer;
+
+            int          cineWidth;
+            int          cineHeight;
+            int          vpWidth;
+            int          vpHeight;
+            int          fboWidth;
+            int          fboHeight;
 
             /**********************************************************************
             * functions
@@ -119,9 +136,9 @@ namespace megamol {
             /** */
 			core::param::ParamSlot selectedSkyboxSideParam;
             /** */
-            core::param::ParamSlot cinematicResolutionXParam;
+            core::param::ParamSlot cinematicHeightParam;
             /** */
-            core::param::ParamSlot cinematicResolutionYParam;
+            core::param::ParamSlot cinematicWidthParam;
 		};
 
 	} /* end namespace cinematiccamera */

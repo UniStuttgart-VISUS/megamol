@@ -153,17 +153,6 @@ namespace megamol {
                 LOOKAT_Z_AXIS = 8
             };
 
-            // enumeration of color types
-            enum colType {
-                COL_SPLINE          = 0,
-                COL_KEYFRAME        = 1,
-                COL_SELECT_KEYFRAME = 2,
-                COL_SELECT_LOOKAT   = 3,
-                COL_SELECT_UP       = 4,
-                COL_SELECT_X_AXIS   = 5,
-                COL_SELECT_Y_AXIS   = 6,
-                COL_SELECT_Z_AXIS   = 7
-            };
 
             /**********************************************************************
             * functions
@@ -205,13 +194,13 @@ namespace megamol {
 #endif
 
             vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> modelViewProjMatrix;
-            vislib::Array<vislib::math::Vector<float, 3> > colors;
             vislib::math::Rectangle<int>  viewport;
             unsigned int                  interpolSteps;
             bool                          toggleManipulator;
             manipulator                   currentManipulator;
             float                         maxAnimTime;
             vislib::math::Point<float, 3> bboxCenter;
+            bool                          showHelpText;
 
             /**********************************************************************
             * callback stuff
@@ -231,6 +220,8 @@ namespace megamol {
             core::param::ParamSlot stepsParam;
             /** Param to toggle to manipulation mode of position or camera lookup */
             core::param::ParamSlot toggleManipulateParam;
+            /**  */
+            core::param::ParamSlot toggleHelpTextParam;
 		};
 
 	} /* end namespace cinematiccamera */

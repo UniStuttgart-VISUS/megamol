@@ -355,7 +355,6 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 	}
 
     // Opengl setup
-	glColor3fv(fgColor);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
@@ -364,6 +363,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     float        frameFrac      = this->tlLength / this->totalTime;
     float        maxAnimTime    = ccc->getMaxAnimTime();
     unsigned int repeatAnimTime = static_cast<unsigned int>(floorf(this->totalTime / maxAnimTime));
+    glColor3fv(fgColor);
     glBegin(GL_LINES);
         // Draw time line
         glVertex2fv(this->tlStartPos.PeekComponents());
@@ -378,7 +378,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
             glVertex2f(this->tlStartPos.GetX() + f, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
         }
         // Draw marker when animation repeats
-        glColor3f(0.8f, 0.0f, 0.0f);
+        glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_ANIM_REPEAT).PeekComponents());
         for (unsigned int i = 1; i <= repeatAnimTime; i++) {
             glVertex2f(this->tlStartPos.GetX() + frameFrac*maxAnimTime*(float)i, this->tlStartPos.GetY() + (this->devY / this->scaleFac));
             glVertex2f(this->tlStartPos.GetX() + frameFrac*maxAnimTime*(float)i, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
@@ -414,8 +414,8 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (keyframes->Count() > 0) {
         // draw the defined keyframes
         for (unsigned int i = 0; i < keyframes->Count(); i++) {
-            ColorMode cMode = ((*keyframes)[i] == s) ? (ColorMode::SELECTED_COLOR) : (ColorMode::DEFAULT_COLOR);
-            this->DrawKeyframeMarker(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), cMode);
+            CallCinematicCamera::colType cMode = ((*keyframes)[i] == s) ? (CallCinematicCamera::colType::COL_KEYFRAME_SELECT) : (CallCinematicCamera::colType::COL_KEYFRAME);
+            this->DrawKeyframeMarker(this->tlStartPos.GetX() + (*keyframes)[i].getTime() * frameFrac, this->tlStartPos.GetY(), ccc->getColor(cMode));
         }
     }
 
@@ -423,7 +423,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     if (!keyframes->Contains(s)) {
         float x = this->tlStartPos.GetX() + s.getTime() * frameFrac;
         glLineWidth(4.0f);
-        glColor3f(0.1f, 0.1f, 1.0f);
+        glColor3fv(ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_SELECT).PeekComponents());
         glBegin(GL_LINES);
             glVertex2f(x, this->tlStartPos.GetY() + (this->markerSize / this->scaleFac));
             glVertex2f(x, this->tlStartPos.GetY());
@@ -432,7 +432,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 
     // Draw dragged keyframe
     if (this->aktiveDragDrop) {
-        this->DrawKeyframeMarker(this->tlStartPos.GetX() + this->dragDropKeyframe.getTime() * frameFrac, this->tlStartPos.GetY(), ColorMode::DRAGDROP_COLOR);
+        this->DrawKeyframeMarker(this->tlStartPos.GetX() + this->dragDropKeyframe.getTime() * frameFrac, this->tlStartPos.GetY(), ccc->getColor(CallCinematicCamera::colType::COL_KEYFRAME_DRAG));
     }
 
 	return true;
@@ -442,24 +442,17 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
 /*
 * cinematiccamera::TimeLineRenderer::DrawKeyframeMarker
 */
-void TimeLineRenderer::DrawKeyframeMarker(float posX, float posY, ColorMode color) {
+void TimeLineRenderer::DrawKeyframeMarker(float posX, float posY, vislib::math::Vector<float, 3> color) {
 
-    switch (color) {
-        case(ColorMode::DEFAULT_COLOR):  glColor3f(0.7f, 0.7f, 1.0f); break;
-        case(ColorMode::SELECTED_COLOR): glColor3f(0.1f, 0.1f, 1.0f); break;
-        case(ColorMode::DRAGDROP_COLOR): glColor3f(0.4f, 0.4f, 1.0f); break;
-        default: glColor3f(0.5f, 0.5f, 0.5f); break;
-    }
-
-    // as texture
     glEnable(GL_TEXTURE_2D);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     this->markerTextures[0]->Bind();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+    glColor3fv(color.PeekComponents());
     glBegin(GL_QUADS);
         glTexCoord2f(1.0f, 1.0f);
         glVertex2f(posX - (this->markerSize/ (2.0f*this->scaleFac)), posY);
@@ -476,15 +469,6 @@ void TimeLineRenderer::DrawKeyframeMarker(float posX, float posY, ColorMode colo
 
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
-
-    // as geometry
-    /*
-    glBegin(GL_TRIANGLES);
-    glVertex2f(posX, posY);
-    glVertex2f(posX - (this->markerSize/ (2.0f*this->scaleFac)), posY + (this->markerSize/this->scaleFac));
-    glVertex2f(posX + (this->markerSize/ (2.0f*this->scaleFac)), posY + (this->markerSize/this->scaleFac));
-    glEnd();
-    */
 }
 
 
