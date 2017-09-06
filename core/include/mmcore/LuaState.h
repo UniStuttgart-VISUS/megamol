@@ -50,7 +50,7 @@ namespace core {
         int LogInfo(lua_State *L);
 
     private:
-        void consumeError(int error, int line);
+        void consumeError(int error, char *file, int line);
         void printTable(lua_State *L, std::stringstream& out);
         void printStack();
 

@@ -299,8 +299,11 @@ void megamol::core::CoreInstance::Initialise(void) {
         throw vislib::IllegalStateException(
             "Cannot initalise Lua", __FILE__, __LINE__);
     }
-    lua->RunString("mmLog(LOGWARNING, 'Lua loaded Ok.')"); // TODO this is broken, I cannot set the global
-    lua->RunString("mmLogInfo('Lua loaded Ok.')");
+    lua->RunString("mmLog(LOGINFO, 'Lua loaded Ok.')");
+    //lua->RunString("mmLog(LOGINFO, 'Running on ', mmGetBitWidth(), 'bits in ', mmGetConfiguration(),"
+    //    "' mode on ', mmGetMachineName(), ' (', mmGetOS(), ')')");
+    lua->RunString("mmLog(LOGINFO, mmGetOS())");
+    //lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // configuration file
     if (this->preInit->IsConfigFileSet()) {

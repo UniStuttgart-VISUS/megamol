@@ -78,12 +78,12 @@ int dispatch(lua_State * L) {
 
 #define USES_CHECK_LUA int __luaErr; __luaErr = LUA_OK;
 #define CHECK_LUA(call) __luaErr = call;\
-    consumeError(__luaErr, __LINE__);
+    consumeError(__luaErr, __FILE__, __LINE__);
 
-void megamol::core::LuaState::consumeError(int error, int line) {
+void megamol::core::LuaState::consumeError(int error, char *file, int line) {
     if (error != LUA_OK) {
         const char *err = lua_tostring(L, -1); // get error from top of stack...
-        vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at line %i\n", err, line);
+        vislib::sys::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
         lua_pop(L, 1); // and remove it.
     }
 }
@@ -116,7 +116,7 @@ void megamol::core::LuaState::printTable(lua_State *L, std::stringstream& out) {
 void megamol::core::LuaState::printStack() {
     int n = lua_gettop(L); // get stack height
     vislib::sys::Log::DefaultLog.WriteInfo("Lua Stack:");
-    for (int x = n; x >= 0; x--) {
+    for (int x = n; x >= 1; x--) {
         int t = lua_type(L, x);
         switch (t) {
             case LUA_TSTRING:  /* strings */
@@ -136,8 +136,7 @@ void megamol::core::LuaState::printStack() {
                 {
                     std::stringstream out;
                     printTable(L, out);
-                    vislib::sys::Log::DefaultLog.WriteInfo("%02i: table:", x);
-                    vislib::sys::Log::DefaultLog.WriteInfo("\n%s", out.str().c_str());
+                    vislib::sys::Log::DefaultLog.WriteInfo("%02i: table:\n%s", x, out.str().c_str());
                 }
                 break;
 
@@ -156,6 +155,18 @@ void megamol::core::LuaState::printStack() {
 megamol::core::LuaState::LuaState(CoreInstance *inst) : L(luaL_newstate()),
         coreInst(inst) {
     if (L != nullptr) {
+
+        // push API
+        //TODO
+        *static_cast<LuaState**>(lua_getextraspace(L)) = this;
+
+        lua_register(L, "mmLog", &dispatch<&LuaState::Log>);
+        lua_register(L, "mmLogInfo", &dispatch<&LuaState::LogInfo>);
+
+        lua_register(L, "mmGetBitWidth", &dispatch<&LuaState::GetBitWidth>);
+        lua_register(L, "mmGetConfiguration", &dispatch<&LuaState::GetConfiguration>);
+        lua_register(L, "mmGetOS", &dispatch<&LuaState::GetOS>);
+        lua_register(L, "mmGetMachineName", &dispatch<&LuaState::GetMachineName>);
 
 #ifdef LUA_FULL_ENVIRONMENT
         // load all environment
@@ -176,33 +187,19 @@ megamol::core::LuaState::LuaState(CoreInstance *inst) : L(luaL_newstate()),
         lua_pop(L, 1);
 #endif
 
-        // push API
-        //TODO
-        *static_cast<LuaState**>(lua_getextraspace(L)) = this;
-
-        lua_register(L, "mmLog", &dispatch<&LuaState::Log>);
-        lua_register(L, "mmLogInfo", &dispatch<&LuaState::LogInfo>);
-
-        lua_register(L, "mmGetBitWidth", &dispatch<&LuaState::GetBitWidth>);
-        lua_register(L, "mmGetConfiguration", &dispatch<&LuaState::GetConfiguration>);
-        lua_register(L, "mmGetOS", &dispatch<&LuaState::GetOS>);
-        lua_register(L, "mmGetMachineName", &dispatch<&LuaState::GetMachineName>);
-
         LoadEnviromentString(MEGAMOL_ENV);
 
-        // this needs to be added to the megamol_env table!!!
-        //lua_pushnumber(L, vislib::sys::Log::LEVEL_ERROR);
-        //lua_setglobal(L, "LOGERROR");
-        //lua_pushnumber(L, vislib::sys::Log::LEVEL_WARN);
-        //lua_setglobal(L, "LOGWARNING");
-        RunString("LOGERROR = 1");
-        lua_pushnumber(L, vislib::sys::Log::LEVEL_INFO);
-        lua_setglobal(L, "LOGINFO");
-        RunString("LOGWARNING = 20");
-
         auto typ = lua_getglobal(L, "megamol_env");
-        printStack();
-        auto horscht = luaL_checkinteger(L, 1);
+        lua_pushstring(L, "LOGINFO");
+        lua_pushinteger(L, vislib::sys::Log::LEVEL_INFO);
+        lua_rawset(L, -3);
+        lua_pushstring(L, "LOGWARNING");
+        lua_pushinteger(L, vislib::sys::Log::LEVEL_WARN);
+        lua_rawset(L, -3);
+        lua_pushstring(L, "LOGERROR");
+        lua_pushnumber(L, vislib::sys::Log::LEVEL_ERROR);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
     }
 }
 
