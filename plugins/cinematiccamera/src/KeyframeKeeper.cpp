@@ -784,7 +784,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
     }
 
     if (this->keyframes.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Interpolate Keyframe] Empty keyframe array.");
+        // vislib::sys::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] [Interpolate Keyframe] Empty keyframe array.");
         Keyframe k = Keyframe(vislib::graphics::Camera(), t);
         if (!this->cameraParam.IsNull()) {
             k.setCameraParameters(this->cameraParam);

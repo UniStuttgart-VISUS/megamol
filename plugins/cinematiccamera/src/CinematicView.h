@@ -101,26 +101,10 @@ namespace megamol {
             vislib::math::Point<float, 3> bboxCenter; 
             float        currentViewTime;
             Keyframe     shownKeyframe;
-
             float        maxAnimTime;
-            //vislib::graphics::gl::FramebufferObject fbo;
-
-            GLuint       colorBuffer;
-            GLuint       depthBuffer;
-            GLuint       frameBuffer;
-
             int          cineWidth;
             int          cineHeight;
-            int          vpWidth;
-            int          vpHeight;
-            int          fboWidth;
-            int          fboHeight;
-
-            /**********************************************************************
-            * functions
-            **********************************************************************/
-
-            void setupRenderToTexture();
+            vislib::graphics::gl::FramebufferObject fbo;
 
             /**********************************************************************
             * callback

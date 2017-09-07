@@ -167,7 +167,7 @@ bool CinematicRenderer::GetExtents(Call& call) {
         }
     }
 
-    // Check for bounding box center
+    // Check for bounding box center before extending it by keyframes
     this->bboxCenter = cr3d->AccessBoundingBoxes().WorldSpaceBBox().CalcCenter();
     if (this->bboxCenter != ccc->getBboxCenter()) {
         ccc->setBboxCenter(this->bboxCenter);
@@ -212,6 +212,13 @@ bool CinematicRenderer::Render(Call& call) {
         this->toggleHelpTextParam.ResetDirty();
     }
 
+    // Check for new max anim time
+    this->maxAnimTime = static_cast<float>(oc->TimeFramesCount());
+    if (this->maxAnimTime != ccc->getMaxAnimTime()) {
+        ccc->setMaxAnimTime(this->maxAnimTime);
+        if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return false;
+    }
+
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return false;
 
@@ -224,13 +231,6 @@ bool CinematicRenderer::Render(Call& call) {
 
     *oc = *cr3d;
     oc->SetTime(selectTime);
-
-    // Check for new max anim time
-    this->maxAnimTime = static_cast<float>(cr3d->TimeFramesCount());
-    if (this->maxAnimTime != ccc->getMaxAnimTime()) {
-        ccc->setMaxAnimTime(this->maxAnimTime);
-        if (!(*ccc)(CallCinematicCamera::CallForSetAnimationData)) return false;
-    }
 
     // Call original renderer.
     glMatrixMode(GL_MODELVIEW);
@@ -270,7 +270,6 @@ bool CinematicRenderer::Render(Call& call) {
         glPushMatrix();
 
         glLineWidth(2.5f);
-        glPointSize(15.0f);
         float        circleRadius = 0.15f;
         unsigned int circleSubDiv = 20;
 

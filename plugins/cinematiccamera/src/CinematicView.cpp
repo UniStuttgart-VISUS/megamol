@@ -13,6 +13,7 @@
 #include "mmcore/view/CallRenderView.h"
 
 #include "vislib/math/Rectangle.h"
+#include "vislib/Trace.h"
 
 #include "CinematicView.h"
 #include "CallCinematicCamera.h"
@@ -52,19 +53,14 @@ CinematicView::CinematicView(void) : View3D(),
     this->currentViewTime = 0.0f;     
     this->maxAnimTime     = 1.0f;
     this->bboxCenter      = vislib::math::Point<float, 3>(0.0f, 0.0f, 0.0f);
-
-    this->cineWidth    = -1.0f;
-    this->cineHeight   = -1.0f;
-    this->vpWidth      = -1.0f;
-    this->vpHeight     = -1.0f;
-    this->fboWidth     = -1.0f;
-    this->fboHeight    = -1.0f;
+    this->cineWidth       = 1920;
+    this->cineHeight      = 1080;
 
     // init parameters
-    this->cinematicHeightParam.SetParameter(new param::IntParam(1, 1));
+    this->cinematicHeightParam.SetParameter(new param::IntParam(this->cineHeight, 1));
     this->MakeSlotAvailable(&this->cinematicHeightParam);
 
-    this->cinematicWidthParam.SetParameter(new param::IntParam(1, 1));
+    this->cinematicWidthParam.SetParameter(new param::IntParam(this->cineWidth, 1));
     this->MakeSlotAvailable(&this->cinematicWidthParam);
 
     // TEMPORARY HACK #########################################################
@@ -78,76 +74,8 @@ CinematicView::CinematicView(void) : View3D(),
 */
 CinematicView::~CinematicView(void) {
 
-    glDeleteTextures(1, &this->colorBuffer);
-    glDeleteTextures(1, &this->depthBuffer);
-    glDeleteFramebuffers(1, &this->frameBuffer);
-
-}
-
-
-/*
-* CinematicView::setupRenderToTexture
-*/
-void CinematicView::setupRenderToTexture() {
-
-    if (!areExtsAvailable("GL_EXT_framebuffer_object GL_ARB_draw_buffers"))
-        return;
-
-    // Delete textures + fbo if necessary
-    if (glIsFramebuffer(this->frameBuffer)) {
-        glDeleteTextures(1, &this->colorBuffer);
-        glDeleteTextures(1, &this->depthBuffer);
-        glDeleteFramebuffers(1, &this->frameBuffer);
-    }
-
-    float vpRatio    = static_cast<float>(this->vpWidth)   / static_cast<float>(this->vpHeight);
-    float cineRatio  = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
-    this->fboWidth   = this->vpWidth;
-    this->fboHeight  = this->vpHeight;
-    if (cineRatio > vpRatio) {
-        this->fboHeight = (static_cast<int>(static_cast<float>(this->vpWidth) / cineRatio));
-    }
-    else if (cineRatio < vpRatio) {
-        this->fboWidth = (static_cast<int>(static_cast<float>(this->vpHeight) * cineRatio));
-    }
-
-    // Create color texture
-    glGenTextures(1, &this->colorBuffer);
-    glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, this->fboWidth, this->fboHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Create depth texture
-    glGenTextures(1, &this->depthBuffer);
-    glBindTexture(GL_TEXTURE_2D, this->depthBuffer);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, this->fboWidth, this->fboHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Create FramebufferObject
-    glGenFramebuffersEXT(1, &this->frameBuffer);
-    glBindFramebufferEXT(GL_FRAMEBUFFER, this->frameBuffer);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->colorBuffer, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depthBuffer, 0);
-
-    // Check status of fbo
-    if (glCheckFramebufferStatusEXT(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        sys::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [setupRenderToTexture] Could not create framebuffer object.");
-    }
-    else {
-        sys::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] [setupRenderToTexture] Creating framebuffer object was successful.");
-    }
-
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
+    //this->fbo.Disable();
+    //this->fbo.Release();
 }
 
 
@@ -163,40 +91,15 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     if (!ccc) return;
     // Updated data from cinematic camera call
     if (!(*ccc)(CallCinematicCamera::CallForGetUpdatedKeyframeData)) return;
-
-    // get viewport
-    int vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    int  vpW = vp[2] - vp[0];
-    int  vpH = vp[3] - vp[1];
-
-    bool resetFramebuffer = false;
-    if ((this->vpHeight != vpH) || (this->vpWidth != vpW)) {
-        this->vpHeight = vpH;
-        this->vpWidth  = vpW;
-        resetFramebuffer = true;
-    }
-    if ((this->cineHeight < 0) || (this->cineWidth < 0)) { // first time
-        this->cineWidth  = vpWidth;
-        this->cineHeight = vpHeight;
-        this->cinematicHeightParam.Param<param::IntParam>()->SetValue(this->cineWidth, false);
-        this->cinematicWidthParam.Param<param::IntParam>()->SetValue(this->cineHeight, false);
-        resetFramebuffer = true;
-    }
+    
     // Update paramters
     if (this->cinematicHeightParam.IsDirty()) {
         this->cinematicHeightParam.ResetDirty();
         this->cineWidth = this->cinematicHeightParam.Param<param::IntParam>()->Value();
-        resetFramebuffer = true;
     }
     if (this->cinematicWidthParam.IsDirty()) {
         this->cinematicWidthParam.ResetDirty();
         this->cineHeight = this->cinematicWidthParam.Param<param::IntParam>()->Value();
-        resetFramebuffer = true;
-    }
-    // Update framebuffer size
-    if (resetFramebuffer) {
-        this->setupRenderToTexture();
     }
 
     // Check for new max anim time
@@ -309,53 +212,82 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         }
     }   
 
-    // ------------------------------------------------------------------------
-    // Render to texture
+    // Viewport stuff ---------------------------------------------------------
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    int  vpWidth   = vp[2] - vp[0]; // or  cr3d->GetViewport().GetSize().GetHeight();
+    int  vpHeight   = vp[3] - vp[1]; // or  cr3d->GetViewport().GetSize().GetWidth();
+    float vpRatio   = static_cast<float>(vpWidth) / static_cast<float>(vpHeight);
+    float cineRatio = static_cast<float>(this->cineWidth) / static_cast<float>(this->cineHeight);
+    float fboWidth  = vpWidth;
+    float fboHeight = vpHeight;
+    if (cineRatio > vpRatio) {
+        fboHeight = (static_cast<int>(static_cast<float>(vpWidth) / cineRatio));
+    }
+    else if (cineRatio < vpRatio) {
+        fboWidth = (static_cast<int>(static_cast<float>(vpHeight) * cineRatio));
+    }
 
-    //cr3d->DisableOutputBuffer();
-    if (cr3d->FrameBufferObject() != NULL)
-        cr3d->FrameBufferObject()->Disable();
-
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
-
-    glBindFramebufferEXT(GL_FRAMEBUFFER, this->frameBuffer);
-    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, DrawBuffers);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->colorBuffer, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depthBuffer, 0);
+    // Render to texture ------------------------------------------------------------
+    // Suppress TRACE output of fbo.Enable() and >fbo.Create()
+#if defined(DEBUG) || defined(_DEBUG)
+    unsigned int otl = vislib::Trace::GetInstance().GetLevel();
+    vislib::Trace::GetInstance().SetLevel(0);
+#endif /* DEBUG || _DEBUG */
+    if (!this->fbo.IsValid()) {
+        if (!this->fbo.Create(fboWidth, fboHeight, GL_RGBA32F, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
+            throw vislib::Exception("[CINEMATIC VIEW] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
+    }
+    if (this->fbo.IsValid()) {
+        if (this->fbo.Enable() != GL_NO_ERROR) {
+            throw vislib::Exception("[CINEMATIC VIEW] Cannot enable Framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
+    }
+    else {
+        throw vislib::Exception("[CINEMATIC VIEW] Framebuffer object is not valid.", __FILE__, __LINE__);
+        return;
+    }
+    // Reset TRACE output level
+#if defined(DEBUG) || defined(_DEBUG)
+    vislib::Trace::GetInstance().SetLevel(otl);
+#endif /* DEBUG || _DEBUG */
 
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    int fboVp[4] = { 0, 0, this->fboWidth, this->fboHeight };
+    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
     this->overrideViewport = fboVp;
     // Set new viewport settings for camera
-    this->camParams->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(this->fboWidth), static_cast<vislib::graphics::ImageSpaceType>(this->fboHeight));
-    this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f, static_cast<float>(this->fboWidth), static_cast<float>(this->fboHeight)));
+    this->camParams->SetVirtualViewSize(static_cast<vislib::graphics::ImageSpaceType>(fboWidth), static_cast<vislib::graphics::ImageSpaceType>(fboHeight));
+    this->camParams->SetTileRect(vislib::math::Rectangle<float>(0.0f, 0.0f, static_cast<float>(fboWidth), static_cast<float>(fboHeight)));
+
+    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
+    GLenum callOutBuffer = cr3d->OutputBuffer();
+    cr3d->SetOutputBuffer(this->fbo.GetID());
+    this->overrideCall = cr3d;
 
     // Call Render-Function of parent View3D
     Base::Render(context);
 
+    // Reset override render call
+    cr3d->SetOutputBuffer(callOutBuffer);
+    this->overrideCall = NULL;
+    // Reset override viewport
     this->overrideViewport = NULL;
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-    glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
-    //cr3d->EnableOutputBuffer();
-    if (cr3d->FrameBufferObject() != NULL)
-        cr3d->FrameBufferObject()->Enable();
+    this->fbo.Disable();
 
-    // ------------------------------------------------------------------------
-    // Draw final image
+    // Draw final image -------------------------------------------------------
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-
     // Reset viewport
     glViewport(vp[0], vp[1], vp[2], vp[3]);
-    glOrtho(0.0f, static_cast<float>(this->vpWidth), 0.0f, static_cast<float>(this->vpHeight), -1.0, 1.0);
+    glOrtho(0.0f, static_cast<float>(vpWidth), 0.0f, static_cast<float>(vpHeight), -1.0, 1.0);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_LIGHTING);
@@ -363,31 +295,19 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glDisable(GL_BLEND);
     glDisable(GL_CULL_FACE);
 
-    // Get the foreground color (inverse background color)
-    float bgColor[4];
-    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
-    for (unsigned int i = 0; i < 4; i++) {
-        fgColor[i] -= bgColor[i];
-    }
-
-    // Draw white background quad
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-        glVertex2i(0, 0);
-        glVertex2i(this->vpWidth, 0);
-        glVertex2i(this->vpWidth, this->vpHeight);
-        glVertex2i(0, this->vpHeight);
-    glEnd();
-
     // Draw texture
-    float wHalfVp    = static_cast<float>(this->vpWidth) / 2.0f;
-    float hHalfVp    = static_cast<float>(this->vpHeight) / 2.0f;
-    float wHalfFbo   = static_cast<float>(this->fboWidth) / 2.0f;
-    float hHalfFbo   = static_cast<float>(this->fboHeight) / 2.0f;
+    float wHalfVp    = static_cast<float>(vpWidth) / 2.0f;
+    float hHalfVp    = static_cast<float>(vpHeight) / 2.0f;
+    float wHalfFbo   = static_cast<float>(fboWidth) / 2.0f;
+    float hHalfFbo   = static_cast<float>(fboHeight) / 2.0f;
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, this->colorBuffer);
+    this->fbo.BindColourTexture();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
         glTexCoord2f(0.0f, 0.0f); glVertex2f(wHalfVp - wHalfFbo, hHalfVp - hHalfFbo);
         glTexCoord2f(1.0f, 0.0f); glVertex2f(wHalfVp + wHalfFbo, hHalfVp - hHalfFbo);
@@ -397,16 +317,23 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
 
-    // Draw letter box quads
+    // Draw letter box quads in fgColor
+    // Get the foreground color (inverse background color)
+    float bgColor[4];
+    float fgColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, bgColor);
+    for (unsigned int i = 0; i < 4; i++) {
+        fgColor[i] -= bgColor[i];
+    }
     int x = 0;
     int y = 0;
-    if (this->fboWidth < this->vpWidth) {
-        x = (static_cast<int>(static_cast<float>(this->vpWidth - this->fboWidth) / 2.0f));
-        y = this->vpHeight;
+    if (fboWidth < vpWidth) {
+        x = (static_cast<int>(static_cast<float>(vpWidth - fboWidth) / 2.0f));
+        y = vpHeight;
     }
-    else if (this->fboHeight < this->vpHeight) {
-        x = this->vpWidth;
-        y = (static_cast<int>(static_cast<float>(this->vpHeight - this->fboHeight) / 2.0f));
+    else if (fboHeight < vpHeight) {
+        x = vpWidth;
+        y = (static_cast<int>(static_cast<float>(vpHeight - fboHeight) / 2.0f));
     }
     glColor3fv(fgColor);
     glBegin(GL_QUADS);
@@ -414,16 +341,16 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         glVertex2i(x, 0);
         glVertex2i(x, y);
         glVertex2i(0, y);
-        glVertex2i(this->vpWidth,     this->vpHeight);
-        glVertex2i(this->vpWidth - x, this->vpHeight);
-        glVertex2i(this->vpWidth - x, this->vpHeight - y);
-        glVertex2i(this->vpWidth,     this->vpHeight - y);
+        glVertex2i(vpWidth,     vpHeight);
+        glVertex2i(vpWidth - x, vpHeight);
+        glVertex2i(vpWidth - x, vpHeight - y);
+        glVertex2i(vpWidth,     vpHeight - y);
     glEnd();
-
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
+    this->fbo.Release();
 }

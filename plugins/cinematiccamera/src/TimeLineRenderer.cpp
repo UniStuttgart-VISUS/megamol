@@ -146,9 +146,9 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
     cr->SetBoundingBox(cr->GetViewport());
 
     // Set time line position in percentage of viewport
-    this->devX         = cr->GetViewport().GetSize().GetWidth()  / 100.0f * 8.0f; // DO CHANGES HERE
+    this->devX         = cr->GetViewport().GetSize().GetWidth()  / 100.0f * 5.0f; // DO CHANGES HERE
     this->devY         = cr->GetViewport().GetSize().GetHeight() / 100.0f * 5.0f; // DO CHANGES HERE
-    this->markerSize   = cr->GetViewport().GetSize().GetWidth()  / 100.0f * 2.0f; // DO CHANGES HERE
+    this->markerSize   = (this->devX > this->devY) ? (this->devX/2.0f) : (this->devY); // DO CHANGES HERE
 
     this->tlStartPos   = vislib::math::Vector<float, 2>(this->devX, cr->GetViewport().GetSize().GetHeight() / 2.0f);
     this->tlEndPos     = vislib::math::Vector<float, 2>(cr->GetViewport().GetSize().GetWidth() - this->devX, cr->GetViewport().GetSize().GetHeight() / 2.0f);
@@ -369,7 +369,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
         glVertex2fv(this->tlStartPos.PeekComponents());
         glVertex2fv(this->tlEndPos.PeekComponents());
         // Draw ruler lines
-        glVertex2f(this->tlStartPos.GetX(),                  this->tlStartPos.GetY() + (this->devY/this->scaleFac));
+        glVertex2f(this->tlStartPos.GetX(),                  this->tlStartPos.GetY() + (this->devY / this->scaleFac));
         glVertex2f(this->tlStartPos.GetX(),                  this->tlStartPos.GetY() - (this->devY / this->scaleFac));
         glVertex2f(this->tlStartPos.GetX() + this->tlLength, this->tlStartPos.GetY() + (this->devY / this->scaleFac));
         glVertex2f(this->tlStartPos.GetX() + this->tlLength, this->tlStartPos.GetY() - (this->devY / this->scaleFac));
